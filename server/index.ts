@@ -3,11 +3,21 @@
  *
  * Startup sequence:
  *   1. Read settings.yaml (fail fast if missing or invalid)
- *   2. Auto-create data directory and seed users.json if absent
- *   3. Mount API handlers (issue, settings)
- *   4. Mount FHIR proxy
- *   5. Serve static files from dist/
- *   6. SPA fallback — all unmatched GET routes return dist/index.html
+ *   2. Auto-create data directory
+ *   3. initAuth() — load/generate JWT secret, migrate users.json
+ *   4. initAuditDb() — open/create SQLite audit database
+ *   5. startPurgeInterval() — run initial purge + daily interval
+ *   6. Create Express app and mount middleware in correct order:
+ *      a. express.json() on /api/auth/* routes (authApiRouter needs it)
+ *      b. auditMiddleware — logs all /api/* requests (before auth, captures 401s)
+ *      c. authMiddleware — validates JWT on /api/* (except public auth paths)
+ *      d. authApiRouter — /api/auth/login, /api/auth/verify, /api/auth/config
+ *      e. issueApiHandler — /api/issues (raw Node handler, auth guaranteed)
+ *      f. settingsApiHandler — /api/settings (raw Node handler, auth guaranteed)
+ *      g. auditApiRouter — /api/audit, /api/audit/export
+ *      h. FHIR proxy — /fhir
+ *      i. Static files — dist/
+ *      j. SPA fallback — all unmatched GET routes
  *   7. Listen on configured host:port
  */
 
@@ -18,6 +28,12 @@ import yaml from 'js-yaml';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { issueApiHandler } from './issueApi.js';
 import { settingsApiHandler } from './settingsApi.js';
+import { initAuth } from './initAuth.js';
+import { authMiddleware } from './authMiddleware.js';
+import { authApiRouter } from './authApi.js';
+import { initAuditDb, startPurgeInterval } from './auditDb.js';
+import { auditMiddleware } from './auditMiddleware.js';
+import { auditApiRouter } from './auditApi.js';
 
 // ---------------------------------------------------------------------------
 // 1. Read settings.yaml at startup (fail fast)
@@ -53,7 +69,7 @@ const blazeUrl: string =
   typeof dataSource.blazeUrl === 'string' ? dataSource.blazeUrl : 'http://localhost:8080/fhir';
 
 // ---------------------------------------------------------------------------
-// 2. Auto-create data directory and seed users.json if absent
+// 2. Auto-create data directory
 // ---------------------------------------------------------------------------
 
 const DATA_DIR = path.resolve(process.cwd(), dataDir);
@@ -62,6 +78,14 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
   console.log(`[server] Created data directory: ${DATA_DIR}`);
 }
+
+// ---------------------------------------------------------------------------
+// 3. initAuth — load/generate JWT secret, migrate users.json
+//    NOTE: initAuth handles users.json creation/migration including passwordHash.
+//    The manual users.json seeding block from the original index.ts is removed
+//    because initAuth() migrates existing users and authApi seeds on first login.
+//    We still seed an initial users.json if absent so initAuth has users to migrate.
+// ---------------------------------------------------------------------------
 
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 
@@ -79,8 +103,23 @@ if (!fs.existsSync(USERS_FILE)) {
   console.log(`[server] Seeded users.json with ${defaultUsers.length} default users`);
 }
 
+// initAuth: loads/generates JWT secret, migrates users.json to add bcrypt hashes
+initAuth(DATA_DIR, settings);
+
 // ---------------------------------------------------------------------------
-// 3. Derive FHIR proxy target (host only — no path)
+// 4. initAuditDb — open/create SQLite audit database
+// ---------------------------------------------------------------------------
+
+initAuditDb(DATA_DIR);
+
+// ---------------------------------------------------------------------------
+// 5. startPurgeInterval — run initial purge + daily interval
+// ---------------------------------------------------------------------------
+
+startPurgeInterval();
+
+// ---------------------------------------------------------------------------
+// 6. Derive FHIR proxy target (host only — no path)
 // ---------------------------------------------------------------------------
 
 function deriveBlazeTarget(url: string): string {
@@ -91,16 +130,34 @@ function deriveBlazeTarget(url: string): string {
 const blazeTarget = deriveBlazeTarget(blazeUrl);
 
 // ---------------------------------------------------------------------------
-// 4. Create Express app and mount routes in correct order
+// 7. Create Express app and mount middleware in correct order
 // ---------------------------------------------------------------------------
 
 const app = express();
 
-// API handlers FIRST (before static/fallback)
+// express.json() ONLY on auth routes — authApiRouter uses req.body.
+// issueApiHandler and settingsApiHandler use readBody() on raw stream,
+// so global express.json() would consume the stream before them.
+app.use('/api/auth', express.json({ limit: '1mb' }));
+
+// auditMiddleware BEFORE authMiddleware — captures 401 responses with user='anonymous'
+// (req.auth is read at res.finish time, so it resolves correctly for both 200 and 401)
+app.use(auditMiddleware);
+
+// authMiddleware validates JWT on all /api/* except public auth paths
+app.use(authMiddleware);
+
+// Auth routes — login, verify, config (express.json already mounted above)
+app.use('/api/auth', authApiRouter);
+
+// Issue and settings handlers (raw Node http middleware, auth guaranteed by authMiddleware)
 app.use(issueApiHandler);
 app.use(settingsApiHandler);
 
-// FHIR proxy SECOND
+// Audit query routes — /api/audit and /api/audit/export (admin-only export)
+app.use('/api/audit', auditApiRouter);
+
+// FHIR proxy
 app.use('/fhir', createProxyMiddleware({
   target: blazeTarget,
   changeOrigin: true,
@@ -115,17 +172,17 @@ app.use('/fhir', createProxyMiddleware({
   },
 }));
 
-// Static file serving THIRD (built Vite output)
+// Static file serving (built Vite output)
 app.use(express.static(path.resolve(process.cwd(), 'dist')));
 
-// SPA fallback LAST — all unmatched GET routes return index.html
-// Express 5 uses path-to-regexp v8+ which requires named parameters; use /{*path} instead of bare *
+// SPA fallback — all unmatched GET routes return index.html
+// Express 5 uses path-to-regexp v8+ which requires named parameters
 app.get('/{*path}', (_req: import('express').Request, res: import('express').Response) => {
   res.sendFile(path.resolve(process.cwd(), 'dist', 'index.html'));
 });
 
 // ---------------------------------------------------------------------------
-// 5. Start server
+// 8. Start server
 // ---------------------------------------------------------------------------
 
 app.listen(PORT, HOST, () => {
