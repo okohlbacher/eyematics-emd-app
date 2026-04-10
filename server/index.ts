@@ -34,6 +34,8 @@ import { authApiRouter } from './authApi.js';
 import { initAuditDb, startPurgeInterval } from './auditDb.js';
 import { auditMiddleware } from './auditMiddleware.js';
 import { auditApiRouter } from './auditApi.js';
+import { initDataDb } from './dataDb.js';
+import { dataApiRouter } from './dataApi.js';
 
 // ---------------------------------------------------------------------------
 // 1. Read settings.yaml at startup (fail fast)
@@ -114,6 +116,7 @@ const auditSection = (settings.audit ?? {}) as Record<string, unknown>;
 const retentionDays = typeof auditSection.retentionDays === 'number' ? auditSection.retentionDays : 90;
 
 initAuditDb(DATA_DIR, retentionDays);
+initDataDb(DATA_DIR);
 
 // ---------------------------------------------------------------------------
 // 5. startPurgeInterval — run initial purge + daily interval
@@ -138,10 +141,11 @@ const blazeTarget = deriveBlazeTarget(blazeUrl);
 
 const app = express();
 
-// express.json() ONLY on auth routes — authApiRouter uses req.body.
-// issueApiHandler and settingsApiHandler use readBody() on raw stream,
-// so global express.json() would consume the stream before them.
+// Body parsers — MUST be before auditMiddleware so req.body is populated for body capture
+// express.json() is scoped (NOT global) — issueApiHandler and settingsApiHandler use readBody()
+// on the raw stream and a global express.json() would consume the stream before them.
 app.use('/api/auth', express.json({ limit: '1mb' }));
+app.use('/api/data', express.json({ limit: '1mb' })); // before auditMiddleware (review concern #9)
 
 // auditMiddleware BEFORE authMiddleware — captures 401 responses with user='anonymous'
 // (req.auth is read at res.finish time, so it resolves correctly for both 200 and 401)
@@ -159,6 +163,10 @@ app.use(settingsApiHandler);
 
 // Audit query routes — /api/audit and /api/audit/export (admin-only export)
 app.use('/api/audit', auditApiRouter);
+
+// Data persistence routes — per-user quality flags, saved searches, excluded/reviewed cases
+// Mounted AFTER authMiddleware so all /api/data/* routes require authentication (DATA-05)
+app.use('/api/data', dataApiRouter);
 
 // FHIR proxy
 app.use('/fhir', createProxyMiddleware({
