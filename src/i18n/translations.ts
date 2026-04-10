@@ -535,6 +535,15 @@ const translations = {
   diagCoronary: { de: 'Koronare Herzkrankheit', en: 'Coronary artery disease' },
   diagAmdFull: { de: 'Altersbedingte Makuladegeneration (267718000)', en: 'Age-related macular degeneration (267718000)' },
   diagDrFull: { de: 'Diabetische Retinopathie (312898008)', en: 'Diabetic retinopathy (312898008)' },
+
+  // Center-based data restriction (Phase 5)
+  fhir403Heading: { de: 'Zugriff verweigert', en: 'Access Denied' },
+  fhir403Body: { de: 'Ihr Konto hat keine Berechtigung fuer die angeforderten Zentren. Bitte wenden Sie sich an Ihren Administrator.', en: 'Your account is not authorized for the requested centers. Please contact your administrator.' },
+  fhirLoadError: { de: 'Daten konnten nicht geladen werden. Bitte erneut versuchen.', en: 'Failed to load data. Please try again.' },
+  retryButton: { de: 'Erneut versuchen', en: 'Retry' },
+  noCentersAssigned: { de: 'Keine Zentren zugewiesen', en: 'No centers assigned' },
+  mutationForbiddenCase: { de: 'Fall liegt ausserhalb Ihrer erlaubten Zentren.', en: 'Case is outside your permitted centers.' },
+  mutationForbiddenSearch: { de: 'Suche enthaelt Faelle ausserhalb Ihrer erlaubten Zentren.', en: 'Search references cases outside your permitted centers.' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
