@@ -105,7 +105,7 @@ app.use('/fhir', createProxyMiddleware({
   target: blazeTarget,
   changeOrigin: true,
   on: {
-    error: (err, _req, res) => {
+    error: (err: Error, _req: import('http').IncomingMessage, res: import('http').ServerResponse | import('net').Socket) => {
       console.error('[fhir-proxy] Error:', (err as Error).message);
       if (res && 'writeHead' in res) {
         (res as import('http').ServerResponse).writeHead(502, { 'Content-Type': 'application/json' });
@@ -120,7 +120,7 @@ app.use(express.static(path.resolve(process.cwd(), 'dist')));
 
 // SPA fallback LAST — all unmatched GET routes return index.html
 // Express 5 uses path-to-regexp v8+ which requires named parameters; use /{*path} instead of bare *
-app.get('/{*path}', (_req, res) => {
+app.get('/{*path}', (_req: import('express').Request, res: import('express').Response) => {
   res.sendFile(path.resolve(process.cwd(), 'dist', 'index.html'));
 });
 
