@@ -155,7 +155,6 @@ export default function QualityPage() {
   };
 
   const handleExclude = (caseId: string) => {
-    const excluding = !excludedCases.includes(caseId);
     toggleExcludeCase(caseId);
   };
 

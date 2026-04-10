@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
-import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { downloadCsv, downloadJson, datedFilename } from '../utils/download';
 import { formatDate } from '../utils/dateFormat';
@@ -34,7 +33,6 @@ type SortField = 'date' | 'name';
 export default function CohortBuilderPage() {
   const { activeCases, centers, savedSearches, addSavedSearch, removeSavedSearch } =
     useData();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const { locale, t } = useLanguage();
 

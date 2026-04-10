@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -12,24 +12,9 @@ export default function LoginPage() {
   const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const { login, verifyOtp } = useAuth();
   const navigate = useNavigate();
   const { locale, setLocale, t } = useLanguage();
-
-  // Fetch 2FA config from server on mount (D-02)
-  useEffect(() => {
-    fetch('/api/auth/config')
-      .then((r) => r.ok ? r.json() : null)
-      .then((data: { twoFactorEnabled?: boolean } | null) => {
-        if (data && typeof data.twoFactorEnabled === 'boolean') {
-          setTwoFactorEnabled(data.twoFactorEnabled);
-        }
-      })
-      .catch(() => {
-        // Config fetch failed — proceed without 2FA info
-      });
-  }, []);
 
   const handleCredentials = async (e: React.FormEvent) => {
     e.preventDefault();

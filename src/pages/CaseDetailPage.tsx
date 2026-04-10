@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
-import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getDateLocale } from '../utils/dateFormat';
 import { translateClinical, getEyeLabel } from '../utils/clinicalTerms';
@@ -38,7 +37,6 @@ import AnamnesisFindings from '../components/case-detail/AnamnesisFindings';
 export default function CaseDetailPage() {
   const { caseId } = useParams<{ caseId: string }>();
   const { cases } = useData();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const { locale, t } = useLanguage();
 

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, Save, RotateCcw, Server, CheckCircle, XCircle, Loader2, Download, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import {
   updateSettings,
@@ -22,7 +21,6 @@ type ConnectionStatus = 'idle' | 'testing' | 'ok' | 'failed';
 
 export default function SettingsPage() {
   const { t } = useLanguage();
-  const { user } = useAuth();
   const { reloadData } = useData();
 
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
