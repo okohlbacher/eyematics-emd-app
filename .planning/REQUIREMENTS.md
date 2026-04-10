@@ -55,15 +55,15 @@
 
 ### Center-Based Data Restriction (Server-Enforced)
 
-- [ ] **CENTER-01**: User's assigned centers stored in JWT payload and in data/users.json
-- [ ] **CENTER-02**: Server-side FHIR data endpoint filters cases by user's centers before sending to client — unauthorized center data never leaves the server
-- [ ] **CENTER-03**: Server-side center permission check on all data API endpoints (/api/data/*) — reject requests for data outside user's centers with 403
-- [ ] **CENTER-04**: Local FHIR bundle loading: server loads only bundles matching user's centers (per-center JSON files map directly to permissions)
-- [ ] **CENTER-05**: Blaze FHIR proxy: server filters response resources by Patient.meta.source matching user's center IDs before forwarding to client
-- [ ] **CENTER-06**: Admin users and users with all centers assigned bypass center filtering
+- [x] **CENTER-01**: User's assigned centers stored in JWT payload and in data/users.json
+- [x] **CENTER-02**: Server-side FHIR data endpoint filters cases by user's centers before sending to client — unauthorized center data never leaves the server
+- [x] **CENTER-03**: Server-side center permission check on all data API endpoints (/api/data/*) — reject requests for data outside user's centers with 403
+- [x] **CENTER-04**: Local FHIR bundle loading: server loads only bundles matching user's centers (per-center JSON files map directly to permissions)
+- [x] **CENTER-05**: Blaze FHIR proxy: server filters response resources by Patient.meta.source matching user's center IDs before forwarding to client
+- [x] **CENTER-06**: Admin users and users with all centers assigned bypass center filtering
 - [ ] **CENTER-07**: Frontend DataContext receives pre-filtered data from server — client-side filtering is defense-in-depth only, not the primary control
 - [ ] **CENTER-08**: CohortBuilder center filter only shows centers the user has permission for
-- [ ] **CENTER-09**: Center permission is enforced at the API layer (authMiddleware extracts centers from JWT, passes to handlers) — no endpoint can return cross-center data without explicit permission
+- [x] **CENTER-09**: Center permission is enforced at the API layer (authMiddleware extracts centers from JWT, passes to handlers) — no endpoint can return cross-center data without explicit permission
 
 ### Auth Middleware
 
