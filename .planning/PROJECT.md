@@ -36,8 +36,8 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] FHIR proxy for production (http-proxy-middleware) (Phase 1)
 - [ ] Server-side user management CRUD via API (Phase 3)
 - [ ] Server-side storage for quality flags, saved searches, excluded/reviewed cases (Phase 3)
-- [ ] Center-based data restriction (users see only their assigned centers' data) (Phase 4)
-- [ ] Keycloak integration preparation (middleware, config, documentation) (Phase 5)
+- [x] Center-based data restriction (users see only their assigned centers' data) — Validated in Phase 5: Center-Based Data Restriction
+- [ ] Keycloak integration preparation (middleware, config, documentation) (Phase 6)
 - [ ] API design that allows future migration from JSON files to a database
 
 ### Out of Scope
