@@ -1,29 +1,35 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { getAuditLog, clearAuditLog, type AuditEntry, type AuditAction } from '../services/auditService';
-import type { TranslationKey } from '../i18n/translations';
-import { FileText, Trash2, Download, Filter } from 'lucide-react';
+import { fetchAuditEntries, exportAuditLog, type ServerAuditEntry } from '../services/auditService';
+import { FileText, Download, Filter } from 'lucide-react';
 import { downloadCsv, datedFilename } from '../utils/download';
 import { getDateLocale } from '../utils/dateFormat';
 
-// Action categories for filtering
-const ACTION_CATEGORIES: Record<string, AuditAction[]> = {
-  auth: ['login', 'logout', 'auto_logout'],
-  views: ['view_landing', 'view_cohort', 'view_analysis', 'view_case', 'view_quality', 'view_admin', 'view_audit'],
-  quality: ['flag_error', 'update_flag', 'exclude_case', 'include_case', 'save_search', 'delete_search'],
-  admin: ['create_user', 'delete_user'],
+// Path-based categories for filtering server audit entries
+const PATH_CATEGORIES: Record<string, (entry: ServerAuditEntry) => boolean> = {
+  auth: (e) => e.path.startsWith('/api/auth'),
+  data: (e) => e.path.startsWith('/api/issues') || e.path.startsWith('/api/data'),
+  settings: (e) => e.path.startsWith('/api/settings'),
+  audit: (e) => e.path.startsWith('/api/audit'),
 };
 
 type TimeRange = 'today' | '7d' | '30d' | 'all';
 
-function actionBadgeClass(action: string): string {
-  if (['login', 'logout', 'auto_logout'].includes(action)) return 'bg-blue-100 text-blue-700';
-  if (action.startsWith('view_')) return 'bg-gray-100 text-gray-700';
-  if (['save_search', 'delete_search'].includes(action)) return 'bg-green-100 text-green-700';
-  if (['flag_error', 'update_flag'].includes(action)) return 'bg-amber-100 text-amber-700';
-  if (['exclude_case', 'include_case'].includes(action)) return 'bg-red-100 text-red-700';
-  if (['create_user', 'delete_user'].includes(action)) return 'bg-purple-100 text-purple-700';
+function methodBadgeClass(method: string): string {
+  switch (method) {
+    case 'GET': return 'bg-gray-100 text-gray-700';
+    case 'POST': return 'bg-green-100 text-green-700';
+    case 'PUT': return 'bg-amber-100 text-amber-700';
+    case 'DELETE': return 'bg-red-100 text-red-700';
+    default: return 'bg-gray-100 text-gray-700';
+  }
+}
+
+function statusBadgeClass(status: number): string {
+  if (status >= 200 && status < 300) return 'bg-green-100 text-green-700';
+  if (status >= 400 && status < 500) return 'bg-amber-100 text-amber-700';
+  if (status >= 500) return 'bg-red-100 text-red-700';
   return 'bg-gray-100 text-gray-700';
 }
 
@@ -43,7 +49,10 @@ function getTimeRangeStart(range: TimeRange): number {
 export default function AuditPage() {
   const { locale, t } = useLanguage();
   const { user } = useAuth();
-  const [entries, setEntries] = useState<AuditEntry[]>(() => getAuditLog());
+
+  const [entries, setEntries] = useState<ServerAuditEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Filter state
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
@@ -52,58 +61,79 @@ export default function AuditPage() {
 
   const dateFmt = getDateLocale(locale);
 
-  /** Translate an action key to a localized label */
-  const translateAction = (action: AuditAction): string => {
-    const key = `audit_action_${action}` as TranslationKey;
-    try { return t(key); } catch { return action; }
-  };
-
-  /** Translate a detail key with argument interpolation */
-  const translateDetail = (entry: AuditEntry): string => {
-    const key = entry.detailKey as TranslationKey;
-    let text: string;
-    try { text = t(key); } catch { text = entry.detailKey; }
-    // Replace {0}, {1}, ... with detailArgs
-    if (entry.detailArgs) {
-      entry.detailArgs.forEach((arg, i) => {
-        text = text.replace(`{${i}}`, arg);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetchAuditEntries({ limit: 500 })
+      .then(result => {
+        if (!cancelled) {
+          setEntries(result.entries);
+          setLoading(false);
+        }
+      })
+      .catch(err => {
+        if (!cancelled) {
+          setError(err.message);
+          setLoading(false);
+        }
       });
-    }
-    return text;
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleRetry = () => {
+    setError(null);
+    setLoading(true);
+    fetchAuditEntries({ limit: 500 })
+      .then(result => { setEntries(result.entries); setLoading(false); })
+      .catch(err => { setError(err.message); setLoading(false); });
   };
 
-  // Filtered & sorted entries
+  // Filtered & sorted entries (client-side time range + category on fetched data)
   const filteredEntries = useMemo(() => {
     const rangeStart = getTimeRangeStart(timeRange);
-    const allowedActions = categoryFilter === 'all'
-      ? null
-      : ACTION_CATEGORIES[categoryFilter] ?? null;
+    const categoryFn = categoryFilter === 'all' ? null : PATH_CATEGORIES[categoryFilter] ?? null;
 
     return entries
       .filter((e) => {
         if (new Date(e.timestamp).getTime() < rangeStart) return false;
-        if (allowedActions && !allowedActions.includes(e.action)) return false;
+        if (categoryFn && !categoryFn(e)) return false;
         return true;
       })
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }, [entries, timeRange, categoryFilter]);
 
-  const handleClear = () => {
-    clearAuditLog();
-    setEntries([]);
-  };
-
-  const handleExportCsv = () => {
-    const headers = [t('auditTime'), t('auditUser'), t('auditAction'), t('auditDetail'), 'Resource'];
-    const rows = filteredEntries.map((e) => [
-      new Date(e.timestamp).toLocaleString(dateFmt, { dateStyle: 'short', timeStyle: 'medium' }),
-      e.user,
-      translateAction(e.action),
-      translateDetail(e),
-      e.resource ?? '',
-    ]);
-
-    downloadCsv(headers, rows, datedFilename('audit-log', 'csv'));
+  const handleExportCsv = async () => {
+    if (user?.role === 'admin') {
+      // Admin: fetch full server export
+      try {
+        const allEntries = await exportAuditLog();
+        const headers = ['Timestamp', 'Method', 'Path', 'User', 'Status', 'Duration (ms)'];
+        const rows = allEntries.map((e) => [
+          new Date(e.timestamp).toLocaleString(dateFmt, { dateStyle: 'short', timeStyle: 'medium' }),
+          e.method,
+          e.path,
+          e.user,
+          String(e.status),
+          String(e.duration_ms),
+        ]);
+        downloadCsv(headers, rows, datedFilename('audit-log-full', 'csv'));
+      } catch (err) {
+        console.error('Audit export failed:', err);
+      }
+    } else {
+      // Non-admin: export currently displayed entries
+      const headers = ['Timestamp', 'Method', 'Path', 'User', 'Status', 'Duration (ms)'];
+      const rows = filteredEntries.map((e) => [
+        new Date(e.timestamp).toLocaleString(dateFmt, { dateStyle: 'short', timeStyle: 'medium' }),
+        e.method,
+        e.path,
+        e.user,
+        String(e.status),
+        String(e.duration_ms),
+      ]);
+      downloadCsv(headers, rows, datedFilename('audit-log', 'csv'));
+    }
   };
 
   return (
@@ -121,7 +151,9 @@ export default function AuditPage() {
         <p className="text-sm text-gray-500">
           {t('auditEntries')}:{' '}
           <span className="font-semibold text-gray-900">
-            {filteredEntries.length === entries.length
+            {loading
+              ? '...'
+              : filteredEntries.length === entries.length
               ? entries.length
               : `${filteredEntries.length} ${t('auditFilteredOf')} ${entries.length}`}
           </span>
@@ -138,21 +170,12 @@ export default function AuditPage() {
           </button>
           <button
             onClick={handleExportCsv}
-            disabled={filteredEntries.length === 0}
+            disabled={filteredEntries.length === 0 || loading}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
             {t('auditExportCsv')}
           </button>
-          {user?.role === 'admin' && (
-            <button
-              onClick={handleClear}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-              {t('auditClear')}
-            </button>
-          )}
         </div>
       </div>
 
@@ -176,7 +199,7 @@ export default function AuditPage() {
                 <option value="30d">{t('auditLast30Days')}</option>
               </select>
             </div>
-            {/* Event type */}
+            {/* Event category */}
             <div>
               <label className="block text-xs font-medium text-gray-500 uppercase mb-1">
                 {t('auditFilterType')}
@@ -188,9 +211,9 @@ export default function AuditPage() {
               >
                 <option value="all">{t('auditFilterAll')}</option>
                 <option value="auth">{t('auditCategoryAuth')}</option>
-                <option value="views">{t('auditCategoryView')}</option>
-                <option value="quality">{t('auditCategoryQuality')}</option>
-                <option value="admin">{t('auditCategoryAdmin')}</option>
+                <option value="data">Data</option>
+                <option value="settings">{t('auditCategoryAdmin')}</option>
+                <option value="audit">Audit</option>
               </select>
             </div>
           </div>
@@ -199,7 +222,19 @@ export default function AuditPage() {
 
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        {filteredEntries.length === 0 ? (
+        {loading ? (
+          <div className="p-8 text-center text-gray-400">Loading...</div>
+        ) : error ? (
+          <div className="p-8 text-center">
+            <p className="text-red-600 mb-3">{error}</p>
+            <button
+              onClick={handleRetry}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
+        ) : filteredEntries.length === 0 ? (
           <div className="p-8 text-center text-gray-400">{t('auditEmpty')}</div>
         ) : (
           <div className="overflow-x-auto">
@@ -213,10 +248,16 @@ export default function AuditPage() {
                     {t('auditUser')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
-                    {t('auditAction')}
+                    Method
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
-                    {t('auditDetail')}
+                    Path
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    Duration (ms)
                   </th>
                 </tr>
               </thead>
@@ -234,16 +275,23 @@ export default function AuditPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${actionBadgeClass(entry.action)}`}
+                        className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${methodBadgeClass(entry.method)}`}
                       >
-                        {translateAction(entry.action)}
+                        {entry.method}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {translateDetail(entry)}
-                      {entry.resource && (
-                        <span className="ml-1 text-gray-400">({entry.resource})</span>
-                      )}
+                    <td className="px-4 py-3 text-gray-600 font-mono text-xs break-all">
+                      {entry.path}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${statusBadgeClass(entry.status)}`}
+                      >
+                        {entry.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 text-right font-mono">
+                      {entry.duration_ms}
                     </td>
                   </tr>
                 ))}
