@@ -1,0 +1,224 @@
+/**
+ * Auth API router: POST /api/auth/login, POST /api/auth/verify, GET /api/auth/config
+ *
+ * Implements two-step login with optional 2FA.
+ * Rate limiting: per-username in-memory Map with exponential backoff.
+ * OTP: fixed configurable code from settings.yaml — no otplib.
+ */
+
+import { Router } from 'express';
+import type { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import { getJwtSecret, getAuthConfig, loadUsers } from './initAuth.js';
+import type { AuthPayload } from './authMiddleware.js';
+
+// ---------------------------------------------------------------------------
+// Rate limiting state (in-memory, per username)
+// ---------------------------------------------------------------------------
+
+interface LockState {
+  count: number;
+  lockedUntil: number;
+}
+
+const loginAttempts = new Map<string, LockState>();
+
+function getLockState(username: string): LockState {
+  return loginAttempts.get(username) ?? { count: 0, lockedUntil: 0 };
+}
+
+function isLocked(state: LockState): boolean {
+  return state.lockedUntil > Date.now();
+}
+
+function recordFailure(username: string): LockState {
+  const state = getLockState(username);
+  const newCount = state.count + 1;
+  const { maxLoginAttempts } = getAuthConfig();
+  const lockedUntil = newCount >= maxLoginAttempts
+    ? Date.now() + Math.pow(2, newCount) * 1000
+    : 0;
+  const newState: LockState = { count: newCount, lockedUntil };
+  loginAttempts.set(username, newState);
+  return newState;
+}
+
+function resetAttempts(username: string): void {
+  loginAttempts.delete(username);
+}
+
+// ---------------------------------------------------------------------------
+// JWT helpers
+// ---------------------------------------------------------------------------
+
+/** Sign a full session JWT (10 min expiry per D-05). */
+function signSessionToken(username: string, role: string, centers: string[]): string {
+  const payload: Omit<AuthPayload, 'iat' | 'exp'> = {
+    sub: username,
+    preferred_username: username,
+    role,
+    centers,
+  };
+  return jwt.sign(payload, getJwtSecret(), { algorithm: 'HS256', expiresIn: '10m' });
+}
+
+/** Sign a challenge token for 2FA step 2 (2 min expiry, purpose='challenge'). */
+function signChallengeToken(username: string): string {
+  return jwt.sign(
+    { sub: username, purpose: 'challenge' },
+    getJwtSecret(),
+    { algorithm: 'HS256', expiresIn: '2m' },
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Router
+// ---------------------------------------------------------------------------
+
+export const authApiRouter = Router();
+
+/**
+ * POST /api/auth/login
+ *
+ * Step 1 of login. Validates bcrypt credentials.
+ * - If 2FA disabled: returns { token } (full session JWT)
+ * - If 2FA enabled: returns { challengeToken } (short-lived, purpose='challenge')
+ * - If account locked: returns 429 with retryAfterMs
+ * - On bad credentials: returns 401 with generic error (no username enumeration, T-02-05)
+ */
+authApiRouter.post('/api/auth/login', (req: Request, res: Response): void => {
+  const { username, password } = req.body as { username?: string; password?: string };
+
+  if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
+    res.status(400).json({ error: 'username and password are required' });
+    return;
+  }
+
+  const key = username.toLowerCase();
+  const state = getLockState(key);
+
+  // Check lock before any credential lookup
+  if (isLocked(state)) {
+    const retryAfterMs = state.lockedUntil - Date.now();
+    res.status(429).json({ error: 'Account locked', retryAfterMs });
+    return;
+  }
+
+  // Find user (case-insensitive)
+  const users = loadUsers();
+  const user = users.find((u) => u.username.toLowerCase() === key);
+
+  if (!user || !user.passwordHash) {
+    // Record failure even for unknown users (prevent timing-based enumeration)
+    recordFailure(key);
+    res.status(401).json({ error: 'Invalid credentials' });
+    return;
+  }
+
+  // Verify password
+  const valid = bcrypt.compareSync(password, user.passwordHash);
+  if (!valid) {
+    const newState = recordFailure(key);
+    if (isLocked(newState)) {
+      const retryAfterMs = newState.lockedUntil - Date.now();
+      res.status(429).json({ error: 'Account locked', retryAfterMs });
+      return;
+    }
+    res.status(401).json({ error: 'Invalid credentials' });
+    return;
+  }
+
+  // Successful login — reset attempts
+  resetAttempts(key);
+
+  const { twoFactorEnabled } = getAuthConfig();
+
+  if (twoFactorEnabled) {
+    // Return short-lived challenge token for OTP step
+    const challengeToken = signChallengeToken(user.username);
+    res.json({ challengeToken });
+  } else {
+    // Return full session JWT directly
+    const token = signSessionToken(user.username, user.role, user.centers);
+    res.json({ token });
+  }
+});
+
+/**
+ * POST /api/auth/verify
+ *
+ * Step 2 of login (2FA). Validates challenge token + OTP.
+ * OTP compared against fixed code from settings.yaml (no otplib).
+ * OTP attempts share the same lockout counter as password attempts (T-02-06).
+ */
+authApiRouter.post('/api/auth/verify', (req: Request, res: Response): void => {
+  const { challengeToken, otp } = req.body as { challengeToken?: string; otp?: string };
+
+  if (typeof challengeToken !== 'string' || typeof otp !== 'string' || !challengeToken || !otp) {
+    res.status(400).json({ error: 'challengeToken and otp are required' });
+    return;
+  }
+
+  // Verify challenge token
+  let sub: string;
+  try {
+    const payload = jwt.verify(challengeToken, getJwtSecret()) as { sub: string; purpose?: string };
+    if (payload.purpose !== 'challenge') {
+      res.status(401).json({ error: 'Invalid challenge token' });
+      return;
+    }
+    sub = payload.sub;
+  } catch {
+    res.status(401).json({ error: 'Invalid or expired challenge token' });
+    return;
+  }
+
+  const key = sub.toLowerCase();
+  const state = getLockState(key);
+
+  // Check lock (OTP brute-force shares counter with password attempts)
+  if (isLocked(state)) {
+    const retryAfterMs = state.lockedUntil - Date.now();
+    res.status(429).json({ error: 'Account locked', retryAfterMs });
+    return;
+  }
+
+  const { otpCode } = getAuthConfig();
+
+  if (otp !== otpCode) {
+    const newState = recordFailure(key);
+    if (isLocked(newState)) {
+      const retryAfterMs = newState.lockedUntil - Date.now();
+      res.status(429).json({ error: 'Account locked', retryAfterMs });
+      return;
+    }
+    res.status(401).json({ error: 'Invalid OTP' });
+    return;
+  }
+
+  // OTP valid — load user and issue full session JWT
+  resetAttempts(key);
+
+  const users = loadUsers();
+  const user = users.find((u) => u.username.toLowerCase() === key);
+
+  if (!user) {
+    res.status(401).json({ error: 'User not found' });
+    return;
+  }
+
+  const token = signSessionToken(user.username, user.role, user.centers);
+  res.json({ token });
+});
+
+/**
+ * GET /api/auth/config
+ *
+ * Public endpoint. Returns twoFactorEnabled so the LoginPage can decide
+ * whether to show the OTP field (D-02).
+ */
+authApiRouter.get('/api/auth/config', (_req: Request, res: Response): void => {
+  const { twoFactorEnabled } = getAuthConfig();
+  res.json({ twoFactorEnabled });
+});
