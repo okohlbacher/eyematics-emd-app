@@ -1,0 +1,292 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1100" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#dc2626"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrow-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#d97706"/>
+    </marker>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="1100" fill="#f8fafc" rx="8"/>
+
+  <!-- Title -->
+  <text x="700" y="32" text-anchor="middle" font-size="20" font-weight="700" fill="#0f172a">EyeMatics System Architecture — Four-Zone Model (Per Site)</text>
+  <text x="700" y="52" text-anchor="middle" font-size="11" fill="#64748b">DSF orchestrates inter-site data exchange | EMD is a local dashboard over locally available data</text>
+
+  <!-- ==================== ZONE 4: BROWSER/UI ==================== -->
+  <rect x="30" y="70" width="580" height="250" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="35" y="72" width="110" height="18" rx="3" fill="#3b82f6"/>
+  <text x="90" y="85" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">ZONE 4: BROWSER</text>
+  <text x="160" y="86" font-size="11" font-weight="600" fill="#1e40af">React SPA — queries only its own local backend</text>
+
+  <!-- Contexts -->
+  <rect x="50" y="100" width="130" height="42" rx="5" fill="#fff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="115" y="118" text-anchor="middle" font-size="9" font-weight="600" fill="#1e40af">AuthContext</text>
+  <text x="115" y="130" text-anchor="middle" font-size="7.5" fill="#64748b">Async login | JWT sessions</text>
+
+  <rect x="190" y="100" width="130" height="42" rx="5" fill="#fff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="255" y="118" text-anchor="middle" font-size="9" font-weight="600" fill="#1e40af">DataContext</text>
+  <text x="255" y="130" text-anchor="middle" font-size="7.5" fill="#64748b">Pre-filtered by centers</text>
+
+  <rect x="330" y="100" width="130" height="42" rx="5" fill="#fff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="395" y="118" text-anchor="middle" font-size="9" font-weight="600" fill="#1e40af">LanguageContext</text>
+  <text x="395" y="130" text-anchor="middle" font-size="7.5" fill="#64748b">DE / EN i18n</text>
+
+  <rect x="470" y="100" width="120" height="42" rx="5" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+  <text x="530" y="118" text-anchor="middle" font-size="9" font-weight="600" fill="#92400e">LoginPage</text>
+  <text x="530" y="130" text-anchor="middle" font-size="7.5" fill="#b45309">Server-side auth + 2FA</text>
+
+  <!-- Pages grid -->
+  <rect x="50" y="155" width="70" height="30" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="85" y="174" text-anchor="middle" font-size="7.5" font-weight="600" fill="#1e40af">Landing</text>
+  <rect x="125" y="155" width="70" height="30" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="160" y="174" text-anchor="middle" font-size="7.5" font-weight="600" fill="#1e40af">Cohort</text>
+  <rect x="200" y="155" width="70" height="30" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="235" y="174" text-anchor="middle" font-size="7.5" font-weight="600" fill="#1e40af">Analysis</text>
+  <rect x="275" y="155" width="70" height="30" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="310" y="174" text-anchor="middle" font-size="7.5" font-weight="600" fill="#1e40af">Case Detail</text>
+  <rect x="350" y="155" width="70" height="30" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="385" y="174" text-anchor="middle" font-size="7.5" font-weight="600" fill="#1e40af">Quality</text>
+  <rect x="425" y="155" width="70" height="30" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="460" y="174" text-anchor="middle" font-size="7.5" font-weight="600" fill="#1e40af">Doc Quality</text>
+  <rect x="500" y="155" width="50" height="30" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="525" y="174" text-anchor="middle" font-size="7.5" font-weight="600" fill="#1e40af">Admin</text>
+  <rect x="555" y="155" width="40" height="30" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="575" y="169" text-anchor="middle" font-size="7" font-weight="600" fill="#1e40af">Audit</text>
+  <text x="575" y="179" text-anchor="middle" font-size="6" fill="#3b82f6">read-only</text>
+
+  <!-- Services bar -->
+  <rect x="50" y="200" width="540" height="32" rx="4" fill="#fff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="60" y="215" font-size="8" font-weight="600" fill="#1e40af">Services:</text>
+  <text x="115" y="215" font-size="7.5" fill="#64748b">authHeaders (JWT Bearer) | auditService (read-only) | settingsService | issueService | fhirLoader</text>
+  <text x="60" y="226" font-size="7" fill="#dc2626">No audit write from client | No direct access to remote sites | No hardcoded credentials</text>
+
+  <!-- Zone boundary -->
+  <text x="320" y="258" text-anchor="middle" font-size="9" font-weight="600" fill="#64748b">HTTPS (JWT Bearer Token via authHeaders.ts)</text>
+  <line x1="50" y1="266" x2="590" y2="266" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="6,3"/>
+
+  <!-- ==================== ZONE 3: LOCAL EMD BACKEND ==================== -->
+  <rect x="30" y="280" width="580" height="340" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="35" y="282" width="170" height="18" rx="3" fill="#16a34a"/>
+  <text x="120" y="295" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">ZONE 3: LOCAL EMD BACKEND</text>
+  <text x="220" y="296" font-size="11" font-weight="600" fill="#166534">Express 5 server — reads only local repository</text>
+
+  <!-- Middleware chain -->
+  <rect x="50" y="308" width="540" height="38" rx="5" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="320" y="322" text-anchor="middle" font-size="9" font-weight="600" fill="#166534">Middleware Chain (mounted on /api/*)</text>
+  <text x="320" y="335" text-anchor="middle" font-size="7.5" fill="#4ade80">express.json(/auth/*) → auditMiddleware (auto-log + redact) → authMiddleware (JWT + challenge-token rejection)</text>
+
+  <!-- Auth API -->
+  <rect x="50" y="355" width="165" height="38" rx="4" fill="#fff" stroke="#86efac" stroke-width="1"/>
+  <text x="132" y="370" text-anchor="middle" font-size="8.5" font-weight="600" fill="#166534">authApiRouter</text>
+  <text x="132" y="383" text-anchor="middle" font-size="7" fill="#64748b">login | verify | config | users</text>
+
+  <!-- Audit API -->
+  <rect x="225" y="355" width="165" height="38" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="307" y="370" text-anchor="middle" font-size="8.5" font-weight="600" fill="#991b1b">auditApiRouter (read-only)</text>
+  <text x="307" y="383" text-anchor="middle" font-size="7" fill="#dc2626">GET only | No POST/PUT/DELETE</text>
+
+  <!-- Other APIs -->
+  <rect x="400" y="355" width="185" height="38" rx="4" fill="#fff" stroke="#86efac" stroke-width="1"/>
+  <text x="492" y="370" text-anchor="middle" font-size="8.5" font-weight="600" fill="#166534">Issue + Settings APIs</text>
+  <text x="492" y="383" text-anchor="middle" font-size="7" fill="#64748b">Feedback reports | YAML config</text>
+
+  <!-- Infrastructure row -->
+  <rect x="50" y="403" width="120" height="32" rx="4" fill="#fff" stroke="#86efac" stroke-width="0.75"/>
+  <text x="110" y="423" text-anchor="middle" font-size="8" font-weight="600" fill="#166534">FHIR Proxy</text>
+
+  <rect x="180" y="403" width="150" height="32" rx="4" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="0.75"/>
+  <text x="255" y="423" text-anchor="middle" font-size="8" font-weight="600" fill="#166534">Static + SPA Fallback</text>
+
+  <rect x="340" y="403" width="120" height="32" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="0.75"/>
+  <text x="400" y="418" text-anchor="middle" font-size="8" font-weight="600" fill="#166534">initAuth</text>
+  <text x="400" y="430" text-anchor="middle" font-size="6.5" fill="#64748b">JWT secret + bcrypt</text>
+
+  <rect x="470" y="403" width="120" height="32" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="0.75"/>
+  <text x="530" y="418" text-anchor="middle" font-size="8" font-weight="600" fill="#166534">initAuditDb</text>
+  <text x="530" y="430" text-anchor="middle" font-size="6.5" fill="#64748b">SQLite + WAL + purge</text>
+
+  <!-- Storage -->
+  <rect x="50" y="448" width="540" height="65" rx="5" fill="#fefce8" stroke="#fde68a" stroke-width="1"/>
+  <text x="60" y="465" font-size="8.5" font-weight="600" fill="#854d0e">Server-Side Storage (data/ directory, configurable via server.dataDir)</text>
+
+  <rect x="60" y="473" width="125" height="30" rx="3" fill="#fff" stroke="#fbbf24" stroke-width="0.5"/>
+  <text x="122" y="487" text-anchor="middle" font-size="8" font-weight="600" fill="#854d0e">audit.db (SQLite)</text>
+  <text x="122" y="498" text-anchor="middle" font-size="6.5" fill="#a16207">WAL | configurable retention</text>
+
+  <rect x="195" y="473" width="125" height="30" rx="3" fill="#fff" stroke="#fbbf24" stroke-width="0.5"/>
+  <text x="257" y="487" text-anchor="middle" font-size="8" font-weight="600" fill="#854d0e">users.json</text>
+  <text x="257" y="498" text-anchor="middle" font-size="6.5" fill="#a16207">bcrypt hashes + roles</text>
+
+  <rect x="330" y="473" width="125" height="30" rx="3" fill="#fff" stroke="#fbbf24" stroke-width="0.5"/>
+  <text x="392" y="487" text-anchor="middle" font-size="8" font-weight="600" fill="#854d0e">jwt-secret.txt</text>
+  <text x="392" y="498" text-anchor="middle" font-size="6.5" fill="#a16207">HS256 key (mode 0600)</text>
+
+  <rect x="465" y="473" width="120" height="30" rx="3" fill="#fff" stroke="#fbbf24" stroke-width="0.5"/>
+  <text x="525" y="487" text-anchor="middle" font-size="8" font-weight="600" fill="#854d0e">feedback/*.json</text>
+  <text x="525" y="498" text-anchor="middle" font-size="6.5" fill="#a16207">Issue reports</text>
+
+  <!-- Config -->
+  <rect x="50" y="523" width="540" height="22" rx="3" fill="#fef9c3" stroke="#fde68a" stroke-width="0.5"/>
+  <text x="320" y="538" text-anchor="middle" font-size="7.5" font-weight="600" fill="#854d0e">settings.yaml — server (port, host, dataDir) | auth (2FA, attempts, OTP) | audit (retentionDays) | dataSource | thresholds</text>
+
+  <!-- Audit note -->
+  <rect x="50" y="553" width="540" height="18" rx="3" fill="#fef2f2" stroke="#fca5a5" stroke-width="0.5"/>
+  <text x="320" y="565" text-anchor="middle" font-size="7" font-weight="700" fill="#dc2626">Audit: server middleware writes only | auto-purge configurable | body redaction (password, OTP, challengeToken) | no client write path</text>
+
+  <!-- Arrow from Zone 4 to Zone 3 -->
+  <line x1="320" y1="240" x2="320" y2="308" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="4,2"/>
+
+  <!-- ==================== ZONE 2: DSF SITE NODE ==================== -->
+  <rect x="660" y="70" width="710" height="260" rx="8" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="665" y="72" width="150" height="18" rx="3" fill="#7c3aed"/>
+  <text x="740" y="85" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">ZONE 2: DSF SITE NODE</text>
+  <text x="830" y="86" font-size="11" font-weight="600" fill="#5b21b6">Inter-site orchestration layer — FHIR R4 + BPMN 2.0</text>
+
+  <!-- DSF FHIR Server -->
+  <rect x="680" y="100" width="250" height="80" rx="6" fill="#fff" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="805" y="120" text-anchor="middle" font-size="10" font-weight="600" fill="#5b21b6">DSF FHIR Server</text>
+  <text x="805" y="135" text-anchor="middle" font-size="8" fill="#64748b">Network-accessible endpoint</text>
+  <text x="805" y="148" text-anchor="middle" font-size="8" fill="#64748b">Organization + Endpoint resources</text>
+  <text x="805" y="161" text-anchor="middle" font-size="8" fill="#64748b">Site certificates + mutual TLS</text>
+  <text x="805" y="174" text-anchor="middle" font-size="7" fill="#7c3aed">Receives Tasks from other sites</text>
+
+  <!-- DSF BPE -->
+  <rect x="950" y="100" width="250" height="80" rx="6" fill="#fff" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="1075" y="120" text-anchor="middle" font-size="10" font-weight="600" fill="#5b21b6">BPE (Business Process Engine)</text>
+  <text x="1075" y="135" text-anchor="middle" font-size="8" fill="#64748b">BPMN 2.0 workflow orchestration</text>
+  <text x="1075" y="148" text-anchor="middle" font-size="8" fill="#64748b">Task-based cross-site coordination</text>
+  <text x="1075" y="161" text-anchor="middle" font-size="8" fill="#64748b">Local + remote step execution</text>
+  <text x="1075" y="174" text-anchor="middle" font-size="7" fill="#7c3aed">Encrypted data transfer patterns</text>
+
+  <!-- DSF Workflows -->
+  <rect x="680" y="195" width="520" height="55" rx="5" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="0.75"/>
+  <text x="690" y="212" font-size="8.5" font-weight="600" fill="#5b21b6">Cross-Site Workflows (DSF-managed)</text>
+  <text x="690" y="226" font-size="7.5" fill="#64748b">1. Feasibility/cohort counts — distributed query, aggregate answers only</text>
+  <text x="690" y="238" font-size="7.5" fill="#64748b">2. Data export — pseudonymized FHIR Bundle via encrypted transfer | 3. Distributed refresh — push updates to local repositories</text>
+
+  <!-- DSF Adapter (future) -->
+  <rect x="680" y="260" width="520" height="38" rx="5" fill="#ede9fe" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="940" y="278" text-anchor="middle" font-size="9" font-weight="600" fill="#5b21b6">DSF Adapter Service (future v2)</text>
+  <text x="940" y="292" text-anchor="middle" font-size="7.5" fill="#7c3aed">Maps EMD requests → DSF Tasks | Tracks process state | Imports returned data | Surfaces workflow status</text>
+
+  <!-- Arrow DSF FHIR <-> BPE -->
+  <line x1="930" y1="140" x2="950" y2="140" stroke="#7c3aed" stroke-width="1.5"/>
+
+  <!-- ==================== ZONE 1: CLINICAL/SOURCE ==================== -->
+  <rect x="660" y="350" width="710" height="170" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="665" y="352" width="195" height="18" rx="3" fill="#dc2626"/>
+  <text x="762" y="365" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">ZONE 1: CLINICAL/SOURCE ZONE</text>
+  <text x="875" y="366" font-size="11" font-weight="600" fill="#991b1b">Local source systems, ETL, pseudonymization</text>
+
+  <rect x="680" y="380" width="200" height="55" rx="6" fill="#fff" stroke="#fca5a5" stroke-width="1"/>
+  <text x="780" y="400" text-anchor="middle" font-size="9" font-weight="600" fill="#991b1b">Clinical Source Systems</text>
+  <text x="780" y="413" text-anchor="middle" font-size="7.5" fill="#64748b">KIS / HIS / EHR</text>
+  <text x="780" y="425" text-anchor="middle" font-size="7.5" fill="#64748b">Ophthalmic data, IVOM records</text>
+
+  <rect x="900" y="380" width="150" height="55" rx="6" fill="#fff" stroke="#fca5a5" stroke-width="1"/>
+  <text x="975" y="400" text-anchor="middle" font-size="9" font-weight="600" fill="#991b1b">ETL + Pseudonymization</text>
+  <text x="975" y="413" text-anchor="middle" font-size="7.5" fill="#64748b">EyeMatics Kerndatensatz</text>
+  <text x="975" y="425" text-anchor="middle" font-size="7.5" fill="#64748b">FHIR R4 transformation</text>
+
+  <rect x="1070" y="380" width="280" height="55" rx="6" fill="#fff" stroke="#fca5a5" stroke-width="1"/>
+  <text x="1210" y="400" text-anchor="middle" font-size="9" font-weight="600" fill="#991b1b">Local EyeMatics FHIR Repository</text>
+  <text x="1210" y="413" text-anchor="middle" font-size="7.5" fill="#64748b">Blaze FHIR Server (site-local)</text>
+  <text x="1210" y="425" text-anchor="middle" font-size="7.5" fill="#64748b">Patient, Observation, Procedure, Organization</text>
+
+  <!-- Data flow label in zone 1 -->
+  <rect x="680" y="448" width="670" height="22" rx="3" fill="#fee2e2" stroke="#fca5a5" stroke-width="0.5"/>
+  <text x="1015" y="463" text-anchor="middle" font-size="7.5" font-weight="600" fill="#991b1b">Data flow: Source Systems → ETL/Pseudonymization → Local FHIR Repository → DSF (for inter-site) + EMD Backend (for local dashboard)</text>
+
+  <!-- Arrows between zones -->
+  <line x1="1210" y1="380" x2="1075" y2="195" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrow-purple)" stroke-dasharray="4,2"/>
+  <text x="1160" y="285" font-size="7" font-weight="600" fill="#7c3aed" transform="rotate(-50 1160 285)">FHIR data</text>
+
+  <line x1="1070" y1="410" x2="590" y2="420" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arrow-green)" stroke-dasharray="4,2"/>
+  <text x="830" y="405" font-size="7.5" font-weight="600" fill="#16a34a">Local FHIR data (read-only)</text>
+
+  <!-- Zone 2 ↔ Remote sites -->
+  <rect x="1220" y="130" width="130" height="40" rx="5" fill="#f5f3ff" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <text x="1285" y="148" text-anchor="middle" font-size="8.5" font-weight="600" fill="#5b21b6">Other Sites</text>
+  <text x="1285" y="162" text-anchor="middle" font-size="7" fill="#7c3aed">via DSF network</text>
+  <line x1="1200" y1="150" x2="1220" y2="150" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
+
+  <!-- ==================== KEYCLOAK ==================== -->
+  <rect x="660" y="540" width="340" height="60" rx="6" fill="#fff" stroke="#fca5a5" stroke-width="1" filter="url(#shadow)"/>
+  <text x="830" y="562" text-anchor="middle" font-size="10" font-weight="600" fill="#991b1b">Keycloak (Optional)</text>
+  <text x="830" y="576" text-anchor="middle" font-size="8" fill="#64748b">OIDC / JWT Auth | Realm: eyematics | RS256</text>
+  <text x="830" y="590" text-anchor="middle" font-size="7" fill="#dc2626">Phase 5: prepare middleware | Same JWT payload as local auth</text>
+
+  <line x1="660" y1="570" x2="590" y2="480" stroke="#3b82f6" stroke-width="1" marker-end="url(#arrow-blue)" stroke-dasharray="4,2"/>
+
+  <!-- ==================== SECURITY + PHASES ==================== -->
+  <rect x="30" y="640" width="580" height="215" rx="8" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="50" y="663" font-size="12" font-weight="700" fill="#6b21a8">Security Model + Responsibility Split</text>
+
+  <text x="50" y="685" font-size="9" font-weight="600" fill="#dc2626">DSF Owns:</text>
+  <text x="50" y="698" font-size="8" fill="#64748b">Site-to-site trust | Process authorization | Transport security (mTLS) | Workflow traceability | Approval gates</text>
+
+  <text x="50" y="718" font-size="9" font-weight="600" fill="#166534">EMD Owns:</text>
+  <text x="50" y="731" font-size="8" fill="#64748b">User-facing authentication (bcrypt + JWT with 2FA, rate limiting) | Tamper-proof audit trail (SQLite, server-writes only)</text>
+  <text x="50" y="744" font-size="8" fill="#64748b">Center-based data restriction (server-enforced) | Visualization | Local business logic</text>
+
+  <text x="50" y="764" font-size="9" font-weight="600" fill="#5b21b6">Architectural Principle:</text>
+  <text x="50" y="777" font-size="8" fill="#64748b">EMD never talks to remote hospitals. Express reads only from local FHIR store.</text>
+  <text x="50" y="790" font-size="8" fill="#64748b">DSF upstream populates local store. Clean separation: orchestration vs. presentation.</text>
+
+  <text x="50" y="810" font-size="9" font-weight="600" fill="#854d0e">Target Pattern (v1): Central Consolidation</text>
+  <text x="50" y="823" font-size="8" fill="#64748b">Each site sends pseudonymized FHIR payloads via DSF → local consolidated repository → EMD reads from that.</text>
+  <text x="50" y="836" font-size="8" fill="#94a3b8">Future: Pattern B (federated query) for strict data-minimization scenarios.</text>
+
+  <!-- ==================== PHASES ==================== -->
+  <rect x="660" y="640" width="710" height="215" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="680" y="663" font-size="12" font-weight="700" fill="#334155">Implementation Phases + Data Flows</text>
+
+  <rect x="680" y="675" width="12" height="12" rx="2" fill="#22c55e"/>
+  <text x="700" y="686" font-size="8.5" font-weight="600" fill="#166534">Phase 1: Production Express Backend ✓</text>
+  <text x="700" y="697" font-size="7.5" fill="#64748b">Express 5, FHIR proxy (http-proxy-middleware), SPA fallback, npm start — COMPLETE</text>
+
+  <rect x="680" y="705" width="12" height="12" rx="2" fill="#22c55e"/>
+  <text x="700" y="716" font-size="8.5" font-weight="600" fill="#166534">Phase 2: Server-Side Auth + Audit ✓</text>
+  <text x="700" y="727" font-size="7.5" fill="#64748b">bcrypt login, JWT (HS256), 2FA, rate limiting, SQLite audit (immutable, auto-purge, body redaction) — COMPLETE</text>
+
+  <rect x="680" y="735" width="12" height="12" rx="2" fill="#f59e0b"/>
+  <text x="700" y="746" font-size="8.5" font-weight="600" fill="#92400e">Phase 3: Server-Side Users + Data</text>
+  <text x="700" y="757" font-size="7.5" fill="#64748b">User CRUD API, quality flags, saved searches, excluded/reviewed cases — NEXT</text>
+
+  <rect x="680" y="765" width="12" height="12" rx="2" fill="#ef4444"/>
+  <text x="700" y="776" font-size="8.5" font-weight="600" fill="#991b1b">Phase 4: Center Restriction (Server-Enforced)</text>
+  <text x="700" y="787" font-size="7.5" fill="#64748b">Server filters data before client sees it — unauthorized center data never on the wire</text>
+
+  <rect x="680" y="795" width="12" height="12" rx="2" fill="#8b5cf6"/>
+  <text x="700" y="806" font-size="8.5" font-weight="600" fill="#5b21b6">Phase 5: Keycloak Preparation</text>
+  <text x="700" y="817" font-size="7.5" fill="#64748b">JWKS validation, claim mapping, docs — same JWT payload, different signer</text>
+
+  <!-- Key data flows -->
+  <text x="680" y="840" font-size="9" font-weight="600" fill="#334155">Key Data Flows:</text>
+  <text x="690" y="853" font-size="7.5" fill="#64748b">1. Login: POST /api/auth/login → bcrypt → JWT { sub, role, centers } → sessionStorage → Bearer header on all requests</text>
+  <text x="690" y="866" font-size="7.5" fill="#64748b">2. Audit: auditMiddleware intercepts every /api/* call → res.on('finish') → INSERT audit_log (redacted) → no client write path</text>
+  <text x="690" y="879" font-size="7.5" fill="#64748b">3. Data: JWT Bearer → authMiddleware (validates + rejects challenge tokens) → handler → response</text>
+  <text x="690" y="892" font-size="7.5" fill="#64748b">4. DSF: Source → ETL → Local FHIR Repo ← DSF BPE (cross-site sync) | EMD reads local repo only</text>
+
+  <!-- ==================== SITE BOUNDARY ==================== -->
+  <rect x="15" y="60" width="1370" height="470" rx="12" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="8,4"/>
+  <text x="700" y="1090" text-anchor="middle" font-size="9" fill="#94a3b8">Dashed outline = single site boundary — each university hospital runs this full stack independently</text>
+</svg>
