@@ -20,6 +20,11 @@
 **Requirements:** AUDIT-01, AUDIT-02, AUDIT-09, AUTH-05 (re-verify), USER-13 (formal verification)
 **Gap Closure:** Closes integration and flow gaps from audit
 **Depends on:** Phase 2
+**Plans:** 2 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Fix 3 integration bugs (body capture, time filters, settings validator)
+- [ ] 03-02-PLAN.md — Install vitest, extract rate limiting, write automated tests
 
 ### Phase 4: User Management & Data Persistence
 **Goal:** Server-side user CRUD via API, server-side data storage replacing localStorage, AdminPage wired to API
