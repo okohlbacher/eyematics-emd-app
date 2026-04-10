@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
+import { initKeycloakAuth } from './keycloakAuth.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -76,6 +77,17 @@ export function initAuth(dataDir: string, settings: Record<string, unknown>): vo
     maxLoginAttempts: typeof authSection.maxLoginAttempts === 'number' ? authSection.maxLoginAttempts : 5,
     otpCode: typeof authSection.otpCode === 'string' ? authSection.otpCode : '123456',
   };
+
+  // Parse auth provider and initialize Keycloak if needed
+  const provider = typeof authSection.provider === 'string' ? authSection.provider : 'local';
+  if (provider === 'keycloak') {
+    const kc = (authSection.keycloak ?? {}) as Record<string, unknown>;
+    if (typeof kc.issuer !== 'string' || !kc.issuer) {
+      throw new Error('[initAuth] auth.keycloak.issuer is required when auth.provider=keycloak');
+    }
+    initKeycloakAuth(kc.issuer);
+    console.log(`[initAuth] Keycloak mode enabled. JWKS: ${kc.issuer}/protocol/openid-connect/certs`);
+  }
 
   // Migrate users.json: add bcrypt passwordHash for any user missing it
   if (fs.existsSync(_usersFile)) {
