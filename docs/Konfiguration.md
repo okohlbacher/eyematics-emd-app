@@ -21,6 +21,9 @@ Alle Änderungen, die über die Settings-Seite im UI vorgenommen werden, werden 
 # EyeMatics Clinical Demonstrator — Application Settings
 # ──────────────────────────────────────────────────────────────
 
+# Zwei-Faktor-Authentisierung (OTP)
+twoFactorEnabled: true
+
 # Therapieabbruch-Schwellenwerte (Tage)
 therapyInterrupterDays: 120   # Therapie-Unterbrecher (t)
 therapyBreakerDays: 365       # Therapie-Abbrecher (t')
@@ -29,54 +32,17 @@ therapyBreakerDays: 365       # Therapie-Abbrecher (t')
 dataSource:
   type: local
   blazeUrl: http://localhost:8080/fhir
-
-# Express-Server-Konfiguration
-server:
-  port: 3000
-  host: "0.0.0.0"
-  dataDir: "./data"
-
-# Authentisierung
-auth:
-  twoFactorEnabled: true
-  maxLoginAttempts: 5
-  otpCode: "123456"
-
-# Audit-Log
-audit:
-  retentionDays: 90
 ```
 
 ### Parameter im Detail
 
 | Parameter | Typ | Default | Beschreibung |
 |-----------|-----|---------|--------------|
+| `twoFactorEnabled` | `boolean` | `true` | Aktiviert/deaktiviert den OTP-Schritt beim Login. Bei `false` entfällt die 2FA-Eingabe. Änderungen werden im Audit-Log protokolliert. |
 | `therapyInterrupterDays` | `number` | `120` | Zeitkriterium t in Tagen für die Kennzeichnung als Therapie-Unterbrecher. Patienten ohne Injektion innerhalb von t Tagen werden als Unterbrecher markiert. |
 | `therapyBreakerDays` | `number` | `365` | Zeitkriterium t' in Tagen für die Kennzeichnung als Therapie-Abbrecher. Patienten ohne Injektion innerhalb von t' Tagen werden als Abbrecher markiert. |
 | `dataSource.type` | `"local"` \| `"blaze"` | `"local"` | Art der Datenquelle. `local`: JSON-Dateien aus `public/data/`. `blaze`: Blaze FHIR Server via REST API. |
-| `dataSource.blazeUrl` | `string` | `http://localhost:8080/fhir` | URL des Blaze FHIR Servers. Nur relevant bei `dataSource.type: blaze`. Der Zugriff erfolgt über einen Proxy (Vite im Dev-Modus, Express in Produktion), um CORS-Probleme zu vermeiden. |
-
-### Server-Parameter (`server.*`)
-
-| Parameter | Typ | Default | Beschreibung |
-|-----------|-----|---------|--------------|
-| `server.port` | `number` | `3000` | Server-Port |
-| `server.host` | `string` | `"0.0.0.0"` | Server-Host (Bindungsadresse) |
-| `server.dataDir` | `string` | `"./data"` | Verzeichnis für persistente Daten (`users.json`, `audit.db`, `jwt-secret.txt`) |
-
-### Authentisierungs-Parameter (`auth.*`)
-
-| Parameter | Typ | Default | Beschreibung |
-|-----------|-----|---------|--------------|
-| `auth.twoFactorEnabled` | `boolean` | `true` | Aktiviert OTP-Schritt beim Login. Bei `false` entfällt die 2FA-Eingabe. Änderungen werden im Audit-Log protokolliert. |
-| `auth.maxLoginAttempts` | `number` | `5` | Maximale Fehlversuche vor Sperrung |
-| `auth.otpCode` | `string` | `"123456"` | Fester OTP-Code für Demonstrator-Modus |
-
-### Audit-Parameter (`audit.*`)
-
-| Parameter | Typ | Default | Beschreibung |
-|-----------|-----|---------|--------------|
-| `audit.retentionDays` | `number` | `90` | Aufbewahrungsfrist für Audit-Einträge in Tagen. Ältere Einträge werden automatisch beim Serverstart und täglich gelöscht. |
+| `dataSource.blazeUrl` | `string` | `http://localhost:8080/fhir` | URL des Blaze FHIR Servers. Nur relevant bei `dataSource.type: blaze`. Der Zugriff erfolgt über einen Vite-Server-Proxy, um CORS-Probleme zu vermeiden. |
 
 ### Wertebereichsprüfung
 
@@ -104,11 +70,10 @@ Die Änderungen werden sofort in `settings.yaml` zurückgeschrieben und sind bei
 nano public/settings.yaml
 
 # Anwendung neu starten, damit die Änderungen geladen werden
-npm run dev       # Entwicklungsmodus
-npm start         # Produktionsmodus
+npm run dev
 ```
 
-> **Hinweis:** Bei manueller Bearbeitung muss die YAML-Syntax korrekt sein. Ungültige YAML-Dateien führen dazu, dass die Standardwerte verwendet werden (Dev-Modus) bzw. der Server den Start verweigert (Produktionsmodus).
+> **Hinweis:** Bei manueller Bearbeitung muss die YAML-Syntax korrekt sein. Ungültige YAML-Dateien führen dazu, dass die Standardwerte verwendet werden.
 
 ## Export und Import
 
@@ -125,36 +90,19 @@ Die aktuelle Konfiguration kann als YAML-Datei heruntergeladen werden:
 ```
 Browser (UI)
     ↓ PUT /api/settings (YAML Body)
-Express Server (server/index.ts) bzw. Vite Dev Server (settingsApi Plugin)
+Vite Dev Server (settingsApi Plugin)
     ↓ fs.writeFileSync()
 public/settings.yaml
     ↑ GET /api/settings
 Browser (UI)
 ```
 
-Die Settings-API wird in beiden Betriebsmodi bereitgestellt:
-- **Entwicklung:** Vite Server Plugin (`server/settingsApi.ts`)
-- **Produktion:** Express Server (`server/index.ts`), gestartet via `npm start`
-
-Alle API-Endpunkte (`/api/settings`, `/api/auth/*`, `/api/audit`, `/api/issues`) stehen sowohl im Entwicklungs- als auch im Produktionsbetrieb zur Verfügung.
+Die Settings-API wird als Vite Server Plugin bereitgestellt (`server/settingsApi.ts`). In einer Produktionsumgebung muss ein entsprechender Endpunkt im Web-Server konfiguriert werden.
 
 ## Produktionsbetrieb
 
-Der Produktionsbetrieb wird über den integrierten Express-Server bereitgestellt:
+Im Produktionsbetrieb (statischer Build mit `npm run build`) steht die Settings-API nicht zur Verfügung. In diesem Fall:
 
-```bash
-# Build erstellen und Produktionsserver starten
-npm run build && npm start
-```
-
-Der Express-Server (`server/index.ts`) stellt alle APIs bereit:
-- `/api/settings` — Konfiguration lesen und schreiben
-- `/api/auth/*` — Authentisierung (Login, OTP-Verifizierung)
-- `/api/audit` — Audit-Log abfragen und exportieren
-- `/api/issues` — Issue-Verwaltung
-- `/fhir` — FHIR-Proxy zum Blaze Server
-
-Persistente Daten werden im Verzeichnis `data/` gespeichert (konfigurierbar über `server.dataDir`):
-- `users.json` — Benutzerdaten mit bcrypt-Passwort-Hashes
-- `audit.db` — SQLite-Datenbank für Audit-Einträge
-- `jwt-secret.txt` — Automatisch generierter JWT-Signaturschlüssel
+1. Konfigurieren Sie `settings.yaml` vor dem Build.
+2. Alternativ: Stellen Sie einen eigenen REST-Endpunkt bereit, der `GET /api/settings` und `PUT /api/settings` unterstützt.
+3. Die Anwendung fällt automatisch auf das statische Lesen von `/settings.yaml` zurück, wenn die API nicht erreichbar ist (dann ohne Rückschreibung).

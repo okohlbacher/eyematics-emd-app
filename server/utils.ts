@@ -1,10 +1,5 @@
 /**
- * Shared utilities for Vite server plugins and Express handlers.
- *
- * NOTE (AUTH-08): validateAuth() and KNOWN_USERS have been removed.
- * Authentication is now handled by server/authMiddleware.ts (JWT validation)
- * and server/authApi.ts. All /api/* routes are protected by authMiddleware
- * mounted in server/index.ts before any route handlers.
+ * Shared utilities for Vite server plugins.
  */
 
 /** Maximum request body size in bytes (10 MB). */
@@ -27,17 +22,61 @@ export function readBody(req: import('http').IncomingMessage, maxSize = MAX_BODY
       }
       data += chunk.toString();
     });
-    req.on('end', () => {
-      // Attach raw body to req for audit middleware capture (Bug 1 fix).
-      // Type augmentation in server/types.d.ts makes this type-safe.
-      // The cast to import('express').Request is safe because Express Request
-      // extends IncomingMessage and _capturedBody is declared on it.
-      (req as import('express').Request)._capturedBody = data;
-      resolve(data);
-    });
+    req.on('end', () => resolve(data));
     req.on('error', reject);
   });
 }
+
+/**
+ * Validate a Bearer token from the Authorization header.
+ * Returns the decoded user object if valid, or null.
+ *
+ * Expected format: `Authorization: Bearer <base64(JSON({ username, role }))>`
+ *
+ * IMPORTANT: This validates the token against a known user list for the demonstrator.
+ * In production, use signed JWTs or server-side sessions.
+ */
+export function validateAuth(
+  req: import('http').IncomingMessage,
+  requiredRole?: string,
+): { username: string; role: string } | null {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+
+  try {
+    const token = authHeader.slice(7);
+    const decoded = JSON.parse(Buffer.from(token, 'base64').toString('utf-8'));
+    if (!decoded || typeof decoded.username !== 'string' || typeof decoded.role !== 'string') {
+      return null;
+    }
+    // Validate username AND role against the known demonstrator user list
+    const knownUser = KNOWN_USERS[decoded.username.toLowerCase()];
+    if (!knownUser) {
+      return null;
+    }
+    // Verify the claimed role matches the actual role — prevents role forgery
+    if (decoded.role !== knownUser.role) {
+      return null;
+    }
+    if (requiredRole && decoded.role !== requiredRole) {
+      return null;
+    }
+    return decoded;
+  } catch {
+    return null;
+  }
+}
+
+/** Known users with their roles for token validation (must match AuthContext defaults). */
+const KNOWN_USERS: Record<string, { role: string }> = {
+  admin:        { role: 'admin' },
+  forscher1:    { role: 'researcher' },
+  forscher2:    { role: 'researcher' },
+  epidemiologe: { role: 'epidemiologist' },
+  kliniker:     { role: 'clinician' },
+  diz_manager:  { role: 'data_manager' },
+  klinikleitung:{ role: 'clinic_lead' },
+};
 
 /**
  * Send a JSON error response with a generic message.

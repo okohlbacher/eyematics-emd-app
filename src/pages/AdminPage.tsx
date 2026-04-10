@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import type { TranslationKey } from '../i18n/translations';
+import { usePageAudit } from '../hooks/usePageAudit';
 import { getDateLocale } from '../utils/dateFormat';
 import { UserPlus, Trash2, Shield, ShieldCheck, Search, ArrowUpDown, Filter, Microscope, Stethoscope, Database, Building2 } from 'lucide-react';
 import type { ManagedUser, UserRole } from '../context/AuthContext';
@@ -39,6 +40,8 @@ type SortDir = 'asc' | 'desc';
 export default function AdminPage() {
   const { user, managedUsers, addManagedUser, removeManagedUser } = useAuth();
   const { locale, t } = useLanguage();
+
+  usePageAudit('view_admin', 'audit_detail_view_admin');
 
   const dateFmt = getDateLocale(locale);
 

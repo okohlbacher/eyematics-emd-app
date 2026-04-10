@@ -1,6 +1,6 @@
 # Benutzerhandbuch — EyeMatics Klinischer Demonstrator (EMD)
 
-**Version 1.1 — Stand: 10.04.2026**
+**Version 1.0 — Stand: 09.04.2026**
 
 ---
 
@@ -24,28 +24,14 @@ Der EyeMatics Klinische Demonstrator (EMD) ist ein webbasiertes Dashboard zur An
 
 1. Öffnen Sie die EMD-URL in Ihrem Browser.
 2. Geben Sie Ihren **Benutzernamen** und Ihr **Passwort** ein.
-3. Klicken Sie auf **Weiter**. Die Zugangsdaten werden serverseitig validiert (`POST /api/auth/login`); das Passwort wird dabei gegen einen bcrypt-Hash geprüft.
+3. Klicken Sie auf **Weiter**.
 4. Falls die Zwei-Faktor-Authentisierung aktiviert ist: Geben Sie den **OTP-Code** ein und klicken Sie auf **Anmelden**.
 5. Sie gelangen zur Startseite (Landing Page).
 
-#### Demo-Zugangsdaten
-
-Im Demonstrator-Modus sind folgende Benutzerkonten vorkonfiguriert:
-
-| Benutzername | Passwort | OTP | Rolle |
-|---|---|---|---|
-| admin | `changeme2025!` | `123456` | IT-Administrator |
-| forscher1 | `changeme2025!` | `123456` | Forscher/in |
-| forscher2 | `changeme2025!` | `123456` | Forscher/in |
-| epidemiologe | `changeme2025!` | `123456` | Epidemiolog/in |
-| kliniker | `changeme2025!` | `123456` | Kliniker/in |
-| diz_manager | `changeme2025!` | `123456` | DIZ Data Manager |
-| klinikleitung | `changeme2025!` | `123456` | Klinikleitung |
-
 **Fehlgeschlagene Anmeldung:**
-- Bei falschem Passwort oder unbekanntem Benutzernamen wird eine Fehlermeldung angezeigt. Die Fehlermeldung ist bewusst generisch gehalten und verrät nicht, ob der Benutzername existiert.
+- Bei falschem Passwort oder unbekanntem Benutzernamen wird eine Fehlermeldung angezeigt.
 - Bei falschem OTP-Code werden Sie zum Passwort-Schritt zurückgeleitet.
-- Nach 5 aufeinanderfolgenden Fehlversuchen wird das Konto vom Server vorübergehend gesperrt (mit ansteigender Wartezeit). Die Sperre wird serverseitig durchgesetzt und kann nicht vom Client umgangen werden.
+- Nach 5 aufeinanderfolgenden Fehlversuchen wird die Anmeldung vorübergehend gesperrt.
 
 ### 2.2 Abmeldung
 
@@ -307,48 +293,30 @@ Das Problem wird mit Screenshot, Seitenname, Benutzername und Zeitstempel server
 
 Navigieren Sie über die Seitenleiste zu **Audit-Log** (nur für Administratoren sichtbar).
 
-Das Audit-Log wird vollständig serverseitig in einer SQLite-Datenbank (`data/audit.db`) geführt. Einträge werden automatisch vom Server für jede API-Anfrage erzeugt — es gibt keine clientseitige Protokollierung. Das Audit-Log ist vom Client aus unveränderlich: Es existiert kein Button zum Löschen oder Leeren der Einträge.
-
 ### 11.1 Protokollierte Aktionen
 
-Der Server protokolliert automatisch jede API-Anfrage mit folgenden Informationen:
-
-| Spalte | Beschreibung |
-|--------|--------------|
-| **Zeitpunkt** | Datum und Uhrzeit der Aktion (ISO 8601) |
-| **Nutzer** | Benutzername des angemeldeten Nutzers (oder „anonymous") |
-| **Aktion** | HTTP-Methode und Pfad (z.B. GET /api/audit) |
-| **Detail** | Bei Änderungen (POST/PUT/DELETE): der Anfrage-Inhalt; bei Abfragen (GET): die Filterparameter |
-
-Beispiele protokollierter Aktionen:
+Das Audit-Log protokolliert alle Benutzeraktionen:
 - Seitenaufrufe (Landing Page, Analyse, Datenqualität, etc.)
 - Einzelfallansichten (mit Pseudonym)
 - Einstellungsänderungen (2FA, Datenquelle)
 - An-/Abmeldungen
-- Alle weiteren API-Zugriffe
 
 ### 11.2 Filterung
 
 Filtern Sie die Einträge nach:
 - Zeitraum
 - Benutzer
-- Aktionstyp / Pfad
+- Aktionstyp
 
 ### 11.3 CSV-Export
 
-Administratoren können das vollständige Audit-Log als CSV-Datei exportieren. Klicken Sie auf **CSV exportieren**, um den Download zu starten.
-
-### 11.4 Aufbewahrung
-
-Audit-Einträge werden standardmäßig 90 Tage aufbewahrt. Ältere Einträge werden beim Serverstart und danach täglich automatisch gelöscht.
+Klicken Sie auf **CSV exportieren**, um das Audit-Log als CSV-Datei herunterzuladen.
 
 ---
 
-## 12. Benutzerverwaltung (Nutzerverwaltung)
+## 12. Benutzerverwaltung (Administration)
 
-Navigieren Sie über die Seitenleiste zu **Nutzerverwaltung** (nur für Administratoren).
-
-Die Benutzerkonten werden serverseitig in `data/users.json` gespeichert und vom Server verwaltet.
+Navigieren Sie über die Seitenleiste zu **Administration** (nur für Administratoren).
 
 ### 12.1 Neuen Benutzer anlegen
 
@@ -388,8 +356,7 @@ Der EMD unterstützt Deutsch und Englisch. Die Sprache kann über das Sprachmen�
 
 | Problem | Lösung |
 |---------|--------|
-| Login schlägt fehl | Prüfen Sie Benutzername und Passwort. Standard-Passwort im Demomodus: `changeme2025!`. OTP-Code: `123456`. |
-| Konto gesperrt | Nach 5 Fehlversuchen wird das Konto vorübergehend gesperrt. Warten Sie die angezeigte Zeit ab und versuchen Sie es erneut. |
+| Login schlägt fehl | Prüfen Sie Benutzername und Passwort. OTP-Code ist `123456` (Demomodus). |
 | Keine Daten sichtbar | Prüfen Sie die Datenquelle in den Einstellungen. Bei Blaze: Ist der Server erreichbar? |
 | CSV-Export funktioniert nicht | Warten Sie kurz nach dem Klick — der Download startet automatisch. |
 | Screenshot fehlt im Issue | Der Screenshot wird vor dem Öffnen des Dialogs erfasst. Popups oder Overlays können die Erfassung stören. |
@@ -414,8 +381,6 @@ Der EMD unterstützt Deutsch und Englisch. Die Sprache kann über das Sprachmen�
 | **OTP** | One-Time Password (Einmalpasswort für 2FA) |
 | **FHIR** | Fast Healthcare Interoperability Resources (HL7-Standard) |
 | **SNOMED** | Systematized Nomenclature of Medicine |
-| **JWT** | JSON Web Token (serverseitiges Authentisierungstoken) |
-| **bcrypt** | Kryptographische Hash-Funktion für Passwortspeicherung |
 | **Kohorte** | Gruppe von Patienten, die bestimmte Filterkriterien erfüllen |
 | **Baseline** | Ausgangswert (erster Messwert eines Patienten) |
 | **Therapie-Unterbrecher** | Patient ohne Injektion seit > t Tagen (Standard: 120 Tage) |
@@ -425,4 +390,4 @@ Der EMD unterstützt Deutsch und Englisch. Die Sprache kann über das Sprachmen�
 
 ---
 
-*Dieses Benutzerhandbuch bezieht sich auf den EyeMatics Klinischen Demonstrator v1.1.0. Für technische Informationen siehe README.md und Konfiguration.md.*
+*Dieses Benutzerhandbuch bezieht sich auf den EyeMatics Klinischen Demonstrator v1.0.0. Für technische Informationen siehe README.md und Konfiguration.md.*
