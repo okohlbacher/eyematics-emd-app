@@ -15,6 +15,7 @@ import { getJwtSecret, getAuthConfig, loadUsers, saveUsers } from './initAuth.js
 import type { UserRecord } from './initAuth.js';
 import type { AuthPayload } from './authMiddleware.js';
 import { createRateLimiter } from './rateLimiting.js';
+import { getAuthProvider } from './keycloakAuth.js';
 
 // ---------------------------------------------------------------------------
 // Constants for user CRUD validation
@@ -92,6 +93,14 @@ export const authApiRouter = Router();
  * - On bad credentials: returns 401 with generic error (no username enumeration, T-02-05)
  */
 authApiRouter.post('/login', (req: Request, res: Response): void => {
+  // D-04: Local login disabled in Keycloak mode
+  if (getAuthProvider() === 'keycloak') {
+    res.status(405).json({
+      error: 'Local login is disabled. This instance uses Keycloak SSO. Contact your administrator.',
+    });
+    return;
+  }
+
   const { username, password } = req.body as { username?: string; password?: string };
 
   if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
@@ -224,7 +233,8 @@ authApiRouter.post('/verify', (req: Request, res: Response): void => {
  */
 authApiRouter.get('/config', (_req: Request, res: Response): void => {
   const { twoFactorEnabled } = getAuthConfig();
-  res.json({ twoFactorEnabled });
+  const provider = getAuthProvider();
+  res.json({ twoFactorEnabled, provider });
 });
 
 /**

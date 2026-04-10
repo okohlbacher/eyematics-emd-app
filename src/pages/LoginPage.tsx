@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Eye, AlertCircle, Globe } from 'lucide-react';
+import { Eye, AlertCircle, Globe, Info } from 'lucide-react';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -12,9 +12,20 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [attempts, setAttempts] = useState(0);
   const [challengeToken, setChallengeToken] = useState('');
+  const [provider, setProvider] = useState<'local' | 'keycloak'>('local');
+  const [showKeycloakInfo, setShowKeycloakInfo] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { locale, setLocale, t } = useLanguage();
+
+  useEffect(() => {
+    fetch('/api/auth/config')
+      .then((r) => r.json() as Promise<{ twoFactorEnabled: boolean; provider?: string }>)
+      .then((cfg) => {
+        setProvider(cfg.provider === 'keycloak' ? 'keycloak' : 'local');
+      })
+      .catch(() => {/* default local on error */});
+  }, []);
 
   const handleCredentials = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +95,9 @@ export default function LoginPage() {
           <Eye className="w-10 h-10 text-blue-600" />
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{t('loginTitle')}</h1>
-            <p className="text-sm text-gray-500">{t('loginSubtitle')}</p>
+            <p className="text-sm text-gray-500">
+              {provider === 'keycloak' ? t('loginKeycloakSubtitle') : t('loginSubtitle')}
+            </p>
           </div>
         </div>
 
@@ -95,7 +108,29 @@ export default function LoginPage() {
           </div>
         )}
 
-        {step === 'credentials' ? (
+        {provider === 'keycloak' ? (
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => setShowKeycloakInfo(true)}
+              className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-500"
+            >
+              {t('loginKeycloakButton')}
+            </button>
+            {showKeycloakInfo && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                <div className="flex items-start gap-2">
+                  <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">{t('loginKeycloakInfoTitle')}</span>
+                    {' '}
+                    {t('loginKeycloakInfoBody')}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : step === 'credentials' ? (
           <form onSubmit={handleCredentials} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

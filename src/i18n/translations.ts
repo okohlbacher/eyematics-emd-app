@@ -84,6 +84,22 @@ const translations = {
     de: 'Ungültiger OTP-Code. Bitte versuchen Sie es erneut.',
     en: 'Invalid OTP code. Please try again.',
   },
+  loginKeycloakButton: {
+    de: 'Mit Keycloak anmelden',
+    en: 'Login with Keycloak',
+  },
+  loginKeycloakInfoTitle: {
+    de: 'Keycloak SSO konfiguriert',
+    en: 'Keycloak SSO configured',
+  },
+  loginKeycloakInfoBody: {
+    de: 'Der Keycloak-Weiterleitungsfluss ist in dieser Version noch nicht verfügbar. Bitte wenden Sie sich an Ihren Administrator.',
+    en: 'Keycloak SSO is configured but the redirect flow is not yet implemented. Contact your administrator.',
+  },
+  loginKeycloakSubtitle: {
+    de: 'Single Sign-On',
+    en: 'Single Sign-On',
+  },
 
   // Landing page
   welcome: { de: 'Willkommen', en: 'Welcome' },
