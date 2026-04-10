@@ -12,40 +12,20 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { getJwtSecret, getAuthConfig, loadUsers } from './initAuth.js';
 import type { AuthPayload } from './authMiddleware.js';
+import { createRateLimiter } from './rateLimiting.js';
 
 // ---------------------------------------------------------------------------
 // Rate limiting state (in-memory, per username)
 // ---------------------------------------------------------------------------
 
-interface LockState {
-  count: number;
-  lockedUntil: number;
-}
-
-const loginAttempts = new Map<string, LockState>();
-
-function getLockState(username: string): LockState {
-  return loginAttempts.get(username) ?? { count: 0, lockedUntil: 0 };
-}
-
-function isLocked(state: LockState): boolean {
-  return state.lockedUntil > Date.now();
-}
-
-function recordFailure(username: string): LockState {
-  const state = getLockState(username);
-  const newCount = state.count + 1;
-  const { maxLoginAttempts } = getAuthConfig();
-  const lockedUntil = newCount >= maxLoginAttempts
-    ? Date.now() + Math.pow(2, newCount) * 1000
-    : 0;
-  const newState: LockState = { count: newCount, lockedUntil };
-  loginAttempts.set(username, newState);
-  return newState;
-}
-
-function resetAttempts(username: string): void {
-  loginAttempts.delete(username);
+// Rate limiter -- lazy init because getAuthConfig() requires initAuth() to have run first.
+// Single instance shared by /login and /verify handlers (addresses Codex review concern).
+let _limiter: ReturnType<typeof createRateLimiter> | null = null;
+function limiter() {
+  if (!_limiter) {
+    _limiter = createRateLimiter(getAuthConfig().maxLoginAttempts);
+  }
+  return _limiter;
 }
 
 // ---------------------------------------------------------------------------
@@ -96,10 +76,10 @@ authApiRouter.post('/login', (req: Request, res: Response): void => {
   }
 
   const key = username.toLowerCase();
-  const state = getLockState(key);
+  const state = limiter().getLockState(key);
 
   // Check lock before any credential lookup
-  if (isLocked(state)) {
+  if (limiter().isLocked(state)) {
     const retryAfterMs = state.lockedUntil - Date.now();
     res.status(429).json({ error: 'Account locked', retryAfterMs });
     return;
@@ -111,7 +91,7 @@ authApiRouter.post('/login', (req: Request, res: Response): void => {
 
   if (!user || !user.passwordHash) {
     // Record failure even for unknown users (prevent timing-based enumeration)
-    recordFailure(key);
+    limiter().recordFailure(key);
     res.status(401).json({ error: 'Invalid credentials' });
     return;
   }
@@ -119,8 +99,8 @@ authApiRouter.post('/login', (req: Request, res: Response): void => {
   // Verify password
   const valid = bcrypt.compareSync(password, user.passwordHash);
   if (!valid) {
-    const newState = recordFailure(key);
-    if (isLocked(newState)) {
+    const newState = limiter().recordFailure(key);
+    if (limiter().isLocked(newState)) {
       const retryAfterMs = newState.lockedUntil - Date.now();
       res.status(429).json({ error: 'Account locked', retryAfterMs });
       return;
@@ -130,7 +110,7 @@ authApiRouter.post('/login', (req: Request, res: Response): void => {
   }
 
   // Successful login — reset attempts
-  resetAttempts(key);
+  limiter().resetAttempts(key);
 
   const { twoFactorEnabled } = getAuthConfig();
 
@@ -175,10 +155,10 @@ authApiRouter.post('/verify', (req: Request, res: Response): void => {
   }
 
   const key = sub.toLowerCase();
-  const state = getLockState(key);
+  const state = limiter().getLockState(key);
 
   // Check lock (OTP brute-force shares counter with password attempts)
-  if (isLocked(state)) {
+  if (limiter().isLocked(state)) {
     const retryAfterMs = state.lockedUntil - Date.now();
     res.status(429).json({ error: 'Account locked', retryAfterMs });
     return;
@@ -187,8 +167,8 @@ authApiRouter.post('/verify', (req: Request, res: Response): void => {
   const { otpCode } = getAuthConfig();
 
   if (otp !== otpCode) {
-    const newState = recordFailure(key);
-    if (isLocked(newState)) {
+    const newState = limiter().recordFailure(key);
+    if (limiter().isLocked(newState)) {
       const retryAfterMs = newState.lockedUntil - Date.now();
       res.status(429).json({ error: 'Account locked', retryAfterMs });
       return;
@@ -198,7 +178,7 @@ authApiRouter.post('/verify', (req: Request, res: Response): void => {
   }
 
   // OTP valid — load user and issue full session JWT
-  resetAttempts(key);
+  limiter().resetAttempts(key);
 
   const users = loadUsers();
   const user = users.find((u) => u.username.toLowerCase() === key);
