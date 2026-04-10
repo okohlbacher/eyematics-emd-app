@@ -1,4 +1,11 @@
-twoFactorEnabled: true
+auth:
+  provider: local
+  twoFactorEnabled: true
+  maxLoginAttempts: 5
+  otpCode: '123456'
+  # keycloak:
+  #   issuer: https://auth.example.com/realms/emd
+  #   clientId: emd-app
 therapyInterrupterDays: 120
 therapyBreakerDays: 365
 dataSource:
