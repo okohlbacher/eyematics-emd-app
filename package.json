@@ -16,10 +16,12 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
+    "bcryptjs": "^3.0.3",
     "express": "^5.2.1",
     "html-to-image": "^1.11.13",
     "http-proxy-middleware": "^3.0.5",
     "js-yaml": "^4.1.1",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.8.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -29,8 +31,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.6",
     "@types/js-yaml": "^4.0.9",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
