@@ -37,7 +37,7 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [ ] Server-side user management CRUD via API (Phase 3)
 - [ ] Server-side storage for quality flags, saved searches, excluded/reviewed cases (Phase 3)
 - [x] Center-based data restriction (users see only their assigned centers' data) — Validated in Phase 5: Center-Based Data Restriction
-- [ ] Keycloak integration preparation (middleware, config, documentation) (Phase 6)
+- [x] Keycloak integration preparation (middleware, config, documentation) — Validated in Phase 6: Keycloak Preparation
 - [ ] API design that allows future migration from JSON files to a database
 
 ### Out of Scope
