@@ -24,11 +24,36 @@ import {
   setReviewedCases,
 } from './dataDb.js';
 import type { QualityFlagRow, SavedSearchRow } from './dataDb.js';
+import { getCaseToCenter } from './fhirApi.js';
 
 export const dataApiRouter = Router();
 
 /** Maximum array size for bulk replacement endpoints (review suggestion: cap list sizes) */
 const MAX_ARRAY_SIZE = 10000;
+
+// ---------------------------------------------------------------------------
+// Center validation helper (CENTER-03, D-10, T-05-02)
+// ---------------------------------------------------------------------------
+
+/**
+ * Validate that all case IDs belong to the user's permitted centers.
+ * Returns an error message string if any case is outside permitted centers, or null if all pass.
+ *
+ * - Admin users and users with all 5 centers bypass validation (same logic as isBypass).
+ * - Unknown case IDs (not in FHIR cache) are allowed through — case may not be loaded yet.
+ */
+function validateCaseCenters(caseIds: string[], userCenters: string[], role: string): string | null {
+  if (role === 'admin' || userCenters.length >= 5) return null; // bypass
+  const index = getCaseToCenter();
+  for (const caseId of caseIds) {
+    const caseCenterId = index.get(caseId);
+    // If caseId is not in the index, allow it (case may not be loaded yet)
+    if (caseCenterId && !userCenters.includes(caseCenterId)) {
+      return `Case ${caseId} not in user's permitted centers`;
+    }
+  }
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // Quality Flags (DATA-01)
@@ -92,6 +117,14 @@ dataApiRouter.put('/quality-flags', (req: Request, res: Response): void => {
     return;
   }
 
+  // Validate that all caseIds belong to centers the user is permitted to access (CENTER-03, T-05-02)
+  const caseIds = (qualityFlags as Record<string, unknown>[]).map((f) => String(f['caseId'] ?? ''));
+  const centerError = validateCaseCenters(caseIds, req.auth!.centers, req.auth!.role);
+  if (centerError) {
+    res.status(403).json({ error: centerError });
+    return;
+  }
+
   setQualityFlags(username, rows);
 
   // Return saved flags in camelCase
@@ -147,6 +180,19 @@ dataApiRouter.post('/saved-searches', (req: Request, res: Response): void => {
   if (filtersStr.length > 50000) {
     res.status(400).json({ error: 'filters object is too large' });
     return;
+  }
+
+  // Validate center ownership for any explicit case IDs in filters (CENTER-03)
+  const filtersObj = typeof filters === 'object' && filters !== null ? filters as Record<string, unknown> : {};
+  const searchCaseIds: string[] = [];
+  if (Array.isArray(filtersObj['caseIds'])) searchCaseIds.push(...filtersObj['caseIds'].map(String));
+  if (Array.isArray(filtersObj['selectedCases'])) searchCaseIds.push(...filtersObj['selectedCases'].map(String));
+  if (searchCaseIds.length > 0) {
+    const centerError = validateCaseCenters(searchCaseIds, req.auth!.centers, req.auth!.role);
+    if (centerError) {
+      res.status(403).json({ error: centerError });
+      return;
+    }
   }
 
   const row: SavedSearchRow = {
