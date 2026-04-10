@@ -37,13 +37,18 @@ Plans:
 - [x] 04-01-PLAN.md — Server-side user CRUD API (saveUsers, GET/POST/DELETE/PUT endpoints)
 - [x] 04-02-PLAN.md — Server-side data persistence API (SQLite data.db, 8 endpoints for 4 resources)
 - [x] 04-03-PLAN.md — Client migration (AdminPage + DataContext wired to server, localStorage removed)
-- [ ] 04-04-PLAN.md — Gap closure: fix auth token flow (login calls server, real JWT in Bearer header)
+- [x] 04-04-PLAN.md — Gap closure: fix auth token flow (login calls server, real JWT in Bearer header)
 
 ### Phase 5: Center-Based Data Restriction
 **Goal:** Server-enforced center filtering on all data endpoints — unauthorized center data never leaves the server
 **Requirements:** CENTER-01, CENTER-02, CENTER-03, CENTER-04, CENTER-05, CENTER-06, CENTER-07, CENTER-08, CENTER-09
 **Gap Closure:** Closes 9 orphaned requirements from audit
 **Depends on:** Phase 4
+**Plans:** 2 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Server-side FHIR bundle loading, center filtering, case ID validation, center ID migration
+- [ ] 05-02-PLAN.md — Client DataContext wired to /api/fhir/bundles, i18n error states, Vite proxy removal
 
 ### Phase 6: Keycloak Preparation
 **Goal:** Prepare auth middleware for Keycloak JWKS validation, config block, claim mapping, UI toggle, documentation
