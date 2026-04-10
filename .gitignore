@@ -28,3 +28,12 @@ dist-ssr
 
 # Claude Code local config
 .claude/
+
+# GSD planning artifacts
+.planning/
+
+# Server build output
+dist-server/
+
+# Server-side data (runtime)
+data/
