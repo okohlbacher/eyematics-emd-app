@@ -55,6 +55,11 @@ Plans:
 **Requirements:** KC-01, KC-02, KC-03, KC-04, KC-05, AUTH-03
 **Gap Closure:** Closes 5 orphaned requirements + 1 partial from audit
 **Depends on:** Phase 5
+**Plans:** 2 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Keycloak auth infrastructure (keycloakAuth.ts, initAuth config parsing, authMiddleware RS256 JWKS branching)
+- [ ] 06-02-PLAN.md — Auth API provider-awareness, LoginPage Keycloak toggle, i18n, keycloak-setup.md documentation
 
 ---
 *Created: 2026-04-10 from milestone audit gap closure*
