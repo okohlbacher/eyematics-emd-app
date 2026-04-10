@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from 'react';
 import { logAudit } from '../services/auditService';
 import { getSettings } from '../services/settingsService';
+import { getAuthHeaders } from '../services/authHeaders';
 import { safeJsonParse } from '../utils/safeJson';
 
 /**
@@ -29,6 +30,9 @@ export const QUALITY_ROLES: UserRole[] = ['admin', 'clinic_lead', 'data_manager'
 export interface User {
   username: string;
   role: UserRole;
+  centers?: string[];
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface ManagedUser {
@@ -68,6 +72,8 @@ interface AuthContextType {
   inactivityWarning: boolean;
   /** Check if current user has a given role or is in a role list */
   hasRole: (roles: UserRole[]) => boolean;
+  fetchCurrentUser: () => Promise<void>;
+  fetchUsers: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -98,6 +104,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const warningRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const fetchCurrentUser = useCallback(async () => {
+    try {
+      const resp = await fetch('/api/auth/users/me', { headers: getAuthHeaders() });
+      if (resp.ok) {
+        const data = await resp.json() as { user: { username: string; role: string; centers: string[]; firstName?: string; lastName?: string } };
+        setUser((prev) => prev ? { ...prev, ...data.user, role: data.user.role as UserRole } : prev);
+      }
+    } catch {
+      // Silently fail — user is already authenticated from JWT
+    }
+  }, []);
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      const resp = await fetch('/api/auth/users', { headers: getAuthHeaders() });
+      if (resp.ok) {
+        const data = await resp.json() as { users: ManagedUser[] };
+        setManagedUsers(data.users);
+      }
+    } catch {
+      // Silently fail — keep existing managed users list
+    }
+  }, []);
+
   const performLogout = useCallback((auto = false) => {
     if (user) {
       logAudit(user.username, auto ? 'auto_logout' : 'logout', auto ? 'audit_detail_auto_logout' : 'audit_detail_logout');
@@ -105,11 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setInactivityWarning(false);
     sessionStorage.removeItem('emd-user');
-    // H-04: clear sensitive data from localStorage on logout
-    localStorage.removeItem('emd-saved-searches');
-    localStorage.removeItem('emd-quality-flags');
-    localStorage.removeItem('emd-excluded-cases');
-    localStorage.removeItem('emd-reviewed-cases');
+    // Data now server-side — no localStorage cleanup needed for data
     localStorage.removeItem('emd-managed-users');
     localStorage.removeItem('emd-audit-log');
   }, [user]);
@@ -146,6 +172,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (warningRef.current) clearTimeout(warningRef.current);
     };
   }, [user, resetInactivityTimer]);
+
+  // Hydrate profile on mount/login: /users/me for all, /users for admin only
+  useEffect(() => {
+    if (!user) return;
+    fetchCurrentUser();
+    if (user.role === 'admin') {
+      fetchUsers();
+    }
+  }, [user?.username]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const login = (username: string, password: string, otp: string): { ok: boolean; error?: 'user_not_found' | 'wrong_password' | 'invalid_otp' } => {
     if (!username) return { ok: false, error: 'user_not_found' };
@@ -195,6 +230,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Build display name from managed users: "FirstName LastName (username)"
   const displayName = (() => {
     if (!user) return '';
+    // Prefer user object fields first (from /users/me), then fall back to managedUsers
+    if (user.firstName || user.lastName) {
+      const full = [user.firstName, user.lastName].filter(Boolean).join(' ');
+      return `${full} (${user.username})`;
+    }
     const mu = managedUsers.find((m) => m.username.toLowerCase() === user.username.toLowerCase());
     if (mu?.firstName || mu?.lastName) {
       const full = [mu.firstName, mu.lastName].filter(Boolean).join(' ');
@@ -227,8 +267,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const value = useMemo<AuthContextType>(() => ({
-    user, displayName, login, logout, managedUsers, addManagedUser, removeManagedUser, inactivityWarning, hasRole,
-  }), [user, displayName, login, logout, managedUsers, addManagedUser, removeManagedUser, inactivityWarning, hasRole]);
+    user, displayName, login, logout, managedUsers, addManagedUser, removeManagedUser, inactivityWarning, hasRole, fetchCurrentUser, fetchUsers,
+  }), [user, displayName, login, logout, managedUsers, addManagedUser, removeManagedUser, inactivityWarning, hasRole, fetchCurrentUser, fetchUsers]);
 
   return (
     <AuthContext.Provider value={value}>
