@@ -16,16 +16,18 @@ import type {
   QualityFlag,
 } from '../types/fhir';
 import {
-  loadAllBundles,
   extractCenters,
   extractPatientCases,
 } from '../services/fhirLoader';
 import { getAuthHeaders } from '../services/authHeaders';
 import { useAuth } from './AuthContext';
+import { useLanguage } from './LanguageContext';
 
 interface DataContextType {
   loading: boolean;
   error: string | null;
+  fhirError: { status: number; message: string } | null;
+  retryFhirLoad: () => void;
   bundles: FhirBundle[];
   centers: CenterInfo[];
   cases: PatientCase[];
@@ -53,10 +55,12 @@ const DataContext = createContext<DataContextType | null>(null);
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   // FHIR data state
   const [fhirLoading, setFhirLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fhirError, setFhirError] = useState<{ status: number; message: string } | null>(null);
   const [bundles, setBundles] = useState<FhirBundle[]>([]);
   const [centers, setCenters] = useState<CenterInfo[]>([]);
   const [cases, setCases] = useState<PatientCase[]>([]);
@@ -83,23 +87,44 @@ export function DataProvider({ children }: { children: ReactNode }) {
   });
 
   const fetchData = useCallback(() => {
+    if (!user) {
+      setFhirLoading(false);
+      return;
+    }
     setFhirLoading(true);
+    setFhirError(null);
     setError(null);
-    loadAllBundles()
-      .then((b) => {
-        setBundles(b);
-        setCenters(extractCenters(b));
-        setCases(extractPatientCases(b));
+
+    fetch('/api/fhir/bundles', { headers: getAuthHeaders() })
+      .then((resp) => {
+        if (resp.status === 403) {
+          setFhirError({ status: 403, message: 'forbidden' });
+          setFhirLoading(false);
+          return null;
+        }
+        if (!resp.ok) {
+          throw new Error(`FHIR bundles: ${resp.status}`);
+        }
+        return resp.json() as Promise<{ bundles: FhirBundle[] }>;
+      })
+      .then((data) => {
+        if (!data) return; // 403 handled above
+        setBundles(data.bundles);
+        setCenters(extractCenters(data.bundles));
+        setCases(extractPatientCases(data.bundles));
         setFhirLoading(false);
       })
       .catch((err) => {
-        console.error('[DataProvider] Failed to load bundles:', err);
-        setError(err instanceof Error ? err.message : String(err));
+        setFhirError({ status: 0, message: err instanceof Error ? err.message : String(err) });
         setFhirLoading(false);
       });
-  }, []);
+  }, [user]);
 
   useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const retryFhirLoad = useCallback(() => {
     fetchData();
   }, [fetchData]);
 
@@ -192,12 +217,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify(s),
       });
-      if (!resp.ok) { setMutationError('Could not save search.'); return; }
+      if (!resp.ok) {
+        if (resp.status === 403) {
+          setMutationError(t('mutationForbiddenSearch'));
+        } else {
+          setMutationError('Could not save search.');
+        }
+        return;
+      }
       const data = await resp.json() as { savedSearch: SavedSearch };
       setSavedSearches((prev) => [...prev, data.savedSearch]);
     } catch { setMutationError('Could not save search.'); }
     finally { mutatingRef.current.savedSearches = false; }
-  }, []);
+  }, [t]);
 
   const removeSavedSearch = useCallback(async (id: string) => {
     if (mutatingRef.current.savedSearches) return;
@@ -223,12 +255,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ qualityFlags: next }),
       });
-      if (!resp.ok) { setMutationError('Could not save quality flag.'); return; }
+      if (!resp.ok) {
+        if (resp.status === 403) {
+          setMutationError(t('mutationForbiddenCase'));
+        } else {
+          setMutationError('Could not save quality flag.');
+        }
+        return;
+      }
       const data = await resp.json() as { qualityFlags: QualityFlag[] };
       setQualityFlags(data.qualityFlags);
     } catch { setMutationError('Could not save quality flag.'); }
     finally { mutatingRef.current.qualityFlags = false; }
-  }, [qualityFlags]);
+  }, [qualityFlags, t]);
 
   const updateQualityFlag = useCallback(async (caseId: string, parameter: string, status: QualityFlag['status']) => {
     if (mutatingRef.current.qualityFlags) return;
@@ -242,12 +281,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ qualityFlags: next }),
       });
-      if (!resp.ok) { setMutationError('Could not save quality flag.'); return; }
+      if (!resp.ok) {
+        if (resp.status === 403) {
+          setMutationError(t('mutationForbiddenCase'));
+        } else {
+          setMutationError('Could not save quality flag.');
+        }
+        return;
+      }
       const data = await resp.json() as { qualityFlags: QualityFlag[] };
       setQualityFlags(data.qualityFlags);
     } catch { setMutationError('Could not save quality flag.'); }
     finally { mutatingRef.current.qualityFlags = false; }
-  }, [qualityFlags]);
+  }, [qualityFlags, t]);
 
   const toggleExcludeCase = useCallback(async (caseId: string) => {
     if (mutatingRef.current.excludedCases) return;
@@ -303,9 +349,43 @@ export function DataProvider({ children }: { children: ReactNode }) {
     finally { mutatingRef.current.reviewedCases = false; }
   }, [reviewedCases]);
 
+  // Render 403 full-page error or network error banner inside the provider
+  // (rendered as children wrapper so consuming tree sees it)
+  const renderedChildren = (() => {
+    if (fhirError?.status === 403) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center p-8">
+            <h2 className="text-xl font-bold text-red-700 mb-4">{t('fhir403Heading')}</h2>
+            <p className="text-sm text-gray-600">{t('fhir403Body')}</p>
+          </div>
+        </div>
+      );
+    }
+    if (fhirError?.status === 0) {
+      return (
+        <>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm m-4">
+            <p>{t('fhirLoadError')}</p>
+            <button
+              onClick={retryFhirLoad}
+              className="mt-2 px-4 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+            >
+              {t('retryButton')}
+            </button>
+          </div>
+          {children}
+        </>
+      );
+    }
+    return children;
+  })();
+
   const value = useMemo<DataContextType>(() => ({
     loading: fhirLoading || dataLoading,
     error,
+    fhirError,
+    retryFhirLoad,
     bundles,
     centers,
     cases,
@@ -328,7 +408,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     clearMutationError: () => setMutationError(null),
     retryLoadData: fetchPersistedData,
   }), [
-    fhirLoading, dataLoading, error, bundles, centers, cases,
+    fhirLoading, dataLoading, error, fhirError, retryFhirLoad,
+    bundles, centers, cases,
     savedSearches, addSavedSearch, removeSavedSearch,
     qualityFlags, addQualityFlag, updateQualityFlag,
     excludedCases, toggleExcludeCase, activeCases,
@@ -338,7 +419,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   return (
     <DataContext.Provider value={value}>
-      {children}
+      {renderedChildren}
     </DataContext.Provider>
   );
 }
