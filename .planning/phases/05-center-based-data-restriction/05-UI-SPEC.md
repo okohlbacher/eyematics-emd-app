@@ -57,9 +57,6 @@ Declared values (multiples of 4 only). Pre-populated from codebase — these are
 | 2xl | 48px | Major section breaks |
 | 3xl | 64px | Not used in this phase |
 
-Exceptions:
-- Touch targets for checkboxes: 24px minimum tap area (checkbox + label row `py-1.5` = 6px pad + 14px text = 20px, acceptable for desktop clinical context)
-
 ---
 
 ## Typography
