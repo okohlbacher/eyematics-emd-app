@@ -36,7 +36,7 @@ Plans:
 Plans:
 - [x] 04-01-PLAN.md — Server-side user CRUD API (saveUsers, GET/POST/DELETE/PUT endpoints)
 - [x] 04-02-PLAN.md — Server-side data persistence API (SQLite data.db, 8 endpoints for 4 resources)
-- [ ] 04-03-PLAN.md — Client migration (AdminPage + DataContext wired to server, localStorage removed)
+- [x] 04-03-PLAN.md — Client migration (AdminPage + DataContext wired to server, localStorage removed)
 
 ### Phase 5: Center-Based Data Restriction
 **Goal:** Server-enforced center filtering on all data endpoints — unauthorized center data never leaves the server
