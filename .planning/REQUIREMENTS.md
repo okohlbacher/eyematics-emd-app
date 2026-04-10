@@ -117,15 +117,19 @@
 |-------------|-------|--------|
 | BACK-01..06 | Phase 1 | Complete |
 | AUDIT-01..10 | Phase 2 | Complete |
-| AUTH-01..09 | Phase 2 | Complete (AUTH-03 deferred to Phase 5) |
-| USER-01..12 | Phase 3 | Pending |
-| DATA-01..07 | Phase 3 | Pending |
-| CENTER-01..09 | Phase 4 | Pending |
-| KC-01..05 | Phase 5 | Pending |
+| AUDIT-01, AUDIT-02, AUDIT-09 | Phase 3 | Pending (re-verify integration fixes) |
+| AUTH-01, AUTH-02, AUTH-04..09 | Phase 2 | Complete |
+| AUTH-03 | Phase 6 | Pending |
+| AUTH-05 | Phase 3 | Pending (re-verify schema fix) |
+| USER-01..12 | Phase 4 | Pending |
+| USER-13 | Phase 3 | Pending (formal verification) |
+| DATA-01..07 | Phase 4 | Pending |
+| CENTER-01..09 | Phase 5 | Pending |
+| KC-01..05 | Phase 6 | Pending |
 
 **Coverage:**
-- v1 requirements: 56 total
-- Mapped to phases: 56
+- v1 requirements: 59 total
+- Mapped to phases: 59
 - Unmapped: 0
 
 ---
