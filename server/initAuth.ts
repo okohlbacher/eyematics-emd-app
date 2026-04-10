@@ -66,9 +66,13 @@ export function initAuth(dataDir: string, settings: Record<string, unknown>): vo
   }
 
   // Parse auth config from settings
+  // auth.twoFactorEnabled takes precedence; fall back to top-level twoFactorEnabled
   const authSection = (settings.auth ?? {}) as Record<string, unknown>;
+  const twoFa = typeof authSection.twoFactorEnabled === 'boolean'
+    ? authSection.twoFactorEnabled
+    : (typeof settings.twoFactorEnabled === 'boolean' ? settings.twoFactorEnabled : false);
   _authConfig = {
-    twoFactorEnabled: typeof authSection.twoFactorEnabled === 'boolean' ? authSection.twoFactorEnabled : false,
+    twoFactorEnabled: twoFa,
     maxLoginAttempts: typeof authSection.maxLoginAttempts === 'number' ? authSection.maxLoginAttempts : 5,
     otpCode: typeof authSection.otpCode === 'string' ? authSection.otpCode : '123456',
   };
