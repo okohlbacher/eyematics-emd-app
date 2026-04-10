@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { getSettings } from '../services/settingsService';
 import { Eye, AlertCircle, Globe } from 'lucide-react';
 
 export default function LoginPage() {
@@ -12,11 +11,12 @@ export default function LoginPage() {
   const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
   const [error, setError] = useState('');
   const [attempts, setAttempts] = useState(0);
+  const [challengeToken, setChallengeToken] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
   const { locale, setLocale, t } = useLanguage();
 
-  const handleCredentials = (e: React.FormEvent) => {
+  const handleCredentials = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
       setError(t('loginErrorEmpty'));
@@ -27,54 +27,53 @@ export default function LoginPage() {
       return;
     }
 
-    // If 2FA is disabled, log in directly (skip OTP step)
-    const settings = getSettings();
-    if (!settings.twoFactorEnabled) {
-      const result = login(username, password, '');
-      if (result.ok) {
-        navigate('/');
-      } else {
-        setAttempts((a) => a + 1);
-        if (result.error === 'user_not_found') {
-          setError(t('loginErrorUserNotFound'));
-        } else if (result.error === 'wrong_password') {
-          setError(t('loginErrorWrongPassword'));
-        } else {
-          setError(t('loginErrorFailed'));
-        }
+    const result = await login(username, password);
+    if (result.ok) {
+      navigate('/');
+    } else if (result.error === 'otp_required') {
+      // Server determined 2FA is required — proceed to OTP step
+      if (result.challengeToken) {
+        setChallengeToken(result.challengeToken);
       }
-      return;
+      setStep('otp');
+      setError('');
+    } else if (result.error === 'account_locked') {
+      setAttempts((a) => a + 1);
+      setError(t('loginErrorTooMany'));
+    } else if (result.error === 'invalid_credentials') {
+      setAttempts((a) => a + 1);
+      // Generic message — do not distinguish user_not_found from wrong_password (prevents enumeration)
+      setError(t('loginErrorWrongPassword'));
+    } else if (result.error === 'network_error') {
+      setAttempts((a) => a + 1);
+      setError(t('loginErrorFailed'));
+    } else {
+      setAttempts((a) => a + 1);
+      setError(t('loginErrorFailed'));
     }
-
-    setStep('otp');
-    setError('');
   };
 
-  const handleOtp = (e: React.FormEvent) => {
+  const handleOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!otp) {
       setError(t('loginErrorOtp'));
       return;
     }
-    const result = login(username, password, otp);
+    const result = await login(username, password, otp, challengeToken);
     if (result.ok) {
       navigate('/');
+    } else if (result.error === 'invalid_otp') {
+      // N01.08: On OTP failure, return to password step immediately
+      setStep('credentials');
+      setOtp('');
+      setChallengeToken('');
+      setError(t('loginErrorInvalidOtp'));
+    } else if (result.error === 'account_locked') {
+      setAttempts((a) => a + 1);
+      setError(t('loginErrorTooMany'));
     } else {
       setAttempts((a) => a + 1);
-      if (result.error === 'user_not_found') {
-        setStep('credentials');
-        setError(t('loginErrorUserNotFound'));
-      } else if (result.error === 'wrong_password') {
-        setStep('credentials');
-        setError(t('loginErrorWrongPassword'));
-      } else if (result.error === 'invalid_otp') {
-        // N01.08: On OTP failure, return to password step immediately
-        setStep('credentials');
-        setOtp('');
-        setError(t('loginErrorInvalidOtp'));
-      } else {
-        setError(t('loginErrorFailed'));
-      }
+      setError(t('loginErrorFailed'));
     }
   };
 
