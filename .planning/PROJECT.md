@@ -23,22 +23,26 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] Full German/English i18n
 - [x] Issue reporting with screenshot capture
 
+### Validated in v1.0
+
+- [x] Production Express backend serving static build + all APIs — v1.0 (Phase 1)
+- [x] Server-side login with bcrypt-hashed passwords (POST /api/auth/login) — v1.0 (Phase 2)
+- [x] JWT session tokens (HS256) with { sub, preferred_username, role, centers } — v1.0 (Phase 2)
+- [x] Remove hardcoded credentials from client bundle — passwords only on server — v1.0 (Phase 2)
+- [x] Server-side audit log (append-only SQLite, replaces localStorage) — v1.0 (Phase 2)
+- [x] Auth middleware validating JWT on all /api/* routes — v1.0 (Phase 2)
+- [x] FHIR proxy for production (http-proxy-middleware) — v1.0 (Phase 1)
+- [x] Server-side user management CRUD via API — v1.0 (Phase 4)
+- [x] Server-side storage for quality flags, saved searches, excluded/reviewed cases — v1.0 (Phase 4)
+- [x] Center-based data restriction (users see only their assigned centers' data) — v1.0 (Phase 5)
+- [x] Keycloak integration preparation (middleware, config, documentation) — v1.0 (Phase 6)
+- [x] API design that allows future migration from JSON files to a database — v1.0 (Phase 4)
+
 ### Active
 
-<!-- Current scope. Building toward these. -->
+<!-- Next milestone scope -->
 
-- [x] Production Express backend serving static build + all APIs (Phase 1)
-- [x] Server-side login with bcrypt-hashed passwords (POST /api/auth/login) (Phase 2)
-- [x] JWT session tokens (HS256) with { sub, preferred_username, role, centers } (Phase 2)
-- [x] Remove hardcoded credentials from client bundle — passwords only on server (Phase 2)
-- [x] Server-side audit log (append-only SQLite, replaces localStorage) (Phase 2)
-- [x] Auth middleware validating JWT on all /api/* routes (Phase 2)
-- [x] FHIR proxy for production (http-proxy-middleware) (Phase 1)
-- [ ] Server-side user management CRUD via API (Phase 3)
-- [ ] Server-side storage for quality flags, saved searches, excluded/reviewed cases (Phase 3)
-- [x] Center-based data restriction (users see only their assigned centers' data) — Validated in Phase 5: Center-Based Data Restriction
-- [x] Keycloak integration preparation (middleware, config, documentation) — Validated in Phase 6: Keycloak Preparation
-- [ ] API design that allows future migration from JSON files to a database
+(No active requirements — define with `/gsd-new-milestone`)
 
 ### Out of Scope
 
@@ -54,7 +58,7 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - **Server**: Express 5 production server (server/index.ts) + Vite dev plugins for backward compat
 - **Auth flow**: Server-side bcrypt + JWT (HS256), 2FA with fixed OTP, rate limiting with exponential backoff
 - **Audit**: Server-side SQLite (data/audit.db), auto-logged by middleware, immutable from client, configurable retention
-- **User centers**: ManagedUser.centers field exists but is never used for data filtering
+- **User centers**: Server-enforced center filtering on all data endpoints (Phase 5)
 - **FHIR data**: 5 centers (UKA, UKB, LMU, UKT, UKM) with synthetic test data
 - **Center mapping**: centerId (e.g., 'org-uka') maps to shorthand (e.g., 'UKA') via CENTER_SHORTHANDS in fhirLoader.ts
 - **Requirements docs**: Lastenheft (RE-EM-LH) and Pflichtenheft (EMDREQ-*) define the formal requirements
@@ -92,8 +96,8 @@ The EMD operates within a four-zone architecture at each site:
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | JSON files over SQLite for v1 | No native deps, simpler deployment, fits on-premises philosophy | Implemented (Phase 1) |
-| Keycloak prepare-only (no full OIDC flow) | Needs real Keycloak instance to test; middleware abstraction is the hard part | Pending (Phase 5) |
-| All localStorage to server | Audit compliance requires it; partial migration creates inconsistent patterns | Partial — audit done (Phase 2), data persistence pending (Phase 3) |
+| Keycloak prepare-only (no full OIDC flow) | Needs real Keycloak instance to test; middleware abstraction is the hard part | ✓ Implemented (Phase 6) |
+| All localStorage to server | Audit compliance requires it; partial migration creates inconsistent patterns | ✓ Complete — audit (Phase 2), data persistence (Phase 4) |
 | Raw Node http types for shared handlers | Avoids Express dependency in code shared with Vite dev plugins | Implemented (Phase 1) |
 | SQLite for audit log (better-sqlite3) | SQL filtering/sorting beats JSONL for query flexibility; configurable retention with auto-purge; immutable from UI | Implemented (Phase 2) |
 | Server-side login with bcrypt + JWT | Passwords must never be in client bundle; JWT format identical for local and Keycloak — seamless provider switch | Implemented (Phase 2) |
@@ -103,4 +107,4 @@ The EMD operates within a four-zone architecture at each site:
 | Pattern A (central consolidation) for v1 | Each site sends pseudonymized payloads via DSF to local consolidated repo. EMD reads from that. Pattern B (federated query) deferred to future. | Architecture decided |
 
 ---
-*Last updated: 2026-04-10 after Phase 2 (server-side auth + audit) completion*
+*Last updated: 2026-04-10 after v1.0 milestone (EMD Backend Redesign MVP)*
