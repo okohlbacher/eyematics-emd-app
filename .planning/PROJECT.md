@@ -38,6 +38,21 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] Keycloak integration preparation (middleware, config, documentation) — v1.0 (Phase 6)
 - [x] API design that allows future migration from JSON files to a database — v1.0 (Phase 4)
 
+### Validated in v1.1
+
+- [x] Frontend AuthContext wired to server JWT auth (no client-side credentials) — v1.1
+- [x] Frontend DataContext wired to server /api/data/* endpoints (no localStorage) — v1.1
+- [x] Frontend AuditPage wired to server /api/audit (immutable, no clear button) — v1.1
+- [x] Frontend AdminPage wired to server /api/auth/users CRUD (org-* center IDs) — v1.1
+- [x] Frontend fhirLoader wired to /api/fhir/bundles (center-filtered server-side) — v1.1
+- [x] Settings.yaml moved out of webroot to config/ — v1.1
+- [x] FHIR data files blocked from static serving in production — v1.1
+- [x] FHIR proxy moved under auth (/api/fhir-proxy) — v1.1
+- [x] Centers configurable via data/centers.json — v1.1
+- [x] Consolidated auth headers (single getAuthHeaders utility) — v1.1
+- [x] Center validation on excluded/reviewed cases endpoints — v1.1
+- [x] Client-side audit removed (server auditMiddleware handles all logging) — v1.1
+
 ### Active
 
 <!-- Next milestone scope -->
@@ -107,4 +122,4 @@ The EMD operates within a four-zone architecture at each site:
 | Pattern A (central consolidation) for v1 | Each site sends pseudonymized payloads via DSF to local consolidated repo. EMD reads from that. Pattern B (federated query) deferred to future. | Architecture decided |
 
 ---
-*Last updated: 2026-04-10 after v1.0 milestone (EMD Backend Redesign MVP)*
+*Last updated: 2026-04-11 after v1.1 milestone (Frontend-Backend Integration)*
