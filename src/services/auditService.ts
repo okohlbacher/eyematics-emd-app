@@ -20,16 +20,16 @@ export interface ServerAuditEntry {
 export async function fetchAuditEntries(filters?: {
   user?: string;
   path?: string;
-  from?: string;
-  to?: string;
+  fromTime?: string;
+  toTime?: string;
   limit?: number;
   offset?: number;
 }): Promise<{ entries: ServerAuditEntry[]; total: number }> {
   const params = new URLSearchParams();
   if (filters?.user) params.set('user', filters.user);
   if (filters?.path) params.set('path', filters.path);
-  if (filters?.from) params.set('from', filters.from);
-  if (filters?.to) params.set('to', filters.to);
+  if (filters?.fromTime) params.set('fromTime', filters.fromTime);
+  if (filters?.toTime) params.set('toTime', filters.toTime);
   if (filters?.limit) params.set('limit', String(filters.limit));
   if (filters?.offset) params.set('offset', String(filters.offset));
 

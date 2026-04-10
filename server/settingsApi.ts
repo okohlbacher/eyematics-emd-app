@@ -22,17 +22,21 @@ const SETTINGS_FILE = path.resolve(process.cwd(), 'public', 'settings.yaml');
 /**
  * Validate parsed YAML settings have the expected structure.
  * Returns an error message string if invalid, or null if valid.
+ *
+ * Validates the canonical nested auth section structure that getAuthConfig()
+ * in server/initAuth.ts consumes. Exported for direct use in unit tests (D-05).
+ *
+ * Note: jwtSecret is NOT validated here — it lives in data/jwt-secret.txt,
+ * not in settings.yaml (per RESEARCH.md pitfall 4).
  */
-function validateSettingsSchema(parsed: unknown): string | null {
+export function validateSettingsSchema(parsed: unknown): string | null {
   if (parsed === null || typeof parsed !== 'object') {
     return 'Settings must be a YAML object';
   }
 
   const obj = parsed as Record<string, unknown>;
 
-  if (typeof obj.twoFactorEnabled !== 'boolean') {
-    return 'twoFactorEnabled must be a boolean';
-  }
+  // Top-level numeric fields
   if (typeof obj.therapyInterrupterDays !== 'number' || !Number.isFinite(obj.therapyInterrupterDays)) {
     return 'therapyInterrupterDays must be a number';
   }
@@ -40,16 +44,33 @@ function validateSettingsSchema(parsed: unknown): string | null {
     return 'therapyBreakerDays must be a number';
   }
 
+  // dataSource section
   if (obj.dataSource === null || typeof obj.dataSource !== 'object') {
     return 'dataSource must be an object';
   }
-
   const ds = obj.dataSource as Record<string, unknown>;
   if (typeof ds.type !== 'string' || ds.type.length === 0) {
     return 'dataSource.type must be a non-empty string';
   }
   if (typeof ds.blazeUrl !== 'string' || ds.blazeUrl.length === 0) {
     return 'dataSource.blazeUrl must be a non-empty string';
+  }
+
+  // auth section (canonical nested structure — per D-03)
+  // Matches what getAuthConfig() in server/initAuth.ts reads from settings.yaml
+  if (obj.auth === null || typeof obj.auth !== 'object') {
+    return 'auth must be an object';
+  }
+  const auth = obj.auth as Record<string, unknown>;
+  if (typeof auth.twoFactorEnabled !== 'boolean') {
+    return 'auth.twoFactorEnabled must be a boolean';
+  }
+  if (typeof auth.maxLoginAttempts !== 'number' || !Number.isInteger(auth.maxLoginAttempts) || auth.maxLoginAttempts < 1) {
+    return 'auth.maxLoginAttempts must be a positive integer';
+  }
+  // otpCode is optional (defaults to '123456' in initAuth.ts)
+  if (auth.otpCode !== undefined && typeof auth.otpCode !== 'string') {
+    return 'auth.otpCode must be a string if provided';
   }
 
   return null;
