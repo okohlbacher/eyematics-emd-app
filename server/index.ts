@@ -142,10 +142,10 @@ app.use('/api/auth', express.json({ limit: '1mb' }));
 
 // auditMiddleware BEFORE authMiddleware — captures 401 responses with user='anonymous'
 // (req.auth is read at res.finish time, so it resolves correctly for both 200 and 401)
-app.use(auditMiddleware);
+app.use('/api', auditMiddleware);
 
-// authMiddleware validates JWT on all /api/* except public auth paths
-app.use(authMiddleware);
+// authMiddleware validates JWT on /api/* except public auth paths
+app.use('/api', authMiddleware);
 
 // Auth routes — login, verify, config (express.json already mounted above)
 app.use('/api/auth', authApiRouter);

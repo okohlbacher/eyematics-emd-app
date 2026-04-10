@@ -1,5 +1,5 @@
 /**
- * Auth API router: POST /api/auth/login, POST /api/auth/verify, GET /api/auth/config
+ * Auth API router: POST /login, POST /verify, GET /config
  *
  * Implements two-step login with optional 2FA.
  * Rate limiting: per-username in-memory Map with exponential backoff.
@@ -79,7 +79,7 @@ function signChallengeToken(username: string): string {
 export const authApiRouter = Router();
 
 /**
- * POST /api/auth/login
+ * POST /login
  *
  * Step 1 of login. Validates bcrypt credentials.
  * - If 2FA disabled: returns { token } (full session JWT)
@@ -87,7 +87,7 @@ export const authApiRouter = Router();
  * - If account locked: returns 429 with retryAfterMs
  * - On bad credentials: returns 401 with generic error (no username enumeration, T-02-05)
  */
-authApiRouter.post('/api/auth/login', (req: Request, res: Response): void => {
+authApiRouter.post('/login', (req: Request, res: Response): void => {
   const { username, password } = req.body as { username?: string; password?: string };
 
   if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
@@ -146,13 +146,13 @@ authApiRouter.post('/api/auth/login', (req: Request, res: Response): void => {
 });
 
 /**
- * POST /api/auth/verify
+ * POST /verify
  *
  * Step 2 of login (2FA). Validates challenge token + OTP.
  * OTP compared against fixed code from settings.yaml (no otplib).
  * OTP attempts share the same lockout counter as password attempts (T-02-06).
  */
-authApiRouter.post('/api/auth/verify', (req: Request, res: Response): void => {
+authApiRouter.post('/verify', (req: Request, res: Response): void => {
   const { challengeToken, otp } = req.body as { challengeToken?: string; otp?: string };
 
   if (typeof challengeToken !== 'string' || typeof otp !== 'string' || !challengeToken || !otp) {
@@ -213,12 +213,12 @@ authApiRouter.post('/api/auth/verify', (req: Request, res: Response): void => {
 });
 
 /**
- * GET /api/auth/config
+ * GET /config
  *
  * Public endpoint. Returns twoFactorEnabled so the LoginPage can decide
  * whether to show the OTP field (D-02).
  */
-authApiRouter.get('/api/auth/config', (_req: Request, res: Response): void => {
+authApiRouter.get('/config', (_req: Request, res: Response): void => {
   const { twoFactorEnabled } = getAuthConfig();
   res.json({ twoFactorEnabled });
 });
