@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "start": "npx tsx server/index.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -17,6 +18,7 @@
     "better-sqlite3": "^12.8.0",
     "express": "^5.2.1",
     "html-to-image": "^1.11.13",
+    "http-proxy-middleware": "^3.0.5",
     "js-yaml": "^4.1.1",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.8.0",
