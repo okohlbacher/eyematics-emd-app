@@ -77,6 +77,25 @@ function redactBody(urlPath: string, body: unknown): string | null {
 }
 
 // ---------------------------------------------------------------------------
+// Body helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Try to parse a string as JSON; return the original string if parsing fails.
+ *
+ * Rule: JSON bodies (POST /api/issues) get parsed into objects so redactBody
+ * can traverse REDACT_PATHS. Non-JSON bodies (PUT /api/settings sends YAML)
+ * stay as raw strings -- redactBody handles strings via String(body).
+ */
+function tryParseJson(str: string): unknown {
+  try {
+    return JSON.parse(str);
+  } catch {
+    return str;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Middleware
 // ---------------------------------------------------------------------------
 
@@ -111,8 +130,18 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
     const user = req.auth?.preferred_username ?? 'anonymous';
 
     // Per D-11: mutations log (redacted) body; GETs log query params only
-    const bodyStr =
-      req.method !== 'GET' ? redactBody(urlPath, req.body) : null;
+    // Body capture priority (Bug 1 fix):
+    //   1. req.body (from express.json()) — populated for /api/auth/* routes
+    //   2. req._capturedBody (from readBody()) — populated for all other mutation routes
+    // _capturedBody is always a raw string. tryParseJson attempts JSON parse so
+    // redactBody can walk REDACT_PATHS for object bodies; YAML bodies stay as
+    // raw strings and redactBody handles them via its String(body) fallback.
+    const rawBody = req.method !== 'GET'
+      ? (req.body !== undefined && req.body !== null
+          ? req.body
+          : (req._capturedBody ? tryParseJson(req._capturedBody) : undefined))
+      : undefined;
+    const bodyStr = req.method !== 'GET' ? redactBody(urlPath, rawBody) : null;
     const queryStr =
       req.method === 'GET' && Object.keys(req.query).length > 0
         ? JSON.stringify(req.query)

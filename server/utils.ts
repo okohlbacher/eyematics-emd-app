@@ -27,7 +27,14 @@ export function readBody(req: import('http').IncomingMessage, maxSize = MAX_BODY
       }
       data += chunk.toString();
     });
-    req.on('end', () => resolve(data));
+    req.on('end', () => {
+      // Attach raw body to req for audit middleware capture (Bug 1 fix).
+      // Type augmentation in server/types.d.ts makes this type-safe.
+      // The cast to import('express').Request is safe because Express Request
+      // extends IncomingMessage and _capturedBody is declared on it.
+      (req as import('express').Request)._capturedBody = data;
+      resolve(data);
+    });
     req.on('error', reject);
   });
 }
