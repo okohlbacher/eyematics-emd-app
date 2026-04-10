@@ -10,9 +10,33 @@ import { Router } from 'express';
 import type { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { getJwtSecret, getAuthConfig, loadUsers } from './initAuth.js';
+import crypto from 'node:crypto';
+import { getJwtSecret, getAuthConfig, loadUsers, saveUsers } from './initAuth.js';
+import type { UserRecord } from './initAuth.js';
 import type { AuthPayload } from './authMiddleware.js';
 import { createRateLimiter } from './rateLimiting.js';
+
+// ---------------------------------------------------------------------------
+// Constants for user CRUD validation
+// ---------------------------------------------------------------------------
+
+/**
+ * Allowlist of valid center codes. Must match CENTER_SHORTHANDS keys in fhirLoader.ts.
+ * Addresses review concern #3: missing centers validation.
+ */
+const VALID_CENTERS = new Set(['org-uka', 'org-ukb', 'org-lmu', 'org-ukt', 'org-ukm']);
+
+const VALID_ROLES = new Set(['admin', 'researcher', 'epidemiologist', 'clinician', 'data_manager', 'clinic_lead']);
+
+/**
+ * Generate a secure random password: 16 chars base64url = ~96 bits entropy.
+ * Used for both user creation (D-01) and password reset.
+ */
+function generateSecurePassword(length = 16): string {
+  return crypto.randomBytes(Math.ceil(length * 0.75))
+    .toString('base64url')
+    .slice(0, length);
+}
 
 // ---------------------------------------------------------------------------
 // Rate limiting state (in-memory, per username)
@@ -204,17 +228,171 @@ authApiRouter.get('/config', (_req: Request, res: Response): void => {
 });
 
 /**
- * GET /api/auth/users
+ * GET /api/auth/users/me
  *
- * Returns user list (without password hashes). Requires authentication.
+ * Returns the authenticated user's profile (USER-01).
+ * Available to any authenticated user (not admin-only).
  */
-authApiRouter.get('/users', (req: Request, res: Response): void => {
+authApiRouter.get('/users/me', (req: Request, res: Response): void => {
   if (!req.auth) {
     res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+  // Case-insensitive lookup to get full user record (review suggestion: case-insensitive matching)
+  const userRecord = loadUsers().find(
+    (u) => u.username.toLowerCase() === req.auth!.preferred_username.toLowerCase()
+  );
+  res.json({
+    user: {
+      username: req.auth.preferred_username,
+      role: req.auth.role,
+      centers: req.auth.centers,
+      firstName: userRecord?.firstName,
+      lastName: userRecord?.lastName,
+    },
+  });
+});
+
+/**
+ * GET /api/auth/users
+ *
+ * Returns user list (without password hashes). Admin only (T-04-05).
+ */
+authApiRouter.get('/users', (req: Request, res: Response): void => {
+  if (!req.auth || req.auth.role !== 'admin') {
+    res.status(403).json({ error: 'Admin access required' });
     return;
   }
   const users = loadUsers().map(({ username, firstName, lastName, role, centers, createdAt, lastLogin }) => ({
     username, firstName, lastName, role, centers, createdAt, lastLogin,
   }));
   res.json({ users });
+});
+
+/**
+ * POST /api/auth/users
+ *
+ * Create a new user with auto-generated password (USER-03, D-01, D-03).
+ * Admin only. Password is server-generated — never sent in request body.
+ * Centers validated against VALID_CENTERS allowlist (review concern #3).
+ */
+authApiRouter.post('/users', async (req: Request, res: Response): Promise<void> => {
+  if (!req.auth || req.auth.role !== 'admin') {
+    res.status(403).json({ error: 'Admin access required' });
+    return;
+  }
+
+  const { username, role, centers, firstName, lastName } = req.body as Record<string, unknown>;
+
+  // Validate required fields
+  if (typeof username !== 'string' || !username.trim()) {
+    res.status(400).json({ error: 'username is required' });
+    return;
+  }
+
+  // Validate role against allowlist
+  const userRole = typeof role === 'string' && VALID_ROLES.has(role) ? role : 'researcher';
+
+  // Validate centers against allowlist (review concern #3)
+  const rawCenters = Array.isArray(centers) ? centers.filter((c): c is string => typeof c === 'string') : [];
+  const invalidCenters = rawCenters.filter((c) => !VALID_CENTERS.has(c));
+  if (invalidCenters.length > 0) {
+    res.status(400).json({ error: `Invalid center codes: ${invalidCenters.join(', ')}` });
+    return;
+  }
+
+  // Check duplicate (case-insensitive)
+  const users = loadUsers();
+  if (users.find((u) => u.username.toLowerCase() === username.trim().toLowerCase())) {
+    res.status(409).json({ error: 'Username already exists' });
+    return;
+  }
+
+  // Generate secure random password (D-01): 16 chars base64url = ~96 bits entropy
+  const generatedPassword = generateSecurePassword();
+  const passwordHash = bcrypt.hashSync(generatedPassword, 12);
+
+  const newUser: UserRecord = {
+    username: username.trim(),
+    passwordHash,
+    role: userRole,
+    centers: rawCenters,
+    firstName: typeof firstName === 'string' && firstName.trim() ? firstName.trim() : undefined,
+    lastName: typeof lastName === 'string' && lastName.trim() ? lastName.trim() : undefined,
+    createdAt: new Date().toISOString(),
+  };
+
+  users.push(newUser);
+  await saveUsers(users);
+
+  // Return user WITHOUT passwordHash, plus the one-time generatedPassword
+  const { passwordHash: _omit, ...safeUser } = newUser;
+  // Cache-Control: no-store to prevent caching one-time password (review suggestion)
+  res.setHeader('Cache-Control', 'no-store');
+  res.status(201).json({ user: safeUser, generatedPassword });
+});
+
+/**
+ * DELETE /api/auth/users/:username
+ *
+ * Remove a user (USER-04, D-03). Admin only.
+ * Self-delete guard prevents admin from locking themselves out (T-04-03).
+ */
+authApiRouter.delete('/users/:username', async (req: Request, res: Response): Promise<void> => {
+  if (!req.auth || req.auth.role !== 'admin') {
+    res.status(403).json({ error: 'Admin access required' });
+    return;
+  }
+
+  const target = req.params.username;
+
+  // Self-delete guard (T-04-03)
+  if (req.auth.preferred_username.toLowerCase() === target.toLowerCase()) {
+    res.status(409).json({ error: 'Cannot delete your own account' });
+    return;
+  }
+
+  const users = loadUsers();
+  const idx = users.findIndex((u) => u.username.toLowerCase() === target.toLowerCase());
+  if (idx === -1) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  users.splice(idx, 1);
+  await saveUsers(users);
+  res.json({ message: 'User deleted' });
+});
+
+/**
+ * PUT /api/auth/users/:username/password
+ *
+ * Reset a user's password (USER-11, D-03). Admin only.
+ * Password is SERVER-GENERATED — no plaintext in request body (review concern #1, T-04-07).
+ */
+authApiRouter.put('/users/:username/password', async (req: Request, res: Response): Promise<void> => {
+  if (!req.auth || req.auth.role !== 'admin') {
+    res.status(403).json({ error: 'Admin access required' });
+    return;
+  }
+
+  const target = req.params.username;
+
+  // Case-insensitive user lookup (review suggestion)
+  const users = loadUsers();
+  const user = users.find((u) => u.username.toLowerCase() === target.toLowerCase());
+  if (!user) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  // Server generates the new password — no plaintext in request body
+  // This eliminates the audit log leak (review concern #1, T-04-07)
+  const generatedPassword = generateSecurePassword();
+  user.passwordHash = bcrypt.hashSync(generatedPassword, 12);
+  await saveUsers(users);
+
+  // Cache-Control: no-store to prevent caching one-time password (review suggestion)
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ generatedPassword });
 });
