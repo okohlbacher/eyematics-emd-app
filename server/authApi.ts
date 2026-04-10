@@ -222,3 +222,19 @@ authApiRouter.get('/config', (_req: Request, res: Response): void => {
   const { twoFactorEnabled } = getAuthConfig();
   res.json({ twoFactorEnabled });
 });
+
+/**
+ * GET /api/auth/users
+ *
+ * Returns user list (without password hashes). Requires authentication.
+ */
+authApiRouter.get('/users', (req: Request, res: Response): void => {
+  if (!req.auth) {
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+  const users = loadUsers().map(({ username, firstName, lastName, role, centers, createdAt, lastLogin }) => ({
+    username, firstName, lastName, role, centers, createdAt, lastLogin,
+  }));
+  res.json({ users });
+});

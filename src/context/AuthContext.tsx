@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from 'react';
-import { setJwt, clearJwt } from '../services/authHeaders';
+import { setJwt, clearJwt, getAuthHeaders } from '../services/authHeaders';
 import { safeJsonParse } from '../utils/safeJson';
 
 /**
@@ -99,9 +99,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return stored ? safeJsonParse<User | null>(stored, null) : null;
   });
 
-  // managedUsers is kept as local state for Phase 2.
-  // Phase 3 will move CRUD to server API. No localStorage persistence (server is source of truth).
   const [managedUsers, setManagedUsers] = useState<ManagedUser[]>([]);
+
+  // Fetch user list from server (source of truth for display names and admin page)
+  const fetchUsers = useCallback(() => {
+    fetch('/api/auth/users', { headers: getAuthHeaders() })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { users?: ManagedUser[] } | null) => {
+        if (data?.users) setManagedUsers(data.users);
+      })
+      .catch(() => { /* ignore — users will show empty */ });
+  }, []);
 
   const [inactivityWarning, setInactivityWarning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -223,6 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!applied) {
           return { ok: false, error: 'Failed to decode session token' };
         }
+        fetchUsers();
         return { ok: true };
       }
 
@@ -230,7 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       return { ok: false, error: 'network_error' };
     }
-  }, [applySessionToken]);
+  }, [applySessionToken, fetchUsers]);
 
   /**
    * Step 2 of server login (2FA): POST /api/auth/verify with { challengeToken, otp }.
@@ -267,6 +276,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!applied) {
           return { ok: false, error: 'Failed to decode session token' };
         }
+        fetchUsers();
         return { ok: true };
       }
 
@@ -274,9 +284,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       return { ok: false, error: 'network_error' };
     }
-  }, [applySessionToken]);
+  }, [applySessionToken, fetchUsers]);
 
   const logout = useCallback(() => performLogout(false), [performLogout]);
+
+  // Fetch users on mount if already authenticated (page reload)
+  useEffect(() => {
+    if (user) fetchUsers();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Build display name from managed users: "FirstName LastName (username)"
   const displayName = (() => {

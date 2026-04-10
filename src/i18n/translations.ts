@@ -256,7 +256,7 @@ const translations = {
   visusJump: { de: 'Sprung > 0.3', en: 'Jump > 0.3' },
 
   // Admin page
-  navAdmin: { de: 'Verwaltung', en: 'Administration' },
+  navAdmin: { de: 'Nutzerverwaltung', en: 'User Management' },
   adminTitle: { de: 'Nutzerverwaltung', en: 'User Management' },
   adminSubtitle: {
     de: 'Nutzerkonten anlegen, bearbeiten und entfernen',
