@@ -50,6 +50,7 @@ let db: Database.Database | null = null;
 
 let stmtInsert: Database.Statement | null = null;
 let stmtPurge: Database.Statement | null = null;
+let _retentionDays = 90;
 
 // ---------------------------------------------------------------------------
 // 1. initAuditDb
@@ -62,7 +63,8 @@ let stmtPurge: Database.Statement | null = null;
  *
  * Must be called once at server startup before any other function.
  */
-export function initAuditDb(dataDir: string): void {
+export function initAuditDb(dataDir: string, retentionDays = 90): void {
+  _retentionDays = retentionDays;
   const dbPath = path.join(dataDir, 'audit.db');
   db = new Database(dbPath);
 
@@ -94,7 +96,7 @@ export function initAuditDb(dataDir: string): void {
   `);
 
   stmtPurge = db.prepare(
-    `DELETE FROM audit_log WHERE timestamp < datetime('now', '-90 days')`,
+    `DELETE FROM audit_log WHERE timestamp < datetime('now', '-' || @days || ' days')`,
   );
 
   console.log(`[auditDb] Opened audit database: ${dbPath}`);
@@ -120,17 +122,17 @@ export function logAuditEntry(entry: AuditDbRow): void {
 // ---------------------------------------------------------------------------
 
 /**
- * Delete audit entries older than 90 days (D-15).
+ * Delete audit entries older than the configured retention period.
  * Returns the number of rows deleted.
  */
 export function purgeOldEntries(): number {
   if (!stmtPurge) {
     throw new Error('[auditDb] purgeOldEntries called before initAuditDb()');
   }
-  const result = stmtPurge.run();
+  const result = stmtPurge.run({ days: _retentionDays });
   const count = result.changes;
   if (count > 0) {
-    console.log(`[auditDb] Purged ${count} audit entries older than 90 days`);
+    console.log(`[auditDb] Purged ${count} audit entries older than ${_retentionDays} days`);
   }
   return count;
 }

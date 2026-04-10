@@ -11,3 +11,5 @@ auth:
   twoFactorEnabled: true
   maxLoginAttempts: 5
   otpCode: "123456"
+audit:
+  retentionDays: 90

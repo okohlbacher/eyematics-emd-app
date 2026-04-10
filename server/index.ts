@@ -110,7 +110,10 @@ initAuth(DATA_DIR, settings);
 // 4. initAuditDb — open/create SQLite audit database
 // ---------------------------------------------------------------------------
 
-initAuditDb(DATA_DIR);
+const auditSection = (settings.audit ?? {}) as Record<string, unknown>;
+const retentionDays = typeof auditSection.retentionDays === 'number' ? auditSection.retentionDays : 90;
+
+initAuditDb(DATA_DIR, retentionDays);
 
 // ---------------------------------------------------------------------------
 // 5. startPurgeInterval — run initial purge + daily interval
