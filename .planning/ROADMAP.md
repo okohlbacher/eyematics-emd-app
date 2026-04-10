@@ -31,12 +31,13 @@ Plans:
 **Requirements:** USER-01, USER-02, USER-03, USER-04, USER-05, USER-06, USER-07, USER-08, USER-09, USER-10, USER-11, USER-12, DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, DATA-07
 **Gap Closure:** Closes 19 orphaned requirements from audit
 **Depends on:** Phase 3
-**Plans:** 3 plans
+**Plans:** 4 plans
 
 Plans:
 - [x] 04-01-PLAN.md — Server-side user CRUD API (saveUsers, GET/POST/DELETE/PUT endpoints)
 - [x] 04-02-PLAN.md — Server-side data persistence API (SQLite data.db, 8 endpoints for 4 resources)
 - [x] 04-03-PLAN.md — Client migration (AdminPage + DataContext wired to server, localStorage removed)
+- [ ] 04-04-PLAN.md — Gap closure: fix auth token flow (login calls server, real JWT in Bearer header)
 
 ### Phase 5: Center-Based Data Restriction
 **Goal:** Server-enforced center filtering on all data endpoints — unauthorized center data never leaves the server
