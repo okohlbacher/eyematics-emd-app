@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-last_updated: "2026-04-10T15:57:11.719Z"
+status: completed
+last_updated: "2026-04-10T16:03:21.897Z"
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
-  percent: 83
+  completed_plans: 6
+  percent: 100
 ---
 
 # Project State
@@ -43,6 +43,8 @@ See: .planning/PROJECT.md (updated 2026-04-10)
 - Local vs Blaze bundle discrimination: Organization entry presence. Local per-center files each have one Organization; Blaze synthetic bundles do not. (Phase 05, Plan 01)
 - Server runtime dependencies (express, bcrypt, etc.) added to package.json — were missing, causing test failures. (Phase 05, Plan 01)
 - Production handlers issueApiHandler and settingsApiHandler added to their modules — were imported in index.ts but missing from exports. (Phase 05, Plan 01)
+- [Phase 05]: i18n keys added to single translations.ts with {de,en} pairs — project uses one file, not separate de.ts/en.ts as plan assumed
+- [Phase 05]: fhirApiPlugin validates auth via validateAuth() from utils.ts; centers field read from decoded JWT payload stored in session
 
 ## Performance Metrics
 

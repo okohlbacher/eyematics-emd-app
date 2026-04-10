@@ -44,11 +44,11 @@ Plans:
 **Requirements:** CENTER-01, CENTER-02, CENTER-03, CENTER-04, CENTER-05, CENTER-06, CENTER-07, CENTER-08, CENTER-09
 **Gap Closure:** Closes 9 orphaned requirements from audit
 **Depends on:** Phase 4
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 05-01-PLAN.md — Server-side FHIR bundle loading, center filtering, case ID validation, center ID migration
-- [ ] 05-02-PLAN.md — Client DataContext wired to /api/fhir/bundles, i18n error states, Vite proxy removal
+- [x] 05-02-PLAN.md — Client DataContext wired to /api/fhir/bundles, i18n error states, Vite proxy removal
 
 ### Phase 6: Keycloak Preparation
 **Goal:** Prepare auth middleware for Keycloak JWKS validation, config block, claim mapping, UI toggle, documentation
