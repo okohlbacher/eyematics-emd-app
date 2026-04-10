@@ -27,17 +27,17 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] Production Express backend serving static build + all APIs
-- [ ] Server-side login with bcrypt-hashed passwords (POST /api/auth/login)
-- [ ] JWT session tokens (HS256 local / RS256 Keycloak) with { username, role, centers }
-- [ ] Remove hardcoded credentials from client bundle — passwords only on server
-- [ ] Server-side audit log (append-only JSONL, replaces localStorage)
-- [ ] Server-side user management with password hashes, role, and center permissions
-- [ ] Server-side storage for quality flags, saved searches, excluded/reviewed cases
-- [ ] Center-based data restriction (users see only their assigned centers' data)
-- [ ] Auth middleware validating JWT on all API routes (same token format for local + Keycloak)
-- [ ] Keycloak integration preparation (middleware, config, documentation)
-- [ ] FHIR proxy for production (http-proxy-middleware)
+- [x] Production Express backend serving static build + all APIs (Phase 1)
+- [x] Server-side login with bcrypt-hashed passwords (POST /api/auth/login) (Phase 2)
+- [x] JWT session tokens (HS256) with { sub, preferred_username, role, centers } (Phase 2)
+- [x] Remove hardcoded credentials from client bundle — passwords only on server (Phase 2)
+- [x] Server-side audit log (append-only SQLite, replaces localStorage) (Phase 2)
+- [x] Auth middleware validating JWT on all /api/* routes (Phase 2)
+- [x] FHIR proxy for production (http-proxy-middleware) (Phase 1)
+- [ ] Server-side user management CRUD via API (Phase 3)
+- [ ] Server-side storage for quality flags, saved searches, excluded/reviewed cases (Phase 3)
+- [ ] Center-based data restriction (users see only their assigned centers' data) (Phase 4)
+- [ ] Keycloak integration preparation (middleware, config, documentation) (Phase 5)
 - [ ] API design that allows future migration from JSON files to a database
 
 ### Out of Scope
@@ -51,9 +51,9 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 ## Context
 
 - **Existing codebase**: ~130 files, well-structured React SPA with Vite 8
-- **Server plugins**: issueApi.ts and settingsApi.ts use Vite's `configureServer()` — dev-only
-- **Auth flow**: hardcoded DEFAULT_CREDENTIALS in AuthContext.tsx, base64 Bearer tokens
-- **Audit**: localStorage with 500 entry cap, cleared on logout, tamperable
+- **Server**: Express 5 production server (server/index.ts) + Vite dev plugins for backward compat
+- **Auth flow**: Server-side bcrypt + JWT (HS256), 2FA with fixed OTP, rate limiting with exponential backoff
+- **Audit**: Server-side SQLite (data/audit.db), auto-logged by middleware, immutable from client, configurable retention
 - **User centers**: ManagedUser.centers field exists but is never used for data filtering
 - **FHIR data**: 5 centers (UKA, UKB, LMU, UKT, UKM) with synthetic test data
 - **Center mapping**: centerId (e.g., 'org-uka') maps to shorthand (e.g., 'UKA') via CENTER_SHORTHANDS in fhirLoader.ts
@@ -91,16 +91,16 @@ The EMD operates within a four-zone architecture at each site:
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| JSON files over SQLite for v1 | No native deps, simpler deployment, fits on-premises philosophy | — Pending |
-| Keycloak prepare-only (no full OIDC flow) | Needs real Keycloak instance to test; middleware abstraction is the hard part | — Pending |
-| All localStorage to server | Audit compliance requires it; partial migration creates inconsistent patterns | — Pending |
-| Raw Node http types for shared handlers | Avoids Express dependency in code shared with Vite dev plugins | — Pending |
-| SQLite for audit log (better-sqlite3) | SQL filtering/sorting beats JSONL for query flexibility; 90-day rolling retention with auto-purge; immutable from UI | — Pending |
-| Server-side login with bcrypt + JWT | Passwords must never be in client bundle; JWT format identical for local and Keycloak — seamless provider switch | — Pending |
-| User credentials + centers in data/users.json | Single user record holds passwordHash, role, centers — same schema regardless of auth provider | — Pending |
-| DSF as separate orchestration layer | DSF populates/coordinates multi-site data; EMD reads only local repository. Four-zone model: clinical/source, DSF node, EMD backend, browser. Clean separation of concerns. | — Pending |
-| EMD never talks to remote hospitals | Express backend reads only from local FHIR store (Blaze or files). DSF upstream pushes data into local store. No direct cross-site communication from EMD. | — Pending |
-| Pattern A (central consolidation) for v1 | Each site sends pseudonymized payloads via DSF to local consolidated repo. EMD reads from that. Pattern B (federated query) deferred to future. | — Pending |
+| JSON files over SQLite for v1 | No native deps, simpler deployment, fits on-premises philosophy | Implemented (Phase 1) |
+| Keycloak prepare-only (no full OIDC flow) | Needs real Keycloak instance to test; middleware abstraction is the hard part | Pending (Phase 5) |
+| All localStorage to server | Audit compliance requires it; partial migration creates inconsistent patterns | Partial — audit done (Phase 2), data persistence pending (Phase 3) |
+| Raw Node http types for shared handlers | Avoids Express dependency in code shared with Vite dev plugins | Implemented (Phase 1) |
+| SQLite for audit log (better-sqlite3) | SQL filtering/sorting beats JSONL for query flexibility; configurable retention with auto-purge; immutable from UI | Implemented (Phase 2) |
+| Server-side login with bcrypt + JWT | Passwords must never be in client bundle; JWT format identical for local and Keycloak — seamless provider switch | Implemented (Phase 2) |
+| User credentials + centers in data/users.json | Single user record holds passwordHash, role, centers — same schema regardless of auth provider | Implemented (Phase 2) |
+| DSF as separate orchestration layer | DSF populates/coordinates multi-site data; EMD reads only local repository. Four-zone model: clinical/source, DSF node, EMD backend, browser. Clean separation of concerns. | Architecture decided |
+| EMD never talks to remote hospitals | Express backend reads only from local FHIR store (Blaze or files). DSF upstream pushes data into local store. No direct cross-site communication from EMD. | Architecture decided |
+| Pattern A (central consolidation) for v1 | Each site sends pseudonymized payloads via DSF to local consolidated repo. EMD reads from that. Pattern B (federated query) deferred to future. | Architecture decided |
 
 ---
-*Last updated: 2026-04-10 after auth security update*
+*Last updated: 2026-04-10 after Phase 2 (server-side auth + audit) completion*

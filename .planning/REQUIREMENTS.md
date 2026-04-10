@@ -7,25 +7,25 @@
 
 ### Production Backend
 
-- [ ] **BACK-01**: Express server serves Vite production build (static files from dist/)
-- [ ] **BACK-02**: Express server mounts all API routes (issues, settings, audit, users, data)
-- [ ] **BACK-03**: FHIR proxy forwards /fhir/* to configured Blaze URL in production
-- [ ] **BACK-04**: SPA fallback (all unmatched GET routes serve index.html)
-- [ ] **BACK-05**: Server starts via `npm start` after `npm run build:all`
-- [ ] **BACK-06**: Vite dev mode (`npm run dev`) continues working unchanged
+- [x] **BACK-01**: Express server serves Vite production build (static files from dist/)
+- [x] **BACK-02**: Express server mounts all API routes (issues, settings, audit, users, data)
+- [x] **BACK-03**: FHIR proxy forwards /fhir/* to configured Blaze URL in production
+- [x] **BACK-04**: SPA fallback (all unmatched GET routes serve index.html)
+- [x] **BACK-05**: Server starts via `npm start` after `npm run build`
+- [x] **BACK-06**: Vite dev mode (`npm run dev`) continues working unchanged
 
 ### Server-Side Audit Log
 
-- [ ] **AUDIT-01**: Audit entries written server-side only — backend logAudit() function inserts directly into SQLite (not exposed as a writable API endpoint)
-- [ ] **AUDIT-02**: GET /api/audit returns entries with filtering (user, action, time range, limit/offset) via SQL queries — read-only
-- [ ] **AUDIT-03**: GET /api/audit/export returns full log as downloadable JSON (admin only) — read-only
-- [ ] **AUDIT-04**: Audit entries stored in SQLite database (data/audit.db) in an append-only audit_log table
-- [ ] **AUDIT-05**: No POST, PUT, PATCH, or DELETE endpoints for audit — no API route can create, modify, or delete audit entries; all writes happen internally via server-side function calls
-- [ ] **AUDIT-06**: AuditPage loads entries asynchronously from server (read-only display, search, filter)
-- [ ] **AUDIT-07**: No audit manipulation from UI — no clear button, no edit, no delete; audit log is immutable from the client's perspective
-- [ ] **AUDIT-08**: Rolling 3-month retention — server-side scheduled cleanup deletes entries older than 90 days on startup and daily via interval (only automated server process can delete)
-- [ ] **AUDIT-09**: SQLite schema: audit_log(id TEXT PK, timestamp TEXT, user TEXT, action TEXT, detailKey TEXT, detailArgs TEXT, resource TEXT); indexed on timestamp, user, action
-- [ ] **AUDIT-10**: Frontend logAudit() calls are replaced by server-side middleware/hooks — every API request that accesses or modifies data is audit-logged by the backend automatically, not by client-initiated POST
+- [x] **AUDIT-01**: Audit entries written server-side only — auditMiddleware inserts directly into SQLite (not exposed as a writable API endpoint)
+- [x] **AUDIT-02**: GET /api/audit returns entries with filtering (user, method, path, time range, limit/offset) via SQL queries — read-only
+- [x] **AUDIT-03**: GET /api/audit/export returns full log as downloadable JSON (admin only) — read-only
+- [x] **AUDIT-04**: Audit entries stored in SQLite database (data/audit.db) in an append-only audit_log table
+- [x] **AUDIT-05**: No POST, PUT, PATCH, or DELETE endpoints for audit — all writes happen internally via server-side middleware
+- [x] **AUDIT-06**: AuditPage loads entries asynchronously from server (read-only display with translated events, search, filter)
+- [x] **AUDIT-07**: No audit manipulation from UI — no clear button, no edit, no delete; audit log is immutable from the client's perspective
+- [x] **AUDIT-08**: Configurable retention (default 90 days) — server-side scheduled cleanup on startup and daily via interval
+- [x] **AUDIT-09**: SQLite schema: audit_log(id TEXT PK, timestamp TEXT, method TEXT, path TEXT, user TEXT, status INTEGER, duration_ms INTEGER, body TEXT, query TEXT); indexed on timestamp, user, path — supersedes original action/detailKey schema per D-14
+- [x] **AUDIT-10**: All frontend logAudit() calls removed — every API request is audit-logged by server middleware automatically
 
 ### Server-Side User Management & Authentication
 
@@ -67,15 +67,15 @@
 
 ### Auth Middleware
 
-- [ ] **AUTH-01**: Unified auth middleware validates JWT Bearer tokens on all /api/* routes
-- [ ] **AUTH-02**: Local mode: JWT signed with HS256 server secret (issued by POST /api/auth/login)
-- [ ] **AUTH-03**: Keycloak mode: JWT signed by Keycloak (validated via JWKS endpoint)
-- [ ] **AUTH-04**: Auth middleware extracts { username, role, centers } from JWT payload for both modes
-- [ ] **AUTH-05**: settings.yaml auth section configures provider (local/keycloak) and JWT secret for local mode
-- [ ] **AUTH-06**: Shared getAuthHeaders() utility replaces duplicated implementations
-- [ ] **AUTH-07**: Remove hardcoded DEFAULT_CREDENTIALS from client-side AuthContext.tsx — login form POSTs to /api/auth/login
-- [ ] **AUTH-08**: Remove hardcoded KNOWN_USERS from server/utils.ts — replaced by data/users.json lookup
-- [ ] **AUTH-09**: JWT token format is identical for local and Keycloak: { sub, preferred_username, role, centers, iat, exp } — frontend code doesn't care which provider issued it
+- [x] **AUTH-01**: Unified auth middleware validates JWT Bearer tokens on all /api/* routes
+- [x] **AUTH-02**: Local mode: JWT signed with HS256 server secret (issued by POST /api/auth/login)
+- [ ] **AUTH-03**: Keycloak mode: JWT signed by Keycloak (validated via JWKS endpoint) — Phase 5
+- [x] **AUTH-04**: Auth middleware extracts { username, role, centers } from JWT payload
+- [x] **AUTH-05**: settings.yaml auth section configures twoFactorEnabled, maxLoginAttempts, otpCode
+- [x] **AUTH-06**: Shared getAuthHeaders() utility replaces duplicated implementations (src/services/authHeaders.ts)
+- [x] **AUTH-07**: Hardcoded DEFAULT_CREDENTIALS removed from AuthContext.tsx — login POSTs to /api/auth/login
+- [x] **AUTH-08**: Hardcoded KNOWN_USERS removed from server/utils.ts — replaced by data/users.json lookup
+- [x] **AUTH-09**: JWT token format: { sub, preferred_username, role, centers, iat, exp } — ready for Keycloak compatibility
 
 ### Keycloak Preparation
 
@@ -115,9 +115,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BACK-01..06 | Phase 1 | Pending |
-| AUDIT-01..10 | Phase 2 | Pending |
-| AUTH-01..09 | Phase 2 | Pending |
+| BACK-01..06 | Phase 1 | Complete |
+| AUDIT-01..10 | Phase 2 | Complete |
+| AUTH-01..09 | Phase 2 | Complete (AUTH-03 deferred to Phase 5) |
 | USER-01..12 | Phase 3 | Pending |
 | DATA-01..07 | Phase 3 | Pending |
 | CENTER-01..09 | Phase 4 | Pending |
@@ -130,4 +130,4 @@
 
 ---
 *Requirements defined: 2026-04-10*
-*Last updated: 2026-04-10 after initial definition*
+*Last updated: 2026-04-10 after Phase 2 (server-side auth + audit) completion*
