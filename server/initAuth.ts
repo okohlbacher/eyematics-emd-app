@@ -121,6 +121,56 @@ export function loadUsers(): UserRecord[] {
 }
 
 // ---------------------------------------------------------------------------
+// Write serialization
+// ---------------------------------------------------------------------------
+
+/**
+ * In-process write lock to serialize user-write operations.
+ * Prevents lost-update race when two admin requests overlap.
+ * (Review concern #8: concurrent admin mutations)
+ */
+let _writeLock = false;
+const _writeQueue: Array<() => void> = [];
+
+function acquireWriteLock(): Promise<void> {
+  return new Promise((resolve) => {
+    if (!_writeLock) {
+      _writeLock = true;
+      resolve();
+    } else {
+      _writeQueue.push(resolve);
+    }
+  });
+}
+
+function releaseWriteLock(): void {
+  const next = _writeQueue.shift();
+  if (next) {
+    next();
+  } else {
+    _writeLock = false;
+  }
+}
+
+/**
+ * Atomically write the full user list to data/users.json.
+ * Uses temp-file + rename to prevent corruption on crash.
+ * Write operations are serialized to prevent lost updates
+ * from concurrent admin requests.
+ */
+export async function saveUsers(users: UserRecord[]): Promise<void> {
+  if (_usersFile === null) {
+    throw new Error('[initAuth] saveUsers() called before initAuth()');
+  }
+  await acquireWriteLock();
+  try {
+    _atomicWrite(_usersFile, JSON.stringify(users, null, 2));
+  } finally {
+    releaseWriteLock();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
 

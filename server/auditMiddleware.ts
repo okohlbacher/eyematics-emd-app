@@ -45,12 +45,16 @@ declare module 'express-serve-static-core' {
  * Paths whose request bodies must have sensitive fields redacted before storage.
  * Per T-02-07: prevent information disclosure via audit log.
  */
-const REDACT_PATHS = new Set(['/api/auth/login', '/api/auth/verify']);
+const REDACT_PATHS = new Set([
+  '/api/auth/login',
+  '/api/auth/verify',
+  '/api/auth/users',           // POST /api/auth/users — response contains generatedPassword
+]);
 
 /**
  * Field names that must never appear in plaintext in the audit database.
  */
-const REDACT_FIELDS = new Set(['password', 'otp', 'challengeToken']);
+const REDACT_FIELDS = new Set(['password', 'otp', 'challengeToken', 'generatedPassword']);
 
 /**
  * Return the request body as a JSON string with sensitive fields replaced
