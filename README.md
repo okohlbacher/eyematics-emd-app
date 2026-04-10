@@ -8,24 +8,21 @@ A web-based dashboard for analysing ophthalmological research data from IVOM tre
 
 ```bash
 npm install
-npm run dev        # Development (Vite + API plugins, http://localhost:5173)
-# or
-npm run build && npm start   # Production (Express server, http://localhost:3000)
+npm run dev
 ```
 
-Log in with `admin` / `changeme2025!` / OTP `123456`.
+Open **http://localhost:5173** — log in with `admin` / `admin2025!` / OTP `123456`.
 
 > See the full credential table and login flow in [docs/Benutzerhandbuch.md](docs/Benutzerhandbuch.md) §2.
 
 ## Available Scripts
 
-| Command           | Description                                    |
-|-------------------|------------------------------------------------|
-| `npm run dev`     | Start the Vite development server              |
-| `npm run build`   | Type-check with TypeScript and build            |
-| `npm start`       | Start the Express production server             |
-| `npm run preview` | Serve the production build locally (Vite only)  |
-| `npm run lint`    | Run ESLint                                      |
+| Command           | Description                          |
+|-------------------|--------------------------------------|
+| `npm run dev`     | Start the Vite development server    |
+| `npm run build`   | Type-check with TypeScript and build |
+| `npm run preview` | Serve the production build locally   |
+| `npm run lint`    | Run ESLint                           |
 
 ## Project Structure
 
@@ -36,15 +33,14 @@ emd-app/
     Konfiguration.md           #   Configuration reference (settings.yaml)
     Lastenheft.md              #   Requirements specification
     Pflichtenheft.md           #   Functional specification
-  data/                         # Runtime data (users.json, audit.db, jwt-secret.txt)
-  server/                      # Express production server + Vite dev plugins
+  server/                      # Vite server plugins (REST APIs)
   public/data/                 # FHIR test data bundles (JSON) + OCT images
   src/
     components/                # Reusable UI components
     components/case-detail/    # CaseDetailPage sub-components
     context/                   # React context providers (Auth, Data, Language)
     config/                    # Clinical thresholds and constants
-    hooks/                     # Custom hooks (useLocalStorageState)
+    hooks/                     # Custom hooks (usePageAudit, useLocalStorageState)
     i18n/                      # Translations (de/en)
     pages/                     # Page components
     services/                  # Data loading, audit, settings, issues
@@ -63,7 +59,7 @@ The application works with HL7 FHIR R4 bundles containing Patient, Condition, Ob
 - **Case Detail View** — visus/CRT dual-axis chart, baseline change, IOP, refraction, injections, medications, OCT viewer, anamnesis, findings, adverse events
 - **Data Quality Review** — anomaly detection, error flagging, therapy discontinuation tracking, CSV export
 - **Documentation Quality** — centre-level benchmarking (completeness, plausibility, overall score)
-- **Audit Trail** — server-side SQLite audit log of all API access, immutable from client, with filtering and CSV export
+- **Audit Trail** — timestamped log of all user actions with filtering and CSV export
 - **Issue Reporting** — per-page feedback with automatic screenshot capture and server-side storage
 - **i18n** — full German/English bilingual support
 - **Role-based Access** — 6 user roles with admin route guards
@@ -76,20 +72,12 @@ The application works with HL7 FHIR R4 bundles containing Patient, Condition, Ob
 Settings are stored in `public/settings.yaml` and editable via the Settings page (persisted server-side via `PUT /api/settings`).
 
 ```yaml
+twoFactorEnabled: true
 therapyInterrupterDays: 120
 therapyBreakerDays: 365
 dataSource:
   type: local                   # "local" or "blaze"
   blazeUrl: http://localhost:8080/fhir
-server:
-  port: 3000
-  dataDir: "./data"
-auth:
-  twoFactorEnabled: true
-  maxLoginAttempts: 5
-  otpCode: "123456"
-audit:
-  retentionDays: 90
 ```
 
 > Full configuration reference: [docs/Konfiguration.md](docs/Konfiguration.md).
@@ -107,18 +95,15 @@ audit:
 
 ## Technology Stack
 
-| Layer     | Technology                                  |
-|-----------|---------------------------------------------|
-| Frontend  | React 19 + TypeScript 6                     |
-| Build     | Vite 8                                      |
-| Server    | Express 5 (production) / Vite plugins (dev) |
-| Auth      | JWT (jsonwebtoken) + bcrypt (bcryptjs)       |
-| Audit     | SQLite (better-sqlite3)                      |
-| Styling   | Tailwind CSS 4                              |
-| Charts    | Recharts 3                                  |
-| Icons     | Lucide React                                |
-| Routing   | React Router 7                              |
-| Data      | HL7 FHIR R4 (static JSON bundles)           |
+| Layer     | Technology                        |
+|-----------|-----------------------------------|
+| Framework | React 19 + TypeScript 6           |
+| Build     | Vite 8                            |
+| Styling   | Tailwind CSS 4                    |
+| Charts    | Recharts 3                        |
+| Icons     | Lucide React                      |
+| Routing   | React Router 7                    |
+| Data      | HL7 FHIR R4 (static JSON bundles) |
 
 > Full dependency list and vulnerability scan: [BOM.md](BOM.md).
 

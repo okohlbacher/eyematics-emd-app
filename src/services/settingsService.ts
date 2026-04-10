@@ -1,5 +1,5 @@
 import yaml from 'js-yaml';
-import { getAuthHeaders } from './authHeaders';
+import { safeJsonParse } from '../utils/safeJson';
 
 export interface AppSettings {
   twoFactorEnabled: boolean;
@@ -23,6 +23,23 @@ const DEFAULTS: AppSettings = {
 
 /** Cached merged settings */
 let _cached: AppSettings | null = null;
+
+/**
+ * Build Authorization header from the current session user.
+ * Returns `{ Authorization: 'Bearer <base64>' }` if an admin is logged in, or empty object.
+ * The token is a base64-encoded JSON `{ username, role }`.
+ */
+function getAuthHeaders(): Record<string, string> {
+  const stored = sessionStorage.getItem('emd-user');
+  if (stored) {
+    const user = safeJsonParse<{ username?: string; role?: string } | null>(stored, null);
+    if (user?.username && user?.role) {
+      const token = btoa(JSON.stringify({ username: user.username, role: user.role }));
+      return { Authorization: `Bearer ${token}` };
+    }
+  }
+  return {};
+}
 
 type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
 

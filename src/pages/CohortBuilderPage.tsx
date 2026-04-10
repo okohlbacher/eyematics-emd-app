@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { usePageAudit } from '../hooks/usePageAudit';
+import { logAudit } from '../services/auditService';
 import { downloadCsv, downloadJson, datedFilename } from '../utils/download';
 import { formatDate } from '../utils/dateFormat';
 import {
@@ -33,8 +36,12 @@ type SortField = 'date' | 'name';
 export default function CohortBuilderPage() {
   const { activeCases, centers, savedSearches, addSavedSearch, removeSavedSearch } =
     useData();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { locale, t } = useLanguage();
+
+  // Audit: log page view
+  usePageAudit('view_cohort', 'audit_detail_view_cohort');
 
   const [filters, setFilters] = useState<CohortFilter>({});
   const [showSaved, setShowSaved] = useState(false);
@@ -83,6 +90,7 @@ export default function CohortBuilderPage() {
       ];
     });
     downloadCsv(headers, rows, datedFilename('cohort-export', 'csv'));
+    if (user) logAudit(user.username, 'save_search', 'audit_detail_export_csv', [String(filteredCases.length)]);
   };
 
   const handleExportJson = () => {
@@ -98,6 +106,7 @@ export default function CohortBuilderPage() {
       medications: c.medications,
     }));
     downloadJson(data, datedFilename('cohort-export', 'json'));
+    if (user) logAudit(user.username, 'save_search', 'audit_detail_export_json', [String(filteredCases.length)]);
   };
 
   const diagnoses = [

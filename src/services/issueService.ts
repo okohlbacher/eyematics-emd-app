@@ -1,6 +1,19 @@
 // Issue reporting service — stores issues on the server filesystem via /api/issues
 
-import { getAuthHeaders } from './authHeaders';
+/** Build Authorization header from the current session user. */
+function getAuthHeaders(): Record<string, string> {
+  try {
+    const stored = sessionStorage.getItem('emd-user');
+    if (stored) {
+      const user = JSON.parse(stored);
+      if (user?.username && user?.role) {
+        const token = btoa(JSON.stringify({ username: user.username, role: user.role }));
+        return { Authorization: `Bearer ${token}` };
+      }
+    }
+  } catch { /* sessionStorage unavailable */ }
+  return {};
+}
 
 export interface ReportedIssue {
   id: string;

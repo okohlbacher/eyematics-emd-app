@@ -1,15 +1,6 @@
+twoFactorEnabled: true
 therapyInterrupterDays: 120
 therapyBreakerDays: 365
 dataSource:
   type: local
   blazeUrl: http://localhost:8080/fhir
-server:
-  port: 3000
-  host: "0.0.0.0"
-  dataDir: "./data"
-auth:
-  twoFactorEnabled: true
-  maxLoginAttempts: 5
-  otpCode: "123456"
-audit:
-  retentionDays: 90
