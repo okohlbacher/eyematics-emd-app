@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from 'react';
-import { logAudit } from '../services/auditService';
-import { getSettings } from '../services/settingsService';
+import { setJwt, clearJwt } from '../services/authHeaders';
 import { safeJsonParse } from '../utils/safeJson';
 
 /**
@@ -29,6 +28,7 @@ export const QUALITY_ROLES: UserRole[] = ['admin', 'clinic_lead', 'data_manager'
 export interface User {
   username: string;
   role: UserRole;
+  centers: string[];
 }
 
 export interface ManagedUser {
@@ -42,25 +42,26 @@ export interface ManagedUser {
   lastLogin?: string;
 }
 
-/** Default credentials for the demonstrator */
-const DEFAULT_CREDENTIALS: Record<string, { password: string; role: UserRole }> = {
-  admin:        { password: 'admin2025!',      role: 'admin' },
-  forscher1:    { password: 'forscher2025!',   role: 'researcher' },
-  forscher2:    { password: 'forscher2025!',   role: 'researcher' },
-  epidemiologe: { password: 'epid2025!',       role: 'epidemiologist' },
-  kliniker:     { password: 'klinik2025!',     role: 'clinician' },
-  diz_manager:  { password: 'diz2025!',        role: 'data_manager' },
-  klinikleitung:{ password: 'leitung2025!',    role: 'clinic_lead' },
-};
-
-/** Accepted OTP code for the demonstrator */
-const VALID_OTP = '123456';
-
 interface AuthContextType {
   user: User | null;
   /** Display name: "FirstName LastName (username)" or fallback to username */
   displayName: string;
-  login: (username: string, password: string, otp: string) => { ok: boolean; error?: 'user_not_found' | 'wrong_password' | 'invalid_otp' };
+  /**
+   * Step 1 of login: POST /api/auth/login with { username, password }.
+   * Returns { ok: true } on success (no 2FA), or { ok: false, needsOtp: true, challengeToken }
+   * when 2FA is required, or { ok: false, error } on failure.
+   */
+  login: (username: string, password: string) => Promise<{
+    ok: boolean;
+    needsOtp?: boolean;
+    challengeToken?: string;
+    error?: string;
+  }>;
+  /**
+   * Step 2 of login: POST /api/auth/verify with { challengeToken, otp }.
+   * Returns { ok: true } on success, or { ok: false, error } on failure.
+   */
+  verifyOtp: (challengeToken: string, otp: string) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
   managedUsers: ManagedUser[];
   addManagedUser: (u: ManagedUser) => void;
@@ -75,44 +76,52 @@ const AuthContext = createContext<AuthContextType | null>(null);
 const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 const WARNING_BEFORE = 60 * 1000; // warn 1 minute before
 
-const DEFAULT_MANAGED_USERS: ManagedUser[] = [
-  { username: 'admin', firstName: 'System', lastName: 'Administrator', role: 'admin', centers: ['UKA', 'UKB', 'LMU', 'UKT', 'UKM'], createdAt: '2025-01-01T00:00:00Z' },
-  { username: 'forscher1', firstName: 'Anna', lastName: 'Müller', role: 'researcher', centers: ['UKA'], createdAt: '2025-01-15T00:00:00Z' },
-  { username: 'forscher2', firstName: 'Thomas', lastName: 'Weber', role: 'researcher', centers: ['UKB'], createdAt: '2025-02-01T00:00:00Z' },
-  { username: 'epidemiologe', firstName: 'Julia', lastName: 'Schmidt', role: 'epidemiologist', centers: ['UKA', 'UKB', 'LMU'], createdAt: '2025-03-01T00:00:00Z' },
-  { username: 'kliniker', firstName: 'Markus', lastName: 'Fischer', role: 'clinician', centers: ['UKT'], createdAt: '2025-03-15T00:00:00Z' },
-  { username: 'diz_manager', firstName: 'Sabine', lastName: 'Braun', role: 'data_manager', centers: ['UKM'], createdAt: '2025-04-01T00:00:00Z' },
-  { username: 'klinikleitung', firstName: 'Prof. Klaus', lastName: 'Hoffmann', role: 'clinic_lead', centers: ['UKA', 'UKB', 'LMU', 'UKT', 'UKM'], createdAt: '2025-04-15T00:00:00Z' },
-];
+/**
+ * Decode the payload segment of a JWT (base64url middle segment).
+ * Returns null if decoding fails.
+ */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    // Base64url → base64 → decode
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const json = atob(base64);
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
     const stored = sessionStorage.getItem('emd-user');
     return stored ? safeJsonParse<User | null>(stored, null) : null;
   });
-  const [managedUsers, setManagedUsers] = useState<ManagedUser[]>(() => {
-    const stored = localStorage.getItem('emd-managed-users');
-    return stored ? safeJsonParse<ManagedUser[]>(stored, DEFAULT_MANAGED_USERS) : DEFAULT_MANAGED_USERS;
-  });
+
+  // managedUsers is kept as local state for Phase 2.
+  // Phase 3 will move CRUD to server API. No localStorage persistence (server is source of truth).
+  const [managedUsers, setManagedUsers] = useState<ManagedUser[]>([]);
+
   const [inactivityWarning, setInactivityWarning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const warningRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const performLogout = useCallback((auto = false) => {
-    if (user) {
-      logAudit(user.username, auto ? 'auto_logout' : 'logout', auto ? 'audit_detail_auto_logout' : 'audit_detail_logout');
-    }
     setUser(null);
     setInactivityWarning(false);
+    clearJwt();
     sessionStorage.removeItem('emd-user');
-    // H-04: clear sensitive data from localStorage on logout
+    // H-04: clear client-side sensitive data on logout
+    // (emd-audit-log and emd-managed-users removed — now server-side)
     localStorage.removeItem('emd-saved-searches');
     localStorage.removeItem('emd-quality-flags');
     localStorage.removeItem('emd-excluded-cases');
     localStorage.removeItem('emd-reviewed-cases');
-    localStorage.removeItem('emd-managed-users');
-    localStorage.removeItem('emd-audit-log');
-  }, [user]);
+    if (auto) {
+      console.info('[auth] Session expired due to inactivity');
+    }
+  }, []);
 
   const resetInactivityTimer = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -147,50 +156,127 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [user, resetInactivityTimer]);
 
-  const login = (username: string, password: string, otp: string): { ok: boolean; error?: 'user_not_found' | 'wrong_password' | 'invalid_otp' } => {
-    if (!username) return { ok: false, error: 'user_not_found' };
+  /**
+   * Apply a received session JWT: decode payload, set user state, store JWT + user in sessionStorage.
+   */
+  const applySessionToken = useCallback((token: string): boolean => {
+    const payload = decodeJwtPayload(token);
+    if (!payload) return false;
 
-    // Check if user exists – first in default credentials, then in managed users
-    const defaultCred = DEFAULT_CREDENTIALS[username.toLowerCase()];
-    const managed = managedUsers.find((u) => u.username.toLowerCase() === username.toLowerCase());
+    const username = typeof payload.preferred_username === 'string' ? payload.preferred_username : (typeof payload.sub === 'string' ? payload.sub : null);
+    const role = typeof payload.role === 'string' ? payload.role as UserRole : 'researcher';
+    const centers = Array.isArray(payload.centers) ? payload.centers as string[] : [];
 
-    if (!defaultCred && !managed) {
-      return { ok: false, error: 'user_not_found' };
-    }
+    if (!username) return false;
 
-    // Validate password (managed users created at runtime use default password 'changeme!')
-    const expectedPassword = defaultCred?.password ?? 'changeme!';
-    if (password !== expectedPassword) {
-      return { ok: false, error: 'wrong_password' };
-    }
-
-    // Validate OTP (skip if 2FA is disabled in settings)
-    const settings = getSettings();
-    if (settings.twoFactorEnabled && otp !== VALID_OTP) {
-      return { ok: false, error: 'invalid_otp' };
-    }
-
-    const role = defaultCred?.role ?? managed?.role ?? 'researcher';
-    const u: User = { username, role };
-    setUser(u);
+    const u: User = { username, role, centers };
+    setJwt(token);
     sessionStorage.setItem('emd-user', JSON.stringify(u));
-    logAudit(username, 'login', 'audit_detail_login', [role]);
+    setUser(u);
+    return true;
+  }, []);
 
-    // Update last login date on managed user
-    setManagedUsers((prev) => {
-      const next = prev.map((mu) =>
-        mu.username.toLowerCase() === username.toLowerCase()
-          ? { ...mu, lastLogin: new Date().toISOString() }
-          : mu
-      );
-      localStorage.setItem('emd-managed-users', JSON.stringify(next));
-      return next;
-    });
+  /**
+   * Step 1 of server login: POST /api/auth/login with { username, password }.
+   *
+   * - If 2FA disabled: server returns { token } → apply JWT, return { ok: true }
+   * - If 2FA enabled: server returns { challengeToken } → return { ok: false, needsOtp: true, challengeToken }
+   * - On 401: return { ok: false, error: 'Invalid credentials' }
+   * - On 429: return { ok: false, error: 'account_locked' }
+   * - On network error: return { ok: false, error: 'network_error' }
+   */
+  const login = useCallback(async (username: string, password: string): Promise<{
+    ok: boolean;
+    needsOtp?: boolean;
+    challengeToken?: string;
+    error?: string;
+  }> => {
+    try {
+      const resp = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
 
-    return { ok: true };
-  };
+      const data = await resp.json() as Record<string, unknown>;
 
-  const logout = () => performLogout(false);
+      if (resp.status === 429) {
+        return { ok: false, error: 'account_locked' };
+      }
+
+      if (resp.status === 401 || resp.status === 400) {
+        return { ok: false, error: typeof data.error === 'string' ? data.error : 'Invalid credentials' };
+      }
+
+      if (!resp.ok) {
+        return { ok: false, error: 'network_error' };
+      }
+
+      // 2FA enabled: server returned challenge token
+      if (typeof data.challengeToken === 'string') {
+        return { ok: false, needsOtp: true, challengeToken: data.challengeToken };
+      }
+
+      // No 2FA: server returned full session JWT
+      if (typeof data.token === 'string') {
+        const applied = applySessionToken(data.token);
+        if (!applied) {
+          return { ok: false, error: 'Failed to decode session token' };
+        }
+        return { ok: true };
+      }
+
+      return { ok: false, error: 'Unexpected server response' };
+    } catch {
+      return { ok: false, error: 'network_error' };
+    }
+  }, [applySessionToken]);
+
+  /**
+   * Step 2 of server login (2FA): POST /api/auth/verify with { challengeToken, otp }.
+   *
+   * - On success: server returns { token } → apply JWT, return { ok: true }
+   * - On 401: return { ok: false, error: 'Invalid OTP' }
+   * - On 429: return { ok: false, error: 'account_locked' }
+   * - On network error: return { ok: false, error: 'network_error' }
+   */
+  const verifyOtp = useCallback(async (challengeToken: string, otp: string): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const resp = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ challengeToken, otp }),
+      });
+
+      const data = await resp.json() as Record<string, unknown>;
+
+      if (resp.status === 429) {
+        return { ok: false, error: 'account_locked' };
+      }
+
+      if (resp.status === 401 || resp.status === 400) {
+        return { ok: false, error: typeof data.error === 'string' ? data.error : 'Invalid OTP' };
+      }
+
+      if (!resp.ok) {
+        return { ok: false, error: 'network_error' };
+      }
+
+      if (typeof data.token === 'string') {
+        const applied = applySessionToken(data.token);
+        if (!applied) {
+          return { ok: false, error: 'Failed to decode session token' };
+        }
+        return { ok: true };
+      }
+
+      return { ok: false, error: 'Unexpected server response' };
+    } catch {
+      return { ok: false, error: 'network_error' };
+    }
+  }, [applySessionToken]);
+
+  const logout = useCallback(() => performLogout(false), [performLogout]);
 
   // Build display name from managed users: "FirstName LastName (username)"
   const displayName = (() => {
@@ -209,26 +295,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const addManagedUser = (u: ManagedUser) => {
-    setManagedUsers((prev) => {
-      const next = [...prev.filter((x) => x.username !== u.username), u];
-      localStorage.setItem('emd-managed-users', JSON.stringify(next));
-      return next;
-    });
-    if (user) logAudit(user.username, 'create_user', 'audit_detail_create_user', [u.username]);
+    setManagedUsers((prev) => [...prev.filter((x) => x.username !== u.username), u]);
   };
 
   const removeManagedUser = (username: string) => {
-    setManagedUsers((prev) => {
-      const next = prev.filter((u) => u.username !== username);
-      localStorage.setItem('emd-managed-users', JSON.stringify(next));
-      return next;
-    });
-    if (user) logAudit(user.username, 'delete_user', 'audit_detail_delete_user', [username]);
+    setManagedUsers((prev) => prev.filter((u) => u.username !== username));
   };
 
   const value = useMemo<AuthContextType>(() => ({
-    user, displayName, login, logout, managedUsers, addManagedUser, removeManagedUser, inactivityWarning, hasRole,
-  }), [user, displayName, login, logout, managedUsers, addManagedUser, removeManagedUser, inactivityWarning, hasRole]);
+    user, displayName, login, verifyOtp, logout, managedUsers, addManagedUser, removeManagedUser, inactivityWarning, hasRole,
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [user, displayName, login, verifyOtp, logout, managedUsers, inactivityWarning]);
 
   return (
     <AuthContext.Provider value={value}>

@@ -1,82 +1,107 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { getSettings } from '../services/settingsService';
 import { Eye, AlertCircle, Globe } from 'lucide-react';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
+  const [challengeToken, setChallengeToken] = useState('');
   const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
   const [error, setError] = useState('');
-  const [attempts, setAttempts] = useState(0);
-  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const { login, verifyOtp } = useAuth();
   const navigate = useNavigate();
   const { locale, setLocale, t } = useLanguage();
 
-  const handleCredentials = (e: React.FormEvent) => {
+  // Fetch 2FA config from server on mount (D-02)
+  useEffect(() => {
+    fetch('/api/auth/config')
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { twoFactorEnabled?: boolean } | null) => {
+        if (data && typeof data.twoFactorEnabled === 'boolean') {
+          setTwoFactorEnabled(data.twoFactorEnabled);
+        }
+      })
+      .catch(() => {
+        // Config fetch failed — proceed without 2FA info
+      });
+  }, []);
+
+  const handleCredentials = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
       setError(t('loginErrorEmpty'));
       return;
     }
-    if (attempts >= 5) {
-      setError(t('loginErrorTooMany'));
-      return;
-    }
 
-    // If 2FA is disabled, log in directly (skip OTP step)
-    const settings = getSettings();
-    if (!settings.twoFactorEnabled) {
-      const result = login(username, password, '');
-      if (result.ok) {
-        navigate('/');
-      } else {
-        setAttempts((a) => a + 1);
-        if (result.error === 'user_not_found') {
-          setError(t('loginErrorUserNotFound'));
-        } else if (result.error === 'wrong_password') {
-          setError(t('loginErrorWrongPassword'));
-        } else {
-          setError(t('loginErrorFailed'));
-        }
-      }
-      return;
-    }
-
-    setStep('otp');
+    setLoading(true);
     setError('');
+
+    const result = await login(username, password);
+
+    setLoading(false);
+
+    if (result.ok) {
+      navigate('/');
+      return;
+    }
+
+    if (result.needsOtp && result.challengeToken) {
+      setChallengeToken(result.challengeToken);
+      setStep('otp');
+      return;
+    }
+
+    // Map server error codes to i18n messages
+    if (result.error === 'account_locked') {
+      setError(t('loginErrorTooMany'));
+    } else if (result.error === 'network_error') {
+      setError(t('loginErrorFailed'));
+    } else {
+      // Generic: covers 'Invalid credentials' and other 401 messages
+      setError(t('loginErrorWrongPassword'));
+    }
   };
 
-  const handleOtp = (e: React.FormEvent) => {
+  const handleOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!otp) {
       setError(t('loginErrorOtp'));
       return;
     }
-    const result = login(username, password, otp);
+
+    setLoading(true);
+    setError('');
+
+    const result = await verifyOtp(challengeToken, otp);
+
+    setLoading(false);
+
     if (result.ok) {
       navigate('/');
+      return;
+    }
+
+    // N01.08: On OTP failure, return to credentials step immediately
+    setStep('credentials');
+    setOtp('');
+    setChallengeToken('');
+
+    if (result.error === 'account_locked') {
+      setError(t('loginErrorTooMany'));
+    } else if (result.error === 'network_error') {
+      setError(t('loginErrorFailed'));
     } else {
-      setAttempts((a) => a + 1);
-      if (result.error === 'user_not_found') {
-        setStep('credentials');
-        setError(t('loginErrorUserNotFound'));
-      } else if (result.error === 'wrong_password') {
-        setStep('credentials');
-        setError(t('loginErrorWrongPassword'));
-      } else if (result.error === 'invalid_otp') {
-        // N01.08: On OTP failure, return to password step immediately
-        setStep('credentials');
-        setOtp('');
-        setError(t('loginErrorInvalidOtp'));
-      } else {
-        setError(t('loginErrorFailed'));
-      }
+      setError(t('loginErrorInvalidOtp'));
     }
   };
+
+  // If server says 2FA is off, skip OTP step: credentials form goes straight to login
+  // (handled by server returning { token } directly — login() resolves ok:true)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-4">
@@ -109,6 +134,7 @@ export default function LoginPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 placeholder={t('loginUsernamePlaceholder')}
                 autoFocus
+                disabled={loading}
               />
             </div>
             <div>
@@ -121,13 +147,15 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 placeholder={t('loginPasswordPlaceholder')}
+                disabled={loading}
               />
             </div>
             <button
               type="submit"
-              className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              disabled={loading}
+              className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {t('loginContinue')}
+              {loading ? '...' : t('loginContinue')}
             </button>
             <p className="text-xs text-gray-400 text-center mt-4">
               {t('loginDemoHint')}
@@ -150,21 +178,26 @@ export default function LoginPage() {
                 placeholder="123456"
                 maxLength={6}
                 autoFocus
+                disabled={loading}
               />
             </div>
             <button
               type="submit"
-              className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              disabled={loading}
+              className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {t('loginSubmit')}
+              {loading ? '...' : t('loginSubmit')}
             </button>
             <button
               type="button"
+              disabled={loading}
               onClick={() => {
                 setStep('credentials');
                 setError('');
+                setChallengeToken('');
+                setOtp('');
               }}
-              className="w-full py-2 text-sm text-gray-500 hover:text-gray-700"
+              className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-60"
             >
               {t('back')}
             </button>
