@@ -59,7 +59,6 @@ Declared values (multiples of 4 only). Pre-populated from codebase — these are
 
 Exceptions:
 - Touch targets for checkboxes: 24px minimum tap area (checkbox + label row `py-1.5` = 6px pad + 14px text = 20px, acceptable for desktop clinical context)
-- Sidebar nav items: 10px vertical padding (`py-2.5`) — retained from Layout.tsx, no change
 
 ---
 
@@ -69,12 +68,11 @@ Pre-populated from codebase scan (Layout.tsx, LandingPage.tsx, CohortBuilderPage
 
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
-| Body | 14px (`text-sm`) | 400 (regular) | 1.5 | Filter labels, checkbox labels, error messages |
-| Label | 14px (`text-sm`) | 500 (medium) | 1.4 | Form field labels (`font-medium`) |
+| Body | 14px (`text-sm`) | 400 (regular) | 1.5 | Filter labels, checkbox labels, form field labels, error messages |
 | Heading | 20px (`text-xl`) or 24px (`text-2xl`) | 700 (bold) | 1.2 | Page headings (`font-bold`) |
 | Display | 28px (`text-3xl`) | 700 (bold) | 1.2 | Summary card values |
 
-Note: Only 2 weights used — regular (400) and bold/semibold (600-700). Medium (500) appears only on labels (`font-medium`) and maps to weight 500 as Tailwind's `font-medium`.
+Note: Exactly 2 weights used — regular (400) and bold (700). All label and body text uses weight 400. All headings and display values use weight 700.
 
 ---
 
