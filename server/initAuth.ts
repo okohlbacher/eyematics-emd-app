@@ -183,26 +183,75 @@ function _atomicWrite(filePath: string, content: string): void {
   fs.renameSync(tmp, filePath);
 }
 
+// ---------------------------------------------------------------------------
+// Center ID migration
+// ---------------------------------------------------------------------------
+
 /**
- * Migrate users.json: add passwordHash for any user missing it.
+ * Mapping from shorthand center names to org-* format.
+ * Shorthand values are legacy and must be migrated at startup.
+ */
+const SHORTHAND_TO_ORG: Record<string, string> = {
+  'UKA': 'org-uka',
+  'UKB': 'org-ukb',
+  'LMU': 'org-lmu',
+  'UKT': 'org-ukt',
+  'UKM': 'org-ukm',
+};
+
+/**
+ * Migrate center IDs from shorthand (e.g. "UKA") to org-* format (e.g. "org-uka").
+ * Already-migrated values (org-*) are left unchanged.
+ *
+ * Exported for testing.
+ */
+export function _migrateCenterIds(users: UserRecord[]): { users: UserRecord[]; changed: boolean } {
+  let changed = false;
+  const migrated = users.map((u) => {
+    const newCenters = u.centers.map((c) => SHORTHAND_TO_ORG[c] ?? c);
+    if (newCenters.some((nc, i) => nc !== u.centers[i])) changed = true;
+    return { ...u, centers: newCenters };
+  });
+  return { users: migrated, changed };
+}
+
+/**
+ * Migrate users.json: add passwordHash for any user missing it,
+ * and convert center IDs from shorthand to org-* format.
  * Uses bcrypt with 12 rounds and the default password 'changeme2025!'.
  */
 function _migrateUsersJson(filePath: string): void {
   const raw = fs.readFileSync(filePath, 'utf-8');
   const users = JSON.parse(raw) as UserRecord[];
 
-  let needsMigration = false;
-  const migrated = users.map((user) => {
+  let needsWrite = false;
+  let workingUsers = users;
+
+  // Migrate password hashes
+  const withHashes = workingUsers.map((user) => {
     if (!user.passwordHash) {
-      needsMigration = true;
+      needsWrite = true;
       const hash = bcrypt.hashSync('changeme2025!', 12);
       return { ...user, passwordHash: hash };
     }
     return user;
   });
 
-  if (needsMigration) {
-    _atomicWrite(filePath, JSON.stringify(migrated, null, 2));
+  if (needsWrite) {
     console.log('[initAuth] Migrated users.json: added bcrypt passwordHash for users without one');
+  }
+
+  workingUsers = withHashes;
+
+  // Migrate center IDs from shorthand to org-* format
+  const { users: withOrgCenters, changed } = _migrateCenterIds(workingUsers);
+  if (changed) {
+    needsWrite = true;
+    workingUsers = withOrgCenters;
+    console.log('[initAuth] Migrated users.json: converted center IDs to org-* format');
+  }
+
+  if (needsWrite) {
+    _atomicWrite(filePath, JSON.stringify(workingUsers, null, 2));
   }
 }

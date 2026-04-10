@@ -36,6 +36,7 @@ import { auditMiddleware } from './auditMiddleware.js';
 import { auditApiRouter } from './auditApi.js';
 import { initDataDb } from './dataDb.js';
 import { dataApiRouter } from './dataApi.js';
+import { fhirApiRouter } from './fhirApi.js';
 
 // ---------------------------------------------------------------------------
 // 1. Read settings.yaml at startup (fail fast)
@@ -93,13 +94,13 @@ const USERS_FILE = path.join(DATA_DIR, 'users.json');
 
 if (!fs.existsSync(USERS_FILE)) {
   const defaultUsers = [
-    { username: 'admin', firstName: 'System', lastName: 'Administrator', role: 'admin', centers: ['UKA', 'UKB', 'LMU', 'UKT', 'UKM'], createdAt: '2025-01-01T00:00:00Z' },
-    { username: 'forscher1', firstName: 'Anna', lastName: 'Müller', role: 'researcher', centers: ['UKA'], createdAt: '2025-01-15T00:00:00Z' },
-    { username: 'forscher2', firstName: 'Thomas', lastName: 'Weber', role: 'researcher', centers: ['UKB'], createdAt: '2025-02-01T00:00:00Z' },
-    { username: 'epidemiologe', firstName: 'Julia', lastName: 'Schmidt', role: 'epidemiologist', centers: ['UKA', 'UKB', 'LMU'], createdAt: '2025-03-01T00:00:00Z' },
-    { username: 'kliniker', firstName: 'Markus', lastName: 'Fischer', role: 'clinician', centers: ['UKT'], createdAt: '2025-03-15T00:00:00Z' },
-    { username: 'diz_manager', firstName: 'Sabine', lastName: 'Braun', role: 'data_manager', centers: ['UKM'], createdAt: '2025-04-01T00:00:00Z' },
-    { username: 'klinikleitung', firstName: 'Prof. Klaus', lastName: 'Hoffmann', role: 'clinic_lead', centers: ['UKA', 'UKB', 'LMU', 'UKT', 'UKM'], createdAt: '2025-04-15T00:00:00Z' },
+    { username: 'admin', firstName: 'System', lastName: 'Administrator', role: 'admin', centers: ['org-uka', 'org-ukb', 'org-lmu', 'org-ukt', 'org-ukm'], createdAt: '2025-01-01T00:00:00Z' },
+    { username: 'forscher1', firstName: 'Anna', lastName: 'Müller', role: 'researcher', centers: ['org-uka'], createdAt: '2025-01-15T00:00:00Z' },
+    { username: 'forscher2', firstName: 'Thomas', lastName: 'Weber', role: 'researcher', centers: ['org-ukb'], createdAt: '2025-02-01T00:00:00Z' },
+    { username: 'epidemiologe', firstName: 'Julia', lastName: 'Schmidt', role: 'epidemiologist', centers: ['org-uka', 'org-ukb', 'org-lmu'], createdAt: '2025-03-01T00:00:00Z' },
+    { username: 'kliniker', firstName: 'Markus', lastName: 'Fischer', role: 'clinician', centers: ['org-ukt'], createdAt: '2025-03-15T00:00:00Z' },
+    { username: 'diz_manager', firstName: 'Sabine', lastName: 'Braun', role: 'data_manager', centers: ['org-ukm'], createdAt: '2025-04-01T00:00:00Z' },
+    { username: 'klinikleitung', firstName: 'Prof. Klaus', lastName: 'Hoffmann', role: 'clinic_lead', centers: ['org-uka', 'org-ukb', 'org-lmu', 'org-ukt', 'org-ukm'], createdAt: '2025-04-15T00:00:00Z' },
   ];
   fs.writeFileSync(USERS_FILE, JSON.stringify(defaultUsers, null, 2), 'utf-8');
   console.log(`[server] Seeded users.json with ${defaultUsers.length} default users`);
@@ -167,6 +168,10 @@ app.use('/api/audit', auditApiRouter);
 // Data persistence routes — per-user quality flags, saved searches, excluded/reviewed cases
 // Mounted AFTER authMiddleware so all /api/data/* routes require authentication (DATA-05)
 app.use('/api/data', dataApiRouter);
+
+// FHIR API routes — center-filtered bundle loading (CENTER-01, CENTER-02)
+// Mounted with express.json() for consistency; GET /bundles does not use body but pattern is future-proof
+app.use('/api/fhir', express.json({ limit: '1mb' }), fhirApiRouter);
 
 // FHIR proxy
 app.use('/fhir', createProxyMiddleware({
