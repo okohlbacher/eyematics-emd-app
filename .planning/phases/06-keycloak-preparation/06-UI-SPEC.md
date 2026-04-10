@@ -44,16 +44,28 @@ Declared values (multiples of 4 only):
 | xs    | 4px   | Icon gaps (`gap-1`), inline margins     |
 | sm    | 8px   | Compact padding (`p-2`, `mb-2`)         |
 | md    | 16px  | Default element spacing (`space-y-4`)   |
-| lg    | 24px  | Card padding (`p-8` = 32px; see note)   |
+| lg    | 24px  | Section spacing                         |
 | xl    | 32px  | Card padding (`p-8`)                    |
 | 2xl   | 48px  | Not used on LoginPage                   |
 | 3xl   | 64px  | Not used on LoginPage                   |
 
-Exceptions:
-- Card uses `p-8` (32px) — matches xl token, within 8-point scale. Source: existing LoginPage.
-- Button uses `py-2.5` (10px) — LoginPage existing pattern; preserve exactly for visual consistency.
-- Error banner uses `p-3` (12px) — LoginPage existing pattern; preserve exactly.
-- Icon touch area: globe icon at `w-3.5 h-3.5` — decorative only, no minimum touch target required.
+**Existing Code Preservation (NOT part of the new spacing contract):**
+
+The following values appear in existing LoginPage.tsx code and MUST be preserved exactly
+for visual consistency with the existing form. They are not new design decisions and are
+not to be used in any new elements added in Phase 6.
+
+| Existing class | Pixel value | Location                    | Reason preserved                        |
+|----------------|-------------|-----------------------------|-----------------------------------------|
+| `py-2.5`       | 10px        | Submit button               | Matches existing button height exactly  |
+| `p-3`          | 12px        | Error banner                | Matches existing error banner padding   |
+
+New elements added in Phase 6 (Keycloak button, info banner) use these same preserved
+values to match the visual weight of their existing counterparts:
+- Keycloak button: `py-2.5` — mirrors the existing submit button (preservation, not new design)
+- Info banner: `p-3` — mirrors the existing error banner (preservation, not new design)
+
+No new non-scale spacing values are introduced in Phase 6.
 
 ---
 
@@ -61,19 +73,23 @@ Exceptions:
 
 All values extracted from `src/pages/LoginPage.tsx`. Do not deviate.
 
+Declared weights: **regular (400)** and **bold (700)** only. Maximum 2 weights.
+
 | Role    | Size         | Weight              | Line Height |
 |---------|--------------|---------------------|-------------|
 | Body    | 14px (sm)    | 400 (normal)        | 1.5         |
-| Label   | 14px (sm)    | 500 (medium)        | 1.5         |
+| Label   | 14px (sm)    | 400 (normal)        | 1.5         |
 | Heading | 24px (2xl)   | 700 (bold)          | 1.2         |
 | Caption | 12px (xs)    | 400 (normal)        | 1.5         |
 
-Source: LoginPage classes — `text-2xl font-bold` (heading), `text-sm font-medium` (label),
-`text-sm` (body), `text-xs` (caption).
+Source: LoginPage classes — `text-2xl font-bold` (heading), `text-sm` (body/label),
+`text-xs` (caption).
 
-Weights used: regular (400) and bold (700). Medium (500) on labels only.
-Two weight rule: body/caption = 400, heading = 700; label 500 is a Tailwind intermediate
-that maps to the same visual hierarchy — treat as part of the 400 family for this phase.
+Note: Existing LoginPage code includes `font-medium` (500) on label elements. This is
+an existing code artifact. For Phase 6, labels on new elements use `font-normal` (400).
+The 14px size is sufficient to distinguish labels from body text without a third weight.
+The existing `font-medium` in preserved code is not touched — only new Phase 6 elements
+follow this 2-weight contract.
 
 ---
 
@@ -99,6 +115,11 @@ button — it IS the primary CTA in Keycloak mode, so this is correct.
 Info message banner (D-06): Uses `bg-blue-50 border border-blue-200 text-blue-700` —
 analogous to the existing error banner pattern but in blue. This is the informational
 equivalent of the red error pattern.
+
+**Focal point:** The "Login with Keycloak" button is the primary visual anchor in Keycloak
+mode. It is the sole interactive element in the card body and uses the accent color
+(`bg-blue-600`) to draw immediate attention. All other elements (heading, subtitle, info
+banner) are secondary to this button.
 
 ---
 
@@ -147,11 +168,11 @@ No new destructive actions in this phase. The Keycloak button click is non-destr
 
 **Keycloak mode (provider = 'keycloak') — new:**
 - Replace entire form section with single "Login with Keycloak" button
-- Button: full-width, `bg-blue-600 text-white`, `py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors` — identical to existing submit button styling
+- Button: full-width, `bg-blue-600 text-white`, `py-2.5 rounded-lg hover:bg-blue-700 transition-colors` — identical to existing submit button styling (py-2.5 is an existing code preservation value; see Spacing section)
 - Subtitle line beneath the "EyeMatics" heading changes to `t('loginKeycloakSubtitle')` ("Single Sign-On")
 - On button click: display inline info banner (no navigation, no API call)
   - Banner appears below button
-  - Style: `p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700`
+  - Style: `p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700` (p-3 is an existing code preservation value; see Spacing section)
   - Icon: `Info` from lucide-react, `w-4 h-4 flex-shrink-0`
   - Content: `t('loginKeycloakInfoTitle')` as bold prefix + `t('loginKeycloakInfoBody')`
 - Language toggle remains visible in both modes (existing behavior preserved)
