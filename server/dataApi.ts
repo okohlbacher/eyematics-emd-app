@@ -24,7 +24,7 @@ import {
   setReviewedCases,
 } from './dataDb.js';
 import type { QualityFlagRow, SavedSearchRow } from './dataDb.js';
-import { getCaseToCenter } from './fhirApi.js';
+import { getCaseToCenter, isBypass } from './fhirApi.js';
 
 export const dataApiRouter = Router();
 
@@ -43,7 +43,7 @@ const MAX_ARRAY_SIZE = 10000;
  * - Unknown case IDs (not in FHIR cache) are allowed through — case may not be loaded yet.
  */
 function validateCaseCenters(caseIds: string[], userCenters: string[], role: string): string | null {
-  if (role === 'admin' || userCenters.length >= 5) return null; // bypass
+  if (isBypass(role, userCenters)) return null;
   const index = getCaseToCenter();
   for (const caseId of caseIds) {
     const caseCenterId = index.get(caseId);
@@ -244,6 +244,14 @@ dataApiRouter.put('/excluded-cases', (req: Request, res: Response): void => {
   }
 
   const caseIds = excludedCases.filter((c): c is string => typeof c === 'string');
+
+  // Validate center ownership (matching quality-flags pattern)
+  const centerError = validateCaseCenters(caseIds, req.auth!.centers, req.auth!.role);
+  if (centerError) {
+    res.status(403).json({ error: centerError });
+    return;
+  }
+
   setExcludedCases(username, caseIds);
   res.json({ excludedCases: getExcludedCases(username) });
 });
@@ -271,6 +279,14 @@ dataApiRouter.put('/reviewed-cases', (req: Request, res: Response): void => {
   }
 
   const caseIds = reviewedCases.filter((c): c is string => typeof c === 'string');
+
+  // Validate center ownership (matching quality-flags pattern)
+  const centerError = validateCaseCenters(caseIds, req.auth!.centers, req.auth!.role);
+  if (centerError) {
+    res.status(403).json({ error: centerError });
+    return;
+  }
+
   setReviewedCases(username, caseIds);
   res.json({ reviewedCases: getReviewedCases(username) });
 });

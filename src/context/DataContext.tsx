@@ -19,7 +19,7 @@ import {
   extractCenters,
   extractPatientCases,
 } from '../services/fhirLoader';
-import { useLocalStorageState } from '../hooks/useLocalStorageState';
+import { getAuthHeaders } from '../services/authHeaders';
 
 interface DataContextType {
   loading: boolean;
@@ -44,29 +44,79 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | null>(null);
 
+// ---------------------------------------------------------------------------
+// Server API helpers
+// ---------------------------------------------------------------------------
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const resp = await fetch(url, { headers: getAuthHeaders() });
+  if (!resp.ok) throw new Error(`${url}: ${resp.status}`);
+  return resp.json() as Promise<T>;
+}
+
+async function putJson<T>(url: string, body: unknown): Promise<T> {
+  const resp = await fetch(url, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) throw new Error(`${url}: ${resp.status}`);
+  return resp.json() as Promise<T>;
+}
+
+async function postJson<T>(url: string, body: unknown): Promise<T> {
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) throw new Error(`${url}: ${resp.status}`);
+  return resp.json() as Promise<T>;
+}
+
+async function deleteJson(url: string): Promise<void> {
+  const resp = await fetch(url, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+  if (!resp.ok) throw new Error(`${url}: ${resp.status}`);
+}
+
 export function DataProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bundles, setBundles] = useState<FhirBundle[]>([]);
   const [centers, setCenters] = useState<CenterInfo[]>([]);
   const [cases, setCases] = useState<PatientCase[]>([]);
-  const [savedSearches, setSavedSearches] = useLocalStorageState<SavedSearch[]>('emd-saved-searches', []);
-  const [qualityFlags, setQualityFlags] = useLocalStorageState<QualityFlag[]>('emd-quality-flags', []);
-  const [excludedCases, setExcludedCases] = useLocalStorageState<string[]>('emd-excluded-cases', []);
-  const [reviewedCases, setReviewedCases] = useLocalStorageState<string[]>('emd-reviewed-cases', []);
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
+  const [qualityFlags, setQualityFlags] = useState<QualityFlag[]>([]);
+  const [excludedCases, setExcludedCases] = useState<string[]>([]);
+  const [reviewedCases, setReviewedCases] = useState<string[]>([]);
 
+  // Load FHIR bundles + per-user data from server
   const fetchData = useCallback(() => {
     setLoading(true);
     setError(null);
-    loadAllBundles()
-      .then((b) => {
+
+    Promise.all([
+      loadAllBundles(),
+      fetchJson<{ qualityFlags: QualityFlag[] }>('/api/data/quality-flags').catch(() => ({ qualityFlags: [] })),
+      fetchJson<{ savedSearches: SavedSearch[] }>('/api/data/saved-searches').catch(() => ({ savedSearches: [] })),
+      fetchJson<{ excludedCases: string[] }>('/api/data/excluded-cases').catch(() => ({ excludedCases: [] })),
+      fetchJson<{ reviewedCases: string[] }>('/api/data/reviewed-cases').catch(() => ({ reviewedCases: [] })),
+    ])
+      .then(([b, qf, ss, ec, rc]) => {
         setBundles(b);
         setCenters(extractCenters(b));
         setCases(extractPatientCases(b));
+        setQualityFlags(qf.qualityFlags);
+        setSavedSearches(ss.savedSearches);
+        setExcludedCases(ec.excludedCases);
+        setReviewedCases(rc.reviewedCases);
         setLoading(false);
       })
       .catch((err) => {
-        console.error('[DataProvider] Failed to load bundles:', err);
+        console.error('[DataProvider] Failed to load data:', err);
         setError(err instanceof Error ? err.message : String(err));
         setLoading(false);
       });
@@ -88,48 +138,78 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const addSavedSearch = useCallback((s: SavedSearch) => {
     setSavedSearches((prev) => [...prev, s]);
-  }, [setSavedSearches]);
+    postJson('/api/data/saved-searches', s).catch((err) =>
+      console.error('[DataProvider] Failed to save search:', err),
+    );
+  }, []);
 
   const removeSavedSearch = useCallback((id: string) => {
     setSavedSearches((prev) => prev.filter((s) => s.id !== id));
-  }, [setSavedSearches]);
+    deleteJson(`/api/data/saved-searches/${id}`).catch((err) =>
+      console.error('[DataProvider] Failed to delete search:', err),
+    );
+  }, []);
 
   const addQualityFlag = useCallback((f: QualityFlag) => {
-    setQualityFlags((prev) => [...prev, f]);
-  }, [setQualityFlags]);
+    setQualityFlags((prev) => {
+      const next = [...prev, f];
+      putJson('/api/data/quality-flags', { qualityFlags: next }).catch((err) =>
+        console.error('[DataProvider] Failed to save quality flags:', err),
+      );
+      return next;
+    });
+  }, []);
 
   const updateQualityFlag = useCallback((
     caseId: string,
     parameter: string,
     status: QualityFlag['status']
   ) => {
-    setQualityFlags((prev) =>
-      prev.map((f) =>
+    setQualityFlags((prev) => {
+      const next = prev.map((f) =>
         f.caseId === caseId && f.parameter === parameter
           ? { ...f, status }
           : f
-      ),
-    );
-  }, [setQualityFlags]);
+      );
+      putJson('/api/data/quality-flags', { qualityFlags: next }).catch((err) =>
+        console.error('[DataProvider] Failed to update quality flags:', err),
+      );
+      return next;
+    });
+  }, []);
 
   const toggleExcludeCase = useCallback((caseId: string) => {
-    setExcludedCases((prev) =>
-      prev.includes(caseId)
+    setExcludedCases((prev) => {
+      const next = prev.includes(caseId)
         ? prev.filter((id) => id !== caseId)
-        : [...prev, caseId],
-    );
-  }, [setExcludedCases]);
+        : [...prev, caseId];
+      putJson('/api/data/excluded-cases', { excludedCases: next }).catch((err) =>
+        console.error('[DataProvider] Failed to update excluded cases:', err),
+      );
+      return next;
+    });
+  }, []);
 
   const markCaseReviewed = useCallback((caseId: string) => {
     setReviewedCases((prev) => {
       if (prev.includes(caseId)) return prev;
-      return [...prev, caseId];
+      const next = [...prev, caseId];
+      putJson('/api/data/reviewed-cases', { reviewedCases: next }).catch((err) =>
+        console.error('[DataProvider] Failed to update reviewed cases:', err),
+      );
+      return next;
     });
-  }, [setReviewedCases]);
+  }, []);
 
   const unmarkCaseReviewed = useCallback((caseId: string) => {
-    setReviewedCases((prev) => prev.filter((id) => id !== caseId));
-  }, [setReviewedCases]);
+    setReviewedCases((prev) => {
+      const next = prev.filter((id) => id !== caseId);
+      putJson('/api/data/reviewed-cases', { reviewedCases: next }).catch((err) =>
+        console.error('[DataProvider] Failed to update reviewed cases:', err),
+      );
+      return next;
+    });
+  }, []);
 
   const value = useMemo<DataContextType>(() => ({
     loading,

@@ -12,6 +12,8 @@ import type { Plugin } from 'vite';
 import fs from 'node:fs';
 import path from 'node:path';
 import { readBody, validateAuth, sendError } from './utils';
+// Import triggers the Express.Request type augmentation (adds req.auth)
+import './authMiddleware.js';
 
 const FEEDBACK_DIR = path.resolve(process.cwd(), 'feedback');
 

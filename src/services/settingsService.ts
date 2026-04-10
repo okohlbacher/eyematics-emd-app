@@ -1,5 +1,5 @@
 import yaml from 'js-yaml';
-import { safeJsonParse } from '../utils/safeJson';
+import { getAuthHeaders } from './authHeaders';
 
 export interface AppSettings {
   twoFactorEnabled: boolean;
@@ -23,23 +23,6 @@ const DEFAULTS: AppSettings = {
 
 /** Cached merged settings */
 let _cached: AppSettings | null = null;
-
-/**
- * Build Authorization header from the current session user.
- * Returns `{ Authorization: 'Bearer <base64>' }` if an admin is logged in, or empty object.
- * The token is a base64-encoded JSON `{ username, role }`.
- */
-function getAuthHeaders(): Record<string, string> {
-  const stored = sessionStorage.getItem('emd-user');
-  if (stored) {
-    const user = safeJsonParse<{ username?: string; role?: string } | null>(stored, null);
-    if (user?.username && user?.role) {
-      const token = btoa(JSON.stringify({ username: user.username, role: user.role }));
-      return { Authorization: `Bearer ${token}` };
-    }
-  }
-  return {};
-}
 
 type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
 
@@ -74,16 +57,7 @@ export async function loadSettings(): Promise<AppSettings> {
       fromYaml = (yaml.load(text) as Partial<AppSettings>) ?? {};
     }
   } catch {
-    // API unavailable — try static file
-    try {
-      const resp = await fetch('/settings.yaml');
-      if (resp.ok) {
-        const text = await resp.text();
-        fromYaml = (yaml.load(text) as Partial<AppSettings>) ?? {};
-      }
-    } catch {
-      // Neither available — use defaults
-    }
+    // API unavailable — use defaults
   }
 
   _cached = merge(DEFAULTS, fromYaml);

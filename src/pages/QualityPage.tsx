@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { usePageAudit } from '../hooks/usePageAudit';
-import { logAudit } from '../services/auditService';
 import {
   getAge,
   getObservationsByCode,
@@ -79,9 +77,6 @@ export default function QualityPage() {
   const [showExcluded, setShowExcluded] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Audit: log page view
-  usePageAudit('view_quality', 'audit_detail_view_quality');
-
   const dateFmt = getDateLocale(locale);
 
   const caseStatus = useMemo(() => {
@@ -155,31 +150,20 @@ export default function QualityPage() {
       flaggedBy: user?.username ?? 'unknown',
       status: 'open',
     });
-    logAudit(user?.username ?? 'unknown', 'flag_error', 'audit_detail_flag_error', [flagDialog.parameter], selectedCase.id);
     setFlagDialog(null);
     setErrorType('');
   };
 
   const handleExclude = (caseId: string) => {
-    const excluding = !excludedCases.includes(caseId);
     toggleExcludeCase(caseId);
-    logAudit(
-      user?.username ?? 'unknown',
-      excluding ? 'exclude_case' : 'include_case',
-      excluding ? 'audit_detail_exclude_case' : 'audit_detail_include_case',
-      [caseId],
-      caseId
-    );
   };
 
   const handleMarkReviewed = (caseId: string) => {
     const isReviewed = reviewedCases.includes(caseId);
     if (isReviewed) {
       unmarkCaseReviewed(caseId);
-      logAudit(user?.username ?? 'unknown', 'update_flag', 'audit_detail_unmark_reviewed', [caseId], caseId);
     } else {
       markCaseReviewed(caseId);
-      logAudit(user?.username ?? 'unknown', 'update_flag', 'audit_detail_mark_reviewed', [caseId], caseId);
     }
   };
 
@@ -733,7 +717,6 @@ export default function QualityPage() {
                               f.parameter,
                               e.target.value as QualityFlag['status']
                             );
-                            logAudit(user?.username ?? 'unknown', 'update_flag', 'audit_detail_update_flag', [e.target.value], f.caseId);
                           }}
                           className="text-xs border rounded px-2 py-1"
                         >

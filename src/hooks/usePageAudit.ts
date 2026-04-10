@@ -1,19 +1,8 @@
-import { useEffect, useRef } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { logAudit, type AuditAction } from '../services/auditService';
-
 /**
- * Log a page-view audit entry once on mount.
- * Replaces the duplicated useEffect+logAudit boilerplate across all pages.
+ * Page-view audit hook — now a no-op.
+ * All audit logging is handled server-side by auditMiddleware.
+ * Kept as a stub so existing page imports don't break.
  */
-export function usePageAudit(action: AuditAction, detailKey: string): void {
-  const { user } = useAuth();
-  const logged = useRef(false);
-
-  useEffect(() => {
-    if (user && !logged.current) {
-      logged.current = true;
-      logAudit(user.username, action, detailKey);
-    }
-  }, [user, action, detailKey]);
+export function usePageAudit(_action: string, _detailKey: string): void {
+  // Server-side audit middleware automatically logs all /api/* requests.
 }

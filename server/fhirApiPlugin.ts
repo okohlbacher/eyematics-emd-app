@@ -15,8 +15,7 @@ import type { Plugin } from 'vite';
 import fs from 'node:fs';
 import path from 'node:path';
 import { validateAuth, sendError } from './utils';
-
-const VALID_CENTERS = new Set(['org-uka', 'org-ukb', 'org-lmu', 'org-ukt', 'org-ukm']);
+import { getValidCenterIds, getFallbackCenterFiles } from './constants.js';
 
 export function fhirApiPlugin(): Plugin {
   return {
@@ -35,16 +34,9 @@ export function fhirApiPlugin(): Plugin {
             // Load bundles from public/data/ (local mode only in dev)
             const DATA_DIR = path.resolve(process.cwd(), 'public', 'data');
             const manifestPath = path.join(DATA_DIR, 'manifest.json');
-            const defaultFiles = [
-              'center-aachen.json',
-              'center-bonn.json',
-              'center-muenchen.json',
-              'center-tuebingen.json',
-              'center-muenster.json',
-            ];
             const files = fs.existsSync(manifestPath)
               ? (JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) as string[])
-              : defaultFiles.filter((f) => fs.existsSync(path.join(DATA_DIR, f)));
+              : getFallbackCenterFiles().filter((f) => fs.existsSync(path.join(DATA_DIR, f)));
 
             const allBundles: unknown[] = [];
             for (const file of files) {
@@ -58,7 +50,8 @@ export function fhirApiPlugin(): Plugin {
             const userObj = user as { username: string; role: string; centers?: string[] };
             const { role } = userObj;
             const centers: string[] = userObj.centers ?? [];
-            const bypass = role === 'admin' || centers.length >= VALID_CENTERS.size;
+            const validCenters = getValidCenterIds();
+            const bypass = role === 'admin' || centers.filter(c => validCenters.has(c)).length >= validCenters.size;
 
             let resultBundles: unknown[];
             if (bypass) {

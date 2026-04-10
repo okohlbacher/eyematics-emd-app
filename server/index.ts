@@ -37,12 +37,13 @@ import { auditApiRouter } from './auditApi.js';
 import { initDataDb } from './dataDb.js';
 import { dataApiRouter } from './dataApi.js';
 import { fhirApiRouter } from './fhirApi.js';
+import { initCenters } from './constants.js';
 
 // ---------------------------------------------------------------------------
 // 1. Read settings.yaml at startup (fail fast)
 // ---------------------------------------------------------------------------
 
-const SETTINGS_FILE = path.resolve(process.cwd(), 'public', 'settings.yaml');
+const SETTINGS_FILE = path.resolve(process.cwd(), 'config', 'settings.yaml');
 
 if (!fs.existsSync(SETTINGS_FILE)) {
   console.error(`[server] FATAL: settings.yaml not found at ${SETTINGS_FILE}`);
@@ -105,6 +106,9 @@ if (!fs.existsSync(USERS_FILE)) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(defaultUsers, null, 2), 'utf-8');
   console.log(`[server] Seeded users.json with ${defaultUsers.length} default users`);
 }
+
+// initCenters: load center configuration from data/centers.json
+initCenters(DATA_DIR);
 
 // initAuth: loads/generates JWT secret, migrates users.json to add bcrypt hashes
 initAuth(DATA_DIR, settings);
@@ -173,8 +177,15 @@ app.use('/api/data', dataApiRouter);
 // Mounted with express.json() for consistency; GET /bundles does not use body but pattern is future-proof
 app.use('/api/fhir', express.json({ limit: '1mb' }), fhirApiRouter);
 
-// FHIR proxy
-app.use('/fhir', createProxyMiddleware({
+// Block unauthenticated access to FHIR data files served via express.static
+// The files live in public/data/ for Vite dev convenience, but must not be
+// served without auth in production. Use /api/fhir/bundles instead.
+app.use('/data', (_req: import('express').Request, res: import('express').Response) => {
+  res.status(403).json({ error: 'Use /api/fhir/bundles for authenticated FHIR data access' });
+});
+
+// FHIR proxy — protected by authMiddleware (moved under /api scope)
+app.use('/api/fhir-proxy', authMiddleware, createProxyMiddleware({
   target: blazeTarget,
   changeOrigin: true,
   on: {
@@ -203,6 +214,6 @@ app.get('/{*path}', (_req: import('express').Request, res: import('express').Res
 
 app.listen(PORT, HOST, () => {
   console.log(`[server] EMD app running at http://${HOST}:${PORT}`);
-  console.log(`[server] FHIR proxy target: ${blazeTarget}`);
+  console.log(`[server] FHIR proxy target: ${blazeTarget} (at /api/fhir-proxy)`);
   console.log(`[server] Data directory: ${DATA_DIR}`);
 });

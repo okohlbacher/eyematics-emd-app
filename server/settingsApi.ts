@@ -17,8 +17,11 @@ import path from 'node:path';
 import yaml from 'js-yaml';
 import { readBody, validateAuth, sendError } from './utils';
 import { invalidateFhirCache } from './fhirApi.js';
+// Import triggers the Express.Request type augmentation (adds req.auth)
+import './authMiddleware.js';
 
-const SETTINGS_FILE = path.resolve(process.cwd(), 'public', 'settings.yaml');
+import { SETTINGS_FILE as SETTINGS_REL } from './constants.js';
+const SETTINGS_FILE = path.resolve(process.cwd(), SETTINGS_REL);
 
 /**
  * Validate parsed YAML settings have the expected structure.

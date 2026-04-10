@@ -28,8 +28,6 @@ export const HBA1C_TARGET_THRESHOLD = 7.0;        // diabetes control target
 // --- Chart colors ---
 export const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
-// --- Audit ---
-export const MAX_AUDIT_ENTRIES = 500;
 
 // --- FHIR pagination ---
 export const FHIR_PAGE_SIZE = 50;

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, Save, RotateCcw, Server, CheckCircle, XCircle, Loader2, Download, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import {
   updateSettings,
@@ -15,7 +14,6 @@ import {
   type DataSourceType,
 } from '../services/dataSource';
 import { invalidateBundleCache } from '../services/fhirLoader';
-import { logAudit } from '../services/auditService';
 import { getIssueCount, exportIssuesFull } from '../services/issueService';
 import { MessageSquarePlus } from 'lucide-react';
 
@@ -23,7 +21,6 @@ type ConnectionStatus = 'idle' | 'testing' | 'ok' | 'failed';
 
 export default function SettingsPage() {
   const { t } = useLanguage();
-  const { user } = useAuth();
   const { reloadData } = useData();
 
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
@@ -103,9 +100,6 @@ export default function SettingsPage() {
     const next = !twoFactorEnabled;
     setTwoFactorEnabled(next);
     updateSettings({ twoFactorEnabled: next });
-    if (user) {
-      logAudit(user.username, 'change_setting', next ? 'audit_detail_change_2fa_enabled' : 'audit_detail_change_2fa_disabled');
-    }
     showSaved();
   };
 
@@ -116,9 +110,6 @@ export default function SettingsPage() {
     updateSettings({ dataSource: { type, blazeUrl: type === 'blaze' ? blazeUrl : '' } });
     invalidateBundleCache();
     reloadData();
-    if (user) {
-      logAudit(user.username, 'change_setting', 'audit_detail_change_datasource', [type]);
-    }
   };
 
   const handleBlazeUrlChange = (url: string) => {

@@ -17,15 +17,11 @@ import type { AuthPayload } from './authMiddleware.js';
 import { createRateLimiter } from './rateLimiting.js';
 import { getAuthProvider } from './keycloakAuth.js';
 
+import { getValidCenterIds } from './constants.js';
+
 // ---------------------------------------------------------------------------
 // Constants for user CRUD validation
 // ---------------------------------------------------------------------------
-
-/**
- * Allowlist of valid center codes. Must match CENTER_SHORTHANDS keys in fhirLoader.ts.
- * Addresses review concern #3: missing centers validation.
- */
-const VALID_CENTERS = new Set(['org-uka', 'org-ukb', 'org-lmu', 'org-ukt', 'org-ukm']);
 
 const VALID_ROLES = new Set(['admin', 'researcher', 'epidemiologist', 'clinician', 'data_manager', 'clinic_lead']);
 
@@ -305,7 +301,8 @@ authApiRouter.post('/users', async (req: Request, res: Response): Promise<void> 
 
   // Validate centers against allowlist (review concern #3)
   const rawCenters = Array.isArray(centers) ? centers.filter((c): c is string => typeof c === 'string') : [];
-  const invalidCenters = rawCenters.filter((c) => !VALID_CENTERS.has(c));
+  const validCenterIds = getValidCenterIds();
+  const invalidCenters = rawCenters.filter((c) => !validCenterIds.has(c));
   if (invalidCenters.length > 0) {
     res.status(400).json({ error: `Invalid center codes: ${invalidCenters.join(', ')}` });
     return;

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "org-uka",
+    "shorthand": "UKA",
+    "name": "Universitätsklinikum Aachen",
+    "file": "center-aachen.json"
+  },
+  {
+    "id": "org-ukb",
+    "shorthand": "UKB",
+    "name": "Universitätsklinikum Bonn",
+    "file": "center-bonn.json"
+  },
+  {
+    "id": "org-lmu",
+    "shorthand": "LMU",
+    "name": "LMU Klinikum München",
+    "file": "center-muenchen.json"
+  },
+  {
+    "id": "org-ukt",
+    "shorthand": "UKT",
+    "name": "Universitätsklinikum Tübingen",
+    "file": "center-tuebingen.json"
+  },
+  {
+    "id": "org-ukm",
+    "shorthand": "UKM",
+    "name": "Universitätsklinikum Münster",
+    "file": "center-muenster.json"
+  }
+]

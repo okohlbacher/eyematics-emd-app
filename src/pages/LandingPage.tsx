@@ -14,7 +14,7 @@ import { getDateLocale } from '../utils/dateFormat';
 
 export default function LandingPage() {
   const { loading, centers, cases } = useData();
-  const { displayName, managedUsers } = useAuth();
+  const { displayName } = useAuth();
   const { locale, t } = useLanguage();
 
   usePageAudit('view_landing', 'audit_detail_view_landing');
@@ -127,9 +127,7 @@ export default function LandingPage() {
           <tbody className="divide-y divide-gray-100">
             {centers.map((center) => {
               const shorthand = getCenterShorthand(center.id, center.name);
-              const usersAtCenter = managedUsers.filter(
-                (mu) => mu.centers?.includes(shorthand) || mu.center === shorthand
-              ).length;
+              const usersAtCenter = 0; // user counts loaded server-side in AdminPage
               return (
                 <tr key={center.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">

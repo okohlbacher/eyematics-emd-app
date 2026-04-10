@@ -19,6 +19,7 @@ import type { Request, Response } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
+import { getValidCenterIds, getFallbackCenterFiles, BLAZE_RESOURCE_TYPES, SETTINGS_FILE } from './constants.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -41,30 +42,6 @@ interface FhirBundle {
   entry: BundleEntry[];
   [key: string]: unknown;
 }
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const VALID_CENTERS = new Set(['org-uka', 'org-ukb', 'org-lmu', 'org-ukt', 'org-ukm']);
-
-const FALLBACK_CENTER_FILES = [
-  'center-aachen.json',
-  'center-bonn.json',
-  'center-muenchen.json',
-  'center-tuebingen.json',
-  'center-muenster.json',
-];
-
-const BLAZE_RESOURCE_TYPES: ReadonlyArray<{ type: string; count: number }> = [
-  { type: 'Patient', count: 500 },
-  { type: 'Condition', count: 1000 },
-  { type: 'Observation', count: 5000 },
-  { type: 'Procedure', count: 2000 },
-  { type: 'MedicationStatement', count: 1000 },
-  { type: 'ImagingStudy', count: 500 },
-  { type: 'Organization', count: 50 },
-];
 
 // ---------------------------------------------------------------------------
 // Module-level cache (D-07)
@@ -92,7 +69,11 @@ export function invalidateFhirCache(): void {
  * Non-admin users with all 5 org-* centers also bypass (D-13, D-14).
  */
 export function isBypass(role: string, centers: string[]): boolean {
-  return role === 'admin' || centers.length >= VALID_CENTERS.size;
+  if (role === 'admin') return true;
+  // Verify actual set membership, not just count (prevents bypass with N arbitrary strings)
+  const validCenters = getValidCenterIds();
+  const validCount = centers.filter((c) => validCenters.has(c)).length;
+  return validCount >= validCenters.size;
 }
 
 // ---------------------------------------------------------------------------
@@ -222,7 +203,7 @@ export function getCaseToCenter(): Map<string, string> {
 // ---------------------------------------------------------------------------
 
 function readDataSourceConfig(): { type: string; blazeUrl: string } {
-  const settingsPath = path.resolve(process.cwd(), 'public', 'settings.yaml');
+  const settingsPath = path.resolve(process.cwd(), SETTINGS_FILE);
   try {
     const raw = fs.readFileSync(settingsPath, 'utf-8');
     const parsed = yaml.load(raw) as Record<string, unknown>;
@@ -259,14 +240,14 @@ async function loadFromLocalFiles(): Promise<FhirBundle[]> {
   const dataDir = path.resolve(process.cwd(), 'public', 'data');
   const manifestPath = path.join(dataDir, 'manifest.json');
 
-  let fileList: string[] = FALLBACK_CENTER_FILES;
+  let fileList: string[] = getFallbackCenterFiles();
   try {
     if (fs.existsSync(manifestPath)) {
       const raw = fs.readFileSync(manifestPath, 'utf-8');
       fileList = JSON.parse(raw) as string[];
     }
   } catch {
-    fileList = FALLBACK_CENTER_FILES;
+    fileList = getFallbackCenterFiles();
   }
 
   const bundles: FhirBundle[] = [];
