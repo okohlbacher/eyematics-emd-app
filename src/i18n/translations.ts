@@ -1,0 +1,531 @@
+export type Locale = 'de' | 'en';
+
+const translations = {
+  // Common
+  back: { de: 'Zurück', en: 'Back' },
+  save: { de: 'Speichern', en: 'Save' },
+  cancel: { de: 'Abbrechen', en: 'Cancel' },
+  delete: { de: 'Löschen', en: 'Delete' },
+  close: { de: 'Schließen', en: 'Close' },
+  reset: { de: 'Zurücksetzen', en: 'Reset' },
+  female: { de: 'Weiblich', en: 'Female' },
+  male: { de: 'Männlich', en: 'Male' },
+  age: { de: 'Alter', en: 'Age' },
+  years: { de: 'Jahre', en: 'years' },
+  diagnosis: { de: 'Diagnose', en: 'Diagnosis' },
+  center: { de: 'Zentrum', en: 'Center' },
+  cases: { de: 'Fälle', en: 'Cases' },
+  gender: { de: 'Geschlecht', en: 'Gender' },
+  contacts: { de: 'Kontakte', en: 'Contacts' },
+  since: { de: 'seit', en: 'since' },
+  criticalValues: { de: 'Kritische Werte', en: 'Critical Values' },
+  noData: { de: 'Keine Daten verfügbar', en: 'No data available' },
+
+  // Navigation
+  navHome: { de: 'Startseite', en: 'Home' },
+  navCohort: { de: 'Kohortenbildung', en: 'Cohort Builder' },
+  navAnalysis: { de: 'Analyse', en: 'Analysis' },
+  navQuality: { de: 'Datenqualität', en: 'Data Quality' },
+  navLogout: { de: 'Abmelden', en: 'Log out' },
+  clinicalDemonstrator: { de: 'Klinischer Demonstrator', en: 'Clinical Demonstrator' },
+
+  // Login
+  loginTitle: { de: 'EyeMatics', en: 'EyeMatics' },
+  loginSubtitle: { de: 'Klinischer Demonstrator', en: 'Clinical Demonstrator' },
+  loginUsername: { de: 'Benutzerkennung', en: 'Username' },
+  loginPassword: { de: 'Passwort', en: 'Password' },
+  loginUsernamePlaceholder: { de: 'Benutzername', en: 'Username' },
+  loginPasswordPlaceholder: { de: 'Passwort', en: 'Password' },
+  loginContinue: { de: 'Weiter', en: 'Continue' },
+  loginSubmit: { de: 'Anmelden', en: 'Log in' },
+  loginDemoHint: {
+    de: 'Demo: admin/admin2025! oder forscher1/forscher2025! — OTP: 123456',
+    en: 'Demo: admin/admin2025! or forscher1/forscher2025! — OTP: 123456',
+  },
+  login2faTitle: {
+    de: 'Zwei-Faktor-Authentisierung: Bitte geben Sie den OTP-Code ein.',
+    en: 'Two-factor authentication: Please enter the OTP code.',
+  },
+  loginOtpLabel: { de: 'OTP-Code', en: 'OTP Code' },
+  loginErrorEmpty: {
+    de: 'Bitte Benutzerkennung und Passwort eingeben.',
+    en: 'Please enter username and password.',
+  },
+  loginErrorOtp: { de: 'Bitte OTP eingeben.', en: 'Please enter OTP.' },
+  loginErrorTooMany: {
+    de: 'Zu viele Fehlversuche. Bitte warten Sie.',
+    en: 'Too many failed attempts. Please wait.',
+  },
+  loginErrorFailed: { de: 'Anmeldung fehlgeschlagen.', en: 'Login failed.' },
+  loginErrorUserNotFound: {
+    de: 'Benutzer nicht gefunden. Bitte prüfen Sie die Benutzerkennung.',
+    en: 'User not found. Please check your username.',
+  },
+  loginErrorWrongPassword: {
+    de: 'Falsches Passwort. Bitte versuchen Sie es erneut.',
+    en: 'Wrong password. Please try again.',
+  },
+  loginErrorInvalidOtp: {
+    de: 'Ungültiger OTP-Code. Bitte versuchen Sie es erneut.',
+    en: 'Invalid OTP code. Please try again.',
+  },
+
+  // Landing page
+  welcome: { de: 'Willkommen', en: 'Welcome' },
+  landingSubtitle: {
+    de: 'Klinischer Demonstrator — Datenübersicht',
+    en: 'Clinical Demonstrator — Data Overview',
+  },
+  connectedCenters: { de: 'Angeschlossene Zentren', en: 'Connected Centers' },
+  pseudonymizedCases: { de: 'Pseudonymisierte Fälle', en: 'Pseudonymized Cases' },
+  totalMeasurements: { de: 'Messwerte gesamt', en: 'Total Measurements' },
+  octImages: { de: 'OCT-Aufnahmen', en: 'OCT Images' },
+  centersAndLocations: {
+    de: 'Angeschlossene Zentren und Standorte',
+    en: 'Connected Centers and Locations',
+  },
+  centersSubtitle: {
+    de: 'Übersicht der verfügbaren Datengrundlage je Zentrum',
+    en: 'Overview of available data basis per center',
+  },
+  location: { de: 'Standort', en: 'Location' },
+  lastUpdate: { de: 'Letzte Aktualisierung', en: 'Last Update' },
+  dataLoading: { de: 'Daten werden geladen...', en: 'Loading data...' },
+
+  // Cohort builder
+  cohortTitle: { de: 'Kohortenbildung', en: 'Cohort Builder' },
+  cohortSubtitle: {
+    de: 'Filterkriterien definieren und Kohorten bilden',
+    en: 'Define filter criteria and build cohorts',
+  },
+  savedSearches: { de: 'Gespeicherte Suchen', en: 'Saved Searches' },
+  savedSearchDefs: {
+    de: 'Gespeicherte Suchdefinitionen',
+    en: 'Saved Search Definitions',
+  },
+  filterCriteria: { de: 'Filterkriterien', en: 'Filter Criteria' },
+  diagnosisAMD: {
+    de: 'AMD (Altersbedingte Makuladegeneration)',
+    en: 'AMD (Age-related Macular Degeneration)',
+  },
+  diagnosisDR: { de: 'Diabetische Retinopathie', en: 'Diabetic Retinopathy' },
+  centers: { de: 'Zentren', en: 'Centers' },
+  ageYears: { de: 'Alter (Jahre)', en: 'Age (Years)' },
+  visusDecimal: { de: 'Visus (0.0 \u2013 1.0)', en: 'Visual Acuity (0.0 \u2013 1.0)' },
+  retinalThickness: { de: 'Netzhautdicke (µm)', en: 'Retinal Thickness (µm)' },
+  searchNamePlaceholder: { de: 'Suchname...', en: 'Search name...' },
+  cohortCases: { de: 'Kohorte', en: 'Cohort' },
+  totalCases: { de: 'Gesamtfällen', en: 'total cases' },
+  of: { de: 'von', en: 'of' },
+  analyzeCohort: { de: 'Kohorte analysieren', en: 'Analyze Cohort' },
+  pseudonym: { de: 'Pseudonym', en: 'Pseudonym' },
+  visus: { de: 'Visus', en: 'Visual Acuity' },
+  execute: { de: 'Ausführen', en: 'Execute' },
+
+  // Analysis page
+  analysisTitle: { de: 'Kohortenanalyse', en: 'Cohort Analysis' },
+  casesInCohort: { de: 'Fälle in der aktuellen Kohorte', en: 'cases in current cohort' },
+  casesWithCritical: {
+    de: 'Fälle mit kritischen Werten (CRT > 400 µm)',
+    en: 'cases with critical values (CRT > 400 µm)',
+  },
+  centerDistribution: { de: 'Verteilung über Zentren', en: 'Distribution across Centers' },
+  diagnosisDistribution: { de: 'Diagnoseverteilung', en: 'Diagnosis Distribution' },
+  diagnosisHoverHint: { de: 'Fahren Sie mit der Maus über die Kuchenstücke, um die vollständige Diagnose anzuzeigen.', en: 'Hover over the pie segments to see the full diagnosis name.' },
+  visusTrend: {
+    de: 'Visus im zeitlichen Verlauf (Mittelwert)',
+    en: 'Visual Acuity over Time (Mean)',
+  },
+  crtDistribution: {
+    de: 'Netzhautdicke (CRT) Verteilung',
+    en: 'Retinal Thickness (CRT) Distribution',
+  },
+  ageVsVisus: {
+    de: 'Alter vs. Visus (letzter Messwert)',
+    en: 'Age vs. Visual Acuity (latest measurement)',
+  },
+  meanVisus: { de: 'Mittlerer Visus', en: 'Mean Visual Acuity' },
+  measurements: { de: 'Messungen', en: 'Measurements' },
+  quarter: { de: 'Quartal', en: 'Quarter' },
+
+  // Case detail page
+  caseNotFound: { de: 'Fall nicht gefunden.', en: 'Case not found.' },
+  visusAndCrt: {
+    de: 'Visusverlauf und Netzhautdicke (CRT)',
+    en: 'Visual Acuity and Retinal Thickness (CRT)',
+  },
+  critical: { de: 'Kritisch', en: 'Critical' },
+  intravitreal: {
+    de: 'Intravitreale Injektionen',
+    en: 'Intravitreal Injections',
+  },
+  noInjections: {
+    de: 'Keine Injektionen dokumentiert.',
+    en: 'No injections documented.',
+  },
+  intravitralInjection: { de: 'Intravitreale Injektion', en: 'Intravitreal Injection' },
+  treatmentTimeline: { de: 'Behandlungsverlauf', en: 'Treatment Timeline' },
+  medication: { de: 'Medikation', en: 'Medication' },
+  noMedication: { de: 'Keine Medikation dokumentiert.', en: 'No medication documented.' },
+  medicationActive: { de: 'Aktiv', en: 'Active' },
+  medicationEnded: { de: 'Beendet', en: 'Ended' },
+  medicationSince: { de: 'seit', en: 'since' },
+  medicationUntil: { de: 'bis', en: 'until' },
+  medicationSwitch: { de: 'Präparatwechsel', en: 'Medication Switch' },
+
+  // Clinical detail display (K05)
+  affectedEye: { de: 'Betroffenes Auge', en: 'Affected Eye' },
+  rightEye: { de: 'Rechtes Auge (OD)', en: 'Right Eye (OD)' },
+  leftEye: { de: 'Linkes Auge (OS)', en: 'Left Eye (OS)' },
+  iop: { de: 'Augeninnendruck (IOD)', en: 'Intraocular Pressure (IOP)' },
+  iopUnit: { de: 'mmHg', en: 'mmHg' },
+  measurementMethod: { de: 'Messmethode', en: 'Measurement Method' },
+  refraction: { de: 'Refraktion', en: 'Refraction' },
+  sphere: { de: 'Sphäre', en: 'Sphere' },
+  cylinder: { de: 'Zylinder', en: 'Cylinder' },
+  axis: { de: 'Achse', en: 'Axis' },
+  hba1c: { de: 'HbA1c', en: 'HbA1c' },
+  diabetesType: { de: 'Diabetestyp', en: 'Diabetes Type' },
+  diabetesSince: { de: 'Diabetes seit', en: 'Diabetes since' },
+  anamnesis: { de: 'Anamnese', en: 'Anamnesis' },
+  ophthalmicAnamnesis: { de: 'Ophthalmologisch', en: 'Ophthalmic' },
+  nonOphthalmicAnamnesis: { de: 'Nicht-ophthalmologisch', en: 'Non-ophthalmic' },
+  anteriorSegment: { de: 'Vorderer Augenabschnitt', en: 'Anterior Segment' },
+  posteriorSegment: { de: 'Hinterer Augenabschnitt', en: 'Posterior Segment' },
+  findings: { de: 'Befunde', en: 'Findings' },
+  treatmentIndication: { de: 'Behandlungsindikation', en: 'Treatment Indication' },
+  adverseEvents: { de: 'Unerwünschte Ereignisse', en: 'Adverse Events' },
+  noAdverseEvents: { de: 'Keine unerwünschten Ereignisse', en: 'No adverse events' },
+  baselineChange: { de: 'Veränderung zum Ausgangswert', en: 'Change from Baseline' },
+  noFindings: { de: 'Keine Befunde', en: 'No findings' },
+  noAnamnesis: { de: 'Keine Anamnese dokumentiert', en: 'No anamnesis documented' },
+  clinicalParameters: { de: 'Klinische Parameter', en: 'Clinical Parameters' },
+
+  // OCT Viewer
+  octTitle: { de: 'OCT-Aufnahmen', en: 'OCT Images' },
+  octNoImages: {
+    de: 'Keine OCT-Aufnahmen verfügbar.',
+    en: 'No OCT images available.',
+  },
+  octCompare: { de: 'Vergleich', en: 'Compare' },
+  octZoomIn: { de: 'Vergrößern', en: 'Zoom In' },
+  octZoomOut: { de: 'Verkleinern', en: 'Zoom Out' },
+  octFullscreen: { de: 'Vollbild', en: 'Fullscreen' },
+  octImageUnavailable: { de: 'Bild nicht verfügbar', en: 'Image not available' },
+  octAttribution: {
+    de: 'OCT-Bilder: OCTID — Optical Coherence Tomography Image Retinal Database, University of Waterloo (doi:10.5683/SP/YEM3RA, doi:10.5683/SP/FLGZZE). CC BY 4.0.',
+    en: 'OCT images: OCTID — Optical Coherence Tomography Image Retinal Database, University of Waterloo (doi:10.5683/SP/YEM3RA, doi:10.5683/SP/FLGZZE). CC BY 4.0.',
+  },
+
+  // Quality page
+  qualityTitle: { de: 'Datenqualitätsprüfung', en: 'Data Quality Review' },
+  qualitySubtitle: {
+    de: 'Fälle prüfen, Fehler kennzeichnen und Prüfstatus verfolgen',
+    en: 'Review cases, flag errors, and track review status',
+  },
+  unchecked: { de: 'Ungeprüft', en: 'Unchecked' },
+  inProgress: { de: 'In Bearbeitung', en: 'In Progress' },
+  reviewed: { de: 'Geprüft', en: 'Reviewed' },
+  selectCaseToReview: {
+    de: 'Fall auswählen, um Datenqualität zu prüfen',
+    en: 'Select a case to review data quality',
+  },
+  fullCaseView: { de: 'Vollständige Fallansicht', en: 'Full Case View' },
+  anomalousValues: { de: 'Auffällige Werte', en: 'Anomalous Values' },
+  reportError: { de: 'Fehler melden', en: 'Report Error' },
+  valuesToReview: { de: 'Zu prüfende Messwerte', en: 'Values to Review' },
+  parameter: { de: 'Parameter', en: 'Parameter' },
+  date: { de: 'Datum', en: 'Date' },
+  value: { de: 'Wert', en: 'Value' },
+  action: { de: 'Aktion', en: 'Action' },
+  reviewResults: { de: 'Prüfergebnisse', en: 'Review Results' },
+  reportedBy: { de: 'gemeldet von', en: 'reported by' },
+  flagErrorTitle: { de: 'Fehler kennzeichnen', en: 'Flag Error' },
+  errorType: { de: 'Fehlerart', en: 'Error Type' },
+  selectErrorType: { de: 'Bitte auswählen...', en: 'Please select...' },
+  errorImplausible: { de: 'Unplausibler Wert', en: 'Implausible Value' },
+  errorMissing: { de: 'Fehlender Wert', en: 'Missing Value' },
+  errorDuplicate: { de: 'Duplikat', en: 'Duplicate' },
+  errorFormat: { de: 'Formatfehler', en: 'Format Error' },
+  errorOther: { de: 'Sonstiger Fehler', en: 'Other Error' },
+  statusOpen: { de: 'Offen', en: 'Open' },
+  statusAcknowledged: { de: 'Bestätigt', en: 'Acknowledged' },
+  statusResolved: { de: 'Behoben', en: 'Resolved' },
+  crtAnomaly: { de: 'CRT > 400 µm', en: 'CRT > 400 µm' },
+  visusAnomaly: { de: 'Visus < 0.1', en: 'Visual Acuity < 0.1' },
+  visusJump: { de: 'Sprung > 0.3', en: 'Jump > 0.3' },
+
+  // Admin page
+  navAdmin: { de: 'Verwaltung', en: 'Administration' },
+  adminTitle: { de: 'Nutzerverwaltung', en: 'User Management' },
+  adminSubtitle: {
+    de: 'Nutzerkonten anlegen, bearbeiten und entfernen',
+    en: 'Create, edit, and remove user accounts',
+  },
+  adminUsers: { de: 'Registrierte Nutzer', en: 'Registered Users' },
+  adminAddUser: { de: 'Nutzer anlegen', en: 'Add User' },
+  adminRole: { de: 'Rolle', en: 'Role' },
+  adminCreated: { de: 'Angelegt', en: 'Created' },
+  adminNoDelete: {
+    de: 'Eigenes Konto kann nicht gelöscht werden.',
+    en: 'Cannot delete your own account.',
+  },
+  adminResearcher: { de: 'Forscher', en: 'Researcher' },
+  adminAdminRole: { de: 'Administrator', en: 'Administrator' },
+  adminOnlyHint: {
+    de: 'Diese Seite ist nur für Administratoren zugänglich.',
+    en: 'This page is only accessible to administrators.',
+  },
+  adminLastLogin: { de: 'Letzte Anmeldung', en: 'Last Login' },
+  adminUsersCount: { de: 'Nutzer', en: 'users' },
+  adminSearchPlaceholder: { de: 'Nutzer suchen…', en: 'Search users…' },
+  adminFilterAllRoles: { de: 'Alle Rollen', en: 'All roles' },
+  adminAssignCenters: { de: 'Zentren zuweisen', en: 'Assign Centers' },
+  adminAssignedCenters: { de: 'Zugewiesene Zentren', en: 'Assigned Centers' },
+
+  // Roles (K10 N10.01)
+  roleAdmin: { de: 'IT-Administrator', en: 'IT Administrator' },
+  roleResearcher: { de: 'Forscher/in', en: 'Researcher' },
+  roleEpidemiologist: { de: 'Epidemiolog/in', en: 'Epidemiologist' },
+  roleClinician: { de: 'Kliniker/in', en: 'Clinician' },
+  roleDataManager: { de: 'DIZ Data Manager', en: 'DIZ Data Manager' },
+  roleClinicLead: { de: 'Klinikleitung', en: 'Clinic Lead' },
+
+  adminFirstName: { de: 'Vorname', en: 'First Name' },
+  adminLastName: { de: 'Nachname', en: 'Last Name' },
+  adminFullName: { de: 'Name', en: 'Name' },
+
+  // Dataset download (K08 N08.01)
+  downloadDataset: { de: 'Datensatz herunterladen', en: 'Download Dataset' },
+  downloadCsv: { de: 'Als CSV', en: 'As CSV' },
+  downloadJson: { de: 'Als JSON', en: 'As JSON' },
+  downloadHint: { de: 'Aktuelle Kohorte exportieren', en: 'Export current cohort' },
+
+  // Settings page (K06 N06.01/N06.04)
+  navSettings: { de: 'Einstellungen', en: 'Settings' },
+  settingsTitle: { de: 'Einstellungen', en: 'Settings' },
+  settingsSubtitle: { de: 'Systemparameter konfigurieren', en: 'Configure system parameters' },
+  settingsTherapy: { de: 'Therapieunterbrechung', en: 'Therapy Discontinuation' },
+  settingsInterrupterDays: { de: 'Therapieunterbrecher-Schwellenwert (Tage)', en: 'Therapy interrupter threshold (days)' },
+  settingsBreakerDays: { de: 'Therapieabbrecher-Schwellenwert (Tage)', en: 'Therapy breaker threshold (days)' },
+  settingsInterrupterHint: { de: 'Patienten mit einer Behandlungspause > t Tage werden als Unterbrecher gekennzeichnet.', en: 'Patients with a treatment gap > t days are marked as interrupters.' },
+  settingsBreakerHint: { de: 'Patienten mit einer Behandlungspause > t\' Tage werden als Abbrecher gekennzeichnet.', en: 'Patients with a treatment gap > t\' days are marked as breakers.' },
+  settingsSaved: { de: 'Einstellungen gespeichert', en: 'Settings saved' },
+  settingsReset: { de: 'Auf Standardwerte zurücksetzen', en: 'Reset to defaults' },
+  settingsValidationError: { de: 'Unterbrecher-Schwellenwert muss kleiner als Abbrecher-Schwellenwert sein.', en: 'Interrupter threshold must be less than breaker threshold.' },
+  settingsDataSource: { de: 'Datenquelle', en: 'Data Source' },
+  settingsDataSourceLocal: { de: 'Lokale Dateien', en: 'Local Files' },
+  settingsDataSourceBlaze: { de: 'FHIR-Server (Blaze)', en: 'FHIR Server (Blaze)' },
+  settingsDataSourceUrl: { de: 'FHIR-Server URL', en: 'FHIR Server URL' },
+  settingsTestConnection: { de: 'Verbindung testen', en: 'Test Connection' },
+  settingsConnectionOk: { de: 'Verbindung erfolgreich', en: 'Connection successful' },
+  settingsConnectionFailed: { de: 'Verbindung fehlgeschlagen', en: 'Connection failed' },
+
+  // Audit page
+  navAudit: { de: 'Protokoll', en: 'Audit Log' },
+  auditTitle: { de: 'Zugriffsprotokoll', en: 'Access Audit Log' },
+  auditSubtitle: {
+    de: 'Alle Zugriffe und Aktionen werden protokolliert',
+    en: 'All access and actions are logged',
+  },
+  auditUser: { de: 'Nutzer', en: 'User' },
+  auditAction: { de: 'Aktion', en: 'Action' },
+  auditDetail: { de: 'Detail', en: 'Detail' },
+  auditTime: { de: 'Zeitpunkt', en: 'Time' },
+  auditClear: { de: 'Protokoll löschen', en: 'Clear Log' },
+  auditEmpty: { de: 'Keine Protokolleinträge vorhanden.', en: 'No audit entries.' },
+  auditEntries: { de: 'Einträge', en: 'entries' },
+
+  // Exclusion
+  excludeFromAnalysis: { de: 'Von Analysen ausschließen', en: 'Exclude from analyses' },
+  includeInAnalysis: { de: 'In Analysen einschließen', en: 'Include in analyses' },
+  excludedCase: { de: 'Ausgeschlossen', en: 'Excluded' },
+  excludedCasesCount: { de: 'Ausgeschlossene Fälle', en: 'Excluded Cases' },
+
+  // Therapy discontinuation
+  therapyDiscontinuation: { de: 'Therapieabbruch/-unterbrechung', en: 'Therapy Discontinuation' },
+  therapyBreaker: { de: 'Therapieabbrecher', en: 'Therapy Discontinuer' },
+  therapyInterrupter: { de: 'Therapieunterbrecher', en: 'Therapy Interrupter' },
+  therapyActive: { de: 'Aktiv', en: 'Active' },
+  therapyGapDays: { de: 'Tage ohne Behandlung', en: 'Days without treatment' },
+  therapyFilterLabel: { de: 'Therapiestatus', en: 'Therapy Status' },
+
+  // Missing data
+  missingData: { de: 'Fehlende Daten', en: 'Missing Data' },
+  missingVisus: { de: 'Kein Visus dokumentiert', en: 'No visual acuity documented' },
+  missingCrt: { de: 'Keine CRT dokumentiert', en: 'No CRT documented' },
+  missingInjections: { de: 'Keine Injektionen dokumentiert', en: 'No injections documented' },
+
+  // Quality search & filter
+  qualitySearchPlaceholder: { de: 'Pseudonym suchen...', en: 'Search pseudonym...' },
+  qualityFilterStatus: { de: 'Prüfstatus', en: 'Review Status' },
+  qualityFilterCenter: { de: 'Zentrum', en: 'Center' },
+  qualityFilterTherapy: { de: 'Therapiestatus', en: 'Therapy Status' },
+  qualityFilterAll: { de: 'Alle', en: 'All' },
+  qualityShowExcluded: { de: 'Ausgeschlossene anzeigen', en: 'Show excluded' },
+  qualityFilteredCount: { de: 'gefiltert', en: 'filtered' },
+
+  // Sort
+  sortByDate: { de: 'Nach Datum', en: 'By Date' },
+  sortByName: { de: 'Nach Name', en: 'By Name' },
+
+  // Inactivity warning
+  inactivityWarning: {
+    de: 'Sie werden in Kürze wegen Inaktivität abgemeldet. Bewegen Sie die Maus, um angemeldet zu bleiben.',
+    en: 'You will be logged out shortly due to inactivity. Move the mouse to stay logged in.',
+  },
+
+  // Audit action labels (translated for display)
+  audit_action_login: { de: 'Anmeldung', en: 'Login' },
+  audit_action_logout: { de: 'Abmeldung', en: 'Logout' },
+  audit_action_auto_logout: { de: 'Auto-Abmeldung', en: 'Auto Logout' },
+  audit_action_view_landing: { de: 'Startseite', en: 'Landing Page' },
+  audit_action_view_cohort: { de: 'Kohortenbildung', en: 'Cohort Builder' },
+  audit_action_view_analysis: { de: 'Analyse', en: 'Analysis' },
+  audit_action_view_case: { de: 'Fallansicht', en: 'Case View' },
+  audit_action_view_quality: { de: 'Qualitätsprüfung', en: 'Quality Review' },
+  audit_action_view_admin: { de: 'Administration', en: 'Administration' },
+  audit_action_view_audit: { de: 'Audit-Log', en: 'Audit Log' },
+  audit_action_save_search: { de: 'Suche gespeichert', en: 'Search Saved' },
+  audit_action_delete_search: { de: 'Suche gelöscht', en: 'Search Deleted' },
+  audit_action_flag_error: { de: 'Fehler gemeldet', en: 'Error Flagged' },
+  audit_action_update_flag: { de: 'Flag aktualisiert', en: 'Flag Updated' },
+  audit_action_exclude_case: { de: 'Fall ausgeschlossen', en: 'Case Excluded' },
+  audit_action_include_case: { de: 'Fall eingeschlossen', en: 'Case Included' },
+  audit_action_create_user: { de: 'Nutzer angelegt', en: 'User Created' },
+  audit_action_delete_user: { de: 'Nutzer entfernt', en: 'User Deleted' },
+
+  // Audit detail messages (with {0}, {1} placeholders)
+  audit_detail_login: { de: 'Anmeldung als {0}', en: 'Logged in as {0}' },
+  audit_detail_logout: { de: 'Aktive Abmeldung', en: 'Active logout' },
+  audit_detail_auto_logout: { de: 'Automatische Abmeldung nach Inaktivität', en: 'Automatic logout due to inactivity' },
+  audit_detail_view_landing: { de: 'Startseite geöffnet', en: 'Opened landing page' },
+  audit_detail_view_cohort: { de: 'Kohortenbildung geöffnet', en: 'Opened cohort builder' },
+  audit_detail_view_analysis: { de: 'Analyse geöffnet', en: 'Opened analysis page' },
+  audit_detail_view_case: { de: 'Fall {0} geöffnet', en: 'Opened case {0}' },
+  audit_detail_view_quality: { de: 'Qualitätsprüfung geöffnet', en: 'Opened quality review' },
+  audit_detail_view_admin: { de: 'Administration geöffnet', en: 'Opened administration' },
+  audit_detail_view_audit: { de: 'Audit-Log geöffnet', en: 'Opened audit log' },
+  audit_detail_flag_error: { de: 'Fehler gemeldet: {0}', en: 'Error flagged: {0}' },
+  audit_detail_update_flag: { de: 'Flag-Status geändert: {0}', en: 'Flag status changed: {0}' },
+  audit_detail_exclude_case: { de: 'Fall {0} von Analysen ausgeschlossen', en: 'Case {0} excluded from analyses' },
+  audit_detail_include_case: { de: 'Fall {0} in Analysen eingeschlossen', en: 'Case {0} included in analyses' },
+  audit_detail_create_user: { de: 'Nutzer angelegt: {0}', en: 'User created: {0}' },
+  audit_detail_delete_user: { de: 'Nutzer entfernt: {0}', en: 'User deleted: {0}' },
+
+  // Audit page filter & export
+  auditFilterTime: { de: 'Zeitraum', en: 'Time Range' },
+  auditFilterType: { de: 'Ereignistyp', en: 'Event Type' },
+  auditFilterAll: { de: 'Alle', en: 'All' },
+  auditExportCsv: { de: 'CSV exportieren', en: 'Export CSV' },
+  auditToday: { de: 'Heute', en: 'Today' },
+  auditLast7Days: { de: 'Letzte 7 Tage', en: 'Last 7 days' },
+  auditLast30Days: { de: 'Letzte 30 Tage', en: 'Last 30 days' },
+  auditAllTime: { de: 'Gesamter Zeitraum', en: 'All time' },
+  auditCategoryAuth: { de: 'Authentifizierung', en: 'Authentication' },
+  auditCategoryView: { de: 'Seitenaufrufe', en: 'Page Views' },
+  auditCategoryQuality: { de: 'Qualitätsprüfung', en: 'Quality Review' },
+  auditCategoryAdmin: { de: 'Administration', en: 'Administration' },
+  auditFilteredOf: { de: 'von', en: 'of' },
+  auditRefresh: { de: 'Aktualisieren', en: 'Refresh' },
+
+  // Quality review actions
+  markAsReviewed: { de: 'Als geprüft markieren', en: 'Mark as reviewed' },
+  unmarkReviewed: { de: 'Prüfung aufheben', en: 'Unmark reviewed' },
+  exportCsv: { de: 'CSV exportieren', en: 'Export CSV' },
+  audit_detail_mark_reviewed: { de: 'Fall {0} als geprüft markiert', en: 'Case {0} marked as reviewed' },
+  audit_detail_unmark_reviewed: { de: 'Prüfung für Fall {0} aufgehoben', en: 'Review status removed for case {0}' },
+
+  // Documentation Quality page (K07 / RE-EM-K07)
+  navDocQuality: { de: 'Dokumentationsqualität', en: 'Documentation Quality' },
+  docQualityTitle: { de: 'Dokumentationsqualität', en: 'Documentation Quality' },
+  docQualitySubtitle: { de: 'Benchmarking der Dokumentationsqualität über alle Zentren', en: 'Documentation quality benchmarking across all centers' },
+  docQualityCompleteness: { de: 'Vollzähligkeit', en: 'Completeness' },
+  docQualityDataCompleteness: { de: 'Vollständigkeit', en: 'Data Completeness' },
+  docQualityPlausibility: { de: 'Plausibilität', en: 'Plausibility' },
+  docQualityOverall: { de: 'Gesamtbewertung', en: 'Overall Score' },
+  docQualityAllCenters: { de: 'Alle Zentren', en: 'All Centers' },
+  docQualityTimeRange: { de: 'Zeitraum', en: 'Time Range' },
+  docQualityLast6Months: { de: 'Letzte 6 Monate', en: 'Last 6 Months' },
+  docQualityLastYear: { de: 'Letztes Jahr', en: 'Last Year' },
+  docQualityAllTime: { de: 'Gesamter Zeitraum', en: 'All Time' },
+  docQualityExport: { de: 'Bericht exportieren', en: 'Export Report' },
+  docQualityCenterDetail: { de: 'Zentrumsdetails', en: 'Center Details' },
+  docQualityPatients: { de: 'Patienten', en: 'Patients' },
+  docQualityObservations: { de: 'Beobachtungen', en: 'Observations' },
+
+  // Settings: 2FA
+  settings2faTitle: { de: 'Zwei-Faktor-Authentisierung', en: 'Two-Factor Authentication' },
+  settings2faLabel: { de: 'OTP-Prüfung bei Anmeldung', en: 'OTP verification on login' },
+  settings2faHint: { de: 'Erfordert die Eingabe eines Einmalpassworts (OTP) nach Benutzername und Passwort.', en: 'Requires entering a one-time password (OTP) after username and password.' },
+  settings2faWarning: { de: '⚠ Zwei-Faktor-Authentisierung ist deaktiviert. Anmeldung erfolgt nur mit Benutzername und Passwort.', en: '⚠ Two-factor authentication is disabled. Login requires only username and password.' },
+
+  // Settings: YAML export
+  settingsExportYaml: { de: 'YAML exportieren', en: 'Export YAML' },
+  settingsFileHint: { de: 'Standardwerte werden aus settings.yaml geladen. Änderungen werden lokal im Browser gespeichert.', en: 'Defaults are loaded from settings.yaml. Changes are stored locally in the browser.' },
+
+  // Audit: settings changes
+  audit_detail_change_2fa_enabled: { de: '2FA aktiviert', en: '2FA enabled' },
+  audit_detail_change_2fa_disabled: { de: '2FA deaktiviert', en: '2FA disabled' },
+  audit_detail_change_datasource: { de: 'Datenquelle geändert auf: {0}', en: 'Data source changed to: {0}' },
+
+  // Issue reporting
+  feedbackButton: { de: 'Problem melden', en: 'Report Issue' },
+  feedbackTitle: { de: 'Problem melden', en: 'Report Issue' },
+  feedbackDescription: { de: 'Beschreiben Sie das Problem:', en: 'Describe the issue:' },
+  feedbackPlaceholder: { de: 'Was ist Ihnen aufgefallen? Was sollte verbessert werden?', en: 'What did you notice? What should be improved?' },
+  feedbackPage: { de: 'Seite', en: 'Page' },
+  feedbackSubmit: { de: 'Absenden', en: 'Submit' },
+  feedbackSuccess: { de: 'Problem wurde gemeldet. Vielen Dank!', en: 'Issue has been reported. Thank you!' },
+  feedbackExport: { de: 'Issues exportieren', en: 'Export Issues' },
+  feedbackCount: { de: '{0} gemeldete(s) Problem(e)', en: '{0} reported issue(s)' },
+
+  // Case Detail — additional analytics (N05.19, N05.31, N05.32, N05.33, N05.35)
+  criticalExceedances: { de: 'Kritische Überschreitungen', en: 'Critical Exceedances' },
+  criticalCrtCount: { de: '{0}× CRT > 400 µm', en: '{0}× CRT > 400 µm' },
+  criticalVisusCount: { de: '{0}× Visus < 0.1', en: '{0}× Visus < 0.1' },
+  criticalIopCount: { de: '{0}× IOD > 21 mmHg', en: '{0}× IOP > 21 mmHg' },
+  interpolatedHint: { de: 'Gestrichelte Linie = interpoliert (kein Messwert)', en: 'Dashed line = interpolated (no measurement)' },
+  distributionTitle: { de: 'Werteverteilung', en: 'Value Distribution' },
+  distributionVisus: { de: 'Visus-Verteilung', en: 'Visus Distribution' },
+  distributionCrt: { de: 'CRT-Verteilung (µm)', en: 'CRT Distribution (µm)' },
+  frequency: { de: 'Häufigkeit', en: 'Frequency' },
+  correlationTitle: { de: 'Parameterkorrelation', en: 'Parameter Correlation' },
+  correlationVisusCrt: { de: 'Visus vs. CRT', en: 'Visus vs. CRT' },
+
+  // DocQuality metric descriptions (m-02)
+  docQualityCompletenessAvg: { de: 'Vollzähligkeit (Ø)', en: 'Completeness (avg)' },
+  docQualityDataCompletenessAvg: { de: 'Vollständigkeit (Ø)', en: 'Data Completeness (avg)' },
+  docQualityPlausibilityAvg: { de: 'Plausibilität (Ø)', en: 'Plausibility (avg)' },
+  docQualityOverallAvg: { de: 'Gesamtbewertung (Ø)', en: 'Overall Score (avg)' },
+  docQualityCompletenessDesc: { de: '% Patienten mit allen Pflichtfeldern', en: '% patients with all required fields' },
+  docQualityDataCompletenessDesc: { de: '% Beobachtungen mit Wert', en: '% observations with value' },
+  docQualityPlausibilityDesc: { de: '% Werte im Plausibilitätsbereich', en: '% values in plausible range' },
+  docQualityOverallDesc: { de: 'Gewichteter Gesamtscore', en: 'Weighted overall score' },
+  docQualityPlausibilityRanges: { de: 'Plausibilitätsbereiche', en: 'Plausibility Ranges' },
+  docQualityParameter: { de: 'Parameter', en: 'Parameter' },
+  docQualityRange: { de: 'Bereich', en: 'Range' },
+  docQualityDetails: { de: 'Details', en: 'Details' },
+
+  // Diagnosis labels (m-03)
+  diagAmd: { de: 'AMD', en: 'AMD' },
+  diagDiabeticRetinopathy: { de: 'Diabetische Retinopathie', en: 'Diabetic Retinopathy' },
+  diagDiabetes2: { de: 'Diabetes mellitus Typ 2, ohne Komplikationen', en: 'Type 2 diabetes mellitus, without complications' },
+  diagDiabetes1: { de: 'Diabetes mellitus Typ 1, ohne Komplikationen', en: 'Type 1 diabetes mellitus, without complications' },
+  diagGlaucoma: { de: 'Primäres Offenwinkelglaukom', en: 'Primary open-angle glaucoma' },
+  diagCataract: { de: 'Senile Kernkatarakt', en: 'Senile nuclear cataract' },
+  diagRetinalDetachment: { de: 'Netzhautablösung mit Riss', en: 'Retinal detachment with break' },
+  diagHypertension: { de: 'Essentielle Hypertonie', en: 'Essential hypertension' },
+  diagHypercholesterolemia: { de: 'Hypercholesterinämie', en: 'Hypercholesterolemia' },
+  diagCoronary: { de: 'Koronare Herzkrankheit', en: 'Coronary artery disease' },
+  diagAmdFull: { de: 'Altersbedingte Makuladegeneration (267718000)', en: 'Age-related macular degeneration (267718000)' },
+  diagDrFull: { de: 'Diabetische Retinopathie (312898008)', en: 'Diabetic retinopathy (312898008)' },
+} as const;
+
+export type TranslationKey = keyof typeof translations;
+
+export function t(key: TranslationKey, locale: Locale): string {
+  return translations[key][locale];
+}
+
+export default translations;

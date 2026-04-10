@@ -1,0 +1,6 @@
+twoFactorEnabled: true
+therapyInterrupterDays: 120
+therapyBreakerDays: 365
+dataSource:
+  type: local
+  blazeUrl: http://localhost:8080/fhir
