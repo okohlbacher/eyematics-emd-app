@@ -58,8 +58,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — Keycloak auth infrastructure (keycloakAuth.ts, initAuth config parsing, authMiddleware RS256 JWKS branching)
-- [ ] 06-02-PLAN.md — Auth API provider-awareness, LoginPage Keycloak toggle, i18n, keycloak-setup.md documentation
+- [x] 06-01-PLAN.md — Keycloak auth infrastructure (keycloakAuth.ts, initAuth config parsing, authMiddleware RS256 JWKS branching)
+- [x] 06-02-PLAN.md — Auth API provider-awareness, LoginPage Keycloak toggle, i18n, keycloak-setup.md documentation
 
 ---
 *Created: 2026-04-10 from milestone audit gap closure*
