@@ -4,8 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import type { TranslationKey } from '../i18n/translations';
 import { usePageAudit } from '../hooks/usePageAudit';
 import { getDateLocale } from '../utils/dateFormat';
-import { getAuthHeaders } from '../services/authHeaders';
-import { UserPlus, Trash2, Shield, ShieldCheck, Search, ArrowUpDown, Filter, Microscope, Stethoscope, Database, Building2, Loader2, Copy, Check, KeyRound } from 'lucide-react';
+import { UserPlus, Trash2, Shield, ShieldCheck, Search, ArrowUpDown, Filter, Microscope, Stethoscope, Database, Building2 } from 'lucide-react';
 import type { ManagedUser, UserRole } from '../context/AuthContext';
 
 const ALL_CENTERS = ['UKA', 'UKB', 'LMU', 'UKT', 'UKM'];
@@ -39,7 +38,7 @@ type SortField = 'username' | 'role' | 'center' | 'createdAt' | 'lastLogin';
 type SortDir = 'asc' | 'desc';
 
 export default function AdminPage() {
-  const { user, managedUsers, fetchUsers } = useAuth();
+  const { user, managedUsers, addManagedUser, removeManagedUser } = useAuth();
   const { locale, t } = useLanguage();
 
   usePageAudit('view_admin', 'audit_detail_view_admin');
@@ -58,17 +57,6 @@ export default function AdminPage() {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('username');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
-
-  // Server CRUD state
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [passwordModalUsername, setPasswordModalUsername] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [deletingUser, setDeletingUser] = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [resettingPassword, setResettingPassword] = useState<string | null>(null);
 
   const getCentersDisplay = (mu: ManagedUser): string => {
     if (mu.centers && mu.centers.length > 0) return mu.centers.join(', ');
@@ -147,102 +135,30 @@ export default function AdminPage() {
     );
   };
 
-  const handleAdd = async () => {
+  const handleAdd = () => {
     if (!username.trim()) return;
-    setCreating(true);
-    setCreateError(null);
 
-    try {
-      const resp = await fetch('/api/auth/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({
-          username: username.trim(),
-          role,
-          centers: selectedCenters.length > 0 ? selectedCenters : undefined,
-          firstName: firstName.trim() || undefined,
-          lastName: lastName.trim() || undefined,
-        }),
-      });
+    const newUser: ManagedUser = {
+      username: username.trim(),
+      firstName: firstName.trim() || undefined,
+      lastName: lastName.trim() || undefined,
+      role,
+      centers: selectedCenters.length > 0 ? selectedCenters : undefined,
+      createdAt: new Date().toISOString(),
+    };
 
-      if (!resp.ok) {
-        const data = await resp.json().catch(() => ({ error: 'Request failed' }));
-        setCreateError(data.error || `Error ${resp.status}`);
-        setCreating(false);
-        return;
-      }
+    addManagedUser(newUser);
 
-      const data = await resp.json() as { user: ManagedUser; generatedPassword: string };
-      setGeneratedPassword(data.generatedPassword);
-      setPasswordModalUsername(data.user.username);
-      setShowPasswordModal(true);
-
-      // Reset form
-      setUsername('');
-      setFirstName('');
-      setLastName('');
-      setRole('researcher');
-      setSelectedCenters([]);
-      setShowForm(false);
-      setCreating(false);
-
-      // Refresh user list from server
-      fetchUsers();
-    } catch {
-      setCreateError('Network error');
-      setCreating(false);
-    }
+    setUsername('');
+    setFirstName('');
+    setLastName('');
+    setRole('researcher');
+    setSelectedCenters([]);
+    setShowForm(false);
   };
 
-  const handleDelete = async (targetUsername: string) => {
-    setDeletingUser(targetUsername);
-
-    try {
-      const resp = await fetch(`/api/auth/users/${encodeURIComponent(targetUsername)}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-      });
-
-      if (!resp.ok) {
-        const data = await resp.json().catch(() => ({ error: 'Request failed' }));
-        console.error('Delete failed:', data.error);
-      }
-
-      // Refresh list from server regardless
-      fetchUsers();
-    } catch {
-      console.error('Delete failed: network error');
-    } finally {
-      setDeletingUser(null);
-      setConfirmDelete(null);
-    }
-  };
-
-  const handleResetPassword = async (targetUsername: string) => {
-    setResettingPassword(targetUsername);
-
-    try {
-      const resp = await fetch(`/api/auth/users/${encodeURIComponent(targetUsername)}/password`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({}),
-      });
-
-      if (!resp.ok) {
-        const data = await resp.json().catch(() => ({ error: 'Request failed' }));
-        console.error('Password reset failed:', data.error);
-        return;
-      }
-
-      const data = await resp.json() as { generatedPassword: string };
-      setGeneratedPassword(data.generatedPassword);
-      setPasswordModalUsername(targetUsername);
-      setShowPasswordModal(true);
-    } catch {
-      console.error('Password reset failed: network error');
-    } finally {
-      setResettingPassword(null);
-    }
+  const handleDelete = (targetUsername: string) => {
+    removeManagedUser(targetUsername);
   };
 
   const SortHeader = ({ field, label }: { field: SortField; label: string }) => (
@@ -293,9 +209,6 @@ export default function AdminPage() {
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                {createError && (
-                  <p className="text-sm text-red-600 mt-1">{createError}</p>
-                )}
               </div>
 
               <div>
@@ -367,14 +280,9 @@ export default function AdminPage() {
             <div className="flex gap-3">
               <button
                 onClick={handleAdd}
-                disabled={creating || !username.trim()}
-                className={`px-4 py-2 text-sm font-semibold rounded-lg text-white ${
-                  creating || !username.trim() ? 'bg-blue-400 opacity-60 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-                }`}
-                aria-disabled={creating}
-                aria-label={creating ? 'Creating user, please wait' : undefined}
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
               >
-                {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : t('createUser' as TranslationKey)}
+                {t('save')}
               </button>
               <button
                 onClick={() => {
@@ -384,7 +292,6 @@ export default function AdminPage() {
                   setLastName('');
                   setRole('researcher');
                   setSelectedCenters([]);
-                  setCreateError(null);
                 }}
                 className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200"
               >
@@ -496,46 +403,21 @@ export default function AdminPage() {
                         : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="py-3 text-right">
-                      {confirmDelete === mu.username ? (
-                        <span className="flex items-center gap-2 text-sm">
-                          <span className="text-gray-600">{(t('removeConfirm' as TranslationKey)).replace('{username}', mu.username)}</span>
-                          <button
-                            onClick={() => handleDelete(mu.username)}
-                            disabled={deletingUser === mu.username}
-                            className="text-red-600 hover:text-red-800 font-medium"
-                            aria-label={`Remove ${mu.username}`}
-                          >
-                            {deletingUser === mu.username ? <Loader2 className="w-4 h-4 animate-spin" /> : t('remove' as TranslationKey)}
-                          </button>
-                          <button onClick={() => setConfirmDelete(null)} className="text-gray-500 hover:text-gray-700">
-                            {t('cancel')}
-                          </button>
+                      {mu.username === user.username ? (
+                        <span
+                          className="text-gray-400 cursor-not-allowed inline-flex items-center gap-1"
+                          title={t('adminNoDelete')}
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleResetPassword(mu.username)}
-                            disabled={resettingPassword === mu.username}
-                            className="text-gray-400 hover:text-blue-500 transition-colors p-1"
-                            aria-label={`Reset password for ${mu.username}`}
-                            title={t('resetPassword' as TranslationKey)}
-                          >
-                            {resettingPassword === mu.username ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
-                          </button>
-                          {user.username.toLowerCase() === mu.username.toLowerCase() ? (
-                            <span className="text-gray-300 p-1" title={t('cannotDeleteSelf' as TranslationKey)}>
-                              <Trash2 className="w-4 h-4" />
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => setConfirmDelete(mu.username)}
-                              className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                              aria-label={`Remove ${mu.username}`}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </span>
+                        <button
+                          onClick={() => handleDelete(mu.username)}
+                          className="text-red-500 hover:text-red-700 inline-flex items-center gap-1"
+                          title={t('delete')}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -545,39 +427,6 @@ export default function AdminPage() {
           </table>
         </div>
       </div>
-
-      {/* Password Modal — shared for create and reset */}
-      {showPasswordModal && generatedPassword && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="pwd-modal-heading">
-          <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl">
-            <p id="pwd-modal-heading" className="text-sm font-semibold text-gray-700 mb-2">
-              {passwordModalUsername ? `${t('passwordFor' as TranslationKey)} ${passwordModalUsername}` : t('userCreated' as TranslationKey)}
-            </p>
-            <p className="text-sm text-gray-500 mb-3">{t('copyPasswordNow' as TranslationKey)}</p>
-            <div className="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200" aria-live="polite">
-              <p className="font-mono text-lg text-center select-all">{generatedPassword}</p>
-            </div>
-            <div className="flex gap-3 mt-4 justify-end">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(generatedPassword);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 1500);
-                }}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 flex items-center gap-2"
-              >
-                {copied ? <><Check className="w-4 h-4" />{t('copied' as TranslationKey)}</> : <><Copy className="w-4 h-4" />{t('copyPassword' as TranslationKey)}</>}
-              </button>
-              <button
-                onClick={() => { setShowPasswordModal(false); setGeneratedPassword(null); setPasswordModalUsername(null); setCopied(false); }}
-                className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200"
-              >
-                {t('done' as TranslationKey)}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
