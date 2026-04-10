@@ -119,7 +119,8 @@ app.use('/fhir', createProxyMiddleware({
 app.use(express.static(path.resolve(process.cwd(), 'dist')));
 
 // SPA fallback LAST — all unmatched GET routes return index.html
-app.get('*', (_req, res) => {
+// Express 5 uses path-to-regexp v8+ which requires named parameters; use /{*path} instead of bare *
+app.get('/{*path}', (_req, res) => {
   res.sendFile(path.resolve(process.cwd(), 'dist', 'index.html'));
 });
 
