@@ -50,19 +50,21 @@ Exceptions:
 
 ## Typography
 
-All sizes extracted from existing codebase patterns. No new type scale is introduced.
+All sizes extracted from existing codebase patterns. Consolidated to 2 weights maximum.
 
 | Role | Size | Weight | Line Height | Tailwind Classes |
 |------|------|--------|-------------|-----------------|
 | Body | 14px | 400 (regular) | 1.5 | `text-sm` |
-| Label | 14px | 500 (medium) | 1.5 | `text-sm font-medium` |
+| Label | 14px | 400 (regular) | 1.5 | `text-sm` |
 | Subheading | 18px | 600 (semibold) | 1.4 | `text-lg font-semibold` |
-| Page heading | 24px | 700 (bold) | 1.2 | `text-2xl font-bold` |
+| Page heading | 24px | 600 (semibold) | 1.2 | `text-2xl font-semibold` |
+
+Declared weights: **400 regular** (body, label, table header, badge text) and **600 semibold** (subheadings, page headings, CTA button labels). No other weights are used.
 
 Notes:
 - Monospace password display (generated password modal): `font-mono text-lg` — matches RESEARCH.md Pattern 7
-- Table header text: `text-sm font-medium text-gray-500` — matches AdminPage.tsx thead pattern
-- Badge/tag text: `text-xs font-medium` — matches center badge pattern in AdminPage.tsx
+- Table header text: `text-sm text-gray-500` — matches AdminPage.tsx thead pattern
+- Badge/tag text: `text-xs` — matches center badge pattern in AdminPage.tsx
 
 ---
 
@@ -101,16 +103,16 @@ Structure:
 ```
 fixed inset-0 bg-black/30 z-50            (backdrop)
   bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl   (panel)
-    text-sm font-medium text-gray-700 mb-2            (heading: "New user created")
+    text-sm font-semibold text-gray-700 mb-2          (heading: "New user created")
     font-mono text-lg text-center select-all           (password display)
       bg-gray-50 rounded-lg px-4 py-3 border border-gray-200
     flex gap-3 mt-4 justify-end                        (actions row)
       [Copy to clipboard]  [Dismiss]
 ```
 
-- Copy button: `px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700`
+- Copy button: `px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700`
 - After copy: button label changes to "Copied" for 1500ms, then reverts. No separate success state.
-- Dismiss button: `px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200`
+- Dismiss button: `px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200`
 - Modal cannot be closed by clicking the backdrop — admin MUST explicitly dismiss (D-02). No `onClick` on the backdrop layer.
 - Escape key does NOT close the modal — security requirement (password must be acknowledged).
 
@@ -140,9 +142,9 @@ bg-red-50 border border-red-200 rounded-lg p-4
   flex items-start gap-3
     AlertCircle w-5 h-5 text-red-500 (flex-shrink-0)
     div
-      p.text-sm.font-medium.text-red-800   (heading)
-      p.text-sm.text-red-700.mt-1          (body + retry instruction)
-      button.mt-3 [Retry]                  (text-sm text-red-700 underline)
+      p.text-sm.font-semibold.text-red-800   (heading)
+      p.text-sm.text-red-700.mt-1            (body + retry instruction)
+      button.mt-3 [Retry]                    (text-sm text-red-700 underline)
 ```
 
 - Inline within the content area of the affected page — not a full-page takeover
@@ -171,6 +173,7 @@ All copy must be bilingual (German/English) via the existing i18n system (`src/i
 
 | Element | Copy (English) | Copy (German) |
 |---------|---------------|--------------|
+| Add User button | "Add User" | "Benutzer hinzufügen" |
 | Create User CTA (button) | "Create User" | "Benutzer anlegen" |
 | Modal heading after creation | "User created" | "Benutzer erstellt" |
 | Modal body (password instruction) | "Copy this password now — it will not be shown again." | "Passwort jetzt kopieren — es wird nicht erneut angezeigt." |
@@ -189,7 +192,7 @@ All copy must be bilingual (German/English) via the existing i18n system (`src/i
 | Mutation error: saved search | "Could not save search." | "Suche konnte nicht gespeichert werden." |
 | Mutation error: excluded cases | "Could not update excluded cases." | "Ausgeschlossene Fälle konnten nicht aktualisiert werden." |
 | Mutation error: reviewed cases | "Could not update reviewed cases." | "Geprüfte Fälle konnten nicht aktualisiert werden." |
-| AdminPage empty state (no users) | "No users found." | "Keine Benutzer gefunden." |
+| AdminPage empty state (no users) | "No users yet. Use Add User to create the first account." | "Noch keine Benutzer. Über „Benutzer hinzufügen" können Sie das erste Konto anlegen." |
 | AdminPage search empty state | "No users match your search." | "Keine Benutzer entsprechen Ihrer Suche." |
 
 Destructive actions in this phase:
@@ -212,7 +215,7 @@ Destructive actions in this phase:
 
 ### AdminPage: Delete User Flow
 
-1. Admin clicks trash icon on a row
+1. Admin clicks trash icon on a row (`aria-label="Remove {username}"` on the icon button trigger)
 2. The row's action cell shows inline confirm: `"Remove dr.mueller?" [Remove] [Cancel]` — replaces the trash icon in-place
 3. Cancel returns to normal trash icon state
 4. Remove sends DELETE, button shows spinner during request
@@ -233,6 +236,7 @@ Minimum requirements matching existing project patterns:
 - All form inputs have associated `<label>` with `for` / `htmlFor` — matches AdminPage.tsx pattern
 - Modal role: `role="dialog" aria-modal="true" aria-labelledby` — matches FeedbackButton.tsx pattern
 - Generated password modal: `aria-live="polite"` on the password value for screen reader announcement
+- Trash icon trigger button (before inline confirm): `aria-label="Remove {username}"` — declared on the icon-only `<button>` element
 - Destructive inline confirm: `aria-label="Remove {username}"` on the Remove button
 - Loading buttons: `aria-disabled="true"` and `aria-label="Creating user, please wait"` while in-flight
 - Error banners: `role="alert"` for screen reader announcement
