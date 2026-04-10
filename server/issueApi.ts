@@ -9,6 +9,7 @@
  */
 
 import type { Plugin } from 'vite';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { readBody, validateAuth, sendError } from './utils';
@@ -73,106 +74,108 @@ function validateIssueBody(data: unknown): string | null {
   return null;
 }
 
+export function issueApiHandler(req: IncomingMessage, res: ServerResponse, next: () => void): void {
+  // POST /api/issues — create new issue (authenticated)
+  if (req.method === 'POST' && req.url === '/api/issues') {
+    const user = validateAuth(req);
+    if (!user) {
+      sendError(res, 401, 'Authentication required');
+      return;
+    }
+
+    readBody(req)
+      .then((body) => {
+        let issue: unknown;
+        try {
+          issue = JSON.parse(body);
+        } catch (parseErr) {
+          sendError(res, 400, 'Invalid JSON', parseErr);
+          return;
+        }
+
+        const validationError = validateIssueBody(issue);
+        if (validationError) {
+          sendError(res, 400, validationError);
+          return;
+        }
+
+        try {
+          const id = crypto.randomUUID();
+          const timestamp = new Date().toISOString();
+          const entry = { id, timestamp, ...(issue as Record<string, unknown>) };
+
+          ensureDir();
+          const filename = `issue-${timestamp.replace(/[:.]/g, '-')}_${id.slice(0, 8)}.json`;
+          fs.writeFileSync(
+            path.join(FEEDBACK_DIR, filename),
+            JSON.stringify(entry, null, 2),
+            'utf-8',
+          );
+
+          res.writeHead(201, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ id, filename }));
+        } catch (err) {
+          sendError(res, 500, 'Failed to save issue', err);
+        }
+      })
+      .catch((err) => {
+        if (err instanceof Error && err.message.includes('too large')) {
+          sendError(res, 413, 'Request body too large');
+        } else {
+          sendError(res, 500, 'Failed to read request body', err);
+        }
+      });
+    return;
+  }
+
+  // GET /api/issues/export — full export with screenshots (admin-only)
+  if (req.method === 'GET' && req.url === '/api/issues/export') {
+    const user = validateAuth(req, 'admin');
+    if (!user) {
+      sendError(res, 403, 'Forbidden: admin role required');
+      return;
+    }
+
+    try {
+      const issues = loadAllIssues(true);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Content-Disposition': `attachment; filename="emd-issues-${dateStr}.json"`,
+      });
+      res.end(JSON.stringify(issues, null, 2));
+    } catch (err) {
+      sendError(res, 500, 'Failed to export issues', err);
+    }
+    return;
+  }
+
+  // GET /api/issues — list issues without screenshot data (authenticated)
+  if (req.method === 'GET' && req.url === '/api/issues') {
+    const user = validateAuth(req);
+    if (!user) {
+      sendError(res, 401, 'Authentication required');
+      return;
+    }
+
+    try {
+      const issues = loadAllIssues(false);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(issues));
+    } catch (err) {
+      sendError(res, 500, 'Failed to load issues', err);
+    }
+    return;
+  }
+
+  next();
+}
+
 export function issueApiPlugin(): Plugin {
   return {
     name: 'issue-api',
     configureServer(server) {
-      server.middlewares.use((req, res, next) => {
-        // POST /api/issues — create new issue (authenticated)
-        if (req.method === 'POST' && req.url === '/api/issues') {
-          const user = validateAuth(req);
-          if (!user) {
-            sendError(res, 401, 'Authentication required');
-            return;
-          }
-
-          readBody(req)
-            .then((body) => {
-              let issue: unknown;
-              try {
-                issue = JSON.parse(body);
-              } catch (parseErr) {
-                sendError(res, 400, 'Invalid JSON', parseErr);
-                return;
-              }
-
-              const validationError = validateIssueBody(issue);
-              if (validationError) {
-                sendError(res, 400, validationError);
-                return;
-              }
-
-              try {
-                const id = crypto.randomUUID();
-                const timestamp = new Date().toISOString();
-                const entry = { id, timestamp, ...(issue as Record<string, unknown>) };
-
-                ensureDir();
-                const filename = `issue-${timestamp.replace(/[:.]/g, '-')}_${id.slice(0, 8)}.json`;
-                fs.writeFileSync(
-                  path.join(FEEDBACK_DIR, filename),
-                  JSON.stringify(entry, null, 2),
-                  'utf-8',
-                );
-
-                res.writeHead(201, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ id, filename }));
-              } catch (err) {
-                sendError(res, 500, 'Failed to save issue', err);
-              }
-            })
-            .catch((err) => {
-              if (err instanceof Error && err.message.includes('too large')) {
-                sendError(res, 413, 'Request body too large');
-              } else {
-                sendError(res, 500, 'Failed to read request body', err);
-              }
-            });
-          return;
-        }
-
-        // GET /api/issues/export — full export with screenshots (admin-only)
-        if (req.method === 'GET' && req.url === '/api/issues/export') {
-          const user = validateAuth(req, 'admin');
-          if (!user) {
-            sendError(res, 403, 'Forbidden: admin role required');
-            return;
-          }
-
-          try {
-            const issues = loadAllIssues(true);
-            const dateStr = new Date().toISOString().slice(0, 10);
-            res.writeHead(200, {
-              'Content-Type': 'application/json',
-              'Content-Disposition': `attachment; filename="emd-issues-${dateStr}.json"`,
-            });
-            res.end(JSON.stringify(issues, null, 2));
-          } catch (err) {
-            sendError(res, 500, 'Failed to export issues', err);
-          }
-          return;
-        }
-
-        // GET /api/issues — list issues without screenshot data (authenticated)
-        if (req.method === 'GET' && req.url === '/api/issues') {
-          const user = validateAuth(req);
-          if (!user) {
-            sendError(res, 401, 'Authentication required');
-            return;
-          }
-
-          try {
-            const issues = loadAllIssues(false);
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(issues));
-          } catch (err) {
-            sendError(res, 500, 'Failed to load issues', err);
-          }
-          return;
-        }
-
-        next();
-      });
+      server.middlewares.use(issueApiHandler);
     },
   };
 }
