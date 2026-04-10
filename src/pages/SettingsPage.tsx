@@ -15,7 +15,6 @@ import {
   type DataSourceType,
 } from '../services/dataSource';
 import { invalidateBundleCache } from '../services/fhirLoader';
-import { logAudit } from '../services/auditService';
 import { getIssueCount, exportIssuesFull } from '../services/issueService';
 import { MessageSquarePlus } from 'lucide-react';
 
@@ -103,9 +102,6 @@ export default function SettingsPage() {
     const next = !twoFactorEnabled;
     setTwoFactorEnabled(next);
     updateSettings({ twoFactorEnabled: next });
-    if (user) {
-      logAudit(user.username, 'change_setting', next ? 'audit_detail_change_2fa_enabled' : 'audit_detail_change_2fa_disabled');
-    }
     showSaved();
   };
 
@@ -116,9 +112,6 @@ export default function SettingsPage() {
     updateSettings({ dataSource: { type, blazeUrl: type === 'blaze' ? blazeUrl : '' } });
     invalidateBundleCache();
     reloadData();
-    if (user) {
-      logAudit(user.username, 'change_setting', 'audit_detail_change_datasource', [type]);
-    }
   };
 
   const handleBlazeUrlChange = (url: string) => {

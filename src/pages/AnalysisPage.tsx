@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
-import { usePageAudit } from '../hooks/usePageAudit';
 import { CHART_COLORS } from '../config/clinicalThresholds';
 import { computeCrtDistribution } from '../utils/distributionBins';
 import {
@@ -38,8 +37,6 @@ export default function AnalysisPage() {
   const { activeCases } = useData();
   const [searchParams] = useSearchParams();
   const { locale, t } = useLanguage();
-
-  usePageAudit('view_analysis', 'audit_detail_view_analysis');
 
   const filters: CohortFilter = useMemo(() => {
     const raw = searchParams.get('filters');

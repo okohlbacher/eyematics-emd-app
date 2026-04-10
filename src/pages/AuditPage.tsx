@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { getAuditLog, clearAuditLog, type AuditEntry, type AuditAction } from '../services/auditService';
 import type { TranslationKey } from '../i18n/translations';
 import { FileText, Trash2, Download, Filter } from 'lucide-react';
-import { usePageAudit } from '../hooks/usePageAudit';
 import { downloadCsv, datedFilename } from '../utils/download';
 import { getDateLocale } from '../utils/dateFormat';
 
@@ -50,8 +49,6 @@ export default function AuditPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
-
-  usePageAudit('view_audit', 'audit_detail_view_audit');
 
   const dateFmt = getDateLocale(locale);
 

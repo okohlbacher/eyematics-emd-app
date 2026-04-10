@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { logAudit } from '../services/auditService';
 import { getDateLocale } from '../utils/dateFormat';
 import { translateClinical, getEyeLabel } from '../utils/clinicalTerms';
 import { computeVisusDistribution, computeCrtDistribution } from '../utils/distributionBins';
@@ -43,10 +42,6 @@ export default function CaseDetailPage() {
   const navigate = useNavigate();
   const { locale, t } = useLanguage();
 
-  // Audit: log case view (needs caseId, so cannot use usePageAudit)
-  useEffect(() => {
-    if (user && caseId) logAudit(user.username, 'view_case', 'audit_detail_view_case', [caseId], caseId);
-  }, [caseId]); // eslint-disable-line react-hooks/exhaustive-deps
   const octViewerRef = useRef<HTMLDivElement>(null);
   const [octSelectedIdx, setOctSelectedIdx] = useState(0);
   const [highlightDate, setHighlightDate] = useState<string | null>(null);

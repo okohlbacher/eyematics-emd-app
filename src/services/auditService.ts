@@ -1,89 +1,46 @@
-// EMDREQ-PROT-001: Audit logging service
-// Logs all data access events with timestamps
-// Detail strings use locale-neutral keys for i18n translation at display time
+/**
+ * Audit service — read-only client for server-side audit log.
+ * All audit writes happen server-side via auditMiddleware.
+ * This service only reads from GET /api/audit.
+ */
+import { getAuthHeaders } from './authHeaders';
 
-export interface AuditEntry {
+export interface ServerAuditEntry {
   id: string;
   timestamp: string;
+  method: string;
+  path: string;
   user: string;
-  action: AuditAction;
-  /** Locale-neutral detail key, e.g. 'audit_detail_login' */
-  detailKey: string;
-  /** Optional interpolation arguments for the detail string */
-  detailArgs?: string[];
-  resource?: string;
+  status: number;
+  duration_ms: number;
+  body: string | null;
+  query: string | null;
 }
 
-export type AuditAction =
-  | 'login'
-  | 'logout'
-  | 'view_landing'
-  | 'view_cohort'
-  | 'view_analysis'
-  | 'view_case'
-  | 'view_quality'
-  | 'view_admin'
-  | 'view_audit'
-  | 'view_doc_quality'
-  | 'save_search'
-  | 'delete_search'
-  | 'flag_error'
-  | 'update_flag'
-  | 'exclude_case'
-  | 'include_case'
-  | 'create_user'
-  | 'delete_user'
-  | 'auto_logout'
-  | 'change_setting';
+export async function fetchAuditEntries(filters?: {
+  user?: string;
+  path?: string;
+  from?: string;
+  to?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<{ entries: ServerAuditEntry[]; total: number }> {
+  const params = new URLSearchParams();
+  if (filters?.user) params.set('user', filters.user);
+  if (filters?.path) params.set('path', filters.path);
+  if (filters?.from) params.set('from', filters.from);
+  if (filters?.to) params.set('to', filters.to);
+  if (filters?.limit) params.set('limit', String(filters.limit));
+  if (filters?.offset) params.set('offset', String(filters.offset));
 
-const STORAGE_KEY = 'emd-audit-log';
-import { MAX_AUDIT_ENTRIES } from '../config/clinicalThresholds';
-import { safeJsonParse } from '../utils/safeJson';
-const MAX_ENTRIES = MAX_AUDIT_ENTRIES;
-
-function loadEntries(): AuditEntry[] {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  return stored ? safeJsonParse<AuditEntry[]>(stored, []) : [];
+  const url = '/api/audit' + (params.toString() ? '?' + params.toString() : '');
+  const resp = await fetch(url, { headers: getAuthHeaders() });
+  if (!resp.ok) throw new Error(`Audit fetch failed: ${resp.status}`);
+  return resp.json();
 }
 
-function saveEntries(entries: AuditEntry[]): void {
-  // Keep only last MAX_ENTRIES
-  const trimmed = entries.slice(-MAX_ENTRIES);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
-}
-
-/**
- * Log an audit event with a locale-neutral detail key.
- * @param user - username
- * @param action - action type
- * @param detailKey - i18n key for the detail message
- * @param detailArgs - optional interpolation arguments (e.g. case ID, username)
- * @param resource - optional resource identifier
- */
-export function logAudit(
-  user: string,
-  action: AuditAction,
-  detailKey: string,
-  detailArgs?: string[],
-  resource?: string
-): void {
-  const entries = loadEntries();
-  entries.push({
-    id: crypto.randomUUID(),
-    timestamp: new Date().toISOString(),
-    user,
-    action,
-    detailKey,
-    detailArgs,
-    resource,
-  });
-  saveEntries(entries);
-}
-
-export function getAuditLog(): AuditEntry[] {
-  return loadEntries();
-}
-
-export function clearAuditLog(): void {
-  localStorage.removeItem(STORAGE_KEY);
+export async function exportAuditLog(): Promise<ServerAuditEntry[]> {
+  const resp = await fetch('/api/audit/export', { headers: getAuthHeaders() });
+  if (!resp.ok) throw new Error(`Audit export failed: ${resp.status}`);
+  return resp.json();
 }

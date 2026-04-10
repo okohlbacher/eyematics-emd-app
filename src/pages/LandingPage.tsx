@@ -1,7 +1,6 @@
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { usePageAudit } from '../hooks/usePageAudit';
 import {
   Building2,
   Users,
@@ -16,8 +15,6 @@ export default function LandingPage() {
   const { loading, centers, cases } = useData();
   const { displayName, managedUsers } = useAuth();
   const { locale, t } = useLanguage();
-
-  usePageAudit('view_landing', 'audit_detail_view_landing');
 
   if (loading) {
     return (
