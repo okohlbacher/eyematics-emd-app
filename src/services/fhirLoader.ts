@@ -13,6 +13,7 @@ import type {
   CohortFilter,
 } from '../types/fhir';
 import { getDataSourceConfig, loadBundlesFromSource } from './dataSource';
+import { authFetch } from './authHeaders';
 
 let cachedBundles: FhirBundle[] | null = null;
 
@@ -159,7 +160,6 @@ let _centerShorthands: Record<string, string> = {
 /** Load center shorthands from server. Called once at app startup. */
 export async function loadCenterShorthands(): Promise<void> {
   try {
-    const { authFetch } = await import('./authHeaders');
     const resp = await authFetch('/api/fhir/centers');
     if (resp.ok) {
       const data = await resp.json() as { centers: Array<{ id: string; shorthand: string }> };
