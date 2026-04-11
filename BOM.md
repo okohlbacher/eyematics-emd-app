@@ -1,6 +1,6 @@
 # Bill of Materials (BOM) — EyeMatics Clinical Demonstrator
 
-Generated: 2026-04-11 (v1.1, updated after lint cleanup)
+Generated: 2026-04-11 (v1.3, after full-review fixes)
 
 ## Direct Dependencies (Production)
 

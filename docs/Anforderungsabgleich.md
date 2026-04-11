@@ -1,8 +1,8 @@
 # Anforderungsabgleich — EyeMatics Klinischer Demonstrator (EMD)
 
-**Stand:** 11.04.2026 | **Version:** 1.1 (nach Lint-Cleanup und Konsistenzpruefung)
+**Stand:** 11.04.2026 | **Version:** 1.3 (nach Full-Review)
 
-> Dieses Dokument gleicht die Anforderungen aus Lastenheft (RE-EM-LH) und Pflichtenheft (EMDREQ-*) mit der tatsaechlichen Implementierung im EMD v1.1 ab.
+> Dieses Dokument gleicht die Anforderungen aus Lastenheft (RE-EM-LH) und Pflichtenheft (EMDREQ-*) mit der tatsaechlichen Implementierung im EMD v1.3 ab.
 
 ---
 

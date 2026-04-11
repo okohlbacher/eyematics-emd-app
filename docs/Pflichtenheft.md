@@ -893,7 +893,7 @@ Diese Rollen sollten an jedem EyeMatics Rollout Standort vertreten sein:
   Forscher                    Datensätze abrufen, Analysen durchführen                                               Zugriff auf Benutzungsoberfläche des klinischen Demonstrators (pseudonyme medizinische Daten)
   --------------------------- -------------------------------------------------------------------------------------- -----------------------------------------------------------------------------------------------
 
-Berechtigungskonzept im EMD (6-Rollen-Modell, Stand v1.1):
+Berechtigungskonzept im EMD (6-Rollen-Modell, Stand v1.3):
 
   ----------------------------- --------------------------------- --------------------------------- --------------------------- ---------------------------
   **Rolle**                     **Klinische Daten**               **Dokumentationsqualitaet**       **Nutzer-Administration**   **System-Administration**

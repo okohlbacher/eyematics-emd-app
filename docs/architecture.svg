@@ -24,7 +24,7 @@
   <rect width="1400" height="1050" fill="#f8fafc" rx="8"/>
 
   <!-- Titel -->
-  <text x="700" y="32" text-anchor="middle" font-size="20" font-weight="700" fill="#0f172a">EyeMatics Systemarchitektur v1.1 — Vier-Zonen-Modell (pro Standort)</text>
+  <text x="700" y="32" text-anchor="middle" font-size="20" font-weight="700" fill="#0f172a">EyeMatics Systemarchitektur v1.3 — Vier-Zonen-Modell (pro Standort)</text>
   <text x="700" y="52" text-anchor="middle" font-size="11" fill="#64748b">DSF orchestriert standortuebergreifenden Datenaustausch | EMD ist ein lokales Dashboard ueber lokal verfuegbare Daten</text>
 
   <!-- ================================================================ -->
@@ -273,7 +273,7 @@
 
   <!-- Phasen -->
   <rect x="700" y="660" width="670" height="190" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="720" y="683" font-size="12" font-weight="700" fill="#334155">Implementierungsphasen (v1.0 + v1.1)</text>
+  <text x="720" y="683" font-size="12" font-weight="700" fill="#334155">Implementierungsphasen (v1.0 — v1.3)</text>
 
   <rect x="720" y="696" width="12" height="12" rx="2" fill="#22c55e"/>
   <text x="740" y="707" font-size="8.5" font-weight="600" fill="#166534">Phase 1: Produktions-Express-Backend</text>
@@ -302,8 +302,15 @@
   <rect x="720" y="816" width="12" height="12" rx="2" fill="#3b82f6"/>
   <text x="740" y="827" font-size="8.5" font-weight="600" fill="#1e40af">v1.1: Frontend-Backend Integration</text>
   <text x="1320" y="827" text-anchor="end" font-size="7.5" fill="#3b82f6">v1.1 ✓</text>
-  <text x="740" y="841" font-size="7" fill="#64748b">Server-JWT Auth | DataContext→Server | Audit immutable | AdminPage CRUD | FHIR via API | Security-Haertung</text>
+
+  <rect x="720" y="836" width="12" height="12" rx="2" fill="#8b5cf6"/>
+  <text x="740" y="847" font-size="8.5" font-weight="600" fill="#5b21b6">v1.2: Lint-Cleanup + Docs-Aktualisierung</text>
+  <text x="1320" y="847" text-anchor="end" font-size="7.5" fill="#8b5cf6">v1.2 ✓</text>
+
+  <rect x="720" y="856" width="12" height="12" rx="2" fill="#f59e0b"/>
+  <text x="740" y="867" font-size="8.5" font-weight="600" fill="#b45309">v1.3: Full-Review (Claude/Gemini/Codex) — 39 Fixes</text>
+  <text x="1320" y="867" text-anchor="end" font-size="7.5" fill="#f59e0b">v1.3 ✓</text>
 
   <!-- Copyright / Stand -->
-  <text x="700" y="880" text-anchor="middle" font-size="9" fill="#94a3b8">Stand: 11.04.2026 — v1.0 (6 Phasen) + v1.1 (Integration) abgeschlossen</text>
+  <text x="700" y="895" text-anchor="middle" font-size="9" fill="#94a3b8">Stand: 11.04.2026 — v1.0 (6 Phasen) + v1.1 (Integration) + v1.2 (Cleanup) + v1.3 (Full-Review) abgeschlossen</text>
 </svg>
