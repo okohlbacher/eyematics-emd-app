@@ -1,39 +1,39 @@
+import { ArrowLeft, Syringe, TrendingDown, TrendingUp } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useData } from '../context/DataContext';
-import { useLanguage } from '../context/LanguageContext';
-
-import { getDateLocale } from '../utils/dateFormat';
-import { translateClinical, getEyeLabel } from '../utils/clinicalTerms';
-import { computeVisusDistribution, computeCrtDistribution } from '../utils/distributionBins';
+import { useNavigate,useParams } from 'react-router-dom';
 import {
-  getObservationsByCode,
-  LOINC_VISUS,
-  LOINC_CRT,
-  LOINC_IOP,
-  LOINC_HBA1C,
-  SNOMED_EYE_RIGHT,
-} from '../services/fhirLoader';
-import {
-  LineChart,
+  CartesianGrid,
+  Legend,
   Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  ReferenceLine,
 } from 'recharts';
-import { ArrowLeft, Syringe, TrendingDown, TrendingUp } from 'lucide-react';
-import { CRITICAL_CRT_THRESHOLD, CRITICAL_VISUS_THRESHOLD, CRITICAL_IOP_THRESHOLD } from '../config/clinicalThresholds';
-import OctViewer from '../components/OctViewer';
-import PatientHeader from '../components/case-detail/PatientHeader';
-import VisusCrtChart from '../components/case-detail/VisusCrtChart';
+
+import AnamnesisFindings from '../components/case-detail/AnamnesisFindings';
+import ClinicalParametersRow from '../components/case-detail/ClinicalParametersRow';
 import DistributionCharts from '../components/case-detail/DistributionCharts';
 import MedicationCard from '../components/case-detail/MedicationCard';
-import ClinicalParametersRow from '../components/case-detail/ClinicalParametersRow';
-import AnamnesisFindings from '../components/case-detail/AnamnesisFindings';
+import PatientHeader from '../components/case-detail/PatientHeader';
+import VisusCrtChart from '../components/case-detail/VisusCrtChart';
+import OctViewer from '../components/OctViewer';
+import { CRITICAL_CRT_THRESHOLD, CRITICAL_IOP_THRESHOLD,CRITICAL_VISUS_THRESHOLD } from '../config/clinicalThresholds';
+import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
+import {
+  getObservationsByCode,
+  LOINC_CRT,
+  LOINC_HBA1C,
+  LOINC_IOP,
+  LOINC_VISUS,
+  SNOMED_EYE_RIGHT,
+} from '../services/fhirLoader';
+import { getEyeLabel,translateClinical } from '../utils/clinicalTerms';
+import { getDateLocale } from '../utils/dateFormat';
+import { computeCrtDistribution,computeVisusDistribution } from '../utils/distributionBins';
 
 export default function CaseDetailPage() {
   const { caseId } = useParams<{ caseId: string }>();

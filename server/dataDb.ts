@@ -15,9 +15,10 @@
  * Review suggestion: all tables include updated_at column.
  */
 
-import Database from 'better-sqlite3';
-import path from 'node:path';
 import crypto from 'node:crypto';
+import path from 'node:path';
+
+import Database from 'better-sqlite3';
 
 // ---------------------------------------------------------------------------
 // Module-level db instance (populated by initDataDb)

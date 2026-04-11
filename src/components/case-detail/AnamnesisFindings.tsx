@@ -1,8 +1,9 @@
-import { Stethoscope, ScanEye, FileWarning } from 'lucide-react';
-import { translateClinical, getEyeLabel } from '../../utils/clinicalTerms';
-import { SNOMED_EYE_RIGHT } from '../../services/fhirLoader';
+import { FileWarning,ScanEye, Stethoscope } from 'lucide-react';
+
 import type { TranslationKey } from '../../i18n/translations';
+import { SNOMED_EYE_RIGHT } from '../../services/fhirLoader';
 import type { Condition, Observation } from '../../types/fhir';
+import { getEyeLabel,translateClinical } from '../../utils/clinicalTerms';
 
 export interface AnamnesisAndFindingsProps {
   ophthalmicAnamnesis: Condition[];

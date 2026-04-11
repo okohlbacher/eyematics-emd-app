@@ -10,14 +10,16 @@
  * H-01: Shared core logic between production Router and Vite plugin.
  */
 
-import { Router } from 'express';
-import type { Request, Response } from 'express';
-import type { Plugin } from 'vite';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
-import { readBody, validateAuth, sendError } from './utils.js';
+
+import type { Request, Response } from 'express';
+import { Router } from 'express';
+import type { Plugin } from 'vite';
+
 import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
+import { readBody, sendError,validateAuth } from './utils.js';
 
 const FEEDBACK_DIR = path.resolve(process.cwd(), 'feedback');
 

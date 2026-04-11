@@ -5,10 +5,12 @@
  * The public/ directory is served statically to clients by Express.
  */
 
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
+
 import bcrypt from 'bcryptjs';
+
 import { initKeycloakAuth } from './keycloakAuth.js';
 
 // ---------------------------------------------------------------------------

@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageSquarePlus, X, Send, CheckCircle } from 'lucide-react';
+import { toPng } from 'html-to-image';
+import { CheckCircle,MessageSquarePlus, Send, X } from 'lucide-react';
+import { useCallback,useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import type { TranslationKey } from '../i18n/translations';
 import { addIssue } from '../services/issueService';
-import { toPng } from 'html-to-image';
 
 /** Map route path to translation key for page name */
 const PAGE_KEY_MAP: Record<string, TranslationKey> = {

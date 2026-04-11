@@ -1,38 +1,38 @@
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useData } from '../context/DataContext';
-import { useLanguage } from '../context/LanguageContext';
-
-import { CHART_COLORS } from '../config/clinicalThresholds';
-import { computeCrtDistribution } from '../utils/distributionBins';
 import {
-  applyFilters,
-  getObservationsByCode,
-  getAge,
-  getDiagnosisLabel,
-  getCenterShorthand,
-  getDiagnosisFullText,
-  LOINC_VISUS,
-  LOINC_CRT,
-} from '../services/fhirLoader';
-import type { CohortFilter } from '../types/fhir';
-import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Scatter,
+  ScatterChart,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  Legend,
-  PieChart,
-  Pie,
-  Cell,
-  ScatterChart,
-  Scatter,
 } from 'recharts';
+
+import { CHART_COLORS } from '../config/clinicalThresholds';
+import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
+import {
+  applyFilters,
+  getAge,
+  getCenterShorthand,
+  getDiagnosisFullText,
+  getDiagnosisLabel,
+  getObservationsByCode,
+  LOINC_CRT,
+  LOINC_VISUS,
+} from '../services/fhirLoader';
+import type { CohortFilter } from '../types/fhir';
+import { computeCrtDistribution } from '../utils/distributionBins';
 
 export default function AnalysisPage() {
   const { activeCases } = useData();

@@ -1,32 +1,33 @@
-import { useState, useMemo } from 'react';
+import {
+  ArrowUpDown,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Filter,
+  Play,
+  Save,
+  Search,
+  Trash2,
+} from 'lucide-react';
+import { useMemo,useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
-import { downloadCsv, downloadJson, datedFilename } from '../utils/download';
-import { formatDate } from '../utils/dateFormat';
 import {
   applyFilters,
   getAge,
-  getLatestObservation,
-  getDiagnosisLabel,
   getDiagnosisFullText,
-  LOINC_VISUS,
+  getDiagnosisLabel,
+  getLatestObservation,
   LOINC_CRT,
+  LOINC_VISUS,
   SNOMED_AMD,
   SNOMED_DR,
 } from '../services/fhirLoader';
 import type { CohortFilter, SavedSearch } from '../types/fhir';
-import {
-  Search,
-  Save,
-  Trash2,
-  Play,
-  Filter,
-  ChevronDown,
-  ChevronUp,
-  ArrowUpDown,
-  Download,
-} from 'lucide-react';
+import { formatDate } from '../utils/dateFormat';
+import { datedFilename,downloadCsv, downloadJson } from '../utils/download';
 
 type SortField = 'date' | 'name';
 

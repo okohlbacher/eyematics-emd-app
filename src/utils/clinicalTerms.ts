@@ -3,8 +3,8 @@
  * Extracted from CaseDetailPage for reuse across the application.
  */
 
-import type { Observation } from '../types/fhir';
 import { SNOMED_EYE_RIGHT } from '../services/fhirLoader';
+import type { Observation } from '../types/fhir';
 
 /** Map English FHIR display texts to German equivalents */
 export const CLINICAL_TERMS_DE: Record<string, string> = {

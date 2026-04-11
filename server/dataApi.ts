@@ -9,21 +9,23 @@
  * Review concern #4: quality_flags uses surrogate id (not composite PK).
  */
 
-import { Router } from 'express';
-import type { Request, Response } from 'express';
 import crypto from 'node:crypto';
+
+import type { Request, Response } from 'express';
+import { Router } from 'express';
+
+import type { QualityFlagRow, SavedSearchRow } from './dataDb.js';
 import {
-  getQualityFlags,
-  setQualityFlags,
-  getSavedSearches,
   addSavedSearch,
-  removeSavedSearch,
   getExcludedCases,
-  setExcludedCases,
+  getQualityFlags,
   getReviewedCases,
+  getSavedSearches,
+  removeSavedSearch,
+  setExcludedCases,
+  setQualityFlags,
   setReviewedCases,
 } from './dataDb.js';
-import type { QualityFlagRow, SavedSearchRow } from './dataDb.js';
 import { getCaseToCenter, isBypass } from './fhirApi.js';
 
 export const dataApiRouter = Router();

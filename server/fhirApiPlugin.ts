@@ -11,11 +11,13 @@
  * Follows the exact pattern from issueApiPlugin and settingsApiPlugin.
  */
 
-import type { Plugin } from 'vite';
 import fs from 'node:fs';
 import path from 'node:path';
-import { validateAuth, sendError } from './utils.js';
-import { getValidCenterIds, getFallbackCenterFiles } from './constants.js';
+
+import type { Plugin } from 'vite';
+
+import { getFallbackCenterFiles,getValidCenterIds } from './constants.js';
+import { sendError,validateAuth } from './utils.js';
 
 export function fhirApiPlugin(): Plugin {
   return {

@@ -1,34 +1,35 @@
-import { useState, useMemo } from 'react';
+import {
+  AlertCircle,
+  Ban,
+  CheckCheck,
+  CheckCircle2,
+  ChevronRight,
+  Circle,
+  Clock,
+  Download,
+  Filter,
+  Flag,
+  Search,
+} from 'lucide-react';
+import { useMemo,useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useData } from '../context/DataContext';
+
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import {
   getAge,
-  getObservationsByCode,
-  getDiagnosisLabel,
   getCenterShorthand,
-  LOINC_VISUS,
+  getDiagnosisLabel,
+  getObservationsByCode,
   LOINC_CRT,
+  LOINC_VISUS,
   SNOMED_IVI,
 } from '../services/fhirLoader';
 import { getSettings } from '../services/settingsService';
-import { downloadCsv, datedFilename } from '../utils/download';
+import type { PatientCase,QualityFlag, QualityStatus } from '../types/fhir';
 import { getDateLocale } from '../utils/dateFormat';
-import type { QualityFlag, QualityStatus, PatientCase } from '../types/fhir';
-import {
-  CheckCircle2,
-  Circle,
-  AlertCircle,
-  Clock,
-  ChevronRight,
-  Flag,
-  Ban,
-  CheckCheck,
-  Search,
-  Filter,
-  Download,
-} from 'lucide-react';
+import { datedFilename,downloadCsv } from '../utils/download';
 
 // Therapy discontinuation detection (EMDREQ-QUAL-009)
 // Uses configurable thresholds from settings (K06 N06.01/N06.04)

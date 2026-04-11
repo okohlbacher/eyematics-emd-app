@@ -10,8 +10,9 @@
  * Keycloak unavailability returns 503 fail-closed (D-03, T-06-05).
  */
 
+import type { NextFunction,Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import type { Request, Response, NextFunction } from 'express';
+
 import { getJwtSecret } from './initAuth.js';
 import { getAuthProvider, getJwksClient } from './keycloakAuth.js';
 

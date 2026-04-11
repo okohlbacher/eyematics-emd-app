@@ -9,10 +9,11 @@
  *   GET /api/audit/export — full dump as downloadable JSON (admin only, T-02-08)
  */
 
-import { Router } from 'express';
 import type { Request, Response } from 'express';
-import { queryAudit, queryAuditExport } from './auditDb.js';
+import { Router } from 'express';
+
 import type { AuditFilters } from './auditDb.js';
+import { queryAudit, queryAuditExport } from './auditDb.js';
 
 export const auditApiRouter = Router();
 

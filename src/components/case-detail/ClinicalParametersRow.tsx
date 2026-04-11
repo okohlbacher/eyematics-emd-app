@@ -1,18 +1,19 @@
+import { Eye, Glasses, HeartPulse } from 'lucide-react';
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
 } from 'recharts';
-import { Eye, Glasses, HeartPulse } from 'lucide-react';
-import { translateClinical } from '../../utils/clinicalTerms';
+
 import { CRITICAL_IOP_THRESHOLD } from '../../config/clinicalThresholds';
 import type { TranslationKey } from '../../i18n/translations';
 import type { Condition, Observation } from '../../types/fhir';
+import { translateClinical } from '../../utils/clinicalTerms';
 
 export interface ClinicalParametersRowProps {
   iopObs: Observation[];

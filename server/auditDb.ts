@@ -12,8 +12,9 @@
  * Per D-15: 90-day rolling retention, runs on startup and every 24 hours
  */
 
-import Database from 'better-sqlite3';
 import path from 'node:path';
+
+import Database from 'better-sqlite3';
 
 // ---------------------------------------------------------------------------
 // Types

@@ -1,15 +1,16 @@
-import { useState } from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import { getDateLocale } from '../utils/dateFormat';
 import {
   ChevronLeft,
   ChevronRight,
-  ZoomIn,
-  ZoomOut,
+  Image as ImageIcon,
   Maximize2,
   X,
-  Image as ImageIcon,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
+import { useState } from 'react';
+
+import { useLanguage } from '../context/LanguageContext';
+import { getDateLocale } from '../utils/dateFormat';
 
 interface OctImage {
   title: string;

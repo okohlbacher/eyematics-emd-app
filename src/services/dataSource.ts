@@ -1,6 +1,6 @@
 import type { FhirBundle } from '../types/fhir';
-import { getSettings } from './settingsService';
 import { authFetch } from './authHeaders';
+import { getSettings } from './settingsService';
 
 export type DataSourceType = 'local' | 'blaze';
 

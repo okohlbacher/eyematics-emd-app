@@ -1,20 +1,21 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import { BrowserRouter, Navigate,Route, Routes } from 'react-router-dom';
+
+import ErrorBoundary from './components/ErrorBoundary';
+import Layout from './components/Layout';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import { LanguageProvider } from './context/LanguageContext';
-import Layout from './components/Layout';
-import LoginPage from './pages/LoginPage';
-import LandingPage from './pages/LandingPage';
-import CohortBuilderPage from './pages/CohortBuilderPage';
-import AnalysisPage from './pages/AnalysisPage';
-import CaseDetailPage from './pages/CaseDetailPage';
-import QualityPage from './pages/QualityPage';
-import DocQualityPage from './pages/DocQualityPage';
 import AdminPage from './pages/AdminPage';
+import AnalysisPage from './pages/AnalysisPage';
 import AuditPage from './pages/AuditPage';
+import CaseDetailPage from './pages/CaseDetailPage';
+import CohortBuilderPage from './pages/CohortBuilderPage';
+import DocQualityPage from './pages/DocQualityPage';
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import QualityPage from './pages/QualityPage';
 import SettingsPage from './pages/SettingsPage';
-import ErrorBoundary from './components/ErrorBoundary';
-import type { ReactNode } from 'react';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user } = useAuth();

@@ -14,13 +14,15 @@
  * Mitigates: T-05-01 (information disclosure), T-05-04 (stale cache), T-05-06 (Blaze error detail)
  */
 
-import { Router } from 'express';
-import type { Request, Response } from 'express';
-import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
 import fs from 'node:fs';
 import path from 'node:path';
+
+import type { Request, Response } from 'express';
+import { Router } from 'express';
 import yaml from 'js-yaml';
-import { getValidCenterIds, getFallbackCenterFiles, getCenters, BLAZE_RESOURCE_TYPES, SETTINGS_FILE } from './constants.js';
+
+import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
+import { BLAZE_RESOURCE_TYPES, getCenters, getFallbackCenterFiles, getValidCenterIds, SETTINGS_FILE } from './constants.js';
 
 // ---------------------------------------------------------------------------
 // Types

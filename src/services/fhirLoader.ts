@@ -1,19 +1,19 @@
 import type {
+  CenterInfo,
+  CohortFilter,
+  Condition,
   FhirBundle,
   FhirResource,
-  Organization,
-  Patient,
-  Condition,
-  Observation,
-  Procedure,
   ImagingStudy,
   MedicationStatement,
-  CenterInfo,
+  Observation,
+  Organization,
+  Patient,
   PatientCase,
-  CohortFilter,
+  Procedure,
 } from '../types/fhir';
-import { getDataSourceConfig, loadBundlesFromSource } from './dataSource';
 import { authFetch } from './authHeaders';
+import { getDataSourceConfig, loadBundlesFromSource } from './dataSource';
 
 let cachedBundles: FhirBundle[] | null = null;
 

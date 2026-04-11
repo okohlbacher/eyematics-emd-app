@@ -6,18 +6,19 @@
  * OTP: fixed configurable code from settings.yaml — no otplib.
  */
 
-import { Router } from 'express';
-import type { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
-import { getJwtSecret, getAuthConfig, loadUsers, saveUsers } from './initAuth.js';
-import type { UserRecord } from './initAuth.js';
-import type { AuthPayload } from './authMiddleware.js';
-import { createRateLimiter } from './rateLimiting.js';
-import { getAuthProvider } from './keycloakAuth.js';
 
+import bcrypt from 'bcryptjs';
+import type { Request, Response } from 'express';
+import { Router } from 'express';
+import jwt from 'jsonwebtoken';
+
+import type { AuthPayload } from './authMiddleware.js';
 import { getValidCenterIds } from './constants.js';
+import type { UserRecord } from './initAuth.js';
+import { getAuthConfig, getJwtSecret, loadUsers, saveUsers } from './initAuth.js';
+import { getAuthProvider } from './keycloakAuth.js';
+import { createRateLimiter } from './rateLimiting.js';
 
 // ---------------------------------------------------------------------------
 // Constants for user CRUD validation

@@ -1,27 +1,28 @@
 import {
   createContext,
-  useContext,
+  type ReactNode,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from 'react';
-import type {
-  FhirBundle,
-  CenterInfo,
-  PatientCase,
-  SavedSearch,
-  QualityFlag,
-} from '../types/fhir';
+
+import { authFetch } from '../services/authHeaders';
 import {
-  loadAllBundles,
   extractCenters,
   extractPatientCases,
-  loadCenterShorthands,
   invalidateBundleCache,
+  loadAllBundles,
+  loadCenterShorthands,
 } from '../services/fhirLoader';
-import { authFetch } from '../services/authHeaders';
+import type {
+  CenterInfo,
+  FhirBundle,
+  PatientCase,
+  QualityFlag,
+  SavedSearch,
+} from '../types/fhir';
 
 interface DataContextType {
   loading: boolean;

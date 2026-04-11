@@ -1,18 +1,19 @@
 import {
-  LineChart,
+  CartesianGrid,
+  Legend,
   Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  ReferenceLine,
 } from 'recharts';
-import { translateClinical } from '../../utils/clinicalTerms';
+
 import { CRITICAL_CRT_THRESHOLD } from '../../config/clinicalThresholds';
 import type { TranslationKey } from '../../i18n/translations';
 import type { Observation } from '../../types/fhir';
+import { translateClinical } from '../../utils/clinicalTerms';
 
 interface CombinedDataPoint {
   date: string;

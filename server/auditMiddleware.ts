@@ -15,8 +15,10 @@
  * - Review concern #6: Use req.originalUrl (not req.path or req.url) for path accuracy.
  */
 
-import type { Request, Response, NextFunction } from 'express';
 import crypto from 'node:crypto';
+
+import type { NextFunction,Request, Response } from 'express';
+
 import { logAuditEntry } from './auditDb.js';
 
 // Type augmentation in server/types.d.ts (F-17: single source of truth)

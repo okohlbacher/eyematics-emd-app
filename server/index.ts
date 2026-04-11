@@ -21,27 +21,29 @@
  *   7. Listen on configured host:port
  */
 
-import express from 'express';
-import type { Request, Response, NextFunction } from 'express';
+import fs from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Socket } from 'node:net';
 import path from 'node:path';
-import fs from 'node:fs';
-import yaml from 'js-yaml';
-import { createProxyMiddleware } from 'http-proxy-middleware';
+
+import type { NextFunction,Request, Response } from 'express';
+import express from 'express';
 import helmet from 'helmet';
-import { issueApiRouter } from './issueApi.js';
-import { settingsApiRouter } from './settingsApi.js';
-import { initAuth } from './initAuth.js';
-import { authMiddleware } from './authMiddleware.js';
-import { authApiRouter } from './authApi.js';
+import { createProxyMiddleware } from 'http-proxy-middleware';
+import yaml from 'js-yaml';
+
+import { auditApiRouter } from './auditApi.js';
 import { initAuditDb, startPurgeInterval } from './auditDb.js';
 import { auditMiddleware } from './auditMiddleware.js';
-import { auditApiRouter } from './auditApi.js';
-import { initDataDb } from './dataDb.js';
-import { dataApiRouter } from './dataApi.js';
-import { fhirApiRouter } from './fhirApi.js';
+import { authApiRouter } from './authApi.js';
+import { authMiddleware } from './authMiddleware.js';
 import { initCenters } from './constants.js';
+import { dataApiRouter } from './dataApi.js';
+import { initDataDb } from './dataDb.js';
+import { fhirApiRouter } from './fhirApi.js';
+import { initAuth } from './initAuth.js';
+import { issueApiRouter } from './issueApi.js';
+import { settingsApiRouter } from './settingsApi.js';
 
 // ---------------------------------------------------------------------------
 // 1. Read settings.yaml at startup (fail fast)

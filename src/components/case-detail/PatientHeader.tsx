@@ -1,19 +1,19 @@
-import React from 'react';
 import {
-  User,
-  Calendar,
-  Building2,
-  Syringe,
-  AlertTriangle,
-  ScanEye,
-  Eye,
   Activity,
+  AlertTriangle,
+  Building2,
+  Calendar,
+  Eye,
   FileWarning,
+  ScanEye,
   Stethoscope,
+  Syringe,
+  User,
 } from 'lucide-react';
-import { getAge, getDiagnosisLabel, getDiagnosisFullText, SNOMED_EYE_RIGHT } from '../../services/fhirLoader';
+import React from 'react';
 
 import type { TranslationKey } from '../../i18n/translations';
+import { getAge, getDiagnosisFullText, getDiagnosisLabel, SNOMED_EYE_RIGHT } from '../../services/fhirLoader';
 import type { Condition } from '../../types/fhir';
 
 interface TimelineEvent {

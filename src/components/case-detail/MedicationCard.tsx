@@ -1,4 +1,5 @@
-import { Pill, ArrowRightLeft } from 'lucide-react';
+import { ArrowRightLeft,Pill } from 'lucide-react';
+
 import type { TranslationKey } from '../../i18n/translations';
 import type { MedicationStatement } from '../../types/fhir';
 
