@@ -1,0 +1,193 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 920" font-family="'Segoe UI',system-ui,sans-serif" font-size="13">
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#059669"/>
+    </marker>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#f1f5f9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="920" fill="url(#bg)" rx="12"/>
+
+  <!-- Title -->
+  <text x="550" y="36" text-anchor="middle" font-size="20" font-weight="700" fill="#0f172a">EMD Architektur — v1.1</text>
+  <text x="550" y="54" text-anchor="middle" font-size="11" fill="#94a3b8">EyeMatics Klinischer Demonstrator · Frontend-Backend Integration</text>
+
+  <!-- ===== BROWSER ZONE ===== -->
+  <rect x="30" y="70" width="1040" height="220" rx="10" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+  <text x="50" y="92" font-size="12" font-weight="700" fill="#1e40af">BROWSER (React SPA)</text>
+
+  <!-- Pages -->
+  <rect x="50" y="105" width="100" height="42" rx="6" fill="#fff" stroke="#93c5fd"/>
+  <text x="100" y="130" text-anchor="middle" font-size="11" fill="#1e3a8a">LoginPage</text>
+
+  <rect x="165" y="105" width="100" height="42" rx="6" fill="#fff" stroke="#93c5fd"/>
+  <text x="215" y="130" text-anchor="middle" font-size="11" fill="#1e3a8a">CohortBuilder</text>
+
+  <rect x="280" y="105" width="100" height="42" rx="6" fill="#fff" stroke="#93c5fd"/>
+  <text x="330" y="130" text-anchor="middle" font-size="11" fill="#1e3a8a">CaseDetail</text>
+
+  <rect x="395" y="105" width="100" height="42" rx="6" fill="#fff" stroke="#93c5fd"/>
+  <text x="445" y="130" text-anchor="middle" font-size="11" fill="#1e3a8a">QualityReview</text>
+
+  <rect x="510" y="105" width="100" height="42" rx="6" fill="#fff" stroke="#93c5fd"/>
+  <text x="560" y="130" text-anchor="middle" font-size="11" fill="#1e3a8a">AdminPage</text>
+
+  <rect x="625" y="105" width="100" height="42" rx="6" fill="#fff" stroke="#93c5fd"/>
+  <text x="675" y="130" text-anchor="middle" font-size="11" fill="#1e3a8a">AuditPage</text>
+
+  <rect x="740" y="105" width="100" height="42" rx="6" fill="#fff" stroke="#93c5fd"/>
+  <text x="790" y="130" text-anchor="middle" font-size="11" fill="#1e3a8a">SettingsPage</text>
+
+  <rect x="855" y="105" width="100" height="42" rx="6" fill="#fff" stroke="#93c5fd"/>
+  <text x="905" y="130" text-anchor="middle" font-size="11" fill="#1e3a8a">Analysis</text>
+
+  <!-- AuthContext -->
+  <rect x="50" y="165" width="460" height="45" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="280" y="183" text-anchor="middle" font-size="12" font-weight="600" fill="#1e40af">AuthContext</text>
+  <text x="280" y="199" text-anchor="middle" font-size="10" fill="#3b82f6">JWT in sessionStorage · Bearer Header · Server-backed login</text>
+
+  <!-- DataContext -->
+  <rect x="530" y="165" width="530" height="45" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="795" y="183" text-anchor="middle" font-size="12" font-weight="600" fill="#1e40af">DataContext + fhirLoader</text>
+  <text x="795" y="199" text-anchor="middle" font-size="10" fill="#3b82f6">GET /api/fhir/bundles · GET/PUT /api/data/* · Server-filtered</text>
+
+  <!-- authHeaders -->
+  <rect x="50" y="225" width="1010" height="30" rx="5" fill="#e0f2fe" stroke="#7dd3fc"/>
+  <text x="555" y="245" text-anchor="middle" font-size="11" fill="#0369a1">getAuthHeaders() → { Authorization: "Bearer &lt;JWT&gt;" }  ·  Single source (src/services/authHeaders.ts)</text>
+
+  <!-- Arrow: Browser → Server -->
+  <line x1="550" y1="290" x2="550" y2="318" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <text x="558" y="310" font-size="10" fill="#3b82f6">HTTPS · JWT Bearer</text>
+
+  <!-- ===== EXPRESS SERVER ZONE ===== -->
+  <rect x="30" y="320" width="1040" height="380" rx="10" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
+  <text x="50" y="342" font-size="12" font-weight="700" fill="#166534">EXPRESS SERVER (Node.js)</text>
+
+  <!-- Middleware Stack -->
+  <rect x="50" y="355" width="1000" height="70" rx="6" fill="#dcfce7" stroke="#86efac"/>
+  <text x="60" y="373" font-size="11" font-weight="600" fill="#166534">Middleware Stack (sequential)</text>
+  <text x="60" y="392" font-size="10" fill="#15803d">1. express.json() → 2. auditMiddleware (all /api/* → SQLite) → 3. authMiddleware (JWT HS256/RS256 validation)</text>
+  <text x="60" y="408" font-size="10" fill="#15803d">Public paths: /api/auth/login, /api/auth/verify, /api/auth/config  ·  All other /api/* require valid JWT</text>
+
+  <!-- API Routers Row 1 -->
+  <rect x="50" y="440" width="200" height="75" rx="6" fill="#fff" stroke="#86efac"/>
+  <text x="150" y="458" text-anchor="middle" font-size="11" font-weight="600" fill="#166534">authApi</text>
+  <text x="150" y="474" text-anchor="middle" font-size="10" fill="#4b5563">POST /login · /verify</text>
+  <text x="150" y="488" text-anchor="middle" font-size="10" fill="#4b5563">GET/POST/DELETE /users</text>
+  <text x="150" y="502" text-anchor="middle" font-size="10" fill="#4b5563">bcrypt · rate limiting</text>
+
+  <rect x="265" y="440" width="200" height="75" rx="6" fill="#fff" stroke="#86efac"/>
+  <text x="365" y="458" text-anchor="middle" font-size="11" font-weight="600" fill="#166534">fhirApi</text>
+  <text x="365" y="474" text-anchor="middle" font-size="10" fill="#4b5563">GET /api/fhir/bundles</text>
+  <text x="365" y="488" text-anchor="middle" font-size="10" fill="#4b5563">Center-filtering from JWT</text>
+  <text x="365" y="502" text-anchor="middle" font-size="10" fill="#4b5563">In-memory cache</text>
+
+  <rect x="480" y="440" width="200" height="75" rx="6" fill="#fff" stroke="#86efac"/>
+  <text x="580" y="458" text-anchor="middle" font-size="11" font-weight="600" fill="#166534">dataApi</text>
+  <text x="580" y="474" text-anchor="middle" font-size="10" fill="#4b5563">quality-flags · saved-searches</text>
+  <text x="580" y="488" text-anchor="middle" font-size="10" fill="#4b5563">excluded/reviewed-cases</text>
+  <text x="580" y="502" text-anchor="middle" font-size="10" fill="#4b5563">Per-user · center-validated</text>
+
+  <rect x="695" y="440" width="170" height="75" rx="6" fill="#fff" stroke="#86efac"/>
+  <text x="780" y="458" text-anchor="middle" font-size="11" font-weight="600" fill="#166534">auditApi</text>
+  <text x="780" y="474" text-anchor="middle" font-size="10" fill="#4b5563">GET /api/audit</text>
+  <text x="780" y="488" text-anchor="middle" font-size="10" fill="#4b5563">GET /api/audit/export</text>
+  <text x="780" y="502" text-anchor="middle" font-size="10" fill="#4b5563">Read-only · immutable</text>
+
+  <rect x="880" y="440" width="170" height="75" rx="6" fill="#fff" stroke="#86efac"/>
+  <text x="965" y="458" text-anchor="middle" font-size="11" font-weight="600" fill="#166534">settingsApi / issueApi</text>
+  <text x="965" y="474" text-anchor="middle" font-size="10" fill="#4b5563">GET/PUT /api/settings</text>
+  <text x="965" y="488" text-anchor="middle" font-size="10" fill="#4b5563">GET/POST /api/issues</text>
+  <text x="965" y="502" text-anchor="middle" font-size="10" fill="#4b5563">YAML · JSON files</text>
+
+  <!-- Arrows to storage -->
+  <line x1="150" y1="515" x2="150" y2="545" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="365" y1="515" x2="365" y2="545" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="580" y1="515" x2="580" y2="545" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="780" y1="515" x2="780" y2="545" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="965" y1="515" x2="965" y2="545" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Storage Row -->
+  <rect x="50" y="548" width="200" height="55" rx="6" fill="#fefce8" stroke="#fde047"/>
+  <text x="150" y="568" text-anchor="middle" font-size="11" font-weight="600" fill="#854d0e">data/</text>
+  <text x="150" y="583" text-anchor="middle" font-size="10" fill="#92400e">users.json · jwt-secret.txt</text>
+  <text x="150" y="596" text-anchor="middle" font-size="10" fill="#92400e">centers.json</text>
+
+  <rect x="265" y="548" width="200" height="55" rx="6" fill="#fefce8" stroke="#fde047"/>
+  <text x="365" y="568" text-anchor="middle" font-size="11" font-weight="600" fill="#854d0e">public/data/</text>
+  <text x="365" y="583" text-anchor="middle" font-size="10" fill="#92400e">center-*.json (FHIR bundles)</text>
+  <text x="365" y="596" text-anchor="middle" font-size="10" fill="#dc2626">Static access blocked (403)</text>
+
+  <rect x="480" y="548" width="200" height="55" rx="6" fill="#fefce8" stroke="#fde047"/>
+  <text x="580" y="568" text-anchor="middle" font-size="11" font-weight="600" fill="#854d0e">data/data.db</text>
+  <text x="580" y="583" text-anchor="middle" font-size="10" fill="#92400e">SQLite · WAL mode</text>
+  <text x="580" y="596" text-anchor="middle" font-size="10" fill="#92400e">Per-user scoped tables</text>
+
+  <rect x="695" y="548" width="170" height="55" rx="6" fill="#fefce8" stroke="#fde047"/>
+  <text x="780" y="568" text-anchor="middle" font-size="11" font-weight="600" fill="#854d0e">data/audit.db</text>
+  <text x="780" y="583" text-anchor="middle" font-size="10" fill="#92400e">SQLite · append-only</text>
+  <text x="780" y="596" text-anchor="middle" font-size="10" fill="#92400e">90-day retention</text>
+
+  <rect x="880" y="548" width="170" height="55" rx="6" fill="#fefce8" stroke="#fde047"/>
+  <text x="965" y="568" text-anchor="middle" font-size="11" font-weight="600" fill="#854d0e">config/ · feedback/</text>
+  <text x="965" y="583" text-anchor="middle" font-size="10" fill="#92400e">settings.yaml (outside webroot)</text>
+  <text x="965" y="596" text-anchor="middle" font-size="10" fill="#92400e">issue-*.json</text>
+
+  <!-- Static + Proxy bar -->
+  <rect x="50" y="618" width="1000" height="65" rx="6" fill="#ecfdf5" stroke="#6ee7b7"/>
+  <text x="60" y="637" font-size="11" font-weight="600" fill="#166534">Static &amp; Proxy</text>
+  <text x="60" y="654" font-size="10" fill="#15803d">/api/fhir-proxy/* → Blaze FHIR Server (auth required)    ·    /data/* → 403 Forbidden</text>
+  <text x="60" y="670" font-size="10" fill="#15803d">express.static(dist/) → Vite build output    ·    GET /* → index.html (SPA fallback)</text>
+
+  <!-- ===== DSF ZONE ===== -->
+  <rect x="30" y="720" width="1040" height="180" rx="10" fill="#fdf2f8" stroke="#fbcfe8" stroke-width="1.5"/>
+  <text x="50" y="742" font-size="12" font-weight="700" fill="#9d174d">DSF MULTI-SITE INTEGRATION (Architekturprinzip)</text>
+
+  <rect x="50" y="755" width="220" height="55" rx="6" fill="#fff" stroke="#f9a8d4"/>
+  <text x="160" y="775" text-anchor="middle" font-size="11" font-weight="600" fill="#9d174d">Zone 1: Klinisch</text>
+  <text x="160" y="791" text-anchor="middle" font-size="10" fill="#6b7280">Quellsysteme · ETL · Pseudonymisierung</text>
+
+  <rect x="290" y="755" width="220" height="55" rx="6" fill="#fff" stroke="#f9a8d4"/>
+  <text x="400" y="775" text-anchor="middle" font-size="11" font-weight="600" fill="#9d174d">Zone 2: DSF Node</text>
+  <text x="400" y="791" text-anchor="middle" font-size="10" fill="#6b7280">FHIR R4 + BPMN · Inter-Site Trust</text>
+
+  <rect x="530" y="755" width="220" height="55" rx="6" fill="#fff" stroke="#f9a8d4"/>
+  <text x="640" y="775" text-anchor="middle" font-size="11" font-weight="600" fill="#9d174d">Zone 3: EMD Backend</text>
+  <text x="640" y="791" text-anchor="middle" font-size="10" fill="#6b7280">Express · Nur lokales Repository</text>
+
+  <rect x="770" y="755" width="220" height="55" rx="6" fill="#fff" stroke="#f9a8d4"/>
+  <text x="880" y="775" text-anchor="middle" font-size="11" font-weight="600" fill="#9d174d">Zone 4: Browser</text>
+  <text x="880" y="791" text-anchor="middle" font-size="10" fill="#6b7280">React SPA · Nur eigenes Backend</text>
+
+  <!-- DSF arrows -->
+  <line x1="270" y1="783" x2="285" y2="783" stroke="#ec4899" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="510" y1="783" x2="525" y2="783" stroke="#ec4899" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="750" y1="783" x2="765" y2="783" stroke="#ec4899" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- DSF principle -->
+  <rect x="50" y="825" width="1000" height="58" rx="6" fill="#fce7f3" stroke="#f9a8d4"/>
+  <text x="550" y="846" text-anchor="middle" font-size="11" font-weight="600" fill="#9d174d">Architekturprinzip</text>
+  <text x="550" y="863" text-anchor="middle" font-size="10" fill="#831843">DSF orchestriert inter-site (Transport, Trust, Workflows) · EMD liest nur lokale Daten · Kein direkter Krankenhauzkontakt</text>
+  <text x="550" y="877" text-anchor="middle" font-size="10" fill="#831843">Pattern A (v1): Zentrale Konsolidierung — pseudonymisierte FHIR-Payloads via DSF in lokales Repository</text>
+
+  <!-- Legend -->
+  <rect x="30" y="905" width="12" height="8" rx="2" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text x="48" y="913" font-size="9" fill="#64748b">Browser</text>
+  <rect x="110" y="905" width="12" height="8" rx="2" fill="#f0fdf4" stroke="#bbf7d0"/>
+  <text x="128" y="913" font-size="9" fill="#64748b">Server</text>
+  <rect x="180" y="905" width="12" height="8" rx="2" fill="#fefce8" stroke="#fde047"/>
+  <text x="198" y="913" font-size="9" fill="#64748b">Storage</text>
+  <rect x="250" y="905" width="12" height="8" rx="2" fill="#fdf2f8" stroke="#fbcfe8"/>
+  <text x="268" y="913" font-size="9" fill="#64748b">DSF</text>
+  <text x="1050" y="913" text-anchor="end" font-size="9" fill="#94a3b8">Stand: 11.04.2026</text>
+</svg>
