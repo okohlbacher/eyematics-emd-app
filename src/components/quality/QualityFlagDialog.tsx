@@ -13,13 +13,7 @@ export interface QualityFlagDialogProps {
   onCancel: () => void;
 }
 
-const ERROR_TYPE_VALUES = [
-  'Unplausibel',
-  'Fehlend',
-  'Duplikat',
-  'Formatfehler',
-  'Sonstiger Fehler',
-] as const;
+type ErrorTypeValue = 'Unplausibel' | 'Fehlend' | 'Duplikat' | 'Formatfehler' | 'Sonstiger Fehler';
 
 export default function QualityFlagDialog({
   flagDialog,
@@ -36,7 +30,7 @@ export default function QualityFlagDialog({
     { value: 'Duplikat', label: t('errorDuplicate') },
     { value: 'Formatfehler', label: t('errorFormat') },
     { value: 'Sonstiger Fehler', label: t('errorOther') },
-  ] satisfies Array<{ value: typeof ERROR_TYPE_VALUES[number]; label: string }>;
+  ] satisfies Array<{ value: ErrorTypeValue; label: string }>;
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">

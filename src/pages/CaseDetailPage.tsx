@@ -1,3 +1,4 @@
+/** Case detail page — EMDREQ-FALL-001 to FALL-006 (single case analysis, clinical parameters, cohort comparison). */
 import { ArrowLeft, Syringe, TrendingDown, TrendingUp } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useNavigate,useParams } from 'react-router-dom';

@@ -97,8 +97,11 @@ export function extractPatientCases(bundles: FhirBundle[]): PatientCase[] {
   });
 }
 
+// F-32: handle invalid/missing birth dates gracefully
 export function getAge(birthDate: string): number {
+  if (!birthDate) return -1;
   const birth = new Date(birthDate);
+  if (isNaN(birth.getTime())) return -1;
   const now = new Date();
   let age = now.getFullYear() - birth.getFullYear();
   const m = now.getMonth() - birth.getMonth();

@@ -17,6 +17,8 @@ import path from 'node:path';
 import type { Plugin } from 'vite';
 
 import { getFallbackCenterFiles,getValidCenterIds } from './constants.js';
+import type { FhirBundle } from './fhirApi.js';
+import { filterBundlesByCenters } from './fhirApi.js';
 import { sendError,validateAuth } from './utils.js';
 
 export function fhirApiPlugin(): Plugin {
@@ -42,33 +44,27 @@ export function fhirApiPlugin(): Plugin {
 
             const allBundles: unknown[] = [];
             for (const file of files) {
-              const filePath = path.join(DATA_DIR, file);
+              const filePath = path.resolve(DATA_DIR, file);
+              // F-04: Prevent path traversal via crafted manifest entries (mirrors fhirApi.ts)
+              if (!filePath.startsWith(DATA_DIR + path.sep) && filePath !== DATA_DIR) {
+                console.warn(`[fhir-api-plugin] Skipping path-traversal attempt: ${file}`);
+                continue;
+              }
               if (fs.existsSync(filePath)) {
                 allBundles.push(JSON.parse(fs.readFileSync(filePath, 'utf-8')));
               }
             }
 
-            // Apply center filtering (same bypass logic as server/fhirApi.ts)
+            // F-15: use shared filtering logic from fhirApi.ts (single source of truth)
             const userObj = user as { username: string; role: string; centers?: string[] };
             const { role } = userObj;
             const centers: string[] = userObj.centers ?? [];
             const validCenters = getValidCenterIds();
             const bypass = role === 'admin' || centers.filter(c => validCenters.has(c)).length >= validCenters.size;
 
-            let resultBundles: unknown[];
-            if (bypass) {
-              resultBundles = allBundles;
-            } else {
-              // Filter: keep bundles whose Organization.resource.id is in user's centers
-              resultBundles = allBundles.filter((bundle: unknown) => {
-                const b = bundle as { entry?: Array<{ resource?: { resourceType?: string; id?: string } }> };
-                const orgEntry = b?.entry?.find(
-                  (e) => e?.resource?.resourceType === 'Organization',
-                );
-                if (!orgEntry) return true; // keep bundles without Organization entry
-                return orgEntry.resource?.id ? centers.includes(orgEntry.resource.id) : true;
-              });
-            }
+            const resultBundles = bypass
+              ? allBundles
+              : filterBundlesByCenters(allBundles as FhirBundle[], centers);
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ bundles: resultBundles }));

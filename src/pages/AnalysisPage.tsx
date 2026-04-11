@@ -1,3 +1,4 @@
+/** Cohort analysis page — EMDREQ-ANL-001 to ANL-004 (center distribution, temporal trends, distributions, adverse events). */
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -43,7 +44,11 @@ export default function AnalysisPage() {
   const filters: CohortFilter = useMemo(() => {
     const raw = searchParams.get('filters');
     if (!raw) return {};
-    try { return JSON.parse(raw); } catch { return {}; }
+    // L-04: validate parsed JSON is an object before using as filters
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch { return {}; }
   }, [searchParams]);
 
   const cohort = useMemo(() => applyFilters(activeCases, filters), [activeCases, filters]);

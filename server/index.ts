@@ -37,7 +37,7 @@ import { initAuditDb, startPurgeInterval } from './auditDb.js';
 import { auditMiddleware } from './auditMiddleware.js';
 import { authApiRouter } from './authApi.js';
 import { authMiddleware } from './authMiddleware.js';
-import { initCenters } from './constants.js';
+import { initCenters, SETTINGS_FILE } from './constants.js';
 import { dataApiRouter } from './dataApi.js';
 import { initDataDb } from './dataDb.js';
 import { fhirApiRouter } from './fhirApi.js';
@@ -48,8 +48,6 @@ import { settingsApiRouter } from './settingsApi.js';
 // ---------------------------------------------------------------------------
 // 1. Read settings.yaml at startup (fail fast)
 // ---------------------------------------------------------------------------
-
-const SETTINGS_FILE = path.resolve(process.cwd(), 'config', 'settings.yaml');
 
 if (!fs.existsSync(SETTINGS_FILE)) {
   console.error(`[server] FATAL: settings.yaml not found at ${SETTINGS_FILE}`);
@@ -91,10 +89,8 @@ if (!fs.existsSync(DATA_DIR)) {
 
 // ---------------------------------------------------------------------------
 // 3. initAuth — load/generate JWT secret, migrate users.json
-//    NOTE: initAuth handles users.json creation/migration including passwordHash.
-//    The manual users.json seeding block from the original index.ts is removed
-//    because initAuth() migrates existing users and authApi seeds on first login.
-//    We still seed an initial users.json if absent so initAuth has users to migrate.
+//    Seed a default users.json if absent, so initAuth has users to migrate.
+//    initAuth() then adds bcrypt passwordHash for any user missing one.
 // ---------------------------------------------------------------------------
 
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -152,15 +148,25 @@ const blazeTarget = deriveBlazeTarget(blazeUrl);
 
 const app = express();
 
+// F-29: dynamically add Keycloak issuer to connectSrc when provider=keycloak
+const connectSrc: string[] = ["'self'"];
+const keycloakSection = (settings.keycloak ?? {}) as Record<string, unknown>;
+if (settings.provider === 'keycloak' && typeof keycloakSection.issuer === 'string') {
+  try {
+    const issuerOrigin = new URL(keycloakSection.issuer as string).origin;
+    connectSrc.push(issuerOrigin);
+  } catch { /* invalid URL — skip */ }
+}
+
 // Security headers (HSTS, CSP, X-Frame-Options, etc.)
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:', 'blob:'],
-      connectSrc: ["'self'"],
+      connectSrc,
     },
   },
   crossOriginEmbedderPolicy: false, // allow loading FHIR data
@@ -184,7 +190,7 @@ app.use('/api/auth', authApiRouter);
 
 // Issue and settings routers (H-01: refactored from raw handlers to Express Router)
 app.use('/api/issues', express.json({ limit: '10mb' }), issueApiRouter);
-app.use('/api/settings', settingsApiRouter);
+app.use('/api/settings', express.text({ limit: '1mb', type: '*/*' }), settingsApiRouter);
 
 // Audit query routes — /api/audit and /api/audit/export (admin-only export)
 app.use('/api/audit', auditApiRouter);
@@ -225,6 +231,11 @@ app.use('/api/fhir-proxy', (req: Request, res: Response, next: NextFunction) => 
     },
   },
 }));
+
+// L-10: JSON 404 for unmatched /api/* routes (before SPA fallback)
+app.use('/api', (_req: Request, res: Response) => {
+  res.status(404).json({ error: 'Not found' });
+});
 
 // Static file serving (built Vite output)
 app.use(express.static(path.resolve(process.cwd(), 'dist')));

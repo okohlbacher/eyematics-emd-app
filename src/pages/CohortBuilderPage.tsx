@@ -1,3 +1,4 @@
+/** Cohort builder page — EMDREQ-KOH-001 to KOH-007, EMDREQ-QUAL-009/010 (filters, saved searches, therapy discontinuation). */
 import {
   ArrowUpDown,
   ChevronDown,
@@ -536,7 +537,7 @@ export default function CohortBuilderPage() {
                           {c.pseudonym}
                         </td>
                         <td className="px-4 py-3 text-sm">
-                          {c.gender === 'female' ? 'W' : 'M'}
+                          {c.gender === 'female' ? t('femaleShort') : t('maleShort')}
                         </td>
                         <td className="px-4 py-3 text-sm text-right">
                           {getAge(c.birthDate)}

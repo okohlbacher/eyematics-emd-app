@@ -202,9 +202,12 @@ export function queryAudit(
 // ---------------------------------------------------------------------------
 
 /**
- * Return all audit rows ordered by timestamp DESC.
- * Used for GET /api/audit/export (admin full dump — no pagination).
+ * Return audit rows ordered by timestamp DESC with a safety limit.
+ * Used for GET /api/audit/export (admin full dump).
+ * F-05: Capped at 100 000 rows to prevent OOM on large databases.
  */
+const MAX_EXPORT_ROWS = 100_000;
+
 export function queryAuditExport(): AuditDbRow[] {
   if (!db) {
     throw new Error('[auditDb] queryAuditExport called before initAuditDb()');
@@ -213,9 +216,10 @@ export function queryAuditExport(): AuditDbRow[] {
     .prepare(
       `SELECT id, timestamp, method, path, user, status, duration_ms, body, query
        FROM audit_log
-       ORDER BY timestamp DESC`,
+       ORDER BY timestamp DESC
+       LIMIT ?`,
     )
-    .all() as AuditDbRow[];
+    .all(MAX_EXPORT_ROWS) as AuditDbRow[];
 }
 
 // ---------------------------------------------------------------------------

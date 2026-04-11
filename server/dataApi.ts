@@ -48,13 +48,14 @@ const MAX_ARRAY_SIZE = 10000;
 function validateCaseCenters(caseIds: string[], userCenters: string[], role: string): string | null {
   if (isBypass(role, userCenters)) return null;
   const index = getCaseToCenter();
+  // L-11: generic errors to prevent case ID enumeration
   for (const caseId of caseIds) {
     const caseCenterId = index.get(caseId);
     if (!caseCenterId) {
-      return `Case ${caseId} not found — data may not be loaded yet`;
+      return 'One or more case IDs are not accessible';
     }
     if (!userCenters.includes(caseCenterId)) {
-      return `Case ${caseId} not in user's permitted centers`;
+      return 'One or more case IDs are not accessible';
     }
   }
   return null;

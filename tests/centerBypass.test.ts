@@ -3,7 +3,7 @@
  * Verifies that bypass uses set membership, not just count.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 // Mock dependencies before importing
 vi.mock('node:fs', () => ({

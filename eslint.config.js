@@ -27,6 +27,20 @@ export default defineConfig([
       // F-23: Enforce consistent import ordering
       'simple-import-sort/imports': 'warn',
       'simple-import-sort/exports': 'warn',
+      // Allow _-prefixed variables for intentional destructuring omission
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        destructuredArrayIgnorePattern: '^_',
+      }],
+    },
+  },
+  // Context files legitimately export hooks + providers together
+  {
+    files: ['src/context/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
 ])

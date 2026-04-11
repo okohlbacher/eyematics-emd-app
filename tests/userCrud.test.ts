@@ -5,11 +5,11 @@
  * These tests are written BEFORE the implementation (TDD RED phase).
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { NextFunction,Request, Response } from 'express';
 import express from 'express';
-import type { Request, Response, NextFunction } from 'express';
-import request from 'supertest';
 import jwt from 'jsonwebtoken';
+import request from 'supertest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // We need to mock initAuth module before importing authApi
 const TEST_SECRET = 'test-jwt-secret-for-user-crud-tests';
@@ -30,6 +30,10 @@ vi.mock('../server/initAuth.js', () => ({
   loadUsers: () => mockUsers,
   saveUsers: vi.fn(async (users: typeof mockUsers) => {
     mockUsers = [...users];
+  }),
+  modifyUsers: vi.fn(async (fn: (users: typeof mockUsers) => typeof mockUsers) => {
+    mockUsers = fn(mockUsers);
+    return mockUsers;
   }),
   getJwtSecret: () => TEST_SECRET,
   getAuthConfig: () => ({ twoFactorEnabled: false, maxLoginAttempts: 5, otpCode: '123456' }),

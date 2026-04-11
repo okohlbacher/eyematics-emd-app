@@ -10,7 +10,6 @@
  */
 
 import fs from 'node:fs';
-import path from 'node:path';
 
 import type { Request, Response } from 'express';
 import { Router } from 'express';
@@ -18,11 +17,9 @@ import yaml from 'js-yaml';
 import type { Plugin } from 'vite';
 
 import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
-import { SETTINGS_FILE as SETTINGS_REL } from './constants.js';
+import { SETTINGS_FILE } from './constants.js';
 import { invalidateFhirCache } from './fhirApi.js';
 import { readBody, sendError,validateAuth } from './utils.js';
-
-const SETTINGS_FILE = path.resolve(process.cwd(), SETTINGS_REL);
 
 // ---------------------------------------------------------------------------
 // Shared core logic
@@ -73,10 +70,21 @@ function parseAndValidateYaml(body: string): { parsed: unknown; error?: string }
 
 export const settingsApiRouter = Router();
 
-settingsApiRouter.get('/', (_req: Request, res: Response): void => {
+settingsApiRouter.get('/', (req: Request, res: Response): void => {
   try {
+    const raw = readSettings();
+    // F-12: strip sensitive fields for non-admin users
+    if (req.auth?.role !== 'admin') {
+      const parsed = yaml.load(raw) as Record<string, unknown> | null;
+      if (parsed && typeof parsed === 'object') {
+        const { otpCode: _o, maxLoginAttempts: _m, provider: _p, ...safe } = parsed;
+        res.setHeader('Content-Type', 'text/yaml');
+        res.send(yaml.dump(safe));
+        return;
+      }
+    }
     res.setHeader('Content-Type', 'text/yaml');
-    res.send(readSettings());
+    res.send(raw);
   } catch (err) {
     console.error('[settings-api] Failed to read settings:', err);
     res.status(500).json({ error: 'Failed to read settings' });
@@ -89,26 +97,25 @@ settingsApiRouter.put('/', (req: Request, res: Response): void => {
     return;
   }
 
-  // Read raw body since content-type is text/yaml
-  readBody(req as unknown as import('http').IncomingMessage)
-    .then((body) => {
-      const { error } = parseAndValidateYaml(body);
-      if (error) {
-        res.status(400).json({ error });
-        return;
-      }
-      try {
-        writeSettings(body, req.auth!.preferred_username);
-        res.json({ ok: true });
-      } catch (err) {
-        console.error('[settings-api] Failed to write settings:', err);
-        res.status(500).json({ error: 'Failed to write settings' });
-      }
-    })
-    .catch((err) => {
-      res.status(err instanceof Error && err.message.includes('too large') ? 413 : 500)
-        .json({ error: err instanceof Error && err.message.includes('too large') ? 'Request body too large' : 'Failed to read request body' });
-    });
+  // F-08: body parsed by express.text() middleware mounted in index.ts
+  const body = typeof req.body === 'string' ? req.body : '';
+  if (!body) {
+    res.status(400).json({ error: 'Empty request body' });
+    return;
+  }
+
+  const { error } = parseAndValidateYaml(body);
+  if (error) {
+    res.status(400).json({ error });
+    return;
+  }
+  try {
+    writeSettings(body, req.auth!.preferred_username);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[settings-api] Failed to write settings:', err);
+    res.status(500).json({ error: 'Failed to write settings' });
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -123,6 +130,7 @@ export function settingsApiPlugin(): Plugin {
         if (req.url !== '/api/settings') return next();
 
         if (req.method === 'GET') {
+          // F-33: Vite plugin must explicitly check auth since production authMiddleware is not mounted in dev
           if (!validateAuth(req)) { sendError(res, 401, 'Authentication required'); return; }
           try {
             res.writeHead(200, { 'Content-Type': 'text/yaml' });

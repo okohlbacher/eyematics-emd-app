@@ -37,5 +37,17 @@ export function createRateLimiter(maxLoginAttempts: number) {
     loginAttempts.delete(username);
   }
 
+  // L-09: periodic cleanup of stale entries to prevent unbounded memory growth
+  const CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
+  const STALE_THRESHOLD = 24 * 60 * 60 * 1000; // 24 hours
+  setInterval(() => {
+    const cutoff = Date.now() - STALE_THRESHOLD;
+    for (const [username, state] of loginAttempts) {
+      if (state.lockedUntil < cutoff && state.lockedUntil > 0) {
+        loginAttempts.delete(username);
+      }
+    }
+  }, CLEANUP_INTERVAL).unref();
+
   return { getLockState, isLocked, recordFailure, resetAttempts };
 }

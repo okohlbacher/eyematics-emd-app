@@ -32,6 +32,7 @@ export interface AuthPayload {
 
 // F-17: Single declaration — all server files import authMiddleware transitively
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       auth?: AuthPayload;

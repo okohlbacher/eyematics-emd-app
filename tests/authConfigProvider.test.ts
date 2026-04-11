@@ -10,10 +10,10 @@
  * - POST /api/auth/login works normally when provider=local (regression)
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import bcrypt from 'bcryptjs';
 import express from 'express';
 import request from 'supertest';
-import bcrypt from 'bcryptjs';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Control provider state via module-level variable

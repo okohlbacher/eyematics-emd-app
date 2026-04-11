@@ -181,7 +181,7 @@ export default function AuditPage() {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <Download className="w-4 h-4" />
-              Export JSON
+              {t('auditExportJson')}
             </button>
           )}
         </div>
@@ -258,13 +258,13 @@ export default function AuditPage() {
                       {t('auditUser')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
-                      Method
+                      {t('auditMethod')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
-                      Path
+                      {t('auditPath')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
-                      Status
+                      {t('auditStatus')}
                     </th>
                   </tr>
                 </thead>

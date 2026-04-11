@@ -1,8 +1,8 @@
 import {
   Ban,
+  CheckCircle2,
   ChevronRight,
   Circle,
-  CheckCircle2,
   Clock,
   Filter,
   Search,

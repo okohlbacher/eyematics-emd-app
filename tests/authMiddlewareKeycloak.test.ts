@@ -1,12 +1,12 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import crypto from 'node:crypto';
+
 import jwt from 'jsonwebtoken';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // keycloakAuth unit tests (uses real module — no mocking)
 // ---------------------------------------------------------------------------
-
-import { initKeycloakAuth, getAuthProvider, getJwksClient, _resetForTesting } from '../server/keycloakAuth.js';
+import { _resetForTesting,getAuthProvider, getJwksClient, initKeycloakAuth } from '../server/keycloakAuth.js';
 
 describe('keycloakAuth module', () => {
   beforeEach(() => { _resetForTesting(); });
@@ -85,9 +85,9 @@ function makeMockJwksClient(throwErr?: Error) {
 
 // Import the real keycloakAuth module (already imported above) and authMiddleware
 // We use vi.spyOn to override getAuthProvider and getJwksClient per test
-import * as keycloakAuthModule from '../server/keycloakAuth.js';
-import * as initAuthModule from '../server/initAuth.js';
 import { authMiddleware } from '../server/authMiddleware.js';
+import * as initAuthModule from '../server/initAuth.js';
+import * as keycloakAuthModule from '../server/keycloakAuth.js';
 
 describe('authMiddleware branching', () => {
   let providerSpy: ReturnType<typeof vi.spyOn>;

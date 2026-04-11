@@ -1,3 +1,4 @@
+/** Documentation quality benchmarking page — EMDREQ-QUAL-011 (center comparison, completeness, plausibility scores). */
 import { BarChart3, Download, Filter } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -12,9 +13,9 @@ import { getCenterShorthand } from '../services/fhirLoader';
 import type { PatientCase } from '../types/fhir';
 import { datedFilename, downloadCsv } from '../utils/download';
 import {
+  type CenterMetrics,
   computeMetrics,
   filterCasesByTimeRange,
-  type CenterMetrics,
   type TimeRange,
 } from '../utils/qualityMetrics';
 

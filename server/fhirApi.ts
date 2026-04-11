@@ -38,7 +38,7 @@ interface BundleEntry {
   };
 }
 
-interface FhirBundle {
+export interface FhirBundle {
   resourceType: string;
   type: string;
   meta?: { lastUpdated?: string; source?: string };
@@ -206,9 +206,8 @@ export function getCaseToCenter(): Map<string, string> {
 // ---------------------------------------------------------------------------
 
 function readDataSourceConfig(): { type: string; blazeUrl: string } {
-  const settingsPath = path.resolve(process.cwd(), SETTINGS_FILE);
   try {
-    const raw = fs.readFileSync(settingsPath, 'utf-8');
+    const raw = fs.readFileSync(SETTINGS_FILE, 'utf-8');
     const parsed = yaml.load(raw) as Record<string, unknown>;
     const ds = (parsed?.dataSource ?? {}) as Record<string, unknown>;
     return {
@@ -272,32 +271,48 @@ async function loadFromLocalFiles(): Promise<FhirBundle[]> {
   return bundles;
 }
 
+// F-26: safety limits to prevent unbounded pagination from misconfigured FHIR servers
+const MAX_PAGES = 100;
+const PAGE_TIMEOUT_MS = 30_000;
+
 async function fetchAllPages(url: string): Promise<unknown[]> {
   const resources: unknown[] = [];
   let nextUrl: string | null = url;
+  let pageCount = 0;
 
   while (nextUrl) {
-    const resp = await fetch(nextUrl, {
-      headers: { Accept: 'application/fhir+json' },
-    });
-    if (!resp.ok) {
-      throw new Error(`FHIR request failed: ${resp.status} ${resp.statusText} — ${nextUrl}`);
+    if (++pageCount > MAX_PAGES) {
+      console.warn(`[fhir-api] fetchAllPages: reached max ${MAX_PAGES} pages, stopping`);
+      break;
     }
-    const bundle = (await resp.json()) as {
-      entry?: Array<{ resource: unknown }>;
-      link?: Array<{ relation: string; url: string }>;
-    };
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), PAGE_TIMEOUT_MS);
+    try {
+      const resp = await fetch(nextUrl, {
+        headers: { Accept: 'application/fhir+json' },
+        signal: controller.signal,
+      });
+      if (!resp.ok) {
+        throw new Error(`FHIR request failed: ${resp.status} ${resp.statusText} — ${nextUrl}`);
+      }
+      const bundle = (await resp.json()) as {
+        entry?: Array<{ resource: unknown }>;
+        link?: Array<{ relation: string; url: string }>;
+      };
 
-    if (bundle.entry) {
-      for (const entry of bundle.entry) {
-        if (entry.resource) {
-          resources.push(entry.resource);
+      if (bundle.entry) {
+        for (const entry of bundle.entry) {
+          if (entry.resource) {
+            resources.push(entry.resource);
+          }
         }
       }
-    }
 
-    const nextLink = bundle.link?.find((l) => l.relation === 'next');
-    nextUrl = nextLink ? nextLink.url : null;
+      const nextLink = bundle.link?.find((l) => l.relation === 'next');
+      nextUrl = nextLink ? nextLink.url : null;
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   return resources;

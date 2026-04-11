@@ -36,9 +36,7 @@ export const CLINICAL_TERMS_DE: Record<string, string> = {
   // IOP methods
   'Goldmann applanation tonometry': 'Goldmann-Applanationstonometrie',
   'Non-contact tonometry': 'Non-Contact-Tonometrie',
-  // Diabetes
-  'Diabetes mellitus Typ 2': 'Diabetes mellitus Typ 2',
-  'Diabetes mellitus Typ 1': 'Diabetes mellitus Typ 1',
+  // Diabetes (German terms are identical — no mapping needed)
 };
 
 /** Translate a clinical display term based on current locale */

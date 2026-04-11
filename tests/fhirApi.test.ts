@@ -5,7 +5,7 @@
  * All 8 behavior specs from 05-01-PLAN.md Task 1.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Mock fs — so we don't read actual files during tests

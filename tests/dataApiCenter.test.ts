@@ -7,11 +7,11 @@
  * Tests PUT /quality-flags center validation and POST /saved-searches center validation.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type { NextFunction,Request, Response } from 'express';
 import express from 'express';
-import type { Request, Response, NextFunction } from 'express';
-import request from 'supertest';
 import jwt from 'jsonwebtoken';
+import request from 'supertest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const TEST_SECRET = 'test-jwt-secret-for-center-validation-tests';
 
@@ -162,7 +162,7 @@ describe('dataApi — center validation for write operations', () => {
       });
 
     expect(res.status).toBe(403);
-    expect(res.body.error).toMatch(/not in user's permitted centers/i);
+    expect(res.body.error).toMatch(/not accessible/i);
   });
 
   // Test 3: PUT /quality-flags by admin with any caseId — succeeds (bypass)

@@ -74,34 +74,47 @@ export function getSettings(): AppSettings {
   return { ...DEFAULTS };
 }
 
-/** F-46: Shared persist helper */
-function persistSettings(settings: AppSettings): void {
+/** F-23: persist helper returns promise; callers resync on failure */
+async function persistSettings(settings: AppSettings): Promise<void> {
   const yamlStr = yaml.dump(settings, { indent: 2, lineWidth: 120, noRefs: true });
-  authFetch('/api/settings', {
+  const resp = await authFetch('/api/settings', {
     method: 'PUT',
     headers: { 'Content-Type': 'text/yaml' },
     body: yamlStr,
-  }).catch((err) => {
-    console.error('[settingsService] Failed to persist settings:', err);
   });
+  if (!resp.ok) {
+    throw new Error(`Failed to persist settings: ${resp.status}`);
+  }
 }
 
 /**
  * Update a subset of settings. Persists to server-side settings.yaml.
+ * On server rejection, reloads settings to resync client cache.
  */
-export function updateSettings(patch: DeepPartial<AppSettings>): AppSettings {
+export async function updateSettings(patch: DeepPartial<AppSettings>): Promise<AppSettings> {
   _cached = merge(_cached ?? DEFAULTS, patch);
-  persistSettings(_cached);
-  return _cached;
+  try {
+    await persistSettings(_cached);
+  } catch (err) {
+    console.error('[settingsService] Persist failed, reloading from server:', err);
+    await loadSettings();
+  }
+  return _cached!;
 }
 
 /**
  * Reset all settings to defaults and persist.
+ * On server rejection, reloads settings to resync client cache.
  */
-export function resetSettings(): AppSettings {
+export async function resetSettings(): Promise<AppSettings> {
   _cached = { ...DEFAULTS };
-  persistSettings(_cached);
-  return _cached;
+  try {
+    await persistSettings(_cached);
+  } catch (err) {
+    console.error('[settingsService] Persist failed, reloading from server:', err);
+    await loadSettings();
+  }
+  return _cached!;
 }
 
 /**

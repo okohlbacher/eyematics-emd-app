@@ -6,7 +6,7 @@
  * and business rules that underpin the Pflichtenheft requirements.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 // ============================================================================
 // EMDREQ-USM: User Management

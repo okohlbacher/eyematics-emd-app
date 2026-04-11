@@ -74,8 +74,8 @@ export default function SettingsPage() {
     showSaved();
   };
 
-  const handleReset = () => {
-    const defaults = resetSettings();
+  const handleReset = async () => {
+    const defaults = await resetSettings();
     setTwoFactorEnabled(defaults.twoFactorEnabled);
     setInterrupterDays(defaults.therapyInterrupterDays);
     setBreakerDays(defaults.therapyBreakerDays);

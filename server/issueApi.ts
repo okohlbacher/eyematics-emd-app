@@ -107,12 +107,15 @@ issueApiRouter.get('/export', (req: Request, res: Response): void => {
   }
   const issues = loadAllIssues(true);
   const dateStr = new Date().toISOString().slice(0, 10);
+  // F-19: consistent wrapper object pattern
   res.setHeader('Content-Disposition', `attachment; filename="emd-issues-${dateStr}.json"`);
-  res.json(issues);
+  res.json({ issues });
 });
 
 issueApiRouter.get('/', (_req: Request, res: Response): void => {
-  res.json(loadAllIssues(false));
+  // F-19: consistent wrapper object pattern; F-28: include total for lightweight counting
+  const issues = loadAllIssues(false);
+  res.json({ issues, total: issues.length });
 });
 
 // ---------------------------------------------------------------------------

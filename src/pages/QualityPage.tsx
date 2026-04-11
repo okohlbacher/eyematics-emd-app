@@ -1,3 +1,4 @@
+/** Data quality review page — EMDREQ-QUAL-001 to QUAL-010 (SDV, error flagging, exclusions, therapy discontinuation). */
 import { Ban, CheckCircle2, Circle, Clock, Download } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -9,9 +10,9 @@ import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import {
+  getAge,
   getCenterShorthand,
   getDiagnosisLabel,
-  getAge,
   SNOMED_IVI,
 } from '../services/fhirLoader';
 import { getSettings } from '../services/settingsService';
@@ -32,9 +33,11 @@ function SummaryCard({ icon, count, label }: { icon: ReactNode; count: number; l
 }
 
 // Therapy discontinuation detection (EMDREQ-QUAL-009)
-// Uses configurable thresholds from settings (K06 N06.01/N06.04)
-function getTherapyStatus(pc: PatientCase): { status: 'active' | 'interrupter' | 'breaker'; gapDays: number } {
-  const settings = getSettings();
+// F-20: thresholds passed as parameters instead of reading global singleton
+function getTherapyStatus(
+  pc: PatientCase,
+  thresholds: { interrupterDays: number; breakerDays: number },
+): { status: 'active' | 'interrupter' | 'breaker'; gapDays: number } {
   const injections = pc.procedures
     .filter((p) => p.code.coding.some((c) => c.code === SNOMED_IVI))
     .map((p) => new Date(p.performedDateTime ?? '').getTime())
@@ -52,8 +55,8 @@ function getTherapyStatus(pc: PatientCase): { status: 'active' | 'interrupter' |
   const lastToNow = (Date.now() - injections[injections.length - 1]) / (1000 * 60 * 60 * 24);
   if (lastToNow > maxGap) maxGap = lastToNow;
 
-  if (maxGap > settings.therapyBreakerDays) return { status: 'breaker', gapDays: Math.round(maxGap) };
-  if (maxGap > settings.therapyInterrupterDays) return { status: 'interrupter', gapDays: Math.round(maxGap) };
+  if (maxGap > thresholds.breakerDays) return { status: 'breaker', gapDays: Math.round(maxGap) };
+  if (maxGap > thresholds.interrupterDays) return { status: 'interrupter', gapDays: Math.round(maxGap) };
   return { status: 'active', gapDays: Math.round(maxGap) };
 }
 
@@ -112,8 +115,13 @@ export default function QualityPage() {
 
   // Therapy status per case (EMDREQ-QUAL-009)
   const therapyStatuses = useMemo(() => {
+    const settings = getSettings();
+    const thresholds = {
+      interrupterDays: settings.therapyInterrupterDays,
+      breakerDays: settings.therapyBreakerDays,
+    };
     const map = new Map<string, ReturnType<typeof getTherapyStatus>>();
-    cases.forEach((c) => map.set(c.id, getTherapyStatus(c)));
+    cases.forEach((c) => map.set(c.id, getTherapyStatus(c, thresholds)));
     return map;
   }, [cases]);
 

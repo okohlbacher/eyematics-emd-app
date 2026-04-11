@@ -1,6 +1,6 @@
 # Bill of Materials (BOM) — EyeMatics Clinical Demonstrator
 
-Generated: 2026-04-11 (v1.1, updated after security review)
+Generated: 2026-04-11 (v1.1, updated after lint cleanup)
 
 ## Direct Dependencies (Production)
 
@@ -15,10 +15,10 @@ Generated: 2026-04-11 (v1.1, updated after security review)
 | `http-proxy-middleware` | 3.0.5 | MIT | FHIR proxy middleware |
 | `js-yaml` | 4.1.1 | MIT | YAML parser/serializer (settings.yaml) |
 | `jsonwebtoken` | 9.0.3 | MIT | JWT signing and verification (HS256) |
-| `jwks-rsa` | 3.2.0 | MIT | JWKS client for Keycloak RS256 validation |
+| `jwks-rsa` | 3.2.2 | MIT | JWKS client for Keycloak RS256 validation |
 | `lucide-react` | 1.8.0 | ISC | Icon library (React bindings) |
-| `react` | 19.2.4 | MIT | UI framework |
-| `react-dom` | 19.2.4 | MIT | React DOM renderer |
+| `react` | 19.2.5 | MIT | UI framework |
+| `react-dom` | 19.2.5 | MIT | React DOM renderer |
 | `react-router-dom` | 7.14.0 | MIT | Client-side routing |
 | `recharts` | 3.8.1 | MIT | Charting library (built on D3) |
 | `tailwindcss` | 4.2.2 | MIT | Utility-first CSS framework |
@@ -41,12 +41,13 @@ Generated: 2026-04-11 (v1.1, updated after security review)
 | `eslint` | 9.39.4 | MIT | JavaScript/TypeScript linter |
 | `eslint-plugin-react-hooks` | 7.0.1 | MIT | ESLint rules for React Hooks |
 | `eslint-plugin-react-refresh` | 0.5.2 | MIT | ESLint rules for React Refresh |
+| `eslint-plugin-simple-import-sort` | 13.0.0 | MIT | ESLint plugin for import/export sorting |
 | `globals` | 17.4.0 | MIT | Global identifier definitions |
 | `supertest` | 7.2.2 | MIT | HTTP assertions for testing |
 | `tsx` | 4.21.0 | MIT | TypeScript execution (for npm start) |
 | `typescript` | 6.0.2 | Apache-2.0 | TypeScript compiler |
-| `typescript-eslint` | 8.58.0 | MIT | TypeScript ESLint integration |
-| `vite` | 8.0.4 | MIT | Build tool and dev server |
+| `typescript-eslint` | 8.58.1 | MIT | TypeScript ESLint integration |
+| `vite` | 8.0.8 | MIT | Build tool and dev server |
 | `vitest` | 4.1.4 | MIT | Test runner (Vite-native) |
 
 ## Dependency Summary
@@ -54,8 +55,8 @@ Generated: 2026-04-11 (v1.1, updated after security review)
 | Category | Count |
 |----------|-------|
 | Direct (production) | 16 |
-| Direct (development) | 21 |
-| Total direct | 37 |
+| Direct (development) | 22 |
+| Total direct | 38 |
 
 ## Vulnerability Scan
 
@@ -71,7 +72,7 @@ found 0 vulnerabilities
 
 | License | Count |
 |---------|-------|
-| MIT | ~34 |
+| MIT | ~35 |
 | ISC | 1 (lucide-react) |
 | Apache-2.0 | 1 (TypeScript) |
 

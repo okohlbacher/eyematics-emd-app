@@ -99,5 +99,5 @@ export const BLAZE_RESOURCE_TYPES: ReadonlyArray<{ type: string; count: number }
   { type: 'Organization', count: 50 },
 ];
 
-/** Path to settings.yaml (outside webroot for security). */
-export const SETTINGS_FILE = 'config/settings.yaml';
+/** Path to settings.yaml (outside webroot for security). F-25: single resolved path. */
+export const SETTINGS_FILE = path.resolve(process.cwd(), 'config', 'settings.yaml');

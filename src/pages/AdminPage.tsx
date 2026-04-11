@@ -84,8 +84,8 @@ export default function AdminPage() {
     try {
       const resp = await authFetch('/api/auth/users');
       if (resp.ok) {
-        const data = await resp.json() as ServerUser[];
-        setUsers(data);
+        const data = await resp.json() as { users: ServerUser[] };
+        setUsers(data.users);
       }
     } catch (err) {
       console.error('[AdminPage] Failed to load users:', err);
@@ -113,12 +113,12 @@ export default function AdminPage() {
     }
   }, [loadUsers, user?.role]);
 
-  const getCentersDisplay = (u: ServerUser): string => {
+  const getCentersDisplay = useCallback((u: ServerUser): string => {
     if (u.centers && u.centers.length > 0) {
       return u.centers.map((c) => centerLabels[c] ?? c).join(', ');
     }
     return '—';
-  };
+  }, [centerLabels]);
 
   const filteredUsers = useMemo(() => {
     let result = [...users];
@@ -163,7 +163,7 @@ export default function AdminPage() {
     });
 
     return result;
-  }, [users, searchQuery, roleFilter, sortField, sortDir]);
+  }, [users, searchQuery, roleFilter, sortField, sortDir, getCentersDisplay]);
 
   // --- Early return AFTER all hooks ---
   if (!user || user.role !== 'admin') {
@@ -265,22 +265,22 @@ export default function AdminPage() {
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
           <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-green-800">User created successfully</p>
+            <p className="text-sm font-medium text-green-800">{t('userCreatedSuccess')}</p>
             <p className="text-sm text-green-700 mt-1">
-              Generated password: <code className="bg-green-100 px-2 py-0.5 rounded font-mono text-sm">{generatedPassword}</code>
+              {t('generatedPasswordLabel')} <code className="bg-green-100 px-2 py-0.5 rounded font-mono text-sm">{generatedPassword}</code>
               <button
                 onClick={() => { void navigator.clipboard.writeText(generatedPassword); }}
                 className="ml-2 text-xs text-green-600 hover:text-green-800 underline"
               >
-                Copy
+                {t('copy')}
               </button>
             </p>
-            <p className="text-xs text-green-600 mt-1">Save this password — it cannot be retrieved later. Auto-dismisses in 30s.</p>
+            <p className="text-xs text-green-600 mt-1">{t('savePasswordHint')}</p>
             <button
               onClick={() => setGeneratedPassword(null)}
               className="text-xs text-green-600 hover:text-green-800 mt-2 underline"
             >
-              Dismiss
+              {t('dismiss')}
             </button>
           </div>
         </div>

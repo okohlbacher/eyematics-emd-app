@@ -695,3 +695,57 @@ Same toggle logic and JSX. Justified since LoginPage is outside Layout.
 ---
 
 *Report generated 2026-04-09 by automated code review (Claude).*
+
+---
+
+## Full Review — Accepted Issues (2026-04-11)
+
+**Reviewed by:** Claude, Gemini, Codex (parallel full-review)
+**Total findings:** 47 (3 CRITICAL, 11 HIGH, 19 MEDIUM, 14 LOW)
+**Fixed:** 39 | **Accepted:** 8
+
+The following issues were reviewed and consciously accepted for the demonstrator scope.
+
+### ACC-01: Dev-mode auth bypass via unsigned base64 tokens (CRITICAL)
+**File:** `server/utils.ts:43-83`
+The Vite dev plugins use `validateAuth()` which accepts base64-encoded JSON tokens without JWT signature verification. Any user can forge admin access in dev mode.
+**Accepted because:** This only affects `npm run dev`; production uses proper JWT verification via `authMiddleware`. Acceptable for a demonstrator that is never exposed on a network in dev mode.
+
+### ACC-02: Static shared OTP code (CRITICAL)
+**File:** `config/settings.yaml:4`, `server/authApi.ts:199`
+The 2FA step uses a fixed OTP code (`123456`) shared across all users, stored in plaintext. Not per-user, not time-based.
+**Accepted because:** Demonstrator scope. For production, TOTP (RFC 6238) with per-user secrets via `otplib` is recommended.
+
+### ACC-03: Default password with no forced change (CRITICAL)
+**File:** `server/initAuth.ts:243`
+All migrated users receive the password `changeme2025!` with no `mustChangePassword` mechanism. Fresh deployments have known-credential admin access.
+**Accepted because:** Demonstrator scope. Documented in the Benutzerhandbuch. For production, a forced password change on first login is recommended.
+
+### ACC-04: Optimistic UI updates not reverted on server rejection (HIGH)
+**File:** `src/context/DataContext.tsx:155-214`
+Mutation functions (`addQualityFlag`, `toggleExcludeCase`, etc.) update local state optimistically and fire-and-forget the server request. On server rejection (e.g., 403), the UI diverges until page reload.
+**Accepted because:** Low probability in normal usage. Server-side validation is correct; the UI inconsistency is temporary and self-resolving on reload.
+
+### ACC-05: `loadUsers()` reads from disk on every API call (MEDIUM)
+**File:** `server/initAuth.ts:121-130`
+Every user lookup reads and parses `data/users.json` from disk. No in-memory caching.
+**Accepted because:** Negligible I/O for a demonstrator with 7 users. A future optimization if user count grows.
+
+### ACC-06: O(n*m) filtering in `activeCases` computation (MEDIUM)
+**File:** `src/context/DataContext.tsx:136-139`
+`cases.filter(c => !excludedCases.includes(c.id))` is O(n*m). Could use `Set` for O(n).
+**Accepted because:** Current dataset is ~150 patients. Would matter at 10,000+ cases.
+
+### ACC-07: Missing delete confirmation dialog (MEDIUM)
+**File:** `src/pages/AdminPage.tsx`
+The delete user button has no confirmation dialog. The `removeConfirm` translation key exists but is unused.
+**Accepted because:** Admin-only action. Low risk in demonstrator. Should be added before production use.
+
+### ACC-08: German error type values stored in database (LOW)
+**File:** `src/components/quality/QualityFlagDialog.tsx:16`
+Error type values (`Unplausibel`, `Fehlend`, etc.) are stored as German strings in SQLite. Changing to language-neutral keys would break existing data.
+**Accepted because:** Backward-compatible change would require a migration. Acceptable for demonstrator. Labels are correctly translated for display via `t()`.
+
+---
+
+*Full review report updated 2026-04-11 by parallel Claude/Gemini/Codex review.*

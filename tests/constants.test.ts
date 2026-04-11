@@ -2,7 +2,7 @@
  * Tests for server/constants.ts — configurable centers and shared constants.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('node:fs', () => ({
   default: {
@@ -13,13 +13,14 @@ vi.mock('node:fs', () => ({
 }));
 
 import fs from 'node:fs';
+
 import {
-  initCenters,
+  BLAZE_RESOURCE_TYPES,
   getCenters,
-  getValidCenterIds,
   getCenterShorthands,
   getFallbackCenterFiles,
-  BLAZE_RESOURCE_TYPES,
+  getValidCenterIds,
+  initCenters,
   SETTINGS_FILE,
 } from '../server/constants';
 
@@ -105,6 +106,7 @@ describe('constants — static values', () => {
   });
 
   it('SETTINGS_FILE points to config/', () => {
-    expect(SETTINGS_FILE).toBe('config/settings.yaml');
+    // F-25: SETTINGS_FILE is now an absolute resolved path
+    expect(SETTINGS_FILE).toMatch(/config[/\\]settings\.yaml$/);
   });
 });

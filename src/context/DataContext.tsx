@@ -100,7 +100,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     invalidateBundleCache();
 
     Promise.all([
-      loadCenterShorthands().catch(() => {}), // M-03: must complete before extractCenters
+      loadCenterShorthands().catch((err) => { console.warn('[DataProvider] Center shorthands unavailable, using fallbacks:', err); }),
       loadAllBundles(),
       fetchJson<{ qualityFlags: QualityFlag[] }>('/api/data/quality-flags').catch(() => ({ qualityFlags: [] })),
       fetchJson<{ savedSearches: SavedSearch[] }>('/api/data/saved-searches').catch(() => ({ savedSearches: [] })),

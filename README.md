@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:5173** — log in with `admin` / `admin2025!` / OTP `123456`.
+Open **http://localhost:5173** — log in with `admin` / `changeme2025!` (2FA is off by default; OTP `123456` when enabled).
 
 > See the full credential table and login flow in [docs/Benutzerhandbuch.md](docs/Benutzerhandbuch.md) §2.
 
@@ -23,6 +23,8 @@ Open **http://localhost:5173** — log in with `admin` / `admin2025!` / OTP `123
 | `npm run build`   | Type-check with TypeScript and build |
 | `npm run preview` | Serve the production build locally   |
 | `npm run lint`    | Run ESLint                           |
+| `npm start`       | Start production Express server      |
+| `npx vitest run`  | Run test suite (106 tests)           |
 
 ## Project Structure
 
@@ -33,14 +35,14 @@ emd-app/
     Konfiguration.md           #   Configuration reference (settings.yaml)
     Lastenheft.md              #   Requirements specification
     Pflichtenheft.md           #   Functional specification
-  server/                      # Vite server plugins (REST APIs)
+  server/                      # Express production server (REST APIs, auth, audit)
   public/data/                 # FHIR test data bundles (JSON) + OCT images
   src/
     components/                # Reusable UI components
     components/case-detail/    # CaseDetailPage sub-components
     context/                   # React context providers (Auth, Data, Language)
     config/                    # Clinical thresholds and constants
-    hooks/                     # Custom hooks (usePageAudit, useLocalStorageState)
+    hooks/                     # Custom hooks (useCaseData)
     i18n/                      # Translations (de/en)
     pages/                     # Page components
     services/                  # Data loading, audit, settings, issues
@@ -69,10 +71,13 @@ The application works with HL7 FHIR R4 bundles containing Patient, Condition, Ob
 
 ## Configuration
 
-Settings are stored in `public/settings.yaml` and editable via the Settings page (persisted server-side via `PUT /api/settings`).
+Settings are stored in `config/settings.yaml` (outside the webroot) and editable via the Settings page (persisted server-side via `PUT /api/settings`).
 
 ```yaml
-twoFactorEnabled: true
+provider: local
+twoFactorEnabled: false
+maxLoginAttempts: 5
+otpCode: '123456'
 therapyInterrupterDays: 120
 therapyBreakerDays: 365
 dataSource:
@@ -103,7 +108,9 @@ dataSource:
 | Charts    | Recharts 3                        |
 | Icons     | Lucide React                      |
 | Routing   | React Router 7                    |
-| Data      | HL7 FHIR R4 (static JSON bundles) |
+| Server    | Express 5 + SQLite (better-sqlite3) |
+| Auth      | JWT (bcrypt, HS256/RS256, optional Keycloak) |
+| Data      | HL7 FHIR R4 (local JSON or Blaze FHIR server) |
 
 > Full dependency list and vulnerability scan: [BOM.md](BOM.md).
 
@@ -125,6 +132,8 @@ dataSource:
 | [docs/Konfiguration.md](docs/Konfiguration.md) | Configuration reference |
 | [docs/Lastenheft.md](docs/Lastenheft.md) | Requirements specification |
 | [docs/Pflichtenheft.md](docs/Pflichtenheft.md) | Functional specification |
+| [docs/Anforderungsabgleich.md](docs/Anforderungsabgleich.md) | Requirements traceability matrix |
+| [docs/architecture.md](docs/architecture.md) | Architecture documentation |
 | [BOM.md](BOM.md) | Bill of materials & vulnerability scan |
 | [ISSUES.md](ISSUES.md) | Security, code quality & duplication review |
 

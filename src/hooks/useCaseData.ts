@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { CRITICAL_CRT_THRESHOLD, CRITICAL_IOP_THRESHOLD, CRITICAL_VISUS_THRESHOLD } from '../config/clinicalThresholds';
+import type { TranslationKey } from '../i18n/translations';
 import {
   getObservationsByCode,
   LOINC_CRT,
@@ -16,8 +17,7 @@ export function useCaseData(
   patientCase: PatientCase | undefined,
   cases: PatientCase[],
   locale: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  t: (key: any) => string,
+  t: (key: TranslationKey) => string,
 ) {
   // Cohort averages for comparison (EMDREQ-FALL-006)
   const cohortAvgVisus = useMemo(() => {

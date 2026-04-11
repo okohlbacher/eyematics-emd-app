@@ -55,12 +55,10 @@ auditApiRouter.get('/', (req: Request, res: Response): void => {
   const rawOffset = Number(req.query.offset);
   if (!Number.isNaN(rawOffset) && rawOffset >= 0) filters.offset = rawOffset;
 
-  const limit = Math.min(filters.limit ?? 50, 500);
-  const offset = filters.offset ?? 0;
+  // F-30: limit/offset clamping handled in queryAudit() — no duplication here
+  const { rows, total } = queryAudit(filters);
 
-  const { rows, total } = queryAudit({ ...filters, limit, offset });
-
-  res.json({ entries: rows, total, limit, offset });
+  res.json({ entries: rows, total, limit: filters.limit ?? 50, offset: filters.offset ?? 0 });
 });
 
 // ---------------------------------------------------------------------------
@@ -82,9 +80,10 @@ auditApiRouter.get('/export', (req: Request, res: Response): void => {
 
   const entries = queryAuditExport();
 
+  // F-19: consistent wrapper object pattern
   res.setHeader('Content-Disposition', 'attachment; filename="audit-export.json"');
   res.setHeader('Content-Type', 'application/json');
-  res.json(entries);
+  res.json({ entries });
 });
 
 // ---------------------------------------------------------------------------

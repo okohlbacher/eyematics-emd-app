@@ -36,15 +36,19 @@ export async function addIssue(
 export async function getIssues(): Promise<ReportedIssue[]> {
   const resp = await authFetch('/api/issues');
   if (!resp.ok) return [];
-  return resp.json();
+  const data = await resp.json() as { issues: ReportedIssue[] };
+  return data.issues;
 }
 
 /**
  * Fetch the issue count from the server.
  */
+// F-28: use total field from server instead of fetching all issues
 export async function getIssueCount(): Promise<number> {
-  const issues = await getIssues();
-  return issues.length;
+  const resp = await authFetch('/api/issues');
+  if (!resp.ok) return 0;
+  const data = await resp.json() as { total: number };
+  return data.total;
 }
 
 /**

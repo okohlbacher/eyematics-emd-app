@@ -27,7 +27,7 @@ EMD kommuniziert niemals direkt mit anderen Kliniken. Der Express-Server liest n
 Alle API-Anfragen durchlaufen vier Middleware-Schichten in fester Reihenfolge:
 
 1. **helmet** — HTTP-Sicherheitsheader (CSP, HSTS, X-Frame-Options, X-Content-Type-Options)
-2. **express.json()** — Body-Parsing fuer `/api/auth`, `/api/data`, `/api/issues` Routen
+2. **express.json()** — Body-Parsing fuer `/api/auth`, `/api/data`, `/api/issues`, `/api/fhir` Routen
 3. **auditMiddleware** — Automatische Protokollierung jeder API-Anfrage in SQLite (inkl. Schwaerzung sensibler Felder wie Passwoerter und OTP-Codes, inkl. Request-Body-Erfassung fuer Mutationen)
 4. **authMiddleware** — JWT-Validierung (HS256 fuer lokale Auth, RS256 via JWKS fuer Keycloak). Oeffentliche Pfade (`/api/auth/login`, `/verify`, `/config`) sind ausgenommen.
 
@@ -70,8 +70,8 @@ Der FHIR-Proxy (`/api/fhir-proxy`) ist auf Administratoren beschraenkt, um eine 
 
 | Speicher | Pfad | Inhalt |
 |----------|------|--------|
-| Konfiguration | `config/settings.yaml` | Auth-Provider, 2FA, Schwellenwerte, Datenquelle (ausserhalb Webroot) |
-| Zentren | `data/centers.json` | Konfigurierbare Zentrenliste (ID, Kuerzel, Name, FHIR-Datei) |
+| Konfiguration | `config/settings.yaml` | provider, twoFactorEnabled, maxLoginAttempts, otpCode, therapyInterrupterDays, therapyBreakerDays, dataSource (ausserhalb Webroot) |
+| Zentren | `data/centers.json` | Konfigurierbare Zentrenliste (`id`, `shorthand`, `name`, `file`) |
 | Benutzer | `data/users.json` | Benutzername, bcrypt-Hash, Rolle, Zentren |
 | JWT-Schluessel | `data/jwt-secret.txt` | HS256-Signaturschluessel (automatisch generiert) |
 | Audit-Log | `data/audit.db` | SQLite, append-only, WAL-Modus, konfigurierbare Aufbewahrung |

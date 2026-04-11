@@ -16,7 +16,7 @@ import jwt from 'jsonwebtoken';
 import type { AuthPayload } from './authMiddleware.js';
 import { getValidCenterIds } from './constants.js';
 import type { UserRecord } from './initAuth.js';
-import { getAuthConfig, getJwtSecret, loadUsers, saveUsers } from './initAuth.js';
+import { getAuthConfig, getJwtSecret, loadUsers, modifyUsers } from './initAuth.js';
 import { getAuthProvider } from './keycloakAuth.js';
 import { createRateLimiter } from './rateLimiting.js';
 
@@ -313,13 +313,6 @@ authApiRouter.post('/users', async (req: Request, res: Response): Promise<void> 
     return;
   }
 
-  // Check duplicate (case-insensitive)
-  const users = loadUsers();
-  if (users.find((u) => u.username.toLowerCase() === username.trim().toLowerCase())) {
-    res.status(409).json({ error: 'Username already exists' });
-    return;
-  }
-
   // Generate secure random password (D-01): 16 chars base64url = ~96 bits entropy
   const generatedPassword = generateSecurePassword();
   const passwordHash = await bcrypt.hash(generatedPassword, 12);
@@ -334,8 +327,21 @@ authApiRouter.post('/users', async (req: Request, res: Response): Promise<void> 
     createdAt: new Date().toISOString(),
   };
 
-  users.push(newUser);
-  await saveUsers(users);
+  // F-11: atomic read-modify-write under lock prevents TOCTOU race
+  try {
+    await modifyUsers((users) => {
+      if (users.find((u) => u.username.toLowerCase() === username.trim().toLowerCase())) {
+        throw new Error('USERNAME_EXISTS');
+      }
+      return [...users, newUser];
+    });
+  } catch (err) {
+    if (err instanceof Error && err.message === 'USERNAME_EXISTS') {
+      res.status(409).json({ error: 'Username already exists' });
+      return;
+    }
+    throw err;
+  }
 
   // Return user WITHOUT passwordHash, plus the one-time generatedPassword
   const { passwordHash: _omit, ...safeUser } = newUser;
@@ -364,15 +370,20 @@ authApiRouter.delete('/users/:username', async (req: Request, res: Response): Pr
     return;
   }
 
-  const users = loadUsers();
-  const idx = users.findIndex((u) => u.username.toLowerCase() === target.toLowerCase());
-  if (idx === -1) {
-    res.status(404).json({ error: 'User not found' });
-    return;
+  // F-11: atomic read-modify-write under lock prevents TOCTOU race
+  try {
+    await modifyUsers((users) => {
+      const idx = users.findIndex((u) => u.username.toLowerCase() === target.toLowerCase());
+      if (idx === -1) throw new Error('USER_NOT_FOUND');
+      return [...users.slice(0, idx), ...users.slice(idx + 1)];
+    });
+  } catch (err) {
+    if (err instanceof Error && err.message === 'USER_NOT_FOUND') {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    throw err;
   }
-
-  users.splice(idx, 1);
-  await saveUsers(users);
   res.json({ message: 'User deleted' });
 });
 
@@ -390,19 +401,26 @@ authApiRouter.put('/users/:username/password', async (req: Request, res: Respons
 
   const target = req.params.username;
 
-  // Case-insensitive user lookup (review suggestion)
-  const users = loadUsers();
-  const user = users.find((u) => u.username.toLowerCase() === target.toLowerCase());
-  if (!user) {
-    res.status(404).json({ error: 'User not found' });
-    return;
-  }
-
   // Server generates the new password — no plaintext in request body
   // This eliminates the audit log leak (review concern #1, T-04-07)
   const generatedPassword = generateSecurePassword();
-  user.passwordHash = await bcrypt.hash(generatedPassword, 12);
-  await saveUsers(users);
+  const newHash = await bcrypt.hash(generatedPassword, 12);
+
+  // F-11: atomic read-modify-write under lock prevents TOCTOU race
+  try {
+    await modifyUsers((users) => {
+      const user = users.find((u) => u.username.toLowerCase() === target.toLowerCase());
+      if (!user) throw new Error('USER_NOT_FOUND');
+      user.passwordHash = newHash;
+      return users;
+    });
+  } catch (err) {
+    if (err instanceof Error && err.message === 'USER_NOT_FOUND') {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    throw err;
+  }
 
   // Cache-Control: no-store to prevent caching one-time password (review suggestion)
   res.setHeader('Cache-Control', 'no-store');

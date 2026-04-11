@@ -11,7 +11,6 @@ export default function LoginPage() {
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
   const [error, setError] = useState('');
-  const [attempts, setAttempts] = useState(0);
   const [challengeToken, setChallengeToken] = useState('');
   const [provider, setProvider] = useState<'local' | 'keycloak'>('local');
   const [showKeycloakInfo, setShowKeycloakInfo] = useState(false);
@@ -34,11 +33,6 @@ export default function LoginPage() {
       setError(t('loginErrorEmpty'));
       return;
     }
-    if (attempts >= 5) {
-      setError(t('loginErrorTooMany'));
-      return;
-    }
-
     const result = await login(username, password);
     if (result.ok) {
       navigate('/');
@@ -50,17 +44,12 @@ export default function LoginPage() {
       setStep('otp');
       setError('');
     } else if (result.error === 'account_locked') {
-      setAttempts((a) => a + 1);
+      // F-10: server-side rate limiting is the sole enforcement
       setError(t('loginErrorTooMany'));
     } else if (result.error === 'invalid_credentials') {
-      setAttempts((a) => a + 1);
       // Generic message — do not distinguish user_not_found from wrong_password (prevents enumeration)
       setError(t('loginErrorWrongPassword'));
-    } else if (result.error === 'network_error') {
-      setAttempts((a) => a + 1);
-      setError(t('loginErrorFailed'));
     } else {
-      setAttempts((a) => a + 1);
       setError(t('loginErrorFailed'));
     }
   };
@@ -81,10 +70,8 @@ export default function LoginPage() {
       setChallengeToken('');
       setError(t('loginErrorInvalidOtp'));
     } else if (result.error === 'account_locked') {
-      setAttempts((a) => a + 1);
       setError(t('loginErrorTooMany'));
     } else {
-      setAttempts((a) => a + 1);
       setError(t('loginErrorFailed'));
     }
   };

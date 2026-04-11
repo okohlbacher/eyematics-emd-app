@@ -179,6 +179,26 @@ export async function saveUsers(users: UserRecord[]): Promise<void> {
   }
 }
 
+/**
+ * F-11: Execute a read-modify-write cycle under the write lock.
+ * Prevents TOCTOU races where concurrent admin requests read stale data.
+ * The callback receives the current users array and must return the updated array.
+ */
+export async function modifyUsers(fn: (users: UserRecord[]) => UserRecord[]): Promise<UserRecord[]> {
+  if (_usersFile === null) {
+    throw new Error('[initAuth] modifyUsers() called before initAuth()');
+  }
+  await acquireWriteLock();
+  try {
+    const users = loadUsers();
+    const updated = fn(users);
+    _atomicWrite(_usersFile, JSON.stringify(updated, null, 2));
+    return updated;
+  } finally {
+    releaseWriteLock();
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------

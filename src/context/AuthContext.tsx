@@ -1,5 +1,7 @@
 import { createContext, type ReactNode,useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
+import { invalidateBundleCache } from '../services/fhirLoader';
+
 /**
  * Roles from the Lastenheft stakeholder analysis (K10 N10.01):
  * 1 = Forscher*in (researcher), 2 = IT-Administrator*in (admin),
@@ -129,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setInactivityWarning(false);
     sessionStorage.removeItem('emd-token');
+    invalidateBundleCache(); // L-12: clear stale data from previous user's center scope
   }, []);
 
   const resetInactivityTimer = useCallback(() => {
