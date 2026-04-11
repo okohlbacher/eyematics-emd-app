@@ -27,8 +27,8 @@ import fs from 'node:fs';
 import yaml from 'js-yaml';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import helmet from 'helmet';
-import { issueApiHandler } from './issueApi.js';
-import { settingsApiHandler } from './settingsApi.js';
+import { issueApiRouter } from './issueApi.js';
+import { settingsApiRouter } from './settingsApi.js';
 import { initAuth } from './initAuth.js';
 import { authMiddleware } from './authMiddleware.js';
 import { authApiRouter } from './authApi.js';
@@ -177,9 +177,9 @@ app.use('/api', authMiddleware);
 // Auth routes — login, verify, config (express.json already mounted above)
 app.use('/api/auth', authApiRouter);
 
-// Issue and settings handlers (raw Node http middleware, auth guaranteed by authMiddleware)
-app.use(issueApiHandler);
-app.use(settingsApiHandler);
+// Issue and settings routers (H-01: refactored from raw handlers to Express Router)
+app.use('/api/issues', express.json({ limit: '10mb' }), issueApiRouter);
+app.use('/api/settings', settingsApiRouter);
 
 // Audit query routes — /api/audit and /api/audit/export (admin-only export)
 app.use('/api/audit', auditApiRouter);
