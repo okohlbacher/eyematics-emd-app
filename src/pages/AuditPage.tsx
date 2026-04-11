@@ -123,8 +123,17 @@ export default function AuditPage() {
     downloadCsv(headers, rows, datedFilename('audit-log', 'csv'));
   };
 
-  const handleExportJson = () => {
-    window.open('/api/audit/export', '_blank');
+  const handleExportJson = async () => {
+    const resp = await authFetch('/api/audit/export');
+    if (!resp.ok) return;
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `audit-export-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
   };
 
   return (

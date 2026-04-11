@@ -174,9 +174,6 @@ export async function loadCenterShorthands(): Promise<void> {
   }
 }
 
-/** Short display names for centers (used in charts/tables) */
-export const CENTER_SHORTHANDS: Record<string, string> = _centerShorthands;
-
 /** Get the shorthand label for a center, falling back to full name */
 export function getCenterShorthand(centerId: string, fallback?: string): string {
   return _centerShorthands[centerId] ?? fallback ?? centerId;

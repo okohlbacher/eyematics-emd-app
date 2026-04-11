@@ -25,22 +25,22 @@ Alle Änderungen, die über die Settings-Seite im UI vorgenommen werden, werden 
 ```yaml
 # ──────────────────────────────────────────────────────────────
 # EyeMatics Clinical Demonstrator — Application Settings
+# Flache Struktur — alle Felder auf Root-Ebene
 # ──────────────────────────────────────────────────────────────
 
-auth:
-  provider: local          # 'local' oder 'keycloak'
-  twoFactorEnabled: false
-  maxLoginAttempts: 5
-  otpCode: '123456'        # Nur serverseitig gelesen — nicht im Client sichtbar
-  # keycloak:
-  #   issuer: https://auth.example.com/realms/emd
-  #   clientId: emd-app
+provider: local              # 'local' oder 'keycloak'
+twoFactorEnabled: false
+maxLoginAttempts: 5
+otpCode: '123456'            # Nur serverseitig gelesen — nicht im Client sichtbar
+# keycloak:
+#   issuer: https://auth.example.com/realms/emd
+#   clientId: emd-app
 
-therapyInterrupterDays: 120   # Therapie-Unterbrecher (t)
-therapyBreakerDays: 365       # Therapie-Abbrecher (t')
+therapyInterrupterDays: 120  # Therapie-Unterbrecher (t)
+therapyBreakerDays: 365      # Therapie-Abbrecher (t')
 
 dataSource:
-  type: local                 # 'local' oder 'blaze'
+  type: local                # 'local' oder 'blaze'
   blazeUrl: http://localhost:8080/fhir
 ```
 
@@ -48,10 +48,10 @@ dataSource:
 
 | Parameter | Typ | Default | Beschreibung |
 |-----------|-----|---------|--------------|
-| `auth.provider` | `"local"` \| `"keycloak"` | `"local"` | Authentifizierungsmethode. `local`: bcrypt + JWT (HS256). `keycloak`: RS256 via JWKS. |
-| `auth.twoFactorEnabled` | `boolean` | `false` | Aktiviert/deaktiviert den OTP-Schritt beim Login. Standardmäßig deaktiviert. |
-| `auth.maxLoginAttempts` | `number` | `5` | Max. Fehlversuche vor Kontosperrung (exponentielles Backoff). |
-| `auth.otpCode` | `string` | `"123456"` | Fester OTP-Code (Demonstrator). Nur serverseitig gelesen. |
+| `provider` | `"local"` \| `"keycloak"` | `"local"` | Authentifizierungsmethode. `local`: bcrypt + JWT (HS256). `keycloak`: RS256 via JWKS. |
+| `twoFactorEnabled` | `boolean` | `false` | Aktiviert/deaktiviert den OTP-Schritt beim Login. Standardmäßig deaktiviert. |
+| `maxLoginAttempts` | `number` | `5` | Max. Fehlversuche vor Kontosperrung (exponentielles Backoff). |
+| `otpCode` | `string` | `"123456"` | Fester OTP-Code (Demonstrator). Nur serverseitig gelesen. |
 | `therapyInterrupterDays` | `number` | `120` | Zeitkriterium t in Tagen für Therapie-Unterbrecher. |
 | `therapyBreakerDays` | `number` | `365` | Zeitkriterium t' in Tagen für Therapie-Abbrecher. |
 | `dataSource.type` | `"local"` \| `"blaze"` | `"local"` | Art der Datenquelle. `local`: JSON-Dateien aus `public/data/`. `blaze`: Blaze FHIR Server. |

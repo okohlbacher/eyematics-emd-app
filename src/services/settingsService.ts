@@ -54,7 +54,7 @@ export async function loadSettings(): Promise<AppSettings> {
     const resp = await authFetch('/api/settings');
     if (resp.ok) {
       const text = await resp.text();
-      fromYaml = (yaml.load(text) as Partial<AppSettings>) ?? {};
+      fromYaml = (yaml.load(text, { schema: yaml.JSON_SCHEMA }) as Partial<AppSettings>) ?? {};
     }
   } catch {
     // API unavailable — use defaults

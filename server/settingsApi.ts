@@ -39,9 +39,13 @@ function writeSettings(yamlBody: string, updatedBy: string): void {
 function validateSettingsSchema(parsed: unknown): string | null {
   if (parsed === null || typeof parsed !== 'object') return 'Settings must be a YAML object';
   const obj = parsed as Record<string, unknown>;
+  // Auth fields (flat structure — F-10)
   if (typeof obj.twoFactorEnabled !== 'boolean') return 'twoFactorEnabled must be a boolean';
+  if (obj.provider !== undefined && typeof obj.provider !== 'string') return 'provider must be a string';
+  // Clinical thresholds
   if (typeof obj.therapyInterrupterDays !== 'number' || !Number.isFinite(obj.therapyInterrupterDays)) return 'therapyInterrupterDays must be a number';
   if (typeof obj.therapyBreakerDays !== 'number' || !Number.isFinite(obj.therapyBreakerDays)) return 'therapyBreakerDays must be a number';
+  // Data source
   if (obj.dataSource === null || typeof obj.dataSource !== 'object') return 'dataSource must be an object';
   const ds = obj.dataSource as Record<string, unknown>;
   if (typeof ds.type !== 'string' || ds.type.length === 0) return 'dataSource.type must be a non-empty string';

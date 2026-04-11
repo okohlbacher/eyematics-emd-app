@@ -80,6 +80,13 @@ export default function AdminPage() {
   const [sortField, setSortField] = useState<SortField>('username');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
+  // F-03: Auto-clear generated password after 30 seconds
+  useEffect(() => {
+    if (!generatedPassword) return;
+    const timer = setTimeout(() => setGeneratedPassword(null), 30_000);
+    return () => clearTimeout(timer);
+  }, [generatedPassword]);
+
   const loadUsers = useCallback(async () => {
     try {
       const resp = await authFetch('/api/auth/users');
@@ -253,8 +260,14 @@ export default function AdminPage() {
             <p className="text-sm font-medium text-green-800">User created successfully</p>
             <p className="text-sm text-green-700 mt-1">
               Generated password: <code className="bg-green-100 px-2 py-0.5 rounded font-mono text-sm">{generatedPassword}</code>
+              <button
+                onClick={() => { void navigator.clipboard.writeText(generatedPassword); }}
+                className="ml-2 text-xs text-green-600 hover:text-green-800 underline"
+              >
+                Copy
+              </button>
             </p>
-            <p className="text-xs text-green-600 mt-1">Save this password — it cannot be retrieved later.</p>
+            <p className="text-xs text-green-600 mt-1">Save this password — it cannot be retrieved later. Auto-dismisses in 30s.</p>
             <button
               onClick={() => setGeneratedPassword(null)}
               className="text-xs text-green-600 hover:text-green-800 mt-2 underline"

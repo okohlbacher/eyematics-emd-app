@@ -96,17 +96,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
 
-    // Load center shorthands from server before loading bundles (M-03)
-    loadCenterShorthands().catch(() => {});
-
     Promise.all([
+      loadCenterShorthands().catch(() => {}), // M-03: must complete before extractCenters
       loadAllBundles(),
       fetchJson<{ qualityFlags: QualityFlag[] }>('/api/data/quality-flags').catch(() => ({ qualityFlags: [] })),
       fetchJson<{ savedSearches: SavedSearch[] }>('/api/data/saved-searches').catch(() => ({ savedSearches: [] })),
       fetchJson<{ excludedCases: string[] }>('/api/data/excluded-cases').catch(() => ({ excludedCases: [] })),
       fetchJson<{ reviewedCases: string[] }>('/api/data/reviewed-cases').catch(() => ({ reviewedCases: [] })),
     ])
-      .then(([b, qf, ss, ec, rc]) => {
+      .then(([, b, qf, ss, ec, rc]) => {
         setBundles(b);
         setCenters(extractCenters(b));
         setCases(extractPatientCases(b));

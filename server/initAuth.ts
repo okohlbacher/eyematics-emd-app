@@ -66,24 +66,19 @@ export function initAuth(dataDir: string, settings: Record<string, unknown>): vo
     console.log(`[initAuth] Generated new JWT secret at ${secretFile}`);
   }
 
-  // Parse auth config from settings
-  // auth.twoFactorEnabled takes precedence; fall back to top-level twoFactorEnabled
-  const authSection = (settings.auth ?? {}) as Record<string, unknown>;
-  const twoFa = typeof authSection.twoFactorEnabled === 'boolean'
-    ? authSection.twoFactorEnabled
-    : (typeof settings.twoFactorEnabled === 'boolean' ? settings.twoFactorEnabled : false);
+  // Parse auth config from flat settings structure (F-10: consistent with validator)
   _authConfig = {
-    twoFactorEnabled: twoFa,
-    maxLoginAttempts: typeof authSection.maxLoginAttempts === 'number' ? authSection.maxLoginAttempts : 5,
-    otpCode: typeof authSection.otpCode === 'string' ? authSection.otpCode : '123456',
+    twoFactorEnabled: typeof settings.twoFactorEnabled === 'boolean' ? settings.twoFactorEnabled : false,
+    maxLoginAttempts: typeof settings.maxLoginAttempts === 'number' ? settings.maxLoginAttempts : 5,
+    otpCode: typeof settings.otpCode === 'string' ? settings.otpCode : '123456',
   };
 
   // Parse auth provider and initialize Keycloak if needed
-  const provider = typeof authSection.provider === 'string' ? authSection.provider : 'local';
+  const provider = typeof settings.provider === 'string' ? settings.provider : 'local';
   if (provider === 'keycloak') {
-    const kc = (authSection.keycloak ?? {}) as Record<string, unknown>;
+    const kc = (settings.keycloak ?? {}) as Record<string, unknown>;
     if (typeof kc.issuer !== 'string' || !kc.issuer) {
-      throw new Error('[initAuth] auth.keycloak.issuer is required when auth.provider=keycloak');
+      throw new Error('[initAuth] keycloak.issuer is required when provider=keycloak');
     }
     initKeycloakAuth(kc.issuer);
     console.log(`[initAuth] Keycloak mode enabled. JWKS: ${kc.issuer}/protocol/openid-connect/certs`);
