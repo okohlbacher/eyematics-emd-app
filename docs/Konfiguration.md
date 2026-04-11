@@ -29,7 +29,7 @@ Alle Änderungen, die über die Settings-Seite im UI vorgenommen werden, werden 
 
 auth:
   provider: local          # 'local' oder 'keycloak'
-  twoFactorEnabled: true
+  twoFactorEnabled: false
   maxLoginAttempts: 5
   otpCode: '123456'        # Nur serverseitig gelesen — nicht im Client sichtbar
   # keycloak:

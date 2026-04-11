@@ -1,6 +1,6 @@
 auth:
   provider: local
-  twoFactorEnabled: true
+  twoFactorEnabled: false
   maxLoginAttempts: 5
   otpCode: '123456'
   # keycloak:

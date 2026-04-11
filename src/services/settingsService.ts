@@ -12,7 +12,7 @@ export interface AppSettings {
 }
 
 const DEFAULTS: AppSettings = {
-  twoFactorEnabled: true,
+  twoFactorEnabled: false,
   therapyInterrupterDays: 120,
   therapyBreakerDays: 365,
   dataSource: {
