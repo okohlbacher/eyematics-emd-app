@@ -26,6 +26,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import yaml from 'js-yaml';
 import { createProxyMiddleware } from 'http-proxy-middleware';
+import helmet from 'helmet';
 import { issueApiHandler } from './issueApi.js';
 import { settingsApiHandler } from './settingsApi.js';
 import { initAuth } from './initAuth.js';
@@ -145,6 +146,20 @@ const blazeTarget = deriveBlazeTarget(blazeUrl);
 // ---------------------------------------------------------------------------
 
 const app = express();
+
+// Security headers (HSTS, CSP, X-Frame-Options, etc.)
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'blob:'],
+      connectSrc: ["'self'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // allow loading FHIR data
+}));
 
 // Body parsers — MUST be before auditMiddleware so req.body is populated for body capture
 // express.json() is scoped (NOT global) — issueApiHandler and settingsApiHandler use readBody()
