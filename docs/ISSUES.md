@@ -29,15 +29,44 @@ The `validateAuth()` function in `server/utils.ts` (used by Vite dev plugins) de
 2. Or share `verifyLocalToken` from `authMiddleware.ts`
 3. Remove `KNOWN_USERS` from `utils.ts`, load from `users.json` via `loadUsers()`
 
-## Other Noted Issues
+## Open Architecture Questions
+
+### Center ID Lifecycle and Mapping
+
+**Severity:** Architecture gap (not a bug — needs design decision)
+
+It is unclear how the following aspects of center management work end-to-end:
+
+1. **Site list provenance:** Where does the authoritative list of participating sites come from? Currently `data/centers.json` is manually maintained per deployment. In a multi-site DSF deployment, the list of participating sites should ideally be derived from DSF Organization/Endpoint resources, not a static file.
+
+2. **Center-to-account assignment:** How are centers assigned to user accounts in practice? Currently an admin manually selects centers when creating a user (`POST /api/auth/users`). There is no automated sync between DSF site membership and EMD user center assignments.
+
+3. **Center ID mapping to Blaze and DSF:** The EMD uses `org-*` prefixed IDs (e.g., `org-uka`). It is not documented how these map to:
+   - Blaze FHIR server Organization resource IDs
+   - DSF Organization/Endpoint resource identifiers
+   - The `Patient.meta.source` field used for center-based filtering of Blaze bundles
+
+4. **Adding/removing sites:** No documented process exists for onboarding a new site or decommissioning one. Changes require manual edits to `data/centers.json`, `data/users.json`, and potentially FHIR bundle filenames.
+
+**Recommendation:** Define a center lifecycle document covering provisioning, ID mapping conventions, DSF integration, and user assignment workflows. For the demonstrator, the current manual approach is sufficient. For production multi-site deployment, consider auto-discovering centers from DSF or a central registry.
+
+## Resolved Issues
 
 | ID | Severity | Description | Status |
 |----|----------|-------------|--------|
-| H-03 | High | Audit log readable by all users (no role check) | **Fixed** — auto-scoped by role |
-| H-06 | High | FHIR proxy has no center filtering | **Fixed** — admin-only |
-| H-07 | High | Audit body missing for issue/settings mutations | Open |
+| H-01 | High | Code duplication (issueApi + settingsApi) | **Fixed** — Express Router refactor |
+| H-02 | High | Divergent center filtering in dev vs prod | **Fixed** — shared functions |
+| H-03 | High | Audit log readable by all users | **Fixed** — auto-scoped by role |
+| H-06 | High | FHIR proxy bypasses center filtering | **Fixed** — admin-only |
+| H-07 | High | Audit body missing for mutations | **Fixed** — readBody sets _capturedBody |
 | H-10 | High | Center validation allows unknown case IDs | **Fixed** — strict rejection |
-| M-01 | Medium | Optimistic state updates (fire-and-forget) | Accepted (demonstrator) |
-| M-05 | Medium | bcrypt.compareSync blocks event loop | Open |
-| M-07 | Medium | QualityFlag type missing `id` field on client | Open |
-| M-09 | Medium | No JWT token refresh mechanism | Accepted (demonstrator) |
+| M-03 | Medium | Duplicate center shorthands client/server | **Fixed** — GET /api/fhir/centers |
+| M-05 | Medium | bcrypt.compareSync blocks event loop | **Fixed** — async compare/hash |
+| M-07 | Medium | QualityFlag type missing `id` field | **Fixed** — added to interface |
+
+## Accepted (Demonstrator)
+
+| ID | Severity | Description | Status |
+|----|----------|-------------|--------|
+| M-01 | Medium | Optimistic state updates (fire-and-forget) | Accepted |
+| M-09 | Medium | No JWT token refresh mechanism | Accepted |
