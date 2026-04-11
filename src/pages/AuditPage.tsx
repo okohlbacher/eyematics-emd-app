@@ -3,6 +3,7 @@ import { useEffect,useMemo, useState } from 'react';
 
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import type { TranslationKey } from '../i18n/translations';
 import { authFetch } from '../services/authHeaders';
 import { getDateLocale } from '../utils/dateFormat';
 import { datedFilename, downloadBlob, downloadCsv } from '../utils/download';
@@ -25,7 +26,7 @@ type TimeRange = 'today' | '7d' | '30d' | 'all';
 // is filtered out by isRelevantEntry().
 // ---------------------------------------------------------------------------
 
-type TranslationFn = (key: string, ...args: string[]) => string;
+type TranslationFn = (key: TranslationKey) => string;
 
 function describeAction(method: string, path: string, t: TranslationFn): string {
   // Auth actions
@@ -55,11 +56,11 @@ function describeAction(method: string, path: string, t: TranslationFn): string 
 }
 
 function describeDetail(method: string, path: string, user: string, t: TranslationFn): string {
-  if (method === 'POST' && path === '/api/auth/login') return t('audit_detail_login', user);
-  if (method === 'POST' && path === '/api/auth/verify') return t('audit_detail_login', user);
+  if (method === 'POST' && path === '/api/auth/login') return t('audit_detail_login').replace('{0}', user);
+  if (method === 'POST' && path === '/api/auth/verify') return t('audit_detail_login').replace('{0}', user);
   if (method === 'DELETE' && path.startsWith('/api/auth/users/')) {
     const username = path.split('/').pop() ?? '';
-    return t('audit_detail_delete_user', decodeURIComponent(username));
+    return t('audit_detail_delete_user').replace('{0}', decodeURIComponent(username));
   }
   return '';
 }
