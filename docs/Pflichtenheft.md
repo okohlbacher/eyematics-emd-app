@@ -269,14 +269,19 @@ ergänzt.
 
 Im Lastenheft werden verschiedene Stakeholder definiert (siehe RE-EM-S:
 Stakeholder-Liste) und den jeweiligen Kernaufgaben zugeordnet. Im Rahmen
-des Demonstrators wird für das MVP ein vereinfachtes Rollenmodell
-umgesetzt. Es wird eine einheitliche Nutzerrolle bereitgestellt, die
-Zugriff auf alle im System verfügbaren Funktionen und Daten hat.
+des Demonstrators wird ein differenziertes 6-Rollen-Modell umgesetzt,
+das den Stakeholder-Kategorien des Lastenhefts entspricht:
 
-Eine differenzierte Einschränkung von Funktionen oder Sichten auf Basis
-spezifischer Nutzergruppen ist nicht Bestandteil des aktuellen
-Umsetzungsumfangs, kann jedoch in zukünftigen Ausbaustufen ergänzt
-werden.
+1. **IT-Administrator (admin)** — Vollzugriff: Nutzerverwaltung, Systemkonfiguration, Audit-Log (alle Eintraege), FHIR-Proxy
+2. **Forscher/in (researcher)** — Klinische Daten: Kohortenbildung, Analyse, Einzelfallansicht, Datenqualitaet
+3. **Epidemiolog/in (epidemiologist)** — Wie Forscher/in, typischerweise mit Zugang zu mehreren Zentren
+4. **Kliniker/in (clinician)** — Klinische Daten des eigenen Zentrums
+5. **DIZ Data Manager (data_manager)** — Datenqualitaetspruefung und Dokumentationsqualitaet
+6. **Klinikleitung (clinic_lead)** — Uebergreifender Zugang, Dokumentationsqualitaets-Benchmarking
+
+Jeder Benutzer ist einem oder mehreren Zentren zugeordnet. Die
+zentrenbasierte Dateneinschraenkung wird serverseitig erzwungen — Benutzer
+sehen ausschliesslich Daten ihrer zugewiesenen Zentren.
 
 4 Anforderungen
 
@@ -888,10 +893,16 @@ Diese Rollen sollten an jedem EyeMatics Rollout Standort vertreten sein:
   Forscher                    Datensätze abrufen, Analysen durchführen                                               Zugriff auf Benutzungsoberfläche des klinischen Demonstrators (pseudonyme medizinische Daten)
   --------------------------- -------------------------------------------------------------------------------------- -----------------------------------------------------------------------------------------------
 
-Berechtigungskonzept im EMD:
+Berechtigungskonzept im EMD (6-Rollen-Modell, Stand v1.1):
 
-  --------------------------- --------------------------------- --------------------------- ---------------------------
-  **Rolle**                   **Datenverarbeitung / Anzeige**   **Nutzer-Administration**   **System-Administration**
-  Technischer Administrator   nein                              ja                          ja
-  Forscher                    ja                                nein                        nein
-  --------------------------- --------------------------------- --------------------------- ---------------------------
+  ----------------------------- --------------------------------- --------------------------------- --------------------------- ---------------------------
+  **Rolle**                     **Klinische Daten**               **Dokumentationsqualitaet**       **Nutzer-Administration**   **System-Administration**
+  IT-Administrator (admin)      ja (alle Zentren)                 ja                                ja                          ja
+  Forscher/in (researcher)      ja (zugewiesene Zentren)          nein                              nein                        nein
+  Epidemiolog/in                ja (zugewiesene Zentren)          nein                              nein                        nein
+  Kliniker/in (clinician)       ja (zugewiesene Zentren)          nein                              nein                        nein
+  DIZ Data Manager              ja (zugewiesene Zentren)          ja                                nein                        nein
+  Klinikleitung (clinic_lead)   ja (zugewiesene Zentren)          ja                                nein                        nein
+  ----------------------------- --------------------------------- --------------------------------- --------------------------- ---------------------------
+
+Zentrenbasierte Einschraenkung: Jede Rolle (ausser admin) sieht nur Daten der zugewiesenen Zentren. Die Filterung erfolgt serverseitig im JWT-Payload.
