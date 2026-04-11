@@ -199,8 +199,15 @@ app.use('/data', (_req: import('express').Request, res: import('express').Respon
   res.status(403).json({ error: 'Use /api/fhir/bundles for authenticated FHIR data access' });
 });
 
-// FHIR proxy — protected by authMiddleware (moved under /api scope)
-app.use('/api/fhir-proxy', authMiddleware, createProxyMiddleware({
+// FHIR proxy — admin-only (H-06: prevents center-bypass via direct Blaze queries)
+// Non-admin users must use /api/fhir/bundles which enforces center filtering.
+app.use('/api/fhir-proxy', (req: import('express').Request, res: import('express').Response, next: import('express').NextFunction) => {
+  if (!req.auth || req.auth.role !== 'admin') {
+    res.status(403).json({ error: 'FHIR proxy access restricted to administrators' });
+    return;
+  }
+  next();
+}, createProxyMiddleware({
   target: blazeTarget,
   changeOrigin: true,
   on: {

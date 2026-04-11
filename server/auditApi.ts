@@ -37,7 +37,12 @@ export const auditApiRouter = Router();
 auditApiRouter.get('/', (req: Request, res: Response): void => {
   const filters: AuditFilters = {};
 
-  if (typeof req.query.user === 'string') filters.user = req.query.user;
+  // H-03: Auto-scope — non-admins see only their own audit entries
+  if (req.auth?.role !== 'admin') {
+    filters.user = req.auth!.preferred_username;
+  } else if (typeof req.query.user === 'string') {
+    filters.user = req.query.user;
+  }
   if (typeof req.query.method === 'string') filters.method = req.query.method;
   if (typeof req.query.path === 'string') filters.path = req.query.path;
   if (typeof req.query.fromTime === 'string') filters.fromTime = req.query.fromTime;

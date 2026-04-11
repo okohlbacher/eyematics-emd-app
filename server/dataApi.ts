@@ -39,16 +39,19 @@ const MAX_ARRAY_SIZE = 10000;
  * Validate that all case IDs belong to the user's permitted centers.
  * Returns an error message string if any case is outside permitted centers, or null if all pass.
  *
- * - Admin users and users with all 5 centers bypass validation (same logic as isBypass).
- * - Unknown case IDs (not in FHIR cache) are allowed through — case may not be loaded yet.
+ * - Admin users and users with all centers bypass validation (same logic as isBypass).
+ * - Unknown case IDs (not in FHIR cache) are REJECTED — prevents writes to
+ *   unauthorized centers before cache warms (H-10).
  */
 function validateCaseCenters(caseIds: string[], userCenters: string[], role: string): string | null {
   if (isBypass(role, userCenters)) return null;
   const index = getCaseToCenter();
   for (const caseId of caseIds) {
     const caseCenterId = index.get(caseId);
-    // If caseId is not in the index, allow it (case may not be loaded yet)
-    if (caseCenterId && !userCenters.includes(caseCenterId)) {
+    if (!caseCenterId) {
+      return `Case ${caseId} not found — data may not be loaded yet`;
+    }
+    if (!userCenters.includes(caseCenterId)) {
       return `Case ${caseId} not in user's permitted centers`;
     }
   }

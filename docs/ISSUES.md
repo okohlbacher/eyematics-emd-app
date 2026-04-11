@@ -33,11 +33,11 @@ The `validateAuth()` function in `server/utils.ts` (used by Vite dev plugins) de
 
 | ID | Severity | Description | Status |
 |----|----------|-------------|--------|
-| H-03 | High | Audit log readable by all users (no role check) | Open |
-| H-06 | High | FHIR proxy has no center filtering | Open |
+| H-03 | High | Audit log readable by all users (no role check) | **Fixed** — auto-scoped by role |
+| H-06 | High | FHIR proxy has no center filtering | **Fixed** — admin-only |
 | H-07 | High | Audit body missing for issue/settings mutations | Open |
-| H-10 | High | Center validation allows unknown case IDs | Open |
-| M-01 | Medium | Optimistic state updates (fire-and-forget) | Open |
+| H-10 | High | Center validation allows unknown case IDs | **Fixed** — strict rejection |
+| M-01 | Medium | Optimistic state updates (fire-and-forget) | Accepted (demonstrator) |
 | M-05 | Medium | bcrypt.compareSync blocks event loop | Open |
 | M-07 | Medium | QualityFlag type missing `id` field on client | Open |
-| M-09 | Medium | No JWT token refresh mechanism | Open |
+| M-09 | Medium | No JWT token refresh mechanism | Accepted (demonstrator) |

@@ -207,10 +207,10 @@ describe('dataApi — center validation for write operations', () => {
     expect(res.status).toBe(201);
   });
 
-  // Test 5: PUT /quality-flags with unknown caseId (not in FHIR cache) — succeeds (allow)
-  it('Test 5: PUT /quality-flags with unknown caseId (not in cache) succeeds', async () => {
+  // Test 5: PUT /quality-flags with unknown caseId (not in FHIR cache) — rejected (H-10)
+  it('Test 5: PUT /quality-flags with unknown caseId (not in cache) is rejected', async () => {
     const app = buildApp();
-    // unknown-case-999 is not in mockCaseIndex
+    // unknown-case-999 is not in mockCaseIndex — strict validation rejects it
     const token = makeToken('forscher1', 'researcher', ['org-uka']);
 
     const res = await request(app)
@@ -227,6 +227,6 @@ describe('dataApi — center validation for write operations', () => {
         ],
       });
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(403);
   });
 });
