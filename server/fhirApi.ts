@@ -16,6 +16,7 @@
 
 import { Router } from 'express';
 import type { Request, Response } from 'express';
+import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
 import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
@@ -237,8 +238,8 @@ async function loadBundlesFromServer(): Promise<FhirBundle[]> {
 }
 
 async function loadFromLocalFiles(): Promise<FhirBundle[]> {
-  const dataDir = path.resolve(process.cwd(), 'public', 'data');
-  const manifestPath = path.join(dataDir, 'manifest.json');
+  const fhirDataDir = path.resolve(process.cwd(), 'public', 'data');
+  const manifestPath = path.join(fhirDataDir, 'manifest.json');
 
   let fileList: string[] = getFallbackCenterFiles();
   try {
@@ -252,7 +253,12 @@ async function loadFromLocalFiles(): Promise<FhirBundle[]> {
 
   const bundles: FhirBundle[] = [];
   for (const filename of fileList) {
-    const filePath = path.resolve(process.cwd(), 'public', 'data', filename);
+    const filePath = path.resolve(fhirDataDir, filename);
+    // F-12: Prevent path traversal via crafted manifest entries
+    if (!filePath.startsWith(fhirDataDir + path.sep) && filePath !== fhirDataDir) {
+      console.warn(`[fhir-api] Skipping path-traversal attempt: ${filename}`);
+      continue;
+    }
     try {
       const raw = fs.readFileSync(filePath, 'utf-8');
       bundles.push(JSON.parse(raw) as FhirBundle);

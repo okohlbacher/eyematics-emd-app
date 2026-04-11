@@ -18,24 +18,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { logAuditEntry } from './auditDb.js';
 
-// ---------------------------------------------------------------------------
-// Type augmentation — matches AuthPayload from server/authMiddleware.ts
-// (authMiddleware attaches this to req.auth after JWT validation)
-// ---------------------------------------------------------------------------
-
-declare module 'express-serve-static-core' {
-  interface Request {
-    auth?: {
-      sub: string;
-      preferred_username: string;
-      role: string;
-      centers: string[];
-      purpose?: string;
-      iat: number;
-      exp: number;
-    };
-  }
-}
+// Type augmentation in server/types.d.ts (F-17: single source of truth)
 
 // ---------------------------------------------------------------------------
 // Body redaction for sensitive auth endpoints

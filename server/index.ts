@@ -22,6 +22,9 @@
  */
 
 import express from 'express';
+import type { Request, Response, NextFunction } from 'express';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { Socket } from 'node:net';
 import path from 'node:path';
 import fs from 'node:fs';
 import yaml from 'js-yaml';
@@ -195,13 +198,13 @@ app.use('/api/fhir', express.json({ limit: '1mb' }), fhirApiRouter);
 // Block unauthenticated access to FHIR data files served via express.static
 // The files live in public/data/ for Vite dev convenience, but must not be
 // served without auth in production. Use /api/fhir/bundles instead.
-app.use('/data', (_req: import('express').Request, res: import('express').Response) => {
+app.use('/data', (_req: Request, res: Response) => {
   res.status(403).json({ error: 'Use /api/fhir/bundles for authenticated FHIR data access' });
 });
 
 // FHIR proxy — admin-only (H-06: prevents center-bypass via direct Blaze queries)
 // Non-admin users must use /api/fhir/bundles which enforces center filtering.
-app.use('/api/fhir-proxy', (req: import('express').Request, res: import('express').Response, next: import('express').NextFunction) => {
+app.use('/api/fhir-proxy', (req: Request, res: Response, next: NextFunction) => {
   if (!req.auth || req.auth.role !== 'admin') {
     res.status(403).json({ error: 'FHIR proxy access restricted to administrators' });
     return;
@@ -211,11 +214,11 @@ app.use('/api/fhir-proxy', (req: import('express').Request, res: import('express
   target: blazeTarget,
   changeOrigin: true,
   on: {
-    error: (err: Error, _req: import('http').IncomingMessage, res: import('http').ServerResponse | import('net').Socket) => {
-      console.error('[fhir-proxy] Error:', (err as Error).message);
+    error: (err: Error, _req: IncomingMessage, res: ServerResponse | Socket) => {
+      console.error('[fhir-proxy] Error:', err.message);
       if (res && 'writeHead' in res) {
-        (res as import('http').ServerResponse).writeHead(502, { 'Content-Type': 'application/json' });
-        (res as import('http').ServerResponse).end(JSON.stringify({ error: 'FHIR proxy error' }));
+        (res as ServerResponse).writeHead(502, { 'Content-Type': 'application/json' });
+        (res as ServerResponse).end(JSON.stringify({ error: 'FHIR proxy error' }));
       }
     },
   },
@@ -226,7 +229,7 @@ app.use(express.static(path.resolve(process.cwd(), 'dist')));
 
 // SPA fallback — all unmatched GET routes return index.html
 // Express 5 uses path-to-regexp v8+ which requires named parameters
-app.get('/{*path}', (_req: import('express').Request, res: import('express').Response) => {
+app.get('/{*path}', (_req: Request, res: Response) => {
   res.sendFile(path.resolve(process.cwd(), 'dist', 'index.html'));
 });
 

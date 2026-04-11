@@ -29,6 +29,7 @@ export interface AuthPayload {
   exp: number;
 }
 
+// F-17: Single declaration — all server files import authMiddleware transitively
 declare global {
   namespace Express {
     interface Request {

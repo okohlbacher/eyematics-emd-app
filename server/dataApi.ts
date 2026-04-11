@@ -105,8 +105,8 @@ dataApiRouter.put('/quality-flags', (req: Request, res: Response): void => {
       case_id: caseId,
       parameter,
       error_type: errorType,
-      // Server-derived fields (review concern #5): ignore client values
-      flagged_at: typeof f['flaggedAt'] === 'string' && f['flaggedAt'] ? f['flaggedAt'] : now,
+      // Server-derived fields (F-13): ALWAYS use server time and JWT username
+      flagged_at: now,
       flagged_by: username, // ALWAYS from JWT, never from client
       status: ['open', 'acknowledged', 'resolved'].includes(status) ? status : 'open',
       updated_at: now,

@@ -14,7 +14,7 @@
 import type { Plugin } from 'vite';
 import fs from 'node:fs';
 import path from 'node:path';
-import { validateAuth, sendError } from './utils';
+import { validateAuth, sendError } from './utils.js';
 import { getValidCenterIds, getFallbackCenterFiles } from './constants.js';
 
 export function fhirApiPlugin(): Plugin {

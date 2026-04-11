@@ -7,17 +7,7 @@ import { getDateLocale } from '../utils/dateFormat';
 import { UserPlus, Trash2, Shield, ShieldCheck, Search, ArrowUpDown, Filter, Microscope, Stethoscope, Database, Building2, CheckCircle } from 'lucide-react';
 import type { UserRole } from '../context/AuthContext';
 
-const CENTER_OPTIONS: { id: string; label: string }[] = [
-  { id: 'org-uka', label: 'UKA' },
-  { id: 'org-ukb', label: 'UKB' },
-  { id: 'org-lmu', label: 'LMU' },
-  { id: 'org-ukt', label: 'UKT' },
-  { id: 'org-ukm', label: 'UKM' },
-];
-
-const CENTER_LABELS: Record<string, string> = Object.fromEntries(
-  CENTER_OPTIONS.map((c) => [c.id, c.label]),
-);
+interface CenterOption { id: string; label: string }
 
 interface ServerUser {
   username: string;
@@ -64,6 +54,8 @@ export default function AdminPage() {
   const dateFmt = getDateLocale(locale);
 
   const [users, setUsers] = useState<ServerUser[]>([]);
+  const [centerOptions, setCenterOptions] = useState<CenterOption[]>([]);
+  const [centerLabels, setCenterLabels] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   const [showForm, setShowForm] = useState(false);
@@ -101,13 +93,26 @@ export default function AdminPage() {
     }
   }, []);
 
+  // F-20: Load center options from server instead of hardcoding
+  useEffect(() => {
+    authFetch('/api/fhir/centers')
+      .then((r) => r.ok ? r.json() as Promise<{ centers: Array<{ id: string; shorthand: string }> }> : null)
+      .then((data) => {
+        if (data?.centers) {
+          setCenterOptions(data.centers.map((c) => ({ id: c.id, label: c.shorthand })));
+          setCenterLabels(Object.fromEntries(data.centers.map((c) => [c.id, c.shorthand])));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     void loadUsers();
   }, [loadUsers]);
 
   const getCentersDisplay = (u: ServerUser): string => {
     if (u.centers && u.centers.length > 0) {
-      return u.centers.map((c) => CENTER_LABELS[c] ?? c).join(', ');
+      return u.centers.map((c) => centerLabels[c] ?? c).join(', ');
     }
     return '—';
   };
@@ -357,7 +362,7 @@ export default function AdminPage() {
                 {t('adminAssignCenters')}
               </label>
               <div className="flex flex-wrap gap-2">
-                {CENTER_OPTIONS.map((c) => (
+                {centerOptions.map((c) => (
                   <button
                     key={c.id}
                     type="button"
@@ -484,7 +489,7 @@ export default function AdminPage() {
                         <div className="flex flex-wrap gap-1">
                           {u.centers.map((c) => (
                             <span key={c} className="inline-block px-1.5 py-0.5 bg-gray-100 rounded text-xs font-medium">
-                              {CENTER_LABELS[c] ?? c}
+                              {centerLabels[c] ?? c}
                             </span>
                           ))}
                         </div>

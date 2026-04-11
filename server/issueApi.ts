@@ -16,8 +16,8 @@ import type { Plugin } from 'vite';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { readBody, validateAuth, sendError } from './utils';
-import './authMiddleware.js';
+import { readBody, validateAuth, sendError } from './utils.js';
+import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
 
 const FEEDBACK_DIR = path.resolve(process.cwd(), 'feedback');
 
@@ -80,16 +80,8 @@ function createIssue(issue: Record<string, unknown>): { id: string; filename: st
 // Express Router (production)
 // ---------------------------------------------------------------------------
 
+// F-15: Body parsing handled by express.json() mounted in index.ts
 export const issueApiRouter = Router();
-
-issueApiRouter.use(Router().use('/', (req, _res, next) => {
-  // express.json() for this router
-  if (req.headers['content-type']?.includes('application/json')) {
-    import('express').then(({ json }) => json({ limit: '10mb' })(req, _res, next));
-  } else {
-    next();
-  }
-}));
 
 issueApiRouter.post('/', (req: Request, res: Response): void => {
   const validationError = validateIssueBody(req.body);
