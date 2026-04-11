@@ -66,20 +66,18 @@ It is unclear how the following aspects of center management work end-to-end:
 
 ## Test Coverage Gaps
 
-Server modules with no or insufficient test coverage. Priority ordered by security impact.
-
-| ID | Severity | Module | Gap | Priority |
-|----|----------|--------|-----|----------|
-| T-01 | High | `settingsApi.ts` | Admin-only PUT guard, non-admin field stripping (otpCode, maxLoginAttempts) — security boundary | 1 |
-| T-02 | High | `auditMiddleware.ts` | `redactBody` not tested directly — password/OTP leak risk on regression | 2 |
-| T-03 | High | `rateLimiting.ts` | Lockout behavior, backoff cap, cleanup — no tests | 3 |
-| T-04 | Medium | `dataDb.ts` | CRUD for quality flags, saved searches, exclusions, reviews — no tests | 4 |
-| T-05 | Medium | `issueApi.ts` | Issue creation, listing, export — no tests | 5 |
-| T-06 | Medium | `auditApi.ts` | API endpoint behavior (admin-only export, auto-scoping) — only DB layer tested | 6 |
-| T-07 | Medium | `authMiddleware.ts` | Local HS256 path untested (only Keycloak RS256 tested) | 7 |
-| T-08 | Low | `fhirApiPlugin.ts` | Vite dev plugin — no tests (dev-only) | 8 |
-| T-09 | Low | `utils.ts` | `readBody`, `validateAuth` — dev-only helpers, no tests | 9 |
-| T-10 | Low | `src/components/`, `src/pages/` | Zero React component tests — no jsdom/happy-dom configured | 10 |
+| ID | Severity | Module | Gap | Status |
+|----|----------|--------|-----|--------|
+| T-01 | High | `settingsApi.ts` | Admin-only PUT guard, non-admin field stripping | **Fixed** — `settingsApi.test.ts` (8 tests) |
+| T-02 | High | `auditMiddleware.ts` | Body redaction for passwords/OTP | **Fixed** — `auditMiddleware.test.ts` (9 tests) |
+| T-03 | High | `rateLimiting.ts` | Lockout, backoff cap, cleanup | **Fixed** — `rateLimiting.test.ts` (11 tests) |
+| T-04 | Medium | `dataDb.ts` | CRUD for flags, searches, exclusions, reviews | **Fixed** — `dataDb.test.ts` (16 tests) |
+| T-05 | Medium | `issueApi.ts` | Issue creation, listing, export | **Fixed** — `issueApi.test.ts` (6 tests) |
+| T-06 | Medium | `auditApi.ts` | Admin-only export, auto-scoping | **Fixed** — `auditApi.test.ts` (7 tests) |
+| T-07 | Medium | `authMiddleware.ts` | Local HS256 verification | **Fixed** — `authMiddlewareLocal.test.ts` (8 tests) |
+| T-08 | Low | `fhirApiPlugin.ts` | Vite dev plugin | Deferred (dev-only) |
+| T-09 | Low | `utils.ts` | `readBody`, `validateAuth` | Deferred (dev-only) |
+| T-10 | Low | `src/components/`, `src/pages/` | React component tests | Deferred (needs jsdom setup) |
 
 ## Accepted (Demonstrator)
 
