@@ -1,6 +1,6 @@
 # Bill of Materials (BOM) — EyeMatics Clinical Demonstrator
 
-Generated: 2026-04-11 (v1.1)
+Generated: 2026-04-11 (v1.1, updated after security review)
 
 ## Direct Dependencies (Production)
 
@@ -10,6 +10,7 @@ Generated: 2026-04-11 (v1.1)
 | `bcryptjs` | 3.0.3 | MIT | Password hashing (bcrypt, pure JS) |
 | `better-sqlite3` | 12.8.0 | MIT | SQLite3 bindings (audit + data persistence) |
 | `express` | 5.2.1 | MIT | HTTP server framework |
+| `helmet` | 8.1.0 | MIT | HTTP security headers (CSP, HSTS, X-Frame-Options) |
 | `html-to-image` | 1.11.13 | MIT | DOM-to-image screenshot capture |
 | `http-proxy-middleware` | 3.0.5 | MIT | FHIR proxy middleware |
 | `js-yaml` | 4.1.1 | MIT | YAML parser/serializer (settings.yaml) |
@@ -52,9 +53,9 @@ Generated: 2026-04-11 (v1.1)
 
 | Category | Count |
 |----------|-------|
-| Direct (production) | 15 |
+| Direct (production) | 16 |
 | Direct (development) | 21 |
-| Total direct | 36 |
+| Total direct | 37 |
 
 ## Vulnerability Scan
 
@@ -80,16 +81,19 @@ All licenses are permissive and compatible with MIT-licensed projects. No copyle
 
 | Package | Role | Notes |
 |---------|------|-------|
-| `bcryptjs` | Password hashing | 12 rounds, pure JS (no native addon) |
+| `bcryptjs` | Password hashing | 12 rounds, async compare/hash, pure JS |
 | `jsonwebtoken` | JWT sign/verify | HS256 for local auth |
 | `jwks-rsa` | JWKS validation | RS256 for Keycloak auth |
 | `better-sqlite3` | Audit + data storage | WAL mode, native addon |
 | `express` | HTTP server | v5 with path-to-regexp v8 |
+| `helmet` | Security headers | CSP, HSTS, X-Frame-Options, X-Content-Type-Options |
 
 ## Test Coverage
 
 ```
 $ npx vitest run
-Test Files  8 passed (8)
-     Tests  68 passed (68)
+Test Files  9 passed (9)
+     Tests  106 passed (106)
 ```
+
+Deployment smoke tests: 16/16 passed (auth, API, security, center filtering, audit scoping, helmet headers).
