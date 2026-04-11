@@ -1,6 +1,6 @@
 # Benutzerhandbuch — EyeMatics Klinischer Demonstrator (EMD)
 
-**Version 1.0 — Stand: 09.04.2026**
+**Version 1.1 — Stand: 11.04.2026**
 
 ---
 
@@ -29,9 +29,10 @@ Der EyeMatics Klinische Demonstrator (EMD) ist ein webbasiertes Dashboard zur An
 5. Sie gelangen zur Startseite (Landing Page).
 
 **Fehlgeschlagene Anmeldung:**
-- Bei falschem Passwort oder unbekanntem Benutzernamen wird eine Fehlermeldung angezeigt.
+- Bei falschen Zugangsdaten wird eine generische Fehlermeldung angezeigt (kein Unterschied zwischen falschem Benutzernamen und falschem Passwort — verhindert Benutzernamen-Enumeration).
 - Bei falschem OTP-Code werden Sie zum Passwort-Schritt zurückgeleitet.
-- Nach 5 aufeinanderfolgenden Fehlversuchen wird die Anmeldung vorübergehend gesperrt.
+- Nach 5 aufeinanderfolgenden Fehlversuchen wird die Anmeldung vorübergehend gesperrt (exponentielles Backoff).
+- Alle Anmeldedaten werden **serverseitig** geprüft (bcrypt + JWT). Passwörter werden nie an den Browser übermittelt.
 
 ### 2.2 Abmeldung
 
@@ -257,8 +258,8 @@ Navigieren Sie über die Seitenleiste zu **Einstellungen**. Alle Einstellungen w
 
 ### 9.3 Datenquelle
 
-- **Lokale Dateien**: JSON-Dateien aus `public/data/` (Standard)
-- **FHIR Server**: Blaze FHIR Server via REST API
+- **Lokale Dateien**: JSON-Dateien, serverseitig geladen und center-gefiltert (Standard)
+- **FHIR Server**: Blaze FHIR Server via Server-Proxy (`/api/fhir-proxy`)
   - Server-URL eingeben (z.B. `http://localhost:8080/fhir`)
   - Verbindung testen mit dem **Test**-Button
 
@@ -295,22 +296,23 @@ Navigieren Sie über die Seitenleiste zu **Audit-Log** (nur für Administratoren
 
 ### 11.1 Protokollierte Aktionen
 
-Das Audit-Log protokolliert alle Benutzeraktionen:
-- Seitenaufrufe (Landing Page, Analyse, Datenqualität, etc.)
-- Einzelfallansichten (mit Pseudonym)
-- Einstellungsänderungen (2FA, Datenquelle)
-- An-/Abmeldungen
+Das Audit-Log protokolliert **automatisch alle API-Anfragen** serverseitig in einer SQLite-Datenbank (immutable — kein Löschen oder Ändern möglich):
+- HTTP-Methode (GET, POST, PUT, DELETE)
+- API-Pfad
+- Benutzername (aus JWT)
+- HTTP-Statuscode
+- Zeitstempel
 
 ### 11.2 Filterung
 
 Filtern Sie die Einträge nach:
-- Zeitraum
-- Benutzer
-- Aktionstyp
+- Zeitraum (Heute, 7 Tage, 30 Tage, Gesamt)
+- HTTP-Methode (GET, POST, PUT, DELETE)
 
-### 11.3 CSV-Export
+### 11.3 Export
 
-Klicken Sie auf **CSV exportieren**, um das Audit-Log als CSV-Datei herunterzuladen.
+- **CSV exportieren**: Gefilterte Einträge als CSV-Datei herunterladen
+- **JSON exportieren** (nur Administratoren): Vollständiger Audit-Export als JSON
 
 ---
 
@@ -324,10 +326,10 @@ Navigieren Sie über die Seitenleiste zu **Administration** (nur für Administra
 2. Füllen Sie die Felder aus:
    - Benutzername (eindeutig)
    - Vorname, Nachname
-   - Passwort
    - Rolle (IT-Administrator, Forscher/in, Epidemiolog/in, Kliniker/in, DIZ Data Manager, Klinikleitung)
    - Zugeordnete Zentren (Mehrfachauswahl)
 3. Klicken Sie auf **Speichern**.
+4. Ein **sicheres Passwort** wird vom Server automatisch generiert und einmalig angezeigt. Notieren Sie dieses Passwort — es kann nicht erneut abgerufen werden.
 
 ### 12.2 Benutzer löschen
 
@@ -356,11 +358,11 @@ Der EMD unterstützt Deutsch und Englisch. Die Sprache kann über das Sprachmen�
 
 | Problem | Lösung |
 |---------|--------|
-| Login schlägt fehl | Prüfen Sie Benutzername und Passwort. OTP-Code ist `123456` (Demomodus). |
-| Keine Daten sichtbar | Prüfen Sie die Datenquelle in den Einstellungen. Bei Blaze: Ist der Server erreichbar? |
+| Login schlägt fehl | Prüfen Sie Benutzername und Passwort. Standard-Passwort für neue Benutzer wurde bei Erstellung angezeigt. OTP-Code: siehe Administrator. |
+| Keine Daten sichtbar | Prüfen Sie, ob Ihnen Zentren zugeordnet sind (nur zugewiesene Zentren sind sichtbar). Bei Blaze: Ist der Server erreichbar? |
 | CSV-Export funktioniert nicht | Warten Sie kurz nach dem Klick — der Download startet automatisch. |
 | Screenshot fehlt im Issue | Der Screenshot wird vor dem Öffnen des Dialogs erfasst. Popups oder Overlays können die Erfassung stören. |
-| Einstellungen gehen verloren | Einstellungen werden in `settings.yaml` auf dem Server gespeichert. Prüfen Sie die Schreibrechte. |
+| Einstellungen gehen verloren | Einstellungen werden in `config/settings.yaml` auf dem Server gespeichert. Prüfen Sie die Schreibrechte. |
 
 ---
 
@@ -390,4 +392,4 @@ Der EMD unterstützt Deutsch und Englisch. Die Sprache kann über das Sprachmen�
 
 ---
 
-*Dieses Benutzerhandbuch bezieht sich auf den EyeMatics Klinischen Demonstrator v1.0.0. Für technische Informationen siehe README.md und Konfiguration.md.*
+*Dieses Benutzerhandbuch bezieht sich auf den EyeMatics Klinischen Demonstrator v1.1. Für technische Informationen siehe README.md und Konfiguration.md.*

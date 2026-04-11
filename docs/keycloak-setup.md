@@ -102,7 +102,7 @@ Valid center codes: `org-uka`, `org-ukb`, `org-lmu`, `org-ukt`, `org-ukm`
 
 ## 6. Configure EMD settings.yaml
 
-Update the EMD application's `public/settings.yaml`:
+Update the EMD application's `config/settings.yaml`:
 
 ```yaml
 auth:
