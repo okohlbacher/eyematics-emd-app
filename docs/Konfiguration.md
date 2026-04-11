@@ -25,8 +25,15 @@ Alle Änderungen, die über die Settings-Seite im UI vorgenommen werden, werden 
 ```yaml
 # ──────────────────────────────────────────────────────────────
 # EyeMatics Clinical Demonstrator — Application Settings
-# Flache Struktur — alle Felder auf Root-Ebene
 # ──────────────────────────────────────────────────────────────
+
+server:
+  port: 3000                 # HTTP-Port des Servers
+  host: '0.0.0.0'           # Bind-Adresse des Servers
+  dataDir: './data'          # Verzeichnis fuer Datendateien
+
+audit:
+  retentionDays: 90          # Aufbewahrungsdauer fuer Audit-Log in Tagen
 
 provider: local              # 'local' oder 'keycloak'
 twoFactorEnabled: false
@@ -48,6 +55,10 @@ dataSource:
 
 | Parameter | Typ | Default | Beschreibung |
 |-----------|-----|---------|--------------|
+| `server.port` | `number` | `3000` | HTTP-Port des Servers |
+| `server.host` | `string` | `"0.0.0.0"` | Bind-Adresse des Servers |
+| `server.dataDir` | `string` | `"./data"` | Verzeichnis fuer Datendateien (users.json, audit.db, etc.) |
+| `audit.retentionDays` | `number` | `90` | Aufbewahrungsdauer fuer Audit-Log-Eintraege in Tagen |
 | `provider` | `"local"` \| `"keycloak"` | `"local"` | Authentifizierungsmethode. `local`: bcrypt + JWT (HS256). `keycloak`: RS256 via JWKS. |
 | `twoFactorEnabled` | `boolean` | `false` | Aktiviert/deaktiviert den OTP-Schritt beim Login. Standardmäßig deaktiviert. |
 | `maxLoginAttempts` | `number` | `5` | Max. Fehlversuche vor Kontosperrung (exponentielles Backoff). |

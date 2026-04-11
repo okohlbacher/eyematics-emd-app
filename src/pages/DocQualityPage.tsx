@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
-import { usePageAudit } from '../hooks/usePageAudit';
+
 import { downloadCsv, datedFilename } from '../utils/download';
 import {
   getCenterShorthand,
@@ -283,7 +283,6 @@ export default function DocQualityPage() {
   const [selectedCenter, setSelectedCenter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  usePageAudit('view_doc_quality', 'audit_detail_view_doc_quality');
 
   // Group cases by center
   const casesByCenter = useMemo(() => {

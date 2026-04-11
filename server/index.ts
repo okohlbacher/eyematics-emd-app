@@ -15,7 +15,7 @@
  *      e. issueApiHandler — /api/issues (raw Node handler, auth guaranteed)
  *      f. settingsApiHandler — /api/settings (raw Node handler, auth guaranteed)
  *      g. auditApiRouter — /api/audit, /api/audit/export
- *      h. FHIR proxy — /fhir
+ *      h. FHIR proxy — /api/fhir-proxy
  *      i. Static files — dist/
  *      j. SPA fallback — all unmatched GET routes
  *   7. Listen on configured host:port

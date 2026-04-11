@@ -61,7 +61,12 @@ const AuthContext = createContext<AuthContextType | null>(null);
 const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 const WARNING_BEFORE = 60 * 1000; // warn 1 minute before
 
-/** Decode a JWT payload without verification (verification is server-side). */
+/**
+ * Decode a JWT payload without cryptographic verification.
+ * This is cosmetic only — used to display the current user's name and role
+ * in the UI. All authorization decisions are enforced server-side via the
+ * authMiddleware, which validates the JWT signature on every /api/* request.
+ */
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
     const parts = token.split('.');

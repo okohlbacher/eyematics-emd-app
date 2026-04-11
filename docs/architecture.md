@@ -101,8 +101,8 @@ Der FHIR-Proxy (`/api/fhir-proxy`) ist auf Administratoren beschraenkt, um eine 
 | `/api/auth/verify` | POST | — | OTP pruefen, JWT ausstellen |
 | `/api/auth/config` | GET | — | 2FA-Status, Provider |
 | `/api/auth/users` | GET/POST | Admin | Benutzerliste / Benutzer anlegen |
-| `/api/auth/users/:name` | DELETE | Admin | Benutzer loeschen |
-| `/api/auth/users/:name/password` | PUT | Admin | Passwort aendern |
+| `/api/auth/users/:username` | DELETE | Admin | Benutzer loeschen |
+| `/api/auth/users/:username/password` | PUT | Admin | Passwort aendern |
 | `/api/auth/users/me` | GET | JWT | Eigene Benutzerinfo |
 | `/api/fhir/bundles` | GET | JWT | FHIR-Bundles (zentrenfiltriert) |
 | `/api/fhir/centers` | GET | JWT | Zentrenliste (ID, Kuerzel, Name) |

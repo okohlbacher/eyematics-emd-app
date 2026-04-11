@@ -152,12 +152,19 @@ dataApiRouter.put('/quality-flags', (req: Request, res: Response): void => {
 dataApiRouter.get('/saved-searches', (req: Request, res: Response): void => {
   const username = req.auth!.preferred_username;
   const rows = getSavedSearches(username);
-  const savedSearches = rows.map((r) => ({
-    id: r.id,
-    name: r.name,
-    createdAt: r.created_at,
-    filters: JSON.parse(r.filters) as unknown,
-  }));
+  const savedSearches: Array<{ id: string; name: string; createdAt: string; filters: unknown }> = [];
+  for (const r of rows) {
+    try {
+      savedSearches.push({
+        id: r.id,
+        name: r.name,
+        createdAt: r.created_at,
+        filters: JSON.parse(r.filters) as unknown,
+      });
+    } catch {
+      console.warn(`[dataApi] Skipping saved search "${r.id}": corrupt filters JSON`);
+    }
+  }
   res.json({ savedSearches });
 });
 

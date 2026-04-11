@@ -16,6 +16,7 @@
  */
 
 import type { Request, Response, NextFunction } from 'express';
+import crypto from 'node:crypto';
 import { logAuditEntry } from './auditDb.js';
 
 // Type augmentation in server/types.d.ts (F-17: single source of truth)

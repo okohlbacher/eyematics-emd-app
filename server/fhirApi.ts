@@ -67,7 +67,7 @@ export function invalidateFhirCache(): void {
 /**
  * Returns true if the user should bypass center filtering.
  * Admin users always bypass (D-12).
- * Non-admin users with all 5 org-* centers also bypass (D-13, D-14).
+ * Non-admin users with all configured centers also bypass (D-13, D-14).
  */
 export function isBypass(role: string, centers: string[]): boolean {
   if (role === 'admin') return true;

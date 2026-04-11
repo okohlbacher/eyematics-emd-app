@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -46,7 +46,7 @@ export default function CohortBuilderPage() {
   const [visusMinText, setVisusMinText] = useState('');
   const [visusMaxText, setVisusMaxText] = useState('');
 
-  const filteredCases = applyFilters(activeCases, filters);
+  const filteredCases = useMemo(() => applyFilters(activeCases, filters), [activeCases, filters]);
 
   const handleSave = () => {
     if (!saveName.trim()) return;

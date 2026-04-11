@@ -19,6 +19,7 @@ import {
   extractCenters,
   extractPatientCases,
   loadCenterShorthands,
+  invalidateBundleCache,
 } from '../services/fhirLoader';
 import { authFetch } from '../services/authHeaders';
 
@@ -95,6 +96,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const fetchData = useCallback(() => {
     setLoading(true);
     setError(null);
+    invalidateBundleCache();
 
     Promise.all([
       loadCenterShorthands().catch(() => {}), // M-03: must complete before extractCenters

@@ -107,8 +107,10 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    void loadUsers();
-  }, [loadUsers]);
+    if (user?.role === 'admin') {
+      void loadUsers();
+    }
+  }, [loadUsers, user?.role]);
 
   const getCentersDisplay = (u: ServerUser): string => {
     if (u.centers && u.centers.length > 0) {

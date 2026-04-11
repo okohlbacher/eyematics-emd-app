@@ -116,7 +116,10 @@ export default function SettingsPage() {
     setBlazeUrl(url);
     setConnectionStatus('idle');
     setConnectionDetail('');
-    updateSettings({ dataSource: { type: 'blaze', blazeUrl: url } });
+  };
+
+  const handleBlazeUrlCommit = () => {
+    updateSettings({ dataSource: { type: 'blaze', blazeUrl } });
     invalidateBundleCache();
     reloadData();
   };
@@ -307,6 +310,7 @@ export default function SettingsPage() {
                 type="url"
                 value={blazeUrl}
                 onChange={(e) => handleBlazeUrlChange(e.target.value)}
+                onBlur={handleBlazeUrlCommit}
                 placeholder="http://localhost:8080/fhir"
                 className="w-full max-w-md border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
               />

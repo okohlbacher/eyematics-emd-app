@@ -73,22 +73,24 @@ export function getSettings(): AppSettings {
   return { ...DEFAULTS };
 }
 
-/**
- * Update a subset of settings. Persists to server-side settings.yaml.
- */
-export function updateSettings(patch: DeepPartial<AppSettings>): AppSettings {
-  _cached = merge(_cached ?? DEFAULTS, patch);
-
-  // Persist to server asynchronously (requires admin authorization)
-  const yamlStr = yaml.dump(_cached, { indent: 2, lineWidth: 120, noRefs: true });
+/** F-46: Shared persist helper */
+function persistSettings(settings: AppSettings): void {
+  const yamlStr = yaml.dump(settings, { indent: 2, lineWidth: 120, noRefs: true });
   authFetch('/api/settings', {
     method: 'PUT',
     headers: { 'Content-Type': 'text/yaml' },
     body: yamlStr,
   }).catch((err) => {
-    console.error('[settingsService] Failed to persist settings to server:', err);
+    console.error('[settingsService] Failed to persist settings:', err);
   });
+}
 
+/**
+ * Update a subset of settings. Persists to server-side settings.yaml.
+ */
+export function updateSettings(patch: DeepPartial<AppSettings>): AppSettings {
+  _cached = merge(_cached ?? DEFAULTS, patch);
+  persistSettings(_cached);
   return _cached;
 }
 
@@ -97,17 +99,7 @@ export function updateSettings(patch: DeepPartial<AppSettings>): AppSettings {
  */
 export function resetSettings(): AppSettings {
   _cached = { ...DEFAULTS };
-
-  // Persist defaults to server (requires admin authorization)
-  const yamlStr = yaml.dump(_cached, { indent: 2, lineWidth: 120, noRefs: true });
-  authFetch('/api/settings', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'text/yaml' },
-    body: yamlStr,
-  }).catch((err) => {
-    console.error('[settingsService] Failed to reset settings on server:', err);
-  });
-
+  persistSettings(_cached);
   return _cached;
 }
 

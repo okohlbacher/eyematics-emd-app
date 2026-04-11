@@ -296,7 +296,11 @@ authApiRouter.post('/users', async (req: Request, res: Response): Promise<void> 
     return;
   }
 
-  // Validate role against allowlist
+  // Validate role against allowlist — reject explicitly invalid values (F-40)
+  if (role !== undefined && (typeof role !== 'string' || !VALID_ROLES.has(role))) {
+    res.status(400).json({ error: `Invalid role. Must be one of: ${[...VALID_ROLES].join(', ')}` });
+    return;
+  }
   const userRole = typeof role === 'string' && VALID_ROLES.has(role) ? role : 'researcher';
 
   // Validate centers against allowlist (review concern #3)
