@@ -75,9 +75,9 @@ It is unclear how the following aspects of center management work end-to-end:
 | T-05 | Medium | `issueApi.ts` | Issue creation, listing, export | **Fixed** — `issueApi.test.ts` (6 tests) |
 | T-06 | Medium | `auditApi.ts` | Admin-only export, auto-scoping | **Fixed** — `auditApi.test.ts` (7 tests) |
 | T-07 | Medium | `authMiddleware.ts` | Local HS256 verification | **Fixed** — `authMiddlewareLocal.test.ts` (8 tests) |
-| T-08 | Low | `fhirApiPlugin.ts` | Vite dev plugin | Deferred (dev-only) |
-| T-09 | Low | `utils.ts` | `readBody`, `validateAuth` | Deferred (dev-only) |
-| T-10 | Low | `src/components/`, `src/pages/` | React component tests | Deferred (needs jsdom setup) |
+| T-08 | Low | `fhirApiPlugin.ts` | Vite dev plugin routes + auth | **Fixed** — `fhirApiPlugin.test.ts` (4 tests) |
+| T-09 | Low | `utils.ts` | `readBody`, `validateAuth`, `sendError` | **Fixed** — `utils.test.ts` (17 tests) |
+| T-10 | Low | `src/components/` | React component rendering | **Fixed** — `components.test.tsx` (7 tests, jsdom) |
 
 ## Accepted (Demonstrator)
 
