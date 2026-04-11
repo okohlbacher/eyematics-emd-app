@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 
-import { useAuth } from '../context/AuthContext';
+import { QUALITY_ROLES, useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import FeedbackButton from './FeedbackButton';
 
@@ -27,10 +27,12 @@ export default function Layout() {
     { to: '/cohort', label: t('navCohort'), icon: Users },
     { to: '/analysis', label: t('navAnalysis'), icon: BarChart3 },
     { to: '/quality', label: t('navQuality'), icon: ClipboardCheck },
-    { to: '/doc-quality', label: t('navDocQuality'), icon: Activity },
-    { to: '/audit', label: t('navAudit'), icon: FileText },
+    ...(user?.role && QUALITY_ROLES.includes(user.role)
+      ? [{ to: '/doc-quality', label: t('navDocQuality'), icon: Activity }]
+      : []),
     ...(user?.role === 'admin'
       ? [
+          { to: '/audit', label: t('navAudit'), icon: FileText },
           { to: '/admin', label: t('navAdmin'), icon: Shield },
           { to: '/settings', label: t('navSettings'), icon: Settings },
         ]

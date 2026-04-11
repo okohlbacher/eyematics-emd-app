@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { authFetch } from '../services/authHeaders';
 import { getDateLocale } from '../utils/dateFormat';
-import { datedFilename,downloadCsv } from '../utils/download';
+import { datedFilename, downloadBlob, downloadCsv } from '../utils/download';
 
 interface ServerAuditEntry {
   id: number;
@@ -28,34 +28,38 @@ type TimeRange = 'today' | '7d' | '30d' | 'all';
 type TranslationFn = (key: string, ...args: string[]) => string;
 
 function describeAction(method: string, path: string, t: TranslationFn): string {
+  // Auth actions
   if (method === 'POST' && path === '/api/auth/login') return t('audit_action_login');
-  if (method === 'POST' && path === '/api/auth/logout') return t('audit_action_logout');
+  if (method === 'POST' && path === '/api/auth/verify') return t('audit_action_login');
   if (method === 'POST' && path === '/api/auth/users') return t('audit_action_create_user');
   if (method === 'DELETE' && path.startsWith('/api/auth/users/')) return t('audit_action_delete_user');
+  // Settings
   if (method === 'PUT' && path === '/api/settings') return t('audit_action_update_settings');
   if (method === 'GET' && path === '/api/settings') return t('audit_action_view_settings');
-  if (method === 'POST' && path === '/api/quality/flags') return t('audit_action_flag_error');
-  if (method === 'PUT' && path.startsWith('/api/quality/flags/')) return t('audit_action_update_flag');
-  if (method === 'POST' && path.startsWith('/api/quality/exclude/')) return t('audit_action_exclude_case');
-  if (method === 'DELETE' && path.startsWith('/api/quality/exclude/')) return t('audit_action_include_case');
-  if (method === 'POST' && path.startsWith('/api/quality/reviewed/')) return t('audit_action_save_search');
-  if (method === 'POST' && path === '/api/cohort/searches') return t('audit_action_save_search');
-  if (method === 'DELETE' && path.startsWith('/api/cohort/searches/')) return t('audit_action_delete_search');
-  if (method === 'GET' && path.startsWith('/api/fhir/')) return t('audit_action_data_access');
+  // Quality flags (actual routes: /api/data/quality-flags)
+  if (method === 'PUT' && path === '/api/data/quality-flags') return t('audit_action_update_flag');
+  // Saved searches (actual routes: /api/data/saved-searches)
+  if (method === 'POST' && path === '/api/data/saved-searches') return t('audit_action_save_search');
+  if (method === 'DELETE' && path.startsWith('/api/data/saved-searches/')) return t('audit_action_delete_search');
+  // Excluded cases (actual routes: /api/data/excluded-cases)
+  if (method === 'PUT' && path === '/api/data/excluded-cases') return t('audit_action_exclude_case');
+  // Reviewed cases (actual routes: /api/data/reviewed-cases)
+  if (method === 'PUT' && path === '/api/data/reviewed-cases') return t('audit_action_update_flag');
+  // Issue reporting
+  if (method === 'POST' && path === '/api/issues') return t('audit_action_flag_error');
+  // Data access
+  if (method === 'GET' && path === '/api/fhir/bundles') return t('audit_action_data_access');
+  // Audit log
   if (method === 'GET' && path.startsWith('/api/audit')) return t('audit_action_view_audit');
   return t('audit_action_unknown');
 }
 
 function describeDetail(method: string, path: string, user: string, t: TranslationFn): string {
   if (method === 'POST' && path === '/api/auth/login') return t('audit_detail_login', user);
-  if (method === 'POST' && path === '/api/auth/logout') return t('audit_detail_logout');
+  if (method === 'POST' && path === '/api/auth/verify') return t('audit_detail_login', user);
   if (method === 'DELETE' && path.startsWith('/api/auth/users/')) {
     const username = path.split('/').pop() ?? '';
     return t('audit_detail_delete_user', decodeURIComponent(username));
-  }
-  if (method === 'GET' && path.startsWith('/api/fhir/cases/')) {
-    const caseId = path.replace('/api/fhir/cases/', '').split('/')[0];
-    return t('audit_detail_view_case', caseId);
   }
   return '';
 }
@@ -63,13 +67,13 @@ function describeDetail(method: string, path: string, user: string, t: Translati
 /** Filter out noise — only show entries that represent meaningful user actions. */
 function isRelevantEntry(entry: ServerAuditEntry): boolean {
   const { method, path } = entry;
-  // Always show mutations
+  // Always show mutations (POST, PUT, DELETE)
   if (method !== 'GET') return true;
   // Show specific meaningful GETs
   if (path === '/api/settings') return true;
   if (path.startsWith('/api/audit')) return true;
-  if (path.startsWith('/api/fhir/cases/')) return true;
-  // Filter out bulk data loads, auth config checks, and other noise
+  if (path === '/api/fhir/bundles') return true;
+  // Filter out auth config checks, user/me lookups, center lists, and other noise
   return false;
 }
 
@@ -168,13 +172,7 @@ export default function AuditPage() {
     const resp = await authFetch('/api/audit/export');
     if (!resp.ok) return;
     const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `audit-export-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+    downloadBlob(blob, datedFilename('audit-export', 'json'));
   };
 
   return (

@@ -9,13 +9,16 @@
 export interface LockState {
   count: number;
   lockedUntil: number;
+  lastActivity: number;
 }
+
+const MAX_LOCKOUT_MS = 3_600_000; // 1 hour cap
 
 export function createRateLimiter(maxLoginAttempts: number) {
   const loginAttempts = new Map<string, LockState>();
 
   function getLockState(username: string): LockState {
-    return loginAttempts.get(username) ?? { count: 0, lockedUntil: 0 };
+    return loginAttempts.get(username) ?? { count: 0, lockedUntil: 0, lastActivity: 0 };
   }
 
   function isLocked(state: LockState): boolean {
@@ -26,9 +29,9 @@ export function createRateLimiter(maxLoginAttempts: number) {
     const state = getLockState(username);
     const newCount = state.count + 1;
     const lockedUntil = newCount >= maxLoginAttempts
-      ? Date.now() + Math.pow(2, newCount) * 1000
+      ? Date.now() + Math.min(Math.pow(2, newCount) * 1000, MAX_LOCKOUT_MS)
       : 0;
-    const newState: LockState = { count: newCount, lockedUntil };
+    const newState: LockState = { count: newCount, lockedUntil, lastActivity: Date.now() };
     loginAttempts.set(username, newState);
     return newState;
   }
@@ -43,7 +46,7 @@ export function createRateLimiter(maxLoginAttempts: number) {
   setInterval(() => {
     const cutoff = Date.now() - STALE_THRESHOLD;
     for (const [username, state] of loginAttempts) {
-      if (state.lockedUntil < cutoff && state.lockedUntil > 0) {
+      if (state.lastActivity < cutoff) {
         loginAttempts.delete(username);
       }
     }

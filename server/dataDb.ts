@@ -55,14 +55,14 @@ export function initDataDb(dataDir: string): void {
     CREATE INDEX IF NOT EXISTS idx_qf_username ON quality_flags(username);
 
     CREATE TABLE IF NOT EXISTS saved_searches (
-      id          TEXT PRIMARY KEY,
+      id          TEXT NOT NULL,
       username    TEXT NOT NULL,
       name        TEXT NOT NULL,
       created_at  TEXT NOT NULL,
       filters     TEXT NOT NULL,
-      updated_at  TEXT NOT NULL
+      updated_at  TEXT NOT NULL,
+      PRIMARY KEY (username, id)
     );
-    CREATE INDEX IF NOT EXISTS idx_ss_username ON saved_searches(username);
 
     CREATE TABLE IF NOT EXISTS excluded_cases (
       username    TEXT NOT NULL,
@@ -78,6 +78,27 @@ export function initDataDb(dataDir: string): void {
       PRIMARY KEY (username, case_id)
     );
   `);
+
+  // Migration: saved_searches PK changed from (id) to (username, id) for IDOR fix
+  const ssInfo = db.pragma('table_info(saved_searches)') as Array<{ name: string; pk: number }>;
+  const pkCols = ssInfo.filter((c) => c.pk > 0).map((c) => c.name);
+  if (pkCols.length === 1 && pkCols[0] === 'id') {
+    db.exec(`
+      ALTER TABLE saved_searches RENAME TO saved_searches_old;
+      CREATE TABLE saved_searches (
+        id          TEXT NOT NULL,
+        username    TEXT NOT NULL,
+        name        TEXT NOT NULL,
+        created_at  TEXT NOT NULL,
+        filters     TEXT NOT NULL,
+        updated_at  TEXT NOT NULL,
+        PRIMARY KEY (username, id)
+      );
+      INSERT INTO saved_searches SELECT id, username, name, created_at, filters, updated_at FROM saved_searches_old;
+      DROP TABLE saved_searches_old;
+    `);
+    console.log('[dataDb] Migrated saved_searches PK to (username, id)');
+  }
 
   console.log('[dataDb] Opened data database:', dbPath);
 }

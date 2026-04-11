@@ -96,21 +96,26 @@ dataApiRouter.put('/quality-flags', (req: Request, res: Response): void => {
 
   // Map camelCase client data to snake_case DB rows
   // Review concern #5: IGNORE client-supplied flaggedBy and flaggedAt
-  // Server derives flaggedBy from JWT username and flaggedAt from server time
+  // M-02 fix: preserve original flagged_at/flagged_by for existing flags
   const now = new Date().toISOString();
+  const existing = getQualityFlags(username);
+  const existingById = new Map(existing.map((f) => [f.id, f]));
+
   const rows: QualityFlagRow[] = (qualityFlags as Record<string, unknown>[]).map((f) => {
     const caseId = String(f['caseId'] ?? '');
     const parameter = String(f['parameter'] ?? '');
     const errorType = String(f['errorType'] ?? '');
     const status = String(f['status'] ?? 'open');
+    const id = typeof f['id'] === 'string' && f['id'] ? f['id'] : crypto.randomUUID();
+    const prev = existingById.get(id);
     return {
-      id: typeof f['id'] === 'string' && f['id'] ? f['id'] : crypto.randomUUID(),
+      id,
       case_id: caseId,
       parameter,
       error_type: errorType,
-      // Server-derived fields (F-13): ALWAYS use server time and JWT username
-      flagged_at: now,
-      flagged_by: username, // ALWAYS from JWT, never from client
+      // Preserve original provenance for existing flags; set server-derived for new ones
+      flagged_at: prev?.flagged_at ?? now,
+      flagged_by: prev?.flagged_by ?? username,
       status: ['open', 'acknowledged', 'resolved'].includes(status) ? status : 'open',
       updated_at: now,
     };

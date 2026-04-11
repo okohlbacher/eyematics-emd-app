@@ -276,6 +276,9 @@ const MAX_PAGES = 100;
 const PAGE_TIMEOUT_MS = 30_000;
 
 async function fetchAllPages(url: string): Promise<unknown[]> {
+  // SSRF guard: only follow pagination links that share the initial URL's origin
+  const allowedOrigin = new URL(url).origin;
+
   const resources: unknown[] = [];
   let nextUrl: string | null = url;
   let pageCount = 0;
@@ -309,7 +312,19 @@ async function fetchAllPages(url: string): Promise<unknown[]> {
       }
 
       const nextLink = bundle.link?.find((l) => l.relation === 'next');
-      nextUrl = nextLink ? nextLink.url : null;
+      if (nextLink) {
+        try {
+          const nextOrigin = new URL(nextLink.url).origin;
+          nextUrl = nextOrigin === allowedOrigin ? nextLink.url : null;
+          if (!nextUrl) {
+            console.warn(`[fhir-api] Blocked pagination link to foreign origin: ${nextOrigin}`);
+          }
+        } catch {
+          nextUrl = null; // malformed URL
+        }
+      } else {
+        nextUrl = null;
+      }
     } finally {
       clearTimeout(timeout);
     }
@@ -396,6 +411,33 @@ fhirApiRouter.get('/bundles', async (req: Request, res: Response): Promise<void>
  * Returns the configured center list with id, shorthand, and name.
  * Used by the frontend to avoid hardcoded center mappings (M-03).
  */
+/**
+ * GET /api/fhir/images/:filename
+ *
+ * Serves OCT images from public/data/oct/ through an authenticated route.
+ * Prevents unauthenticated access to clinical images (H-07).
+ * Path traversal mitigated by stripping directory separators from filename.
+ */
+fhirApiRouter.get('/images/:filename', (req: Request, res: Response): void => {
+  const filename = String(req.params.filename ?? '').replace(/[/\\]/g, '');
+  if (!filename) {
+    res.status(400).json({ error: 'Filename required' });
+    return;
+  }
+  const filePath = path.resolve(process.cwd(), 'public', 'data', 'oct', filename);
+  // Ensure resolved path stays within the oct directory
+  const octDir = path.resolve(process.cwd(), 'public', 'data', 'oct');
+  if (!filePath.startsWith(octDir)) {
+    res.status(403).json({ error: 'Access denied' });
+    return;
+  }
+  if (!fs.existsSync(filePath)) {
+    res.status(404).json({ error: 'Image not found' });
+    return;
+  }
+  res.sendFile(filePath);
+});
+
 fhirApiRouter.get('/centers', (_req: Request, res: Response): void => {
   const centers = getCenters().map((c) => ({
     id: c.id,

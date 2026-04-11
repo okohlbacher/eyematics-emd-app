@@ -167,6 +167,8 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:', 'blob:'],
       connectSrc,
+      frameAncestors: ["'self'"],
+      baseUri: ["'self'"],
     },
   },
   crossOriginEmbedderPolicy: false, // allow loading FHIR data

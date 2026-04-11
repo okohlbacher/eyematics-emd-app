@@ -44,10 +44,18 @@ export default function AnalysisPage() {
   const filters: CohortFilter = useMemo(() => {
     const raw = searchParams.get('filters');
     if (!raw) return {};
-    // L-04: validate parsed JSON is an object before using as filters
+    // M-04: explicitly pick known CohortFilter keys to prevent prototype pollution
     try {
       const parsed = JSON.parse(raw);
-      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+      const safe: CohortFilter = {};
+      if (Array.isArray(parsed.diagnosis)) safe.diagnosis = parsed.diagnosis.map(String);
+      if (Array.isArray(parsed.gender)) safe.gender = parsed.gender.map(String);
+      if (Array.isArray(parsed.ageRange) && parsed.ageRange.length === 2) safe.ageRange = [Number(parsed.ageRange[0]), Number(parsed.ageRange[1])];
+      if (Array.isArray(parsed.visusRange) && parsed.visusRange.length === 2) safe.visusRange = [Number(parsed.visusRange[0]), Number(parsed.visusRange[1])];
+      if (Array.isArray(parsed.crtRange) && parsed.crtRange.length === 2) safe.crtRange = [Number(parsed.crtRange[0]), Number(parsed.crtRange[1])];
+      if (Array.isArray(parsed.centers)) safe.centers = parsed.centers.map(String);
+      return safe;
     } catch { return {}; }
   }, [searchParams]);
 

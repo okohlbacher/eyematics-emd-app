@@ -74,6 +74,32 @@ export function fhirApiPlugin(): Plugin {
           return;
         }
 
+        // GET /api/fhir/images/:filename — serve OCT images (H-07)
+        if (req.method === 'GET' && req.url?.startsWith('/api/fhir/images/')) {
+          const user = validateAuth(req);
+          if (!user) {
+            sendError(res, 401, 'Authentication required');
+            return;
+          }
+          const filename = decodeURIComponent(req.url.slice('/api/fhir/images/'.length)).replace(/[/\\]/g, '');
+          if (!filename) {
+            sendError(res, 400, 'Filename required');
+            return;
+          }
+          const octDir = path.resolve(process.cwd(), 'public', 'data', 'oct');
+          const filePath = path.resolve(octDir, filename);
+          if (!filePath.startsWith(octDir) || !fs.existsSync(filePath)) {
+            sendError(res, 404, 'Image not found');
+            return;
+          }
+          const data = fs.readFileSync(filePath);
+          const ext = path.extname(filename).toLowerCase();
+          const mime = ext === '.png' ? 'image/png' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'application/octet-stream';
+          res.writeHead(200, { 'Content-Type': mime, 'Content-Length': data.length });
+          res.end(data);
+          return;
+        }
+
         next();
       });
     },

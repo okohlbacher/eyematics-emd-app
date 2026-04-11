@@ -1,4 +1,4 @@
-# Known Issues — EMD v1.1
+# Known Issues — EMD v1.3
 
 Issues identified during architecture/security review (2026-04-11). Deferred because the EMD is currently a demonstrator, not a production clinical system.
 
@@ -63,6 +63,23 @@ It is unclear how the following aspects of center management work end-to-end:
 | M-03 | Medium | Duplicate center shorthands client/server | **Fixed** — GET /api/fhir/centers |
 | M-05 | Medium | bcrypt.compareSync blocks event loop | **Fixed** — async compare/hash |
 | M-07 | Medium | QualityFlag type missing `id` field | **Fixed** — added to interface |
+
+## Test Coverage Gaps
+
+Server modules with no or insufficient test coverage. Priority ordered by security impact.
+
+| ID | Severity | Module | Gap | Priority |
+|----|----------|--------|-----|----------|
+| T-01 | High | `settingsApi.ts` | Admin-only PUT guard, non-admin field stripping (otpCode, maxLoginAttempts) — security boundary | 1 |
+| T-02 | High | `auditMiddleware.ts` | `redactBody` not tested directly — password/OTP leak risk on regression | 2 |
+| T-03 | High | `rateLimiting.ts` | Lockout behavior, backoff cap, cleanup — no tests | 3 |
+| T-04 | Medium | `dataDb.ts` | CRUD for quality flags, saved searches, exclusions, reviews — no tests | 4 |
+| T-05 | Medium | `issueApi.ts` | Issue creation, listing, export — no tests | 5 |
+| T-06 | Medium | `auditApi.ts` | API endpoint behavior (admin-only export, auto-scoping) — only DB layer tested | 6 |
+| T-07 | Medium | `authMiddleware.ts` | Local HS256 path untested (only Keycloak RS256 tested) | 7 |
+| T-08 | Low | `fhirApiPlugin.ts` | Vite dev plugin — no tests (dev-only) | 8 |
+| T-09 | Low | `utils.ts` | `readBody`, `validateAuth` — dev-only helpers, no tests | 9 |
+| T-10 | Low | `src/components/`, `src/pages/` | Zero React component tests — no jsdom/happy-dom configured | 10 |
 
 ## Accepted (Demonstrator)
 

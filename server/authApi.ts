@@ -149,8 +149,13 @@ authApiRouter.post('/login', async (req: Request, res: Response): Promise<void> 
     const challengeToken = signChallengeToken(user.username);
     res.json({ challengeToken });
   } else {
-    // Return full session JWT directly
+    // Return full session JWT directly — update lastLogin (H-12)
     const token = signSessionToken(user.username, user.role, user.centers);
+    try {
+      modifyUsers((users) =>
+        users.map((u) => u.username === user.username ? { ...u, lastLogin: new Date().toISOString() } : u),
+      ).catch(() => {});
+    } catch { /* best-effort — don't fail login if write fails */ }
     res.json({ token });
   }
 });
@@ -219,6 +224,12 @@ authApiRouter.post('/verify', (req: Request, res: Response): void => {
   }
 
   const token = signSessionToken(user.username, user.role, user.centers);
+  // Update lastLogin (H-12)
+  try {
+    modifyUsers((u) =>
+      u.map((r) => r.username === user.username ? { ...r, lastLogin: new Date().toISOString() } : r),
+    ).catch(() => {});
+  } catch { /* best-effort */ }
   res.json({ token });
 });
 

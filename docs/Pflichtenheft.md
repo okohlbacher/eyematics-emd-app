@@ -184,15 +184,15 @@ Demonstrator unterstützt, sondern erfolgen außerhalb des Systems.
 
 2.4 Rollenmodell und Zuständigkeiten
 
-Das Rollenmodell des Demonstrators ist im aktuellen Projektumfang
-vereinfacht umgesetzt. Es wird eine einheitliche Nutzerrolle
-bereitgestellt, die Zugriff auf die im System verfügbaren Funktionen und
-Daten hat. Eine Erweiterung des Rollen- und Berechtigungskonzepts ist
-grundsätzlich möglich, jedoch nicht Bestandteil des aktuellen
-Umsetzungsumfangs.
+Der Demonstrator implementiert ein differenziertes 6-Rollen-Modell,
+das den Stakeholder-Kategorien des Lastenhefts entspricht (siehe
+Abschnitt 3.2.2 für Details). Jede Rolle definiert spezifische
+Zugriffsrechte auf Funktionen und Daten. Die zentrenbasierte
+Dateneinschränkung wird serverseitig erzwungen.
 
-Die Verwaltung von Nutzerkonten erfolgt durch definierte administrative
-Rollen, während fachliche Freigaben außerhalb des Systems stattfinden.
+Die Verwaltung von Nutzerkonten erfolgt durch die administrative Rolle
+(IT-Administrator), während fachliche Freigaben außerhalb des Systems
+stattfinden.
 
 3 Abgrenzung zum Lastenheft
 

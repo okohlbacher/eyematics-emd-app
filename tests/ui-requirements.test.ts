@@ -8,6 +8,14 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
+import {
+  CRITICAL_CRT_THRESHOLD,
+  CRITICAL_VISUS_THRESHOLD,
+  VISUS_JUMP_THRESHOLD,
+} from '../src/config/clinicalThresholds';
+import { CHART_COLORS } from '../src/config/clinicalThresholds';
+import { createRateLimiter } from '../server/rateLimiting';
+
 // ============================================================================
 // EMDREQ-USM: User Management
 // ============================================================================
@@ -74,26 +82,32 @@ describe('EMDREQ-USM: User Management', () => {
 
   // EMDREQ-USM-006: Failed login handling
   describe('USM-006: Failed login attempts', () => {
-    it('max login attempts defaults to 5', () => {
-      const maxAttempts = 5;
-      expect(maxAttempts).toBe(5);
+    it('rate limiter locks after configured max attempts', () => {
+      const limiter = createRateLimiter(3);
+      limiter.recordFailure('user1');
+      limiter.recordFailure('user1');
+      const state = limiter.recordFailure('user1');
+      expect(limiter.isLocked(state)).toBe(true);
     });
 
-    it('exponential backoff doubles lockout time', () => {
-      const baseLockMs = 2000;
-      const lockouts = [0, 1, 2, 3].map(n => Math.pow(2, n) * baseLockMs);
-      expect(lockouts).toEqual([2000, 4000, 8000, 16000]);
+    it('rate limiter resets after successful login', () => {
+      const limiter = createRateLimiter(3);
+      limiter.recordFailure('user1');
+      limiter.recordFailure('user1');
+      limiter.resetAttempts('user1');
+      const state = limiter.getLockState('user1');
+      expect(state.count).toBe(0);
     });
-  });
 
-  // EMDREQ-USM-008: Auto logout
-  describe('USM-008: Inactivity timeout', () => {
-    it('timeout is 10 minutes with 1-minute warning', () => {
-      const INACTIVITY_TIMEOUT = 10 * 60 * 1000;
-      const WARNING_BEFORE = 60 * 1000;
-      expect(INACTIVITY_TIMEOUT).toBe(600000);
-      expect(WARNING_BEFORE).toBe(60000);
-      expect(INACTIVITY_TIMEOUT - WARNING_BEFORE).toBe(540000);
+    it('lockout capped at 1 hour', () => {
+      const limiter = createRateLimiter(1);
+      // Record many failures to trigger high exponent
+      let state = limiter.recordFailure('user1');
+      for (let i = 0; i < 30; i++) {
+        state = limiter.recordFailure('user1');
+      }
+      const lockDuration = state.lockedUntil - Date.now();
+      expect(lockDuration).toBeLessThanOrEqual(3_600_000);
     });
   });
 });
@@ -314,8 +328,10 @@ describe('EMDREQ-QUAL: Quality Review', () => {
   });
 
   describe('QUAL-009: Therapy discontinuation', () => {
-    it('interrupter threshold (120d) < breaker threshold (365d)', () => {
-      expect(120).toBeLessThan(365);
+    it('clinical thresholds are imported from config, not hardcoded', () => {
+      expect(CRITICAL_CRT_THRESHOLD).toBe(400);
+      expect(CRITICAL_VISUS_THRESHOLD).toBe(0.1);
+      expect(VISUS_JUMP_THRESHOLD).toBe(0.3);
     });
 
     it('classifies patient by days since last injection', () => {
@@ -350,8 +366,7 @@ describe('EMDREQ-ANL: Analysis', () => {
   });
 
   describe('ANL-004: Critical values in cohort', () => {
-    it('chart colors has enough entries for center display', () => {
-      const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+    it('chart colors from config has enough entries for center display', () => {
       expect(CHART_COLORS.length).toBeGreaterThanOrEqual(5);
     });
   });

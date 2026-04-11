@@ -1,5 +1,6 @@
 // Issue reporting service — stores issues on the server filesystem via /api/issues
 
+import { downloadBlob } from '../utils/download';
 import { authFetch } from './authHeaders';
 
 export interface ReportedIssue {
@@ -62,14 +63,5 @@ export async function exportIssuesFull(): Promise<void> {
     return;
   }
   const blob = await resp.blob();
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `emd-issues-${new Date().toISOString().slice(0, 10)}.json`;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 500);
+  downloadBlob(blob, `emd-issues-${new Date().toISOString().slice(0, 10)}.json`);
 }

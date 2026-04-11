@@ -42,13 +42,14 @@ function validateSettingsSchema(parsed: unknown): string | null {
   // Auth fields (flat structure — F-10)
   if (typeof obj.twoFactorEnabled !== 'boolean') return 'twoFactorEnabled must be a boolean';
   if (obj.provider !== undefined && typeof obj.provider !== 'string') return 'provider must be a string';
+  if (obj.provider !== undefined && !['local', 'keycloak'].includes(obj.provider as string)) return "provider must be 'local' or 'keycloak'";
   // Clinical thresholds
   if (typeof obj.therapyInterrupterDays !== 'number' || !Number.isFinite(obj.therapyInterrupterDays)) return 'therapyInterrupterDays must be a number';
   if (typeof obj.therapyBreakerDays !== 'number' || !Number.isFinite(obj.therapyBreakerDays)) return 'therapyBreakerDays must be a number';
   // Data source
   if (obj.dataSource === null || typeof obj.dataSource !== 'object') return 'dataSource must be an object';
   const ds = obj.dataSource as Record<string, unknown>;
-  if (typeof ds.type !== 'string' || ds.type.length === 0) return 'dataSource.type must be a non-empty string';
+  if (typeof ds.type !== 'string' || !['local', 'blaze'].includes(ds.type)) return "dataSource.type must be 'local' or 'blaze'";
   if (typeof ds.blazeUrl !== 'string' || ds.blazeUrl.length === 0) return 'dataSource.blazeUrl must be a non-empty string';
   return null;
 }
@@ -105,15 +106,14 @@ settingsApiRouter.put('/', (req: Request, res: Response): void => {
     return;
   }
 
-  const { error } = parseAndValidateYaml(body);
+  const { parsed, error } = parseAndValidateYaml(body);
   if (error) {
     res.status(400).json({ error });
     return;
   }
   try {
     writeSettings(body, req.auth!.preferred_username);
-    const parsed = yaml.load(body) as Record<string, unknown>;
-    updateAuthConfig(parsed);
+    updateAuthConfig(parsed as Record<string, unknown>);
     res.json({ ok: true });
   } catch (err) {
     console.error('[settings-api] Failed to write settings:', err);
@@ -150,12 +150,11 @@ export function settingsApiPlugin(): Plugin {
 
           readBody(req)
             .then((body) => {
-              const { error } = parseAndValidateYaml(body);
+              const { parsed: parsedSettings, error } = parseAndValidateYaml(body);
               if (error) { sendError(res, 400, error); return; }
               try {
                 writeSettings(body, authUser.username);
-                const parsedSettings = yaml.load(body) as Record<string, unknown>;
-                updateAuthConfig(parsedSettings);
+                updateAuthConfig(parsedSettings as Record<string, unknown>);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true }));
               } catch (err) {
