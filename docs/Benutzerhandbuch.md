@@ -1,6 +1,6 @@
 # Benutzerhandbuch — EyeMatics Klinischer Demonstrator (EMD)
 
-**Version 1.3 — Stand: 11.04.2026**
+**Version 1.4 — Stand: 11.04.2026**
 
 ---
 
@@ -427,4 +427,4 @@ Der EMD unterstützt Deutsch und Englisch. Die Sprache kann über das Sprachmen�
 
 ---
 
-*Dieses Benutzerhandbuch bezieht sich auf den EyeMatics Klinischen Demonstrator v1.3. Für technische Informationen siehe README.md und Konfiguration.md.*
+*Dieses Benutzerhandbuch bezieht sich auf den EyeMatics Klinischen Demonstrator v1.4. Für technische Informationen siehe README.md und Konfiguration.md.*

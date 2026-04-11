@@ -1,6 +1,6 @@
 # Architektur — EyeMatics Klinischer Demonstrator (EMD)
 
-**Version 1.3 — Stand: 11.04.2026 (nach Full-Review)**
+**Version 1.4 — Stand: 11.04.2026**
 
 > Siehe auch: [architecture.svg](architecture.svg) fuer das visuelle Architekturdiagramm.
 
@@ -119,4 +119,4 @@ Der FHIR-Proxy (`/api/fhir-proxy`) ist auf Administratoren beschraenkt, um eine 
 
 ---
 
-*Dieses Dokument beschreibt die Architektur des EMD v1.3 (nach Full-Review). Fuer das visuelle Diagramm siehe [architecture.svg](architecture.svg).*
+*Dieses Dokument beschreibt die Architektur des EMD v1.4. Fuer das visuelle Diagramm siehe [architecture.svg](architecture.svg).*

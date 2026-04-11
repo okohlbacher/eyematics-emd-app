@@ -1,4 +1,4 @@
-# Known Issues — EMD v1.3
+# Known Issues — EMD v1.4
 
 Issues identified during architecture/security review (2026-04-11). Deferred because the EMD is currently a demonstrator, not a production clinical system.
 

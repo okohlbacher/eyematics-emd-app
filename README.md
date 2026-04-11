@@ -24,7 +24,7 @@ Open **http://localhost:5173** — log in with `admin` / `changeme2025!` (2FA is
 | `npm run preview` | Serve the production build locally   |
 | `npm run lint`    | Run ESLint                           |
 | `npm start`       | Start production Express server      |
-| `npx vitest run`  | Run test suite (106 tests)           |
+| `npm test`        | Run test suite (221 tests)           |
 
 ## Project Structure
 

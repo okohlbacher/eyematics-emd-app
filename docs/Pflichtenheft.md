@@ -3,9 +3,9 @@
 EyeMatics Klinischer Demonstrator (EMD)
 
   ------------------------ -------------------------------------------
-  **Dokumentstatus**       in Bearbeitung
-  **Version**              0.9 (Entwurf)
-  **Datum**                09.04.2026
+  **Dokumentstatus**       Gültig
+  **Version**              1.4
+  **Datum**                11.04.2026
   **Autoren**              Berger, Melina et al.
   **Projekt**              EyeMatics -- AP05 Klinischer Demonstrator
   **Zuständigkeit**        UKA / IMI Aachen
@@ -22,7 +22,8 @@ Revisionshistorie
   **Version**   **Datum**    **Autor**    **Beschreibung**
   0.1           2025         Berger, M.   Erstversion
   0.9           07.04.2026   Berger, M.   Aktualisierung aller Abschnitte
-                                          \[weitere Einträge ergänzen\]
+  1.3           11.04.2026   Team         Full-Review: Sicherheit, Konsistenz, i18n
+  1.4           11.04.2026   Team         Test Coverage Milestone, 221 Tests
   ------------- ------------ ------------ ---------------------------------
 
 Inhaltsverzeichnis
@@ -893,7 +894,7 @@ Diese Rollen sollten an jedem EyeMatics Rollout Standort vertreten sein:
   Forscher                    Datensätze abrufen, Analysen durchführen                                               Zugriff auf Benutzungsoberfläche des klinischen Demonstrators (pseudonyme medizinische Daten)
   --------------------------- -------------------------------------------------------------------------------------- -----------------------------------------------------------------------------------------------
 
-Berechtigungskonzept im EMD (6-Rollen-Modell, Stand v1.3):
+Berechtigungskonzept im EMD (6-Rollen-Modell, Stand v1.4):
 
   ----------------------------- --------------------------------- --------------------------------- --------------------------- ---------------------------
   **Rolle**                     **Klinische Daten**               **Dokumentationsqualitaet**       **Nutzer-Administration**   **System-Administration**
