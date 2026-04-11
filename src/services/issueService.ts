@@ -1,6 +1,6 @@
 // Issue reporting service — stores issues on the server filesystem via /api/issues
 
-import { getAuthHeaders } from './authHeaders';
+import { authFetch } from './authHeaders';
 
 export interface ReportedIssue {
   id: string;
@@ -19,9 +19,9 @@ export interface ReportedIssue {
 export async function addIssue(
   issue: Omit<ReportedIssue, 'id' | 'timestamp'>
 ): Promise<{ id: string; filename: string }> {
-  const resp = await fetch('/api/issues', {
+  const resp = await authFetch('/api/issues', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(issue),
   });
   if (!resp.ok) {
@@ -34,7 +34,7 @@ export async function addIssue(
  * Fetch all issues from the server (without screenshot data).
  */
 export async function getIssues(): Promise<ReportedIssue[]> {
-  const resp = await fetch('/api/issues', { headers: getAuthHeaders() });
+  const resp = await authFetch('/api/issues');
   if (!resp.ok) return [];
   return resp.json();
 }
@@ -52,7 +52,7 @@ export async function getIssueCount(): Promise<number> {
  * Fetches with auth headers, then triggers browser download.
  */
 export async function exportIssuesFull(): Promise<void> {
-  const resp = await fetch('/api/issues/export', { headers: getAuthHeaders() });
+  const resp = await authFetch('/api/issues/export');
   if (!resp.ok) {
     console.error('[issueService] Export failed:', resp.status);
     return;

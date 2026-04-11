@@ -1,6 +1,6 @@
 import type { FhirBundle } from '../types/fhir';
 import { getSettings } from './settingsService';
-import { getAuthHeaders } from './authHeaders';
+import { authFetch } from './authHeaders';
 
 export type DataSourceType = 'local' | 'blaze';
 
@@ -38,18 +38,12 @@ export function getDataSourceConfig(): DataSourceConfig {
 export async function loadBundlesFromSource(
   _config: DataSourceConfig
 ): Promise<FhirBundle[]> {
-  const resp = await fetch('/api/fhir/bundles', {
-    headers: {
-      Accept: 'application/json',
-      ...getAuthHeaders(),
-    },
+  const resp = await authFetch('/api/fhir/bundles', {
+    headers: { Accept: 'application/json' },
   });
 
   if (resp.status === 401) {
-    // The user's session has expired or the token is invalid.
-    // Other mechanisms (auth interceptors) will handle logout; return empty
-    // here so the UI degrades gracefully rather than throwing.
-    return [];
+    return []; // authFetch handles redirect; degrade gracefully
   }
 
   if (!resp.ok) {
@@ -71,11 +65,8 @@ export async function loadBundlesFromSource(
  * Returns the server software name/version string on success, or throws.
  */
 export async function testBlazeConnection(_blazeUrl: string): Promise<string> {
-  const resp = await fetch('/api/fhir-proxy/metadata', {
-    headers: {
-      Accept: 'application/fhir+json',
-      ...getAuthHeaders(),
-    },
+  const resp = await authFetch('/api/fhir-proxy/metadata', {
+    headers: { Accept: 'application/fhir+json' },
   });
 
   if (!resp.ok) {

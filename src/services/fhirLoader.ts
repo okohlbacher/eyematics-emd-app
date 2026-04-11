@@ -144,8 +144,11 @@ export const SNOMED_IVI = '36189003';
 export const SNOMED_EYE_RIGHT = '362503005';
 export const SNOMED_EYE_LEFT = '362502000';
 
-/** Short display names for centers (used in charts/tables) */
-export const CENTER_SHORTHANDS: Record<string, string> = {
+/**
+ * Center shorthand cache — loaded from server via /api/fhir/centers (M-03).
+ * Falls back to built-in defaults until the API response arrives.
+ */
+let _centerShorthands: Record<string, string> = {
   'org-uka': 'UKA',
   'org-ukb': 'UKB',
   'org-lmu': 'LMU',
@@ -153,9 +156,30 @@ export const CENTER_SHORTHANDS: Record<string, string> = {
   'org-ukm': 'UKM',
 };
 
+/** Load center shorthands from server. Called once at app startup. */
+export async function loadCenterShorthands(): Promise<void> {
+  try {
+    const { authFetch } = await import('./authHeaders');
+    const resp = await authFetch('/api/fhir/centers');
+    if (resp.ok) {
+      const data = await resp.json() as { centers: Array<{ id: string; shorthand: string }> };
+      const map: Record<string, string> = {};
+      for (const c of data.centers) {
+        map[c.id] = c.shorthand;
+      }
+      _centerShorthands = map;
+    }
+  } catch {
+    // Keep defaults on failure
+  }
+}
+
+/** Short display names for centers (used in charts/tables) */
+export const CENTER_SHORTHANDS: Record<string, string> = _centerShorthands;
+
 /** Get the shorthand label for a center, falling back to full name */
 export function getCenterShorthand(centerId: string, fallback?: string): string {
-  return CENTER_SHORTHANDS[centerId] ?? fallback ?? centerId;
+  return _centerShorthands[centerId] ?? fallback ?? centerId;
 }
 
 export function getDiagnosisLabel(code: string, locale: string = 'de'): string {

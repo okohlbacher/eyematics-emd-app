@@ -18,8 +18,9 @@ import {
   loadAllBundles,
   extractCenters,
   extractPatientCases,
+  loadCenterShorthands,
 } from '../services/fhirLoader';
-import { getAuthHeaders } from '../services/authHeaders';
+import { authFetch } from '../services/authHeaders';
 
 interface DataContextType {
   loading: boolean;
@@ -49,15 +50,15 @@ const DataContext = createContext<DataContextType | null>(null);
 // ---------------------------------------------------------------------------
 
 async function fetchJson<T>(url: string): Promise<T> {
-  const resp = await fetch(url, { headers: getAuthHeaders() });
+  const resp = await authFetch(url);
   if (!resp.ok) throw new Error(`${url}: ${resp.status}`);
   return resp.json() as Promise<T>;
 }
 
 async function putJson<T>(url: string, body: unknown): Promise<T> {
-  const resp = await fetch(url, {
+  const resp = await authFetch(url, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
   if (!resp.ok) throw new Error(`${url}: ${resp.status}`);
@@ -65,9 +66,9 @@ async function putJson<T>(url: string, body: unknown): Promise<T> {
 }
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
-  const resp = await fetch(url, {
+  const resp = await authFetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
   if (!resp.ok) throw new Error(`${url}: ${resp.status}`);
@@ -75,10 +76,7 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
 }
 
 async function deleteJson(url: string): Promise<void> {
-  const resp = await fetch(url, {
-    method: 'DELETE',
-    headers: getAuthHeaders(),
-  });
+  const resp = await authFetch(url, { method: 'DELETE' });
   if (!resp.ok) throw new Error(`${url}: ${resp.status}`);
 }
 
@@ -97,6 +95,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const fetchData = useCallback(() => {
     setLoading(true);
     setError(null);
+
+    // Load center shorthands from server before loading bundles (M-03)
+    loadCenterShorthands().catch(() => {});
 
     Promise.all([
       loadAllBundles(),

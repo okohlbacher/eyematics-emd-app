@@ -1,5 +1,5 @@
 import yaml from 'js-yaml';
-import { getAuthHeaders } from './authHeaders';
+import { authFetch } from './authHeaders';
 
 export interface AppSettings {
   twoFactorEnabled: boolean;
@@ -51,7 +51,7 @@ export async function loadSettings(): Promise<AppSettings> {
   let fromYaml: Partial<AppSettings> = {};
   try {
     // Try server API first (supports write-back)
-    const resp = await fetch('/api/settings', { headers: getAuthHeaders() });
+    const resp = await authFetch('/api/settings');
     if (resp.ok) {
       const text = await resp.text();
       fromYaml = (yaml.load(text) as Partial<AppSettings>) ?? {};
@@ -81,9 +81,9 @@ export function updateSettings(patch: DeepPartial<AppSettings>): AppSettings {
 
   // Persist to server asynchronously (requires admin authorization)
   const yamlStr = yaml.dump(_cached, { indent: 2, lineWidth: 120, noRefs: true });
-  fetch('/api/settings', {
+  authFetch('/api/settings', {
     method: 'PUT',
-    headers: { 'Content-Type': 'text/yaml', ...getAuthHeaders() },
+    headers: { 'Content-Type': 'text/yaml' },
     body: yamlStr,
   }).catch((err) => {
     console.error('[settingsService] Failed to persist settings to server:', err);
@@ -100,9 +100,9 @@ export function resetSettings(): AppSettings {
 
   // Persist defaults to server (requires admin authorization)
   const yamlStr = yaml.dump(_cached, { indent: 2, lineWidth: 120, noRefs: true });
-  fetch('/api/settings', {
+  authFetch('/api/settings', {
     method: 'PUT',
-    headers: { 'Content-Type': 'text/yaml', ...getAuthHeaders() },
+    headers: { 'Content-Type': 'text/yaml' },
     body: yamlStr,
   }).catch((err) => {
     console.error('[settingsService] Failed to reset settings on server:', err);

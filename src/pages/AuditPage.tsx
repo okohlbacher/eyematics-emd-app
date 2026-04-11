@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { getAuthHeaders } from '../services/authHeaders';
+import { authFetch } from '../services/authHeaders';
 import { FileText, Download, Filter } from 'lucide-react';
 import { downloadCsv, datedFilename } from '../utils/download';
 import { getDateLocale } from '../utils/dateFormat';
@@ -76,9 +76,7 @@ export default function AuditPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('/api/audit?limit=500&offset=0', {
-          headers: getAuthHeaders(),
-        });
+        const res = await authFetch('/api/audit?limit=500&offset=0');
         if (!res.ok) {
           throw new Error(`Server returned ${res.status}`);
         }

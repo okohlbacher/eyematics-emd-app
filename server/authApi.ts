@@ -88,7 +88,7 @@ export const authApiRouter = Router();
  * - If account locked: returns 429 with retryAfterMs
  * - On bad credentials: returns 401 with generic error (no username enumeration, T-02-05)
  */
-authApiRouter.post('/login', (req: Request, res: Response): void => {
+authApiRouter.post('/login', async (req: Request, res: Response): Promise<void> => {
   // D-04: Local login disabled in Keycloak mode
   if (getAuthProvider() === 'keycloak') {
     res.status(405).json({
@@ -126,7 +126,7 @@ authApiRouter.post('/login', (req: Request, res: Response): void => {
   }
 
   // Verify password
-  const valid = bcrypt.compareSync(password, user.passwordHash);
+  const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
     const newState = limiter().recordFailure(key);
     if (limiter().isLocked(newState)) {
@@ -317,7 +317,7 @@ authApiRouter.post('/users', async (req: Request, res: Response): Promise<void> 
 
   // Generate secure random password (D-01): 16 chars base64url = ~96 bits entropy
   const generatedPassword = generateSecurePassword();
-  const passwordHash = bcrypt.hashSync(generatedPassword, 12);
+  const passwordHash = await bcrypt.hash(generatedPassword, 12);
 
   const newUser: UserRecord = {
     username: username.trim(),
@@ -396,7 +396,7 @@ authApiRouter.put('/users/:username/password', async (req: Request, res: Respons
   // Server generates the new password — no plaintext in request body
   // This eliminates the audit log leak (review concern #1, T-04-07)
   const generatedPassword = generateSecurePassword();
-  user.passwordHash = bcrypt.hashSync(generatedPassword, 12);
+  user.passwordHash = await bcrypt.hash(generatedPassword, 12);
   await saveUsers(users);
 
   // Cache-Control: no-store to prevent caching one-time password (review suggestion)

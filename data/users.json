@@ -1,0 +1,89 @@
+[
+  {
+    "username": "admin",
+    "firstName": "System",
+    "lastName": "Administrator",
+    "role": "admin",
+    "centers": [
+      "org-uka",
+      "org-ukb",
+      "org-lmu",
+      "org-ukt",
+      "org-ukm"
+    ],
+    "createdAt": "2025-01-01T00:00:00Z",
+    "passwordHash": "$2b$12$iN394xi075GURM3vAKnI3uhZdipGBMRLe6uyytRjKnOu5pCYekLg."
+  },
+  {
+    "username": "forscher1",
+    "firstName": "Anna",
+    "lastName": "Müller",
+    "role": "researcher",
+    "centers": [
+      "org-uka"
+    ],
+    "createdAt": "2025-01-15T00:00:00Z",
+    "passwordHash": "$2b$12$k1qElmjaYvPcWJfngRyiNORXKECiR963G4hdqddLE9XTgwci011MO"
+  },
+  {
+    "username": "forscher2",
+    "firstName": "Thomas",
+    "lastName": "Weber",
+    "role": "researcher",
+    "centers": [
+      "org-ukb"
+    ],
+    "createdAt": "2025-02-01T00:00:00Z",
+    "passwordHash": "$2b$12$A4ucqlDDhXOEtfz/E8Tf0u6GlTv8tUShyFbV1piWeexLHER0LbADq"
+  },
+  {
+    "username": "epidemiologe",
+    "firstName": "Julia",
+    "lastName": "Schmidt",
+    "role": "epidemiologist",
+    "centers": [
+      "org-uka",
+      "org-ukb",
+      "org-lmu"
+    ],
+    "createdAt": "2025-03-01T00:00:00Z",
+    "passwordHash": "$2b$12$gvNIdZ0gdtn3O7s7axS52.Doi2ZNk/OB1Zp6cQRqGZkWoePhYSZey"
+  },
+  {
+    "username": "kliniker",
+    "firstName": "Markus",
+    "lastName": "Fischer",
+    "role": "clinician",
+    "centers": [
+      "org-ukt"
+    ],
+    "createdAt": "2025-03-15T00:00:00Z",
+    "passwordHash": "$2b$12$KKY4tXSI74YL403cuEA5EO0fcZTFlNzcrrXOju1mQfmqj06juybcC"
+  },
+  {
+    "username": "diz_manager",
+    "firstName": "Sabine",
+    "lastName": "Braun",
+    "role": "data_manager",
+    "centers": [
+      "org-ukm"
+    ],
+    "createdAt": "2025-04-01T00:00:00Z",
+    "passwordHash": "$2b$12$e2OxAB4YnHmjqhi0I3NHt./tGkXswgU8V7byjx6k6XWO2REgmcpKm"
+  },
+  {
+    "username": "klinikleitung",
+    "firstName": "Prof. Klaus",
+    "lastName": "Hoffmann",
+    "role": "clinic_lead",
+    "centers": [
+      "org-uka",
+      "org-ukb",
+      "org-lmu",
+      "org-ukt",
+      "org-ukm"
+    ],
+    "createdAt": "2025-04-15T00:00:00Z",
+    "passwordHash": "$2b$12$M63o.tpvfyIK33deVmswTe76PlwCFFzsKzvG.8mMAl8Pm/NA4Z9Iq"
+  }
+]

@@ -243,7 +243,7 @@ function _migrateUsersJson(filePath: string): void {
   const withHashes = workingUsers.map((user) => {
     if (!user.passwordHash) {
       needsWrite = true;
-      const hash = bcrypt.hashSync('changeme2025!', 12);
+      const hash = bcrypt.hashSync('changeme2025!', 12); // sync OK at startup (one-time migration)
       return { ...user, passwordHash: hash };
     }
     return user;

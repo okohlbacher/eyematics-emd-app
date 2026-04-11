@@ -19,7 +19,7 @@ import type { Request, Response } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
-import { getValidCenterIds, getFallbackCenterFiles, BLAZE_RESOURCE_TYPES, SETTINGS_FILE } from './constants.js';
+import { getValidCenterIds, getFallbackCenterFiles, getCenters, BLAZE_RESOURCE_TYPES, SETTINGS_FILE } from './constants.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -365,4 +365,19 @@ fhirApiRouter.get('/bundles', async (req: Request, res: Response): Promise<void>
     console.error('[fhir-api] Error loading bundles:', (err as Error).message);
     res.status(502).json({ error: 'Failed to load FHIR bundles' });
   }
+});
+
+/**
+ * GET /api/fhir/centers
+ *
+ * Returns the configured center list with id, shorthand, and name.
+ * Used by the frontend to avoid hardcoded center mappings (M-03).
+ */
+fhirApiRouter.get('/centers', (_req: Request, res: Response): void => {
+  const centers = getCenters().map((c) => ({
+    id: c.id,
+    shorthand: c.shorthand,
+    name: c.name,
+  }));
+  res.json({ centers });
 });

@@ -175,6 +175,7 @@ export interface SavedSearch {
 export type QualityStatus = 'unchecked' | 'in_progress' | 'reviewed';
 
 export interface QualityFlag {
+  id?: string;
   caseId: string;
   parameter: string;
   errorType: string;

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import type { TranslationKey } from '../i18n/translations';
-import { getAuthHeaders } from '../services/authHeaders';
+import { authFetch } from '../services/authHeaders';
 import { getDateLocale } from '../utils/dateFormat';
 import { UserPlus, Trash2, Shield, ShieldCheck, Search, ArrowUpDown, Filter, Microscope, Stethoscope, Database, Building2, CheckCircle } from 'lucide-react';
 import type { UserRole } from '../context/AuthContext';
@@ -82,7 +82,7 @@ export default function AdminPage() {
 
   const loadUsers = useCallback(async () => {
     try {
-      const resp = await fetch('/api/auth/users', { headers: getAuthHeaders() });
+      const resp = await authFetch('/api/auth/users');
       if (resp.ok) {
         const data = await resp.json() as ServerUser[];
         setUsers(data);
@@ -181,9 +181,9 @@ export default function AdminPage() {
     if (!username.trim()) return;
 
     try {
-      const resp = await fetch('/api/auth/users', {
+      const resp = await authFetch('/api/auth/users', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: username.trim(),
           firstName: firstName.trim() || undefined,
@@ -214,9 +214,8 @@ export default function AdminPage() {
 
   const handleDelete = async (targetUsername: string) => {
     try {
-      const resp = await fetch(`/api/auth/users/${encodeURIComponent(targetUsername)}`, {
+      const resp = await authFetch(`/api/auth/users/${encodeURIComponent(targetUsername)}`, {
         method: 'DELETE',
-        headers: getAuthHeaders(),
       });
       if (resp.ok) {
         await loadUsers();
