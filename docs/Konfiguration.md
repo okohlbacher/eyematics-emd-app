@@ -49,7 +49,7 @@ dataSource:
 | Parameter | Typ | Default | Beschreibung |
 |-----------|-----|---------|--------------|
 | `auth.provider` | `"local"` \| `"keycloak"` | `"local"` | Authentifizierungsmethode. `local`: bcrypt + JWT (HS256). `keycloak`: RS256 via JWKS. |
-| `auth.twoFactorEnabled` | `boolean` | `true` | Aktiviert/deaktiviert den OTP-Schritt beim Login. |
+| `auth.twoFactorEnabled` | `boolean` | `false` | Aktiviert/deaktiviert den OTP-Schritt beim Login. Standardmäßig deaktiviert. |
 | `auth.maxLoginAttempts` | `number` | `5` | Max. Fehlversuche vor Kontosperrung (exponentielles Backoff). |
 | `auth.otpCode` | `string` | `"123456"` | Fester OTP-Code (Demonstrator). Nur serverseitig gelesen. |
 | `therapyInterrupterDays` | `number` | `120` | Zeitkriterium t in Tagen für Therapie-Unterbrecher. |
@@ -113,15 +113,32 @@ Der Server:
 - Blockiert direkten Zugriff auf `/data/*` (nur über `/api/fhir/bundles`)
 - Alle API-Endpunkte unter `/api/*` sind JWT-geschützt
 
+## Standardbenutzer
+
+Beim ersten Start werden 7 Standardbenutzer angelegt (in `data/users.json`). Alle erhalten das Passwort `changeme2025!` (bcrypt-gehasht). Es wird empfohlen, Passwörter nach dem ersten Login zu ändern.
+
+| Benutzername | Rolle | Zentren |
+|-------------|-------|---------|
+| `admin` | IT-Administrator | Alle (UKA, UKB, LMU, UKT, UKM) |
+| `forscher1` | Forscher/in | UKA |
+| `forscher2` | Forscher/in | UKB |
+| `epidemiologe` | Epidemiolog/in | UKA, UKB, LMU |
+| `kliniker` | Kliniker/in | UKT |
+| `diz_manager` | DIZ Data Manager | UKM |
+| `klinikleitung` | Klinikleitung | Alle |
+
 ## Architektur
 
 ```
 Browser (UI)
     ↓ POST /api/auth/login (JSON Body)
 Express Server (authApi)
-    ↓ JWT Token
+    ↓ bcrypt-Prüfung → JWT Token (HS256, 10 Min.)
 Browser → Bearer Token → /api/settings, /api/data/*, /api/fhir/bundles
+    ↓ Alle API-Anfragen automatisch im Audit-Log protokolliert
 Express Server
     ↓ fs.writeFileSync()
 config/settings.yaml
 ```
+
+> Siehe [architecture.svg](architecture.svg) und [architecture.md](architecture.md) für das vollständige Architekturdiagramm.

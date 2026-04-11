@@ -2,6 +2,8 @@
 
 This guide covers configuring Keycloak as the authentication provider for the EMD application.
 
+> **Note:** By default, the EMD uses local authentication (`auth.provider: local`) with bcrypt password hashing and HS256 JWT tokens. Keycloak is an **optional** alternative for deployments that require centralized identity management. The auth middleware supports both providers with the same JWT payload format — switching requires only a configuration change and server restart.
+
 ## Prerequisites
 
 - Keycloak server running (v22+ recommended)
