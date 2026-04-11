@@ -113,10 +113,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetch('/api/auth/users/me', {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((r) => r.ok ? r.json() as Promise<{ firstName?: string; lastName?: string; username: string }> : null)
+      .then((r) => r.ok ? r.json() as Promise<{ user?: { firstName?: string; lastName?: string; username: string } }> : null)
       .then((data) => {
-        if (data?.firstName || data?.lastName) {
-          const full = [data.firstName, data.lastName].filter(Boolean).join(' ');
+        const u = data?.user;
+        if (u?.firstName || u?.lastName) {
+          const full = [u.firstName, u.lastName].filter(Boolean).join(' ');
           setDisplayName(`${full} (${user.username})`);
         } else {
           setDisplayName(user.username);

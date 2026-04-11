@@ -18,18 +18,59 @@ interface ServerAuditEntry {
 }
 
 type TimeRange = 'today' | '7d' | '30d' | 'all';
-type MethodFilter = 'all' | 'GET' | 'POST' | 'PUT' | 'DELETE';
 
-const HTTP_METHODS: MethodFilter[] = ['all', 'GET', 'POST', 'PUT', 'DELETE'];
+// ---------------------------------------------------------------------------
+// Map raw (method, path) to a semantic audit_action_* translation key.
+// Only meaningful user actions are shown; noise (health checks, static assets)
+// is filtered out by isRelevantEntry().
+// ---------------------------------------------------------------------------
 
-function methodBadgeClass(method: string): string {
-  switch (method) {
-    case 'GET':    return 'bg-gray-100 text-gray-700';
-    case 'POST':   return 'bg-blue-100 text-blue-700';
-    case 'PUT':    return 'bg-amber-100 text-amber-700';
-    case 'DELETE': return 'bg-red-100 text-red-700';
-    default:       return 'bg-gray-100 text-gray-700';
+type TranslationFn = (key: string, ...args: string[]) => string;
+
+function describeAction(method: string, path: string, t: TranslationFn): string {
+  if (method === 'POST' && path === '/api/auth/login') return t('audit_action_login');
+  if (method === 'POST' && path === '/api/auth/logout') return t('audit_action_logout');
+  if (method === 'POST' && path === '/api/auth/users') return t('audit_action_create_user');
+  if (method === 'DELETE' && path.startsWith('/api/auth/users/')) return t('audit_action_delete_user');
+  if (method === 'PUT' && path === '/api/settings') return t('audit_action_update_settings');
+  if (method === 'GET' && path === '/api/settings') return t('audit_action_view_settings');
+  if (method === 'POST' && path === '/api/quality/flags') return t('audit_action_flag_error');
+  if (method === 'PUT' && path.startsWith('/api/quality/flags/')) return t('audit_action_update_flag');
+  if (method === 'POST' && path.startsWith('/api/quality/exclude/')) return t('audit_action_exclude_case');
+  if (method === 'DELETE' && path.startsWith('/api/quality/exclude/')) return t('audit_action_include_case');
+  if (method === 'POST' && path.startsWith('/api/quality/reviewed/')) return t('audit_action_save_search');
+  if (method === 'POST' && path === '/api/cohort/searches') return t('audit_action_save_search');
+  if (method === 'DELETE' && path.startsWith('/api/cohort/searches/')) return t('audit_action_delete_search');
+  if (method === 'GET' && path.startsWith('/api/fhir/')) return t('audit_action_data_access');
+  if (method === 'GET' && path.startsWith('/api/audit')) return t('audit_action_view_audit');
+  return t('audit_action_unknown');
+}
+
+function describeDetail(method: string, path: string, user: string, t: TranslationFn): string {
+  if (method === 'POST' && path === '/api/auth/login') return t('audit_detail_login', user);
+  if (method === 'POST' && path === '/api/auth/logout') return t('audit_detail_logout');
+  if (method === 'DELETE' && path.startsWith('/api/auth/users/')) {
+    const username = path.split('/').pop() ?? '';
+    return t('audit_detail_delete_user', decodeURIComponent(username));
   }
+  if (method === 'GET' && path.startsWith('/api/fhir/cases/')) {
+    const caseId = path.replace('/api/fhir/cases/', '').split('/')[0];
+    return t('audit_detail_view_case', caseId);
+  }
+  return '';
+}
+
+/** Filter out noise — only show entries that represent meaningful user actions. */
+function isRelevantEntry(entry: ServerAuditEntry): boolean {
+  const { method, path } = entry;
+  // Always show mutations
+  if (method !== 'GET') return true;
+  // Show specific meaningful GETs
+  if (path === '/api/settings') return true;
+  if (path.startsWith('/api/audit')) return true;
+  if (path.startsWith('/api/fhir/cases/')) return true;
+  // Filter out bulk data loads, auth config checks, and other noise
+  return false;
 }
 
 function statusBadgeClass(status: number): string {
@@ -64,7 +105,6 @@ export default function AuditPage() {
 
   // Filter state
   const [timeRange, setTimeRange]       = useState<TimeRange>('all');
-  const [methodFilter, setMethodFilter] = useState<MethodFilter>('all');
   const [showFilters, setShowFilters]   = useState(false);
 
   const dateFmt = getDateLocale(locale);
@@ -105,20 +145,20 @@ export default function AuditPage() {
 
     return entries
       .filter((e) => {
+        if (!isRelevantEntry(e)) return false;
         if (new Date(e.timestamp).getTime() < rangeStart) return false;
-        if (methodFilter !== 'all' && e.method !== methodFilter) return false;
         return true;
       })
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }, [entries, timeRange, methodFilter]);
+  }, [entries, timeRange]);
 
   const handleExportCsv = () => {
-    const headers = [t('auditTime'), t('auditUser'), 'Method', 'Path', 'Status'];
+    const headers = [t('auditTime'), t('auditUser'), t('auditAction'), t('auditDetail'), t('auditStatus')];
     const rows = filteredEntries.map((e) => [
       new Date(e.timestamp).toLocaleString(dateFmt, { dateStyle: 'short', timeStyle: 'medium' }),
       e.user,
-      e.method,
-      e.path,
+      describeAction(e.method, e.path, t),
+      describeDetail(e.method, e.path, e.user, t),
       String(e.status),
     ]);
     downloadCsv(headers, rows, datedFilename('audit-log', 'csv'));
@@ -190,40 +230,20 @@ export default function AuditPage() {
       {/* Filter panel */}
       {showFilters && (
         <div className="mb-4 bg-white rounded-xl border border-gray-200 p-4">
-          <div className="grid grid-cols-2 gap-4">
-            {/* Time range */}
-            <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">
-                {t('auditFilterTime')}
-              </label>
-              <select
-                value={timeRange}
-                onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
-              >
-                <option value="all">{t('auditAllTime')}</option>
-                <option value="today">{t('auditToday')}</option>
-                <option value="7d">{t('auditLast7Days')}</option>
-                <option value="30d">{t('auditLast30Days')}</option>
-              </select>
-            </div>
-            {/* HTTP method */}
-            <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">
-                {t('auditFilterType')}
-              </label>
-              <select
-                value={methodFilter}
-                onChange={(e) => setMethodFilter(e.target.value as MethodFilter)}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
-              >
-                {HTTP_METHODS.map((m) => (
-                  <option key={m} value={m}>
-                    {m === 'all' ? t('auditFilterAll') : m}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 uppercase mb-1">
+              {t('auditFilterTime')}
+            </label>
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 max-w-xs"
+            >
+              <option value="all">{t('auditAllTime')}</option>
+              <option value="today">{t('auditToday')}</option>
+              <option value="7d">{t('auditLast7Days')}</option>
+              <option value="30d">{t('auditLast30Days')}</option>
+            </select>
           </div>
         </div>
       )}
@@ -258,10 +278,10 @@ export default function AuditPage() {
                       {t('auditUser')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
-                      {t('auditMethod')}
+                      {t('auditAction')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
-                      {t('auditPath')}
+                      {t('auditDetail')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
                       {t('auditStatus')}
@@ -280,15 +300,11 @@ export default function AuditPage() {
                       <td className="px-4 py-3 font-medium text-gray-900">
                         {entry.user}
                       </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${methodBadgeClass(entry.method)}`}
-                        >
-                          {entry.method}
-                        </span>
+                      <td className="px-4 py-3 text-gray-900">
+                        {describeAction(entry.method, entry.path, t)}
                       </td>
-                      <td className="px-4 py-3 text-gray-600 font-mono text-xs">
-                        {entry.path}
+                      <td className="px-4 py-3 text-gray-600 text-sm">
+                        {describeDetail(entry.method, entry.path, entry.user, t)}
                       </td>
                       <td className="px-4 py-3">
                         <span

@@ -58,6 +58,7 @@ export default function AdminPage() {
   const [centerOptions, setCenterOptions] = useState<CenterOption[]>([]);
   const [centerLabels, setCenterLabels] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [showForm, setShowForm] = useState(false);
   const [username, setUsername] = useState('');
@@ -81,14 +82,18 @@ export default function AdminPage() {
   }, [generatedPassword]);
 
   const loadUsers = useCallback(async () => {
+    setLoadError(null);
     try {
       const resp = await authFetch('/api/auth/users');
       if (resp.ok) {
         const data = await resp.json() as { users: ServerUser[] };
         setUsers(data.users);
+      } else {
+        setLoadError(`Server returned ${resp.status}`);
       }
     } catch (err) {
       console.error('[AdminPage] Failed to load users:', err);
+      setLoadError(err instanceof Error ? err.message : 'Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -465,6 +470,10 @@ export default function AdminPage() {
               {loading ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-gray-400">Loading…</td>
+                </tr>
+              ) : loadError ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-red-500">{loadError}</td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>

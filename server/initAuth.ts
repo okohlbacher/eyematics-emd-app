@@ -115,6 +115,18 @@ export function getAuthConfig(): AuthConfig {
 }
 
 /**
+ * Re-parse auth config from updated settings.
+ * Called after settings.yaml is written so the in-memory config stays in sync.
+ */
+export function updateAuthConfig(settings: Record<string, unknown>): void {
+  _authConfig = {
+    twoFactorEnabled: typeof settings.twoFactorEnabled === 'boolean' ? settings.twoFactorEnabled : false,
+    maxLoginAttempts: typeof settings.maxLoginAttempts === 'number' ? settings.maxLoginAttempts : 5,
+    otpCode: typeof settings.otpCode === 'string' ? settings.otpCode : '123456',
+  };
+}
+
+/**
  * Reads and returns all users from data/users.json.
  * Throws if initAuth() has not been called or users file does not exist.
  */

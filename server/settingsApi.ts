@@ -19,6 +19,7 @@ import type { Plugin } from 'vite';
 import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
 import { SETTINGS_FILE } from './constants.js';
 import { invalidateFhirCache } from './fhirApi.js';
+import { updateAuthConfig } from './initAuth.js';
 import { readBody, sendError,validateAuth } from './utils.js';
 
 // ---------------------------------------------------------------------------
@@ -111,6 +112,8 @@ settingsApiRouter.put('/', (req: Request, res: Response): void => {
   }
   try {
     writeSettings(body, req.auth!.preferred_username);
+    const parsed = yaml.load(body) as Record<string, unknown>;
+    updateAuthConfig(parsed);
     res.json({ ok: true });
   } catch (err) {
     console.error('[settings-api] Failed to write settings:', err);
@@ -151,6 +154,8 @@ export function settingsApiPlugin(): Plugin {
               if (error) { sendError(res, 400, error); return; }
               try {
                 writeSettings(body, authUser.username);
+                const parsedSettings = yaml.load(body) as Record<string, unknown>;
+                updateAuthConfig(parsedSettings);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true }));
               } catch (err) {

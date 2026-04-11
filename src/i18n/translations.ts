@@ -436,6 +436,12 @@ const translations = {
   audit_action_include_case: { de: 'Fall eingeschlossen', en: 'Case Included' },
   audit_action_create_user: { de: 'Nutzer angelegt', en: 'User Created' },
   audit_action_delete_user: { de: 'Nutzer entfernt', en: 'User Deleted' },
+  audit_action_update_settings: { de: 'Einstellungen geändert', en: 'Settings Updated' },
+  audit_action_view_settings: { de: 'Einstellungen', en: 'Settings' },
+  audit_action_view_doc_quality: { de: 'Dokumentationsqualität', en: 'Documentation Quality' },
+  audit_action_export_data: { de: 'Datenexport', en: 'Data Export' },
+  audit_action_data_access: { de: 'Datenzugriff', en: 'Data Access' },
+  audit_action_unknown: { de: 'Sonstige Aktion', en: 'Other Action' },
 
   // Audit detail messages (with {0}, {1} placeholders)
   audit_detail_login: { de: 'Anmeldung als {0}', en: 'Logged in as {0}' },

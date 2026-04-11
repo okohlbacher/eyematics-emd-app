@@ -104,33 +104,21 @@ export function CenterComparisonChart({
         />
         <Tooltip content={<CustomTooltip />} />
         <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
-        <Bar
-          dataKey={t('docQualityCompleteness')}
-          fill="#3b82f6"
-          radius={[4, 4, 0, 0]}
-        >
-          {chartData.map((entry) => (
-            <Cell
-              key={entry.name}
-              fill={scoreColor(entry[t('docQualityCompleteness')] as number)}
-            />
-          ))}
-        </Bar>
-        <Bar
-          dataKey={t('docQualityDataCompleteness')}
-          fill="#8b5cf6"
-          radius={[4, 4, 0, 0]}
-        />
-        <Bar
-          dataKey={t('docQualityPlausibility')}
-          fill="#f59e0b"
-          radius={[4, 4, 0, 0]}
-        />
-        <Bar
-          dataKey={t('docQualityOverall')}
-          fill="#10b981"
-          radius={[4, 4, 0, 0]}
-        />
+        {([
+          t('docQualityCompleteness'),
+          t('docQualityDataCompleteness'),
+          t('docQualityPlausibility'),
+          t('docQualityOverall'),
+        ] as const).map((key) => (
+          <Bar key={key} dataKey={key} radius={[4, 4, 0, 0]}>
+            {chartData.map((entry) => (
+              <Cell
+                key={entry.name}
+                fill={scoreColor(entry[key] as number)}
+              />
+            ))}
+          </Bar>
+        ))}
       </BarChart>
     </ResponsiveContainer>
   );

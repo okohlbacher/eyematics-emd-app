@@ -166,6 +166,7 @@ export default function QualityPage() {
   };
 
   const handleExportCsv = () => {
+    if (filteredCases.length === 0) return;
     const headers = [
       t('pseudonym'), t('center'), t('age'), t('diagnosis'),
       t('qualityFilterStatus'), t('therapyDiscontinuation'), t('excludedCase'),
@@ -179,7 +180,7 @@ export default function QualityPage() {
         c.pseudonym,
         getCenterShorthand(c.centerId, c.centerName),
         String(getAge(c.birthDate)),
-        c.conditions.map((cond) => getDiagnosisLabel(cond.code.coding[0]?.code ?? '', locale)).join('; '),
+        (c.conditions ?? []).map((cond) => getDiagnosisLabel(cond.code?.coding?.[0]?.code ?? '', locale)).join('; '),
         statusLabel,
         therapyLabel,
         excludedCases.includes(c.id) ? '✓' : '',
