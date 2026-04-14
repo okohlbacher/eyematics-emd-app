@@ -259,6 +259,42 @@ export function _migrateCenterIds(users: UserRecord[]): { users: UserRecord[]; c
 }
 
 /**
+ * Set of removed center IDs (v1.0/v1.1 roster).
+ * v1.5 roster correction removes Bonn (org-ukb), München (org-lmu), Münster (org-ukm).
+ * Users holding only these centers are reassigned to ['org-uka'] (default fallback)
+ * so they remain functional after the roster switch.
+ *
+ * Exported indirectly via _migrateRemovedCenters for testing.
+ */
+const REMOVED_CENTER_IDS = new Set<string>(['org-ukb', 'org-lmu', 'org-ukm']);
+
+/**
+ * Strip removed-roster center IDs from each user's centers array.
+ * Users whose centers array becomes empty after stripping are reassigned to ['org-uka'].
+ *
+ * Exported for testing.
+ */
+export function _migrateRemovedCenters(
+  users: UserRecord[],
+): { users: UserRecord[]; changed: boolean } {
+  let changed = false;
+  const migrated = users.map((u) => {
+    const filtered = u.centers.filter((c) => !REMOVED_CENTER_IDS.has(c));
+    const dropped = filtered.length !== u.centers.length;
+    if (filtered.length === 0) {
+      changed = true;
+      return { ...u, centers: ['org-uka'] };
+    }
+    if (dropped) {
+      changed = true;
+      return { ...u, centers: filtered };
+    }
+    return u;
+  });
+  return { users: migrated, changed };
+}
+
+/**
  * Migrate users.json: add passwordHash for any user missing it,
  * and convert center IDs from shorthand to org-* format.
  * Uses bcrypt with 12 rounds and the default password 'changeme2025!'.
@@ -292,6 +328,16 @@ function _migrateUsersJson(filePath: string): void {
     needsWrite = true;
     workingUsers = withOrgCenters;
     console.log('[initAuth] Migrated users.json: converted center IDs to org-* format');
+  }
+
+  // Migrate removed center IDs (v1.5 roster correction)
+  // Must run AFTER _migrateCenterIds so legacy shorthand-form centers have
+  // already been promoted to org-* before we check for removed IDs.
+  const { users: withoutRemoved, changed: removedChanged } = _migrateRemovedCenters(workingUsers);
+  if (removedChanged) {
+    needsWrite = true;
+    workingUsers = withoutRemoved;
+    console.log('[initAuth] Migrated users.json: stripped removed center IDs (org-ukb/org-lmu/org-ukm)');
   }
 
   if (needsWrite) {
