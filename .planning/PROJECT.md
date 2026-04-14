@@ -55,9 +55,30 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 ### Active
 
-<!-- Next milestone scope -->
+<!-- Next milestone scope — v1.5 Site Roster & Cohort Analytics -->
 
-(No active requirements — define with `/gsd-new-milestone`)
+- [ ] Replace site roster with Aachen, Chemnitz, Dresden, Greifswald, Leipzig, Mainz, Tübingen (7 sites; was 5)
+- [ ] Generate synthetic FHIR bundles for the 5 new sites (40–50 patients each with AMD/DME/RVO trajectories)
+- [ ] Node.js synthetic data generator script (`scripts/generate-center-bundle.ts`) — reproducible, parameterizable
+- [ ] Migrate `data/users.json` center assignments (strip removed IDs, reassign empty lists to `org-uka`)
+- [ ] Update docs (Lastenheft, Pflichtenheft, Konfiguration, README) and tests (constants, ui-requirements, fhirApi, dataApiCenter, centerBypass) for new roster
+- [ ] Cohort Outcome Trajectories view — longitudinal visus analysis across cohort members
+- [ ] OD / OS separated panels + combined OD+OS panel
+- [ ] X-axis toggle: days since baseline vs treatment index
+- [ ] Y-metric toggle: absolute / Δ vs baseline / Δ %
+- [ ] Display layer toggles: median line, scatter of all points, SD band, per-patient curves
+- [ ] Interpolation grid slider for median computation (default 120 points)
+- [ ] Summary cards: patients, total measurements, OD / OS counts
+- [ ] CSV export of underlying measurements
+
+## Current Milestone: v1.5 Site Roster & Cohort Analytics
+
+**Goal:** Correct the site roster to the 7 real EyeMatics sites with matching synthetic data, and add cohort-level outcome analysis.
+
+**Target features:**
+- Site roster correction from 5 to 7 centers (remove Bonn/München/Münster; add Chemnitz, Dresden, Greifswald, Leipzig, Mainz)
+- Reproducible synthetic FHIR bundle generator for new sites (40–50 patients each)
+- Cohort Outcome Trajectories — longitudinal visus delta/absolute over time or treatment index, OD/OS, with median + SD + per-patient curves
 
 ### Out of Scope
 
@@ -122,4 +143,4 @@ The EMD operates within a four-zone architecture at each site:
 | Pattern A (central consolidation) for v1 | Each site sends pseudonymized payloads via DSF to local consolidated repo. EMD reads from that. Pattern B (federated query) deferred to future. | Architecture decided |
 
 ---
-*Last updated: 2026-04-11 after v1.1 milestone (Frontend-Backend Integration)*
+*Last updated: 2026-04-14 — milestone v1.5 opened (Site Roster & Cohort Analytics). Note: v1.2–v1.4 shipped between v1.1 and v1.5 but were not tracked in GSD artifacts; git history is authoritative for those.*
