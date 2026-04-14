@@ -49,11 +49,11 @@ vi.mock('../server/dataDb.js', () => ({
 // Mock fhirApi — control the case-to-center index
 // ---------------------------------------------------------------------------
 
-// Case index: blaze-pat-001 belongs to org-uka, blaze-pat-002 belongs to org-ukb
+// Case index: case-uka-001 belongs to org-uka, case-ukc-001 belongs to org-ukc, case-ukd-001 belongs to org-ukd
 const mockCaseIndex = new Map<string, string>([
   ['case-uka-001', 'org-uka'],
-  ['case-ukb-001', 'org-ukb'],
-  ['case-lmu-001', 'org-lmu'],
+  ['case-ukc-001', 'org-ukc'],
+  ['case-ukd-001', 'org-ukd'],
 ]);
 
 vi.mock('../server/fhirApi.js', () => ({
@@ -61,7 +61,7 @@ vi.mock('../server/fhirApi.js', () => ({
   invalidateFhirCache: vi.fn(),
   getCaseToCenter: vi.fn(() => mockCaseIndex),
   isBypass: vi.fn((role: string, centers: string[]) =>
-    role === 'admin' || centers.length >= 5,
+    role === 'admin' || centers.length >= 7,
   ),
   getOrgIdFromBundle: vi.fn(() => null),
   filterBundlesByCenters: vi.fn((bundles: unknown[]) => bundles),
@@ -144,7 +144,7 @@ describe('dataApi — center validation for write operations', () => {
   // Test 2: PUT /quality-flags with caseId outside user's permitted center — returns 403
   it('Test 2: PUT /quality-flags with caseId outside permitted center returns 403', async () => {
     const app = buildApp();
-    // forscher1 only has org-uka, but case-ukb-001 belongs to org-ukb
+    // forscher1 only has org-uka, but case-ukc-001 belongs to org-ukc
     const token = makeToken('forscher1', 'researcher', ['org-uka']);
 
     const res = await request(app)
@@ -153,7 +153,7 @@ describe('dataApi — center validation for write operations', () => {
       .send({
         qualityFlags: [
           {
-            caseId: 'case-ukb-001',
+            caseId: 'case-ukc-001',
             parameter: 'visus',
             errorType: 'outlier',
             status: 'open',
@@ -168,7 +168,7 @@ describe('dataApi — center validation for write operations', () => {
   // Test 3: PUT /quality-flags by admin with any caseId — succeeds (bypass)
   it('Test 3: PUT /quality-flags by admin bypasses center validation', async () => {
     const app = buildApp();
-    const token = makeToken('admin', 'admin', ['org-uka', 'org-ukb', 'org-lmu', 'org-ukt', 'org-ukm']);
+    const token = makeToken('admin', 'admin', ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukmz', 'org-ukt']);
 
     const res = await request(app)
       .put('/data/quality-flags')
@@ -176,7 +176,7 @@ describe('dataApi — center validation for write operations', () => {
       .send({
         qualityFlags: [
           {
-            caseId: 'case-ukb-001',
+            caseId: 'case-ukc-001',
             parameter: 'visus',
             errorType: 'outlier',
             status: 'open',

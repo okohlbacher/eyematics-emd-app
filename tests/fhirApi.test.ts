@@ -16,7 +16,7 @@ vi.mock('node:fs', () => ({
     existsSync: vi.fn().mockReturnValue(true),
     readFileSync: vi.fn((filePath: string) => {
       if (String(filePath).includes('manifest.json')) {
-        return JSON.stringify(['center-aachen.json', 'center-bonn.json']);
+        return JSON.stringify(['center-aachen.json', 'center-chemnitz.json']);
       }
       if (String(filePath).includes('settings.yaml') || String(filePath).includes('public/settings.yaml')) {
         return 'dataSource:\n  type: local\n  blazeUrl: http://localhost:8080/fhir\n';
@@ -24,8 +24,8 @@ vi.mock('node:fs', () => ({
       if (String(filePath).includes('center-aachen.json')) {
         return JSON.stringify(AACHEN_BUNDLE);
       }
-      if (String(filePath).includes('center-bonn.json')) {
-        return JSON.stringify(BONN_BUNDLE);
+      if (String(filePath).includes('center-chemnitz.json')) {
+        return JSON.stringify(CHEMNITZ_BUNDLE);
       }
       return '{}';
     }),
@@ -35,7 +35,7 @@ vi.mock('node:fs', () => ({
   existsSync: vi.fn().mockReturnValue(true),
   readFileSync: vi.fn((filePath: string) => {
     if (String(filePath).includes('manifest.json')) {
-      return JSON.stringify(['center-aachen.json', 'center-bonn.json']);
+      return JSON.stringify(['center-aachen.json', 'center-chemnitz.json']);
     }
     if (String(filePath).includes('settings.yaml') || String(filePath).includes('public/settings.yaml')) {
       return 'dataSource:\n  type: local\n  blazeUrl: http://localhost:8080/fhir\n';
@@ -43,8 +43,8 @@ vi.mock('node:fs', () => ({
     if (String(filePath).includes('center-aachen.json')) {
       return JSON.stringify(AACHEN_BUNDLE);
     }
-    if (String(filePath).includes('center-bonn.json')) {
-      return JSON.stringify(BONN_BUNDLE);
+    if (String(filePath).includes('center-chemnitz.json')) {
+      return JSON.stringify(CHEMNITZ_BUNDLE);
     }
     return '{}';
   }),
@@ -111,22 +111,22 @@ const AACHEN_BUNDLE = {
   ],
 };
 
-const BONN_BUNDLE = {
+const CHEMNITZ_BUNDLE = {
   resourceType: 'Bundle',
   type: 'collection',
   entry: [
     {
       resource: {
         resourceType: 'Organization',
-        id: 'org-ukb',
-        name: 'Universitätsklinikum Bonn',
+        id: 'org-ukc',
+        name: 'Universitätsklinikum Chemnitz',
       },
     },
     {
       resource: {
         resourceType: 'Patient',
-        id: 'pat-ukb-001',
-        meta: { source: 'org-ukb' },
+        id: 'pat-ukc-001',
+        meta: { source: 'org-ukc' },
         gender: 'male',
         birthDate: '1960-05-10',
       },
@@ -134,8 +134,8 @@ const BONN_BUNDLE = {
     {
       resource: {
         resourceType: 'Observation',
-        id: 'obs-ukb-001',
-        subject: { reference: 'Patient/pat-ukb-001' },
+        id: 'obs-ukc-001',
+        subject: { reference: 'Patient/pat-ukc-001' },
       },
     },
   ],
@@ -162,7 +162,7 @@ const BLAZE_SYNTHETIC_BUNDLE = {
       resource: {
         resourceType: 'Patient',
         id: 'blaze-pat-002',
-        meta: { source: 'org-ukb' },
+        meta: { source: 'org-ukc' },
       },
     },
     {
@@ -206,7 +206,7 @@ describe('fhirApi — filtering and bypass logic', () => {
 
   // Test 1: filterBundlesByCenters() with local bundles — user with ['org-uka'] only gets aachen bundle
   it('Test 1: filterBundlesByCenters() with local bundles filters to user centers only', () => {
-    const bundles = [AACHEN_BUNDLE, BONN_BUNDLE];
+    const bundles = [AACHEN_BUNDLE, CHEMNITZ_BUNDLE];
     const result = filterBundlesByCenters(bundles, ['org-uka']);
     expect(result).toHaveLength(1);
     // The returned bundle should be the Aachen bundle (has Organization org-uka)
@@ -229,7 +229,7 @@ describe('fhirApi — filtering and bypass logic', () => {
     );
     expect(patients.some((p: { resource: { id?: string } }) => p.resource.id === 'blaze-pat-001')).toBe(true);
 
-    // Patient from org-ukb should be excluded
+    // Patient from org-ukc should be excluded
     expect(patients.some((p: { resource: { id?: string } }) => p.resource.id === 'blaze-pat-002')).toBe(false);
 
     // Condition referencing permitted patient should be kept
@@ -249,19 +249,19 @@ describe('fhirApi — filtering and bypass logic', () => {
   it('Test 3: isBypass() returns true for role=admin regardless of centers', () => {
     expect(isBypass('admin', [])).toBe(true);
     expect(isBypass('admin', ['org-uka'])).toBe(true);
-    expect(isBypass('admin', ['org-uka', 'org-ukb', 'org-lmu', 'org-ukt', 'org-ukm'])).toBe(true);
+    expect(isBypass('admin', ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukmz', 'org-ukt'])).toBe(true);
   });
 
-  // Test 4: isBypass() returns true for non-admin with all 5 org-* centers
-  it('Test 4: isBypass() returns true for non-admin with all 5 org-* centers', () => {
-    const allCenters = ['org-uka', 'org-ukb', 'org-lmu', 'org-ukt', 'org-ukm'];
+  // Test 4: isBypass() returns true for non-admin with all 7 org-* centers
+  it('Test 4: isBypass() returns true for non-admin with all 7 org-* centers', () => {
+    const allCenters = ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukmz', 'org-ukt'];
     expect(isBypass('researcher', allCenters)).toBe(true);
     expect(isBypass('clinic_lead', allCenters)).toBe(true);
   });
 
   // Test 5: isBypass() returns false for non-admin with 3 centers
-  it('Test 5: isBypass() returns false for non-admin with fewer than 5 centers', () => {
-    expect(isBypass('researcher', ['org-uka', 'org-ukb', 'org-lmu'])).toBe(false);
+  it('Test 5: isBypass() returns false for non-admin with fewer than 7 centers', () => {
+    expect(isBypass('researcher', ['org-uka', 'org-ukc', 'org-ukd'])).toBe(false);
     expect(isBypass('clinician', ['org-uka'])).toBe(false);
     expect(isBypass('epidemiologist', [])).toBe(false);
   });
@@ -269,7 +269,7 @@ describe('fhirApi — filtering and bypass logic', () => {
   // Test 6: getOrgIdFromBundle() extracts Organization.resource.id from bundle
   it('Test 6: getOrgIdFromBundle() extracts Organization id from bundle', () => {
     expect(getOrgIdFromBundle(AACHEN_BUNDLE)).toBe('org-uka');
-    expect(getOrgIdFromBundle(BONN_BUNDLE)).toBe('org-ukb');
+    expect(getOrgIdFromBundle(CHEMNITZ_BUNDLE)).toBe('org-ukc');
   });
 
   it('Test 6b: getOrgIdFromBundle() returns null if no Organization entry', () => {
@@ -296,22 +296,23 @@ describe('fhirApi — filtering and bypass logic', () => {
     // Import the migration function (exported for testing via initAuth)
     const { _migrateCenterIds } = await import('../server/initAuth.js');
     const users = [
-      { username: 'test1', role: 'researcher', centers: ['UKA', 'UKB'], createdAt: '2025-01-01T00:00:00Z' },
+      { username: 'test1', role: 'researcher', centers: ['UKA', 'UKC'], createdAt: '2025-01-01T00:00:00Z' },
+      // test2: already-migrated unknown IDs pass through unchanged — plan 07-03 strips 'org-ukb' via _migrateRemovedCenters
       { username: 'test2', role: 'admin', centers: ['org-uka', 'org-ukb'], createdAt: '2025-01-01T00:00:00Z' },
-      { username: 'test3', role: 'clinician', centers: ['LMU', 'UKT', 'UKM'], createdAt: '2025-01-01T00:00:00Z' },
+      { username: 'test3', role: 'clinician', centers: ['UKD', 'UKT', 'UKG'], createdAt: '2025-01-01T00:00:00Z' },
     ];
     const result = _migrateCenterIds(users as Parameters<typeof _migrateCenterIds>[0]);
     expect(result.changed).toBe(true);
-    expect(result.users[0].centers).toEqual(['org-uka', 'org-ukb']);
-    // Already-migrated values are unchanged
+    expect(result.users[0].centers).toEqual(['org-uka', 'org-ukc']);
+    // Already-migrated values are unchanged (pass-through of legacy org-ukb documented for plan 07-03)
     expect(result.users[1].centers).toEqual(['org-uka', 'org-ukb']);
-    expect(result.users[2].centers).toEqual(['org-lmu', 'org-ukt', 'org-ukm']);
+    expect(result.users[2].centers).toEqual(['org-ukd', 'org-ukt', 'org-ukg']);
   });
 
   it('Test 8b: _migrateCenterIds returns changed=false when no migration needed', async () => {
     const { _migrateCenterIds } = await import('../server/initAuth.js');
     const users = [
-      { username: 'admin', role: 'admin', centers: ['org-uka', 'org-ukb', 'org-lmu', 'org-ukt', 'org-ukm'], createdAt: '2025-01-01T00:00:00Z' },
+      { username: 'admin', role: 'admin', centers: ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukmz', 'org-ukt'], createdAt: '2025-01-01T00:00:00Z' },
     ];
     const result = _migrateCenterIds(users as Parameters<typeof _migrateCenterIds>[0]);
     expect(result.changed).toBe(false);

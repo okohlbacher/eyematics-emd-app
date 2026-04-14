@@ -26,7 +26,7 @@ import {
 
 const VALID_CENTERS_JSON = JSON.stringify([
   { id: 'org-uka', shorthand: 'UKA', name: 'UK Aachen', file: 'center-aachen.json' },
-  { id: 'org-ukb', shorthand: 'UKB', name: 'UK Bonn', file: 'center-bonn.json' },
+  { id: 'org-ukc', shorthand: 'UKC', name: 'UK Chemnitz', file: 'center-chemnitz.json' },
 ]);
 
 describe('constants — center configuration', () => {
@@ -42,7 +42,7 @@ describe('constants — center configuration', () => {
     const centers = getCenters();
     expect(centers).toHaveLength(2);
     expect(centers[0].id).toBe('org-uka');
-    expect(centers[1].shorthand).toBe('UKB');
+    expect(centers[1].shorthand).toBe('UKC');
   });
 
   it('getValidCenterIds returns a Set of IDs', () => {
@@ -53,7 +53,7 @@ describe('constants — center configuration', () => {
     const ids = getValidCenterIds();
     expect(ids).toBeInstanceOf(Set);
     expect(ids.has('org-uka')).toBe(true);
-    expect(ids.has('org-ukb')).toBe(true);
+    expect(ids.has('org-ukc')).toBe(true);
     expect(ids.has('org-xyz')).toBe(false);
   });
 
@@ -64,7 +64,7 @@ describe('constants — center configuration', () => {
     initCenters('/data');
     const map = getCenterShorthands();
     expect(map['org-uka']).toBe('UKA');
-    expect(map['org-ukb']).toBe('UKB');
+    expect(map['org-ukc']).toBe('UKC');
   });
 
   it('getFallbackCenterFiles returns file names from config', () => {
@@ -73,7 +73,7 @@ describe('constants — center configuration', () => {
 
     initCenters('/data');
     const files = getFallbackCenterFiles();
-    expect(files).toEqual(['center-aachen.json', 'center-bonn.json']);
+    expect(files).toEqual(['center-aachen.json', 'center-chemnitz.json']);
   });
 
   it('falls back to defaults when centers.json is missing', () => {
@@ -81,9 +81,9 @@ describe('constants — center configuration', () => {
 
     initCenters('/data');
     const centers = getCenters();
-    expect(centers.length).toBe(5); // 5 default centers
+    expect(centers.length).toBe(7); // 7 default centers
     expect(centers.map(c => c.id)).toContain('org-uka');
-    expect(centers.map(c => c.id)).toContain('org-ukm');
+    expect(centers.map(c => c.id)).toContain('org-ukmz');
   });
 
   it('falls back to defaults on malformed JSON', () => {
@@ -92,7 +92,7 @@ describe('constants — center configuration', () => {
 
     initCenters('/data');
     const centers = getCenters();
-    expect(centers.length).toBe(5);
+    expect(centers.length).toBe(7);
   });
 });
 

@@ -11,7 +11,7 @@ import { describe, expect, it, vi } from 'vitest';
 // Mock dependencies
 vi.mock('../server/constants.js', () => ({
   getFallbackCenterFiles: () => ['center-aachen.json'],
-  getValidCenterIds: () => new Set(['org-uka', 'org-ukb']),
+  getValidCenterIds: () => new Set(['org-uka', 'org-ukc']),
 }));
 
 vi.mock('../server/fhirApi.js', () => ({

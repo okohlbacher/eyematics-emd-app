@@ -41,7 +41,7 @@ describe('EMDREQ-USM: User Management', () => {
         sub: 'admin',
         preferred_username: 'admin',
         role: 'admin',
-        centers: ['org-uka', 'org-ukb'],
+        centers: ['org-uka', 'org-ukc'],
         iat: 1712880000,
         exp: 1712880600,
       };
@@ -130,7 +130,7 @@ describe('EMDREQ-KOH: Cohort Building', () => {
 
     const mockCases = [
       { id: '1', gender: 'male', centerId: 'org-uka' },
-      { id: '2', gender: 'female', centerId: 'org-ukb' },
+      { id: '2', gender: 'female', centerId: 'org-ukc' },
       { id: '3', gender: 'male', centerId: 'org-uka' },
     ];
 
@@ -150,7 +150,7 @@ describe('EMDREQ-KOH: Cohort Building', () => {
     });
 
     it('combines multiple filters (AND logic)', () => {
-      const result = applyFilters(mockCases, { gender: ['female'], centers: ['org-ukb'] });
+      const result = applyFilters(mockCases, { gender: ['female'], centers: ['org-ukc'] });
       expect(result).toHaveLength(1);
     });
 
@@ -355,12 +355,17 @@ describe('EMDREQ-QUAL: Quality Review', () => {
 
 describe('EMDREQ-ANL: Analysis', () => {
   describe('ANL-001: Center distribution', () => {
-    it('center shorthand mapping covers all 5 centers', () => {
+    it('center shorthand mapping covers all 7 centers', () => {
       const shorthands: Record<string, string> = {
-        'org-uka': 'UKA', 'org-ukb': 'UKB', 'org-lmu': 'LMU',
-        'org-ukt': 'UKT', 'org-ukm': 'UKM',
+        'org-uka':  'UKA',
+        'org-ukc':  'UKC',
+        'org-ukd':  'UKD',
+        'org-ukg':  'UKG',
+        'org-ukl':  'UKL',
+        'org-ukmz': 'UKMZ',
+        'org-ukt':  'UKT',
       };
-      expect(Object.keys(shorthands)).toHaveLength(5);
+      expect(Object.keys(shorthands)).toHaveLength(7);
       expect(shorthands['org-uka']).toBe('UKA');
     });
   });
@@ -415,7 +420,7 @@ describe('EMDREQ-PROT: Audit Protocol', () => {
 
 describe('v1.1: Center-based data restriction', () => {
   it('center IDs use org-* format consistently', () => {
-    const validIds = ['org-uka', 'org-ukb', 'org-lmu', 'org-ukt', 'org-ukm'];
+    const validIds = ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukmz', 'org-ukt'];
     for (const id of validIds) {
       expect(id).toMatch(/^org-[a-z]+$/);
     }
@@ -428,14 +433,14 @@ describe('v1.1: Center-based data restriction', () => {
   });
 
   it('center filtering is AND with user assignment', () => {
-    const userCenters = ['org-uka', 'org-ukb'];
+    const userCenters = ['org-uka', 'org-ukc'];
     const bundles = [
       { orgId: 'org-uka' },
-      { orgId: 'org-ukb' },
-      { orgId: 'org-lmu' },
+      { orgId: 'org-ukc' },
+      { orgId: 'org-ukd' },
     ];
     const filtered = bundles.filter(b => userCenters.includes(b.orgId));
     expect(filtered).toHaveLength(2);
-    expect(filtered.map(b => b.orgId)).not.toContain('org-lmu');
+    expect(filtered.map(b => b.orgId)).not.toContain('org-ukd');
   });
 });

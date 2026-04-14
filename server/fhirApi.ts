@@ -73,10 +73,12 @@ export function invalidateFhirCache(): void {
  */
 export function isBypass(role: string, centers: string[]): boolean {
   if (role === 'admin') return true;
-  // Verify actual set membership, not just count (prevents bypass with N arbitrary strings)
-  const validCenters = getValidCenterIds();
-  const validCount = centers.filter((c) => validCenters.has(c)).length;
-  return validCount >= validCenters.size;
+  const valid = getValidCenterIds();
+  if (valid.size === 0) return false;
+  for (const id of valid) {
+    if (!centers.includes(id)) return false;
+  }
+  return true;
 }
 
 // ---------------------------------------------------------------------------
