@@ -26,9 +26,9 @@
 **Plans:** 3 plans
 
 Plans:
-- [ ] 07-01-PLAN.md — Lock 7-site roster (data/centers.json, DEFAULT_CENTERS, client _centerShorthands, roster-pinned test updates, isBypass refactor)
-- [ ] 07-02-PLAN.md — Deterministic synthetic FHIR Bundle generator (Mulberry32 PRNG, scripts/generate-center-bundle.ts, npm run generate-bundles, 5 new bundle files, manifest update, load-path smoke tests)
-- [ ] 07-03-PLAN.md — Users.json migration (_migrateRemovedCenters chained at startup), stale bundle deletion, server/index.ts seed update, README + docs sweep
+- [x] 07-01-PLAN.md — Lock 7-site roster (data/centers.json, DEFAULT_CENTERS, client _centerShorthands, roster-pinned test updates, isBypass refactor)
+- [x] 07-02-PLAN.md — Deterministic synthetic FHIR Bundle generator (Mulberry32 PRNG, scripts/generate-center-bundle.ts, npm run generate-bundles, 5 new bundle files, manifest update, load-path smoke tests)
+- [x] 07-03-PLAN.md — Users.json migration (_migrateRemovedCenters chained at startup), stale bundle deletion, server/index.ts seed update, README + docs sweep
 
 ### Phase 8: Cohort Outcome Trajectories
 

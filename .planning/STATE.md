@@ -1,15 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.5
-milestone_name: site-roster-and-cohort-analytics
-status: active
-last_updated: "2026-04-14T00:00:00.000Z"
+milestone_name: milestone
+status: Defining — ready for `/gsd-plan-phase 7`
+last_updated: "2026-04-14T20:41:58.118Z"
+last_activity: 2026-04-14
 progress:
   total_phases: 2
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 3
+  completed_plans: 3
+  percent: 100
 ---
 
 # Project State
@@ -23,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 
 ## Current Position
 
-Phase: 07 — Site Roster Correction & Synthetic Data
+Phase: 8
 Plan: Not started
 Status: Defining — ready for `/gsd-plan-phase 7`
-Last activity: 2026-04-14 — Milestone v1.5 opened (Site Roster & Cohort Analytics)
+Last activity: 2026-04-14
 
 ## Progress
 
