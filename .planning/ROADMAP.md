@@ -46,7 +46,13 @@ Plans:
 5. Opening the Outcomes view writes an audit entry; authz is enforced — a user whose cohort includes centers they aren't assigned to cannot load data across that boundary (center-based restriction from Phase 5 still applies).
 6. German and English locales cover every new UI string; the `cohortTrajectory.ts` utility has unit tests for empty / single-patient / single-measurement / sparse-series / mismatched-span edge cases.
 
-**Plans:** TBD (created via `/gsd-plan-phase 8`)
+**Plans:** 4 plans
+
+Plans:
+- [ ] 08-01-PLAN.md — Pure trajectory math utility (src/utils/cohortTrajectory.ts) + exhaustive vitest edge-case suite (TDD; OUTCOME-03, -04, -06, -09, -10)
+- [ ] 08-02-PLAN.md — GET /api/audit/events/view-open no-op audit beacon endpoint + tests (OUTCOME-11)
+- [ ] 08-03-PLAN.md — OutcomesPage + 6 co-located components (summary cards, 3 ComposedChart panels, settings drawer, data preview with CSV, tooltip, empty states) + /outcomes route (OUTCOME-01, -02, -03, -04, -05, -06, -07, -08, -09, -11)
+- [ ] 08-04-PLAN.md — outcomes* i18n bundle (DE+EN, ~55 keys) + CohortBuilderPage entry points (header action + per-row saved-cohort action) + i18n completeness test (OUTCOME-01, -12)
 
 ---
 *Created: 2026-04-14 — opens milestone v1.5*
