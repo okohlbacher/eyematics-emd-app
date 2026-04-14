@@ -23,7 +23,12 @@
 4. `data/users.json` migration runs on server startup and leaves every user with at least one valid center from the new roster.
 5. Docs and i18n strings for centers are coherent — grep for `UKB|UKM|LMU|Bonn|München|Münster` in `src/`, `server/`, `docs/`, and `tests/` returns no functional hits (archived planning docs excluded).
 
-**Plans:** TBD (created via `/gsd-plan-phase 7`)
+**Plans:** 3 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — Lock 7-site roster (data/centers.json, DEFAULT_CENTERS, client _centerShorthands, roster-pinned test updates, isBypass refactor)
+- [ ] 07-02-PLAN.md — Deterministic synthetic FHIR Bundle generator (Mulberry32 PRNG, scripts/generate-center-bundle.ts, npm run generate-bundles, 5 new bundle files, manifest update, load-path smoke tests)
+- [ ] 07-03-PLAN.md — Users.json migration (_migrateRemovedCenters chained at startup), stale bundle deletion, server/index.ts seed update, README + docs sweep
 
 ### Phase 8: Cohort Outcome Trajectories
 
