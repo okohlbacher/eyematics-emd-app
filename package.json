@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node --import tsx server/index.ts",
+    "generate-bundles": "node --import tsx scripts/generate-all-bundles.ts",
     "test": "vitest run"
   },
   "dependencies": {
