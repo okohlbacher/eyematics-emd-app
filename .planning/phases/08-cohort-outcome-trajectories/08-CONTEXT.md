@@ -28,9 +28,10 @@ Deliver a cohort-scoped **Outcomes view** that plots longitudinal visual-acuity 
 - **D-06:** A patient with no visus in one eye is excluded from that eye's panel (see missing-data rules D-17..D-19).
 
 ### Treatment index (X-axis mode 2)
-- **D-07:** "Number of treatments" index is computed **per patient** as the cumulative count of `MedicationAdministration` resources up to and including each observation's date.
-- **D-08:** Treatment index is **eye-aware per panel**: the OD panel counts only right-eye injections, OS panel only left-eye, combined panel uses all. Laterality is read from `MedicationAdministration.bodySite` (SNOMED 8966001 = left eye, 18944008 = right eye) with a fallback to a `bodySiteLaterality` extension if present. If neither is available, the injection is **excluded from OD/OS panels but counted in the combined panel**.
-- **D-09:** If a patient has zero MedicationAdministration resources and X-axis mode "Number of treatments" is active, that patient is rendered as a single scatter dot at index 0 for each observation (same as the sparse-data rule D-18).
+> **Reconciled 2026-04-14 after research:** Bundles contain **zero** `MedicationAdministration` resources; all treatments are `Procedure` resources with SNOMED code `36189003` (IVOM injection). `fhirLoader.ts` already exports `SNOMED_EYE_RIGHT` (362503005), `SNOMED_EYE_LEFT` (362502000), `SNOMED_IVI` (36189003).
+- **D-07:** "Number of treatments" index is computed **per patient** as the cumulative count of `Procedure` resources with `code.coding.code == '36189003'` (`SNOMED_IVI`) up to and including each observation's date.
+- **D-08:** Treatment index is **eye-aware per panel**: OD panel counts only right-eye injections (`bodySite.coding.code == '362503005'` / `SNOMED_EYE_RIGHT`), OS panel only left-eye (`362502000` / `SNOMED_EYE_LEFT`), combined panel uses all. If `bodySite` is missing or has no recognized laterality code, the procedure is **excluded from OD/OS panels but counted in the combined panel**.
+- **D-09:** If a patient has zero IVI Procedures and X-axis mode "Number of treatments" is active, that patient is rendered as a single scatter dot at index 0 for each observation (same as the sparse-data rule D-18).
 
 ### Y-metric modes
 - **D-10:** Three modes, controlled by a radio group in the settings drawer:
@@ -79,12 +80,13 @@ Deliver a cohort-scoped **Outcomes view** that plots longitudinal visual-acuity 
   patient_pseudonym, eye, observation_date, days_since_baseline,
   treatment_index, visus_logmar, visus_snellen_numerator, visus_snellen_denominator
   ```
+  Snellen convention: **20/x** numerator (US foot-based, e.g. 20/40). Rationale: international readability; convention isolated to a single helper in `cohortTrajectory.ts` so switching to 6/x is a one-line change if later requested.
 - **D-29:** CSV export via existing `src/utils/download.ts` `downloadCsv` helper; filename via `datedFilename(...)`.
 - **D-30:** `center_id` is **intentionally excluded** from the CSV (honors Phase 5 authz — the user already sees the data on-screen filtered to their authorized centers; exporting center_id adds no value and invites cross-site artifacts).
 
 ### Authz / audit
 - **D-31:** All aggregation is **client-side** over data the existing data layer has already authorized (center-based restriction from Phase 5 still applies). **No new data-bypass endpoint.**
-- **D-32:** Opening the Outcomes view triggers a server-side audit entry via the existing audit pattern used by AnalysisPage. Entry includes: action (`open_outcomes_view`), user id, cohort identifier or filter snapshot, timestamp.
+- **D-32:** Opening the Outcomes view triggers a server-side audit entry via the existing per-request audit middleware. Implementation: a new no-op endpoint `GET /api/audit/events/view-open?name=open_outcomes_view&cohort=<id|filter_hash>` called on mount; middleware captures the row automatically. **View-open only** — toggle changes do not emit additional audit events (matches AnalysisPage pattern).
 
 ### Pure utility boundary
 - **D-33:** All math (baseline derivation, Δ/Δ%, treatment index computation, grid interpolation, median, IQR) lives in **`src/utils/cohortTrajectory.ts`** as pure, side-effect-free functions.
@@ -93,6 +95,15 @@ Deliver a cohort-scoped **Outcomes view** that plots longitudinal visual-acuity 
 ### i18n
 - **D-35:** Every new user-facing string is added to both `de` and `en` bundles in `src/i18n/translations.ts` under a new `outcomes.*` namespace. No hardcoded text.
 - **D-36:** Strings follow the namespace shape used by existing analytical views (`cohortBuilder.*`, `analysis.*`).
+
+### Performance ceiling
+- **D-37:** Soft ceiling on cohort size for default scatter layer rendering. When `patientCount > 30`, the **Scatter** display layer is **toggled off by default** on mount (user can still enable it). A subtle advisory badge appears in the settings drawer next to the Scatter toggle: "Scatter disabled by default for cohorts > 30 patients (performance)" / "Streupunkte bei Kohorten > 30 Patient:innen standardmäßig aus (Performance)".
+- **D-38:** The median line, per-patient curves, and IQR spread band remain on by default regardless of cohort size — scatter is the only layer throttled.
+- **D-39:** Unit test for the default-layer-resolution helper covers the 30-patient boundary (29 → scatter on, 30 → on, 31 → off).
+
+### Unit handling (visus observation source)
+- **D-40:** Observations store visus as `value` with `unit: "decimal"` (decimal acuity, e.g. 0.5 = 20/40). `cohortTrajectory.ts` **normalizes to logMAR at ingest** via `logMAR = -log10(decimal)`. All downstream math (baseline Δ, Δ%, median, IQR, grid interpolation) operates in logMAR space. Snellen (`20/x`) is computed only for the CSV export / tooltip display: `x = round(20 / decimal)`.
+- **D-41:** Y-axis shows logMAR values in plot (matches clinical outcome reporting convention); tooltip additionally displays the Snellen equivalent on a second line.
 
 ### Claude's Discretion
 - Recharts vs raw SVG for the three panels (default: Recharts, to match the existing codebase; fall back to raw SVG only if Recharts can't express per-grid-point band rendering cleanly)
