@@ -153,11 +153,13 @@ export const SNOMED_EYE_LEFT = '362502000';
  * Falls back to built-in defaults until the API response arrives.
  */
 let _centerShorthands: Record<string, string> = {
-  'org-uka': 'UKA',
-  'org-ukb': 'UKB',
-  'org-lmu': 'LMU',
-  'org-ukt': 'UKT',
-  'org-ukm': 'UKM',
+  'org-uka':  'UKA',
+  'org-ukc':  'UKC',
+  'org-ukd':  'UKD',
+  'org-ukg':  'UKG',
+  'org-ukl':  'UKL',
+  'org-ukmz': 'UKMZ',
+  'org-ukt':  'UKT',
 };
 
 /** Load center shorthands from server. Called once at app startup. */

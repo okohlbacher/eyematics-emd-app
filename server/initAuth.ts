@@ -233,11 +233,13 @@ function _atomicWrite(filePath: string, content: string): void {
  * Shorthand values are legacy and must be migrated at startup.
  */
 const SHORTHAND_TO_ORG: Record<string, string> = {
-  'UKA': 'org-uka',
-  'UKB': 'org-ukb',
-  'LMU': 'org-lmu',
-  'UKT': 'org-ukt',
-  'UKM': 'org-ukm',
+  'UKA':  'org-uka',
+  'UKC':  'org-ukc',
+  'UKD':  'org-ukd',
+  'UKG':  'org-ukg',
+  'UKL':  'org-ukl',
+  'UKMZ': 'org-ukmz',
+  'UKT':  'org-ukt',
 };
 
 /**
