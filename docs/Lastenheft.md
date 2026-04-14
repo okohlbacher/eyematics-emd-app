@@ -514,3 +514,7 @@ Kriterien erfüllt sein. \[Zu spezifizieren\]
 
 *Das Glossar wird über die separate Seite RE-EM-G: Glossar
 bereitgestellt (29 ophthalmologische Fachbegriffe).*
+
+---
+
+**Anmerkung v1.5 (Rosterkorrektur):** Der Software-Demonstrator EMD wird ab v1.5 auf die sieben realen EyeMatics-Standorte beschränkt: UKA (Aachen), UKC (Chemnitz), UKD (Dresden), UKG (Greifswald), UKL (Leipzig), UKMZ (Mainz), UKT (Tübingen). Frühere Demo-Standorte (UKB Bonn, LMU München, UKM Münster) sind entfernt; historische Lastenheft-Passagen bleiben als Projektdokumentation unverändert.

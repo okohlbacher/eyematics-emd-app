@@ -116,13 +116,17 @@ dataSource:
 
 ## Centres (Test Data)
 
-| Shorthand | Full Name                       | Patients |
-|-----------|---------------------------------|----------|
-| UKA       | Universitätsklinikum Aachen     | 35       |
-| UKB       | Universitätsklinikum Bonn       | 30       |
-| LMU       | LMU Klinikum München            | 30       |
-| UKM       | Universitätsklinikum Münster    | 25       |
-| UKT       | Universitätsklinikum Tübingen   | 30       |
+| Shorthand | Full Name                         | Patients (approx.) | Source   |
+|-----------|-----------------------------------|--------------------|----------|
+| UKA       | Universitätsklinikum Aachen       | 35                 | curated  |
+| UKC       | Universitätsklinikum Chemnitz     | 45                 | generated|
+| UKD       | Universitätsklinikum Dresden      | 45                 | generated|
+| UKG       | Universitätsklinikum Greifswald   | 45                 | generated|
+| UKL       | Universitätsklinikum Leipzig      | 45                 | generated|
+| UKMZ      | Universitätsmedizin Mainz         | 45                 | generated|
+| UKT       | Universitätsklinikum Tübingen     | 30                 | curated  |
+
+> Synthetic bundles for the five generated sites are produced by `npm run generate-bundles` (deterministic seeded output; see `scripts/generate-center-bundle.ts`).
 
 ## Documentation
 

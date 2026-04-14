@@ -74,8 +74,13 @@ Die Liste der verfügbaren Zentren ist in `data/centers.json` konfigurierbar:
 
 ```json
 [
-  { "id": "org-uka", "shorthand": "UKA", "name": "Universitätsklinikum Aachen", "file": "center-aachen.json" },
-  { "id": "org-ukb", "shorthand": "UKB", "name": "Universitätsklinikum Bonn", "file": "center-bonn.json" }
+  { "id": "org-uka",  "shorthand": "UKA",  "name": "Universitätsklinikum Aachen",     "file": "center-aachen.json" },
+  { "id": "org-ukc",  "shorthand": "UKC",  "name": "Universitätsklinikum Chemnitz",   "file": "center-chemnitz.json" },
+  { "id": "org-ukd",  "shorthand": "UKD",  "name": "Universitätsklinikum Dresden",    "file": "center-dresden.json" },
+  { "id": "org-ukg",  "shorthand": "UKG",  "name": "Universitätsklinikum Greifswald", "file": "center-greifswald.json" },
+  { "id": "org-ukl",  "shorthand": "UKL",  "name": "Universitätsklinikum Leipzig",    "file": "center-leipzig.json" },
+  { "id": "org-ukmz", "shorthand": "UKMZ", "name": "Universitätsmedizin Mainz",       "file": "center-mainz.json" },
+  { "id": "org-ukt",  "shorthand": "UKT",  "name": "Universitätsklinikum Tübingen",   "file": "center-tuebingen.json" }
 ]
 ```
 
@@ -128,15 +133,15 @@ Der Server:
 
 Beim ersten Start werden 7 Standardbenutzer angelegt (in `data/users.json`). Alle erhalten das Passwort `changeme2025!` (bcrypt-gehasht). Es wird empfohlen, Passwörter nach dem ersten Login zu ändern.
 
-| Benutzername | Rolle | Zentren |
-|-------------|-------|---------|
-| `admin` | IT-Administrator | Alle (UKA, UKB, LMU, UKT, UKM) |
-| `forscher1` | Forscher/in | UKA |
-| `forscher2` | Forscher/in | UKB |
-| `epidemiologe` | Epidemiolog/in | UKA, UKB, LMU |
-| `kliniker` | Kliniker/in | UKT |
-| `diz_manager` | DIZ Data Manager | UKM |
-| `klinikleitung` | Klinikleitung | Alle |
+| Benutzername    | Rolle               | Zentren                                   |
+|-----------------|---------------------|-------------------------------------------|
+| `admin`         | IT-Administrator    | Alle (UKA, UKC, UKD, UKG, UKL, UKMZ, UKT) |
+| `forscher1`     | Forscher/in         | UKA                                       |
+| `forscher2`     | Forscher/in         | UKC                                       |
+| `epidemiologe`  | Epidemiolog/in      | UKA, UKC, UKD                             |
+| `kliniker`      | Kliniker/in         | UKT                                       |
+| `diz_manager`   | DIZ Data Manager    | UKMZ                                      |
+| `klinikleitung` | Klinikleitung       | Alle                                      |
 
 ## Architektur
 
