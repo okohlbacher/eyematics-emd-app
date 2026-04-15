@@ -67,34 +67,34 @@ Extend the outcomes view beyond visus. Each metric reuses the existing axis/y-me
 
 ## Traceability
 
-Phases assigned during roadmap creation.
+Phases assigned during roadmap creation (2026-04-16).
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| VQA-01 | TBD | Pending |
-| VQA-02 | TBD | Pending |
-| VQA-03 | TBD | Pending |
-| VQA-04 | TBD | Pending |
-| VQA-05 | TBD | Pending |
-| AGG-01 | TBD | Pending |
-| AGG-02 | TBD | Pending |
-| AGG-03 | TBD | Pending |
-| AGG-04 | TBD | Pending |
-| AGG-05 | TBD | Pending |
-| METRIC-01 | TBD | Pending |
-| METRIC-02 | TBD | Pending |
-| METRIC-03 | TBD | Pending |
-| METRIC-04 | TBD | Pending |
-| METRIC-05 | TBD | Pending |
-| METRIC-06 | TBD | Pending |
-| CRREV-01 | TBD | Pending |
-| CRREV-02 | TBD | Pending |
+| VQA-01 | Phase 10 | Pending |
+| VQA-02 | Phase 10 | Pending |
+| VQA-03 | Phase 10 | Pending |
+| VQA-04 | Phase 10 | Pending |
+| VQA-05 | Phase 10 | Pending |
+| AGG-01 | Phase 12 | Pending |
+| AGG-02 | Phase 12 | Pending |
+| AGG-03 | Phase 12 | Pending |
+| AGG-04 | Phase 12 | Pending |
+| AGG-05 | Phase 12 | Pending |
+| METRIC-01 | Phase 13 | Pending |
+| METRIC-02 | Phase 13 | Pending |
+| METRIC-03 | Phase 13 | Pending |
+| METRIC-04 | Phase 13 | Pending |
+| METRIC-05 | Phase 13 | Pending |
+| METRIC-06 | Phase 13 | Pending |
+| CRREV-01 | Phase 11 | Pending |
+| CRREV-02 | Phase 10 | Pending |
 
 **Coverage:**
 - v1.6 requirements: 18 total
-- Mapped to phases: 0 (pending roadmapper)
-- Unmapped: 18 (expected until roadmap created)
+- Mapped to phases: 18 (100%)
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-16*
-*Last updated: 2026-04-16 after initial definition*
+*Last updated: 2026-04-16 — Traceability populated (Phases 10–13, 18/18 mapped).*
