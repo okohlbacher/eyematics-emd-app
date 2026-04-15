@@ -6,6 +6,7 @@ import { useSearchParams } from 'react-router-dom';
 import OutcomesEmptyState from '../components/outcomes/OutcomesEmptyState';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import type { TranslationKey } from '../i18n/translations';
 import { applyFilters } from '../services/fhirLoader';
 import type { CohortFilter } from '../types/fhir';
 import {
@@ -80,7 +81,7 @@ export default function OutcomesPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!cohort || cohort.cases.length === 0) {
-    return <OutcomesEmptyState variant="no-cohort" t={t as (key: import('../i18n/translations').TranslationKey) => string} />;
+    return <OutcomesEmptyState variant="no-cohort" t={t as (key: TranslationKey) => string} />;
   }
 
   // Unused-var discipline: touch the state setters/getters so downstream plans
