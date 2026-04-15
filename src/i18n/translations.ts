@@ -577,6 +577,93 @@ const translations = {
   noCentersAssigned: { de: 'Keine Zentren zugewiesen', en: 'No centers assigned' },
   mutationForbiddenCase: { de: 'Fall liegt ausserhalb Ihrer erlaubten Zentren.', en: 'Case is outside your permitted centers.' },
   mutationForbiddenSearch: { de: 'Suche enthaelt Faelle ausserhalb Ihrer erlaubten Zentren.', en: 'Search references cases outside your permitted centers.' },
+
+  // Cohort Outcome Trajectories (Phase 08 — OUTCOME-01..12)
+  outcomesTitle: { de: 'Outcomes', en: 'Outcomes' },
+  outcomesTitleWithCohort: { de: 'Outcomes: {cohortName}', en: 'Outcomes: {cohortName}' },
+  outcomesSubtitleSaved: { de: 'Gespeicherte Kohorte · {count} Patient:innen', en: 'Saved cohort · {count} patients' },
+  outcomesSubtitleAdhoc: { de: 'Ad-hoc-Filter · {count} Patient:innen', en: 'Ad-hoc filter · {count} patients' },
+  outcomesOpenSettings: { de: 'Einstellungen öffnen', en: 'Open settings' },
+  outcomesCloseSettings: { de: 'Einstellungen schließen', en: 'Close settings' },
+  outcomesBackToCohort: { de: 'Zurück zur Kohorte', en: 'Back to cohort' },
+
+  // Entry points (CohortBuilderPage — D-02)
+  outcomesOpenForCohort: { de: 'Outcomes anzeigen', en: 'View Outcomes' },
+  outcomesOpenForFilter: { de: 'Outcomes für aktuellen Filter', en: 'Outcomes for current filter' },
+
+  // Summary cards (D-25)
+  outcomesCardPatients: { de: 'Patient:innen', en: 'Patients' },
+  outcomesCardMeasurements: { de: 'Messungen gesamt', en: 'Total measurements' },
+  outcomesCardOdMeasurements: { de: 'Messungen OD', en: 'OD measurements' },
+  outcomesCardOsMeasurements: { de: 'Messungen OS', en: 'OS measurements' },
+  outcomesCardExcluded: { de: '{count} ausgeschlossen', en: '{count} excluded' },
+  outcomesCardExcludedTooltip: { de: 'Patient:innen ohne Visusmessung in diesem Auge.', en: 'Patients with no visus measurement in this eye.' },
+
+  // Chart panels
+  outcomesPanelOd: { de: 'Rechtes Auge (OD)', en: 'Right eye (OD)' },
+  outcomesPanelOs: { de: 'Linkes Auge (OS)', en: 'Left eye (OS)' },
+  outcomesPanelCombined: { de: 'OD + OS kombiniert', en: 'OD + OS combined' },
+  outcomesPanelSubtitle: { de: '{patients} Patient:innen · {measurements} Messungen', en: '{patients} patients · {measurements} measurements' },
+
+  // Settings drawer (D-23)
+  outcomesSettingsTitle: { de: 'Einstellungen', en: 'Settings' },
+  outcomesSectionXAxis: { de: 'X-Achse', en: 'X axis' },
+  outcomesXAxisTime: { de: 'Tage seit Baseline', en: 'Days since baseline' },
+  outcomesXAxisTreatments: { de: 'Anzahl Behandlungen', en: 'Number of treatments' },
+  outcomesSectionYMetric: { de: 'Y-Metrik', en: 'Y metric' },
+  outcomesYAbsolute: { de: 'Absolut (logMAR)', en: 'Absolute (logMAR)' },
+  outcomesYDelta: { de: 'Δ (Differenz zur Baseline)', en: 'Δ (delta from baseline)' },
+  outcomesYDeltaPercent: { de: 'Δ % (prozentuale Änderung)', en: 'Δ % (percent change)' },
+  outcomesSectionLayers: { de: 'Anzeigeebenen', en: 'Display layers' },
+  outcomesLayerMedian: { de: 'Median', en: 'Median' },
+  outcomesLayerPerPatient: { de: 'Individuelle Kurven', en: 'Per-patient curves' },
+  outcomesLayerScatter: { de: 'Streupunkte', en: 'Scatter' },
+  outcomesLayerSpreadBand: { de: 'Streuband (IQR)', en: 'Spread band (IQR)' },
+  outcomesSettingsScatterAdvisory: { de: 'Streupunkte bei Kohorten > 30 Patient:innen standardmäßig aus (Performance)', en: 'Scatter disabled by default for cohorts > 30 patients (performance)' },
+  outcomesSectionGrid: { de: 'Interpolationsraster', en: 'Interpolation grid' },
+  outcomesGridSliderLabel: { de: '{n} Stützstellen', en: '{n} grid points' },
+  outcomesResetSettings: { de: 'Auf Standard zurücksetzen', en: 'Reset to defaults' },
+
+  // Data preview (D-27..D-30)
+  outcomesPreviewToggleOpen: { de: 'Rohdaten anzeigen', en: 'Show raw data' },
+  outcomesPreviewToggleClose: { de: 'Rohdaten ausblenden', en: 'Hide raw data' },
+  outcomesPreviewCaption: { de: '{rows} Messzeilen · identisch zum CSV-Export', en: '{rows} measurement rows · identical to CSV export' },
+  outcomesPreviewExportCsv: { de: 'CSV exportieren', en: 'Export CSV' },
+  outcomesPreviewExportedStatus: { de: 'CSV exportiert', en: 'CSV exported' },
+  outcomesPreviewColPseudonym: { de: 'Pseudonym', en: 'Pseudonym' },
+  outcomesPreviewColEye: { de: 'Auge', en: 'Eye' },
+  outcomesPreviewColDate: { de: 'Datum', en: 'Date' },
+  outcomesPreviewColDaysSinceBaseline: { de: 'Tage seit Baseline', en: 'Days since baseline' },
+  outcomesPreviewColTreatmentIndex: { de: 'Behandlungsindex', en: 'Treatment index' },
+  outcomesPreviewColVisusLogmar: { de: 'Visus (logMAR)', en: 'Visus (logMAR)' },
+  outcomesPreviewColSnellenNum: { de: 'Snellen Zähler', en: 'Snellen numerator' },
+  outcomesPreviewColSnellenDen: { de: 'Snellen Nenner', en: 'Snellen denominator' },
+  outcomesPreviewEyeOd: { de: 'OD', en: 'OD' },
+  outcomesPreviewEyeOs: { de: 'OS', en: 'OS' },
+
+  // Tooltips
+  outcomesTooltipPatient: { de: 'Patient', en: 'Patient' },
+  outcomesTooltipEye: { de: 'Auge', en: 'Eye' },
+  outcomesTooltipDay: { de: 'Tag', en: 'Day' },
+  outcomesTooltipTreatmentIndex: { de: 'Behandlung #', en: 'Treatment #' },
+  outcomesTooltipLogmar: { de: 'logMAR', en: 'logMAR' },
+  outcomesTooltipSnellen: { de: 'Snellen', en: 'Snellen' },
+  outcomesTooltipDelta: { de: 'Δ', en: 'Δ' },
+  outcomesTooltipDeltaPercent: { de: 'Δ %', en: 'Δ %' },
+  outcomesTooltipMedian: { de: 'Median ({n} Patient:innen)', en: 'Median ({n} patients)' },
+  outcomesTooltipIqr: { de: 'IQR {p25} – {p75}', en: 'IQR {p25} – {p75}' },
+  outcomesTooltipClipped: { de: 'außerhalb ±200 % (abgeschnitten)', en: 'outside ±200 % (clipped)' },
+  outcomesTooltipSparse: { de: 'Sparse-Serie ({n} Messpunkte)', en: 'Sparse series ({n} measurements)' },
+
+  // Empty / loading / error
+  outcomesLoading: { de: 'Verlaufsdaten werden berechnet …', en: 'Computing trajectories …' },
+  outcomesEmptyCohortTitle: { de: 'Keine Patient:innen in dieser Kohorte', en: 'No patients in this cohort' },
+  outcomesEmptyCohortBody: { de: 'Passen Sie den Filter in der Kohortenbildung an oder wählen Sie eine andere gespeicherte Suche.', en: 'Adjust filters in the Cohort Builder or pick a different saved search.' },
+  outcomesEmptyCohortAction: { de: 'Zur Kohortenbildung', en: 'Go to Cohort Builder' },
+  outcomesNoVisusTitle: { de: 'Keine Visus-Messungen in dieser Kohorte', en: 'No visus measurements in this cohort' },
+  outcomesNoVisusBody: { de: 'Die ausgewählten Patient:innen haben keine Observation mit LOINC 79880-1.', en: 'The selected patients have no observation with LOINC 79880-1.' },
+  outcomesPanelEmpty: { de: 'Keine Messwerte für dieses Auge', en: 'No measurements for this eye' },
+  outcomesError: { de: 'Berechnung fehlgeschlagen. Bitte erneut versuchen.', en: 'Computation failed. Please try again.' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
@@ -585,4 +672,5 @@ export function t(key: TranslationKey, locale: Locale): string {
   return translations[key][locale];
 }
 
+export { translations };
 export default translations;
