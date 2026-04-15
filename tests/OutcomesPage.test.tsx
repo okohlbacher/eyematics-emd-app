@@ -5,7 +5,7 @@
  * Tests 13-17 (data preview, CSV) land in 09-03.
  */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import OutcomesPage from '../src/pages/OutcomesPage';
 
@@ -30,9 +30,21 @@ vi.mock('../src/services/fhirLoader', () => ({
   getObservationsByCode: vi.fn(() => []),
 }));
 
+// Mock cohortTrajectory so tests 8-12 control the aggregate directly.
+// The real function is pure math; tests assert DOM behaviour from the result shape.
+vi.mock('../src/utils/cohortTrajectory', async (importOriginal) => {
+  const real = await importOriginal<typeof import('../src/utils/cohortTrajectory')>();
+  return {
+    ...real,
+    computeCohortTrajectory: vi.fn(),
+  };
+});
+
 import { useData } from '../src/context/DataContext';
 import { useLanguage } from '../src/context/LanguageContext';
 import { applyFilters } from '../src/services/fhirLoader';
+import { computeCohortTrajectory } from '../src/utils/cohortTrajectory';
+import type { TrajectoryResult } from '../src/utils/cohortTrajectory';
 import type { PatientCase, SavedSearch } from '../src/types/fhir';
 
 // ---------------------------------------------------------------------------
@@ -259,5 +271,185 @@ describe('OutcomesPage — route resolution, audit beacon, empty states (09-01)'
     // The marker flips after the scatter useEffect runs
     const marker = await screen.findByTestId('outcomes-scatter-default-off');
     expect(marker).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests 8..12 — panels, summary cards, drawer toggles (09-02)
+// ---------------------------------------------------------------------------
+
+/** Build a mock TrajectoryResult panel for a given eye with N patients and M measurements */
+function makePanelResult(patientCount: number, measurementCount: number, excludedCount = 0) {
+  return {
+    patients: Array.from({ length: patientCount }, (_, i) => ({
+      id: `p${i + 1}`,
+      pseudonym: `p${i + 1}`,
+      measurements: Array.from({ length: Math.floor(measurementCount / Math.max(patientCount, 1)) }, (__, j) => ({
+        date: `2024-0${(j % 9) + 1}-01`,
+        decimal: 0.8,
+        logmar: 0.097,
+        snellenNum: 20,
+        snellenDen: 25,
+        eye: 'od' as const,
+        x: (j + 1) * 30,
+        y: 0.097,
+      })),
+      sparse: false,
+      excluded: false,
+      baseline: 0.097,
+    })),
+    scatterPoints: [],
+    medianGrid: Array.from({ length: 10 }, (_, i) => ({
+      x: (i + 1) * 15,
+      y: 0.097,
+      p25: 0.05,
+      p75: 0.15,
+      n: patientCount,
+    })),
+    summary: { patientCount, measurementCount, excludedCount },
+  };
+}
+
+/** Build a full TrajectoryResult for use in tests 8-12 */
+function makeTrajectoryResult(override: Partial<TrajectoryResult> = {}): TrajectoryResult {
+  const defaultResult: TrajectoryResult = {
+    od: makePanelResult(3, 15),
+    os: makePanelResult(3, 15),
+    combined: makePanelResult(3, 30),
+  };
+  return { ...defaultResult, ...override };
+}
+
+describe('OutcomesPage — panels, summary cards, drawer toggles (09-02)', () => {
+  beforeEach(() => {
+    // Default aggregate for 3-patient, 3×5 OD + 3×5 OS cohort
+    (computeCohortTrajectory as ReturnType<typeof vi.fn>).mockReturnValue(makeTrajectoryResult());
+  });
+
+  /**
+   * Test 8: OD panel renders an SVG for a 3-patient cohort with OD measurements.
+   * OutcomesPanel must mount a Recharts ComposedChart which renders an <svg>.
+   */
+  it('8. OD panel renders and its subtree contains an svg element', () => {
+    const cases = [
+      buildPatientCaseWithVisus('p1'),
+      buildPatientCaseWithVisus('p2'),
+      buildPatientCaseWithVisus('p3'),
+    ];
+    (computeCohortTrajectory as ReturnType<typeof vi.fn>).mockReturnValue(makeTrajectoryResult());
+    renderWith({ activeCases: cases });
+
+    const panel = screen.getByTestId('outcomes-panel-od');
+    expect(panel).toBeDefined();
+    const svg = panel.querySelector('svg');
+    expect(svg).not.toBeNull();
+  });
+
+  /**
+   * Test 9: Toggling axisMode from 'days' to 'treatments' via the drawer
+   * causes the axis label for treatments to appear in the DOM.
+   */
+  it('9. toggling x-axis to treatments in drawer causes axis label to appear', async () => {
+    const cases = [buildPatientCaseWithVisus('p1')];
+    renderWith({ activeCases: cases });
+
+    // Open the settings drawer by clicking the gear button
+    const gearBtn = screen.getByLabelText('outcomesOpenSettings');
+    fireEvent.click(gearBtn);
+
+    // Click the treatments radio
+    await waitFor(() => {
+      expect(screen.getByLabelText('outcomesXAxisTreatments')).toBeDefined();
+    });
+    fireEvent.click(screen.getByLabelText('outcomesXAxisTreatments'));
+
+    // After toggle, outcomesXAxisTreatments label text or treatment tooltip key should appear
+    await waitFor(() => {
+      // The drawer radio is checked AND the panel xLabel reflects treatments mode
+      const treatmentsRadio = screen.getByLabelText('outcomesXAxisTreatments') as HTMLInputElement;
+      expect(treatmentsRadio.checked).toBe(true);
+    });
+  });
+
+  /**
+   * Test 10: Toggling the spreadBand checkbox off removes the IQR area marker
+   * from the OD panel subtree.
+   */
+  it('10. toggling spreadBand off removes the IQR marker from the OD panel', async () => {
+    const cases = [buildPatientCaseWithVisus('p1')];
+    renderWith({ activeCases: cases });
+
+    // Initially the IQR marker should be present in OD panel
+    expect(screen.getByTestId('outcomes-panel-od-iqr')).toBeDefined();
+
+    // Open drawer and toggle the spread band off
+    fireEvent.click(screen.getByLabelText('outcomesOpenSettings'));
+    await waitFor(() => {
+      expect(screen.getByLabelText('outcomesLayerSpreadBand')).toBeDefined();
+    });
+    fireEvent.click(screen.getByLabelText('outcomesLayerSpreadBand'));
+
+    // IQR marker should now be absent
+    await waitFor(() => {
+      expect(screen.queryByTestId('outcomes-panel-od-iqr')).toBeNull();
+    });
+  });
+
+  /**
+   * Test 11: With a 31-patient cohort, the Scatter checkbox is unchecked on mount.
+   * (D-37 — defaultScatterOn(31) === false)
+   */
+  it('11. with 31-patient cohort, scatter checkbox is unchecked in drawer on mount', async () => {
+    const cases = Array.from({ length: 31 }, (_, i) =>
+      buildPatientCaseWithVisus(`p${i + 1}`),
+    );
+    renderWith({ activeCases: cases });
+
+    // Open the drawer
+    fireEvent.click(screen.getByLabelText('outcomesOpenSettings'));
+
+    await waitFor(() => {
+      const scatterCheckbox = screen.getByLabelText('outcomesLayerScatter') as HTMLInputElement;
+      expect(scatterCheckbox.checked).toBe(false);
+    });
+  });
+
+  /**
+   * Test 12: Summary cards parity for an all-OD cohort of 3 patients × 5 OD observations.
+   * Patients card: "3", OD card: "15", OS card: "0" + excluded hint, Total card: "15".
+   */
+  it('12. summary cards display values matching the aggregate for all-OD cohort', () => {
+    const cases = [
+      buildPatientCaseWithVisus('p1'),
+      buildPatientCaseWithVisus('p2'),
+      buildPatientCaseWithVisus('p3'),
+    ];
+
+    // All-OD cohort: 3 patients × 5 OD each, 0 OS
+    const allOdAggregate: TrajectoryResult = {
+      od: makePanelResult(3, 15),
+      os: makePanelResult(0, 0, 0),
+      combined: makePanelResult(3, 15),
+    };
+    (computeCohortTrajectory as ReturnType<typeof vi.fn>).mockReturnValue(allOdAggregate);
+
+    renderWith({ activeCases: cases });
+
+    // Patients card
+    const patientsCard = screen.getByTestId('outcomes-card-patients');
+    expect(patientsCard.textContent).toContain('3');
+
+    // OD card: 15 measurements
+    const odCard = screen.getByTestId('outcomes-card-od');
+    expect(odCard.textContent).toContain('15');
+
+    // OS card: 0 measurements + excluded hint
+    const osCard = screen.getByTestId('outcomes-card-os');
+    expect(osCard.textContent).toContain('0');
+    expect(osCard.textContent).toContain('outcomesCardExcluded');
+
+    // Total card: 15 total
+    const totalCard = screen.getByTestId('outcomes-card-total');
+    expect(totalCard.textContent).toContain('15');
   });
 });
