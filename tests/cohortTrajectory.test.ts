@@ -180,12 +180,13 @@ describe('cohortTrajectory — pure helpers', () => {
       expect(result[2]).toBeNull();
     });
 
-    it('interpolate([{x:10,y:1},{x:100,y:2}], [5,10,50,100,200]) → [null,1,1.5,2,null]', () => {
-      const series = [{ x: 10, y: 1 }, { x: 100, y: 2 }];
-      const result = interpolate(series, [5, 10, 50, 100, 200]);
-      expect(result[0]).toBeNull();          // 5 < 10 → outside span
-      expect(result[1]).toBe(1);             // exact match at x=10
-      expect(result[2]).toBeCloseTo(1.5, 5); // midpoint
+    it('interpolate([{x:0,y:1},{x:100,y:2}], [−5,0,50,100,200]) → [null,1,1.5,2,null]', () => {
+      // x=50 is the true midpoint of [0,100], so y = 1 + (50/100)*1 = 1.5
+      const series = [{ x: 0, y: 1 }, { x: 100, y: 2 }];
+      const result = interpolate(series, [-5, 0, 50, 100, 200]);
+      expect(result[0]).toBeNull();          // -5 < 0 → outside span
+      expect(result[1]).toBe(1);             // exact match at x=0
+      expect(result[2]).toBeCloseTo(1.5, 5); // true midpoint
       expect(result[3]).toBe(2);             // exact match at x=100
       expect(result[4]).toBeNull();          // 200 > 100 → outside span (D-15)
     });
