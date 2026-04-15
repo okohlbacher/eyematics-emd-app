@@ -93,23 +93,29 @@ export default function OutcomesPage() {
       .catch(() => { /* beacon is fire-and-forget */ });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!cohort || cohort.cases.length === 0) {
-    return <OutcomesEmptyState variant="no-cohort" t={t as (key: TranslationKey) => string} />;
-  }
-
   // D-26: single memoized aggregate keyed on all 5 inputs — feeds BOTH cards AND panels.
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  // Hoisted above early-return guards to satisfy Rules of Hooks (WR-01).
   const aggregate = useMemo(
-    () =>
-      computeCohortTrajectory({
+    () => {
+      if (!cohort || cohort.cases.length === 0) return null;
+      return computeCohortTrajectory({
         cases: cohort.cases,
         axisMode,
         yMetric,
         gridPoints,
         spreadMode,
-      }),
+      });
+    },
     [cohort, axisMode, yMetric, gridPoints, spreadMode],
   );
+
+  if (!cohort || cohort.cases.length === 0) {
+    return <OutcomesEmptyState variant="no-cohort" t={t as (key: TranslationKey) => string} />;
+  }
+
+  if (!aggregate) {
+    return <OutcomesEmptyState variant="no-cohort" t={t as (key: TranslationKey) => string} />;
+  }
 
   // No-visus early return: both panels have zero measurements
   if (
@@ -139,6 +145,8 @@ export default function OutcomesPage() {
         <button
           type="button"
           aria-label={t('outcomesOpenSettings')}
+          aria-expanded={drawerOpen}
+          aria-controls="outcomes-settings-drawer"
           onClick={() => setDrawerOpen((v) => !v)}
           className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
         >
