@@ -77,9 +77,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Scaffold /outcomes route + cohort resolution + audit beacon + OutcomesEmptyState + App.tsx wiring (TDD, tests 1..7; OUTCOME-01, -09, -11)
-- [ ] 09-02-PLAN.md — OutcomesSummaryCards + three OutcomesPanels (OD/OS/combined) + OutcomesTooltip + OutcomesSettingsDrawer + page wire (TDD, tests 8..12; OUTCOME-02, -03, -04, -05, -06, -07)
-- [ ] 09-03-PLAN.md — OutcomesDataPreview <details> + flattenToRows helper + CSV export via downloadCsv/datedFilename (TDD, tests 13..17; OUTCOME-08)
+- [x] 09-01-PLAN.md — Scaffold /outcomes route + cohort resolution + audit beacon + OutcomesEmptyState + App.tsx wiring (TDD, tests 1..7; OUTCOME-01, -09, -11)
+- [x] 09-02-PLAN.md — OutcomesSummaryCards + three OutcomesPanels (OD/OS/combined) + OutcomesTooltip + OutcomesSettingsDrawer + page wire (TDD, tests 8..12; OUTCOME-02, -03, -04, -05, -06, -07)
+- [x] 09-03-PLAN.md — OutcomesDataPreview <details> + flattenToRows helper + CSV export via downloadCsv/datedFilename (TDD, tests 13..17; OUTCOME-08)
 
 ---
 *Created: 2026-04-14 — opens milestone v1.5*
