@@ -1,41 +1,47 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.5
-milestone_name: milestone
-status: Phase 8 complete (foundations); Phase 9 awaiting discuss/plan for Outcomes Page UI
-last_updated: "2026-04-15T08:05:00.000Z"
-last_activity: 2026-04-15
+milestone: none
+milestone_name: none
+status: v1.5 SHIPPED 2026-04-15 — awaiting `/gsd-new-milestone`
+last_updated: "2026-04-15T17:20:00.000Z"
+last_activity: 2026-04-15 — milestone v1.5 archived and tagged
 progress:
-  total_phases: 3
-  completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
-  percent: 67
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-14)
+See: .planning/PROJECT.md (updated 2026-04-15)
 
 **Core value:** Every user sees only authorized data, with tamper-proof audit trail
-**Current focus:** Phase 9 — outcomes-page-ui (fresh discuss/plan needed)
+**Current focus:** No active milestone — v1.5 shipped. Run `/gsd-new-milestone` to begin the next cycle.
 
 ## Current Position
 
-Phase: 9
-Plan: Not started
-Status: Phase 8 complete (3 of 3 plans shipped: 08-01, 08-02, 08-04). 08-03 deferred to new Phase 9. Ready for `/gsd-discuss-phase 9`.
-Last activity: 2026-04-15
+No active milestone.
+Last activity: 2026-04-15 — v1.5 archived to `.planning/milestones/`
 
-## Progress
+## Milestones Shipped
 
-| Phase | Status | Plans |
-|-------|--------|-------|
-| 7     | ●      | 3/3   |
-| 8     | ●      | 3/3   |
-| 9     | ○      | 0/0   |
+| Version | Name | Phases | Shipped |
+|---------|------|--------|---------|
+| v1.0 | Foundational Backend | 1–6 | earlier |
+| v1.1 | Frontend ↔ Backend Wiring | — | earlier |
+| v1.5 | Site Roster Correction & Cohort Analytics | 7–9 | 2026-04-15 |
+
+## v1.5 Final Progress
+
+| Phase | Status | Plans | Verification |
+|-------|--------|-------|--------------|
+| 7     | ●      | 3/3   | human_needed (visual QA available) |
+| 8     | ●      | 3/3   | passed |
+| 9     | ●      | 3/3   | passed |
 
 ## Accumulated Context
 

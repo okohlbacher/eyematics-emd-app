@@ -53,32 +53,64 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] Center validation on excluded/reviewed cases endpoints — v1.1
 - [x] Client-side audit removed (server auditMiddleware handles all logging) — v1.1
 
+### Validated in v1.5
+
+- [x] Replace site roster with Aachen, Chemnitz, Dresden, Greifswald, Leipzig, Mainz, Tübingen (7 sites; was 5) — v1.5 (Phase 7)
+- [x] Synthetic FHIR bundles for the 5 new sites (~45 patients each with AMD/DME/RVO trajectories) — v1.5 (Phase 7)
+- [x] Deterministic Node.js synthetic data generator (`scripts/generate-center-bundle.ts`, Mulberry32 PRNG) — v1.5 (Phase 7)
+- [x] `data/users.json` migration (`_migrateRemovedCenters` at server startup) — v1.5 (Phase 7)
+- [x] Docs + roster-pinned tests updated for new 7-site roster — v1.5 (Phase 7)
+- [x] Cohort Outcome Trajectories view — longitudinal cohort-level visus analysis — v1.5 (Phase 9)
+- [x] OD / OS separated panels + combined OD+OS panel — v1.5 (Phase 9)
+- [x] X-axis toggle: days since baseline vs treatment index — v1.5 (Phase 9)
+- [x] Y-metric toggle: absolute / Δ vs baseline / Δ % — v1.5 (Phase 9)
+- [x] Display layer toggles: median, per-patient, scatter, IQR band — v1.5 (Phase 9)
+- [x] Interpolation grid slider for median (default 120, range 20–300) — v1.5 (Phase 9)
+- [x] Summary cards: patients, total measurements, OD / OS counts (D-26 single source) — v1.5 (Phase 9)
+- [x] CSV export of underlying measurements with 8 D-28 columns (no `center_id`) — v1.5 (Phase 9)
+- [x] Audit beacon on outcomes view open (`GET /api/audit/events/view-open`) — v1.5 (Phase 8 + 9)
+- [x] Full DE+EN i18n for outcomes view (71 keys + completeness test) — v1.5 (Phase 8)
+
 ### Active
 
-<!-- Next milestone scope — v1.5 Site Roster & Cohort Analytics -->
+<!-- No active milestone. Run /gsd-new-milestone to begin the next cycle. -->
 
-- [ ] Replace site roster with Aachen, Chemnitz, Dresden, Greifswald, Leipzig, Mainz, Tübingen (7 sites; was 5)
-- [ ] Generate synthetic FHIR bundles for the 5 new sites (40–50 patients each with AMD/DME/RVO trajectories)
-- [ ] Node.js synthetic data generator script (`scripts/generate-center-bundle.ts`) — reproducible, parameterizable
-- [ ] Migrate `data/users.json` center assignments (strip removed IDs, reassign empty lists to `org-uka`)
-- [ ] Update docs (Lastenheft, Pflichtenheft, Konfiguration, README) and tests (constants, ui-requirements, fhirApi, dataApiCenter, centerBypass) for new roster
-- [ ] Cohort Outcome Trajectories view — longitudinal visus analysis across cohort members
-- [ ] OD / OS separated panels + combined OD+OS panel
-- [ ] X-axis toggle: days since baseline vs treatment index
-- [ ] Y-metric toggle: absolute / Δ vs baseline / Δ %
-- [ ] Display layer toggles: median line, scatter of all points, SD band, per-patient curves
-- [ ] Interpolation grid slider for median computation (default 120 points)
-- [ ] Summary cards: patients, total measurements, OD / OS counts
-- [ ] CSV export of underlying measurements
+## Current State
 
-## Current Milestone: v1.5 Site Roster & Cohort Analytics
+**Shipped:** Milestone v1.5 — Site Roster Correction & Cohort Analytics (2026-04-15)
+- Full 7-site roster (Aachen, Chemnitz, Dresden, Greifswald, Leipzig, Mainz, Tübingen)
+- Deterministic synthetic FHIR bundle generator + npm script
+- Cohort Outcome Trajectories analytics view at `/outcomes` (3 panels, live toggles, CSV export, audit beacon)
+- 25/25 v1.5 requirements satisfied, 0 orphans, 4/4 E2E flows verified
+- 313/313 tests passing across 27 files at milestone close
+
+**Archive:** [`.planning/milestones/v1.5-ROADMAP.md`](milestones/v1.5-ROADMAP.md), [`.planning/milestones/v1.5-REQUIREMENTS.md`](milestones/v1.5-REQUIREMENTS.md)
+
+## Next Milestone Goals
+
+No next milestone defined. Candidate themes for a future milestone cycle (not yet committed):
+- **Visual/UX QA follow-through** — the Phase 7 `human_needed` items (admin filter UI spot-check) and Phase 9 visual QA items (chart palette, IQR band, tooltip, empty states) remain available for manual UAT.
+- **Server-side pre-aggregation** for very large cohorts (>1000 patients)
+- **Additional outcome metrics** beyond visus (CRT trajectory, treatment-interval distribution, responder classification)
+- **Cross-cohort comparison** on a single chart
+- **Real Keycloak OIDC redirect flow** (v1.0 shipped prep only — would require a real Keycloak instance)
+- **Code-review info findings from Phase 9** (IN-01: audit beacon PII reduction; IN-02: data preview row key stability)
+
+Start the next cycle with `/gsd-new-milestone`.
+
+## Historical Milestone Goals (archived)
+
+<details>
+<summary>v1.5: Site Roster & Cohort Analytics (shipped 2026-04-15)</summary>
 
 **Goal:** Correct the site roster to the 7 real EyeMatics sites with matching synthetic data, and add cohort-level outcome analysis.
 
 **Target features:**
 - Site roster correction from 5 to 7 centers (remove Bonn/München/Münster; add Chemnitz, Dresden, Greifswald, Leipzig, Mainz)
 - Reproducible synthetic FHIR bundle generator for new sites (40–50 patients each)
-- Cohort Outcome Trajectories — longitudinal visus delta/absolute over time or treatment index, OD/OS, with median + SD + per-patient curves
+- Cohort Outcome Trajectories — longitudinal visus delta/absolute over time or treatment index, OD/OS, with median + IQR + per-patient curves
+
+</details>
 
 ### Out of Scope
 
@@ -143,4 +175,4 @@ The EMD operates within a four-zone architecture at each site:
 | Pattern A (central consolidation) for v1 | Each site sends pseudonymized payloads via DSF to local consolidated repo. EMD reads from that. Pattern B (federated query) deferred to future. | Architecture decided |
 
 ---
-*Last updated: 2026-04-14 — milestone v1.5 opened (Site Roster & Cohort Analytics). Note: v1.2–v1.4 shipped between v1.1 and v1.5 but were not tracked in GSD artifacts; git history is authoritative for those.*
+*Last updated: 2026-04-15 — milestone v1.5 SHIPPED (Site Roster & Cohort Analytics). 25/25 requirements satisfied, 0 orphans, 4/4 E2E flows verified, 313/313 tests passing. Note: v1.2–v1.4 shipped between v1.1 and v1.5 but were not tracked in GSD artifacts; git history is authoritative for those.*
