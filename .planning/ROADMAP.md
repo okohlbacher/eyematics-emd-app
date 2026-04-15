@@ -30,29 +30,55 @@ Plans:
 - [x] 07-02-PLAN.md — Deterministic synthetic FHIR Bundle generator (Mulberry32 PRNG, scripts/generate-center-bundle.ts, npm run generate-bundles, 5 new bundle files, manifest update, load-path smoke tests)
 - [x] 07-03-PLAN.md — Users.json migration (_migrateRemovedCenters chained at startup), stale bundle deletion, server/index.ts seed update, README + docs sweep
 
-### Phase 8: Cohort Outcome Trajectories
+### Phase 8: Cohort Outcome Trajectories — Foundations
 
-**Goal:** Add a cohort-level outcome analysis view that plots longitudinal visual-acuity trajectories across all members of a cohort with OD/OS/combined panels, axis/metric toggles, display layer controls, and CSV export.
+**Goal:** Land the non-UI foundations for cohort-level outcome analysis: the pure trajectory-math utility (median/IQR/logMAR/Snellen/treatment-index), the audit view-open beacon endpoint, the outcomes* i18n bundle, and the CohortBuilder entry points into the (future) Outcomes view.
 
-**Requirements:** OUTCOME-01, OUTCOME-02, OUTCOME-03, OUTCOME-04, OUTCOME-05, OUTCOME-06, OUTCOME-07, OUTCOME-08, OUTCOME-09, OUTCOME-10, OUTCOME-11, OUTCOME-12
+**Requirements:** OUTCOME-03, OUTCOME-04, OUTCOME-06, OUTCOME-09, OUTCOME-10, OUTCOME-11, OUTCOME-12 (+ partial OUTCOME-01 entry points)
+
+> UI-side requirements (OUTCOME-02, -05, -07, -08 and the page-facing half of OUTCOME-01) moved to Phase 9 where they get fresh discussion, research, and planning.
 
 **Depends on:** Phase 7 (needs the new roster + enlarged cohort-able dataset to be meaningful)
 
 **Success criteria:**
-1. From any cohort defined in `CohortBuilderPage`, the user can open an Outcomes view and see three panels (OD, OS, combined) with per-patient curves and a median overlay, using real observation data from the cohort's members.
-2. Toggling the X axis between "Days since baseline" and "Number of treatments" redraws all three panels with the new abscissa; toggling Y between Absolute / Δ / Δ% rescales the ordinate consistently per patient.
-3. Display toggles (median line, scatter, SD shading, individual curves) independently show/hide their layer; the interpolation-grid slider re-computes median and SD band live.
-4. Summary cards show correct patient count, total measurements, and per-eye counts; values match the underlying FHIR Observations; Data preview exports CSV with matching rows.
-5. Opening the Outcomes view writes an audit entry; authz is enforced — a user whose cohort includes centers they aren't assigned to cannot load data across that boundary (center-based restriction from Phase 5 still applies).
-6. German and English locales cover every new UI string; the `cohortTrajectory.ts` utility has unit tests for empty / single-patient / single-measurement / sparse-series / mismatched-span edge cases.
+1. `computeCohortTrajectory()` is pure, deterministic, exported from `src/utils/cohortTrajectory.ts`, and has exhaustive vitest coverage for the 5 OUTCOME-10 edge cases (empty cohort, single patient, single measurement, sparse series, mismatched spans).
+2. `GET /api/audit/events/view-open` returns 204 for authenticated users and the request is captured by audit middleware; Phase 9 UI consumes this endpoint from `OutcomesPage` on mount.
+3. Every `outcomes*` i18n key from the UI-SPEC copywriting contract exists in DE and EN, with a completeness test guarding regression.
+4. `CohortBuilderPage` exposes entry points (header action + per-row action) that navigate to `/outcomes?cohort=<id>` — the route itself is implemented in Phase 9.
+5. German and English locales cover every new non-UI string; backend + math layer have no cross-phase regressions.
 
-**Plans:** 4 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Pure trajectory math utility (src/utils/cohortTrajectory.ts) + exhaustive vitest edge-case suite (TDD; OUTCOME-03, -04, -06, -09, -10)
-- [ ] 08-02-PLAN.md — GET /api/audit/events/view-open no-op audit beacon endpoint + tests (OUTCOME-11)
-- [ ] 08-03-PLAN.md — OutcomesPage + 6 co-located components (summary cards, 3 ComposedChart panels, settings drawer, data preview with CSV, tooltip, empty states) + /outcomes route (OUTCOME-01, -02, -03, -04, -05, -06, -07, -08, -09, -11)
-- [ ] 08-04-PLAN.md — outcomes* i18n bundle (DE+EN, ~55 keys) + CohortBuilderPage entry points (header action + per-row saved-cohort action) + i18n completeness test (OUTCOME-01, -12)
+- [x] 08-01-PLAN.md — Pure trajectory math utility (src/utils/cohortTrajectory.ts) + exhaustive vitest edge-case suite (TDD; OUTCOME-03, -04, -06, -09, -10)
+- [x] 08-02-PLAN.md — GET /api/audit/events/view-open no-op audit beacon endpoint + tests (OUTCOME-11)
+- [x] 08-04-PLAN.md — outcomes* i18n bundle (DE+EN) + CohortBuilderPage entry points (header action + per-row saved-cohort action) + i18n completeness test (OUTCOME-01 entry points, OUTCOME-12)
+
+> 08-03 (OutcomesPage UI + 7 co-located components + /outcomes route) deferred to Phase 9 (see below). One prior agent attempt was reverted cleanly — the only surviving 08-03 artifact is the plan file `.planning/phases/08-cohort-outcome-trajectories/08-03-PLAN.md`, retained as reference input for Phase 9 research.
+
+### Phase 9: Outcomes Page UI
+
+**Goal:** Build the `/outcomes` route that composes Phase 8's trajectory math + audit beacon + i18n bundle into the visible Outcomes analytics view — three Recharts panels (OD, OS, combined), summary cards, settings drawer, data preview with CSV export, custom tooltip, and empty states.
+
+**Requirements:** OUTCOME-01 (page-facing), OUTCOME-02, OUTCOME-05, OUTCOME-07, OUTCOME-08, plus re-use of OUTCOME-03/-04/-06/-09/-11 surfaces from Phase 8.
+
+**Depends on:** Phase 8 (needs `computeCohortTrajectory`, view-open endpoint, outcomes* i18n keys, CohortBuilder entry points — all landed).
+
+**Success criteria:**
+1. Navigating to `/outcomes?cohort=<id>` renders three panels with per-patient curves + median overlay using real observation data.
+2. X-axis toggle (days vs. treatments) and Y-metric toggle (absolute/Δ/Δ%) redraw all three panels live.
+3. Display-layer toggles (median, per-patient, scatter, spread band) independently show/hide; interpolation-grid slider re-computes the median live.
+4. Summary cards, panel subtitles, and data-preview row count all read from the SAME memoized `aggregate` object (no drift).
+5. CSV export via `downloadCsv` produces the D-28 column set (no `center_id`) with a dated filename.
+6. Audit beacon fires once on mount with the correct cohort/filter param.
+7. Cohorts >30 patients start with Scatter layer OFF; empty-state variants render for 0-patient / no-visus / panel-scoped-zero.
+8. Fresh discussion + research + planning performed before execution — no porting of the reverted 08-03 attempt.
+
+**Plans:** TBD — run `/gsd-discuss-phase 9` then `/gsd-plan-phase 9`.
+
+Plans:
+- [ ] _Plans will be generated in planning phase._
 
 ---
 *Created: 2026-04-14 — opens milestone v1.5*
+*Updated: 2026-04-15 — Phase 8 rescoped to foundations; 08-03 UI deferred to new Phase 9*
