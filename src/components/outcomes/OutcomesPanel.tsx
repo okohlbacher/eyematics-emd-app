@@ -71,12 +71,19 @@ export default function OutcomesPanel({
     );
   }
 
-  // IQR band projection (09-CONTEXT.md locked decision 2)
+  // IQR band projection (09-CONTEXT.md locked decision 2 — single <Area>).
+  //
+  // Recharts 3.8.1 `BaseLineType = number | ReadonlyArray<NullableCoordinate>` —
+  // the `baseLine` prop only accepts a number OR an array of coordinates, NEVER a
+  // dataKey string. Phase 8 research (08-RESEARCH.md A1) asserted dataKey support;
+  // it is actually incorrect. We keep the single-Area intent of the locked decision
+  // and pass baseLine as a coordinate array derived from the same medianGrid.
   const iqrData = panel.medianGrid.map((g) => ({
     x: g.x,
     iqrLow: g.p25,
     iqrHigh: g.p75,
   }));
+  const iqrBaseLine = panel.medianGrid.map((g) => ({ x: g.x, y: g.p25 }));
 
   return (
     <div
@@ -132,7 +139,7 @@ export default function OutcomesPanel({
             <Area
               data={iqrData}
               dataKey="iqrHigh"
-              baseLine="iqrLow"
+              baseLine={iqrBaseLine}
               fill={color}
               fillOpacity={0.15}
               stroke="none"
