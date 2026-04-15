@@ -4,6 +4,10 @@ import { Settings } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 import OutcomesEmptyState from '../components/outcomes/OutcomesEmptyState';
+import OutcomesSummaryCards from '../components/outcomes/OutcomesSummaryCards';
+import OutcomesPanel from '../components/outcomes/OutcomesPanel';
+import OutcomesSettingsDrawer from '../components/outcomes/OutcomesSettingsDrawer';
+import { CHART_COLORS } from '../config/clinicalThresholds';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import type { TranslationKey } from '../i18n/translations';
@@ -11,6 +15,7 @@ import { applyFilters } from '../services/fhirLoader';
 import type { CohortFilter } from '../types/fhir';
 import {
   type AxisMode,
+  computeCohortTrajectory,
   defaultScatterOn,
   type SpreadMode,
   type YMetric,
@@ -30,18 +35,25 @@ function safePickFilter(raw: unknown): CohortFilter {
   return safe;
 }
 
+type LayerState = {
+  median: boolean;
+  perPatient: boolean;
+  scatter: boolean;
+  spreadBand: boolean;
+};
+
 export default function OutcomesPage() {
   const { activeCases, savedSearches } = useData();
   const [searchParams] = useSearchParams();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
 
-  // Session-only toggle state (D-24). Drawer UI lands in 09-02.
-  const [, setDrawerOpen] = useState(false);
-  const [axisMode] = useState<AxisMode>('days');
-  const [yMetric] = useState<YMetric>('absolute');
-  const [gridPoints] = useState<number>(120);
+  // Session-only toggle state (D-24).
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [axisMode, setAxisMode] = useState<AxisMode>('days');
+  const [yMetric, setYMetric] = useState<YMetric>('absolute');
+  const [gridPoints, setGridPoints] = useState<number>(120);
   const [spreadMode] = useState<SpreadMode>('iqr');
-  const [layers, setLayers] = useState({
+  const [layers, setLayers] = useState<LayerState>({
     median: true, perPatient: true, scatter: true, spreadBand: true,
   });
 
@@ -84,9 +96,32 @@ export default function OutcomesPage() {
     return <OutcomesEmptyState variant="no-cohort" t={t as (key: TranslationKey) => string} />;
   }
 
-  // Unused-var discipline: touch the state setters/getters so downstream plans
-  // can import them without TS6133 noise. (09-02 will actually render drawer.)
-  void axisMode; void yMetric; void gridPoints; void spreadMode;
+  // D-26: single memoized aggregate keyed on all 5 inputs — feeds BOTH cards AND panels.
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const aggregate = useMemo(
+    () =>
+      computeCohortTrajectory({
+        cases: cohort.cases,
+        axisMode,
+        yMetric,
+        gridPoints,
+        spreadMode,
+      }),
+    [cohort, axisMode, yMetric, gridPoints, spreadMode],
+  );
+
+  // No-visus early return: both panels have zero measurements
+  if (
+    aggregate.od.summary.measurementCount === 0 &&
+    aggregate.os.summary.measurementCount === 0
+  ) {
+    return (
+      <OutcomesEmptyState
+        variant="no-visus"
+        t={t as (key: TranslationKey) => string}
+      />
+    );
+  }
 
   return (
     <div className="p-8">
@@ -114,8 +149,69 @@ export default function OutcomesPage() {
       <div
         data-testid={layers.scatter ? 'outcomes-scatter-default-on' : 'outcomes-scatter-default-off'}
       />
-      {/* Plans 09-02 / 09-03 wire summary cards, panels, drawer, data preview here. */}
+
+      {/* Summary cards row (OUTCOME-07 / D-26) */}
+      <OutcomesSummaryCards
+        aggregate={aggregate}
+        t={t}
+        locale={locale as 'de' | 'en'}
+      />
+
+      {/* Three chart panels: OD → OS → Combined (OUTCOME-02) */}
+      <div className="mt-12 grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <OutcomesPanel
+          panel={aggregate.od}
+          eye="od"
+          color={CHART_COLORS[0]}
+          axisMode={axisMode}
+          yMetric={yMetric}
+          layers={layers}
+          t={t}
+          locale={locale as 'de' | 'en'}
+          titleKey="outcomesPanelOd"
+        />
+        <OutcomesPanel
+          panel={aggregate.os}
+          eye="os"
+          color={CHART_COLORS[2]}
+          axisMode={axisMode}
+          yMetric={yMetric}
+          layers={layers}
+          t={t}
+          locale={locale as 'de' | 'en'}
+          titleKey="outcomesPanelOs"
+        />
+        <OutcomesPanel
+          panel={aggregate.combined}
+          eye="combined"
+          color={CHART_COLORS[4]}
+          axisMode={axisMode}
+          yMetric={yMetric}
+          layers={layers}
+          t={t}
+          locale={locale as 'de' | 'en'}
+          titleKey="outcomesPanelCombined"
+        />
+      </div>
+
+      {/* Plans 09-03 wire data preview here. */}
       <div data-testid="outcomes-content-placeholder" />
+
+      {/* Settings drawer (OUTCOME-03 through -06) */}
+      <OutcomesSettingsDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        axisMode={axisMode}
+        setAxisMode={setAxisMode}
+        yMetric={yMetric}
+        setYMetric={setYMetric}
+        gridPoints={gridPoints}
+        setGridPoints={setGridPoints}
+        layers={layers}
+        setLayers={setLayers}
+        patientCount={cohort.cases.length}
+        t={t}
+      />
     </div>
   );
 }
