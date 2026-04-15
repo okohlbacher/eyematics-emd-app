@@ -5,6 +5,7 @@ import {
   ChevronUp,
   Download,
   Filter,
+  LineChart,
   Play,
   Save,
   Search,
@@ -116,18 +117,33 @@ export default function CohortBuilderPage() {
             {t('cohortSubtitle')}
           </p>
         </div>
-        <button
-          onClick={() => setShowSaved(!showSaved)}
-          className="flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-        >
-          <Search className="w-4 h-4" />
-          {t('savedSearches')} ({savedSearches.length})
-          {showSaved ? (
-            <ChevronUp className="w-3 h-3" />
-          ) : (
-            <ChevronDown className="w-3 h-3" />
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={filteredCases.length === 0}
+            onClick={() => {
+              const payload = encodeURIComponent(JSON.stringify(filters));
+              navigate(`/outcomes?filter=${payload}`);
+            }}
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
+            title={t('outcomesOpenForFilter')}
+          >
+            <LineChart className="w-4 h-4" />
+            {t('outcomesOpenForFilter')}
+          </button>
+          <button
+            onClick={() => setShowSaved(!showSaved)}
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+          >
+            <Search className="w-4 h-4" />
+            {t('savedSearches')} ({savedSearches.length})
+            {showSaved ? (
+              <ChevronUp className="w-3 h-3" />
+            ) : (
+              <ChevronDown className="w-3 h-3" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Saved searches panel */}
@@ -165,6 +181,15 @@ export default function CohortBuilderPage() {
                   </p>
                 </div>
                 <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/outcomes?cohort=${encodeURIComponent(s.id)}`)}
+                    className="p-1.5 text-violet-600 hover:bg-violet-50 rounded focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
+                    title={t('outcomesOpenForCohort')}
+                    aria-label={t('outcomesOpenForCohort')}
+                  >
+                    <LineChart className="w-4 h-4" />
+                  </button>
                   <button
                     onClick={() => handleLoadSearch(s)}
                     className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
