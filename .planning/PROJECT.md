@@ -71,9 +71,19 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] Audit beacon on outcomes view open (`GET /api/audit/events/view-open`) — v1.5 (Phase 8 + 9)
 - [x] Full DE+EN i18n for outcomes view (71 keys + completeness test) — v1.5 (Phase 8)
 
-### Active
+### Active (v1.6 — Outcomes Polish & Scale)
 
-<!-- No active milestone. Run /gsd-new-milestone to begin the next cycle. -->
+<!-- REQ-IDs assigned in REQUIREMENTS.md once milestone is scoped -->
+
+## Current Milestone: v1.6 Outcomes Polish & Scale
+
+**Goal:** Finish v1.5 visual QA, unlock large-cohort performance via server-side pre-aggregation, extend outcome metrics beyond visus, and close Phase 9 code-review info findings.
+
+**Target features:**
+- Visual/UX QA follow-through (Phase 7 admin filter UI spot-check; Phase 9 outcomes chart palette, IQR band, tooltip, empty states)
+- Server-side pre-aggregation for large cohorts (>1000 patients) to keep `/outcomes` responsive
+- Additional outcome metrics beyond visus: CRT trajectory, treatment-interval distribution, responder classification
+- Phase 9 code-review info findings: IN-01 (audit beacon PII reduction), IN-02 (data preview row key stability)
 
 ## Current State
 
@@ -86,17 +96,10 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 **Archive:** [`.planning/milestones/v1.5-ROADMAP.md`](milestones/v1.5-ROADMAP.md), [`.planning/milestones/v1.5-REQUIREMENTS.md`](milestones/v1.5-REQUIREMENTS.md)
 
-## Next Milestone Goals
+## Next Milestone Goals (post-v1.6 candidates)
 
-No next milestone defined. Candidate themes for a future milestone cycle (not yet committed):
-- **Visual/UX QA follow-through** — the Phase 7 `human_needed` items (admin filter UI spot-check) and Phase 9 visual QA items (chart palette, IQR band, tooltip, empty states) remain available for manual UAT.
-- **Server-side pre-aggregation** for very large cohorts (>1000 patients)
-- **Additional outcome metrics** beyond visus (CRT trajectory, treatment-interval distribution, responder classification)
 - **Cross-cohort comparison** on a single chart
 - **Real Keycloak OIDC redirect flow** (v1.0 shipped prep only — would require a real Keycloak instance)
-- **Code-review info findings from Phase 9** (IN-01: audit beacon PII reduction; IN-02: data preview row key stability)
-
-Start the next cycle with `/gsd-new-milestone`.
 
 ## Historical Milestone Goals (archived)
 
@@ -174,5 +177,22 @@ The EMD operates within a four-zone architecture at each site:
 | EMD never talks to remote hospitals | Express backend reads only from local FHIR store (Blaze or files). DSF upstream pushes data into local store. No direct cross-site communication from EMD. | Architecture decided |
 | Pattern A (central consolidation) for v1 | Each site sends pseudonymized payloads via DSF to local consolidated repo. EMD reads from that. Pattern B (federated query) deferred to future. | Architecture decided |
 
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd-complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
 ---
-*Last updated: 2026-04-15 — milestone v1.5 SHIPPED (Site Roster & Cohort Analytics). 25/25 requirements satisfied, 0 orphans, 4/4 E2E flows verified, 313/313 tests passing. Note: v1.2–v1.4 shipped between v1.1 and v1.5 but were not tracked in GSD artifacts; git history is authoritative for those.*
+*Last updated: 2026-04-16 — milestone v1.6 started (Outcomes Polish & Scale). Previous: v1.5 SHIPPED 2026-04-15 — 25/25 requirements satisfied, 313/313 tests passing.*
