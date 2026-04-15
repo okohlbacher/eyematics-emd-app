@@ -36,7 +36,38 @@ vi.mock('../src/utils/cohortTrajectory', async (importOriginal) => {
   const real = await importOriginal<typeof import('../src/utils/cohortTrajectory')>();
   return {
     ...real,
-    computeCohortTrajectory: vi.fn(),
+    computeCohortTrajectory: vi.fn(() => ({
+      od: { patients: [], scatterPoints: [], medianGrid: [{ x: 0, y: 0.1, p25: 0.05, p75: 0.15, n: 1 }], summary: { patientCount: 1, measurementCount: 1, excludedCount: 0 } },
+      os: { patients: [], scatterPoints: [], medianGrid: [{ x: 0, y: 0.1, p25: 0.05, p75: 0.15, n: 1 }], summary: { patientCount: 1, measurementCount: 1, excludedCount: 0 } },
+      combined: { patients: [], scatterPoints: [], medianGrid: [{ x: 0, y: 0.1, p25: 0.05, p75: 0.15, n: 1 }], summary: { patientCount: 1, measurementCount: 1, excludedCount: 0 } },
+    })),
+  };
+});
+
+// Mock Recharts so ComposedChart renders a predictable SVG in jsdom (no ResizeObserver).
+vi.mock('recharts', async (importOriginal) => {
+  const real = await importOriginal<typeof import('recharts')>();
+  return {
+    ...real,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ResponsiveContainer: ({ children }: { children: any }) => (
+      <div data-testid="recharts-responsive-container">
+        <svg>{children}</svg>
+      </div>
+    ),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ComposedChart: ({ children }: { children: any }) => (
+      <g data-testid="recharts-composed-chart">{children}</g>
+    ),
+    CartesianGrid: () => null,
+    XAxis: () => null,
+    YAxis: () => null,
+    Tooltip: () => null,
+    Legend: () => null,
+    ReferenceLine: () => null,
+    Area: () => <g data-testid="recharts-area" />,
+    Line: () => null,
+    Scatter: () => null,
   };
 });
 
