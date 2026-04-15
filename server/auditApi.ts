@@ -87,7 +87,29 @@ auditApiRouter.get('/export', (req: Request, res: Response): void => {
 });
 
 // ---------------------------------------------------------------------------
+// GET /api/audit/events/view-open — view-open beacon (OUTCOME-11 / D-32)
+// ---------------------------------------------------------------------------
+/**
+ * No-op authenticated beacon used by analytical views to produce an auditable
+ * row for "user opened view X". The audit middleware captures method, path,
+ * query string, user, and duration automatically into audit_log. This handler
+ * simply terminates the request with 204 No Content.
+ *
+ * Query params (all free-form; recorded verbatim into audit_log.query):
+ *   name    — view identifier (e.g. 'open_outcomes_view')
+ *   cohort  — saved search id, when opened from a saved cohort
+ *   filter  — urlencoded JSON filter snapshot, when opened from an ad-hoc filter
+ *
+ * No role gate: any authenticated user may produce their own view-open entry.
+ */
+auditApiRouter.get('/events/view-open', (_req: Request, res: Response): void => {
+  res.status(204).end();
+});
+
+// ---------------------------------------------------------------------------
 // No POST / PUT / PATCH / DELETE routes are defined.
 // Per D-13 and AUDIT-05: the audit log is append-only from the server's
-// perspective. Express will return 404 for any write attempt.
+// perspective. All audit writes are produced implicitly by the audit
+// middleware over regular GET requests. Express will return 404 for any
+// write attempt.
 // ---------------------------------------------------------------------------

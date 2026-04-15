@@ -115,6 +115,35 @@ describe('auditApi', () => {
     });
   });
 
+  describe('GET /api/audit/events/view-open — view-open beacon', () => {
+    it('responds 204 with empty body when authenticated (user role)', async () => {
+      const app = createApp('user');
+      const res = await request(app).get('/api/audit/events/view-open?name=open_outcomes_view&cohort=abc');
+      expect(res.status).toBe(204);
+      expect(res.text).toBe('');
+    });
+
+    it('responds 204 for admin role too (no role gating)', async () => {
+      const app = createApp('admin');
+      const res = await request(app).get('/api/audit/events/view-open?name=open_outcomes_view&cohort=abc');
+      expect(res.status).toBe(204);
+      expect(res.text).toBe('');
+    });
+
+    it('accepts oversized filter query string without rejection', async () => {
+      const app = createApp('user');
+      const longFilter = encodeURIComponent(JSON.stringify({ centers: Array(20).fill('org-x') }));
+      const res = await request(app).get(`/api/audit/events/view-open?name=open_outcomes_view&filter=${longFilter}`);
+      expect(res.status).toBe(204);
+    });
+
+    it('POST to same URL returns 404 (no write route exists)', async () => {
+      const app = createApp('user');
+      const res = await request(app).post('/api/audit/events/view-open').send({});
+      expect(res.status).toBe(404);
+    });
+  });
+
   describe('GET /api/audit/export', () => {
     it('returns 403 for non-admin', async () => {
       const app = createApp('researcher', 'researcher');
