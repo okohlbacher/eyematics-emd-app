@@ -74,11 +74,14 @@ Plans:
 7. Cohorts >30 patients start with Scatter layer OFF; empty-state variants render for 0-patient / no-visus / panel-scoped-zero.
 8. Fresh discussion + research + planning performed before execution — no porting of the reverted 08-03 attempt.
 
-**Plans:** TBD — run `/gsd-discuss-phase 9` then `/gsd-plan-phase 9`.
+**Plans:** 3 plans
 
 Plans:
-- [ ] _Plans will be generated in planning phase._
+- [ ] 09-01-PLAN.md — Scaffold /outcomes route + cohort resolution + audit beacon + OutcomesEmptyState + App.tsx wiring (TDD, tests 1..7; OUTCOME-01, -09, -11)
+- [ ] 09-02-PLAN.md — OutcomesSummaryCards + three OutcomesPanels (OD/OS/combined) + OutcomesTooltip + OutcomesSettingsDrawer + page wire (TDD, tests 8..12; OUTCOME-02, -03, -04, -05, -06, -07)
+- [ ] 09-03-PLAN.md — OutcomesDataPreview <details> + flattenToRows helper + CSV export via downloadCsv/datedFilename (TDD, tests 13..17; OUTCOME-08)
 
 ---
 *Created: 2026-04-14 — opens milestone v1.5*
 *Updated: 2026-04-15 — Phase 8 rescoped to foundations; 08-03 UI deferred to new Phase 9*
+*Updated: 2026-04-15 — Phase 9 planned (3 plans, sequential waves 1→2→3; TDD RED/GREEN/REFACTOR per plan)*
