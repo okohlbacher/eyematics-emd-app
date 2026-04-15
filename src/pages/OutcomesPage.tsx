@@ -3,10 +3,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Settings } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
+import OutcomesDataPreview from '../components/outcomes/OutcomesDataPreview';
 import OutcomesEmptyState from '../components/outcomes/OutcomesEmptyState';
-import OutcomesSummaryCards from '../components/outcomes/OutcomesSummaryCards';
 import OutcomesPanel from '../components/outcomes/OutcomesPanel';
 import OutcomesSettingsDrawer from '../components/outcomes/OutcomesSettingsDrawer';
+import OutcomesSummaryCards from '../components/outcomes/OutcomesSummaryCards';
 import { CHART_COLORS } from '../config/clinicalThresholds';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -151,13 +152,15 @@ export default function OutcomesPage() {
       />
 
       {/* Summary cards row (OUTCOME-07 / D-26) */}
+      {/* t cast: OutcomesSummaryCards uses (key: string) => string; TranslationKey is narrower. */}
       <OutcomesSummaryCards
         aggregate={aggregate}
-        t={t}
+        t={t as (key: string) => string}
         locale={locale as 'de' | 'en'}
       />
 
       {/* Three chart panels: OD → OS → Combined (OUTCOME-02) */}
+      {/* t cast: OutcomesPanel uses (key: string) => string; TranslationKey is narrower. */}
       <div className="mt-12 grid grid-cols-1 xl:grid-cols-3 gap-6">
         <OutcomesPanel
           panel={aggregate.od}
@@ -166,7 +169,7 @@ export default function OutcomesPage() {
           axisMode={axisMode}
           yMetric={yMetric}
           layers={layers}
-          t={t}
+          t={t as (key: string) => string}
           locale={locale as 'de' | 'en'}
           titleKey="outcomesPanelOd"
         />
@@ -177,7 +180,7 @@ export default function OutcomesPage() {
           axisMode={axisMode}
           yMetric={yMetric}
           layers={layers}
-          t={t}
+          t={t as (key: string) => string}
           locale={locale as 'de' | 'en'}
           titleKey="outcomesPanelOs"
         />
@@ -188,16 +191,22 @@ export default function OutcomesPage() {
           axisMode={axisMode}
           yMetric={yMetric}
           layers={layers}
-          t={t}
+          t={t as (key: string) => string}
           locale={locale as 'de' | 'en'}
           titleKey="outcomesPanelCombined"
         />
       </div>
 
-      {/* Plans 09-03 wire data preview here. */}
-      <div data-testid="outcomes-content-placeholder" />
+      {/* Data preview panel + CSV export (OUTCOME-08 / 09-03) */}
+      <OutcomesDataPreview
+        cases={cohort.cases}
+        aggregate={aggregate}
+        t={t}
+        locale={locale as 'de' | 'en'}
+      />
 
       {/* Settings drawer (OUTCOME-03 through -06) */}
+      {/* t cast: OutcomesSettingsDrawer uses (key: string) => string; TranslationKey is narrower. */}
       <OutcomesSettingsDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
@@ -210,7 +219,7 @@ export default function OutcomesPage() {
         layers={layers}
         setLayers={setLayers}
         patientCount={cohort.cases.length}
-        t={t}
+        t={t as (key: string) => string}
       />
     </div>
   );
