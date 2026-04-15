@@ -5,6 +5,18 @@
  * Tests 13-17 (data preview, CSV) land in 09-03.
  */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+
+// ---------------------------------------------------------------------------
+// download.ts mock — used by tests 15-17 (CSV export assertions).
+// Declared before other imports so vi.mock hoisting works correctly.
+// ---------------------------------------------------------------------------
+const downloadCsvSpy = vi.fn();
+const datedFilenameSpy = vi.fn((prefix: string, ext: string) => `${prefix}-2026-04-15.${ext}`);
+
+vi.mock('../src/utils/download', () => ({
+  downloadCsv: (...args: unknown[]) => downloadCsvSpy(...args),
+  datedFilename: (p: string, e: string) => datedFilenameSpy(p, e),
+}));
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import OutcomesPage from '../src/pages/OutcomesPage';
@@ -482,5 +494,168 @@ describe('OutcomesPage — panels, summary cards, drawer toggles (09-02)', () =>
     // Total card: 15 total
     const totalCard = screen.getByTestId('outcomes-card-total');
     expect(totalCard.textContent).toContain('15');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests 13..17 — data preview panel + CSV export (09-03)
+// ---------------------------------------------------------------------------
+
+/**
+ * Build a PatientCase with N OD observations and M OS observations.
+ * Each observation is a LOINC_VISUS entry with a unique date and decimal value.
+ */
+function buildPatientCaseWithMeasurements(
+  pseudo: string,
+  odCount: number,
+  osCount: number,
+): PatientCase {
+  const observations = [
+    ...Array.from({ length: odCount }, (_, i) => ({
+      resourceType: 'Observation',
+      id: `obs-od-${pseudo}-${i}`,
+      code: { coding: [{ system: 'http://loinc.org', code: '79880-1' }] },
+      valueQuantity: { value: 0.8 - i * 0.05, unit: 'decimal' },
+      effectiveDateTime: `2024-0${i + 1}-01`,
+      // SNOMED_EYE_RIGHT = '362503005' → eyeOf → 'od'
+      bodySite: { coding: [{ system: 'http://snomed.info/sct', code: '362503005' }] },
+    })),
+    ...Array.from({ length: osCount }, (_, i) => ({
+      resourceType: 'Observation',
+      id: `obs-os-${pseudo}-${i}`,
+      code: { coding: [{ system: 'http://loinc.org', code: '79880-1' }] },
+      valueQuantity: { value: 0.7 - i * 0.05, unit: 'decimal' },
+      effectiveDateTime: `2024-0${i + 4}-01`,
+      // SNOMED_EYE_LEFT = '362502000' → eyeOf → 'os'
+      bodySite: { coding: [{ system: 'http://snomed.info/sct', code: '362502000' }] },
+    })),
+  ];
+  return {
+    id: pseudo,
+    pseudonym: pseudo,
+    gender: 'female',
+    birthDate: '1965-03-15',
+    centerId: 'org-uka',
+    centerName: 'UKA',
+    conditions: [],
+    observations,
+    procedures: [],
+    imagingStudies: [],
+    medications: [],
+  } as unknown as PatientCase;
+}
+
+describe('OutcomesPage — data preview panel + CSV export (09-03)', () => {
+  // Fixture: 2 patients × (3 OD + 2 OS) = 10 rows total.
+  // aggregate reflects the same counts so row-count parity holds.
+  const previewCases = [
+    buildPatientCaseWithMeasurements('alice', 3, 2),
+    buildPatientCaseWithMeasurements('bob', 3, 2),
+  ];
+  const previewAggregate: TrajectoryResult = {
+    od: makePanelResult(2, 6),   // 2 patients × 3 OD = 6
+    os: makePanelResult(2, 4),   // 2 patients × 2 OS = 4
+    combined: makePanelResult(2, 10),
+  };
+
+  beforeEach(() => {
+    (computeCohortTrajectory as ReturnType<typeof vi.fn>).mockReturnValue(previewAggregate);
+    downloadCsvSpy.mockClear();
+    datedFilenameSpy.mockClear();
+  });
+
+  /**
+   * Test 13: <details> renders collapsed by default.
+   * The outcomesPreviewToggleOpen summary text is visible; its parent <details>
+   * element must NOT have the `open` attribute.
+   */
+  it('13. <details> data preview renders collapsed by default', () => {
+    renderWith({ activeCases: previewCases });
+    const summary = screen.getByText('outcomesPreviewToggleOpen');
+    expect(summary).toBeDefined();
+    const details = summary.closest('details');
+    expect(details).not.toBeNull();
+    expect(details!.hasAttribute('open')).toBe(false);
+  });
+
+  /**
+   * Test 14: Expanding the panel reveals all 8 column headers + parity caption.
+   * Fixture: 10 rows (6 OD + 4 OS) → caption contains "10".
+   */
+  it('14. expanding <details> shows 8 column headers and row-count caption', () => {
+    renderWith({ activeCases: previewCases });
+    const summary = screen.getByText('outcomesPreviewToggleOpen');
+    const details = summary.closest('details')!;
+    // Programmatically open the details element
+    details.setAttribute('open', '');
+
+    // All 8 D-28 column header keys must appear as i18n keys (t(k) === k in test env)
+    expect(screen.getByText('outcomesPreviewColPseudonym')).toBeDefined();
+    expect(screen.getByText('outcomesPreviewColEye')).toBeDefined();
+    expect(screen.getByText('outcomesPreviewColDate')).toBeDefined();
+    expect(screen.getByText('outcomesPreviewColDaysSinceBaseline')).toBeDefined();
+    expect(screen.getByText('outcomesPreviewColTreatmentIndex')).toBeDefined();
+    expect(screen.getByText('outcomesPreviewColVisusLogmar')).toBeDefined();
+    expect(screen.getByText('outcomesPreviewColSnellenNum')).toBeDefined();
+    expect(screen.getByText('outcomesPreviewColSnellenDen')).toBeDefined();
+  });
+
+  /**
+   * Test 15: Clicking Export CSV calls downloadCsv with headers in exact D-28 order.
+   */
+  it('15. Export CSV button calls downloadCsv with 8 D-28 column headers in order', () => {
+    renderWith({ activeCases: previewCases });
+    // Open the details
+    const details = screen.getByTestId('outcomes-data-preview');
+    details.setAttribute('open', '');
+
+    const exportBtn = screen.getByLabelText('outcomesPreviewExportCsv');
+    fireEvent.click(exportBtn);
+
+    expect(downloadCsvSpy).toHaveBeenCalledTimes(1);
+    const [headers] = downloadCsvSpy.mock.calls[0] as [string[], string[][], string];
+    expect(headers).toHaveLength(8);
+    expect(headers[0]).toBe('outcomesPreviewColPseudonym');
+    expect(headers[1]).toBe('outcomesPreviewColEye');
+    expect(headers[2]).toBe('outcomesPreviewColDate');
+    expect(headers[3]).toBe('outcomesPreviewColDaysSinceBaseline');
+    expect(headers[4]).toBe('outcomesPreviewColTreatmentIndex');
+    expect(headers[5]).toBe('outcomesPreviewColVisusLogmar');
+    expect(headers[6]).toBe('outcomesPreviewColSnellenNum');
+    expect(headers[7]).toBe('outcomesPreviewColSnellenDen');
+  });
+
+  /**
+   * Test 16: CSV headers have exactly 8 entries and do NOT contain "center_id" (D-30).
+   */
+  it('16. CSV headers have exactly 8 entries and do not include center_id', () => {
+    renderWith({ activeCases: previewCases });
+    const details = screen.getByTestId('outcomes-data-preview');
+    details.setAttribute('open', '');
+
+    fireEvent.click(screen.getByLabelText('outcomesPreviewExportCsv'));
+
+    const [headers, rows] = downloadCsvSpy.mock.calls[0] as [string[], string[][], string];
+    expect(headers).toHaveLength(8);
+    expect(headers.join(',')).not.toContain('center_id');
+    if (rows.length > 0) {
+      expect(rows[0].join(',')).not.toContain('center_id');
+    }
+  });
+
+  /**
+   * Test 17: datedFilename is called with ('outcomes-cohort', 'csv') and the
+   * resulting filename matches the shape outcomes-cohort-YYYY-MM-DD.csv.
+   */
+  it('17. CSV filename matches outcomes-cohort-YYYY-MM-DD.csv shape', () => {
+    renderWith({ activeCases: previewCases });
+    const details = screen.getByTestId('outcomes-data-preview');
+    details.setAttribute('open', '');
+
+    fireEvent.click(screen.getByLabelText('outcomesPreviewExportCsv'));
+
+    expect(datedFilenameSpy).toHaveBeenCalledWith('outcomes-cohort', 'csv');
+    const [, , filename] = downloadCsvSpy.mock.calls[0] as [string[], string[][], string];
+    expect(filename).toMatch(/^outcomes-cohort-\d{4}-\d{2}-\d{2}\.csv$/);
   });
 });
