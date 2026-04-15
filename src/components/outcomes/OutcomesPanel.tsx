@@ -169,6 +169,7 @@ export default function OutcomesPanel({
               data={panel.scatterPoints}
               fill={color}
               fillOpacity={0.5}
+              isAnimationActive={false}
             />
           )}
 
