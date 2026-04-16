@@ -625,22 +625,16 @@ const thresholdLogmar = thresholdLetters * 0.02; // always positive
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Interval histogram median line rendering**
-   - What we know: UI spec says "horizontal ReferenceLine at median gap in days"; Y-axis is count; X-axis is categorical
-   - What's unclear: A ReferenceLine at y=45 (median gap days) would draw at count=45, not at the 45-day position on x-axis
-   - Recommendation: Render as text annotation above/inside the chart, or annotate the bin containing the median. Confirm with user or implement as labeled text element.
+1. **Interval histogram median line rendering** — RESOLVED
+   - Resolution: Plan 13-03 renders the median as a `<p data-testid="interval-median">Median: {medianGap}d</p>` text annotation above the histogram, NOT as `ReferenceLine y={medianGap}`. The Y-axis is count (not days), so a ReferenceLine at count=medianGapDays is semantically incorrect. Text annotation is the correct approach.
 
-2. **CRT observations in synthetic bundles**
-   - What we know: `LOINC_CRT = 'LP267955-5'` is defined in `shared/fhirCodes.ts`
-   - What's unclear: Whether the synthetic bundle generator (`scripts/generate-center-bundle.ts`) populates CRT observations with this code and realistic µm values
-   - Recommendation: Wave 0 task should verify by inspecting `generate-center-bundle.ts` and/or running a count query against the generated bundles.
+2. **CRT observations in synthetic bundles** — RESOLVED
+   - Resolution: Verified `scripts/generate-center-bundle.ts` line 74 defines `CRT_CODE = { system: LOINC, code: 'LP267955-5', display: 'Central retinal thickness' }` and lines 211–224 generate CRT observations for every patient (baseline + every 3rd visit), with realistic µm values in range [200, 600] trending downward with noise. No Wave 0 patching needed.
 
-3. **Responder "closest to 365 days" measurement lookup**
-   - What we know: 13-CONTEXT.md D-05 says "closest measurement to 365 days"
-   - What's unclear: Whether this is baseline+365 days (per-patient) or calendar year 1 from treatment start
-   - Recommendation: Implement as days since first baseline observation (same as `axisMode='days'` x-axis), find measurement with `|x - 365|` minimized.
+3. **Responder "closest to 365 days" measurement lookup** — RESOLVED
+   - Resolution: Plan 13-04 implements as days since first baseline observation (matching `axisMode='days'` x-axis convention), finding the measurement that minimizes `Math.abs(daysSinceBaseline - 365)` with a ±180-day window (`YEAR_1_WINDOW_DAYS = 180`, `YEAR_1_TARGET_DAYS = 365`).
 
 ---
 
