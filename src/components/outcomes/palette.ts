@@ -8,10 +8,10 @@
  * (codebase has no dark-mode infrastructure). If dark mode is added later,
  * re-verify EYE_COLORS against the dark background.
  *
- * Contrast ratios against #ffffff (computed 2026-04-16):
- *   OD     #1d4ed8 (tailwind blue-700)   ≈ 8.58:1
- *   OS     #b91c1c (tailwind red-700)    ≈ 6.51:1
- *   OD+OS  #6d28d9 (tailwind violet-700) ≈ 8.68:1
+ * Contrast ratios against #ffffff (computed 2026-04-16 via this module):
+ *   OD     #1d4ed8 (tailwind blue-700)   ≈ 6.70:1
+ *   OS     #b91c1c (tailwind red-700)    ≈ 6.47:1
+ *   OD+OS  #6d28d9 (tailwind violet-700) ≈ 7.10:1
  * All exceed WCAG 2.1 SC 1.4.11 graphical threshold (3.0:1).
  */
 
