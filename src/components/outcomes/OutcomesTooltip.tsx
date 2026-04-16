@@ -16,6 +16,7 @@ interface Props {
   layers: { median: boolean; perPatient: boolean; scatter: boolean; spreadBand: boolean };
   t: (key: string) => string;
   locale: 'de' | 'en';
+  valueLabelKey?: string;  // optional override for value label (e.g. CRT µm key)
 }
 
 export default function OutcomesTooltip({
@@ -26,6 +27,7 @@ export default function OutcomesTooltip({
   layers,
   t,
   locale,
+  valueLabelKey,
 }: Props) {
   if (!active || !payload || payload.length === 0) return null;
 
@@ -81,9 +83,10 @@ export default function OutcomesTooltip({
   const xDisplay =
     axisMode === 'days' ? `${fmtNum(xValue, 0)} d` : `#${fmtNum(xValue, 0)}`;
 
-  // D-05: y-unit string — metric-specific.
-  const yUnit: string =
-    yMetric === 'absolute' ? 'logMAR' : yMetric === 'delta' ? 'Δ logMAR' : '%';
+  // D-05: y-unit string — metric-specific. If valueLabelKey is provided (CRT), use its translation.
+  const yUnit: string = valueLabelKey
+    ? t(valueLabelKey)
+    : yMetric === 'absolute' ? 'logMAR' : yMetric === 'delta' ? 'Δ logMAR' : '%';
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm">

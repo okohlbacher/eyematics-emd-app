@@ -31,16 +31,26 @@ interface Props {
   layers: LayerState;
   t: (key: string) => string;
   locale: 'de' | 'en';
-  titleKey: 'outcomesPanelOd' | 'outcomesPanelOs' | 'outcomesPanelCombined';
+  titleKey: 'outcomesPanelOd' | 'outcomesPanelOs' | 'outcomesPanelCombined'
+          | 'metricsCrtPanelOd' | 'metricsCrtPanelOs' | 'metricsCrtPanelCombined';
+  metric?: 'visus' | 'crt';  // NEW — default 'visus' for backward compat
 }
 
-function yDomain(yMetric: YMetric, medianGrid: GridPoint[]): [number | string, number | string] {
-  if (yMetric === 'absolute') return [0, 2];
-  // For delta/delta_percent: compute symmetric range from data so 0 is centred.
+function yDomain(
+  yMetric: YMetric,
+  medianGrid: GridPoint[],
+  metric: 'visus' | 'crt' = 'visus',
+): [number | string, number | string] {
+  if (yMetric === 'absolute') {
+    return metric === 'crt' ? [0, 800] : [0, 2];
+  }
+  // Data-driven symmetric range — same logic for visus logMAR and CRT µm/%
   const vals = medianGrid.flatMap((g) => [g.y, g.p25 ?? g.y, g.p75 ?? g.y]).filter(Number.isFinite);
   if (vals.length === 0) return yMetric === 'delta_percent' ? [-100, 100] : [-1, 1];
   const maxAbs = Math.max(...vals.map(Math.abs)) * 1.15; // 15% headroom
-  const bound = Math.max(maxAbs, yMetric === 'delta_percent' ? 10 : 0.05);
+  // For CRT delta µm the "0.05 floor" from visus logMAR doesn't apply — use a µm-scaled floor.
+  const floor = yMetric === 'delta_percent' ? 10 : (metric === 'crt' ? 5 : 0.05);
+  const bound = Math.max(maxAbs, floor);
   return [-bound, bound];
 }
 
@@ -54,8 +64,13 @@ export default function OutcomesPanel({
   t,
   locale,
   titleKey,
+  metric = 'visus',
 }: Props) {
   const subtitle = `${panel.summary.patientCount} · ${panel.summary.measurementCount}`;
+  // CRT tooltip value label key — passed to OutcomesTooltip for µm unit display
+  const valueLabelKey = metric === 'crt'
+    ? (yMetric === 'absolute' ? 'metricsCrtYAxisAbsolute' : yMetric === 'delta' ? 'metricsCrtYAxisDelta' : 'metricsCrtYAxisDeltaPercent')
+    : undefined;
   const xLabel =
     axisMode === 'days'
       ? t('outcomesTooltipDay')
@@ -109,6 +124,16 @@ export default function OutcomesPanel({
         />
       )}
 
+      {/* Hidden marker div for y-domain regression tests */}
+      <div
+        hidden
+        data-testid="outcomes-panel-ydomain"
+        data-metric={metric}
+        data-ymetric={yMetric}
+        data-min={yDomain(yMetric, panel.medianGrid, metric)[0]}
+        data-max={yDomain(yMetric, panel.medianGrid, metric)[1]}
+      />
+
       <ResponsiveContainer width="100%" height={320}>
         <ComposedChart data={panel.medianGrid}>
           <CartesianGrid strokeDasharray="3 3" />
@@ -127,7 +152,7 @@ export default function OutcomesPanel({
               offset: -4,
             }}
           />
-          <YAxis tick={{ fontSize: 11 }} domain={yDomain(yMetric, panel.medianGrid)} />
+          <YAxis tick={{ fontSize: 11 }} domain={yDomain(yMetric, panel.medianGrid, metric)} />
           <Tooltip
             content={
               <OutcomesTooltip
@@ -136,6 +161,7 @@ export default function OutcomesPanel({
                 layers={layers}
                 t={t}
                 locale={locale}
+                valueLabelKey={valueLabelKey}
               />
             }
           />
