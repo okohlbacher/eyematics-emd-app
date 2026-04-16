@@ -94,8 +94,15 @@
   4. Metric selector on `/outcomes` switches between Visus / CRT / Interval / Responder without a navigation, and `?metric=` query param deep-links to the selection — round-trip test: set param → refresh → same metric shown.
   5. CSV export for every metric emits metric-appropriate columns (e.g., CRT replaces `va_logmar` with `crt_um`) and the filename carries the metric slug — verified per-metric by a test.
   6. All new strings (panel titles, metric names, tooltip labels, empty-state copy, CSV headers) exist in DE + EN with an i18n completeness test in the v1.5 pattern — zero untranslated keys.
-**Plans**: TBD
+**Plans** (6):
 **UI hint**: yes
+
+- [ ] 13-01-PLAN.md — Wave 0 scaffolding: seed ~50 metrics* i18n keys (DE/EN per 13-UI-SPEC) + four describe.skip RED test files for Wave 1 activation (METRIC-01, METRIC-02, METRIC-03, METRIC-04, METRIC-06)
+- [ ] 13-02-PLAN.md — CRT metric: computeCrtTrajectory in shared/ + server aggregate metric param/cache/audit extension + OutcomesPanel metric prop with CRT y-domain (METRIC-01)
+- [ ] 13-03-PLAN.md — Interval histogram: shared/intervalMetric.ts (computeIntervalDistribution with 6 fixed bins) + IntervalHistogram.tsx with eye toggle + median as text annotation (METRIC-02)
+- [ ] 13-04-PLAN.md — Responder classification: shared/responderMetric.ts (classifyResponders with configurable threshold, ±180-day year-1 window) + ResponderView.tsx grouped bar + trajectory overlay (METRIC-03)
+- [ ] 13-05-PLAN.md — Integration: metric selector tab strip + ?metric= deep-link on OutcomesView + metric-aware OutcomesSettingsDrawer + metric-appropriate CSV export with slug filename (METRIC-01, METRIC-04, METRIC-05)
+- [ ] 13-06-PLAN.md — i18n completeness test extension for metrics* namespace (non-empty DE+EN, placeholder parity, reference resolution) (METRIC-06)
 
 ### Progress
 
@@ -103,8 +110,8 @@
 |-------|----------------|--------|-----------|
 | 10. Visual/UX QA & Preview Stability | 6/6 | Complete    | 2026-04-16 |
 | 11. Audit Beacon PII Hardening | 3/3 | Complete    | 2026-04-16 |
-| 12. Server-Side Outcomes Pre-Aggregation | 4/4 | Complete   | 2026-04-16 |
-| 13. New Outcome Metrics (CRT / Interval / Responder) | 0/TBD | Not started | — |
+| 12. Server-Side Outcomes Pre-Aggregation | 4/4 | Complete    | 2026-04-16 |
+| 13. New Outcome Metrics (CRT / Interval / Responder) | 0/6 | Planned | — |
 
 ### Coverage
 
@@ -114,4 +121,4 @@
 
 ---
 
-*Last updated: 2026-04-16 — v1.6 roadmap created (Phases 10–13, 18/18 requirements mapped). Phase 11 decomposed into 3 plans.*
+*Last updated: 2026-04-16 — Phase 13 decomposed into 6 plans across 3 waves (Wave 0: 13-01 scaffold; Wave 1: 13-02/03/04 parallel metric implementations; Wave 2: 13-05/06 integration + i18n test).*
