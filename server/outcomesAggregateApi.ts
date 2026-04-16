@@ -25,7 +25,7 @@ import type { Request, Response } from 'express';
 import { Router } from 'express';
 
 import type { AxisMode, Eye, SpreadMode, YMetric } from '../shared/cohortTrajectory.js';
-import { computeCohortTrajectory } from '../shared/cohortTrajectory.js';
+import { computeCohortTrajectory, computeCrtTrajectory } from '../shared/cohortTrajectory.js';
 import type { AggregateResponse } from '../shared/outcomesProjection.js';
 import { shapeOutcomesResponse } from '../shared/outcomesProjection.js';
 import { applyFilters, extractPatientCases } from '../shared/patientCases.js';
@@ -53,6 +53,8 @@ const VALID_AXIS_MODES = new Set<AxisMode>(['days', 'treatments']);
 const VALID_Y_METRICS = new Set<YMetric>(['absolute', 'delta', 'delta_percent']);
 const VALID_EYES = new Set<Eye>(['od', 'os', 'combined']);
 const VALID_SPREAD_MODES = new Set<SpreadMode>(['iqr', 'sd1', 'sd2']);
+// T-13-03: strict allowlist for metric parameter (no enumeration on invalid values)
+const VALID_METRICS = new Set<'visus' | 'crt'>(['visus', 'crt']);
 const MAX_COHORT_ID_LEN = 128;         // IN-01 parity with Phase 11 auditApi.ts:131
 const MIN_GRID_POINTS = 2;
 const MAX_GRID_POINTS = 2048;
@@ -66,6 +68,7 @@ interface ValidBody {
   spreadMode: SpreadMode;
   includePerPatient: boolean;
   includeScatter: boolean;
+  metric: 'visus' | 'crt';
 }
 
 function validateBody(raw: unknown): ValidBody | null {
@@ -81,6 +84,9 @@ function validateBody(raw: unknown): ValidBody | null {
   const includePerPatient = body.includePerPatient === undefined ? false : body.includePerPatient;
   const includeScatter = body.includeScatter === undefined ? false : body.includeScatter;
   if (typeof includePerPatient !== 'boolean' || typeof includeScatter !== 'boolean') return null;
+  // T-13-03: metric allowlist — absent defaults to 'visus' for backward compat; unknown value → 400
+  const metric = body.metric === undefined ? 'visus' : body.metric;
+  if (typeof metric !== 'string' || !VALID_METRICS.has(metric as 'visus' | 'crt')) return null;
   return {
     cohortId: body.cohortId,
     axisMode: body.axisMode as AxisMode,
@@ -90,6 +96,7 @@ function validateBody(raw: unknown): ValidBody | null {
     spreadMode: spreadMode as SpreadMode,
     includePerPatient,
     includeScatter,
+    metric: metric as 'visus' | 'crt',
   };
 }
 
@@ -128,7 +135,7 @@ outcomesAggregateRouter.post('/aggregate', async (req: Request, res: Response): 
     res.status(400).json({ error: 'Invalid request body' });
     return;
   }
-  const { cohortId, axisMode, yMetric, gridPoints, eye, spreadMode, includePerPatient, includeScatter } = validated;
+  const { cohortId, axisMode, yMetric, gridPoints, eye, spreadMode, includePerPatient, includeScatter, metric } = validated;
 
   // 3. Cohort ownership check (D-06). 403 identical for not-found and not-owned.
   //    H1 fix: audit 403 so enumeration attempts are visible in the log (hashed id only).
@@ -151,6 +158,7 @@ outcomesAggregateRouter.post('/aggregate', async (req: Request, res: Response): 
   }
 
   // 4. Cache read (D-07/D-08 user-scoped key). Literal key construction.
+  // T-13-04: metric must be in cache key so CRT and visus cache independently
   const cacheKey = JSON.stringify({
     cohortId,
     axisMode,
@@ -161,6 +169,7 @@ outcomesAggregateRouter.post('/aggregate', async (req: Request, res: Response): 
     includePerPatient,
     includeScatter,
     user,
+    metric,
   });
   const cached = aggregateCacheGet(cacheKey);
   let response: AggregateResponse;
@@ -210,7 +219,9 @@ outcomesAggregateRouter.post('/aggregate', async (req: Request, res: Response): 
       res.status(502).json({ error: 'Upstream data unavailable' });
       return;
     }
-    const trajectory = computeCohortTrajectory({ cases, axisMode, yMetric, gridPoints, spreadMode });
+    const trajectory = metric === 'crt'
+      ? computeCrtTrajectory({ cases, axisMode, yMetric, gridPoints, spreadMode })
+      : computeCohortTrajectory({ cases, axisMode, yMetric, gridPoints, spreadMode });
     // SINGLE projector — Plan 12-01 Task 4 output. Tests (Plan 12-03) import the
     // same function; no local re-definition here, no drift possible.
     response = shapeOutcomesResponse(trajectory, eye, includePerPatient, includeScatter, false);
@@ -234,6 +245,7 @@ outcomesAggregateRouter.post('/aggregate', async (req: Request, res: Response): 
       centers: userCenters,
       payloadBytes,
       cacheHit,
+      metric,
     }),
     query: null,
   });

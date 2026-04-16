@@ -24,6 +24,7 @@ export interface AggregateRequest {
   spreadMode?: SpreadMode;
   includePerPatient?: boolean;
   includeScatter?: boolean;
+  metric?: 'visus' | 'crt';  // optional for backward compat — absent defaults to 'visus' on server
 }
 
 export interface AggregateResponse {

@@ -31,7 +31,7 @@ import { initAuditDb } from '../server/auditDb';
 import { addSavedSearch, initDataDb } from '../server/dataDb';
 import { _resetForTesting as _resetHashCohortId, initHashCohortId } from '../server/hashCohortId';
 import type { PatientCase } from '../shared/types/fhir';
-import { LOINC_VISUS, SNOMED_EYE_LEFT, SNOMED_EYE_RIGHT } from '../shared/fhirCodes';
+import { LOINC_CRT, LOINC_VISUS, SNOMED_EYE_LEFT, SNOMED_EYE_RIGHT } from '../shared/fhirCodes';
 
 // @ts-expect-error — server/outcomesAggregateApi.ts is created in parallel by Plan 12-02
 import { outcomesAggregateRouter } from '../server/outcomesAggregateApi';
@@ -108,6 +108,32 @@ function makePatient(pseudonym: string, centerId: string, decimals: number[]): P
       subject: { reference: `Patient/${pseudonym}` },
       effectiveDateTime: new Date(base + i * 30 * 86400000).toISOString(),
       valueQuantity: { value: d, unit: 'decimal' },
+      bodySite: { coding: [{ code: i % 2 === 0 ? SNOMED_EYE_RIGHT : SNOMED_EYE_LEFT }] },
+    })),
+    procedures: [],
+    imagingStudies: [],
+    medications: [],
+  } as unknown as PatientCase;
+}
+
+function makeCrtPatient(pseudonym: string, centerId: string, umValues: number[]): PatientCase {
+  const base = new Date('2024-01-01T00:00:00Z').getTime();
+  return {
+    id: pseudonym,
+    pseudonym,
+    gender: 'unknown',
+    birthDate: '1960-01-01',
+    centerId,
+    centerName: centerId,
+    conditions: [],
+    observations: umValues.map((um, i) => ({
+      resourceType: 'Observation',
+      id: `${pseudonym}-crt-${i}`,
+      status: 'final',
+      code: { coding: [{ code: LOINC_CRT, system: 'http://loinc.org' }] },
+      subject: { reference: `Patient/${pseudonym}` },
+      effectiveDateTime: new Date(base + i * 30 * 86400000).toISOString(),
+      valueQuantity: { value: um, unit: 'um' },
       bodySite: { coding: [{ code: i % 2 === 0 ? SNOMED_EYE_RIGHT : SNOMED_EYE_LEFT }] },
     })),
     procedures: [],
@@ -365,6 +391,59 @@ describe('POST /api/outcomes/aggregate — AGG-01 contract + auth + cache + cent
 
     expect(res.status).toBe(200);
     expect(res.headers['content-encoding']).toBe('gzip');
+  });
+
+  it('accepts metric: "crt" and returns CRT trajectory (200)', async () => {
+    const user = 'user-a';
+    seedSavedSearch(user, 'cohort-crt');
+    // Seed CRT patients so the CRT trajectory has data
+    casesByCenter['org-uka'] = [
+      makeCrtPatient('p-crt-1', 'org-uka', [350, 320, 310, 300, 295]),
+      makeCrtPatient('p-crt-2', 'org-uka', [400, 380, 360, 350, 340]),
+      makeCrtPatient('p-crt-3', 'org-uka', [280, 270, 260, 255, 250]),
+    ];
+    const app = createApp({ preferred_username: user, role: 'researcher', centers: ['org-uka'] });
+
+    const res = await request(app)
+      .post('/api/outcomes/aggregate')
+      .send({ cohortId: 'cohort-crt', ...VALID_BODY, metric: 'crt' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      median: expect.any(Array),
+      meta: expect.objectContaining({ patientCount: expect.any(Number) }),
+    });
+  });
+
+  it('defaults to metric: "visus" when metric is absent (backward compat)', async () => {
+    const user = 'user-a';
+    seedSavedSearch(user, 'cohort-compat');
+    const app = createApp({ preferred_username: user, role: 'researcher', centers: ['org-uka'] });
+
+    // Request without metric field — must behave identically to explicit metric: 'visus'
+    const resImplicit = await request(app)
+      .post('/api/outcomes/aggregate')
+      .send({ cohortId: 'cohort-compat', ...VALID_BODY });
+    const resExplicit = await request(app)
+      .post('/api/outcomes/aggregate')
+      .send({ cohortId: 'cohort-compat', ...VALID_BODY, metric: 'visus' });
+
+    expect(resImplicit.status).toBe(200);
+    expect(resExplicit.status).toBe(200);
+    // Both should return the same shape and patient count
+    expect(resImplicit.body.meta.patientCount).toBe(resExplicit.body.meta.patientCount);
+  });
+
+  it('rejects unknown metric value with 400', async () => {
+    const user = 'user-a';
+    seedSavedSearch(user, 'cohort-alpha');
+    const app = createApp({ preferred_username: user, role: 'researcher', centers: ['org-uka'] });
+
+    const res = await request(app)
+      .post('/api/outcomes/aggregate')
+      .send({ cohortId: 'cohort-alpha', ...VALID_BODY, metric: 'bogus' });
+
+    expect(res.status).toBe(400);
   });
 });
 
