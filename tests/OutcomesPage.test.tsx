@@ -276,10 +276,11 @@ describe('OutcomesPage — route resolution, audit beacon, empty states (09-01)'
   });
 
   /**
-   * Test 6: Fires GET /api/audit/events/view-open?name=open_outcomes_view&cohort=abc
-   * exactly once on mount with credentials: 'include'.
+   * Test 6 (Phase 11 / CRREV-01): Fires POST /api/audit/events/view-open with
+   * JSON body + keepalive; no cohort id / filter in URL. Migrated from the
+   * legacy GET-with-querystring shape.
    */
-  it('6. fires audit beacon exactly once on mount with correct URL and credentials', async () => {
+  it('6. fires audit beacon POST with JSON body, keepalive, and no cohort id in URL (Phase 11)', async () => {
     const cases = [buildPatientCase('p1')];
     const savedSearches: SavedSearch[] = [
       { id: 'abc', name: 'My Cohort', createdAt: '2024-01-01T00:00:00Z', filters: {} },
@@ -290,14 +291,85 @@ describe('OutcomesPage — route resolution, audit beacon, empty states (09-01)'
       initialEntries: ['/outcomes?cohort=abc'],
     });
 
-    // Wait for fetch to be called (fire-and-forget effect)
     await new Promise((r) => setTimeout(r, 0));
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
-    expect(url).toContain('name=open_outcomes_view');
-    expect(url).toContain('cohort=abc');
+
+    // URL must be exactly the endpoint — no querystring.
+    expect(url).toBe('/api/audit/events/view-open');
+    expect(url).not.toContain('?');
+    expect(url).not.toContain('cohort');
+
+    // Method + transport flags.
+    expect(init?.method).toBe('POST');
+    expect(init?.keepalive).toBe(true);
     expect(init?.credentials).toBe('include');
+    expect((init?.headers as Record<string, string>)?.['Content-Type']).toBe('application/json');
+
+    // Body shape — cohortId in body, not URL.
+    expect(typeof init?.body).toBe('string');
+    const parsed = JSON.parse(init!.body as string);
+    expect(parsed).toEqual({ name: 'open_outcomes_view', cohortId: 'abc' });
+  });
+
+  /**
+   * Test 6b (Phase 11 / D-08): filter query param is decoded + parsed into the body object.
+   */
+  it('6b. decodes ?filter= into body.filter (no URL querystring)', async () => {
+    const cases = [buildPatientCase('p1')];
+    const filterObj = { diagnosis: ['AMD'], centers: ['org-uka'] };
+    const filterParam = encodeURIComponent(JSON.stringify(filterObj));
+    renderWith({
+      activeCases: cases,
+      initialEntries: [`/outcomes?filter=${filterParam}`],
+    });
+
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/audit/events/view-open');
+
+    const parsed = JSON.parse(init!.body as string);
+    expect(parsed.name).toBe('open_outcomes_view');
+    expect(parsed.filter).toEqual(filterObj);
+    expect(parsed).not.toHaveProperty('cohortId');
+  });
+
+  /**
+   * Test 6c (Phase 11 / malformed-filter handling): drops unparseable filter; no crash.
+   */
+  it('6c. drops malformed ?filter= from the beacon body (fire-and-forget never throws)', async () => {
+    const cases = [buildPatientCase('p1')];
+    renderWith({
+      activeCases: cases,
+      initialEntries: ['/outcomes?filter=%7Binvalid'],
+    });
+
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    const parsed = JSON.parse(init!.body as string);
+    expect(parsed.name).toBe('open_outcomes_view');
+    expect(parsed).not.toHaveProperty('filter');
+    expect(parsed).not.toHaveProperty('cohortId');
+  });
+
+  /**
+   * Test 6d (Phase 11 / no params): bare /outcomes mount produces the minimal body.
+   */
+  it('6d. with no query params, body contains only { name }', async () => {
+    const cases = [buildPatientCase('p1')];
+    renderWith({ activeCases: cases, initialEntries: ['/outcomes'] });
+
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    const parsed = JSON.parse(init!.body as string);
+    expect(parsed).toEqual({ name: 'open_outcomes_view' });
   });
 
   /**
