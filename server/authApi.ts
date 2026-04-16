@@ -373,7 +373,7 @@ authApiRouter.delete('/users/:username', async (req: Request, res: Response): Pr
     return;
   }
 
-  const target = req.params.username;
+  const target = String(req.params.username ?? '');
 
   // Self-delete guard (T-04-03)
   if (req.auth.preferred_username.toLowerCase() === target.toLowerCase()) {
@@ -410,7 +410,7 @@ authApiRouter.put('/users/:username/password', async (req: Request, res: Respons
     return;
   }
 
-  const target = req.params.username;
+  const target = String(req.params.username ?? '');
 
   // Server generates the new password — no plaintext in request body
   // This eliminates the audit log leak (review concern #1, T-04-07)

@@ -62,6 +62,21 @@ function validateSettingsSchema(parsed: unknown): string | null {
   const ds = obj.dataSource as Record<string, unknown>;
   if (typeof ds.type !== 'string' || !['local', 'blaze'].includes(ds.type)) return "dataSource.type must be 'local' or 'blaze'";
   if (typeof ds.blazeUrl !== 'string' || ds.blazeUrl.length === 0) return 'dataSource.blazeUrl must be a non-empty string';
+  // Phase 12 / D-11 — optional outcomes section
+  if (obj.outcomes !== undefined) {
+    if (obj.outcomes === null || typeof obj.outcomes !== 'object') return 'outcomes must be an object';
+    const out = obj.outcomes as Record<string, unknown>;
+    if (out.serverAggregationThresholdPatients !== undefined) {
+      if (typeof out.serverAggregationThresholdPatients !== 'number' || !Number.isFinite(out.serverAggregationThresholdPatients) || out.serverAggregationThresholdPatients < 1) {
+        return 'outcomes.serverAggregationThresholdPatients must be a positive number';
+      }
+    }
+    if (out.aggregateCacheTtlMs !== undefined) {
+      if (typeof out.aggregateCacheTtlMs !== 'number' || !Number.isFinite(out.aggregateCacheTtlMs) || out.aggregateCacheTtlMs < 0) {
+        return 'outcomes.aggregateCacheTtlMs must be a non-negative number';
+      }
+    }
+  }
   return null;
 }
 

@@ -49,6 +49,7 @@ const REDACT_PATHS = new Set([
  */
 const SKIP_AUDIT_PATHS = new Set([
   '/api/audit/events/view-open',  // Phase 11: handler writes row with hashed cohortId
+  '/api/outcomes/aggregate',      // Phase 12 / D-17 / T-12-04: handler writes row with hashed cohortId + payloadBytes
 ]);
 
 /**
