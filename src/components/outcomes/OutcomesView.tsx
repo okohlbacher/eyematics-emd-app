@@ -538,7 +538,7 @@ export default function OutcomesView() {
               role="status"
               aria-live="polite"
               className="ml-3 text-gray-500 text-sm italic"
-              data-testid="outcomes-server-computing"
+              data-testid="outcomes-server-computing-header"
             >
               {t('outcomesServerComputingLabel')}
             </span>
