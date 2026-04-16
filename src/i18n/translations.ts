@@ -159,6 +159,13 @@ const translations = {
   pseudonym: { de: 'Pseudonym', en: 'Pseudonym' },
   visus: { de: 'Visus', en: 'Visual Acuity' },
   execute: { de: 'Ausführen', en: 'Execute' },
+  detailedView: { de: 'Detailansicht', en: 'Detailed view' },
+  summaryView: { de: 'Zusammenfassung', en: 'Summary' },
+  cohortSummaryAgeRange: { de: 'Altersbereich', en: 'Age range' },
+  cohortSummaryVisusRange: { de: 'Visusbereich', en: 'Visual acuity range' },
+  cohortSummaryCenters: { de: 'Zentren', en: 'Centers' },
+  cohortSummaryNoData: { de: 'Keine Fälle ausgewählt', en: 'No cases selected' },
+  years: { de: 'J.', en: 'yr' },
 
   // Analysis page
   analysisTitle: { de: 'Kohortenanalyse', en: 'Cohort Analysis' },

@@ -63,7 +63,7 @@ export default function OutcomesView() {
   // Session-only toggle state (D-24).
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [axisMode, setAxisMode] = useState<AxisMode>('days');
-  const [yMetric, setYMetric] = useState<YMetric>('absolute');
+  const [yMetric, setYMetric] = useState<YMetric>('delta');
   const [gridPoints, setGridPoints] = useState<number>(120);
   const [spreadMode] = useState<SpreadMode>('iqr');
   const [layers, setLayers] = useState<LayerState>({
