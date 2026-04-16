@@ -24,28 +24,16 @@ import crypto from 'node:crypto';
 import type { Request, Response } from 'express';
 import { Router } from 'express';
 
-import { LOINC_CRT, LOINC_VISUS } from '../shared/fhirCodes.js';
-import { getLatestObservation } from '../shared/fhirQueries.js';
 import type { AxisMode, Eye, SpreadMode, YMetric } from '../shared/cohortTrajectory.js';
 import { computeCohortTrajectory } from '../shared/cohortTrajectory.js';
 import type { AggregateResponse } from '../shared/outcomesProjection.js';
 import { shapeOutcomesResponse } from '../shared/outcomesProjection.js';
-import type {
-  CohortFilter,
-  Condition,
-  ImagingStudy,
-  MedicationStatement,
-  Observation,
-  Organization,
-  Patient,
-  PatientCase,
-  Procedure,
-} from '../shared/types/fhir.js';
+import { applyFilters, extractPatientCases } from '../shared/patientCases.js';
+import type { CohortFilter, PatientCase } from '../shared/types/fhir.js';
 import { logAuditEntry } from './auditDb.js';
 import { getSavedSearches } from './dataDb.js';
 // STATIC imports (no dynamic module loading in the request path — Task 2b adds the
 // `export` keyword to server/fhirApi.ts:getCachedBundles so this import compiles).
-import type { FhirBundle } from './fhirApi.js';
 import {
   filterBundlesByCenters,
   getCachedBundles,
@@ -103,90 +91,6 @@ function validateBody(raw: unknown): ValidBody | null {
     includePerPatient,
     includeScatter,
   };
-}
-
-// ---------------------------------------------------------------------------
-// Inline pure re-implementations of extractPatientCases / applyFilters / getAge
-// (per the plan's <interfaces> pivot: src/services/fhirLoader.ts transitively
-// pulls browser globals via authHeaders.ts which server tsconfig does not
-// declare; reimplementing locally against shared/ imports keeps the server
-// build self-contained and matches the reference semantics of fhirLoader.ts).
-// ---------------------------------------------------------------------------
-
-function resourcesOfType<T>(bundles: FhirBundle[], type: string): T[] {
-  return bundles.flatMap((b) =>
-    b.entry
-      .filter((e) => e.resource.resourceType === type)
-      .map((e) => e.resource as unknown as T),
-  );
-}
-
-function extractPatientCases(bundles: FhirBundle[]): PatientCase[] {
-  const patients = resourcesOfType<Patient>(bundles, 'Patient');
-  const conditions = resourcesOfType<Condition>(bundles, 'Condition');
-  const observations = resourcesOfType<Observation>(bundles, 'Observation');
-  const procedures = resourcesOfType<Procedure>(bundles, 'Procedure');
-  const imaging = resourcesOfType<ImagingStudy>(bundles, 'ImagingStudy');
-  const medications = resourcesOfType<MedicationStatement>(bundles, 'MedicationStatement');
-  const orgs = resourcesOfType<Organization>(bundles, 'Organization');
-
-  return patients.map((pat) => {
-    const ref = `Patient/${pat.id}`;
-    const org = orgs.find((o) => o.id === pat.meta?.source);
-    return {
-      id: pat.id,
-      pseudonym:
-        pat.identifier?.find((i) => i.system === 'urn:eyematics:pseudonym')?.value ?? pat.id,
-      gender: pat.gender ?? 'unknown',
-      birthDate: pat.birthDate ?? '',
-      centerId: pat.meta?.source ?? '',
-      centerName: org?.name ?? pat.meta?.source ?? '',
-      conditions: conditions.filter((c) => c.subject.reference === ref),
-      observations: observations.filter((o) => o.subject.reference === ref),
-      procedures: procedures.filter((p) => p.subject.reference === ref),
-      imagingStudies: imaging.filter((i) => i.subject.reference === ref),
-      medications: medications.filter((m) => m.subject.reference === ref),
-    };
-  });
-}
-
-function getAge(birthDate: string): number {
-  if (!birthDate) return -1;
-  const birth = new Date(birthDate);
-  if (isNaN(birth.getTime())) return -1;
-  const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
-  const m = now.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
-  return age;
-}
-
-function applyFilters(cases: PatientCase[], filters: CohortFilter): PatientCase[] {
-  return cases.filter((c) => {
-    if (filters.centers?.length && !filters.centers.includes(c.centerId)) return false;
-    if (filters.gender?.length && !filters.gender.includes(c.gender)) return false;
-    if (filters.diagnosis?.length) {
-      const codes = c.conditions.flatMap((cond) => cond.code.coding.map((cd) => cd.code));
-      if (!filters.diagnosis.some((d) => codes.includes(d))) return false;
-    }
-    if (filters.ageRange) {
-      const age = getAge(c.birthDate);
-      if (age < filters.ageRange[0] || age > filters.ageRange[1]) return false;
-    }
-    if (filters.visusRange) {
-      const latest = getLatestObservation(c.observations, LOINC_VISUS);
-      const val = latest?.valueQuantity?.value;
-      if (val == null) return false;
-      if (val < filters.visusRange[0] || val > filters.visusRange[1]) return false;
-    }
-    if (filters.crtRange) {
-      const latest = getLatestObservation(c.observations, LOINC_CRT);
-      const val = latest?.valueQuantity?.value;
-      if (val == null) return false;
-      if (val < filters.crtRange[0] || val > filters.crtRange[1]) return false;
-    }
-    return true;
-  });
 }
 
 // ---------------------------------------------------------------------------

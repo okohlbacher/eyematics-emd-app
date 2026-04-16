@@ -149,8 +149,9 @@ vi.mock('../server/fhirApi.js', async (importOriginal) => {
   };
 });
 
-vi.mock('../src/services/fhirLoader.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../src/services/fhirLoader.js')>();
+// The handler imports extractPatientCases from shared/patientCases.ts (not fhirLoader).
+vi.mock('../shared/patientCases.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../shared/patientCases.js')>();
   return {
     ...actual,
     extractPatientCases: vi.fn(() => currentFixture),

@@ -57,22 +57,24 @@ vi.mock('../server/fhirApi.js', async (importOriginal) => {
   return {
     ...actual,
     getCachedBundles: vi.fn(async () => mockBundlesRef.bundles),
+    filterBundlesByCendles: vi.fn((_b: unknown, _c: string[]) => mockBundlesRef.bundles),
     filterBundlesByCenters: vi.fn((_b: unknown, _c: string[]) => mockBundlesRef.bundles),
   };
 });
 
-vi.mock('../src/services/fhirLoader.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../src/services/fhirLoader.js')>();
+// The handler imports extractPatientCases from shared/patientCases.ts (not fhirLoader).
+// We mock that shared module so tests can inject synthetic PatientCases without
+// building full FHIR bundle fixtures. applyFilters is kept real (pure function).
+vi.mock('../shared/patientCases.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../shared/patientCases.js')>();
   return {
     ...actual,
     // extractPatientCases is called by the handler on the filtered bundles; we
-    // reshape: the bundles array is ignored, we return the union of fixtures
-    // scoped to the mock's current center(s). resolveCohortCases pipeline:
-    //   bundles (mocked) -> extractPatientCases -> applyFilters
-    // We set `lastCenters` via a beforeEach-configured closure below.
+    // ignore the bundles argument and return the fixture union for currentAuthCenters.
+    // resolveCohortCases pipeline: bundles (mocked) -> extractPatientCases -> applyFilters
     extractPatientCases: vi.fn(() => currentFixtureCases()),
-    // applyFilters is pure — keep the real implementation so diagnosis/center/
-    // visusRange filtering is exercised end-to-end by the test fixture.
+    // applyFilters is pure — keep real implementation so center/diagnosis/visusRange
+    // filtering is exercised end-to-end.
   };
 });
 
