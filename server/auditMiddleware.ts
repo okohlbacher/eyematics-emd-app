@@ -7,8 +7,9 @@
  * - D-11: Mutations log (redacted) body; GETs log query params only
  * - Review concern #2 (HIGH): Redact sensitive fields (password, otp, challengeToken)
  *   before storing the body for /api/auth/* endpoints
- * - Review concern #4 (HIGH): Requires express.json() mounted BEFORE this middleware
- *   so that req.body is populated. Plan 03 (wiring) adds express.json() globally.
+ * - Review concern #4 (HIGH): Requires express.json() (or readBody() via _capturedBody)
+ *   to populate req.body. index.ts mounts express.json() scoped to specific routes
+ *   (NOT global) because issueApi and settingsApi consume the raw stream via readBody().
  * - Review concern #5 (MEDIUM): Mount BEFORE auth middleware so 401 responses are
  *   captured. req.auth is read at finish time — populated if auth succeeded, undefined
  *   for 401s. Both cases resolve correctly at event time.
