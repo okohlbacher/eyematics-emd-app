@@ -110,6 +110,12 @@ auditApiRouter.get('/export', (req: Request, res: Response): void => {
  * Response: 204 No Content (D-03 fire-and-forget).
  *
  * No role gate: any authenticated user may emit their own view-open.
+ *
+ * Trust boundary (IN-02): `filter` is stored VERBATIM in the audit row body.
+ * Callers MUST NOT embed PII or patient identifiers inside the filter object.
+ * The server performs no redaction or field-allowlisting on this payload beyond
+ * the 16 KiB JSON cap; a future phase may introduce a shallow allowlist once
+ * the filter taxonomy stabilises.
  */
 auditApiRouter.post('/events/view-open', (req: Request, res: Response): void => {
   const body = (req.body ?? {}) as { name?: unknown; cohortId?: unknown; filter?: unknown };
