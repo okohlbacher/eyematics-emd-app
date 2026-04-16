@@ -11,7 +11,8 @@ import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { auditApiRouter } from '../server/auditApi';
-import { initAuditDb, logAuditEntry } from '../server/auditDb';
+import { initAuditDb, logAuditEntry, queryAudit } from '../server/auditDb';
+import { initHashCohortId, _resetForTesting as _resetHashCohortId } from '../server/hashCohortId';
 
 let tmpDir: string;
 
@@ -21,6 +22,8 @@ function createApp(role: string, username = 'testuser') {
     req.auth = { sub: username, preferred_username: username, role, centers: [], iat: 0, exp: 0 };
     next();
   });
+  // Phase 11: scoped JSON parser for the beacon route (mirrors server/index.ts)
+  app.use('/api/audit/events/view-open', express.json({ limit: '16kb' }));
   app.use('/api/audit', auditApiRouter);
   return app;
 }
@@ -64,6 +67,8 @@ function seedEntries() {
 beforeEach(() => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'auditapi-test-'));
   initAuditDb(tmpDir);
+  _resetHashCohortId();
+  initHashCohortId({ audit: { cohortHashSecret: 'test-cohort-hash-secret-32-chars-min-xxx' } });
   seedEntries();
 });
 
@@ -115,32 +120,79 @@ describe('auditApi', () => {
     });
   });
 
-  describe('GET /api/audit/events/view-open — view-open beacon', () => {
-    it('responds 204 with empty body when authenticated (user role)', async () => {
-      const app = createApp('user');
-      const res = await request(app).get('/api/audit/events/view-open?name=open_outcomes_view&cohort=abc');
+  describe('POST /api/audit/events/view-open — hashed beacon (Phase 11 / CRREV-01)', () => {
+    it('responds 204 with empty body for an authenticated user', async () => {
+      const app = createApp('researcher', 'researcher');
+      const res = await request(app)
+        .post('/api/audit/events/view-open')
+        .send({ name: 'open_outcomes_view' });
       expect(res.status).toBe(204);
       expect(res.text).toBe('');
     });
 
-    it('responds 204 for admin role too (no role gating)', async () => {
-      const app = createApp('admin');
-      const res = await request(app).get('/api/audit/events/view-open?name=open_outcomes_view&cohort=abc');
+    it('writes audit row with cohortHash (16 hex) and NO raw cohortId anywhere (D-11 / T-11-01)', async () => {
+      const app = createApp('researcher', 'researcher');
+      const res = await request(app)
+        .post('/api/audit/events/view-open')
+        .send({ name: 'open_outcomes_view', cohortId: 'saved-search-xyz', filter: { diagnosis: ['AMD'] } });
       expect(res.status).toBe(204);
-      expect(res.text).toBe('');
+
+      const { rows } = queryAudit({ path: '/api/audit/events/view-open' });
+      expect(rows).toHaveLength(1);
+      const row = rows[0];
+      expect(row.method).toBe('POST');
+      expect(row.path).toBe('/api/audit/events/view-open');
+      expect(row.user).toBe('researcher');
+      expect(row.query).toBeNull();
+
+      // Raw id absence — the core security assertion
+      expect(row.body).not.toContain('saved-search-xyz');
+
+      // Parsed body shape
+      expect(row.body).not.toBeNull();
+      const parsed = JSON.parse(row.body!);
+      expect(parsed.name).toBe('open_outcomes_view');
+      expect(parsed.cohortHash).toMatch(/^[0-9a-f]{16}$/);
+      expect(parsed.filter).toEqual({ diagnosis: ['AMD'] });
+      expect(parsed).not.toHaveProperty('cohortId');
     });
 
-    it('accepts oversized filter query string without rejection', async () => {
-      const app = createApp('user');
-      const longFilter = encodeURIComponent(JSON.stringify({ centers: Array(20).fill('org-x') }));
-      const res = await request(app).get(`/api/audit/events/view-open?name=open_outcomes_view&filter=${longFilter}`);
+    it('records cohortHash: null when no cohortId is sent', async () => {
+      const app = createApp('researcher', 'researcher');
+      const res = await request(app)
+        .post('/api/audit/events/view-open')
+        .send({ name: 'open_outcomes_view' });
       expect(res.status).toBe(204);
+
+      const { rows } = queryAudit({ path: '/api/audit/events/view-open' });
+      expect(rows).toHaveLength(1);
+      const parsed = JSON.parse(rows[0].body!);
+      expect(parsed.cohortHash).toBeNull();
     });
 
-    it('POST to same URL returns 404 (no write route exists)', async () => {
-      const app = createApp('user');
-      const res = await request(app).post('/api/audit/events/view-open').send({});
+    it('preserves filter payload verbatim without hashing (D-08)', async () => {
+      const app = createApp('researcher', 'researcher');
+      await request(app)
+        .post('/api/audit/events/view-open')
+        .send({ name: 'open_outcomes_view', filter: { centers: ['org-uka', 'org-ukc'] } });
+      const { rows } = queryAudit({ path: '/api/audit/events/view-open' });
+      const parsed = JSON.parse(rows[0].body!);
+      expect(parsed.filter).toEqual({ centers: ['org-uka', 'org-ukc'] });
+    });
+
+    it('GET /api/audit/events/view-open returns 404 (legacy route removed)', async () => {
+      const app = createApp('researcher', 'researcher');
+      const res = await request(app).get('/api/audit/events/view-open?cohort=abc');
       expect(res.status).toBe(404);
+    });
+
+    it('rejects body larger than 16 KiB with 413', async () => {
+      const app = createApp('researcher', 'researcher');
+      const big = 'x'.repeat(32 * 1024);
+      const res = await request(app)
+        .post('/api/audit/events/view-open')
+        .send({ name: 'open_outcomes_view', filter: { blob: big } });
+      expect(res.status).toBe(413);
     });
   });
 
