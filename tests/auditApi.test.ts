@@ -2,6 +2,7 @@
  * T-06: Tests for auditApi.ts — admin-only export, non-admin auto-scoping.
  */
 
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
