@@ -23,7 +23,7 @@
 ### Phases
 
 - [x] **Phase 10: Visual/UX QA & Preview Stability** — Close v1.5 human-QA items (admin filter, chart palette, IQR band, tooltips, empty states) and stabilize OutcomesDataPreview row keys. (completed 2026-04-16)
-- [ ] **Phase 11: Audit Beacon PII Hardening** — Replace cohort id in audit-beacon querystring with hashed id in event payload; establish the hashing pattern AGG-05 will reuse.
+- [x] **Phase 11: Audit Beacon PII Hardening** — Replace cohort id in audit-beacon querystring with hashed id in event payload; establish the hashing pattern AGG-05 will reuse. (completed 2026-04-16)
 - [ ] **Phase 12: Server-Side Outcomes Pre-Aggregation** — Ship `POST /api/outcomes/aggregate`, byte-parity with client aggregation, cacheable, auto-routed at >1000-patient threshold.
 - [ ] **Phase 13: New Outcome Metrics (CRT / Interval / Responder)** — Add three metrics with metric selector, deep-link, metric-aware CSV, and full DE+EN i18n.
 
@@ -56,9 +56,9 @@
 **Requirements**: CRREV-01
 **Plans** (3):
 
-- [ ] 11-01-PLAN.md — Settings key `audit.cohortHashSecret` + `server/hashCohortId.ts` utility (HMAC-SHA256, 16-hex truncation, fail-fast) + startup wiring + non-admin strip
-- [ ] 11-02-PLAN.md — Server beacon refactor: `POST /api/audit/events/view-open` with handler-written audit row (hashed cohort id) + `SKIP_AUDIT_PATHS` middleware skip-list + scoped `express.json()`
-- [ ] 11-03-PLAN.md — Client beacon transport migration: `fetch POST` + `keepalive: true` + JSON body; test 6 migration
+- [x] 11-01-PLAN.md — Settings key `audit.cohortHashSecret` + `server/hashCohortId.ts` utility (HMAC-SHA256, 16-hex truncation, fail-fast) + startup wiring + non-admin strip
+- [x] 11-02-PLAN.md — Server beacon refactor: `POST /api/audit/events/view-open` with handler-written audit row (hashed cohort id) + `SKIP_AUDIT_PATHS` middleware skip-list + scoped `express.json()`
+- [x] 11-03-PLAN.md — Client beacon transport migration: `fetch POST` + `keepalive: true` + JSON body; test 6 migration
 
 **Success Criteria** (what must be TRUE):
   1. `GET /api/audit/events/view-open` no longer accepts or records cohort id in the querystring; request carries no cohort-identifying parameter in the URL.
@@ -97,7 +97,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 10. Visual/UX QA & Preview Stability | 6/6 | Complete    | 2026-04-16 |
-| 11. Audit Beacon PII Hardening | 0/3 | Not started | — |
+| 11. Audit Beacon PII Hardening | 3/3 | Complete    | 2026-04-16 |
 | 12. Server-Side Outcomes Pre-Aggregation | 0/TBD | Not started | — |
 | 13. New Outcome Metrics (CRT / Interval / Responder) | 0/TBD | Not started | — |
 
