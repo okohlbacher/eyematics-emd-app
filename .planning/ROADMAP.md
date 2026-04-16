@@ -75,7 +75,12 @@
   3. Client `/outcomes` auto-routes to the server endpoint when cohort size exceeds the configured threshold (default 1000, overridable via `settings.yaml`); below threshold keeps the v1.5 client path — observable by a test that seeds cohorts above and below and asserts the code path taken.
   4. Response is cacheable per `{ cohortId, axisMode, yMetric, gridPoints, eye }` key with an explicit invalidation trigger on cohort mutation; cache hit path measurably faster than cold path and verified by a test.
   5. Endpoint emits an `outcomes.aggregate` audit event with hashed cohort id (via Phase 11 utility), user, center set, and payload size — verified by DB row assertion; no raw cohort id anywhere in the audit record.
-**Plans**: TBD
+**Plans** (4):
+
+- [ ] 12-01-PLAN.md — Shared module extraction: split fhirLoader into pure shared/ + networked src/, promote cohortTrajectory to shared/, add both tsconfig includes, install backward-compat shims (AGG-02 precondition)
+- [ ] 12-02-PLAN.md — Server aggregation module: POST /api/outcomes/aggregate handler + in-memory TTL cache + dataApi invalidation hooks + SKIP_AUDIT_PATHS + scoped compression + AGG-05 audit event (AGG-01, AGG-04, AGG-05)
+- [ ] 12-03-PLAN.md — Test suite: cache unit tests + API contract tests (auth, center filter, cohort ownership, body caps, cross-user scoping) + AGG-02 byte-parity tests + AGG-05 audit row assertions
+- [ ] 12-04-PLAN.md — Client routing: src/services/outcomesAggregateService.ts + OutcomesView.tsx size-based routing + DE/EN 'Computing on server…' indicator + server-error fallback to client compute + AGG-03 regression test
 **UI hint**: yes
 
 #### Phase 13: New Outcome Metrics (CRT / Interval / Responder)
@@ -98,7 +103,7 @@
 |-------|----------------|--------|-----------|
 | 10. Visual/UX QA & Preview Stability | 6/6 | Complete    | 2026-04-16 |
 | 11. Audit Beacon PII Hardening | 3/3 | Complete    | 2026-04-16 |
-| 12. Server-Side Outcomes Pre-Aggregation | 0/TBD | Not started | — |
+| 12. Server-Side Outcomes Pre-Aggregation | 0/4 | Not started | — |
 | 13. New Outcome Metrics (CRT / Interval / Responder) | 0/TBD | Not started | — |
 
 ### Coverage

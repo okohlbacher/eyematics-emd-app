@@ -584,22 +584,22 @@ describe('AGG-02 byte parity', () => {
 | A4 | Express 5's `res.json(payload)` produces byte-identical output to `JSON.stringify(payload)` for the purposes of the parity test | Pattern 1 | If Express adds whitespace or reorders keys, parity test fails. Direct check: `res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(payload))` is a safe fallback. |
 | A5 | The in-memory `Map` cache won't exceed memory pressure for the demonstrator scale | Pattern 3 | Unbounded growth possible if many unique cohort/config combos. Plan can add a soft size cap (e.g., `MAX_ENTRIES = 256`) + LRU eviction if concern surfaces. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Shared types placement — `shared/types/fhir.ts` vs keep in `src/types/fhir.ts` with a reach-up import?**
    - What we know: `cohortTrajectory.ts` imports `Observation`, `PatientCase`, `Procedure` from `../types/fhir`. Moving to `shared/` means either relocating types or allowing `shared/` to reach into `src/`.
    - What's unclear: Whether the planner wants `shared/` to be a true leaf (no reach-up) or whether a one-level reach is acceptable.
-   - Recommendation: Relocate types to `shared/types/fhir.ts` and re-export from `src/types/fhir.ts` for existing callers. Matches the cohortTrajectory re-export shim pattern.
+   - RESOLVED: Relocate types to `shared/types/fhir.ts` and re-export from `src/types/fhir.ts` for existing callers. Matches the cohortTrajectory re-export shim pattern. Internalized by Plan 12-01 Task 1 (creates shared/types/fhir.ts) + Task 3 (installs the re-export shim in src/types/fhir.ts).
 
 2. **How does the server discover "active cases" for a cohortId?**
    - What we know: `server/dataDb.js` has `getSavedSearches(user) → SavedSearchRow[]` with `filters` as JSON string. `server/fhirApi.ts` has `getCaseToCenter()` and internal bundle cache. The client path uses `applyFilters(activeCases, savedSearch.filters)`.
    - What's unclear: Whether the server has a single `getActiveCases(centers)` helper equivalent to the client's `useData().activeCases`, or whether the handler must compose `loadBundles → extractPatientCases → center-filter → applyFilters`.
-   - Recommendation: Plan a task to expose a `server/fhirApi.ts` helper `getActivePatientCases(centers: string[]): PatientCase[]` that encapsulates the existing center filter + extraction, so the aggregate handler stays thin.
+   - RESOLVED: Plan 12-02 Task 2 exports `getCachedBundles` from `server/fhirApi.ts` and the aggregate handler composes `filterBundlesByCenters` + `extractPatientCases` + `applyFilters` inline in `resolveCohortCases`. A single `getActivePatientCases(centers)` helper was not extracted because the composition is only 4 lines and keeping the seams visible aids the AGG-01 center-filter audit (Pitfall #2).
 
 3. **Saved-search update path for D-09 invalidation.**
    - What we know: `server/dataApi.ts` has `POST /saved-searches` (create-or-replace) and `DELETE /saved-searches/:id`. There is no explicit `PUT`.
    - What's unclear: Whether `POST /saved-searches` for an existing id counts as a mutation requiring invalidation.
-   - Recommendation: Yes — treat both POST (same id replacing) and DELETE as mutation triggers. Add `invalidateByCohort(id)` in both handlers.
+   - RESOLVED: Yes — Plan 12-02 Task 2 adds `invalidateByCohort(row.id)` after `addSavedSearch` in the POST /saved-searches handler and after `removeSavedSearch` in the DELETE /saved-searches/:id handler of `server/dataApi.ts`. Both paths are treated as mutation triggers.
 
 ## Validation Architecture
 
