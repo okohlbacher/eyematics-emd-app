@@ -184,6 +184,11 @@ app.use(helmet({
 app.use('/api/auth', express.json({ limit: '1mb' }));
 app.use('/api/data', express.json({ limit: '1mb' })); // before auditMiddleware (review concern #9)
 
+// Body parser scoped to the Phase 11 view-open beacon — MUST be before auditMiddleware
+// so req.body is populated when the handler runs. 16 KiB cap is a cheap DoS guard for
+// ad-hoc filter payloads.
+app.use('/api/audit/events/view-open', express.json({ limit: '16kb' }));
+
 // auditMiddleware BEFORE authMiddleware — captures 401 responses with user='anonymous'
 // (req.auth is read at res.finish time, so it resolves correctly for both 200 and 401)
 app.use('/api', auditMiddleware);

@@ -5,15 +5,19 @@
  * All audit writes are internal server function calls (logAuditEntry via middleware).
  *
  * Endpoints:
- *   GET /api/audit        — filtered list with pagination (authenticated users)
- *   GET /api/audit/export — full dump as downloadable JSON (admin only, T-02-08)
+ *   GET  /api/audit                      — filtered list with pagination (authenticated users)
+ *   GET  /api/audit/export               — full dump as downloadable JSON (admin only, T-02-08)
+ *   POST /api/audit/events/view-open     — view-open beacon (hashed cohort id, Phase 11)
  */
+
+import crypto from 'node:crypto';
 
 import type { Request, Response } from 'express';
 import { Router } from 'express';
 
 import type { AuditFilters } from './auditDb.js';
-import { queryAudit, queryAuditExport } from './auditDb.js';
+import { logAuditEntry, queryAudit, queryAuditExport } from './auditDb.js';
+import { hashCohortId } from './hashCohortId.js';
 
 export const auditApiRouter = Router();
 
@@ -87,29 +91,57 @@ auditApiRouter.get('/export', (req: Request, res: Response): void => {
 });
 
 // ---------------------------------------------------------------------------
-// GET /api/audit/events/view-open — view-open beacon (OUTCOME-11 / D-32)
+// POST /api/audit/events/view-open — view-open beacon (Phase 11 / CRREV-01)
 // ---------------------------------------------------------------------------
 /**
- * No-op authenticated beacon used by analytical views to produce an auditable
- * row for "user opened view X". The audit middleware captures method, path,
- * query string, user, and duration automatically into audit_log. This handler
- * simply terminates the request with 204 No Content.
+ * Authenticated beacon used by analytical views to produce an auditable row
+ * for "user opened view X". Phase 11 flipped this from GET to POST so the
+ * cohort identifier never appears in the request URL / access logs / proxy
+ * logs / Referer headers. The handler computes an HMAC-SHA256 hash of the
+ * cohortId via hashCohortId() and writes the audit row directly, then
+ * returns 204. The auditMiddleware SKIP_AUDIT_PATHS set ensures no duplicate
+ * row is written (D-10 / T-11-01).
  *
- * Query params (all free-form; recorded verbatim into audit_log.query):
- *   name    — view identifier (e.g. 'open_outcomes_view')
- *   cohort  — saved search id, when opened from a saved cohort
- *   filter  — urlencoded JSON filter snapshot, when opened from an ad-hoc filter
+ * Request body (JSON, <= 16 KiB):
+ *   name      string — required, view identifier (e.g. 'open_outcomes_view')
+ *   cohortId  string — optional, raw saved-search id; hashed before storage
+ *   filter    object — optional, ad-hoc filter snapshot; stored as-is (D-08)
  *
- * No role gate: any authenticated user may produce their own view-open entry.
+ * Response: 204 No Content (D-03 fire-and-forget).
+ *
+ * No role gate: any authenticated user may emit their own view-open.
  */
-auditApiRouter.get('/events/view-open', (_req: Request, res: Response): void => {
+auditApiRouter.post('/events/view-open', (req: Request, res: Response): void => {
+  const body = (req.body ?? {}) as { name?: unknown; cohortId?: unknown; filter?: unknown };
+  const name = typeof body.name === 'string' ? body.name : 'unknown';
+  const cohortHash = typeof body.cohortId === 'string' && body.cohortId.length > 0
+    ? hashCohortId(body.cohortId)
+    : null;
+  const filter = body.filter !== undefined ? body.filter : null;
+
+  logAuditEntry({
+    id: crypto.randomUUID(),
+    timestamp: new Date().toISOString(),
+    method: 'POST',
+    path: '/api/audit/events/view-open',
+    user: req.auth?.preferred_username ?? 'anonymous',
+    status: 204,
+    duration_ms: 0,
+    body: JSON.stringify({ name, cohortHash, filter }),
+    query: null,
+  });
+
   res.status(204).end();
 });
 
+// NOTE: The legacy GET /events/view-open handler is removed in this phase.
+// Express will return 404 for GETs to this path — matches CRREV-01 success
+// criterion "no longer accepts or records cohort id in the querystring".
+
 // ---------------------------------------------------------------------------
-// No POST / PUT / PATCH / DELETE routes are defined.
+// No PUT / PATCH / DELETE routes are defined.
 // Per D-13 and AUDIT-05: the audit log is append-only from the server's
-// perspective. All audit writes are produced implicitly by the audit
-// middleware over regular GET requests. Express will return 404 for any
-// write attempt.
+// perspective. All writes go through logAuditEntry — either implicitly via
+// auditMiddleware or explicitly via a handler-written row (see POST
+// /events/view-open above). Express will return 404 for any other write.
 // ---------------------------------------------------------------------------
