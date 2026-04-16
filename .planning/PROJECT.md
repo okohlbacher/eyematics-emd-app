@@ -94,6 +94,8 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - 25/25 v1.5 requirements satisfied, 0 orphans, 4/4 E2E flows verified
 - 313/313 tests passing across 27 files at milestone close
 
+**In progress (v1.6):** Phase 10 (Visual/UX QA & Preview Stability) complete 2026-04-16 — VQA-01..05 + CRREV-02 closed, 340/340 tests across 33 files. Admin center filter, chart palette + WCAG contrast gate, IQR band n<2 guard, tooltip D-05/D-06 format + suppression, all-eyes-filtered empty state (DE+EN), stable OutcomesDataPreview row keys. Dark-mode contrast deferred per VQA-02 footnote.
+
 **Archive:** [`.planning/milestones/v1.5-ROADMAP.md`](milestones/v1.5-ROADMAP.md), [`.planning/milestones/v1.5-REQUIREMENTS.md`](milestones/v1.5-REQUIREMENTS.md)
 
 ## Next Milestone Goals (post-v1.6 candidates)
@@ -195,4 +197,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 — milestone v1.6 started (Outcomes Polish & Scale). Previous: v1.5 SHIPPED 2026-04-15 — 25/25 requirements satisfied, 313/313 tests passing.*
+*Last updated: 2026-04-16 — Phase 10 complete (Visual/UX QA & Preview Stability); v1.6 Outcomes Polish & Scale in progress. Previous: v1.5 SHIPPED 2026-04-15 — 25/25 requirements satisfied, 313/313 tests passing.*
