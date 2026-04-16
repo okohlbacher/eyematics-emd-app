@@ -318,6 +318,7 @@ const translations = {
   adminUsersCount: { de: 'Nutzer', en: 'users' },
   adminSearchPlaceholder: { de: 'Nutzer suchen…', en: 'Search users…' },
   adminFilterAllRoles: { de: 'Alle Rollen', en: 'All roles' },
+  adminFilterAllCenters: { de: 'Alle Zentren', en: 'All centers' },
   adminAssignCenters: { de: 'Zentren zuweisen', en: 'Assign Centers' },
   adminAssignedCenters: { de: 'Zugewiesene Zentren', en: 'Assigned Centers' },
 
