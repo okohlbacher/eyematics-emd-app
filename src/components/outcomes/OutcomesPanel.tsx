@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import type { AxisMode, PanelResult, YMetric } from '../../utils/cohortTrajectory';
 import OutcomesTooltip from './OutcomesTooltip';
+import { SERIES_STYLES } from './palette';
 
 type LayerState = {
   median: boolean;
@@ -141,8 +142,8 @@ export default function OutcomesPanel({
               dataKey="iqrHigh"
               baseLine={iqrBaseLine}
               fill={color}
-              fillOpacity={0.15}
-              stroke="none"
+              fillOpacity={SERIES_STYLES.iqr.fillOpacity}
+              stroke={SERIES_STYLES.iqr.stroke}
               isAnimationActive={false}
             />
           )}
@@ -157,8 +158,8 @@ export default function OutcomesPanel({
                   dataKey="y"
                   type="linear"
                   stroke={color}
-                  strokeWidth={1.5}
-                  strokeOpacity={p.sparse ? 0.3 : 0.6}
+                  strokeWidth={SERIES_STYLES.perPatient.strokeWidth}
+                  strokeOpacity={p.sparse ? SERIES_STYLES.perPatient.opacitySparse : SERIES_STYLES.perPatient.opacityDense}
                   dot={false}
                   isAnimationActive={false}
                 />
@@ -168,7 +169,7 @@ export default function OutcomesPanel({
             <Scatter
               data={panel.scatterPoints}
               fill={color}
-              fillOpacity={0.5}
+              fillOpacity={SERIES_STYLES.scatter.fillOpacity}
               isAnimationActive={false}
             />
           )}
@@ -179,7 +180,7 @@ export default function OutcomesPanel({
               dataKey="y"
               type="linear"
               stroke={color}
-              strokeWidth={3}
+              strokeWidth={SERIES_STYLES.median.strokeWidth}
               dot={false}
               isAnimationActive={false}
             />
