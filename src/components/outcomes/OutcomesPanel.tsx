@@ -129,6 +129,7 @@ export default function OutcomesPanel({
               <OutcomesTooltip
                 yMetric={yMetric}
                 axisMode={axisMode}
+                layers={layers}
                 t={t}
                 locale={locale}
               />
@@ -154,7 +155,11 @@ export default function OutcomesPanel({
               .map((p) => (
                 <Line
                   key={p.id}
-                  data={p.measurements}
+                  data={p.measurements.map((m) => ({
+                    ...m,
+                    __series: 'perPatient' as const,
+                    pseudonym: p.pseudonym,
+                  }))}
                   dataKey="y"
                   type="linear"
                   stroke={color}
