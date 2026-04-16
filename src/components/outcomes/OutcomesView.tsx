@@ -225,6 +225,24 @@ export default function OutcomesView() {
     return <OutcomesEmptyState variant="no-cohort" t={t as (key: TranslationKey) => string} />;
   }
 
+  // Phase 12 / AGG-03 / D-14: server fetch is in flight — show a non-blocking loading state
+  // with the testid indicator. This is distinct from "no cohort" (cohort exists but aggregate
+  // is pending from the server). Rendered here (before the !aggregate early-return) so the
+  // loading indicator is visible while routeServerSide is active.
+  if (routeServerSide && serverLoading && !serverAggregate) {
+    return (
+      <div className="flex items-center gap-2 py-8 justify-center text-gray-500 text-sm italic">
+        <span
+          role="status"
+          aria-live="polite"
+          data-testid="outcomes-server-computing"
+        >
+          {t('outcomesServerComputingLabel')}
+        </span>
+      </div>
+    );
+  }
+
   if (!aggregate) {
     return <OutcomesEmptyState variant="no-cohort" t={t as (key: TranslationKey) => string} />;
   }
