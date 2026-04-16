@@ -120,41 +120,6 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('CohortBuilderPage entry points (D-02)', () => {
-  it('header "Outcomes for current filter" button is disabled when filteredCases is empty', () => {
-    setupMocks({ activeCases: [] });
-    render(
-      <MemoryRouter initialEntries={['/cohort']}>
-        <Routes>
-          <Route path="/cohort" element={<CohortBuilderPage />} />
-        </Routes>
-      </MemoryRouter>,
-    );
-
-    const btn = screen.getByTitle(t('outcomesOpenForFilter', 'en'));
-    expect(btn).toBeDefined();
-    expect((btn as HTMLButtonElement).disabled).toBe(true);
-  });
-
-  it('header button navigates to /analysis?tab=trajectories&filter=... when filteredCases is non-empty', async () => {
-    const cases = [makeCase('p1'), makeCase('p2')];
-    setupMocks({ activeCases: cases });
-
-    let capturedLoc: ReturnType<typeof useLocation> | null = null;
-    renderWithRouter((loc) => { capturedLoc = loc; });
-
-    const btn = screen.getByTitle(t('outcomesOpenForFilter', 'en'));
-    expect((btn as HTMLButtonElement).disabled).toBe(false);
-    fireEvent.click(btn);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('outcomes-page')).toBeDefined();
-    });
-    expect(capturedLoc).not.toBeNull();
-    expect(capturedLoc!.pathname).toBe('/analysis');
-    expect(capturedLoc!.search).toContain('tab=trajectories');
-    expect(capturedLoc!.search).toContain('filter=');
-  });
-
   it('per-row LineChart button navigates to /analysis?tab=trajectories&cohort=<id>', async () => {
     const savedSearch = makeSearch('search-abc-123', 'Test Cohort');
     setupMocks({ activeCases: [], savedSearches: [savedSearch] });

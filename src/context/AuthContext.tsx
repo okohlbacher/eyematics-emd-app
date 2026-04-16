@@ -117,8 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((data) => {
         const u = data?.user;
         if (u?.firstName || u?.lastName) {
-          const full = [u.firstName, u.lastName].filter(Boolean).join(' ');
-          setDisplayName(`${full} (${user.username})`);
+          setDisplayName([u.firstName, u.lastName].filter(Boolean).join(' '));
         } else {
           setDisplayName(user.username);
         }

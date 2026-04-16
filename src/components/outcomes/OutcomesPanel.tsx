@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { AxisMode, PanelResult, YMetric } from '../../utils/cohortTrajectory';
+import type { AxisMode, GridPoint, PanelResult, YMetric } from '../../utils/cohortTrajectory';
 import OutcomesTooltip from './OutcomesTooltip';
 import { SERIES_STYLES } from './palette';
 
@@ -34,10 +34,14 @@ interface Props {
   titleKey: 'outcomesPanelOd' | 'outcomesPanelOs' | 'outcomesPanelCombined';
 }
 
-function yDomain(yMetric: YMetric): [number | string, number | string] {
+function yDomain(yMetric: YMetric, medianGrid: GridPoint[]): [number | string, number | string] {
   if (yMetric === 'absolute') return [0, 2];
-  if (yMetric === 'delta_percent') return [-200, 200];
-  return ['auto', 'auto'];
+  // For delta/delta_percent: compute symmetric range from data so 0 is centred.
+  const vals = medianGrid.flatMap((g) => [g.y, g.p25 ?? g.y, g.p75 ?? g.y]).filter(Number.isFinite);
+  if (vals.length === 0) return yMetric === 'delta_percent' ? [-100, 100] : [-1, 1];
+  const maxAbs = Math.max(...vals.map(Math.abs)) * 1.15; // 15% headroom
+  const bound = Math.max(maxAbs, yMetric === 'delta_percent' ? 10 : 0.05);
+  return [-bound, bound];
 }
 
 export default function OutcomesPanel({
@@ -123,7 +127,7 @@ export default function OutcomesPanel({
               offset: -4,
             }}
           />
-          <YAxis tick={{ fontSize: 11 }} domain={yDomain(yMetric)} />
+          <YAxis tick={{ fontSize: 11 }} domain={yDomain(yMetric, panel.medianGrid)} />
           <Tooltip
             content={
               <OutcomesTooltip

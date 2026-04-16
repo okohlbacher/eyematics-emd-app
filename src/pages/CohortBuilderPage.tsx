@@ -119,19 +119,6 @@ export default function CohortBuilderPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            type="button"
-            disabled={filteredCases.length === 0}
-            onClick={() => {
-              const payload = encodeURIComponent(JSON.stringify(filters));
-              navigate(`/analysis?tab=trajectories&filter=${payload}`);
-            }}
-            className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
-            title={t('outcomesOpenForFilter')}
-          >
-            <LineChart className="w-4 h-4" />
-            {t('outcomesOpenForFilter')}
-          </button>
-          <button
             onClick={() => setShowSaved(!showSaved)}
             className="flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
           >
