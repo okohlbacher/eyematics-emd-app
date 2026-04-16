@@ -352,32 +352,50 @@ describe('cohortTrajectory — computeCohortTrajectory OUTCOME-10 cases', () => 
   });
 
   // -------------------------------------------------------------------------
-  // 2. Single patient, full data
+  // 2. Two patients with identical data, full
   // -------------------------------------------------------------------------
-  it('2. Single patient with 5 OD observations — od panel correct, os excluded', () => {
-    const c = makeCase('p1', [
-      makeObs('2023-01-01', 0.5, SNOMED_EYE_RIGHT, 'obs-1'),
-      makeObs('2023-02-01', 0.6, SNOMED_EYE_RIGHT, 'obs-2'),
-      makeObs('2023-03-01', 0.7, SNOMED_EYE_RIGHT, 'obs-3'),
-      makeObs('2023-04-01', 0.6, SNOMED_EYE_RIGHT, 'obs-4'),
-      makeObs('2023-05-01', 0.5, SNOMED_EYE_RIGHT, 'obs-5'),
-    ]);
+  // D-04 / VQA-03 update (Phase 10-02a): the n>=2 guard means a single-patient
+  // cohort yields an empty medianGrid at every gx (ys.length === 1 gets skipped
+  // to avoid a degenerate IQR band p25===p75===y). The original intent of this
+  // test was to verify that an IDENTICAL-value cohort collapses p25/p75 onto the
+  // median; we now seed two patients with identical OD series so ys.length === 2
+  // at every gx and the same invariant holds.
+  it('2. Two identical-series patients (5 OD obs) — od panel correct, os excluded', () => {
+    const obsP1 = [
+      makeObs('2023-01-01', 0.5, SNOMED_EYE_RIGHT, 'obs-p1-1'),
+      makeObs('2023-02-01', 0.6, SNOMED_EYE_RIGHT, 'obs-p1-2'),
+      makeObs('2023-03-01', 0.7, SNOMED_EYE_RIGHT, 'obs-p1-3'),
+      makeObs('2023-04-01', 0.6, SNOMED_EYE_RIGHT, 'obs-p1-4'),
+      makeObs('2023-05-01', 0.5, SNOMED_EYE_RIGHT, 'obs-p1-5'),
+    ];
+    const obsP2 = [
+      makeObs('2023-01-01', 0.5, SNOMED_EYE_RIGHT, 'obs-p2-1'),
+      makeObs('2023-02-01', 0.6, SNOMED_EYE_RIGHT, 'obs-p2-2'),
+      makeObs('2023-03-01', 0.7, SNOMED_EYE_RIGHT, 'obs-p2-3'),
+      makeObs('2023-04-01', 0.6, SNOMED_EYE_RIGHT, 'obs-p2-4'),
+      makeObs('2023-05-01', 0.5, SNOMED_EYE_RIGHT, 'obs-p2-5'),
+    ];
+    const p1 = makeCase('p1', obsP1);
+    const p2 = makeCase('p2', obsP2);
 
     const result = computeCohortTrajectory({
-      cases: [c],
+      cases: [p1, p2],
       axisMode: 'days',
       yMetric: 'absolute',
       gridPoints: 20,
     });
 
     // OD panel
-    expect(result.od.patients).toHaveLength(1);
+    expect(result.od.patients).toHaveLength(2);
     expect(result.od.patients[0].excluded).toBe(false);
+    expect(result.od.patients[1].excluded).toBe(false);
     // 5 measurements >= ceil(20/10)=2 threshold, sparse=false
     expect(result.od.patients[0].sparse).toBe(false);
+    expect(result.od.patients[1].sparse).toBe(false);
     expect(result.od.medianGrid).toHaveLength(20);
     result.od.medianGrid.forEach((gp) => {
-      expect(gp.n).toBe(1);
+      expect(gp.n).toBe(2);
+      // Identical-series cohort: p25 === y === p75 (IQR of two identical values)
       expect(gp.p25).toBeCloseTo(gp.y, 5);
       expect(gp.p75).toBeCloseTo(gp.y, 5);
     });
@@ -386,8 +404,8 @@ describe('cohortTrajectory — computeCohortTrajectory OUTCOME-10 cases', () => 
     expect(result.os.summary.patientCount).toBe(0);
     expect(result.os.patients[0].excluded).toBe(true);
 
-    // Combined panel — patient has OD data so included
-    expect(result.combined.summary.patientCount).toBe(1);
+    // Combined panel — both patients have OD data so included
+    expect(result.combined.summary.patientCount).toBe(2);
   });
 
   // -------------------------------------------------------------------------
@@ -418,23 +436,33 @@ describe('cohortTrajectory — computeCohortTrajectory OUTCOME-10 cases', () => 
   // -------------------------------------------------------------------------
   // 4. Sparse series
   // -------------------------------------------------------------------------
+  // D-04 / VQA-03 update (Phase 10-02a): guard now requires ys.length >= 2 at
+  // each gx. Seed a second sparse patient with matching span so the sparse flag
+  // remains asserted AND medianGrid has at least one non-degenerate row.
   it('4. 3 observations with gridPoints=50 → sparse=true (ceil(50/10)=5, 3<5)', () => {
-    const c = makeCase('p1', [
-      makeObs('2023-01-01', 0.5, SNOMED_EYE_RIGHT, 'obs-1'),
-      makeObs('2023-03-01', 0.6, SNOMED_EYE_RIGHT, 'obs-2'),
-      makeObs('2023-05-01', 0.7, SNOMED_EYE_RIGHT, 'obs-3'),
+    const p1 = makeCase('p1', [
+      makeObs('2023-01-01', 0.5, SNOMED_EYE_RIGHT, 'obs-p1-1'),
+      makeObs('2023-03-01', 0.6, SNOMED_EYE_RIGHT, 'obs-p1-2'),
+      makeObs('2023-05-01', 0.7, SNOMED_EYE_RIGHT, 'obs-p1-3'),
+    ]);
+    const p2 = makeCase('p2', [
+      makeObs('2023-01-01', 0.55, SNOMED_EYE_RIGHT, 'obs-p2-1'),
+      makeObs('2023-03-01', 0.65, SNOMED_EYE_RIGHT, 'obs-p2-2'),
+      makeObs('2023-05-01', 0.75, SNOMED_EYE_RIGHT, 'obs-p2-3'),
     ]);
 
     const result = computeCohortTrajectory({
-      cases: [c],
+      cases: [p1, p2],
       axisMode: 'days',
       yMetric: 'absolute',
       gridPoints: 50,
     });
 
     expect(result.od.patients[0].sparse).toBe(true);
-    // Sparse patients still contribute to medianGrid (D-19)
+    expect(result.od.patients[1].sparse).toBe(true);
+    // Sparse patients still contribute to medianGrid (D-19); D-04 requires n>=2.
     expect(result.od.medianGrid.length).toBeGreaterThan(0);
+    expect(result.od.medianGrid.every((gp) => gp.n >= 2)).toBe(true);
   });
 
   // -------------------------------------------------------------------------

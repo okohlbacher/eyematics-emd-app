@@ -448,7 +448,9 @@ function buildPanel(
       if (interpolated !== null) ys.push(interpolated);
     }
 
-    if (ys.length === 0) continue; // Mismatched span — skip this grid point (D-15)
+    // D-04 (VQA-03): require n>=2 so IQR band has non-degenerate p25/p75.
+    // D-15 skip for mismatched span (ys.length === 0) is subsumed by the stricter check.
+    if (ys.length < 2) continue;
 
     const sorted = [...ys].sort((a, b) => a - b);
     const yMedian = percentile(sorted, 0.5);
