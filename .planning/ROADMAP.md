@@ -22,7 +22,7 @@
 
 ### Phases
 
-- [ ] **Phase 10: Visual/UX QA & Preview Stability** — Close v1.5 human-QA items (admin filter, chart palette, IQR band, tooltips, empty states) and stabilize OutcomesDataPreview row keys.
+- [x] **Phase 10: Visual/UX QA & Preview Stability** — Close v1.5 human-QA items (admin filter, chart palette, IQR band, tooltips, empty states) and stabilize OutcomesDataPreview row keys. (completed 2026-04-16)
 - [ ] **Phase 11: Audit Beacon PII Hardening** — Replace cohort id in audit-beacon querystring with hashed id in event payload; establish the hashing pattern AGG-05 will reuse.
 - [ ] **Phase 12: Server-Side Outcomes Pre-Aggregation** — Ship `POST /api/outcomes/aggregate`, byte-parity with client aggregation, cacheable, auto-routed at >1000-patient threshold.
 - [ ] **Phase 13: New Outcome Metrics (CRT / Interval / Responder)** — Add three metrics with metric selector, deep-link, metric-aware CSV, and full DE+EN i18n.
@@ -44,9 +44,9 @@
 **UI hint**: yes
 
 - [x] 10-01-chart-palette-contrast-PLAN.md — Chart palette extraction + WCAG AA contrast test (VQA-02)
-- [ ] 10-02a-iqr-band-guard-PLAN.md — IQR band n<2 guard at math + DOM layers (VQA-03)
-- [ ] 10-02b-tooltip-PLAN.md — Tooltip D-05 format + D-06 per-patient suppression (VQA-04)
-- [ ] 10-03-empty-state-i18n-PLAN.md — Third empty-state variant + DE/EN copy (VQA-05)
+- [x] 10-02a-iqr-band-guard-PLAN.md — IQR band n<2 guard at math + DOM layers (VQA-03)
+- [x] 10-02b-tooltip-PLAN.md — Tooltip D-05 format + D-06 per-patient suppression (VQA-04)
+- [x] 10-03-empty-state-i18n-PLAN.md — Third empty-state variant + DE/EN copy (VQA-05)
 - [x] 10-04a-admin-center-filter-PLAN.md — AdminPage 7-site center filter + snapshot test (VQA-01)
 - [x] 10-04b-preview-row-keys-PLAN.md — OutcomesDataPreview stable composite row key + D-11 duplicate resolver (CRREV-02)
 
@@ -91,7 +91,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 10. Visual/UX QA & Preview Stability | 3/6 | In Progress|  |
+| 10. Visual/UX QA & Preview Stability | 6/6 | Complete   | 2026-04-16 |
 | 11. Audit Beacon PII Hardening | 0/TBD | Not started | — |
 | 12. Server-Side Outcomes Pre-Aggregation | 0/TBD | Not started | — |
 | 13. New Outcome Metrics (CRT / Interval / Responder) | 0/TBD | Not started | — |
