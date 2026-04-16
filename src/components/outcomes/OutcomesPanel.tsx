@@ -146,6 +146,8 @@ export default function OutcomesPanel({
               fillOpacity={SERIES_STYLES.iqr.fillOpacity}
               stroke={SERIES_STYLES.iqr.stroke}
               isAnimationActive={false}
+              // Suppress legend chip — IQR is a visual band, not a series.
+              legendType="none"
             />
           )}
 
@@ -167,6 +169,11 @@ export default function OutcomesPanel({
                   strokeOpacity={p.sparse ? SERIES_STYLES.perPatient.opacitySparse : SERIES_STYLES.perPatient.opacityDense}
                   dot={false}
                   isAnimationActive={false}
+                  // CRITICAL: without legendType="none", every patient produces a
+                  // legend chip (icon "-o-" + dataKey "y"). With 300+ patients the
+                  // Recharts <Legend> overflows and tiles the panel. See
+                  // docs/reviews/2026-04-16 bug report.
+                  legendType="none"
                 />
               ))}
 
@@ -176,6 +183,8 @@ export default function OutcomesPanel({
               fill={color}
               fillOpacity={SERIES_STYLES.scatter.fillOpacity}
               isAnimationActive={false}
+              // Suppress legend chip — scatter points are an aggregate overlay.
+              legendType="none"
             />
           )}
 
@@ -188,6 +197,9 @@ export default function OutcomesPanel({
               strokeWidth={SERIES_STYLES.median.strokeWidth}
               dot={false}
               isAnimationActive={false}
+              // Give the median line a human-readable legend label so the
+              // sole remaining legend chip reads "Median" instead of "y".
+              name={t('outcomesLayerMedian')}
             />
           )}
         </ComposedChart>

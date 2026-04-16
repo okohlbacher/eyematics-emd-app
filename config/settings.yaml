@@ -1,15 +1,12 @@
-provider: local
 twoFactorEnabled: false
-maxLoginAttempts: 5
-otpCode: '123456'
-# keycloak:
-#   issuer: https://auth.example.com/realms/emd
-#   clientId: emd-app
 therapyInterrupterDays: 120
 therapyBreakerDays: 365
 dataSource:
-  type: local
+  type: blaze
   blazeUrl: http://localhost:8080/fhir
+provider: local
+maxLoginAttempts: 5
+otpCode: '123456'
 audit:
   cohortHashSecret: 'dev-cohort-hash-secret-please-replace-in-prod-xxxxxxxxxxxxxx'
 outcomes:

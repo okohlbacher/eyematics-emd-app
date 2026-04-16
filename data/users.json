@@ -14,7 +14,8 @@
       "org-ukt"
     ],
     "createdAt": "2025-01-01T00:00:00Z",
-    "passwordHash": "$2b$12$iN394xi075GURM3vAKnI3uhZdipGBMRLe6uyytRjKnOu5pCYekLg."
+    "passwordHash": "$2b$12$szPBV7Yxh2Y5kJpYtI1kI.AeLaSnXVZUCDkKGEbt3m8mrPQI1nSoC",
+    "lastLogin": "2026-04-16T18:20:50.320Z"
   },
   {
     "username": "forscher1",

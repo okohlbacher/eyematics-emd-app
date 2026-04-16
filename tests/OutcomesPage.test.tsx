@@ -19,7 +19,7 @@ vi.mock('../src/utils/download', () => ({
 }));
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import OutcomesPage from '../src/pages/OutcomesPage';
+import OutcomesView from '../src/components/outcomes/OutcomesView';
 
 // ---------------------------------------------------------------------------
 // Module mocks
@@ -177,12 +177,12 @@ interface RenderOptions {
   initialEntries?: string[];
 }
 
-function renderWith({ activeCases = [], savedSearches = [], initialEntries = ['/outcomes'] }: RenderOptions = {}) {
+function renderWith({ activeCases = [], savedSearches = [], initialEntries = ['/analysis?tab=trajectories'] }: RenderOptions = {}) {
   setupMocks({ activeCases, savedSearches });
   return render(
     <MemoryRouter initialEntries={initialEntries}>
       <Routes>
-        <Route path="/outcomes" element={<OutcomesPage />} />
+        <Route path="/analysis" element={<OutcomesView />} />
         <Route path="/cohort" element={<div data-testid="cohort-page" />} />
       </Routes>
     </MemoryRouter>,
@@ -243,7 +243,7 @@ describe('OutcomesPage — route resolution, audit beacon, empty states (09-01)'
     renderWith({
       activeCases: [buildPatientCase('p1')],
       savedSearches,
-      initialEntries: ['/outcomes?cohort=does-not-exist'],
+      initialEntries: ['/analysis?tab=trajectories&cohort=does-not-exist'],
     });
     expect(screen.getByText('outcomesEmptyCohortTitle')).toBeDefined();
   });
@@ -258,7 +258,7 @@ describe('OutcomesPage — route resolution, audit beacon, empty states (09-01)'
     // applyFilters still returns all cases (mock passthrough)
     renderWith({
       activeCases: cases,
-      initialEntries: [`/outcomes?filter=${filter}`],
+      initialEntries: [`/analysis?tab=trajectories&filter=${filter}`],
     });
     expect(screen.getByText('outcomesTitle')).toBeDefined();
   });
@@ -270,7 +270,7 @@ describe('OutcomesPage — route resolution, audit beacon, empty states (09-01)'
   it('5. renders no-cohort empty state when ?filter= is invalid JSON', () => {
     renderWith({
       activeCases: [buildPatientCase('p1')],
-      initialEntries: ['/outcomes?filter=not-valid-json%7B%7B'],
+      initialEntries: ['/analysis?tab=trajectories&filter=not-valid-json%7B%7B'],
     });
     expect(screen.getByText('outcomesEmptyCohortTitle')).toBeDefined();
   });
@@ -288,7 +288,7 @@ describe('OutcomesPage — route resolution, audit beacon, empty states (09-01)'
     renderWith({
       activeCases: cases,
       savedSearches,
-      initialEntries: ['/outcomes?cohort=abc'],
+      initialEntries: ['/analysis?tab=trajectories&cohort=abc'],
     });
 
     await new Promise((r) => setTimeout(r, 0));
@@ -322,7 +322,7 @@ describe('OutcomesPage — route resolution, audit beacon, empty states (09-01)'
     const filterParam = encodeURIComponent(JSON.stringify(filterObj));
     renderWith({
       activeCases: cases,
-      initialEntries: [`/outcomes?filter=${filterParam}`],
+      initialEntries: [`/analysis?tab=trajectories&filter=${filterParam}`],
     });
 
     await new Promise((r) => setTimeout(r, 0));
@@ -344,7 +344,7 @@ describe('OutcomesPage — route resolution, audit beacon, empty states (09-01)'
     const cases = [buildPatientCase('p1')];
     renderWith({
       activeCases: cases,
-      initialEntries: ['/outcomes?filter=%7Binvalid'],
+      initialEntries: ['/analysis?tab=trajectories&filter=%7Binvalid'],
     });
 
     await new Promise((r) => setTimeout(r, 0));
@@ -362,7 +362,7 @@ describe('OutcomesPage — route resolution, audit beacon, empty states (09-01)'
    */
   it('6d. with no query params, body contains only { name }', async () => {
     const cases = [buildPatientCase('p1')];
-    renderWith({ activeCases: cases, initialEntries: ['/outcomes'] });
+    renderWith({ activeCases: cases, initialEntries: ['/analysis?tab=trajectories'] });
 
     await new Promise((r) => setTimeout(r, 0));
 

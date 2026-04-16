@@ -36,11 +36,11 @@ import type { PatientCase, SavedSearch } from '../src/types/fhir';
 // Test helpers
 // ---------------------------------------------------------------------------
 
-/** Spy on the location when /outcomes is reached */
+/** Spy on the location when /analysis is reached (where trajectories now live) */
 function SpyLocation({ onMatch }: { onMatch: (loc: ReturnType<typeof useLocation>) => void }) {
   const loc = useLocation();
   useEffect(() => {
-    if (loc.pathname === '/outcomes') onMatch(loc);
+    if (loc.pathname === '/analysis') onMatch(loc);
   });
   return <div data-testid="outcomes-page" />;
 }
@@ -104,7 +104,7 @@ function renderWithRouter(onMatch: (loc: ReturnType<typeof useLocation>) => void
     <MemoryRouter initialEntries={['/cohort']}>
       <Routes>
         <Route path="/cohort" element={<CohortBuilderPage />} />
-        <Route path="/outcomes" element={<SpyLocation onMatch={onMatch} />} />
+        <Route path="/analysis" element={<SpyLocation onMatch={onMatch} />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -135,7 +135,7 @@ describe('CohortBuilderPage entry points (D-02)', () => {
     expect((btn as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('header button navigates to /outcomes?filter=... when filteredCases is non-empty', async () => {
+  it('header button navigates to /analysis?tab=trajectories&filter=... when filteredCases is non-empty', async () => {
     const cases = [makeCase('p1'), makeCase('p2')];
     setupMocks({ activeCases: cases });
 
@@ -150,11 +150,12 @@ describe('CohortBuilderPage entry points (D-02)', () => {
       expect(screen.getByTestId('outcomes-page')).toBeDefined();
     });
     expect(capturedLoc).not.toBeNull();
-    expect(capturedLoc!.pathname).toBe('/outcomes');
+    expect(capturedLoc!.pathname).toBe('/analysis');
+    expect(capturedLoc!.search).toContain('tab=trajectories');
     expect(capturedLoc!.search).toContain('filter=');
   });
 
-  it('per-row LineChart button navigates to /outcomes?cohort=<id>', async () => {
+  it('per-row LineChart button navigates to /analysis?tab=trajectories&cohort=<id>', async () => {
     const savedSearch = makeSearch('search-abc-123', 'Test Cohort');
     setupMocks({ activeCases: [], savedSearches: [savedSearch] });
 
@@ -179,7 +180,8 @@ describe('CohortBuilderPage entry points (D-02)', () => {
       expect(screen.getByTestId('outcomes-page')).toBeDefined();
     });
     expect(capturedLoc).not.toBeNull();
-    expect(capturedLoc!.pathname).toBe('/outcomes');
+    expect(capturedLoc!.pathname).toBe('/analysis');
+    expect(capturedLoc!.search).toContain('tab=trajectories');
     expect(capturedLoc!.search).toContain('cohort=');
     expect(capturedLoc!.search).toContain('search-abc-123');
   });

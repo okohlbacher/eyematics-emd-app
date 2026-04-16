@@ -1,28 +1,36 @@
-/** Cohort Outcome Trajectories — OUTCOME-01..12 / Phase 09. */
+/**
+ * Cohort Outcome Trajectories view — OUTCOME-01..12 / Phase 09.
+ *
+ * Rendered as the "Trajectories" tab inside AnalysisPage. Formerly lived at
+ * its own route /outcomes (src/pages/OutcomesPage.tsx, removed 2026-04-16).
+ * Route resolution (?cohort / ?filter) and the audit beacon on mount are
+ * preserved — the beacon now fires when this component mounts (i.e. when
+ * the user switches to the Trajectories tab).
+ */
 import { useEffect, useMemo, useState } from 'react';
 import { Settings } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
-import OutcomesDataPreview from '../components/outcomes/OutcomesDataPreview';
-import OutcomesEmptyState from '../components/outcomes/OutcomesEmptyState';
-import OutcomesPanel from '../components/outcomes/OutcomesPanel';
-import OutcomesSettingsDrawer from '../components/outcomes/OutcomesSettingsDrawer';
-import OutcomesSummaryCards from '../components/outcomes/OutcomesSummaryCards';
-import { EYE_COLORS } from '../components/outcomes/palette';
-import { useData } from '../context/DataContext';
-import { useLanguage } from '../context/LanguageContext';
-import type { TranslationKey } from '../i18n/translations';
-import { applyFilters } from '../services/fhirLoader';
-import type { CohortFilter } from '../types/fhir';
+import { useData } from '../../context/DataContext';
+import { useLanguage } from '../../context/LanguageContext';
+import type { TranslationKey } from '../../i18n/translations';
+import { applyFilters } from '../../services/fhirLoader';
+import type { CohortFilter } from '../../types/fhir';
 import {
   type AxisMode,
   computeCohortTrajectory,
   defaultScatterOn,
   type SpreadMode,
   type YMetric,
-} from '../utils/cohortTrajectory';
+} from '../../utils/cohortTrajectory';
+import OutcomesDataPreview from './OutcomesDataPreview';
+import OutcomesEmptyState from './OutcomesEmptyState';
+import OutcomesPanel from './OutcomesPanel';
+import OutcomesSettingsDrawer from './OutcomesSettingsDrawer';
+import OutcomesSummaryCards from './OutcomesSummaryCards';
+import { EYE_COLORS } from './palette';
 
-// M-04 safe-pick pattern (copied verbatim from AnalysisPage.tsx L48-59)
+// M-04 safe-pick pattern (mirrors AnalysisPage.tsx filter parsing).
 function safePickFilter(raw: unknown): CohortFilter {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
   const parsed = raw as Record<string, unknown>;
@@ -43,7 +51,7 @@ type LayerState = {
   spreadBand: boolean;
 };
 
-export default function OutcomesPage() {
+export default function OutcomesView() {
   const { activeCases, savedSearches } = useData();
   const [searchParams] = useSearchParams();
   const { t, locale } = useLanguage();
@@ -83,10 +91,10 @@ export default function OutcomesPage() {
   }, [cohort]);
 
   // Audit beacon (Phase 11 / CRREV-01) — fire-and-forget POST, once per mount.
-  // D-01: cohort id + filter travel in the JSON body, NEVER the URL.
-  // D-02: fetch + keepalive (not sendBeacon) — survives unload, standard JSON headers, testable.
-  // D-03: fire-and-forget — silently discard any network/transport error.
-  // D-08: filter is preserved as-is in the body (no client-side hashing).
+  // When this component mounts (= user switches to the Trajectories tab), we
+  // record the "open outcomes view" audit event. Semantics preserved from the
+  // removed /outcomes page: D-01 cohort id + filter go in the JSON body, never
+  // the URL; D-02 fetch + keepalive; D-03 fire-and-forget.
   //
   // IN-03: The empty dependency array ([]) is intentional. This effect fires
   // EXACTLY ONCE per mount — same-route cohort switches (e.g. client-side nav
@@ -174,12 +182,12 @@ export default function OutcomesPage() {
   }
 
   return (
-    <div className="p-8">
+    <div>
       <header className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-lg font-semibold text-gray-900">
             {cohort.name ? `${t('outcomesTitle')}: ${cohort.name}` : t('outcomesTitle')}
-          </h1>
+          </h2>
           <p className="text-gray-500 text-sm mt-1">
             {(cohort.name ? t('outcomesSubtitleSaved') : t('outcomesSubtitleAdhoc'))
               .replace('{count}', String(cohort.cases.length))}
@@ -203,7 +211,6 @@ export default function OutcomesPage() {
       />
 
       {/* Summary cards row (OUTCOME-07 / D-26) */}
-      {/* t cast: OutcomesSummaryCards uses (key: string) => string; TranslationKey is narrower. */}
       <OutcomesSummaryCards
         aggregate={aggregate}
         t={t as (key: string) => string}
@@ -211,7 +218,6 @@ export default function OutcomesPage() {
       />
 
       {/* Three chart panels: OD → OS → Combined (OUTCOME-02) */}
-      {/* t cast: OutcomesPanel uses (key: string) => string; TranslationKey is narrower. */}
       <div className="mt-12 grid grid-cols-1 xl:grid-cols-3 gap-6">
         <OutcomesPanel
           panel={aggregate.od}
@@ -257,7 +263,6 @@ export default function OutcomesPage() {
       />
 
       {/* Settings drawer (OUTCOME-03 through -06) */}
-      {/* t cast: OutcomesSettingsDrawer uses (key: string) => string; TranslationKey is narrower. */}
       <OutcomesSettingsDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}

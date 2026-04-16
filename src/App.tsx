@@ -12,7 +12,6 @@ import AuditPage from './pages/AuditPage';
 import CaseDetailPage from './pages/CaseDetailPage';
 import CohortBuilderPage from './pages/CohortBuilderPage';
 import DocQualityPage from './pages/DocQualityPage';
-import OutcomesPage from './pages/OutcomesPage';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import QualityPage from './pages/QualityPage';
@@ -53,7 +52,6 @@ function AppRoutes() {
       >
         <Route path="/" element={<LandingPage />} />
         <Route path="/cohort" element={<CohortBuilderPage />} />
-        <Route path="/outcomes" element={<OutcomesPage />} />
         <Route path="/analysis" element={<AnalysisPage />} />
         <Route path="/case/:caseId" element={<CaseDetailPage />} />
         <Route path="/quality" element={<QualityPage />} />

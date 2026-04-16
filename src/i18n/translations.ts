@@ -162,6 +162,8 @@ const translations = {
 
   // Analysis page
   analysisTitle: { de: 'Kohortenanalyse', en: 'Cohort Analysis' },
+  analysisTabAggregate: { de: 'Aggregiert', en: 'Aggregate' },
+  analysisTabTrajectories: { de: 'Verläufe', en: 'Trajectories' },
   casesInCohort: { de: 'Fälle in der aktuellen Kohorte', en: 'cases in current cohort' },
   casesWithCritical: {
     de: 'Fälle mit kritischen Werten (CRT > 400 µm)',

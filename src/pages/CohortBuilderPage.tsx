@@ -123,7 +123,7 @@ export default function CohortBuilderPage() {
             disabled={filteredCases.length === 0}
             onClick={() => {
               const payload = encodeURIComponent(JSON.stringify(filters));
-              navigate(`/outcomes?filter=${payload}`);
+              navigate(`/analysis?tab=trajectories&filter=${payload}`);
             }}
             className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
             title={t('outcomesOpenForFilter')}
@@ -183,7 +183,7 @@ export default function CohortBuilderPage() {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => navigate(`/outcomes?cohort=${encodeURIComponent(s.id)}`)}
+                    onClick={() => navigate(`/analysis?tab=trajectories&cohort=${encodeURIComponent(s.id)}`)}
                     className="p-1.5 text-violet-600 hover:bg-violet-50 rounded focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
                     title={t('outcomesOpenForCohort')}
                     aria-label={t('outcomesOpenForCohort')}
