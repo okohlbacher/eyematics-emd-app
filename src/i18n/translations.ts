@@ -663,6 +663,8 @@ const translations = {
   outcomesEmptyCohortAction: { de: 'Zur Kohortenbildung', en: 'Go to Cohort Builder' },
   outcomesNoVisusTitle: { de: 'Keine Visus-Messungen in dieser Kohorte', en: 'No visus measurements in this cohort' },
   outcomesNoVisusBody: { de: 'Die ausgewählten Patient:innen haben keine Observation mit LOINC 79880-1.', en: 'The selected patients have no observation with LOINC 79880-1.' },
+  outcomesEmptyAllEyesFilteredTitle: { de: 'Keine Augen entsprechen den aktuellen Filtern.', en: 'No eyes match the current filters.' },
+  outcomesEmptyAllEyesFilteredBody: { de: 'Passen Sie die OD/OS- oder Layer-Filter an, um Daten zu sehen.', en: 'Adjust the OD/OS or layer toggles to see data.' },
   outcomesPanelEmpty: { de: 'Keine Messwerte für dieses Auge', en: 'No measurements for this eye' },
   outcomesError: { de: 'Berechnung fehlgeschlagen. Bitte erneut versuchen.', en: 'Computation failed. Please try again.' },
 } as const;
