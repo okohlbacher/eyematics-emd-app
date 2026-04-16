@@ -15,6 +15,20 @@ import type {
 import { authFetch } from './authHeaders';
 import { getDataSourceConfig, loadBundlesFromSource } from './dataSource';
 
+// Re-export shared pure constants + FHIR query helpers for backward compatibility.
+// Canonical sources: shared/fhirCodes.ts, shared/fhirQueries.ts
+export * from '../../shared/fhirCodes';
+export { getObservationsByCode, getLatestObservation } from '../../shared/fhirQueries';
+
+// Internal references for applyFilters, getDiagnosisLabel, getDiagnosisFullText.
+import {
+  LOINC_VISUS,
+  LOINC_CRT,
+  SNOMED_AMD,
+  SNOMED_DR,
+} from '../../shared/fhirCodes';
+import { getLatestObservation } from '../../shared/fhirQueries';
+
 let cachedBundles: FhirBundle[] | null = null;
 
 export async function loadAllBundles(): Promise<FhirBundle[]> {
@@ -108,45 +122,6 @@ export function getAge(birthDate: string): number {
   if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
   return age;
 }
-
-export function getLatestObservation(
-  observations: Observation[],
-  loincCode: string
-): Observation | undefined {
-  return observations
-    .filter((o) => o.code.coding.some((c) => c.code === loincCode))
-    .sort(
-      (a, b) =>
-        new Date(b.effectiveDateTime ?? 0).getTime() -
-        new Date(a.effectiveDateTime ?? 0).getTime()
-    )[0];
-}
-
-export function getObservationsByCode(
-  observations: Observation[],
-  loincCode: string
-): Observation[] {
-  return observations
-    .filter((o) => o.code.coding.some((c) => c.code === loincCode))
-    .sort(
-      (a, b) =>
-        new Date(a.effectiveDateTime ?? 0).getTime() -
-        new Date(b.effectiveDateTime ?? 0).getTime()
-    );
-}
-
-export const LOINC_VISUS = '79880-1';
-export const LOINC_CRT = 'LP267955-5';
-export const LOINC_IOP = '56844-4';
-export const LOINC_HBA1C = '4548-4';
-export const LOINC_REFRACTION_SPH = '79846-2';
-export const LOINC_REFRACTION_CYL = '79847-0';
-export const LOINC_REFRACTION_AXIS = '79848-8';
-export const SNOMED_AMD = '267718000';
-export const SNOMED_DR = '312898008';
-export const SNOMED_IVI = '36189003';
-export const SNOMED_EYE_RIGHT = '362503005';
-export const SNOMED_EYE_LEFT = '362502000';
 
 /**
  * Center shorthand cache — loaded from server via /api/fhir/centers (M-03).
