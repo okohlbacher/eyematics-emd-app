@@ -15,3 +15,6 @@ export const SNOMED_DR = '312898008';
 export const SNOMED_IVI = '36189003';
 export const SNOMED_EYE_RIGHT = '362503005';
 export const SNOMED_EYE_LEFT = '362502000';
+// Alternate SNOMED CT codes for eye laterality (both are valid in SNOMED CT)
+export const SNOMED_EYE_RIGHT_ALT = '24028007';
+export const SNOMED_EYE_LEFT_ALT = '8966001';

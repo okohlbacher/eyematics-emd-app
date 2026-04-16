@@ -1,6 +1,5 @@
 /** Phase 13 / METRIC-01 — computeCrtTrajectory parity with visus and CRT-specific branches. */
 import { describe, it, expect } from 'vitest';
-// @ts-expect-error — Plan 02 will add this export to shared/cohortTrajectory.ts
 import { computeCrtTrajectory } from '../shared/cohortTrajectory';
 import type { PatientCase } from '../shared/types/fhir';
 
@@ -19,7 +18,7 @@ function makeCase(pseudonym: string, crtByEye: Record<'od' | 'os', Array<{ date:
   return { pseudonym, observations, procedures: [] } as unknown as PatientCase;
 }
 
-describe.skip('computeCrtTrajectory', () => {
+describe('computeCrtTrajectory', () => {
   it('returns absolute µm values in [0, 800] range for absolute yMetric', () => {
     const cases = [makeCase('P1', {
       od: [{ date: '2024-01-01', um: 300 }, { date: '2024-06-01', um: 250 }],

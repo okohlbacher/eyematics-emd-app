@@ -12,9 +12,12 @@
 
 import { getObservationsByCode } from './fhirQueries';
 import {
+  LOINC_CRT,
   LOINC_VISUS,
   SNOMED_EYE_LEFT,
+  SNOMED_EYE_LEFT_ALT,
   SNOMED_EYE_RIGHT,
+  SNOMED_EYE_RIGHT_ALT,
   SNOMED_IVI,
 } from './fhirCodes';
 import type { Observation, PatientCase, Procedure } from './types/fhir';
@@ -118,8 +121,8 @@ export function eyeOf(bodySite: unknown): 'od' | 'os' | null {
   if (!coding || !Array.isArray(coding)) return null;
 
   const code = coding[0]?.code;
-  if (code === SNOMED_EYE_RIGHT) return 'od';
-  if (code === SNOMED_EYE_LEFT) return 'os';
+  if (code === SNOMED_EYE_RIGHT || code === SNOMED_EYE_RIGHT_ALT) return 'od';
+  if (code === SNOMED_EYE_LEFT || code === SNOMED_EYE_LEFT_ALT) return 'os';
   return null;
 }
 
@@ -420,11 +423,15 @@ function buildPatientSeries(
 
 // ---------------------------------------------------------------------------
 // Internal: build a PanelResult from a list of PatientSeries
+// minN: minimum number of patients needed for a grid point (D-04).
+//   Visus default: 2 (IQR band must be non-degenerate).
+//   CRT: 1 (single-patient µm trajectory is valid; p25=p75=median).
 // ---------------------------------------------------------------------------
 function buildPanel(
   allSeries: PatientSeries[],
   gridPoints: number,
-  spreadMode: SpreadMode
+  spreadMode: SpreadMode,
+  minN = 2,
 ): PanelResult {
   const active = allSeries.filter((s) => !s.excluded);
   const excluded = allSeries.filter((s) => s.excluded);
@@ -448,9 +455,9 @@ function buildPanel(
       if (interpolated !== null) ys.push(interpolated);
     }
 
-    // D-04 (VQA-03): require n>=2 so IQR band has non-degenerate p25/p75.
-    // D-15 skip for mismatched span (ys.length === 0) is subsumed by the stricter check.
-    if (ys.length < 2) continue;
+    // D-04 (VQA-03): for visus, require n>=2 so IQR band is non-degenerate.
+    // CRT passes minN=1 to allow single-patient panels (p25=p75=median in that case).
+    if (ys.length < minN) continue;
 
     const sorted = [...ys].sort((a, b) => a - b);
     const yMedian = percentile(sorted, 0.5);
@@ -500,5 +507,179 @@ function buildPanel(
       excludedCount: excluded.length,
       measurementCount,
     },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// computeCrtTrajectory — METRIC-01 / Phase 13 Plan 02
+// Mirrors computeCohortTrajectory but reads LOINC_CRT observations whose
+// valueQuantity.value is already in µm (no logMAR conversion).
+// ---------------------------------------------------------------------------
+
+export function computeCrtTrajectory(input: {
+  cases: PatientCase[];
+  axisMode: AxisMode;
+  yMetric: YMetric;
+  gridPoints: number;
+  spreadMode?: SpreadMode;
+}): TrajectoryResult {
+  const { cases, axisMode, yMetric, gridPoints, spreadMode = 'iqr' } = input;
+
+  const odSeries: PatientSeries[] = [];
+  const osSeries: PatientSeries[] = [];
+
+  for (const c of cases) {
+    const allCrt = getObservationsByCode(c.observations, LOINC_CRT);
+    const odObs = allCrt.filter((o) => eyeOf(o.bodySite) === 'od');
+    const osObs = allCrt.filter((o) => eyeOf(o.bodySite) === 'os');
+
+    odSeries.push(buildCrtPatientSeries(c, odObs, 'od', axisMode, yMetric, gridPoints));
+    osSeries.push(buildCrtPatientSeries(c, osObs, 'os', axisMode, yMetric, gridPoints));
+  }
+
+  // Combined panel: pool OD + OS measurements for each patient (mirrors visus logic)
+  const combinedSeries: PatientSeries[] = cases.map((c, i) => {
+    const od = odSeries[i];
+    const os = osSeries[i];
+    const allMeas = [...od.measurements, ...os.measurements].sort((a, b) => a.x - b.x);
+    const included = !od.excluded || !os.excluded;
+    return {
+      id: c.pseudonym,
+      pseudonym: c.pseudonym,
+      measurements: allMeas,
+      sparse: allMeas.length >= 2 && allMeas.length < Math.ceil(gridPoints / 10),
+      excluded: !included,
+      baseline: od.baseline ?? os.baseline,
+    };
+  });
+
+  // CRT uses minN=1: a single patient's µm trajectory is clinically meaningful.
+  // (Visus uses default minN=2 so IQR band is non-degenerate per D-04.)
+  return {
+    od: buildPanel(odSeries, gridPoints, spreadMode, 1),
+    os: buildPanel(osSeries, gridPoints, spreadMode, 1),
+    combined: buildPanel(combinedSeries, gridPoints, spreadMode, 1),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Internal: build a PatientSeries for a single (patient, eye) pair — CRT µm
+// ---------------------------------------------------------------------------
+function buildCrtPatientSeries(
+  c: PatientCase,
+  crtObs: Observation[],
+  eye: 'od' | 'os',
+  axisMode: AxisMode,
+  yMetric: YMetric,
+  gridPoints: number,
+): PatientSeries {
+  if (crtObs.length === 0) {
+    return {
+      id: c.pseudonym,
+      pseudonym: c.pseudonym,
+      measurements: [],
+      sparse: false,
+      excluded: true,
+      baseline: null,
+    };
+  }
+
+  // Filter to observations with valid date + µm value, sort ascending by date.
+  const sorted = [...crtObs]
+    .filter(
+      (o) =>
+        typeof o.effectiveDateTime === 'string' &&
+        typeof o.valueQuantity?.value === 'number' &&
+        Number.isFinite(o.valueQuantity.value),
+    )
+    .sort((a, b) =>
+      (a.effectiveDateTime as string).localeCompare(b.effectiveDateTime as string),
+    );
+
+  if (sorted.length === 0) {
+    return {
+      id: c.pseudonym,
+      pseudonym: c.pseudonym,
+      measurements: [],
+      sparse: false,
+      excluded: true,
+      baseline: null,
+    };
+  }
+
+  const baselineDate = sorted[0].effectiveDateTime as string;
+  const baselineUm = sorted[0].valueQuantity!.value as number;
+
+  // IVI procedure dates for treatment-index axis (same as visus)
+  const iviDatesForEye: string[] = (c.procedures ?? [])
+    .filter((p) => (p.code?.coding ?? []).some((cd) => cd.code === SNOMED_IVI))
+    .filter((p) => eyeOf(p.bodySite) === eye)
+    .map((p) => p.performedDateTime)
+    .filter((d): d is string => typeof d === 'string')
+    .sort();
+
+  const measurements: Measurement[] = [];
+
+  for (const o of sorted) {
+    const obsDate = o.effectiveDateTime as string;
+    const raw = o.valueQuantity!.value as number;
+
+    // X value
+    let x: number;
+    if (axisMode === 'days') {
+      x = daysBetween(baselineDate, obsDate);
+    } else {
+      x = iviDatesForEye.filter((d) => d <= obsDate).length;
+    }
+
+    // Y value
+    let y: number | null = null;
+    let clipped = false;
+
+    if (yMetric === 'absolute') {
+      y = raw;
+    } else if (yMetric === 'delta') {
+      y = raw - baselineUm;
+    } else {
+      // delta_percent — clamp to ±200 (matches visus)
+      if (baselineUm === 0) {
+        y = null;
+      } else {
+        const pct = ((raw - baselineUm) / baselineUm) * 100;
+        const clamped = clamp(pct, -200, 200);
+        if (clamped !== pct) clipped = true;
+        y = clamped;
+      }
+    }
+
+    // CRT measurements use rawDecimal to store µm; logmar/snellen fields set to 0
+    // (the Measurement type is visus-centric; CRT reuses the shape with µm in y).
+    measurements.push({
+      date: obsDate,
+      decimal: raw,
+      logmar: raw,        // µm stored here for CRT tooltip compatibility
+      snellenNum: 0,
+      snellenDen: 0,
+      eye,
+      x,
+      y,
+      ...(clipped ? { clipped: true } : {}),
+    });
+  }
+
+  // Sort by x ascending
+  measurements.sort((a, b) => a.x - b.x);
+
+  const sparse =
+    measurements.length >= 2 &&
+    measurements.length < Math.ceil(gridPoints / 10);
+
+  return {
+    id: c.pseudonym,
+    pseudonym: c.pseudonym,
+    measurements,
+    sparse,
+    excluded: false,
+    baseline: baselineUm,
   };
 }
