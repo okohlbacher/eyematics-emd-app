@@ -116,6 +116,11 @@ auditApiRouter.get('/export', (req: Request, res: Response): void => {
  * The server performs no redaction or field-allowlisting on this payload beyond
  * the 16 KiB JSON cap; a future phase may introduce a shallow allowlist once
  * the filter taxonomy stabilises.
+ *
+ * Timing convention (IN-10): `duration_ms: 0` is a SENTINEL indicating a
+ * handler-written row with no middleware timing available (D-03 fire-and-forget).
+ * Middleware-written rows carry a true duration via `Date.now() - startMs`.
+ * Dashboarding that filters on `duration_ms > 0` will exclude these rows by design.
  */
 auditApiRouter.post('/events/view-open', (req: Request, res: Response): void => {
   const body = (req.body ?? {}) as { name?: unknown; cohortId?: unknown; filter?: unknown };
