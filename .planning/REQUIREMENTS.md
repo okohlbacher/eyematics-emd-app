@@ -24,7 +24,7 @@ Keep `/outcomes` responsive for cohorts >1000 patients by moving median/IQR/grid
 
 - [ ] **AGG-01**: New `POST /api/outcomes/aggregate` endpoint accepts `{ cohortId, axisMode, yMetric, gridPoints, eye }` and returns `{ median, iqrLow, iqrHigh, perPatient?, scatter? }` — center-filtered from JWT, not from request body.
 - [ ] **AGG-02**: Server aggregation uses the same algorithm as the client `aggregate` useMemo (Phase 8-01); parity verified by a round-trip test: seed a cohort, compute both ways, assert `median` + `iqrLow` + `iqrHigh` are byte-identical.
-- [ ] **AGG-03**: Client `/outcomes` auto-routes to the server endpoint when cohort size exceeds a configurable threshold (default 1000 patients, overridable via `settings.yaml`); below threshold keeps the current client path.
+- [x] **AGG-03**: Client `/outcomes` auto-routes to the server endpoint when cohort size exceeds a configurable threshold (default 1000 patients, overridable via `settings.yaml`); below threshold keeps the current client path.
 - [ ] **AGG-04**: Server aggregation response is cacheable per `{ cohortId, axisMode, yMetric, gridPoints, eye }` key with explicit cache invalidation on cohort mutation (ETag or in-memory TTL — chosen during plan phase).
 - [ ] **AGG-05**: Aggregation endpoint emits an audit event `outcomes.aggregate` with cohort id hash (not raw id), user, center set, and payload size — PII-minimal per IN-01 guidance.
 
@@ -79,7 +79,7 @@ Phases assigned during roadmap creation (2026-04-16).
 | VQA-05 | Phase 10 | Pending |
 | AGG-01 | Phase 12 | Pending |
 | AGG-02 | Phase 12 | Pending |
-| AGG-03 | Phase 12 | Pending |
+| AGG-03 | Phase 12 | Complete |
 | AGG-04 | Phase 12 | Pending |
 | AGG-05 | Phase 12 | Pending |
 | METRIC-01 | Phase 13 | Pending |
