@@ -79,7 +79,15 @@ settingsApiRouter.get('/', (req: Request, res: Response): void => {
     if (req.auth?.role !== 'admin') {
       const parsed = yaml.load(raw) as Record<string, unknown> | null;
       if (parsed && typeof parsed === 'object') {
-        const { otpCode: _o, maxLoginAttempts: _m, provider: _p, ...safe } = parsed;
+        const { otpCode: _o, maxLoginAttempts: _m, provider: _p, audit: _audit, ...safe } = parsed;
+        // Preserve other audit fields (e.g. retentionDays) while stripping cohortHashSecret
+        if (_audit && typeof _audit === 'object') {
+          const auditObj = _audit as Record<string, unknown>;
+          const { cohortHashSecret: _c, ...safeAudit } = auditObj;
+          if (Object.keys(safeAudit).length > 0) {
+            (safe as Record<string, unknown>).audit = safeAudit;
+          }
+        }
         res.setHeader('Content-Type', 'text/yaml');
         res.send(yaml.dump(safe));
         return;

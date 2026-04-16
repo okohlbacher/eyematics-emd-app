@@ -10,3 +10,5 @@ therapyBreakerDays: 365
 dataSource:
   type: local
   blazeUrl: http://localhost:8080/fhir
+audit:
+  cohortHashSecret: 'dev-cohort-hash-secret-please-replace-in-prod-xxxxxxxxxxxxxx'
