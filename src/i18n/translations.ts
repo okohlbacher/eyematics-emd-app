@@ -749,6 +749,7 @@ const translations = {
 
   // ---- Phase 13: Error States ----
   metricsErrorComputationFailed: { de: 'Berechnung fehlgeschlagen. Bitte erneut versuchen.', en: 'Computation failed. Please try again.' },
+  metricsSettingsNoControls: { de: 'Keine Einstellungen für dieses Intervall-Diagramm.', en: 'No settings for this interval chart.' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

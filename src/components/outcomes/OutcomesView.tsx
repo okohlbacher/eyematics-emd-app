@@ -6,6 +6,8 @@
  * Route resolution (?cohort / ?filter) and the audit beacon on mount are
  * preserved — the beacon now fires when this component mounts (i.e. when
  * the user switches to the Trajectories tab).
+ *
+ * Phase 13 / METRIC-04: inline metric tab strip (?metric= URL param).
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Settings } from 'lucide-react';
@@ -27,12 +29,30 @@ import {
   type TrajectoryResult,
   type YMetric,
 } from '../../utils/cohortTrajectory';
+import { computeCrtTrajectory } from '../../../shared/cohortTrajectory';
 import OutcomesDataPreview from './OutcomesDataPreview';
 import OutcomesEmptyState from './OutcomesEmptyState';
+import IntervalHistogram from './IntervalHistogram';
 import OutcomesPanel from './OutcomesPanel';
+import ResponderView from './ResponderView';
 import OutcomesSettingsDrawer from './OutcomesSettingsDrawer';
 import OutcomesSummaryCards from './OutcomesSummaryCards';
 import { EYE_COLORS } from './palette';
+
+// ---------------------------------------------------------------------------
+// Metric types + constants (METRIC-04)
+// ---------------------------------------------------------------------------
+
+type MetricType = 'visus' | 'crt' | 'interval' | 'responder';
+const VALID_METRICS = new Set<MetricType>(['visus', 'crt', 'interval', 'responder']);
+const METRIC_TAB_ORDER: readonly MetricType[] = ['visus', 'crt', 'interval', 'responder'] as const;
+
+function metricTitleKey(m: MetricType): 'metricsVisus' | 'metricsCrt' | 'metricsInterval' | 'metricsResponder' {
+  if (m === 'crt') return 'metricsCrt';
+  if (m === 'interval') return 'metricsInterval';
+  if (m === 'responder') return 'metricsResponder';
+  return 'metricsVisus';
+}
 
 // M-04 safe-pick pattern (mirrors AnalysisPage.tsx filter parsing).
 function safePickFilter(raw: unknown): CohortFilter {
@@ -57,7 +77,7 @@ type LayerState = {
 
 export default function OutcomesView() {
   const { activeCases, savedSearches } = useData();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale } = useLanguage();
 
   // Session-only toggle state (D-24).
@@ -74,6 +94,15 @@ export default function OutcomesView() {
   const [threshold, setThreshold] = useState<number>(1000);
   const [serverAggregate, setServerAggregate] = useState<TrajectoryResult | null>(null);
   const [serverLoading, setServerLoading] = useState(false);
+
+  // Phase 13 / METRIC-04: active metric derived from URL (D-01).
+  const rawMetric = searchParams.get('metric');
+  const activeMetric: MetricType = (rawMetric && VALID_METRICS.has(rawMetric as MetricType))
+    ? (rawMetric as MetricType)
+    : 'visus';
+
+  // Phase 13 / D-05: responder threshold (session-only, resets on reload).
+  const [thresholdLetters, setThresholdLetters] = useState<number>(5);
 
   useEffect(() => {
     loadSettings().then((s) => {
@@ -107,18 +136,6 @@ export default function OutcomesView() {
   }, [cohort]);
 
   // Audit beacon (Phase 11 / CRREV-01) — fire-and-forget POST, once per mount.
-  // When this component mounts (= user switches to the Trajectories tab), we
-  // record the "open outcomes view" audit event. Semantics preserved from the
-  // removed /outcomes page: D-01 cohort id + filter go in the JSON body, never
-  // the URL; D-02 fetch + keepalive; D-03 fire-and-forget.
-  //
-  // IN-03: The empty dependency array ([]) is intentional. This effect fires
-  // EXACTLY ONCE per mount — same-route cohort switches (e.g. client-side nav
-  // from ?cohort=A to ?cohort=B without remount) do NOT retrigger the beacon
-  // (by design, per D-03). The eslint-disable below suppresses exhaustive-deps
-  // so `searchParams` is not treated as a dependency; if the desired behaviour
-  // ever changes to "fire on each cohort change", replace [] with [searchParams]
-  // AND re-evaluate D-03's once-per-view guarantee.
   useEffect(() => {
     const cid = searchParams.get('cohort');
     const fp = searchParams.get('filter');
@@ -148,7 +165,45 @@ export default function OutcomesView() {
     cohort && cohortId && cohort.cases.length > threshold
   );
 
+  // Phase 13 / METRIC-04: metric change handler (preserves cohort/filter params).
+  const resetToMetricDefaults = (m: MetricType) => {
+    if (m === 'visus' || m === 'crt') {
+      setYMetric('delta');
+      setAxisMode('days');
+      setLayers({
+        median: true,
+        perPatient: true,
+        scatter: defaultScatterOn(cohort?.cases.length ?? 0),
+        spreadBand: true,
+      });
+    }
+    // interval / responder: no reset needed — they ignore yMetric/axisMode/layers.
+  };
+
+  const handleMetricChange = (m: MetricType) => {
+    setSearchParams((p) => {
+      p.set('metric', m);
+      return p;
+    });
+    resetToMetricDefaults(m);
+  };
+
+  const handleMetricKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, current: MetricType) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    const idx = METRIC_TAB_ORDER.indexOf(current);
+    const next = e.key === 'ArrowRight'
+      ? METRIC_TAB_ORDER[(idx + 1) % METRIC_TAB_ORDER.length]
+      : METRIC_TAB_ORDER[(idx - 1 + METRIC_TAB_ORDER.length) % METRIC_TAB_ORDER.length];
+    handleMetricChange(next);
+  };
+
+  // Phase 13: server routing effect — gated on activeMetric (only visus + crt route).
   useEffect(() => {
+    if (activeMetric !== 'visus' && activeMetric !== 'crt') {
+      setServerAggregate(null);
+      return;
+    }
     if (!routeServerSide || !cohortId) {
       setServerAggregate(null);
       return;
@@ -164,6 +219,7 @@ export default function OutcomesView() {
       spreadMode,
       includePerPatient: layers.perPatient,
       includeScatter: layers.scatter,
+      metric: activeMetric as 'visus' | 'crt',
     };
 
     Promise.all([
@@ -186,7 +242,7 @@ export default function OutcomesView() {
     });
 
     return () => { cancelled = true; };
-  }, [routeServerSide, cohortId, axisMode, yMetric, gridPoints, spreadMode, layers.perPatient, layers.scatter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeMetric, routeServerSide, cohortId, axisMode, yMetric, gridPoints, spreadMode, layers.perPatient, layers.scatter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /** Project server AggregateResponse back to the PanelResult shape the panels consume. */
   function panelFromServer(r: AggregateResponse): PanelResult {
@@ -221,73 +277,261 @@ export default function OutcomesView() {
     [routeServerSide, serverAggregate, serverLoading, cohort, axisMode, yMetric, gridPoints, spreadMode],
   );
 
-  if (!cohort || cohort.cases.length === 0) {
-    return <OutcomesEmptyState variant="no-cohort" t={t as (key: TranslationKey) => string} />;
-  }
+  // Phase 13 / METRIC-01: CRT aggregate memo.
+  const crtAggregate = useMemo(
+    () => {
+      if (activeMetric !== 'crt') return null;
+      if (routeServerSide && serverAggregate) return serverAggregate;
+      if (routeServerSide && serverLoading) return null;
+      if (!cohort || cohort.cases.length === 0) return null;
+      return computeCrtTrajectory({
+        cases: cohort.cases,
+        axisMode,
+        yMetric,
+        gridPoints,
+        spreadMode,
+      });
+    },
+    [activeMetric, routeServerSide, serverAggregate, serverLoading, cohort, axisMode, yMetric, gridPoints, spreadMode],
+  );
 
-  // Phase 12 / AGG-03 / D-14: server fetch is in flight — show a non-blocking loading state
-  // with the testid indicator. This is distinct from "no cohort" (cohort exists but aggregate
-  // is pending from the server). Rendered here (before the !aggregate early-return) so the
-  // loading indicator is visible while routeServerSide is active.
-  if (routeServerSide && serverLoading && !serverAggregate) {
-    return (
-      <div className="flex items-center gap-2 py-8 justify-center text-gray-500 text-sm italic">
-        <span
-          role="status"
-          aria-live="polite"
-          data-testid="outcomes-server-computing"
-        >
-          {t('outcomesServerComputingLabel')}
-        </span>
-      </div>
-    );
-  }
+  // ---------------------------------------------------------------------------
+  // Render helpers
+  // ---------------------------------------------------------------------------
 
-  if (!aggregate) {
-    return <OutcomesEmptyState variant="no-cohort" t={t as (key: TranslationKey) => string} />;
-  }
+  const renderTabStrip = () => (
+    <nav
+      role="tablist"
+      aria-label={t('metricsSelectorLabel')}
+      className="flex gap-2 border-b border-gray-200 mb-6"
+    >
+      {METRIC_TAB_ORDER.map((m) => {
+        const active = m === activeMetric;
+        return (
+          <button
+            key={m}
+            role="tab"
+            type="button"
+            aria-selected={active}
+            tabIndex={active ? 0 : -1}
+            onClick={() => handleMetricChange(m)}
+            onKeyDown={(e) => handleMetricKeyDown(e, m)}
+            data-testid={`metric-tab-${m}`}
+            className={
+              active
+                ? 'px-4 py-2 text-sm font-semibold text-blue-700 border-b-2 border-blue-700'
+                : 'px-4 py-2 text-sm text-gray-500 hover:text-gray-700'
+            }
+          >
+            {t(metricTitleKey(m))}
+          </button>
+        );
+      })}
+    </nav>
+  );
 
-  // No-visus early return: both panels have zero measurements
-  if (
-    aggregate.od.summary.measurementCount === 0 &&
-    aggregate.os.summary.measurementCount === 0
-  ) {
-    return (
-      <OutcomesEmptyState
-        variant="no-visus"
-        t={t as (key: TranslationKey) => string}
-      />
-    );
-  }
+  const renderBody = () => {
+    if (!cohort || cohort.cases.length === 0) {
+      return <OutcomesEmptyState variant="no-cohort" t={t as (key: TranslationKey) => string} />;
+    }
 
-  // VQA-05 / D-07: all-eyes-filtered — data exists but every layer toggle is off.
-  // Distinct from no-visus (no data at all). Copy in D-08 directs the user to the toolbar.
-  if (
-    cohort.cases.length > 0 &&
-    aggregate.od.summary.measurementCount + aggregate.os.summary.measurementCount > 0 &&
-    !layers.median &&
-    !layers.perPatient &&
-    !layers.scatter &&
-    !layers.spreadBand
-  ) {
-    return (
-      <OutcomesEmptyState
-        variant="all-eyes-filtered"
-        t={t as (key: TranslationKey) => string}
-      />
-    );
-  }
+    // Server fetch in flight (only relevant for visus/crt)
+    if (routeServerSide && serverLoading && !serverAggregate && (activeMetric === 'visus' || activeMetric === 'crt')) {
+      return (
+        <div className="flex items-center gap-2 py-8 justify-center text-gray-500 text-sm italic">
+          <span
+            role="status"
+            aria-live="polite"
+            data-testid="outcomes-server-computing"
+          >
+            {t('outcomesServerComputingLabel')}
+          </span>
+        </div>
+      );
+    }
+
+    if (activeMetric === 'visus') {
+      if (!aggregate) {
+        return <OutcomesEmptyState variant="no-cohort" t={t as (key: TranslationKey) => string} />;
+      }
+      if (
+        aggregate.od.summary.measurementCount === 0 &&
+        aggregate.os.summary.measurementCount === 0
+      ) {
+        return <OutcomesEmptyState variant="no-visus" t={t as (key: TranslationKey) => string} />;
+      }
+      if (
+        cohort.cases.length > 0 &&
+        aggregate.od.summary.measurementCount + aggregate.os.summary.measurementCount > 0 &&
+        !layers.median &&
+        !layers.perPatient &&
+        !layers.scatter &&
+        !layers.spreadBand
+      ) {
+        return <OutcomesEmptyState variant="all-eyes-filtered" t={t as (key: TranslationKey) => string} />;
+      }
+      return (
+        <>
+          <OutcomesSummaryCards
+            aggregate={aggregate}
+            t={t as (key: string) => string}
+            locale={locale as 'de' | 'en'}
+          />
+          <div data-testid={layers.scatter ? 'outcomes-scatter-default-on' : 'outcomes-scatter-default-off'} />
+          <div className="mt-12 grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <OutcomesPanel
+              panel={aggregate.od}
+              eye="od"
+              color={EYE_COLORS.OD}
+              axisMode={axisMode}
+              yMetric={yMetric}
+              layers={layers}
+              t={t as (key: string) => string}
+              locale={locale as 'de' | 'en'}
+              titleKey="outcomesPanelOd"
+            />
+            <OutcomesPanel
+              panel={aggregate.os}
+              eye="os"
+              color={EYE_COLORS.OS}
+              axisMode={axisMode}
+              yMetric={yMetric}
+              layers={layers}
+              t={t as (key: string) => string}
+              locale={locale as 'de' | 'en'}
+              titleKey="outcomesPanelOs"
+            />
+            <OutcomesPanel
+              panel={aggregate.combined}
+              eye="combined"
+              color={EYE_COLORS['OD+OS']}
+              axisMode={axisMode}
+              yMetric={yMetric}
+              layers={layers}
+              t={t as (key: string) => string}
+              locale={locale as 'de' | 'en'}
+              titleKey="outcomesPanelCombined"
+            />
+          </div>
+          <OutcomesDataPreview
+            activeMetric="visus"
+            cases={cohort.cases}
+            aggregate={aggregate}
+            t={t}
+            locale={locale as 'de' | 'en'}
+          />
+        </>
+      );
+    }
+
+    if (activeMetric === 'crt') {
+      if (!crtAggregate || crtAggregate.od.summary.measurementCount + crtAggregate.os.summary.measurementCount === 0) {
+        return <OutcomesEmptyState variant="no-crt" t={t as (key: TranslationKey) => string} />;
+      }
+      return (
+        <>
+          <div className="mt-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <OutcomesPanel
+              panel={crtAggregate.od}
+              eye="od"
+              color={EYE_COLORS.OD}
+              axisMode={axisMode}
+              yMetric={yMetric}
+              layers={layers}
+              t={t as (key: string) => string}
+              locale={locale as 'de' | 'en'}
+              titleKey="metricsCrtPanelOd"
+              metric="crt"
+            />
+            <OutcomesPanel
+              panel={crtAggregate.os}
+              eye="os"
+              color={EYE_COLORS.OS}
+              axisMode={axisMode}
+              yMetric={yMetric}
+              layers={layers}
+              t={t as (key: string) => string}
+              locale={locale as 'de' | 'en'}
+              titleKey="metricsCrtPanelOs"
+              metric="crt"
+            />
+            <OutcomesPanel
+              panel={crtAggregate.combined}
+              eye="combined"
+              color={EYE_COLORS['OD+OS']}
+              axisMode={axisMode}
+              yMetric={yMetric}
+              layers={layers}
+              t={t as (key: string) => string}
+              locale={locale as 'de' | 'en'}
+              titleKey="metricsCrtPanelCombined"
+              metric="crt"
+            />
+          </div>
+          <OutcomesDataPreview
+            activeMetric="crt"
+            cases={cohort.cases}
+            aggregate={crtAggregate}
+            t={t}
+            locale={locale as 'de' | 'en'}
+          />
+        </>
+      );
+    }
+
+    if (activeMetric === 'interval') {
+      return (
+        <>
+          <IntervalHistogram
+            cases={cohort.cases}
+            t={t as (k: TranslationKey) => string}
+            locale={locale as 'de' | 'en'}
+          />
+          <OutcomesDataPreview
+            activeMetric="interval"
+            cases={cohort.cases}
+            aggregate={aggregate ?? { od: { patients: [], scatterPoints: [], medianGrid: [], summary: { patientCount: 0, measurementCount: 0, excludedCount: 0 } }, os: { patients: [], scatterPoints: [], medianGrid: [], summary: { patientCount: 0, measurementCount: 0, excludedCount: 0 } }, combined: { patients: [], scatterPoints: [], medianGrid: [], summary: { patientCount: 0, measurementCount: 0, excludedCount: 0 } } }}
+            t={t}
+            locale={locale as 'de' | 'en'}
+          />
+        </>
+      );
+    }
+
+    if (activeMetric === 'responder') {
+      return (
+        <>
+          <ResponderView
+            cases={cohort.cases}
+            thresholdLetters={thresholdLetters}
+            t={t as (k: TranslationKey) => string}
+            locale={locale as 'de' | 'en'}
+          />
+          <OutcomesDataPreview
+            activeMetric="responder"
+            cases={cohort.cases}
+            aggregate={aggregate ?? { od: { patients: [], scatterPoints: [], medianGrid: [], summary: { patientCount: 0, measurementCount: 0, excludedCount: 0 } }, os: { patients: [], scatterPoints: [], medianGrid: [], summary: { patientCount: 0, measurementCount: 0, excludedCount: 0 } }, combined: { patients: [], scatterPoints: [], medianGrid: [], summary: { patientCount: 0, measurementCount: 0, excludedCount: 0 } } }}
+            t={t}
+            locale={locale as 'de' | 'en'}
+            thresholdLetters={thresholdLetters}
+          />
+        </>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div>
       <header className="mb-6 flex items-start justify-between">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">
-            {cohort.name ? `${t('outcomesTitle')}: ${cohort.name}` : t('outcomesTitle')}
+            {cohort?.name ? `${t('outcomesTitle')}: ${cohort.name}` : t('outcomesTitle')}
           </h2>
           <p className="text-gray-500 text-sm mt-1">
-            {(cohort.name ? t('outcomesSubtitleSaved') : t('outcomesSubtitleAdhoc'))
-              .replace('{count}', String(cohort.cases.length))}
+            {(cohort?.name ? t('outcomesSubtitleSaved') : t('outcomesSubtitleAdhoc'))
+              .replace('{count}', String(cohort?.cases.length ?? 0))}
           </p>
           {routeServerSide && serverLoading && (
             <span
@@ -312,67 +556,17 @@ export default function OutcomesView() {
         </button>
       </header>
 
-      {/* Task-1.2 marker: asserts the D-37 default-scatter-off effect ran. */}
-      <div
-        data-testid={layers.scatter ? 'outcomes-scatter-default-on' : 'outcomes-scatter-default-off'}
-      />
+      {/* Phase 13 / METRIC-04: inline metric tab strip */}
+      {renderTabStrip()}
 
-      {/* Summary cards row (OUTCOME-07 / D-26) */}
-      <OutcomesSummaryCards
-        aggregate={aggregate}
-        t={t as (key: string) => string}
-        locale={locale as 'de' | 'en'}
-      />
-
-      {/* Three chart panels: OD → OS → Combined (OUTCOME-02) */}
-      <div className="mt-12 grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <OutcomesPanel
-          panel={aggregate.od}
-          eye="od"
-          color={EYE_COLORS.OD}
-          axisMode={axisMode}
-          yMetric={yMetric}
-          layers={layers}
-          t={t as (key: string) => string}
-          locale={locale as 'de' | 'en'}
-          titleKey="outcomesPanelOd"
-        />
-        <OutcomesPanel
-          panel={aggregate.os}
-          eye="os"
-          color={EYE_COLORS.OS}
-          axisMode={axisMode}
-          yMetric={yMetric}
-          layers={layers}
-          t={t as (key: string) => string}
-          locale={locale as 'de' | 'en'}
-          titleKey="outcomesPanelOs"
-        />
-        <OutcomesPanel
-          panel={aggregate.combined}
-          eye="combined"
-          color={EYE_COLORS['OD+OS']}
-          axisMode={axisMode}
-          yMetric={yMetric}
-          layers={layers}
-          t={t as (key: string) => string}
-          locale={locale as 'de' | 'en'}
-          titleKey="outcomesPanelCombined"
-        />
-      </div>
-
-      {/* Data preview panel + CSV export (OUTCOME-08 / 09-03) */}
-      <OutcomesDataPreview
-        cases={cohort.cases}
-        aggregate={aggregate}
-        t={t}
-        locale={locale as 'de' | 'en'}
-      />
+      {/* Conditional metric body */}
+      {renderBody()}
 
       {/* Settings drawer (OUTCOME-03 through -06) */}
       <OutcomesSettingsDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
+        activeMetric={activeMetric}
         axisMode={axisMode}
         setAxisMode={setAxisMode}
         yMetric={yMetric}
@@ -381,7 +575,9 @@ export default function OutcomesView() {
         setGridPoints={setGridPoints}
         layers={layers}
         setLayers={setLayers}
-        patientCount={cohort.cases.length}
+        thresholdLetters={thresholdLetters}
+        setThresholdLetters={setThresholdLetters}
+        patientCount={cohort?.cases.length ?? 0}
         t={t as (key: string) => string}
       />
     </div>

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 import type { TranslationKey } from '../../i18n/translations';
 
-type Variant = 'no-cohort' | 'no-visus' | 'all-eyes-filtered';
+type Variant = 'no-cohort' | 'no-visus' | 'all-eyes-filtered' | 'no-crt' | 'no-interval' | 'no-responder';
 
 export default function OutcomesEmptyState({
   variant,
@@ -30,6 +30,21 @@ export default function OutcomesEmptyState({
     case 'all-eyes-filtered':
       titleKey = 'outcomesEmptyAllEyesFilteredTitle';
       bodyKey = 'outcomesEmptyAllEyesFilteredBody';
+      actionKey = null;
+      break;
+    case 'no-crt':
+      titleKey = 'metricsCrtNoCrtTitle';
+      bodyKey = 'metricsCrtNoCrtBody';
+      actionKey = null;
+      break;
+    case 'no-interval':
+      titleKey = 'metricsIntervalNoDataTitle';
+      bodyKey = 'metricsIntervalNoDataBody';
+      actionKey = null;
+      break;
+    case 'no-responder':
+      titleKey = 'metricsResponderNoDataTitle';
+      bodyKey = 'metricsResponderNoDataBody';
       actionKey = null;
       break;
   }
