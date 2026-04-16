@@ -130,6 +130,24 @@ export default function OutcomesPage() {
     );
   }
 
+  // VQA-05 / D-07: all-eyes-filtered — data exists but every layer toggle is off.
+  // Distinct from no-visus (no data at all). Copy in D-08 directs the user to the toolbar.
+  if (
+    cohort.cases.length > 0 &&
+    aggregate.od.summary.measurementCount + aggregate.os.summary.measurementCount > 0 &&
+    !layers.median &&
+    !layers.perPatient &&
+    !layers.scatter &&
+    !layers.spreadBand
+  ) {
+    return (
+      <OutcomesEmptyState
+        variant="all-eyes-filtered"
+        t={t as (key: TranslationKey) => string}
+      />
+    );
+  }
+
   return (
     <div className="p-8">
       <header className="mb-6 flex items-start justify-between">
