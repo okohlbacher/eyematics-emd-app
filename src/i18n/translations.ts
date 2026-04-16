@@ -678,6 +678,77 @@ const translations = {
   outcomesEmptyAllEyesFilteredBody: { de: 'Passen Sie die OD/OS- oder Layer-Filter an, um Daten zu sehen.', en: 'Adjust the OD/OS or layer toggles to see data.' },
   outcomesPanelEmpty: { de: 'Keine Messwerte für dieses Auge', en: 'No measurements for this eye' },
   outcomesError: { de: 'Berechnung fehlgeschlagen. Bitte erneut versuchen.', en: 'Computation failed. Please try again.' },
+
+  // ---- Phase 13: Metric Selector (METRIC-04 / D-01) ----
+  metricsVisus: { de: 'Visus', en: 'Visus' },
+  metricsCrt: { de: 'CRT', en: 'CRT' },
+  metricsInterval: { de: 'Behandlungsintervall', en: 'Treatment Interval' },
+  metricsResponder: { de: 'Responder', en: 'Responder' },
+  metricsSelectorLabel: { de: 'Metrik auswählen', en: 'Select metric' },
+
+  // ---- Phase 13: CRT Panel (METRIC-01 / D-03) ----
+  metricsCrtPanelOd: { de: 'Rechtes Auge (OD) — CRT', en: 'Right eye (OD) — CRT' },
+  metricsCrtPanelOs: { de: 'Linkes Auge (OS) — CRT', en: 'Left eye (OS) — CRT' },
+  metricsCrtPanelCombined: { de: 'OD + OS kombiniert — CRT', en: 'OD + OS combined — CRT' },
+  metricsCrtYAxisAbsolute: { de: 'Absolute CRT (µm)', en: 'Absolute CRT (µm)' },
+  metricsCrtYAxisDelta: { de: 'Δ CRT (µm)', en: 'Δ CRT (µm)' },
+  metricsCrtYAxisDeltaPercent: { de: 'Δ CRT (%)', en: 'Δ CRT (%)' },
+  metricsCrtYMetricAbsolute: { de: 'Absolut (µm)', en: 'Absolute (µm)' },
+  metricsCrtYMetricDelta: { de: 'Δ (µm zur Baseline)', en: 'Δ (µm from baseline)' },
+  metricsCrtYMetricDeltaPercent: { de: 'Δ % (prozentuale Änderung)', en: 'Δ % (percent change)' },
+  metricsCrtTooltipValue: { de: 'CRT (µm)', en: 'CRT (µm)' },
+  metricsCrtPanelEmpty: { de: 'Keine CRT-Messungen für dieses Auge', en: 'No CRT measurements for this eye' },
+  metricsCrtNoCrtTitle: { de: 'Keine CRT-Messungen in dieser Kohorte', en: 'No CRT measurements in this cohort' },
+  metricsCrtNoCrtBody: { de: 'Die ausgewählten Patient:innen haben keine CRT-Observation mit LOINC LP267955-5.', en: 'The selected patients have no CRT observation with LOINC LP267955-5.' },
+
+  // ---- Phase 13: Treatment-Interval Histogram (METRIC-02 / D-04) ----
+  metricsIntervalTitle: { de: 'Behandlungsintervalle (Injektionsgaps)', en: 'Treatment Intervals (Injection Gaps)' },
+  metricsIntervalXAxis: { de: 'Tage zwischen Behandlungen', en: 'Days between treatments' },
+  metricsIntervalYAxis: { de: 'Anzahl Intervalle', en: 'Interval count' },
+  metricsIntervalMedianLine: { de: 'Median {days}d', en: 'Median {days}d' },
+  metricsIntervalGapDays: { de: 'Tage', en: 'days' },
+  metricsIntervalEyeSelector: { de: 'Auge', en: 'Eye' },
+  metricsIntervalEyeOd: { de: 'OD', en: 'OD' },
+  metricsIntervalEyeOs: { de: 'OS', en: 'OS' },
+  metricsIntervalEyeCombined: { de: 'OD + OS', en: 'OD + OS' },
+  metricsIntervalBin_0_30: { de: '0–30d', en: '0–30d' },
+  metricsIntervalBin_30_60: { de: '30–60d', en: '30–60d' },
+  metricsIntervalBin_60_90: { de: '60–90d', en: '60–90d' },
+  metricsIntervalBin_90_120: { de: '90–120d', en: '90–120d' },
+  metricsIntervalBin_120_180: { de: '120–180d', en: '120–180d' },
+  metricsIntervalBin_180_plus: { de: '180+d', en: '180+d' },
+  metricsIntervalNoDataTitle: { de: 'Keine Behandlungsintervalle berechenbar', en: 'No treatment intervals calculable' },
+  metricsIntervalNoDataBody: { de: 'Mindestens 2 IVOM-Einträge pro Patient:in erforderlich.', en: 'At least 2 IVOM entries per patient required.' },
+
+  // ---- Phase 13: Responder Classification (METRIC-03 / D-05) ----
+  metricsResponderTitle: { de: 'Responder-Klassifikation', en: 'Responder Classification' },
+  metricsResponderBucketResponder: { de: 'Responder', en: 'Responder' },
+  metricsResponderBucketPartial: { de: 'Partial', en: 'Partial' },
+  metricsResponderBucketNonResponder: { de: 'Non-Responder', en: 'Non-Responder' },
+  metricsResponderBarXAxis: { de: 'Auge', en: 'Eye' },
+  metricsResponderBarYAxis: { de: 'Anzahl Patient:innen', en: 'Patient count' },
+  metricsResponderTrajectoryTitle: { de: 'Medianverlauf nach Bucket', en: 'Median trajectory by bucket' },
+  metricsResponderThreshold: { de: 'Responder-Schwelle: Δvisus ≥ {letters} Buchstaben @ 12 Monate', en: 'Responder threshold: Δvisus ≥ {letters} letters @ 12 months' },
+  metricsResponderThresholdSection: { de: 'Responder-Schwelle', en: 'Responder threshold' },
+  metricsResponderThresholdHelper: { de: 'Nur für aktive Kohorte, setzt sich bei Reload zurück.', en: 'Session-only; resets on page reload.' },
+  metricsResponderNoDataTitle: { de: 'Klassifikation nicht möglich', en: 'Classification not possible' },
+  metricsResponderNoDataBody: { de: 'Zu wenig Messungen für eine Responder-Klassifikation.', en: 'Insufficient measurements for responder classification.' },
+
+  // ---- Phase 13: CSV Export (METRIC-05 / D-07) ----
+  metricsPreviewExportCsvCrt: { de: 'CSV exportieren (CRT)', en: 'Export CSV (CRT)' },
+  metricsPreviewExportCsvInterval: { de: 'CSV exportieren (Intervalle)', en: 'Export CSV (Intervals)' },
+  metricsPreviewExportCsvResponder: { de: 'CSV exportieren (Responder)', en: 'Export CSV (Responder)' },
+  metricsPreviewColCrtUm: { de: 'CRT (µm)', en: 'CRT (µm)' },
+  metricsPreviewColCrtDeltaUm: { de: 'Δ CRT (µm)', en: 'Δ CRT (µm)' },
+  metricsPreviewColGapIndex: { de: 'Lücken-Index', en: 'Gap index' },
+  metricsPreviewColGapDays: { de: 'Tage (Lücke)', en: 'Gap days' },
+  metricsPreviewColProcedureDate: { de: 'Behandlungsdatum', en: 'Procedure date' },
+  metricsPreviewColBucket: { de: 'Responder-Bucket', en: 'Responder bucket' },
+  metricsPreviewColDeltaVisusLetters: { de: 'Δ Visus (Buchstaben)', en: 'Δ visus (letters)' },
+  metricsPreviewColMeasurementDate: { de: 'Messdatum', en: 'Measurement date' },
+
+  // ---- Phase 13: Error States ----
+  metricsErrorComputationFailed: { de: 'Berechnung fehlgeschlagen. Bitte erneut versuchen.', en: 'Computation failed. Please try again.' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
