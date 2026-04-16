@@ -54,11 +54,16 @@
 **Goal**: Cohort identifiers stop leaking into audit URLs; the hashing primitive that AGG-05 will reuse is established and unit-tested.
 **Depends on**: Phase 10 (not technically — but sequenced after to keep Phase 12 unblocked; no shared artifacts)
 **Requirements**: CRREV-01
+**Plans** (3):
+
+- [ ] 11-01-PLAN.md — Settings key `audit.cohortHashSecret` + `server/hashCohortId.ts` utility (HMAC-SHA256, 16-hex truncation, fail-fast) + startup wiring + non-admin strip
+- [ ] 11-02-PLAN.md — Server beacon refactor: `POST /api/audit/events/view-open` with handler-written audit row (hashed cohort id) + `SKIP_AUDIT_PATHS` middleware skip-list + scoped `express.json()`
+- [ ] 11-03-PLAN.md — Client beacon transport migration: `fetch POST` + `keepalive: true` + JSON body; test 6 migration
+
 **Success Criteria** (what must be TRUE):
   1. `GET /api/audit/events/view-open` no longer accepts or records cohort id in the querystring; request carries no cohort-identifying parameter in the URL.
   2. The audit DB row for an outcomes view-open contains the cohort reference as a hashed id in the event payload — verified by a test that seeds a cohort, triggers the beacon, and asserts the DB row has the hash (not the raw id).
   3. A reusable `hashCohortId(id)` utility lives in server code with a deterministic test (same input → same hash; different input → different hash) so AGG-05 can reuse it without duplication.
-**Plans**: TBD
 
 #### Phase 12: Server-Side Outcomes Pre-Aggregation
 **Goal**: Cohorts >1000 patients render `/outcomes` without client-side jank; server aggregation is byte-identical to the client path at the grid level, cacheable, and center-filtered from the JWT.
@@ -92,7 +97,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 10. Visual/UX QA & Preview Stability | 6/6 | Complete    | 2026-04-16 |
-| 11. Audit Beacon PII Hardening | 0/TBD | Not started | — |
+| 11. Audit Beacon PII Hardening | 0/3 | Not started | — |
 | 12. Server-Side Outcomes Pre-Aggregation | 0/TBD | Not started | — |
 | 13. New Outcome Metrics (CRT / Interval / Responder) | 0/TBD | Not started | — |
 
@@ -104,4 +109,4 @@
 
 ---
 
-*Last updated: 2026-04-16 — v1.6 roadmap created (Phases 10–13, 18/18 requirements mapped).*
+*Last updated: 2026-04-16 — v1.6 roadmap created (Phases 10–13, 18/18 requirements mapped). Phase 11 decomposed into 3 plans.*
