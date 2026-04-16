@@ -159,6 +159,20 @@ export default function OutcomesDataPreview({ cases, aggregate, t, locale }: Pro
   const rows = flattenToRows(cases);
   const rowCount = rows.length;
 
+  // CRREV-02: stable composite row keys — pure function of row identity,
+  // not array index. Format: `${pseudo}|${eye}|${date}`; duplicate tuples
+  // (multiple measurements same day) get a `|#N` suffix (N≥2) so every
+  // rendered row has a unique, reorder-invariant key.
+  const rowKeys: string[] = (() => {
+    const seen = new Map<string, number>();
+    return rows.map((r) => {
+      const base = `${r.patient_pseudonym}|${r.eye}|${r.observation_date}`;
+      const n = (seen.get(base) ?? 0) + 1;
+      seen.set(base, n);
+      return n === 1 ? base : `${base}|#${n}`;
+    });
+  })();
+
   const fmt = (n: number, digits = 3) =>
     new Intl.NumberFormat(locale, { maximumFractionDigits: digits }).format(n);
 
@@ -234,7 +248,8 @@ export default function OutcomesDataPreview({ cases, aggregate, t, locale }: Pro
             <tbody className="divide-y divide-gray-100">
               {rows.map((r, i) => (
                 <tr
-                  key={`${r.patient_pseudonym}-${r.eye}-${r.observation_date}-${i}`}
+                  key={rowKeys[i]}
+                  data-row-key={rowKeys[i]}
                   className="text-sm hover:bg-gray-50"
                 >
                   <td className="px-3 py-2">{r.patient_pseudonym}</td>

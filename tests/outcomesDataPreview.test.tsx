@@ -193,10 +193,21 @@ describe('OutcomesDataPreview — row key stability (CRREV-02)', () => {
     );
 
     const keys = keysFromRows(openAndGetRows(container));
-    // Array-index suffix would be `-0`, `-1`, … at the end of the key.
-    // The legitimate dup-tuple suffix is `|#N`, which must not match.
+    // Old key shape: `${pseudo}-${eye}-${date}-${index}` — dash-separated,
+    // trailing index. New shape: `${pseudo}|${eye}|${date}` (pipe-separated),
+    // with optional `|#N` counter for duplicate tuples.
+    //
+    // We assert the new shape directly:
+    //   - every key contains two `|` separators (three tuple components), and
+    //   - any trailing counter uses the `|#N` form, never `-N`.
     for (const k of keys) {
-      expect(k).not.toMatch(/-\d+$/);
+      expect(k.split('|').length).toBeGreaterThanOrEqual(3);
+      // No dash-separated trailing numeric index (old format).
+      // The ISO date itself ends with `-DD` but appears before the second `|`,
+      // so only the final segment is checked.
+      const lastSegment = k.split('|').pop() ?? '';
+      // Last segment is either the date (YYYY-MM-DD) or `#N` counter.
+      expect(lastSegment).toMatch(/^(\d{4}-\d{2}-\d{2}|#\d+)$/);
     }
   });
 
