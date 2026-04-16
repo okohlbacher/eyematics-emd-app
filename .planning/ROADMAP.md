@@ -43,12 +43,12 @@
 **Plans** (6): 
 **UI hint**: yes
 
-- [ ] 10-01-chart-palette-contrast-PLAN.md — Chart palette extraction + WCAG AA contrast test (VQA-02)
+- [x] 10-01-chart-palette-contrast-PLAN.md — Chart palette extraction + WCAG AA contrast test (VQA-02)
 - [ ] 10-02a-iqr-band-guard-PLAN.md — IQR band n<2 guard at math + DOM layers (VQA-03)
 - [ ] 10-02b-tooltip-PLAN.md — Tooltip D-05 format + D-06 per-patient suppression (VQA-04)
 - [ ] 10-03-empty-state-i18n-PLAN.md — Third empty-state variant + DE/EN copy (VQA-05)
-- [ ] 10-04a-admin-center-filter-PLAN.md — AdminPage 7-site center filter + snapshot test (VQA-01)
-- [ ] 10-04b-preview-row-keys-PLAN.md — OutcomesDataPreview stable composite row key + D-11 duplicate resolver (CRREV-02)
+- [x] 10-04a-admin-center-filter-PLAN.md — AdminPage 7-site center filter + snapshot test (VQA-01)
+- [x] 10-04b-preview-row-keys-PLAN.md — OutcomesDataPreview stable composite row key + D-11 duplicate resolver (CRREV-02)
 
 #### Phase 11: Audit Beacon PII Hardening
 **Goal**: Cohort identifiers stop leaking into audit URLs; the hashing primitive that AGG-05 will reuse is established and unit-tested.
@@ -91,7 +91,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 10. Visual/UX QA & Preview Stability | 0/6 | Not started | — |
+| 10. Visual/UX QA & Preview Stability | 3/6 | In Progress|  |
 | 11. Audit Beacon PII Hardening | 0/TBD | Not started | — |
 | 12. Server-Side Outcomes Pre-Aggregation | 0/TBD | Not started | — |
 | 13. New Outcome Metrics (CRT / Interval / Responder) | 0/TBD | Not started | — |
