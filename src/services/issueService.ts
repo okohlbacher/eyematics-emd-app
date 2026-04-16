@@ -11,6 +11,7 @@ export interface ReportedIssue {
   description: string;
   screenshot?: string; // base64 data URL
   hasScreenshot?: boolean; // set when screenshot is stripped in listing
+  appVersion?: string; // build version from package.json, injected by Vite
 }
 
 /**

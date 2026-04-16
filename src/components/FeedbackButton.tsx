@@ -106,6 +106,7 @@ export default function FeedbackButton() {
         page: pageLabel(location.pathname),
         description: description.trim(),
         screenshot: screenshot ?? undefined,
+        appVersion: __APP_VERSION__,
       });
       setSubmitted(true);
       setTimeout(() => {
@@ -161,10 +162,16 @@ export default function FeedbackButton() {
               </div>
             ) : (
               <div className="p-5 space-y-4">
-                {/* Page info */}
-                <div className="text-sm text-gray-500">
-                  <span className="font-medium">{t('feedbackPage')}:</span>{' '}
-                  <span className="font-mono text-gray-700">{pageLabel(location.pathname)}</span>
+                {/* Page info + build version */}
+                <div className="text-sm text-gray-500 flex gap-4 flex-wrap">
+                  <span>
+                    <span className="font-medium">{t('feedbackPage')}:</span>{' '}
+                    <span className="font-mono text-gray-700">{pageLabel(location.pathname)}</span>
+                  </span>
+                  <span>
+                    <span className="font-medium">{t('feedbackVersion')}:</span>{' '}
+                    <span className="font-mono text-gray-700">v{__APP_VERSION__}</span>
+                  </span>
                 </div>
 
                 {/* Screenshot preview */}

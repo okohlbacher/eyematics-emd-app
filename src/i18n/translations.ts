@@ -533,6 +533,7 @@ const translations = {
   feedbackDescription: { de: 'Beschreiben Sie das Problem:', en: 'Describe the issue:' },
   feedbackPlaceholder: { de: 'Was ist Ihnen aufgefallen? Was sollte verbessert werden?', en: 'What did you notice? What should be improved?' },
   feedbackPage: { de: 'Seite', en: 'Page' },
+  feedbackVersion: { de: 'Version', en: 'Version' },
   feedbackSubmit: { de: 'Absenden', en: 'Submit' },
   feedbackSuccess: { de: 'Problem wurde gemeldet. Vielen Dank!', en: 'Issue has been reported. Thank you!' },
   feedbackExport: { de: 'Issues exportieren', en: 'Export Issues' },

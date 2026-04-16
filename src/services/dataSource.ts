@@ -61,24 +61,19 @@ export async function loadBundlesFromSource(
 // ---------------------------------------------------------------------------
 
 /**
- * Test connectivity to the FHIR server via the server-side proxy.
- * Returns the server software name/version string on success, or throws.
+ * Test connectivity to the FHIR server.
+ * Delegates to the server-side test endpoint which reads the current blazeUrl
+ * from settings.yaml and makes a direct outbound request (avoids the
+ * startup-time-fixed proxy target).
  */
 export async function testBlazeConnection(_blazeUrl: string): Promise<string> {
-  const resp = await authFetch('/api/fhir-proxy/metadata', {
-    headers: { Accept: 'application/fhir+json' },
-  });
+  const resp = await authFetch('/api/settings/fhir-connection-test');
 
   if (!resp.ok) {
-    throw new Error(`${resp.status} ${resp.statusText}`);
+    const body = await resp.json().catch(() => ({})) as { error?: string };
+    throw new Error(body.error ?? `${resp.status} ${resp.statusText}`);
   }
 
-  const capability = (await resp.json()) as {
-    software?: { name?: string; version?: string };
-    fhirVersion?: string;
-  };
-  const name = capability.software?.name ?? 'FHIR Server';
-  const version = capability.software?.version ?? '';
-  const fhir = capability.fhirVersion ? ` (FHIR ${capability.fhirVersion})` : '';
-  return `${name}${version ? ' ' + version : ''}${fhir}`;
+  const result = (await resp.json()) as { ok: boolean; detail?: string };
+  return result.detail ?? 'Connected';
 }
