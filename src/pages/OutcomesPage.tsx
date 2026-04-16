@@ -87,6 +87,14 @@ export default function OutcomesPage() {
   // D-02: fetch + keepalive (not sendBeacon) — survives unload, standard JSON headers, testable.
   // D-03: fire-and-forget — silently discard any network/transport error.
   // D-08: filter is preserved as-is in the body (no client-side hashing).
+  //
+  // IN-03: The empty dependency array ([]) is intentional. This effect fires
+  // EXACTLY ONCE per mount — same-route cohort switches (e.g. client-side nav
+  // from ?cohort=A to ?cohort=B without remount) do NOT retrigger the beacon
+  // (by design, per D-03). The eslint-disable below suppresses exhaustive-deps
+  // so `searchParams` is not treated as a dependency; if the desired behaviour
+  // ever changes to "fire on each cohort change", replace [] with [searchParams]
+  // AND re-evaluate D-03's once-per-view guarantee.
   useEffect(() => {
     const cid = searchParams.get('cohort');
     const fp = searchParams.get('filter');
