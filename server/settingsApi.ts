@@ -30,6 +30,17 @@ function readSettings(): string {
   return fs.existsSync(SETTINGS_FILE) ? fs.readFileSync(SETTINGS_FILE, 'utf-8') : '';
 }
 
+/**
+ * IN-05: Strip `cohortHashSecret` from the audit sub-object for non-admin GETs.
+ * Returns the remaining audit fields (e.g. retentionDays) or undefined if the
+ * object is empty / not an object at all. Pure helper; no side effects.
+ */
+function stripSensitiveAudit(audit: unknown): Record<string, unknown> | undefined {
+  if (!audit || typeof audit !== 'object') return undefined;
+  const { cohortHashSecret: _c, ...rest } = audit as Record<string, unknown>;
+  return Object.keys(rest).length > 0 ? rest : undefined;
+}
+
 function writeSettings(yamlBody: string, updatedBy: string): void {
   fs.writeFileSync(SETTINGS_FILE, yamlBody, 'utf-8');
   invalidateFhirCache();
@@ -79,14 +90,11 @@ settingsApiRouter.get('/', (req: Request, res: Response): void => {
     if (req.auth?.role !== 'admin') {
       const parsed = yaml.load(raw) as Record<string, unknown> | null;
       if (parsed && typeof parsed === 'object') {
-        const { otpCode: _o, maxLoginAttempts: _m, provider: _p, audit: _audit, ...safe } = parsed;
-        // Preserve other audit fields (e.g. retentionDays) while stripping cohortHashSecret
-        if (_audit && typeof _audit === 'object') {
-          const auditObj = _audit as Record<string, unknown>;
-          const { cohortHashSecret: _c, ...safeAudit } = auditObj;
-          if (Object.keys(safeAudit).length > 0) {
-            (safe as Record<string, unknown>).audit = safeAudit;
-          }
+        const { otpCode: _o, maxLoginAttempts: _m, provider: _p, audit: rawAudit, ...safe } = parsed;
+        // IN-05: preserve other audit fields (e.g. retentionDays) via a single helper.
+        const safeAudit = stripSensitiveAudit(rawAudit);
+        if (safeAudit) {
+          (safe as Record<string, unknown>).audit = safeAudit;
         }
         res.setHeader('Content-Type', 'text/yaml');
         res.send(yaml.dump(safe));
