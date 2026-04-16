@@ -40,10 +40,10 @@ created: 2026-04-16
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
 | 13-01-01 | 01 | 0 | METRIC-01 | — | N/A | unit | `npx vitest run tests/crtTrajectory.test.ts` | ❌ W0 | ⬜ pending |
 | 13-01-02 | 01 | 1 | METRIC-01 | — | N/A | unit | `npx vitest run tests/crtTrajectory.test.ts` | ✅ | ⬜ pending |
-| 13-02-01 | 02 | 0 | METRIC-02 | — | N/A | unit | `npx vitest run tests/intervalHistogram.test.ts` | ❌ W0 | ⬜ pending |
-| 13-02-02 | 02 | 1 | METRIC-02 | — | N/A | unit | `npx vitest run tests/intervalHistogram.test.ts` | ✅ | ⬜ pending |
-| 13-03-01 | 03 | 0 | METRIC-03 | — | N/A | unit | `npx vitest run tests/responderClassification.test.ts` | ❌ W0 | ⬜ pending |
-| 13-03-02 | 03 | 1 | METRIC-03 | — | N/A | unit | `npx vitest run tests/responderClassification.test.ts` | ✅ | ⬜ pending |
+| 13-02-01 | 02 | 0 | METRIC-02 | — | N/A | unit | `npx vitest run tests/intervalMetric.test.ts` | ❌ W0 | ⬜ pending |
+| 13-02-02 | 02 | 1 | METRIC-02 | — | N/A | unit | `npx vitest run tests/intervalHistogram.test.tsx` | ✅ | ⬜ pending |
+| 13-03-01 | 03 | 0 | METRIC-03 | — | N/A | unit | `npx vitest run tests/responderMetric.test.ts` | ❌ W0 | ⬜ pending |
+| 13-03-02 | 03 | 1 | METRIC-03 | — | N/A | unit | `npx vitest run tests/responderView.test.tsx` | ✅ | ⬜ pending |
 | 13-04-01 | 04 | 1 | METRIC-04 | — | N/A | unit | `npx vitest run tests/metricSelector.test.ts` | ❌ W0 | ⬜ pending |
 | 13-05-01 | 05 | 1 | METRIC-05 | — | N/A | unit | `npx vitest run tests/csvExport.test.ts` | ✅ | ⬜ pending |
 | 13-06-01 | 06 | 1 | METRIC-06 | — | N/A | unit | `npx vitest run tests/outcomesI18n.test.ts` | ✅ | ⬜ pending |
