@@ -1,6 +1,5 @@
 /** Phase 13 / METRIC-03 — classifyResponders buckets at threshold boundary (logMAR sign convention). */
 import { describe, it, expect } from 'vitest';
-// @ts-expect-error — Plan 04 will create this module
 import { classifyResponders } from '../shared/responderMetric';
 import type { PatientCase } from '../shared/types/fhir';
 
@@ -21,7 +20,7 @@ function makeVisusCase(pseudonym: string, byEye: Record<'od' | 'os', Array<{ day
   return { pseudonym, observations, procedures: [] } as unknown as PatientCase;
 }
 
-describe.skip('classifyResponders', () => {
+describe('classifyResponders', () => {
   it('returns three buckets with PatientCase[] in each', () => {
     const result = classifyResponders([], 5, 'combined');
     expect(result).toHaveProperty('responder');
