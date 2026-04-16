@@ -38,6 +38,19 @@ const REDACT_PATHS = new Set([
 ]);
 
 /**
+ * Paths whose audit row is written DIRECTLY by the route handler (not by this middleware).
+ * The middleware must NOT write a duplicate row AND must NOT capture the raw request body
+ * for these paths — D-10 / T-11-01 / Phase 11 CRREV-01.
+ *
+ * Handler-written rows bypass this middleware's redaction pipeline because they carry
+ * per-route privileged data (e.g. hashed identifiers) that only the handler knows how to
+ * derive. The handler is responsible for its own PII minimization.
+ */
+const SKIP_AUDIT_PATHS = new Set([
+  '/api/audit/events/view-open',  // Phase 11: handler writes row with hashed cohortId
+]);
+
+/**
  * Field names that must never appear in plaintext in the audit database.
  */
 const REDACT_FIELDS = new Set(['password', 'otp', 'challengeToken', 'generatedPassword']);
@@ -112,9 +125,14 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
   const startMs = Date.now();
 
   res.on('finish', () => {
-    const duration = Date.now() - startMs;
     // Strip query string to get the clean path
     const urlPath = req.originalUrl.split('?')[0];
+
+    // Phase 11 / D-10 / T-11-01: skip paths whose handlers write their own audit row.
+    // This check MUST precede body capture so the raw body is never read/serialised here.
+    if (SKIP_AUDIT_PATHS.has(urlPath)) return;
+
+    const duration = Date.now() - startMs;
     // req.auth is populated by authMiddleware for authenticated requests;
     // undefined for requests that were rejected (401) — fall back to 'anonymous'
     const user = req.auth?.preferred_username ?? 'anonymous';
