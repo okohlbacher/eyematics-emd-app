@@ -163,3 +163,43 @@ describe('auditMiddleware', () => {
     expect(loggedEntries[0].path).toBe('/api/audit');
   });
 });
+
+describe('SKIP_AUDIT_PATHS — handler-written rows (Phase 11 / D-10 / T-11-01)', () => {
+  it('skips POST /api/audit/events/view-open (no middleware-written row)', () => {
+    const req = mockReq({
+      originalUrl: '/api/audit/events/view-open',
+      method: 'POST',
+      body: { name: 'open_outcomes_view', cohortId: 'saved-search-xyz' },
+    });
+    const res = mockRes();
+    const next: NextFunction = vi.fn();
+    auditMiddleware(req, res, next);
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries).toHaveLength(0);
+  });
+
+  it('still logs other /api/ paths (regression — skip-list does not over-reach)', () => {
+    const req = mockReq({ originalUrl: '/api/fhir/bundles' });
+    const res = mockRes();
+    const next: NextFunction = vi.fn();
+    auditMiddleware(req, res, next);
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries).toHaveLength(1);
+    expect(loggedEntries[0].path).toBe('/api/fhir/bundles');
+  });
+
+  it('skip fires even when request body would contain a raw cohort id', () => {
+    // The skip-list MUST run before body-capture so the raw id cannot leak into debug sinks.
+    // Observable proof: zero entries logged despite a body present.
+    const req = mockReq({
+      originalUrl: '/api/audit/events/view-open',
+      method: 'POST',
+      body: { cohortId: 'raw-cohort-id-that-must-not-be-captured' },
+    });
+    const res = mockRes();
+    const next: NextFunction = vi.fn();
+    auditMiddleware(req, res, next);
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries).toHaveLength(0);
+  });
+});
