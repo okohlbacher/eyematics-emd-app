@@ -23,22 +23,19 @@ import type {
   Procedure,
 } from './types/fhir.js';
 
-// ---------------------------------------------------------------------------
-// Bundle entry shape (minimal — matches server/fhirApi.ts FhirBundle)
-// ---------------------------------------------------------------------------
-
-interface BundleEntry {
-  resource: { resourceType: string; [key: string]: unknown };
-}
-interface FhirBundle {
-  entry: BundleEntry[];
+// Accept any bundle-like object — only the resourceType field is needed to filter.
+// Structurally compatible with both shared/types/fhir.FhirBundle (strict) and
+// server/fhirApi.FhirBundle (relaxed id?: string). The cast to unknown as T
+// in resourcesOfType handles the downstream typing.
+interface BundleLike {
+  entry: Array<{ resource: { resourceType: string } }>;
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function resourcesOfType<T>(bundles: FhirBundle[], type: string): T[] {
+function resourcesOfType<T>(bundles: BundleLike[], type: string): T[] {
   return bundles.flatMap((b) =>
     b.entry
       .filter((e) => e.resource.resourceType === type)
@@ -46,7 +43,7 @@ function resourcesOfType<T>(bundles: FhirBundle[], type: string): T[] {
   );
 }
 
-export function extractPatientCases(bundles: FhirBundle[]): PatientCase[] {
+export function extractPatientCases(bundles: BundleLike[]): PatientCase[] {
   const patients = resourcesOfType<Patient>(bundles, 'Patient');
   const conditions = resourcesOfType<Condition>(bundles, 'Condition');
   const observations = resourcesOfType<Observation>(bundles, 'Observation');

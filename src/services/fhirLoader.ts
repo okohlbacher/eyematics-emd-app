@@ -1,33 +1,24 @@
 import type {
   CenterInfo,
-  CohortFilter,
-  Condition,
   FhirBundle,
   FhirResource,
-  ImagingStudy,
-  MedicationStatement,
-  Observation,
   Organization,
   Patient,
-  PatientCase,
-  Procedure,
 } from '../types/fhir';
 import { authFetch } from './authHeaders';
 import { getDataSourceConfig, loadBundlesFromSource } from './dataSource';
 
 // Re-export shared pure constants + FHIR query helpers for backward compatibility.
-// Canonical sources: shared/fhirCodes.ts, shared/fhirQueries.ts
+// Canonical sources: shared/fhirCodes.ts, shared/fhirQueries.ts, shared/patientCases.ts
 export * from '../../shared/fhirCodes';
 export { getObservationsByCode, getLatestObservation } from '../../shared/fhirQueries';
+export { extractPatientCases, applyFilters, getAge } from '../../shared/patientCases';
 
-// Internal references for applyFilters, getDiagnosisLabel, getDiagnosisFullText.
+// Internal references for getDiagnosisLabel, getDiagnosisFullText.
 import {
-  LOINC_VISUS,
-  LOINC_CRT,
   SNOMED_AMD,
   SNOMED_DR,
 } from '../../shared/fhirCodes';
-import { getLatestObservation } from '../../shared/fhirQueries';
 
 let cachedBundles: FhirBundle[] | null = null;
 
@@ -55,10 +46,6 @@ function resourcesOfType<T extends FhirResource>(
   );
 }
 
-function patientRef(id: string): string {
-  return `Patient/${id}`;
-}
-
 export function extractCenters(bundles: FhirBundle[]): CenterInfo[] {
   const orgs = resourcesOfType<Organization>(bundles, 'Organization');
   const patients = resourcesOfType<Patient>(bundles, 'Patient');
@@ -81,47 +68,7 @@ export function extractCenters(bundles: FhirBundle[]): CenterInfo[] {
   });
 }
 
-export function extractPatientCases(bundles: FhirBundle[]): PatientCase[] {
-  const patients = resourcesOfType<Patient>(bundles, 'Patient');
-  const conditions = resourcesOfType<Condition>(bundles, 'Condition');
-  const observations = resourcesOfType<Observation>(bundles, 'Observation');
-  const procedures = resourcesOfType<Procedure>(bundles, 'Procedure');
-  const imaging = resourcesOfType<ImagingStudy>(bundles, 'ImagingStudy');
-  const medications = resourcesOfType<MedicationStatement>(bundles, 'MedicationStatement');
-  const orgs = resourcesOfType<Organization>(bundles, 'Organization');
-
-  return patients.map((pat) => {
-    const ref = patientRef(pat.id);
-    const org = orgs.find((o) => o.id === pat.meta?.source);
-    return {
-      id: pat.id,
-      pseudonym:
-        pat.identifier?.find((i) => i.system === 'urn:eyematics:pseudonym')
-          ?.value ?? pat.id,
-      gender: pat.gender ?? 'unknown',
-      birthDate: pat.birthDate ?? '',
-      centerId: pat.meta?.source ?? '',
-      centerName: org?.name ?? pat.meta?.source ?? '',
-      conditions: conditions.filter((c) => c.subject.reference === ref),
-      observations: observations.filter((o) => o.subject.reference === ref),
-      procedures: procedures.filter((p) => p.subject.reference === ref),
-      imagingStudies: imaging.filter((i) => i.subject.reference === ref),
-      medications: medications.filter((m) => m.subject.reference === ref),
-    };
-  });
-}
-
-// F-32: handle invalid/missing birth dates gracefully
-export function getAge(birthDate: string): number {
-  if (!birthDate) return -1;
-  const birth = new Date(birthDate);
-  if (isNaN(birth.getTime())) return -1;
-  const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
-  const m = now.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
-  return age;
-}
+// extractPatientCases, getAge — re-exported from shared/patientCases above (M1 fix).
 
 /**
  * Center shorthand cache — loaded from server via /api/fhir/centers (M-03).
@@ -219,40 +166,4 @@ export function getDiagnosisFullText(code: string, locale: string = 'de'): strin
   }
 }
 
-export function applyFilters(
-  cases: PatientCase[],
-  filters: CohortFilter
-): PatientCase[] {
-  return cases.filter((c) => {
-    if (filters.centers?.length && !filters.centers.includes(c.centerId)) {
-      return false;
-    }
-    if (filters.gender?.length && !filters.gender.includes(c.gender)) {
-      return false;
-    }
-    if (filters.diagnosis?.length) {
-      const codes = c.conditions.flatMap((cond) =>
-        cond.code.coding.map((cd) => cd.code)
-      );
-      if (!filters.diagnosis.some((d) => codes.includes(d))) return false;
-    }
-    if (filters.ageRange) {
-      const age = getAge(c.birthDate);
-      if (age < filters.ageRange[0] || age > filters.ageRange[1]) return false;
-    }
-    if (filters.visusRange) {
-      const latest = getLatestObservation(c.observations, LOINC_VISUS);
-      const val = latest?.valueQuantity?.value;
-      if (val == null) return false;
-      if (val < filters.visusRange[0] || val > filters.visusRange[1])
-        return false;
-    }
-    if (filters.crtRange) {
-      const latest = getLatestObservation(c.observations, LOINC_CRT);
-      const val = latest?.valueQuantity?.value;
-      if (val == null) return false;
-      if (val < filters.crtRange[0] || val > filters.crtRange[1]) return false;
-    }
-    return true;
-  });
-}
+// applyFilters — re-exported from shared/patientCases above (M1 fix).

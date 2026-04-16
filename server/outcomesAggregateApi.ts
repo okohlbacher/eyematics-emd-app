@@ -131,9 +131,21 @@ outcomesAggregateRouter.post('/aggregate', async (req: Request, res: Response): 
   const { cohortId, axisMode, yMetric, gridPoints, eye, spreadMode, includePerPatient, includeScatter } = validated;
 
   // 3. Cohort ownership check (D-06). 403 identical for not-found and not-owned.
+  //    H1 fix: audit 403 so enumeration attempts are visible in the log (hashed id only).
   const searches = getSavedSearches(user);
   const search = searches.find((s) => s.id === cohortId);
   if (!search) {
+    logAuditEntry({
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      method: 'POST',
+      path: '/api/outcomes/aggregate',
+      user,
+      status: 403,
+      duration_ms: 0,
+      body: JSON.stringify({ name: 'outcomes.aggregate', cohortHash: hashCohortId(cohortId), outcome: 'forbidden' }),
+      query: null,
+    });
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
@@ -165,6 +177,17 @@ outcomesAggregateRouter.post('/aggregate', async (req: Request, res: Response): 
     try {
       filters = JSON.parse(search.filters) as CohortFilter;
     } catch {
+      logAuditEntry({
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        method: 'POST',
+        path: '/api/outcomes/aggregate',
+        user,
+        status: 500,
+        duration_ms: 0,
+        body: JSON.stringify({ name: 'outcomes.aggregate', cohortHash: hashCohortId(cohortId), outcome: 'filters_corrupt' }),
+        query: null,
+      });
       res.status(500).json({ error: 'Cohort filters corrupt' });
       return;
     }
@@ -173,6 +196,17 @@ outcomesAggregateRouter.post('/aggregate', async (req: Request, res: Response): 
       cases = await resolveCohortCases(userRole, userCenters, filters);
     } catch (err) {
       console.error('[outcomesAggregateApi] Cohort resolve failed:', (err as Error).message);
+      logAuditEntry({
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        method: 'POST',
+        path: '/api/outcomes/aggregate',
+        user,
+        status: 502,
+        duration_ms: 0,
+        body: JSON.stringify({ name: 'outcomes.aggregate', cohortHash: hashCohortId(cohortId), outcome: 'upstream_unavailable' }),
+        query: null,
+      });
       res.status(502).json({ error: 'Upstream data unavailable' });
       return;
     }

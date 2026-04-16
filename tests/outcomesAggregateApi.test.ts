@@ -57,7 +57,6 @@ vi.mock('../server/fhirApi.js', async (importOriginal) => {
   return {
     ...actual,
     getCachedBundles: vi.fn(async () => mockBundlesRef.bundles),
-    filterBundlesByCendles: vi.fn((_b: unknown, _c: string[]) => mockBundlesRef.bundles),
     filterBundlesByCenters: vi.fn((_b: unknown, _c: string[]) => mockBundlesRef.bundles),
   };
 });
