@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 import type { TranslationKey } from '../../i18n/translations';
 
-type Variant = 'no-cohort' | 'no-visus';
+type Variant = 'no-cohort' | 'no-visus' | 'all-eyes-filtered';
 
 export default function OutcomesEmptyState({
   variant,
@@ -12,9 +12,27 @@ export default function OutcomesEmptyState({
   variant: Variant;
   t: (key: TranslationKey) => string;
 }) {
-  const titleKey: TranslationKey = variant === 'no-cohort' ? 'outcomesEmptyCohortTitle' : 'outcomesNoVisusTitle';
-  const bodyKey: TranslationKey = variant === 'no-cohort' ? 'outcomesEmptyCohortBody' : 'outcomesNoVisusBody';
-  const actionKey: TranslationKey | null = variant === 'no-cohort' ? 'outcomesEmptyCohortAction' : null;
+  let titleKey: TranslationKey;
+  let bodyKey: TranslationKey;
+  let actionKey: TranslationKey | null;
+
+  switch (variant) {
+    case 'no-cohort':
+      titleKey = 'outcomesEmptyCohortTitle';
+      bodyKey = 'outcomesEmptyCohortBody';
+      actionKey = 'outcomesEmptyCohortAction';
+      break;
+    case 'no-visus':
+      titleKey = 'outcomesNoVisusTitle';
+      bodyKey = 'outcomesNoVisusBody';
+      actionKey = null;
+      break;
+    case 'all-eyes-filtered':
+      titleKey = 'outcomesEmptyAllEyesFilteredTitle';
+      bodyKey = 'outcomesEmptyAllEyesFilteredBody';
+      actionKey = null;
+      break;
+  }
 
   return (
     <div className="p-8 flex flex-col items-center justify-center text-center min-h-[60vh]">
