@@ -551,7 +551,7 @@ export default function CohortBuilderPage() {
                       <p className="text-2xl font-bold text-gray-900">
                         {cohortSummary.ageMin ?? '—'}–{cohortSummary.ageMax ?? '—'}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">{t('years')}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{t('yearsShort')}</p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <p className="text-xs font-medium text-gray-500 uppercase mb-1">{t('cohortSummaryVisusRange')}</p>

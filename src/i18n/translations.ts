@@ -165,7 +165,7 @@ const translations = {
   cohortSummaryVisusRange: { de: 'Visusbereich', en: 'Visual acuity range' },
   cohortSummaryCenters: { de: 'Zentren', en: 'Centers' },
   cohortSummaryNoData: { de: 'Keine Fälle ausgewählt', en: 'No cases selected' },
-  years: { de: 'J.', en: 'yr' },
+  yearsShort: { de: 'J.', en: 'yr' },
 
   // Analysis page
   analysisTitle: { de: 'Kohortenanalyse', en: 'Cohort Analysis' },
