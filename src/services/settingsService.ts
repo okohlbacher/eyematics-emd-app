@@ -10,6 +10,10 @@ export interface AppSettings {
     type: 'local' | 'blaze';
     blazeUrl: string;
   };
+  outcomes?: {
+    serverAggregationThresholdPatients?: number;
+    aggregateCacheTtlMs?: number;
+  };
 }
 
 const DEFAULTS: AppSettings = {
@@ -19,6 +23,10 @@ const DEFAULTS: AppSettings = {
   dataSource: {
     type: 'local',
     blazeUrl: 'http://localhost:8080/fhir',
+  },
+  outcomes: {
+    serverAggregationThresholdPatients: 1000,
+    aggregateCacheTtlMs: 1800000,
   },
 };
 
