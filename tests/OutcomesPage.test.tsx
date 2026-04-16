@@ -25,6 +25,34 @@ import OutcomesView from '../src/components/outcomes/OutcomesView';
 // Module mocks
 // ---------------------------------------------------------------------------
 
+// Phase 12-04: mock settingsService so loadSettings() in OutcomesView
+// does not call authFetch (which would add extra fetchSpy calls and break
+// the beacon-count assertions in tests 6/6b/6c/6d).
+vi.mock('../src/services/settingsService', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../src/services/settingsService')>();
+  return {
+    ...actual,
+    loadSettings: vi.fn().mockResolvedValue({
+      twoFactorEnabled: false,
+      therapyInterrupterDays: 120,
+      therapyBreakerDays: 365,
+      dataSource: { type: 'local', blazeUrl: 'http://localhost:8080/fhir' },
+      outcomes: { serverAggregationThresholdPatients: 1000, aggregateCacheTtlMs: 1800000 },
+    }),
+  };
+});
+
+// Phase 12-04: mock outcomesAggregateService so postAggregate never fires
+// real fetches in the existing OutcomesPage tests (all fixtures are below the
+// default threshold of 1000, so postAggregate would not be called anyway, but
+// an explicit mock ensures no accidental network calls if fixture sizes change).
+vi.mock('../src/services/outcomesAggregateService', () => ({
+  postAggregate: vi.fn().mockResolvedValue({
+    median: [], iqrLow: [], iqrHigh: [],
+    meta: { patientCount: 0, excludedCount: 0, measurementCount: 0, cacheHit: false },
+  }),
+}));
+
 vi.mock('../src/context/DataContext', () => ({
   useData: vi.fn(),
 }));

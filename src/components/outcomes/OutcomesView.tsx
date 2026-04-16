@@ -15,12 +15,16 @@ import { useData } from '../../context/DataContext';
 import { useLanguage } from '../../context/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import { applyFilters } from '../../services/fhirLoader';
+import { postAggregate, type AggregateResponse } from '../../services/outcomesAggregateService';
+import { loadSettings } from '../../services/settingsService';
 import type { CohortFilter } from '../../types/fhir';
 import {
   type AxisMode,
   computeCohortTrajectory,
   defaultScatterOn,
+  type PanelResult,
   type SpreadMode,
+  type TrajectoryResult,
   type YMetric,
 } from '../../utils/cohortTrajectory';
 import OutcomesDataPreview from './OutcomesDataPreview';
@@ -65,6 +69,18 @@ export default function OutcomesView() {
   const [layers, setLayers] = useState<LayerState>({
     median: true, perPatient: true, scatter: true, spreadBand: true,
   });
+
+  // Phase 12 / AGG-03 / D-13 — server-side routing state.
+  const [threshold, setThreshold] = useState<number>(1000);
+  const [serverAggregate, setServerAggregate] = useState<TrajectoryResult | null>(null);
+  const [serverLoading, setServerLoading] = useState(false);
+
+  useEffect(() => {
+    loadSettings().then((s) => {
+      const t = s.outcomes?.serverAggregationThresholdPatients;
+      if (typeof t === 'number' && Number.isFinite(t) && t > 0) setThreshold(t);
+    }).catch(() => { /* keep default */ });
+  }, []);
 
   // Cohort resolution (OUTCOME-01 / D-03)
   const cohort = useMemo(() => {
@@ -126,10 +142,73 @@ export default function OutcomesView() {
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Phase 12 / AGG-03 / D-13 — size-based routing to server endpoint.
+  const cohortId = searchParams.get('cohort');
+  const routeServerSide = Boolean(
+    cohort && cohortId && cohort.cases.length > threshold
+  );
+
+  useEffect(() => {
+    if (!routeServerSide || !cohortId) {
+      setServerAggregate(null);
+      return;
+    }
+    let cancelled = false;
+    setServerLoading(true);
+
+    const shared = {
+      cohortId,
+      axisMode,
+      yMetric,
+      gridPoints,
+      spreadMode,
+      includePerPatient: layers.perPatient,
+      includeScatter: layers.scatter,
+    };
+
+    Promise.all([
+      postAggregate({ ...shared, eye: 'od' }),
+      postAggregate({ ...shared, eye: 'os' }),
+      postAggregate({ ...shared, eye: 'combined' }),
+    ]).then(([od, os, combined]) => {
+      if (cancelled) return;
+      setServerAggregate({
+        od: panelFromServer(od),
+        os: panelFromServer(os),
+        combined: panelFromServer(combined),
+      });
+    }).catch((err) => {
+      if (cancelled) return;
+      console.warn('[OutcomesView] Server aggregate failed — falling back to client compute', err);
+      setServerAggregate(null);
+    }).finally(() => {
+      if (!cancelled) setServerLoading(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [routeServerSide, cohortId, axisMode, yMetric, gridPoints, spreadMode, layers.perPatient, layers.scatter]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** Project server AggregateResponse back to the PanelResult shape the panels consume. */
+  function panelFromServer(r: AggregateResponse): PanelResult {
+    return {
+      patients: r.perPatient ?? [],
+      scatterPoints: r.scatter ?? [],
+      medianGrid: r.median,
+      summary: {
+        patientCount: r.meta.patientCount,
+        excludedCount: r.meta.excludedCount,
+        measurementCount: r.meta.measurementCount,
+      },
+    };
+  }
+
   // D-26: single memoized aggregate keyed on all 5 inputs — feeds BOTH cards AND panels.
   // Hoisted above early-return guards to satisfy Rules of Hooks (WR-01).
+  // Phase 12 / AGG-03: prefers server result when routeServerSide is active.
   const aggregate = useMemo(
     () => {
+      if (routeServerSide && serverAggregate) return serverAggregate;
+      if (routeServerSide && serverLoading) return null;
       if (!cohort || cohort.cases.length === 0) return null;
       return computeCohortTrajectory({
         cases: cohort.cases,
@@ -139,7 +218,7 @@ export default function OutcomesView() {
         spreadMode,
       });
     },
-    [cohort, axisMode, yMetric, gridPoints, spreadMode],
+    [routeServerSide, serverAggregate, serverLoading, cohort, axisMode, yMetric, gridPoints, spreadMode],
   );
 
   if (!cohort || cohort.cases.length === 0) {
@@ -192,6 +271,16 @@ export default function OutcomesView() {
             {(cohort.name ? t('outcomesSubtitleSaved') : t('outcomesSubtitleAdhoc'))
               .replace('{count}', String(cohort.cases.length))}
           </p>
+          {routeServerSide && serverLoading && (
+            <span
+              role="status"
+              aria-live="polite"
+              className="ml-3 text-gray-500 text-sm italic"
+              data-testid="outcomes-server-computing"
+            >
+              {t('outcomesServerComputingLabel')}
+            </span>
+          )}
         </div>
         <button
           type="button"
