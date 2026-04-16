@@ -8,7 +8,7 @@ import OutcomesEmptyState from '../components/outcomes/OutcomesEmptyState';
 import OutcomesPanel from '../components/outcomes/OutcomesPanel';
 import OutcomesSettingsDrawer from '../components/outcomes/OutcomesSettingsDrawer';
 import OutcomesSummaryCards from '../components/outcomes/OutcomesSummaryCards';
-import { CHART_COLORS } from '../config/clinicalThresholds';
+import { EYE_COLORS } from '../components/outcomes/palette';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import type { TranslationKey } from '../i18n/translations';
@@ -173,7 +173,7 @@ export default function OutcomesPage() {
         <OutcomesPanel
           panel={aggregate.od}
           eye="od"
-          color={CHART_COLORS[0]}
+          color={EYE_COLORS.OD}
           axisMode={axisMode}
           yMetric={yMetric}
           layers={layers}
@@ -184,7 +184,7 @@ export default function OutcomesPage() {
         <OutcomesPanel
           panel={aggregate.os}
           eye="os"
-          color={CHART_COLORS[2]}
+          color={EYE_COLORS.OS}
           axisMode={axisMode}
           yMetric={yMetric}
           layers={layers}
@@ -195,7 +195,7 @@ export default function OutcomesPage() {
         <OutcomesPanel
           panel={aggregate.combined}
           eye="combined"
-          color={CHART_COLORS[4]}
+          color={EYE_COLORS['OD+OS']}
           axisMode={axisMode}
           yMetric={yMetric}
           layers={layers}
