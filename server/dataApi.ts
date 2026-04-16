@@ -27,6 +27,7 @@ import {
   setReviewedCases,
 } from './dataDb.js';
 import { getCaseToCenter, isBypass } from './fhirApi.js';
+import { invalidateByCohort } from './outcomesAggregateCache.js';
 
 export const dataApiRouter = Router();
 
@@ -222,6 +223,7 @@ dataApiRouter.post('/saved-searches', (req: Request, res: Response): void => {
   };
 
   addSavedSearch(username, row);
+  invalidateByCohort(row.id);   // Phase 12 / D-09 — drop any cached aggregate for this cohort id (covers replace-in-place)
 
   res.status(201).json({
     savedSearch: {
@@ -236,6 +238,7 @@ dataApiRouter.post('/saved-searches', (req: Request, res: Response): void => {
 dataApiRouter.delete('/saved-searches/:id', (req: Request, res: Response): void => {
   const username = req.auth!.preferred_username;
   removeSavedSearch(username, String(req.params.id ?? ''));
+  invalidateByCohort(String(req.params.id ?? ''));   // Phase 12 / D-09 — drop cached aggregate on delete
   res.json({ message: 'Saved search deleted' });
 });
 

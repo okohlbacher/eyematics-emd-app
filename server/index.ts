@@ -26,6 +26,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Socket } from 'node:net';
 import path from 'node:path';
 
+import compression from 'compression';
 import type { NextFunction,Request, Response } from 'express';
 import express from 'express';
 import helmet from 'helmet';
@@ -44,6 +45,7 @@ import { fhirApiRouter } from './fhirApi.js';
 import { initHashCohortId } from './hashCohortId.js';
 import { initAuth } from './initAuth.js';
 import { issueApiRouter } from './issueApi.js';
+import { outcomesAggregateRouter } from './outcomesAggregateApi.js';
 import { initOutcomesAggregateCache } from './outcomesAggregateCache.js';
 import { settingsApiRouter } from './settingsApi.js';
 
@@ -193,6 +195,13 @@ app.use('/api/data', express.json({ limit: '1mb' })); // before auditMiddleware 
 // ad-hoc filter payloads.
 app.use('/api/audit/events/view-open', express.json({ limit: '16kb' }));
 
+// Phase 12 / D-15 / D-17 — Body parser + compression for aggregate route.
+// BEFORE auditMiddleware so req.body is populated (even though the middleware
+// skip-list short-circuits — defense in depth; see server/auditMiddleware.ts SKIP_AUDIT_PATHS).
+// Limit '16kb' matches Phase 11 precedent on /api/audit/events/view-open (CONTEXT §Established Patterns).
+app.use('/api/outcomes/aggregate', express.json({ limit: '16kb' }));
+app.use('/api/outcomes/aggregate', compression());
+
 // auditMiddleware BEFORE authMiddleware — captures 401 responses with user='anonymous'
 // (req.auth is read at res.finish time, so it resolves correctly for both 200 and 401)
 app.use('/api', auditMiddleware);
@@ -209,6 +218,9 @@ app.use('/api/settings', express.text({ limit: '1mb', type: '*/*' }), settingsAp
 
 // Audit query routes — /api/audit and /api/audit/export (admin-only export)
 app.use('/api/audit', auditApiRouter);
+
+// Phase 12 / AGG-01 — server-side cohort aggregation
+app.use('/api/outcomes', outcomesAggregateRouter);
 
 // Data persistence routes — per-user quality flags, saved searches, excluded/reviewed cases
 // Mounted AFTER authMiddleware so all /api/data/* routes require authentication (DATA-05)
