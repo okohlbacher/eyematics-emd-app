@@ -13,6 +13,7 @@ interface Props {
   payload?: PayloadEntry[];
   yMetric: YMetric;
   axisMode: AxisMode;
+  layers: { median: boolean; perPatient: boolean; scatter: boolean; spreadBand: boolean };
   t: (key: string) => string;
   locale: 'de' | 'en';
 }
@@ -22,12 +23,22 @@ export default function OutcomesTooltip({
   payload,
   yMetric,
   axisMode,
+  layers,
   t,
   locale,
 }: Props) {
   if (!active || !payload || payload.length === 0) return null;
 
-  const first = payload[0];
+  // D-06: when the per-patient layer is off, suppress per-patient tooltip entries.
+  const filtered = layers.perPatient
+    ? payload
+    : payload.filter(
+        (e) =>
+          (e.payload as Record<string, unknown> | undefined)?.__series !== 'perPatient',
+      );
+  if (filtered.length === 0) return null;
+
+  const first = filtered[0];
   const raw = (first.payload ?? {}) as Record<string, unknown>;
 
   const fmtNum = (n: number, digits = 2) =>
@@ -66,6 +77,14 @@ export default function OutcomesTooltip({
       ? t('outcomesTooltipDay')
       : t('outcomesTooltipTreatmentIndex');
 
+  // D-05: x-value formatting — "{n} d" for days, "#{n}" for treatments.
+  const xDisplay =
+    axisMode === 'days' ? `${fmtNum(xValue, 0)} d` : `#${fmtNum(xValue, 0)}`;
+
+  // D-05: y-unit string — metric-specific.
+  const yUnit: string =
+    yMetric === 'absolute' ? 'logMAR' : yMetric === 'delta' ? 'Δ logMAR' : '%';
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm">
       {isMedian ? (
@@ -74,7 +93,7 @@ export default function OutcomesTooltip({
             {t('outcomesTooltipMedian').replace('{n}', String(raw.n ?? ''))}
           </div>
           <div className="text-xs text-gray-500">
-            {xLabel}: {fmtNum(xValue, 0)}
+            {xLabel}: {xDisplay}
           </div>
           {logmar !== null && (
             <div className="text-xs text-gray-500">
@@ -98,11 +117,11 @@ export default function OutcomesTooltip({
             </div>
           )}
           <div className="text-xs text-gray-500">
-            {xLabel}: {fmtNum(xValue, 0)}
+            {xLabel}: {xDisplay}
           </div>
           {logmar !== null && (
             <div className="text-xs text-gray-500">
-              {t('outcomesTooltipLogmar')}: {fmtNum(logmar)}
+              {t('outcomesTooltipLogmar')}: {fmtNum(logmar)} {yUnit}
             </div>
           )}
           {snellen && (
