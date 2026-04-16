@@ -82,15 +82,32 @@ export default function OutcomesPage() {
     }
   }, [cohort]);
 
-  // Audit beacon (OUTCOME-11 / D-32) — fire-and-forget, once per mount.
+  // Audit beacon (Phase 11 / CRREV-01) — fire-and-forget POST, once per mount.
+  // D-01: cohort id + filter travel in the JSON body, NEVER the URL.
+  // D-02: fetch + keepalive (not sendBeacon) — survives unload, standard JSON headers, testable.
+  // D-03: fire-and-forget — silently discard any network/transport error.
+  // D-08: filter is preserved as-is in the body (no client-side hashing).
   useEffect(() => {
-    const params = new URLSearchParams({ name: 'open_outcomes_view' });
     const cid = searchParams.get('cohort');
     const fp = searchParams.get('filter');
-    if (cid) params.set('cohort', cid);
-    if (fp) params.set('filter', fp);
-    fetch(`/api/audit/events/view-open?${params.toString()}`, { credentials: 'include' })
-      .catch(() => { /* beacon is fire-and-forget */ });
+    const body: Record<string, unknown> = { name: 'open_outcomes_view' };
+    if (cid) body.cohortId = cid;
+    if (fp) {
+      try {
+        body.filter = JSON.parse(decodeURIComponent(fp));
+      } catch {
+        // Malformed filter param — drop from the beacon payload.
+      }
+    }
+    fetch('/api/audit/events/view-open', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      credentials: 'include',
+    }).catch(() => {
+      /* beacon is fire-and-forget (D-03) */
+    });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // D-26: single memoized aggregate keyed on all 5 inputs — feeds BOTH cards AND panels.
