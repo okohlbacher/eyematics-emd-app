@@ -126,7 +126,8 @@ auditApiRouter.post('/events/view-open', (req: Request, res: Response): void => 
     res.status(400).json({ error: 'cohortId exceeds 128 characters' });
     return;
   }
-  const cohortHash = typeof body.cohortId === 'string' && body.cohortId.length > 0
+  // IN-04: trim() guards against whitespace-only strings producing spurious hash rows.
+  const cohortHash = typeof body.cohortId === 'string' && body.cohortId.trim().length > 0
     ? hashCohortId(body.cohortId)
     : null;
   const filter = body.filter !== undefined ? body.filter : null;
