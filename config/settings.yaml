@@ -12,3 +12,6 @@ dataSource:
   blazeUrl: http://localhost:8080/fhir
 audit:
   cohortHashSecret: 'dev-cohort-hash-secret-please-replace-in-prod-xxxxxxxxxxxxxx'
+outcomes:
+  serverAggregationThresholdPatients: 1000
+  aggregateCacheTtlMs: 1800000

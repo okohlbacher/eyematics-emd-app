@@ -44,6 +44,7 @@ import { fhirApiRouter } from './fhirApi.js';
 import { initHashCohortId } from './hashCohortId.js';
 import { initAuth } from './initAuth.js';
 import { issueApiRouter } from './issueApi.js';
+import { initOutcomesAggregateCache } from './outcomesAggregateCache.js';
 import { settingsApiRouter } from './settingsApi.js';
 
 // ---------------------------------------------------------------------------
@@ -118,6 +119,9 @@ initAuth(DATA_DIR, settings);
 
 // Phase 11 / D-05 / D-06 — initialize cohort-id hash secret (fail-fast if missing)
 initHashCohortId(settings);
+
+// Phase 12 — load aggregate cache TTL from outcomes section (defaults to 30 min)
+initOutcomesAggregateCache(settings);
 
 // ---------------------------------------------------------------------------
 // 4. initAuditDb — open/create SQLite audit database
