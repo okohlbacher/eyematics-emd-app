@@ -114,6 +114,12 @@ auditApiRouter.get('/export', (req: Request, res: Response): void => {
 auditApiRouter.post('/events/view-open', (req: Request, res: Response): void => {
   const body = (req.body ?? {}) as { name?: unknown; cohortId?: unknown; filter?: unknown };
   const name = typeof body.name === 'string' ? body.name : 'unknown';
+  // IN-01: defensive 128-char upper bound on cohortId — saved-search ids are short
+  // UUID-like strings; a larger value is either a caller bug or abuse.
+  if (typeof body.cohortId === 'string' && body.cohortId.length > 128) {
+    res.status(400).json({ error: 'cohortId exceeds 128 characters' });
+    return;
+  }
   const cohortHash = typeof body.cohortId === 'string' && body.cohortId.length > 0
     ? hashCohortId(body.cohortId)
     : null;
