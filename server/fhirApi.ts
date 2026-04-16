@@ -365,7 +365,7 @@ async function loadFromBlaze(blazeUrl: string): Promise<FhirBundle[]> {
 // Cache access
 // ---------------------------------------------------------------------------
 
-async function getCachedBundles(): Promise<FhirBundle[]> {
+export async function getCachedBundles(): Promise<FhirBundle[]> {
   if (_bundleCache !== null) {
     return _bundleCache;
   }
