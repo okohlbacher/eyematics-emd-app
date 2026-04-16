@@ -71,6 +71,7 @@ export default function AdminPage() {
   // Search, filter, sort state
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [centerFilter, setCenterFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('username');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
@@ -144,6 +145,11 @@ export default function AdminPage() {
       result = result.filter((u) => u.role === roleFilter);
     }
 
+    // Center filter (VQA-01 / D-09)
+    if (centerFilter !== 'all') {
+      result = result.filter((u) => Array.isArray(u.centers) && u.centers.includes(centerFilter));
+    }
+
     // Sort
     result.sort((a, b) => {
       let cmp = 0;
@@ -168,7 +174,7 @@ export default function AdminPage() {
     });
 
     return result;
-  }, [users, searchQuery, roleFilter, sortField, sortDir, getCentersDisplay]);
+  }, [users, searchQuery, roleFilter, centerFilter, sortField, sortDir, getCentersDisplay]);
 
   // --- Early return AFTER all hooks ---
   if (!user || user.role !== 'admin') {
@@ -449,6 +455,20 @@ export default function AdminPage() {
               <option value="clinician">{t('roleClinician')}</option>
               <option value="data_manager">{t('roleDataManager')}</option>
               <option value="clinic_lead">{t('roleClinicLead')}</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Building2 className="w-4 h-4 text-gray-400" />
+            <select
+              data-testid="admin-center-filter"
+              value={centerFilter}
+              onChange={(e) => setCenterFilter(e.target.value)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">{t('adminFilterAllCenters')}</option>
+              {centerOptions.map((c) => (
+                <option key={c.id} value={c.id}>{c.label}</option>
+              ))}
             </select>
           </div>
         </div>
