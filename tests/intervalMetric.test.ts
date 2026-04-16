@@ -1,6 +1,5 @@
 /** Phase 13 / METRIC-02 — computeIntervalDistribution buckets injection gaps. */
 import { describe, it, expect } from 'vitest';
-// @ts-expect-error — Plan 03 will create this module
 import { computeIntervalDistribution } from '../shared/intervalMetric';
 import type { PatientCase } from '../shared/types/fhir';
 
@@ -16,7 +15,7 @@ function makeCaseWithIvi(pseudonym: string, dates: Array<{ date: string; eye: 'o
   return { pseudonym, observations: [], procedures } as unknown as PatientCase;
 }
 
-describe.skip('computeIntervalDistribution', () => {
+describe('computeIntervalDistribution', () => {
   it('returns 6 bins with correct labels', () => {
     const result = computeIntervalDistribution([], 'combined');
     expect(result.bins.map((b: any) => b.label)).toEqual(['0–30d', '30–60d', '60–90d', '90–120d', '120–180d', '180+d']);
