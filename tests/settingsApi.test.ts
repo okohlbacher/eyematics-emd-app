@@ -13,8 +13,11 @@ vi.mock('../server/fhirApi.js', () => ({ invalidateFhirCache: vi.fn() }));
 vi.mock('../server/initAuth.js', () => ({ updateAuthConfig: vi.fn() }));
 
 // Mock fs to return our test settings
+// IN-08: the cohortHashSecret literal below is 41 chars; it MUST stay >=32 chars
+// to satisfy hashCohortId init (server/hashCohortId.ts). Drifting below 32 would
+// break any downstream PUT-time secret-length check added in a later phase.
 vi.mock('node:fs', async () => {
-  const yaml = 'twoFactorEnabled: false\notpCode: "999999"\nmaxLoginAttempts: 5\nprovider: local\ntherapyInterrupterDays: 120\ntherapyBreakerDays: 365\ndataSource:\n  type: local\n  blazeUrl: "http://localhost:8080/fhir"\naudit:\n  cohortHashSecret: "test-cohort-hash-secret-32-chars-min-xxxx"\n';
+  const yaml = 'twoFactorEnabled: false\notpCode: "999999"\nmaxLoginAttempts: 5\nprovider: local\ntherapyInterrupterDays: 120\ntherapyBreakerDays: 365\ndataSource:\n  type: local\n  blazeUrl: "http://localhost:8080/fhir"\naudit:\n  cohortHashSecret: "test-cohort-hash-secret-32-chars-min-xxxx"\n'; // >=32 chars to satisfy hashCohortId init
   const actual = await vi.importActual<typeof import('node:fs')>('node:fs');
   return {
     ...actual,
@@ -30,7 +33,7 @@ vi.mock('node:fs', async () => {
   };
 });
 
-const VALID_YAML = 'twoFactorEnabled: false\notpCode: "999999"\nmaxLoginAttempts: 5\nprovider: local\ntherapyInterrupterDays: 120\ntherapyBreakerDays: 365\ndataSource:\n  type: local\n  blazeUrl: "http://localhost:8080/fhir"\naudit:\n  cohortHashSecret: "test-cohort-hash-secret-32-chars-min-xxxx"\n';
+const VALID_YAML = 'twoFactorEnabled: false\notpCode: "999999"\nmaxLoginAttempts: 5\nprovider: local\ntherapyInterrupterDays: 120\ntherapyBreakerDays: 365\ndataSource:\n  type: local\n  blazeUrl: "http://localhost:8080/fhir"\naudit:\n  cohortHashSecret: "test-cohort-hash-secret-32-chars-min-xxxx"\n'; // >=32 chars to satisfy hashCohortId init
 
 import { settingsApiRouter } from '../server/settingsApi';
 
