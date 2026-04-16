@@ -41,6 +41,7 @@ import { initCenters, SETTINGS_FILE } from './constants.js';
 import { dataApiRouter } from './dataApi.js';
 import { initDataDb } from './dataDb.js';
 import { fhirApiRouter } from './fhirApi.js';
+import { initHashCohortId } from './hashCohortId.js';
 import { initAuth } from './initAuth.js';
 import { issueApiRouter } from './issueApi.js';
 import { settingsApiRouter } from './settingsApi.js';
@@ -114,6 +115,9 @@ initCenters(DATA_DIR);
 
 // initAuth: loads/generates JWT secret, migrates users.json to add bcrypt hashes
 initAuth(DATA_DIR, settings);
+
+// Phase 11 / D-05 / D-06 — initialize cohort-id hash secret (fail-fast if missing)
+initHashCohortId(settings);
 
 // ---------------------------------------------------------------------------
 // 4. initAuditDb — open/create SQLite audit database
