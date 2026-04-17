@@ -49,6 +49,10 @@ export default function LoginPage() {
     } else if (result.error === 'invalid_credentials') {
       // Generic message — do not distinguish user_not_found from wrong_password (prevents enumeration)
       setError(t('loginErrorWrongPassword'));
+    } else if (result.error === 'totp_enrollment_required') {
+      // SEC-04: AuthContext has set requiresTotpEnrollment=true; AppRoutes will render
+      // TotpEnrollPage automatically. Do NOT show an error — the redirect is intentional.
+      setError('');
     } else {
       setError(t('loginErrorFailed'));
     }
