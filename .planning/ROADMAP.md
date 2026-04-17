@@ -97,12 +97,12 @@
 **Plans** (6):
 **UI hint**: yes
 
-- [ ] 13-01-PLAN.md — Wave 0 scaffolding: seed ~50 metrics* i18n keys (DE/EN per 13-UI-SPEC) + four describe.skip RED test files for Wave 1 activation (METRIC-01, METRIC-02, METRIC-03, METRIC-04, METRIC-06)
-- [ ] 13-02-PLAN.md — CRT metric: computeCrtTrajectory in shared/ + server aggregate metric param/cache/audit extension + OutcomesPanel metric prop with CRT y-domain (METRIC-01)
-- [ ] 13-03-PLAN.md — Interval histogram: shared/intervalMetric.ts (computeIntervalDistribution with 6 fixed bins) + IntervalHistogram.tsx with eye toggle + median as text annotation (METRIC-02)
-- [ ] 13-04-PLAN.md — Responder classification: shared/responderMetric.ts (classifyResponders with configurable threshold, ±180-day year-1 window) + ResponderView.tsx grouped bar + trajectory overlay (METRIC-03)
-- [ ] 13-05-PLAN.md — Integration: metric selector tab strip + ?metric= deep-link on OutcomesView + metric-aware OutcomesSettingsDrawer + metric-appropriate CSV export with slug filename (METRIC-01, METRIC-04, METRIC-05)
-- [ ] 13-06-PLAN.md — i18n completeness test extension for metrics* namespace (non-empty DE+EN, placeholder parity, reference resolution) (METRIC-06)
+- [x] 13-01-PLAN.md — Wave 0 scaffolding: seed ~50 metrics* i18n keys (DE/EN per 13-UI-SPEC) + four describe.skip RED test files for Wave 1 activation (METRIC-01, METRIC-02, METRIC-03, METRIC-04, METRIC-06)
+- [x] 13-02-PLAN.md — CRT metric: computeCrtTrajectory in shared/ + server aggregate metric param/cache/audit extension + OutcomesPanel metric prop with CRT y-domain (METRIC-01)
+- [x] 13-03-PLAN.md — Interval histogram: shared/intervalMetric.ts (computeIntervalDistribution with 6 fixed bins) + IntervalHistogram.tsx with eye toggle + median as text annotation (METRIC-02)
+- [x] 13-04-PLAN.md — Responder classification: shared/responderMetric.ts (classifyResponders with configurable threshold, ±180-day year-1 window) + ResponderView.tsx grouped bar + trajectory overlay (METRIC-03)
+- [x] 13-05-PLAN.md — Integration: metric selector tab strip + ?metric= deep-link on OutcomesView + metric-aware OutcomesSettingsDrawer + metric-appropriate CSV export with slug filename (METRIC-01, METRIC-04, METRIC-05)
+- [x] 13-06-PLAN.md — i18n completeness test extension for metrics* namespace (non-empty DE+EN, placeholder parity, reference resolution) (METRIC-06)
 
 ### Progress
 
@@ -111,7 +111,7 @@
 | 10. Visual/UX QA & Preview Stability | 6/6 | Complete    | 2026-04-16 |
 | 11. Audit Beacon PII Hardening | 3/3 | Complete    | 2026-04-16 |
 | 12. Server-Side Outcomes Pre-Aggregation | 4/4 | Complete    | 2026-04-16 |
-| 13. New Outcome Metrics (CRT / Interval / Responder) | 0/6 | Planned | — |
+| 13. New Outcome Metrics (CRT / Interval / Responder) | 4/6 | In Progress|  |
 
 ### Coverage
 
