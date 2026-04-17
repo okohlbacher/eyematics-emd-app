@@ -35,7 +35,8 @@ Declared values (must be multiples of 4). All values observed in existing codeba
 | Token | Value | Usage |
 |-------|-------|-------|
 | xs | 4px | Icon gaps (`gap-1`), checkbox-label gap |
-| sm | 8px | Compact element spacing (`gap-2`), form field internal padding vertical |
+| sm | 8px | Compact element spacing (`gap-2`), form field internal padding vertical, recovery code grid gap |
+| input-padding-x | 12px | OTP/form input horizontal padding (`px-3`) — existing codebase standard (LoginPage, PasswordChangePage) |
 | md | 16px | Default element spacing (`gap-4`), form field margin-bottom, card padding horizontal |
 | lg | 24px | Section padding (`gap-6`), card header bottom margin |
 | xl | 32px | Layout gaps (`p-8` card padding), section breaks |
@@ -43,8 +44,6 @@ Declared values (must be multiples of 4). All values observed in existing codeba
 | 3xl | 64px | Not used in these components |
 
 Exceptions:
-- OTP input: `py-2 px-3` (8px vertical, 12px horizontal) — matches existing LoginPage and PasswordChangePage inputs exactly
-- Recovery code grid: `gap-2` (8px) between code cells
 - Touch target for "Copy all" and "Download" buttons: minimum 44px height via `py-2` + font-size + border
 
 ---
@@ -97,6 +96,8 @@ New components to create for this phase:
 ### TotpEnrollPage (`src/pages/TotpEnrollPage.tsx`)
 
 Full-page interstitial — mirrors PasswordChangePage exactly.
+
+**Primary focal point:** amber Shield icon + page heading (`text-xl font-semibold`) — eye enters top-center of the card, follows to subtitle, then to the QR code image or confirmation input field. The card is the sole focus container on a neutral `bg-gray-50` fullscreen background; no competing elements.
 
 **Layout:**
 - Outer: `min-h-screen flex items-center justify-center bg-gray-50 p-4`
