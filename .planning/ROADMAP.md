@@ -69,7 +69,13 @@ Plans:
   3. At enrollment, the user is shown a set of one-time recovery codes; using a valid recovery code against `POST /verify` succeeds exactly once and marks that code as burned in the database
   4. A user who has not yet enrolled TOTP can still authenticate via the existing static OTP fallback (backward-compat transition window)
   5. An admin can reset another user's TOTP enrollment via the admin panel, forcing them back to the pre-enrollment state
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 15-01-PLAN.md — Scaffolding: install otplib+qrcode, extend UserRecord, expand authMiddleware/auditMiddleware, create Wave 0 test stubs
+- [ ] 15-02-PLAN.md — Backend: /login TOTP gate + /totp/enroll + /totp/confirm + /verify TOTP&recovery + admin DELETE /users/:username/totp
+- [ ] 15-03-PLAN.md — Frontend enrollment: TotpEnrollPage + RecoveryCodesPanel + AuthContext state + App.tsx gate + LoginPage OTP length + 21 i18n keys
+- [ ] 15-04-PLAN.md — AdminPage Reset 2FA button + human end-to-end checkpoint
 
 #### Phase 16: Cross-Cohort Comparison
 **Goal**: A researcher can overlay up to 4 saved cohorts on a single trajectory chart to compare outcome trends side by side; individual patient curves are visually subordinate to cohort medians
@@ -113,11 +119,11 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 14. Security Quick Wins & Performance | v1.7 | 3/3 | Complete   | 2026-04-17 |
-| 15. TOTP 2FA | v1.7 | 0/TBD | Not started | - |
+| 15. TOTP 2FA | v1.7 | 0/4 | Planned | - |
 | 16. Cross-Cohort Comparison | v1.7 | 0/TBD | Not started | - |
 | 17. Audit Log Upgrade & Dark Mode | v1.7 | 0/TBD | Not started | - |
 | 18. Keycloak OIDC Redirect | v1.7 | 0/TBD | Not started | - |
 
 ---
 
-*Last updated: 2026-04-17 — Phase 14 planned (3 plans, 2 waves). Continues from v1.6 (Phases 10–13).*
+*Last updated: 2026-04-17 — Phase 15 planned (4 plans, 4 waves). Phase 14 complete. Continues from v1.6 (Phases 10–13).*
