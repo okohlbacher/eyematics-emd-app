@@ -1,7 +1,8 @@
 ---
 phase: 15
 slug: totp-2fa
-status: draft
+status: approved
+reviewed_at: 2026-04-17
 shadcn_initialized: false
 preset: none
 created: 2026-04-17
