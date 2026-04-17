@@ -26,7 +26,6 @@ export interface UserRecord {
   lastName?: string;
   createdAt: string;
   lastLogin?: string;
-  mustChangePassword?: boolean;
 }
 
 interface AuthConfig {
@@ -299,10 +298,8 @@ export function _migrateRemovedCenters(
  * Migrate users.json: add passwordHash for any user missing it,
  * and convert center IDs from shorthand to org-* format.
  * Uses bcrypt with 12 rounds and the default password 'changeme2025!'.
- *
- * Exported for testing (SEC-03 migration scan assertions).
  */
-export function _migrateUsersJson(filePath: string): void {
+function _migrateUsersJson(filePath: string): void {
   const raw = fs.readFileSync(filePath, 'utf-8');
   const users = JSON.parse(raw) as UserRecord[];
 
@@ -342,20 +339,6 @@ export function _migrateUsersJson(filePath: string): void {
     workingUsers = withoutRemoved;
     console.log('[initAuth] Migrated users.json: stripped removed center IDs (org-ukb/org-lmu/org-ukm)');
   }
-
-  // SEC-03: scan for users on the default migrated password and flag them
-  const DEFAULT_PASSWORD = 'changeme2025!';
-  const withFlag = workingUsers.map((user) => {
-    if (user.passwordHash && user.mustChangePassword === undefined) {
-      const isDefault = bcrypt.compareSync(DEFAULT_PASSWORD, user.passwordHash);
-      if (isDefault) {
-        needsWrite = true;
-        return { ...user, mustChangePassword: true };
-      }
-    }
-    return user;
-  });
-  workingUsers = withFlag;
 
   if (needsWrite) {
     _atomicWrite(filePath, JSON.stringify(workingUsers, null, 2));

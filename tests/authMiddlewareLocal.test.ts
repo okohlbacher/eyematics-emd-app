@@ -3,8 +3,6 @@
  * Validates JWT verification, challenge token rejection, public path bypass.
  */
 
-import crypto from 'node:crypto';
-
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
@@ -136,33 +134,6 @@ describe('authMiddleware (local HS256)', () => {
         .get('/api/protected')
         .set('Authorization', `Basic ${token}`);
       expect(res.status).toBe(401);
-    });
-
-    it('rejects RS256-signed token with 401 (SEC-01 algorithm pin)', async () => {
-      const app = createApp();
-      const { privateKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
-      const token = jwt.sign(
-        { sub: 'user', preferred_username: 'user', role: 'researcher', centers: [] },
-        privateKey,
-        { algorithm: 'RS256' },
-      );
-      const res = await request(app)
-        .get('/api/protected')
-        .set('Authorization', `Bearer ${token}`);
-      expect(res.status).toBe(401);
-      expect(res.body.error).toContain('Invalid or expired');
-    });
-
-    it('rejects alg:none token with 401 (SEC-01 algorithm pin)', async () => {
-      const app = createApp();
-      const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
-      const payload = Buffer.from(JSON.stringify({ sub: 'x', exp: 9999999999 })).toString('base64url');
-      const fakeToken = `${header}.${payload}.`;
-      const res = await request(app)
-        .get('/api/protected')
-        .set('Authorization', `Bearer ${fakeToken}`);
-      expect(res.status).toBe(401);
-      expect(res.body.error).toContain('Invalid or expired');
     });
   });
 });

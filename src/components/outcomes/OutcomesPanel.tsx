@@ -42,27 +42,16 @@ function yDomain(
   metric: 'visus' | 'crt' = 'visus',
 ): [number | string, number | string] {
   if (yMetric === 'absolute') {
-    // CRT: 0–800 µm clinical range. Visus logMAR: 0–1.0 covers 20/200→20/20 (admin feedback Apr-17).
-    return metric === 'crt' ? [0, 800] : [0, 1];
+    return metric === 'crt' ? [0, 800] : [0, 2];
   }
-  if (yMetric === 'delta_percent') {
-    // Data-driven symmetric range for percentage deltas (CRT and visus).
-    const vals = medianGrid.flatMap((g) => [g.y, g.p25 ?? g.y, g.p75 ?? g.y]).filter(Number.isFinite);
-    if (vals.length === 0) return [-100, 100];
-    const maxAbs = Math.max(...vals.map(Math.abs)) * 1.15;
-    return [-Math.max(maxAbs, 10), Math.max(maxAbs, 10)];
-  }
-  // yMetric === 'delta'
-  if (metric === 'visus') {
-    // Visus delta logMAR: fixed [-1, 1]. Max possible change is ±1 logMAR
-    // (full range from 20/200 to 20/20 or vice versa). Admin feedback Apr-17.
-    return [-1, 1];
-  }
-  // CRT delta µm: data-driven symmetric (µm changes can vary widely).
+  // Data-driven symmetric range — same logic for visus logMAR and CRT µm/%
   const vals = medianGrid.flatMap((g) => [g.y, g.p25 ?? g.y, g.p75 ?? g.y]).filter(Number.isFinite);
-  if (vals.length === 0) return [-1, 1];
-  const maxAbs = Math.max(...vals.map(Math.abs)) * 1.15;
-  return [-Math.max(maxAbs, 5), Math.max(maxAbs, 5)];
+  if (vals.length === 0) return yMetric === 'delta_percent' ? [-100, 100] : [-1, 1];
+  const maxAbs = Math.max(...vals.map(Math.abs)) * 1.15; // 15% headroom
+  // For CRT delta µm the "0.05 floor" from visus logMAR doesn't apply — use a µm-scaled floor.
+  const floor = yMetric === 'delta_percent' ? 10 : (metric === 'crt' ? 5 : 0.05);
+  const bound = Math.max(maxAbs, floor);
+  return [-bound, bound];
 }
 
 export default function OutcomesPanel({
@@ -120,8 +109,6 @@ export default function OutcomesPanel({
     <div
       data-testid={`outcomes-panel-${eye}`}
       className="bg-white rounded-xl border border-gray-200 p-5"
-      role="img"
-      aria-label={`${t(titleKey)} — ${panel.summary.patientCount} ${t('outcomesCardPatients')}`}
     >
       <h3 className="text-base font-semibold text-gray-900">{t(titleKey)}</h3>
       <p className="text-xs text-gray-500 mt-1">{subtitle}</p>

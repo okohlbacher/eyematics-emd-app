@@ -188,10 +188,10 @@ export function generateCenterBundle(input: GenerateCenterBundleInput): unknown 
     }
 
     // Visus observations: baseline + one per IVOM (so visitDates.length total)
-    let visus = 0.1 + rand() * 0.35; // start somewhere between 0.10 and 0.45
+    let visus = 0.05 + rand() * 0.4; // start somewhere between 0.05 and 0.45
     for (let k = 0; k < visitDates.length; k++) {
-      // Trend slowly upward with noise, clamp to [0.1, 1.0] (valid decimal visus range)
-      visus = Math.min(1.0, Math.max(0.1, visus + (rand() - 0.4) * 0.05));
+      // Trend slowly upward with noise, clamp to [0.05, 1.0]
+      visus = Math.min(1.0, Math.max(0.05, visus + (rand() - 0.4) * 0.05));
       const value = Math.round(visus * 100) / 100;
       const obsId = `obs-${sh}-${patNum}-vis-${k + 1}`;
       const observation: Record<string, unknown> = {

@@ -97,33 +97,22 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [ ] Cross-cohort comparison on a single chart (XCOHORT-01)
 - [ ] Real Keycloak OIDC redirect flow (KEYCLK-01) — needs real Keycloak instance
 
-## Current Milestone: v1.7 Security, Performance & Cross-Cohort
-
-**Goal:** Harden production security, improve runtime performance and accessibility, and add cross-cohort comparison capability alongside Keycloak OIDC and dark-mode contrast.
-
-**Target features:**
-- JWT `algorithms` pin + cohortHashSecret auto-generation (security quick wins)
-- TOTP (RFC 6238) to replace static shared OTP code
-- O(N+M) patient case extraction refactor (`shared/patientCases.ts`)
-- Cache warming on server startup
-- ARIA labels on all trajectory chart containers
-- Audit log visual dashboard for administrators
-- Cross-cohort comparison on a single chart (XCOHORT-01)
-- Real Keycloak OIDC redirect flow (KEYCLK-01)
-- Dark-mode contrast for outcomes charts (VQA-02)
-
 ## Current State
 
-**In progress:** Milestone v1.7 — Security, Performance & Cross-Cohort (started 2026-04-17)
-
-**Previous:** Milestone v1.6 — Outcomes Polish & Scale (shipped 2026-04-17)
+**Shipped:** Milestone v1.6 — Outcomes Polish & Scale (2026-04-17)
 - Visual/UX QA closed: WCAG palette, IQR guard, tooltip format, empty states, admin filter, stable row keys
 - Audit beacon PII hardened: cohort ID → HMAC-SHA256 hash in POST body (CRREV-01)
 - Server-side outcomes pre-aggregation at >1000-patient threshold (AGG-01..05)
 - Four new outcome metrics: CRT, Treatment-Interval, Responder, metric selector with deep-link (METRIC-01..06)
-- 430/430 tests passing across 47 files at milestone close
+- 429/429 tests passing across 47 files at milestone close
 
 **Archive:** [`.planning/milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md), [`.planning/milestones/v1.6-REQUIREMENTS.md`](milestones/v1.6-REQUIREMENTS.md)
+
+## Next Milestone Goals (v1.7 candidates)
+
+- **Cross-cohort comparison** on a single chart (XCOHORT-01/02)
+- **Real Keycloak OIDC redirect flow** (KEYCLK-01 — needs real Keycloak instance)
+- **Dark-mode contrast** for outcomes charts (VQA-02 deferred from v1.6)
 
 ## Historical Milestone Goals (archived)
 

@@ -43,8 +43,7 @@ export interface ManagedUser {
 
 type LoginResult =
   | { ok: true }
-  | { ok: false; error: 'invalid_credentials' | 'otp_required' | 'account_locked' | 'invalid_otp' | 'network_error'; challengeToken?: string; retryAfterMs?: number }
-  | { ok: false; error: 'must_change_password'; changeToken: string };
+  | { ok: false; error: 'invalid_credentials' | 'otp_required' | 'account_locked' | 'invalid_otp' | 'network_error'; challengeToken?: string; retryAfterMs?: number };
 
 interface AuthContextType {
   user: User | null;
@@ -57,12 +56,6 @@ interface AuthContextType {
   hasRole: (roles: UserRole[]) => boolean;
   /** JWT token for API calls */
   token: string | null;
-  /** SEC-03: true when user must change password before accessing the app */
-  mustChangePassword: boolean;
-  /** SEC-03: short-lived changeToken issued by /login for mustChangePassword users */
-  pendingChangeToken: string | null;
-  /** SEC-03: submit a new password using the pending changeToken */
-  changePassword: (changeToken: string, newPassword: string) => Promise<{ ok: true } | { ok: false; error: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -108,8 +101,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
   const [displayName, setDisplayName] = useState('');
   const [inactivityWarning, setInactivityWarning] = useState(false);
-  const [mustChangePassword, setMustChangePassword] = useState(false);
-  const [pendingChangeToken, setPendingChangeToken] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const warningRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -215,14 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (resp.ok) {
-        const data = await resp.json() as { token?: string; challengeToken?: string; mustChangePassword?: boolean; changeToken?: string };
-
-        if (data.mustChangePassword && data.changeToken) {
-          // SEC-03: user must change default password before getting a session
-          setMustChangePassword(true);
-          setPendingChangeToken(data.changeToken);
-          return { ok: false, error: 'must_change_password', changeToken: data.changeToken };
-        }
+        const data = await resp.json() as { token?: string; challengeToken?: string };
 
         if (data.token) {
           // 2FA disabled — direct session token
@@ -251,29 +235,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => performLogout(false), [performLogout]);
 
-  const changePassword = useCallback(async (changeToken: string, newPassword: string) => {
-    try {
-      const resp = await fetch('/api/auth/change-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ changeToken, newPassword }),
-      });
-      if (resp.ok) {
-        const data = await resp.json() as { token: string };
-        sessionStorage.setItem('emd-token', data.token);
-        setToken(data.token);
-        setUser(userFromToken(data.token));
-        setMustChangePassword(false);
-        setPendingChangeToken(null);
-        return { ok: true as const };
-      }
-      const err = await resp.json() as { error?: string };
-      return { ok: false as const, error: err.error ?? 'Unknown error' };
-    } catch {
-      return { ok: false as const, error: 'network_error' };
-    }
-  }, []);
-
   const hasRole = useCallback((roles: UserRole[]): boolean => {
     if (!user) return false;
     return roles.includes(user.role);
@@ -281,8 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextType>(() => ({
     user, displayName, login, logout, inactivityWarning, hasRole, token,
-    mustChangePassword, pendingChangeToken, changePassword,
-  }), [user, displayName, login, logout, inactivityWarning, hasRole, token, mustChangePassword, pendingChangeToken, changePassword]);
+  }), [user, displayName, login, logout, inactivityWarning, hasRole, token]);
 
   return (
     <AuthContext.Provider value={value}>
