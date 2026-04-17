@@ -15,7 +15,7 @@
     ],
     "createdAt": "2025-01-01T00:00:00Z",
     "passwordHash": "$2b$12$szPBV7Yxh2Y5kJpYtI1kI.AeLaSnXVZUCDkKGEbt3m8mrPQI1nSoC",
-    "lastLogin": "2026-04-16T18:20:50.320Z"
+    "lastLogin": "2026-04-17T06:50:11.038Z"
   },
   {
     "username": "forscher1",
@@ -26,7 +26,8 @@
       "org-uka"
     ],
     "createdAt": "2025-01-15T00:00:00Z",
-    "passwordHash": "$2b$12$k1qElmjaYvPcWJfngRyiNORXKECiR963G4hdqddLE9XTgwci011MO"
+    "passwordHash": "$2b$12$k1qElmjaYvPcWJfngRyiNORXKECiR963G4hdqddLE9XTgwci011MO",
+    "lastLogin": "2026-04-17T06:02:03.401Z"
   },
   {
     "username": "forscher2",

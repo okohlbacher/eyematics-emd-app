@@ -41,7 +41,7 @@ import { authMiddleware } from './authMiddleware.js';
 import { initCenters, SETTINGS_FILE } from './constants.js';
 import { dataApiRouter } from './dataApi.js';
 import { initDataDb } from './dataDb.js';
-import { fhirApiRouter } from './fhirApi.js';
+import { fhirApiRouter, getCachedBundles } from './fhirApi.js';
 import { initHashCohortId } from './hashCohortId.js';
 import { initAuth } from './initAuth.js';
 import { issueApiRouter } from './issueApi.js';
@@ -119,8 +119,8 @@ initCenters(DATA_DIR);
 // initAuth: loads/generates JWT secret, migrates users.json to add bcrypt hashes
 initAuth(DATA_DIR, settings);
 
-// Phase 11 / D-05 / D-06 — initialize cohort-id hash secret (fail-fast if missing)
-initHashCohortId(settings);
+// Phase 11 / D-05 / D-06 / SEC-02 — initialize cohort-id hash secret (file-first, auto-gen on fresh startup)
+initHashCohortId(DATA_DIR, settings);
 
 // Phase 12 — load aggregate cache TTL from outcomes section (defaults to 30 min)
 initOutcomesAggregateCache(settings);
@@ -140,6 +140,20 @@ initDataDb(DATA_DIR);
 // ---------------------------------------------------------------------------
 
 startPurgeInterval();
+
+// PERF-02: Warm FHIR bundle cache before accepting requests.
+// Non-fatal: Blaze may be unavailable in dev or on cold cluster start.
+void (async () => {
+  try {
+    await getCachedBundles();
+    console.log('[server] FHIR bundle cache warmed on startup');
+  } catch (err) {
+    console.warn(
+      '[server] FHIR bundle cache warm failed — will retry on first request:',
+      (err as Error).message,
+    );
+  }
+})();
 
 // ---------------------------------------------------------------------------
 // 6. Derive FHIR proxy target (host only — no path)
