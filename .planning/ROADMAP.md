@@ -52,7 +52,12 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
   4. `extractPatientCases` processes a 7-center bundle via O(N+M) Map pre-grouping; no `.filter()` loops nested over observations/procedures/conditions remain
   5. FHIR bundles for all configured centers are loaded into `_bundleCache` during server startup, before the first HTTP request arrives
   6. Every Recharts trajectory chart container renders an `aria-label` that names the metric, eye side, and cohort patient count
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — JWT algorithm pin (SEC-01) + cohort hash secret auto-generation (SEC-02)
+- [ ] 14-02-PLAN.md — O(N+M) patient case extraction (PERF-01) + FHIR bundle cache warming (PERF-02)
+- [ ] 14-03-PLAN.md — Forced password change enforcement backend + frontend (SEC-03) + ARIA chart labels (A11Y-01)
 
 #### Phase 15: TOTP 2FA
 **Goal**: Each user account has its own TOTP secret; the shared static OTP code is retired; users locked out of TOTP have a recovery path
@@ -107,7 +112,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 14. Security Quick Wins & Performance | v1.7 | 0/TBD | Not started | - |
+| 14. Security Quick Wins & Performance | v1.7 | 0/3 | Not started | - |
 | 15. TOTP 2FA | v1.7 | 0/TBD | Not started | - |
 | 16. Cross-Cohort Comparison | v1.7 | 0/TBD | Not started | - |
 | 17. Audit Log Upgrade & Dark Mode | v1.7 | 0/TBD | Not started | - |
@@ -115,4 +120,4 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ---
 
-*Last updated: 2026-04-17 — v1.7 roadmap created (5 phases, 18 requirements). Continues from v1.6 (Phases 10–13).*
+*Last updated: 2026-04-17 — Phase 14 planned (3 plans, 2 waves). Continues from v1.6 (Phases 10–13).*
