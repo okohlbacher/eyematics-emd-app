@@ -178,7 +178,7 @@ authApiRouter.post('/verify', (req: Request, res: Response): void => {
   // Verify challenge token
   let sub: string;
   try {
-    const payload = jwt.verify(challengeToken, getJwtSecret()) as { sub: string; purpose?: string };
+    const payload = jwt.verify(challengeToken, getJwtSecret(), { algorithms: ['HS256'] }) as { sub: string; purpose?: string };
     if (payload.purpose !== 'challenge') {
       res.status(401).json({ error: 'Invalid challenge token' });
       return;
