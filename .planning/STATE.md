@@ -78,3 +78,4 @@ None.
 
 - 2026-04-17: Milestone v1.6 shipped. v1.7 roadmap created — 5 phases (14–18), 18 requirements mapped, 100% coverage.
 - 2026-04-17: Phase 14 complete — 3/3 plans executed, verified 12/12 must-haves. SEC-01 (JWT HS256 pin on 2 call sites), SEC-02 (cohort-hash-secret.txt auto-gen), SEC-03 (forced pwd change flow end-to-end), PERF-01 (O(N+M) patientCases Map refactor), PERF-02 (FHIR cache warm IIFE at startup), A11Y-01 (aria-label on OutcomesPanel). 449 tests passing (+19 vs v1.6).
+- 2026-04-17: Phase 15 context gathered — all decisions at Claude's discretion. otplib@13.4.0 + qrcode@1.5.4; TotpEnrollPage fullscreen interstitial; 10 recovery codes bcrypt-hashed; admin "Reset 2FA" in AdminPage; PasswordChangePage pattern reused.
