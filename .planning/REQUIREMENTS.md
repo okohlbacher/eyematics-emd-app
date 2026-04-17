@@ -15,8 +15,8 @@
 
 ### Performance (PERF)
 
-- [ ] **PERF-01**: `extractPatientCases` in `shared/patientCases.ts` refactored from O(N×M) to O(N+M) via Map pre-grouping of observations/procedures/conditions by subject reference
-- [ ] **PERF-02**: FHIR bundle cache (`_bundleCache`) warmed on server startup immediately after databases are initialized, not deferred to first request
+- [x] **PERF-01**: `extractPatientCases` in `shared/patientCases.ts` refactored from O(N×M) to O(N+M) via Map pre-grouping of observations/procedures/conditions by subject reference
+- [x] **PERF-02**: FHIR bundle cache (`_bundleCache`) warmed on server startup immediately after databases are initialized, not deferred to first request
 
 ### Accessibility (A11Y)
 
@@ -76,8 +76,8 @@
 | SEC-01 | Phase 14 | Complete |
 | SEC-02 | Phase 14 | Complete |
 | SEC-03 | Phase 14 | Pending |
-| PERF-01 | Phase 14 | Pending |
-| PERF-02 | Phase 14 | Pending |
+| PERF-01 | Phase 14 | Complete |
+| PERF-02 | Phase 14 | Complete |
 | A11Y-01 | Phase 14 | Pending |
 | SEC-04 | Phase 15 | Pending |
 | SEC-05 | Phase 15 | Pending |

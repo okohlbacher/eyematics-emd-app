@@ -56,7 +56,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 Plans:
 - [x] 14-01-PLAN.md — JWT algorithm pin (SEC-01) + cohort hash secret auto-generation (SEC-02)
-- [ ] 14-02-PLAN.md — O(N+M) patient case extraction (PERF-01) + FHIR bundle cache warming (PERF-02)
+- [x] 14-02-PLAN.md — O(N+M) patient case extraction (PERF-01) + FHIR bundle cache warming (PERF-02)
 - [ ] 14-03-PLAN.md — Forced password change enforcement backend + frontend (SEC-03) + ARIA chart labels (A11Y-01)
 
 #### Phase 15: TOTP 2FA
@@ -112,7 +112,7 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 14. Security Quick Wins & Performance | v1.7 | 1/3 | In Progress|  |
+| 14. Security Quick Wins & Performance | v1.7 | 2/3 | In Progress|  |
 | 15. TOTP 2FA | v1.7 | 0/TBD | Not started | - |
 | 16. Cross-Cohort Comparison | v1.7 | 0/TBD | Not started | - |
 | 17. Audit Log Upgrade & Dark Mode | v1.7 | 0/TBD | Not started | - |
