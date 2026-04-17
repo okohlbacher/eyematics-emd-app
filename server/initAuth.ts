@@ -305,8 +305,9 @@ export function _migrateRemovedCenters(
  * Migrate users.json: add passwordHash for any user missing it,
  * and convert center IDs from shorthand to org-* format.
  * Uses bcrypt with 12 rounds and the default password 'changeme2025!'.
+ * Exported for testing (mustChangePassword.test.ts).
  */
-function _migrateUsersJson(filePath: string): void {
+export function _migrateUsersJson(filePath: string): void {
   const raw = fs.readFileSync(filePath, 'utf-8');
   const users = JSON.parse(raw) as UserRecord[];
 

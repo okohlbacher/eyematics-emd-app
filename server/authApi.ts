@@ -3,7 +3,7 @@
  *
  * Implements two-step login with optional 2FA.
  * Rate limiting: per-username in-memory Map with exponential backoff.
- * OTP: fixed configurable code from settings.yaml — no otplib.
+ * OTP: TOTP (RFC 6238) per-user via otplib, with static otpCode fallback for unenrolled users.
  */
 
 import crypto from 'node:crypto';
@@ -12,6 +12,8 @@ import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
+import { generateSecret, generateURI, verifySync } from 'otplib';
+import QRCode from 'qrcode';
 
 import type { AuthPayload } from './authMiddleware.js';
 import { getValidCenterIds } from './constants.js';
@@ -72,6 +74,28 @@ function signChallengeToken(username: string): string {
     getJwtSecret(),
     { algorithm: 'HS256', expiresIn: '2m' },
   );
+}
+
+/**
+ * Sign an enrollment token embedding the pending TOTP secret (Pitfall 2).
+ * The secret is embedded in the JWT payload (server-signed) so it survives
+ * across calls without server-side state. TTL is 3 minutes (D-01).
+ */
+function signEnrollToken(username: string, totpSecret: string): string {
+  return jwt.sign(
+    { sub: username, purpose: 'totp-enroll', totpSecret },
+    getJwtSecret(),
+    { algorithm: 'HS256', expiresIn: '3m' },
+  );
+}
+
+/**
+ * Generate a single 8-char recovery code formatted as "ABCD-1234" (D-03).
+ * Uses crypto.randomBytes(4) for 32-bit entropy per code.
+ */
+function generateRecoveryCode(): string {
+  const raw = crypto.randomBytes(4).toString('hex').toUpperCase();
+  return `${raw.slice(0, 4)}-${raw.slice(4, 8)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -155,6 +179,15 @@ authApiRouter.post('/login', async (req: Request, res: Response): Promise<void> 
 
   const { twoFactorEnabled } = getAuthConfig();
 
+  // D-01: Force TOTP enrollment for users under twoFactorEnabled who have not yet enrolled.
+  // Gate runs AFTER mustChangePassword, BEFORE the challengeToken issuance.
+  if (twoFactorEnabled && user.totpEnabled !== true) {
+    const pendingSecret = generateSecret();
+    const enrollToken = signEnrollToken(user.username, pendingSecret);
+    res.json({ requiresTotpEnrollment: true, enrollToken });
+    return;
+  }
+
   if (twoFactorEnabled) {
     // Return short-lived challenge token for OTP step
     const challengeToken = signChallengeToken(user.username);
@@ -175,10 +208,11 @@ authApiRouter.post('/login', async (req: Request, res: Response): Promise<void> 
  * POST /verify
  *
  * Step 2 of login (2FA). Validates challenge token + OTP.
- * OTP compared against fixed code from settings.yaml (no otplib).
+ * For enrolled users (totpEnabled=true): tries TOTP first (±1 period), then recovery codes.
+ * For non-enrolled users: falls back to static otpCode from settings.yaml (D-07).
  * OTP attempts share the same lockout counter as password attempts (T-02-06).
  */
-authApiRouter.post('/verify', (req: Request, res: Response): void => {
+authApiRouter.post('/verify', async (req: Request, res: Response): Promise<void> => {
   const { challengeToken, otp } = req.body as { challengeToken?: string; otp?: string };
 
   if (typeof challengeToken !== 'string' || typeof otp !== 'string' || !challengeToken || !otp) {
@@ -210,9 +244,48 @@ authApiRouter.post('/verify', (req: Request, res: Response): void => {
     return;
   }
 
-  const { otpCode } = getAuthConfig();
+  // Load user BEFORE OTP check so we know whether to use TOTP or static fallback
+  const users = loadUsers();
+  const user = users.find((u) => u.username.toLowerCase() === key);
 
-  if (otp !== otpCode) {
+  if (!user) {
+    res.status(401).json({ error: 'Invalid OTP' }); // no enumeration
+    return;
+  }
+
+  let otpValid = false;
+  let recoveryCodeUsed = false;
+  let burnedIndex = -1;
+
+  if (user.totpEnabled === true && typeof user.totpSecret === 'string') {
+    // D-06: Try TOTP first (±1 period via epochTolerance=30).
+    // verifySync throws if the token is not exactly 6 digits — catch and fall through.
+    try {
+      const result = verifySync({ secret: user.totpSecret, token: otp, epochTolerance: 30 });
+      otpValid = result.valid;
+    } catch {
+      // Token is not a valid TOTP format (e.g. recovery code) — try recovery codes below
+      otpValid = false;
+    }
+
+    if (!otpValid && Array.isArray(user.totpRecoveryCodes) && user.totpRecoveryCodes.length > 0) {
+      // D-06: Try recovery codes — concurrent bcrypt.compare (Pitfall 4)
+      const results = await Promise.all(
+        user.totpRecoveryCodes.map((hash) => bcrypt.compare(otp, hash)),
+      );
+      burnedIndex = results.findIndex(Boolean);
+      if (burnedIndex !== -1) {
+        otpValid = true;
+        recoveryCodeUsed = true;
+      }
+    }
+  } else {
+    // D-07: Static otpCode fallback for unenrolled users
+    const { otpCode } = getAuthConfig();
+    otpValid = otp === otpCode;
+  }
+
+  if (!otpValid) {
     const newState = limiter().recordFailure(key);
     if (limiter().isLocked(newState)) {
       const retryAfterMs = newState.lockedUntil - Date.now();
@@ -223,25 +296,37 @@ authApiRouter.post('/verify', (req: Request, res: Response): void => {
     return;
   }
 
-  // OTP valid — load user and issue full session JWT
+  // OTP valid — reset attempts
   limiter().resetAttempts(key);
 
-  const users = loadUsers();
-  const user = users.find((u) => u.username.toLowerCase() === key);
-
-  if (!user) {
-    res.status(401).json({ error: 'User not found' });
-    return;
+  // Burn recovery code atomically under the modifyUsers write lock (T-15-16: TOCTOU guard)
+  if (recoveryCodeUsed && burnedIndex !== -1) {
+    await modifyUsers((us) =>
+      us.map((u) =>
+        u.username === user.username
+          ? {
+              ...u,
+              totpRecoveryCodes: (u.totpRecoveryCodes ?? []).filter((_, i) => i !== burnedIndex),
+              lastLogin: new Date().toISOString(),
+            }
+          : u,
+      ),
+    );
+    // D-12: mark audit action for recovery code use
+    (res.locals as Record<string, string>).auditAction = 'totp-recovery-used';
+  } else {
+    // Update lastLogin (H-12, best-effort)
+    try {
+      modifyUsers((u) =>
+        u.map((r) => r.username === user.username ? { ...r, lastLogin: new Date().toISOString() } : r),
+      ).catch(() => {});
+    } catch { /* best-effort */ }
   }
 
   const token = signSessionToken(user.username, user.role, user.centers);
-  // Update lastLogin (H-12)
-  try {
-    modifyUsers((u) =>
-      u.map((r) => r.username === user.username ? { ...r, lastLogin: new Date().toISOString() } : r),
-    ).catch(() => {});
-  } catch { /* best-effort */ }
-  res.json({ token });
+  const response: { token: string; recoveryCodeUsed?: boolean } = { token };
+  if (recoveryCodeUsed) response.recoveryCodeUsed = true;
+  res.json(response);
 });
 
 /**
@@ -314,6 +399,112 @@ authApiRouter.post('/change-password', async (req: Request, res: Response): Prom
   }
   const token = signSessionToken(user.username, user.role, user.centers);
   res.json({ token });
+});
+
+/**
+ * POST /api/auth/totp/enroll
+ *
+ * Step 1 of TOTP enrollment. Accepts an enrollToken (issued by /login for unenrolled users),
+ * returns the QR data URL, manual key, and a fresh enrollToken with the same embedded secret.
+ * No session JWT required — enrollToken is the credential (route is in PUBLIC_PATHS).
+ *
+ * The secret is embedded in the enrollToken JWT payload so there is no server-side state.
+ * A fresh token is issued to reset the 3-minute TTL from the /enroll call.
+ */
+authApiRouter.post('/totp/enroll', async (req: Request, res: Response): Promise<void> => {
+  const { enrollToken } = req.body as { enrollToken?: string };
+  if (typeof enrollToken !== 'string' || !enrollToken) {
+    res.status(400).json({ error: 'enrollToken is required' });
+    return;
+  }
+
+  let payload: { sub: string; purpose: string; totpSecret: string };
+  try {
+    payload = jwt.verify(enrollToken, getJwtSecret(), { algorithms: ['HS256'] }) as typeof payload;
+  } catch {
+    res.status(401).json({ error: 'Invalid or expired enrollToken' });
+    return;
+  }
+
+  if (payload.purpose !== 'totp-enroll' || typeof payload.totpSecret !== 'string') {
+    res.status(401).json({ error: 'Invalid enrollToken' });
+    return;
+  }
+
+  const uri = generateURI({ issuer: 'EyeMatics', label: payload.sub, secret: payload.totpSecret });
+  const qrDataUrl = await QRCode.toDataURL(uri);
+  // Re-issue a fresh token with the same secret so the TTL resets from /enroll call time
+  const freshToken = signEnrollToken(payload.sub, payload.totpSecret);
+  res.json({ qrDataUrl, manualKey: payload.totpSecret, enrollToken: freshToken });
+});
+
+/**
+ * POST /api/auth/totp/confirm
+ *
+ * Step 2 of TOTP enrollment. Accepts an enrollToken + a 6-digit TOTP code.
+ * Verifies the code against the secret embedded in the enrollToken.
+ * On success: writes totpEnabled=true and 10 bcrypt-hashed recovery codes to users.json,
+ * returns the session JWT and plaintext recovery codes (shown exactly once).
+ *
+ * No session JWT required — enrollToken is the credential (route is in PUBLIC_PATHS).
+ */
+authApiRouter.post('/totp/confirm', async (req: Request, res: Response): Promise<void> => {
+  const { enrollToken, otp } = req.body as { enrollToken?: string; otp?: string };
+  if (typeof enrollToken !== 'string' || typeof otp !== 'string' || !enrollToken || !otp) {
+    res.status(400).json({ error: 'enrollToken and otp are required' });
+    return;
+  }
+
+  let payload: { sub: string; purpose: string; totpSecret: string };
+  try {
+    payload = jwt.verify(enrollToken, getJwtSecret(), { algorithms: ['HS256'] }) as typeof payload;
+  } catch {
+    res.status(401).json({ error: 'Invalid or expired enrollToken' });
+    return;
+  }
+
+  if (payload.purpose !== 'totp-enroll' || typeof payload.totpSecret !== 'string') {
+    res.status(401).json({ error: 'Invalid enrollToken' });
+    return;
+  }
+
+  // D-10: ±1 period tolerance (epochTolerance=30s = 1 period)
+  const result = verifySync({ secret: payload.totpSecret, token: otp, epochTolerance: 30 });
+  if (!result.valid) {
+    res.status(401).json({ error: 'Invalid TOTP code' });
+    return;
+  }
+
+  // Generate and hash 10 recovery codes concurrently (Pitfall 3: Promise.all for performance)
+  const rawCodes = Array.from({ length: 10 }, generateRecoveryCode);
+  const hashedCodes = await Promise.all(rawCodes.map((c) => bcrypt.hash(c, 12)));
+
+  await modifyUsers((users) =>
+    users.map((u) =>
+      u.username === payload.sub
+        ? {
+            ...u,
+            totpSecret: payload.totpSecret,
+            totpEnabled: true,
+            totpRecoveryCodes: hashedCodes,
+            lastLogin: new Date().toISOString(),
+          }
+        : u,
+    ),
+  );
+
+  const freshUsers = loadUsers();
+  const user = freshUsers.find((u) => u.username === payload.sub);
+  if (!user) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  // Mark audit action (D-12)
+  (res.locals as Record<string, string>).auditAction = 'totp-enrolled';
+
+  const token = signSessionToken(user.username, user.role, user.centers);
+  res.json({ token, recoveryCodes: rawCodes });
 });
 
 /**
