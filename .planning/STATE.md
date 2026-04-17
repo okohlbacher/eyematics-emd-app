@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Security, Performance & Cross-Cohort
 status: executing
-last_updated: "2026-04-17T10:23:17.155Z"
-last_activity: 2026-04-17 -- Phase 14 planning complete
+last_updated: "2026-04-17T12:35:00.000Z"
+last_activity: 2026-04-17 -- Phase 14 complete (verified 12/12 must-haves, 449 tests)
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
   completed_plans: 3
-  percent: 100
+  percent: 20
 ---
 
 # Project State
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-17)
 
 **Core value:** Every user sees only authorized data, with tamper-proof audit trail — while `/outcomes` stays fast, visually polished, and useful beyond visus.
-**Current focus:** Milestone v1.7 — Phase 14 ready to plan
+**Current focus:** Milestone v1.7 — Phase 15 (TOTP) ready to plan
 
 ## Current Position
 
-Phase: 14 of 18 (Security Quick Wins & Performance)
-Plan: 03 of 03 (Complete)
-Status: Executing
-Last activity: 2026-04-17 -- Phase 14 Plan 03 complete (SEC-03 + A11Y-01)
+Phase: 15 of 18 (TOTP Per-User Authentication)
+Plan: — (not yet planned)
+Status: Ready to plan
+Last activity: 2026-04-17 -- Phase 14 complete (verified 12/12 must-haves, 449 tests)
 
-Progress: [██████████] 100%
+Progress: [██░░░░░░░░] 20%
 
 ## Milestones Shipped
 
@@ -55,9 +55,9 @@ Progress: [██████████] 100%
 
 - `shared/` pure-TS module: cohort math shared between server and client. No imports from `server/` or `src/`.
 - Server aggregation at >1000-patient threshold via `POST /api/outcomes/aggregate`. JWT-center-filtered, TTL-cached.
-- Cohort IDs HMAC-SHA256 hashed in all audit events (`server/hashCohortId.ts`). Secret in `config/settings.yaml`.
+- Cohort IDs HMAC-SHA256 hashed in all audit events (`server/hashCohortId.ts`). Secret auto-generated to `data/cohort-hash-secret.txt` (SEC-02).
 - 4 outcome metrics: Visus logMAR, CRT µm, Treatment-Interval histogram, Responder classification.
-- 430/430 tests passing across 47 files at v1.6 close.
+- 449/449 tests passing across 49 files at Phase 14 close.
 
 ### Pending Todos
 
@@ -77,4 +77,4 @@ None.
 ## Session Log
 
 - 2026-04-17: Milestone v1.6 shipped. v1.7 roadmap created — 5 phases (14–18), 18 requirements mapped, 100% coverage.
-- 2026-04-17: Phase 14 complete — 3/3 plans executed. SEC-01 (JWT pin), SEC-02 (perf: cache warm + O(N+M)), SEC-03 (forced pwd change), A11Y-01 (aria-label). 449/449 tests passing.
+- 2026-04-17: Phase 14 complete — 3/3 plans executed, verified 12/12 must-haves. SEC-01 (JWT HS256 pin on 2 call sites), SEC-02 (cohort-hash-secret.txt auto-gen), SEC-03 (forced pwd change flow end-to-end), PERF-01 (O(N+M) patientCases Map refactor), PERF-02 (FHIR cache warm IIFE at startup), A11Y-01 (aria-label on OutcomesPanel). 449 tests passing (+19 vs v1.6).
