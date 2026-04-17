@@ -71,39 +71,59 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] Audit beacon on outcomes view open (`GET /api/audit/events/view-open`) — v1.5 (Phase 8 + 9)
 - [x] Full DE+EN i18n for outcomes view (71 keys + completeness test) — v1.5 (Phase 8)
 
-### Active (v1.6 — Outcomes Polish & Scale)
+### Validated in v1.6
 
-<!-- REQ-IDs assigned in REQUIREMENTS.md once milestone is scoped -->
+- ✓ WCAG-verified outcomes chart palette with centralized `palette.ts` module — v1.6 (Phase 10)
+- ✓ IQR band n<2 guard at math + DOM layers; no 0-height artifacts — v1.6 (Phase 10)
+- ✓ Outcomes tooltip field order, units, and per-patient suppression (D-05/D-06) — v1.6 (Phase 10)
+- ✓ All-eyes-filtered empty-state variant (DE+EN); outcomes i18n grows to 73 keys — v1.6 (Phase 10)
+- ✓ Admin center filter locked to 7-site roster with roster-change canary test (VQA-01) — v1.6 (Phase 10)
+- ✓ Stable OutcomesDataPreview row keys: composite `${pseudo}|${eye}|${date}` (CRREV-02) — v1.6 (Phase 10)
+- ✓ Cohort ID removed from audit beacon URL; HMAC-SHA256 hash in POST body (CRREV-01) — v1.6 (Phase 11)
+- ✓ `POST /api/outcomes/aggregate` — JWT-center-filtered, cached, byte-identical to client (AGG-01..05) — v1.6 (Phase 12)
+- ✓ Auto-route to server aggregation above 1000-patient threshold (AGG-03) — v1.6 (Phase 12)
+- ✓ Shared `shared/` module extracted from `src/` with backward-compat shims (AGG-02 precondition) — v1.6 (Phase 12)
+- ✓ CRT trajectory metric with LOINC LP267955-5, µm units, server routing (METRIC-01) — v1.6 (Phase 13)
+- ✓ Treatment-interval histogram: 6 fixed bins, median annotation, eye toggle (METRIC-02) — v1.6 (Phase 13)
+- ✓ Responder classification: configurable threshold, ±180-day year-1 window (METRIC-03) — v1.6 (Phase 13)
+- ✓ Metric selector tab strip with `?metric=` deep-link (METRIC-04) — v1.6 (Phase 13)
+- ✓ Per-metric CSV export with metric-slug filename (METRIC-05) — v1.6 (Phase 13)
+- ✓ 60 metrics* i18n keys (DE+EN) with automated completeness test (METRIC-06) — v1.6 (Phase 13)
 
-## Current Milestone: v1.6 Outcomes Polish & Scale
+### Active (v1.7 candidates)
 
-**Goal:** Finish v1.5 visual QA, unlock large-cohort performance via server-side pre-aggregation, extend outcome metrics beyond visus, and close Phase 9 code-review info findings.
-
-**Target features:**
-- Visual/UX QA follow-through (Phase 7 admin filter UI spot-check; Phase 9 outcomes chart palette, IQR band, tooltip, empty states)
-- Server-side pre-aggregation for large cohorts (>1000 patients) to keep `/outcomes` responsive
-- Additional outcome metrics beyond visus: CRT trajectory, treatment-interval distribution, responder classification
-- Phase 9 code-review info findings: IN-01 (audit beacon PII reduction), IN-02 (data preview row key stability)
+- [ ] Dark-mode WCAG contrast for outcomes palette — VQA-02 deferred; no dark-mode infrastructure exists yet
+- [ ] metricSelector integration tests — `describe.skip` placeholder; needs full router context
+- [ ] Cross-cohort comparison on a single chart (XCOHORT-01)
+- [ ] Real Keycloak OIDC redirect flow (KEYCLK-01) — needs real Keycloak instance
 
 ## Current State
 
-**Shipped:** Milestone v1.5 — Site Roster Correction & Cohort Analytics (2026-04-15)
-- Full 7-site roster (Aachen, Chemnitz, Dresden, Greifswald, Leipzig, Mainz, Tübingen)
-- Deterministic synthetic FHIR bundle generator + npm script
-- Cohort Outcome Trajectories analytics view at `/outcomes` (3 panels, live toggles, CSV export, audit beacon)
-- 25/25 v1.5 requirements satisfied, 0 orphans, 4/4 E2E flows verified
-- 313/313 tests passing across 27 files at milestone close
+**Shipped:** Milestone v1.6 — Outcomes Polish & Scale (2026-04-17)
+- Visual/UX QA closed: WCAG palette, IQR guard, tooltip format, empty states, admin filter, stable row keys
+- Audit beacon PII hardened: cohort ID → HMAC-SHA256 hash in POST body (CRREV-01)
+- Server-side outcomes pre-aggregation at >1000-patient threshold (AGG-01..05)
+- Four new outcome metrics: CRT, Treatment-Interval, Responder, metric selector with deep-link (METRIC-01..06)
+- 429/429 tests passing across 47 files at milestone close
 
-**In progress (v1.6):** Phase 10 (Visual/UX QA & Preview Stability) complete 2026-04-16 — VQA-01..05 + CRREV-02 closed, 340/340 tests across 33 files. Admin center filter, chart palette + WCAG contrast gate, IQR band n<2 guard, tooltip D-05/D-06 format + suppression, all-eyes-filtered empty state (DE+EN), stable OutcomesDataPreview row keys. Dark-mode contrast deferred per VQA-02 footnote.
+**Archive:** [`.planning/milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md), [`.planning/milestones/v1.6-REQUIREMENTS.md`](milestones/v1.6-REQUIREMENTS.md)
 
-**Archive:** [`.planning/milestones/v1.5-ROADMAP.md`](milestones/v1.5-ROADMAP.md), [`.planning/milestones/v1.5-REQUIREMENTS.md`](milestones/v1.5-REQUIREMENTS.md)
+## Next Milestone Goals (v1.7 candidates)
 
-## Next Milestone Goals (post-v1.6 candidates)
-
-- **Cross-cohort comparison** on a single chart
-- **Real Keycloak OIDC redirect flow** (v1.0 shipped prep only — would require a real Keycloak instance)
+- **Cross-cohort comparison** on a single chart (XCOHORT-01/02)
+- **Real Keycloak OIDC redirect flow** (KEYCLK-01 — needs real Keycloak instance)
+- **Dark-mode contrast** for outcomes charts (VQA-02 deferred from v1.6)
 
 ## Historical Milestone Goals (archived)
+
+<details>
+<summary>v1.6: Outcomes Polish & Scale (shipped 2026-04-17)</summary>
+
+**Goal:** Finish v1.5 visual QA, unlock large-cohort performance via server-side pre-aggregation, extend outcome metrics beyond visus, close Phase 9 code-review info findings.
+
+**Delivered:** VQA (Phase 10) + Audit PII hardening (Phase 11) + Server aggregation (Phase 12) + 4 new metrics (Phase 13). 429 tests, 47 test files, 178 files changed.
+
+</details>
 
 <details>
 <summary>v1.5: Site Roster & Cohort Analytics (shipped 2026-04-15)</summary>
@@ -127,15 +147,15 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 ## Context
 
-- **Existing codebase**: ~130 files, well-structured React SPA with Vite 8
+- **Codebase (v1.6):** ~250 source files, React/TypeScript SPA + Express 5 server + `shared/` pure-TS module
 - **Server**: Express 5 production server (server/index.ts) + Vite dev plugins for backward compat
 - **Auth flow**: Server-side bcrypt + JWT (HS256), 2FA with fixed OTP, rate limiting with exponential backoff
-- **Audit**: Server-side SQLite (data/audit.db), auto-logged by middleware, immutable from client, configurable retention
+- **Audit**: Server-side SQLite (data/audit.db), auto-logged by middleware, immutable from client, configurable retention; cohort IDs hashed via HMAC-SHA256 (v1.6)
 - **User centers**: Server-enforced center filtering on all data endpoints (Phase 5)
-- **FHIR data**: 5 centers (UKA, UKB, LMU, UKT, UKM) with synthetic test data
-- **Center mapping**: centerId (e.g., 'org-uka') maps to shorthand (e.g., 'UKA') via CENTER_SHORTHANDS in fhirLoader.ts
+- **FHIR data**: 7 centers (Aachen, Chemnitz, Dresden, Greifswald, Leipzig, Mainz, Tübingen) with deterministic synthetic data (Mulberry32 PRNG)
+- **Outcomes**: 4 metrics (Visus, CRT, Treatment-Interval, Responder) with server-side pre-aggregation at >1000-patient threshold; metric selector with `?metric=` deep-link
+- **Test surface**: 429 tests passing across 47 files (v1.6 close)
 - **Requirements docs**: Lastenheft (RE-EM-LH) and Pflichtenheft (EMDREQ-*) define the formal requirements
-- **Code review**: ISSUES.md documents 50 findings including the security and architecture gaps this redesign addresses
 
 ### DSF Integration Architecture (Multi-Site)
 
@@ -178,6 +198,10 @@ The EMD operates within a four-zone architecture at each site:
 | DSF as separate orchestration layer | DSF populates/coordinates multi-site data; EMD reads only local repository. Four-zone model: clinical/source, DSF node, EMD backend, browser. Clean separation of concerns. | Architecture decided |
 | EMD never talks to remote hospitals | Express backend reads only from local FHIR store (Blaze or files). DSF upstream pushes data into local store. No direct cross-site communication from EMD. | Architecture decided |
 | Pattern A (central consolidation) for v1 | Each site sends pseudonymized payloads via DSF to local consolidated repo. EMD reads from that. Pattern B (federated query) deferred to future. | Architecture decided |
+| shared/ module extracted from src/ (v1.6) | Pure-TS cohort math shared between server (aggregation) and client (client-path fallback). Dual tsconfig, backward-compat shims, byte-parity parity test. | ✓ Validated — clean split, no regressions |
+| Server aggregation at >1000-patient threshold (v1.6) | Configurable via settings.yaml (default 1000). Below threshold: client path. Above: POST /api/outcomes/aggregate. Both paths converge on identical grid points. | ✓ Validated — byte-parity test proves identity |
+| Cohort ID hashed in audit events (v1.6) | HMAC-SHA256 truncated to 16 hex chars. Secret in settings.yaml. hashCohortId reused by aggregation audit event. URL stays clean (no querystring PII). | ✓ Validated — closes CRREV-01 / IN-01 |
+| Per-metric CSV flatteners in OutcomesDataPreview (v1.6) | Each metric has its own flattenXxxRows() helper in the component file (locked-decision-3 pattern from Phase 8). No shared utility to avoid coupling. | ✓ Validated — consistent with locked decision |
 
 ## Evolution
 
@@ -197,4 +221,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 — Phase 10 complete (Visual/UX QA & Preview Stability); v1.6 Outcomes Polish & Scale in progress. Previous: v1.5 SHIPPED 2026-04-15 — 25/25 requirements satisfied, 313/313 tests passing.*
+*Last updated: 2026-04-17 after v1.6 milestone — Outcomes Polish & Scale shipped. 4 phases, 19 plans, 429/429 tests passing.*
