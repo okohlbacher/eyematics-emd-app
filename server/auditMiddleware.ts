@@ -36,6 +36,8 @@ const REDACT_PATHS = new Set([
   '/api/auth/login',
   '/api/auth/verify',
   '/api/auth/users',           // POST /api/auth/users — response contains generatedPassword
+  '/api/auth/totp/enroll',
+  '/api/auth/totp/confirm',
 ]);
 
 /**
@@ -55,7 +57,7 @@ const SKIP_AUDIT_PATHS = new Set([
 /**
  * Field names that must never appear in plaintext in the audit database.
  */
-const REDACT_FIELDS = new Set(['password', 'otp', 'challengeToken', 'generatedPassword']);
+const REDACT_FIELDS = new Set(['password', 'otp', 'challengeToken', 'generatedPassword', 'enrollToken', 'totpSecret']);
 
 /**
  * Return the request body as a JSON string with sensitive fields replaced

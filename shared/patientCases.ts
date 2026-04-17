@@ -43,21 +43,6 @@ function resourcesOfType<T>(bundles: BundleLike[], type: string): T[] {
   );
 }
 
-// PERF-01: O(M) group-by helper — builds a Map keyed by subject.reference so
-// that the per-patient lookup is O(1) instead of O(M) per patient.
-function groupBySubject<T extends { subject: { reference: string } }>(
-  resources: T[],
-): Map<string, T[]> {
-  const map = new Map<string, T[]>();
-  for (const r of resources) {
-    const key = r.subject.reference;
-    const bucket = map.get(key);
-    if (bucket) bucket.push(r);
-    else map.set(key, [r]);
-  }
-  return map;
-}
-
 export function extractPatientCases(bundles: BundleLike[]): PatientCase[] {
   const patients = resourcesOfType<Patient>(bundles, 'Patient');
   const conditions = resourcesOfType<Condition>(bundles, 'Condition');
@@ -66,13 +51,6 @@ export function extractPatientCases(bundles: BundleLike[]): PatientCase[] {
   const imaging = resourcesOfType<ImagingStudy>(bundles, 'ImagingStudy');
   const medications = resourcesOfType<MedicationStatement>(bundles, 'MedicationStatement');
   const orgs = resourcesOfType<Organization>(bundles, 'Organization');
-
-  // O(M): build lookup maps before iterating patients (PERF-01)
-  const conditionsBySubject = groupBySubject(conditions);
-  const observationsBySubject = groupBySubject(observations);
-  const proceduresBySubject = groupBySubject(procedures);
-  const imagingBySubject = groupBySubject(imaging);
-  const medicationsBySubject = groupBySubject(medications);
 
   return patients.map((pat) => {
     const ref = `Patient/${pat.id}`;
@@ -85,11 +63,11 @@ export function extractPatientCases(bundles: BundleLike[]): PatientCase[] {
       birthDate: pat.birthDate ?? '',
       centerId: pat.meta?.source ?? '',
       centerName: org?.name ?? pat.meta?.source ?? '',
-      conditions: conditionsBySubject.get(ref) ?? [],
-      observations: observationsBySubject.get(ref) ?? [],
-      procedures: proceduresBySubject.get(ref) ?? [],
-      imagingStudies: imagingBySubject.get(ref) ?? [],
-      medications: medicationsBySubject.get(ref) ?? [],
+      conditions: conditions.filter((c) => c.subject.reference === ref),
+      observations: observations.filter((o) => o.subject.reference === ref),
+      procedures: procedures.filter((p) => p.subject.reference === ref),
+      imagingStudies: imaging.filter((i) => i.subject.reference === ref),
+      medications: medications.filter((m) => m.subject.reference === ref),
     };
   });
 }

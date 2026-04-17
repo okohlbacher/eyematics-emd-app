@@ -108,17 +108,6 @@ const translations = {
     en: 'Single Sign-On',
   },
 
-  // Password change (SEC-03)
-  changePasswordTitle: { de: 'Passwort ändern', en: 'Change Password' },
-  changePasswordSubtitle: { de: 'Ihr Konto verwendet noch das Standard-Passwort. Bitte setzen Sie ein neues Passwort.', en: 'Your account is using the default password. Please set a new password.' },
-  changePasswordNewLabel: { de: 'Neues Passwort', en: 'New Password' },
-  changePasswordConfirmLabel: { de: 'Passwort bestätigen', en: 'Confirm Password' },
-  changePasswordSubmit: { de: 'Passwort setzen', en: 'Set Password' },
-  changePasswordMismatch: { de: 'Passwörter stimmen nicht überein', en: 'Passwords do not match' },
-  changePasswordTooShort: { de: 'Mindestens 8 Zeichen erforderlich', en: 'Minimum 8 characters required' },
-  changePasswordDefaultForbidden: { de: 'Das Standardpasswort darf nicht verwendet werden', en: 'The default password cannot be used' },
-  changePasswordSuccess: { de: 'Passwort erfolgreich geändert', en: 'Password changed successfully' },
-
   // Landing page
   welcome: { de: 'Willkommen', en: 'Welcome' },
   landingSubtitle: {

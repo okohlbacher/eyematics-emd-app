@@ -14,7 +14,6 @@ import CohortBuilderPage from './pages/CohortBuilderPage';
 import DocQualityPage from './pages/DocQualityPage';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
-import PasswordChangePage from './pages/PasswordChangePage';
 import QualityPage from './pages/QualityPage';
 import SettingsPage from './pages/SettingsPage';
 
@@ -39,13 +38,6 @@ function QualityRoute({ children }: { children: ReactNode }) {
 }
 
 function AppRoutes() {
-  const { mustChangePassword } = useAuth();
-
-  // SEC-03: block all navigation until user sets a new password
-  if (mustChangePassword) {
-    return <PasswordChangePage />;
-  }
-
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
