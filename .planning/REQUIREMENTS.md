@@ -71,34 +71,32 @@
 
 ## Traceability
 
-*Populated by roadmapper — to be filled after roadmap creation.*
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEC-01 | — | Pending |
-| SEC-02 | — | Pending |
-| SEC-03 | — | Pending |
-| SEC-04 | — | Pending |
-| SEC-05 | — | Pending |
-| PERF-01 | — | Pending |
-| PERF-02 | — | Pending |
-| A11Y-01 | — | Pending |
-| AUDIT-01 | — | Pending |
-| XCOHORT-01 | — | Pending |
-| XCOHORT-02 | — | Pending |
-| XCOHORT-03 | — | Pending |
-| XCOHORT-04 | — | Pending |
-| KEYCLK-01 | — | Pending |
-| VIS-01 | — | Pending |
-| VIS-02 | — | Pending |
-| VIS-03 | — | Pending |
-| VIS-04 | — | Pending |
+| SEC-01 | Phase 14 | Pending |
+| SEC-02 | Phase 14 | Pending |
+| SEC-03 | Phase 14 | Pending |
+| PERF-01 | Phase 14 | Pending |
+| PERF-02 | Phase 14 | Pending |
+| A11Y-01 | Phase 14 | Pending |
+| SEC-04 | Phase 15 | Pending |
+| SEC-05 | Phase 15 | Pending |
+| XCOHORT-01 | Phase 16 | Pending |
+| XCOHORT-02 | Phase 16 | Pending |
+| XCOHORT-03 | Phase 16 | Pending |
+| XCOHORT-04 | Phase 16 | Pending |
+| VIS-04 | Phase 16 | Pending |
+| AUDIT-01 | Phase 17 | Pending |
+| VIS-01 | Phase 17 | Pending |
+| VIS-02 | Phase 17 | Pending |
+| VIS-03 | Phase 17 | Pending |
+| KEYCLK-01 | Phase 18 | Pending |
 
 **Coverage:**
-- v1.7 requirements: 19 total
-- Mapped to phases: 0 (roadmapper pending)
-- Unmapped: 19 ⚠️
+- v1.7 requirements: 18 total
+- Mapped to phases: 18
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-17*
-*Last updated: 2026-04-17 after initial v1.7 definition*
+*Last updated: 2026-04-17 — traceability filled by roadmapper (v1.7 roadmap created)*
