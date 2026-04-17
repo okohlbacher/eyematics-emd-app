@@ -22,8 +22,9 @@ vi.mock('../server/keycloakAuth.js', () => ({
 }));
 
 import { generateSecret, generateSync } from 'otplib';
-import { initAuth, loadUsers, type UserRecord } from '../server/initAuth';
+
 import { authApiRouter } from '../server/authApi';
+import { initAuth, loadUsers, type UserRecord } from '../server/initAuth';
 
 const TEST_SECRET = 'test-secret-for-totp-enrollment-tests';
 
@@ -358,56 +359,22 @@ describe('Phase 15 — TOTP verify (SEC-04)', () => {
   });
 
   it('POST /verify with non-enrolled user still accepts the static otpCode fallback', async () => {
-    // nototp user has no totpEnabled — static otpCode fallback should work
-    // But twoFactorEnabled=true means they get a challengeToken first
-    const app = createApp();
+    // D-07: Static otpCode fallback for unenrolled users.
+    // The /login gate returns requiresTotpEnrollment for unenrolled users under twoFactorEnabled=true,
+    // so a non-enrolled user cannot get a challengeToken via /login. The static OTP fallback in
+    // /verify is a safety net for edge cases (e.g. admin reset between /login and /verify).
+    // Test approach: manually craft a challengeToken (server-signed, valid purpose) and verify
+    // that /verify accepts the static otpCode for a user without totpEnabled=true.
 
-    // First: login with the non-enrolled user — since twoFactorEnabled=true but
-    // user has no totpEnabled AND twoFactorEnabled is true, they need TOTP enrollment.
-    // Wait — the plan says D-07: static fallback for non-enrolled users under twoFactorEnabled=true.
-    // The gate is: if (twoFactorEnabled && user.totpEnabled !== true) → requiresTotpEnrollment
-    // So non-enrolled user gets requiresTotpEnrollment... unless we have a user with
-    // twoFactorEnabled=false setting. For this test, we use twoFactorEnabled=false.
-    // Reinitialize with twoFactorEnabled=false for the static OTP test.
-
-    initAuth(tmpDir, makeSettings(false));
-    const appNoTotp = createApp();
-
-    // Login gets direct challengeToken (wait — twoFactorEnabled=false gives direct token)
-    // Actually if twoFactorEnabled=false, login returns {token} directly (no challenge)
-    // So for the static OTP path, we need twoFactorEnabled=true but user is not enrolled...
-    // But the gate sends requiresTotpEnrollment before the challenge! Per D-07,
-    // static fallback is for non-enrolled users — but the gate returns enrollToken not challengeToken.
-    // So static OTP users get caught in the enrollment gate first.
-    //
-    // Re-reading the plan: D-07 says "static otpCode fallback for unenrolled users"
-    // But the gate on /login for unenrolled user returns requiresTotpEnrollment...
-    // This seems like a contradiction. The non-enrolled user can never reach /verify
-    // if the gate returns requiresTotpEnrollment instead of challengeToken.
-    //
-    // Resolution: The /verify static fallback is accessible if the user somehow has
-    // a challengeToken (e.g., they were enrolled before but their enrollment was cleared
-    // between /login and /verify, which is a race). In practice, D-07 fallback means:
-    // when twoFactorEnabled=false, users get a direct token. When twoFactorEnabled=true
-    // and not enrolled, they MUST enroll. The "static fallback" in /verify is a safety net
-    // for any unenrolled user who somehow has a challengeToken.
-    //
-    // For the test: use twoFactorEnabled=false (so login returns token directly),
-    // then switch to true and manually create a challengeToken for the non-enrolled user
-    // using jwt.sign with the test secret, then call /verify with the static otpCode.
-
-    // Create a challengeToken manually (since /login won't issue one to unenrolled user)
+    // Create a challengeToken manually for the nototp user
     const challengeToken = jwt.sign(
       { sub: 'nototp', purpose: 'challenge' },
       TEST_SECRET,
       { algorithm: 'HS256', expiresIn: '2m' },
     );
 
-    // Switch back to twoFactorEnabled=true for the /verify call
-    initAuth(tmpDir, makeSettings(true));
-    const appWithTotp = createApp();
-
-    const res = await request(appWithTotp)
+    const app = createApp();
+    const res = await request(app)
       .post('/api/auth/verify')
       .send({ challengeToken, otp: 'static123' });
 
@@ -443,9 +410,7 @@ describe('Phase 15 — TOTP verify (SEC-04)', () => {
       .send({ challengeToken: challengeToken1, otp: 'AAAA-1111' });
     expect(res1.status).toBe(200);
 
-    // Now try to reuse the same code — need a new challengeToken
-    // We need to log in again as enrolled user (using TOTP)
-    const otp = generateSync({ secret: enrolledSecret });
+    // Now try to reuse the same code — need a new challengeToken from /login
     const challengeToken2 = await getChallengeToken(app, 'enrolled');
     // Use the burned recovery code again
     const res2 = await request(app)

@@ -16,18 +16,16 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-
-import { vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../server/keycloakAuth.js', () => ({
   getAuthProvider: () => 'local',
   getJwksClient: () => null,
 }));
 
-import { initAuth, loadUsers, type UserRecord } from '../server/initAuth';
 import { authApiRouter } from '../server/authApi';
 import { authMiddleware } from '../server/authMiddleware';
+import { initAuth, loadUsers, type UserRecord } from '../server/initAuth';
 
 const TEST_SECRET = 'test-secret-for-totp-admin-tests';
 
