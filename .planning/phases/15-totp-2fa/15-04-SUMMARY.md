@@ -172,3 +172,23 @@ Files:
 
 Commits:
 - 512a21a: feat(15-04): add handleResetTotp handler and Reset 2FA button in AdminPage
+
+---
+
+## Post-Plan Bug Fix: LoginPage totp_enrollment_required handling
+
+**Reported:** User could not log in as an unenrolled user — "Login failed" error appeared.
+
+**Root cause:** `LoginPage.handleCredentials` had no explicit branch for `result.error === 'totp_enrollment_required'`. The error fell through to the generic `else` clause and called `setError(t('loginErrorFailed'))`, displaying a confusing "Login failed" banner before TotpEnrollPage rendered.
+
+**Fix:** Added explicit `else if (result.error === 'totp_enrollment_required')` branch that calls `setError('')`. AuthContext has already set `requiresTotpEnrollment=true` which causes AppRoutes to render TotpEnrollPage — no navigation call is needed.
+
+**Full flow verified correct (no additional changes required):**
+
+- `completeTotpEnroll` in AuthContext correctly: clears `requiresTotpEnrollment`, clears `pendingEnrollToken`, stores session JWT in sessionStorage, sets token and user state.
+- `TotpEnrollPage` → `RecoveryCodesPanel` correctly calls `completeTotpEnroll(token)` from the Continue button, gated behind the "I have saved" checkbox.
+- `/api/auth/totp/confirm` returns a full session JWT via `signSessionToken()`, not a partial token.
+
+**Commit:** b59b3ba — `fix(15): handle totp_enrollment_required in LoginPage, verify complete enrollment flow`
+
+**Tests:** 16 passed (totpEnrollment.test.ts + totpAdmin.test.ts). `npx tsc --noEmit` clean.
