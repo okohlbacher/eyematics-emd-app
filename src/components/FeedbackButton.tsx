@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageSquarePlus, X, Send, CheckCircle } from 'lucide-react';
+import { toPng } from 'html-to-image';
+import { CheckCircle,MessageSquarePlus, Send, X } from 'lucide-react';
+import { useCallback,useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import type { TranslationKey } from '../i18n/translations';
 import { addIssue } from '../services/issueService';
-import { toPng } from 'html-to-image';
 
 /** Map route path to translation key for page name */
 const PAGE_KEY_MAP: Record<string, TranslationKey> = {
@@ -105,6 +106,7 @@ export default function FeedbackButton() {
         page: pageLabel(location.pathname),
         description: description.trim(),
         screenshot: screenshot ?? undefined,
+        appVersion: __APP_VERSION__,
       });
       setSubmitted(true);
       setTimeout(() => {
@@ -160,10 +162,16 @@ export default function FeedbackButton() {
               </div>
             ) : (
               <div className="p-5 space-y-4">
-                {/* Page info */}
-                <div className="text-sm text-gray-500">
-                  <span className="font-medium">{t('feedbackPage')}:</span>{' '}
-                  <span className="font-mono text-gray-700">{pageLabel(location.pathname)}</span>
+                {/* Page info + build version */}
+                <div className="text-sm text-gray-500 flex gap-4 flex-wrap">
+                  <span>
+                    <span className="font-medium">{t('feedbackPage')}:</span>{' '}
+                    <span className="font-mono text-gray-700">{pageLabel(location.pathname)}</span>
+                  </span>
+                  <span>
+                    <span className="font-medium">{t('feedbackVersion')}:</span>{' '}
+                    <span className="font-mono text-gray-700">v{__APP_VERSION__}</span>
+                  </span>
                 </div>
 
                 {/* Screenshot preview */}

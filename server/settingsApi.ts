@@ -1,114 +1,261 @@
 /**
- * Vite server plugin that provides a REST API for server-side settings persistence.
- * Settings are stored in `public/settings.yaml`.
+ * Settings API — Express Router + Vite dev plugin.
+ * Settings are stored in config/settings.yaml (outside webroot).
  *
  * Endpoints:
- *   GET  /api/settings   — read current settings from settings.yaml (authenticated users)
- *   PUT  /api/settings   — update settings and write back to settings.yaml (admin-only)
+ *   GET  /api/settings                      — read current settings (authenticated users)
+ *   PUT  /api/settings                      — update settings (admin-only)
+ *   GET  /api/settings/fhir-connection-test — test FHIR server connectivity (admin-only)
  *
- * Authorization:
- *   GET requests require any authenticated user.
- *   PUT requests require an admin role.
+ * H-01: Shared core logic between production Router and Vite plugin.
  */
 
-import type { Plugin } from 'vite';
 import fs from 'node:fs';
-import path from 'node:path';
-import yaml from 'js-yaml';
-import { readBody, validateAuth, sendError } from './utils';
 
-const SETTINGS_FILE = path.resolve(process.cwd(), 'public', 'settings.yaml');
+import type { Request, Response } from 'express';
+import { Router } from 'express';
+import yaml from 'js-yaml';
+import type { Plugin } from 'vite';
+
+import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
+import { SETTINGS_FILE } from './constants.js';
+import { invalidateFhirCache } from './fhirApi.js';
+import { updateAuthConfig } from './initAuth.js';
+import { readBody, sendError,validateAuth } from './utils.js';
+
+// ---------------------------------------------------------------------------
+// Shared core logic
+// ---------------------------------------------------------------------------
+
+function readSettings(): string {
+  return fs.existsSync(SETTINGS_FILE) ? fs.readFileSync(SETTINGS_FILE, 'utf-8') : '';
+}
 
 /**
- * Validate parsed YAML settings have the expected structure.
- * Returns an error message string if invalid, or null if valid.
+ * IN-05: Strip `cohortHashSecret` from the audit sub-object for non-admin GETs.
+ * Returns the remaining audit fields (e.g. retentionDays) or undefined if the
+ * object is empty / not an object at all. Pure helper; no side effects.
  */
+function stripSensitiveAudit(audit: unknown): Record<string, unknown> | undefined {
+  if (!audit || typeof audit !== 'object') return undefined;
+  const { cohortHashSecret: _c, ...rest } = audit as Record<string, unknown>;
+  return Object.keys(rest).length > 0 ? rest : undefined;
+}
+
+function writeSettings(yamlBody: string, updatedBy: string): void {
+  fs.writeFileSync(SETTINGS_FILE, yamlBody, 'utf-8');
+  invalidateFhirCache();
+  console.log(`[settings-api] Settings updated by ${updatedBy}`);
+}
+
 function validateSettingsSchema(parsed: unknown): string | null {
-  if (parsed === null || typeof parsed !== 'object') {
-    return 'Settings must be a YAML object';
-  }
-
+  if (parsed === null || typeof parsed !== 'object') return 'Settings must be a YAML object';
   const obj = parsed as Record<string, unknown>;
-
-  if (typeof obj.twoFactorEnabled !== 'boolean') {
-    return 'twoFactorEnabled must be a boolean';
-  }
-  if (typeof obj.therapyInterrupterDays !== 'number' || !Number.isFinite(obj.therapyInterrupterDays)) {
-    return 'therapyInterrupterDays must be a number';
-  }
-  if (typeof obj.therapyBreakerDays !== 'number' || !Number.isFinite(obj.therapyBreakerDays)) {
-    return 'therapyBreakerDays must be a number';
-  }
-
-  if (obj.dataSource === null || typeof obj.dataSource !== 'object') {
-    return 'dataSource must be an object';
-  }
-
+  // Auth fields (flat structure — F-10)
+  if (typeof obj.twoFactorEnabled !== 'boolean') return 'twoFactorEnabled must be a boolean';
+  if (obj.provider !== undefined && typeof obj.provider !== 'string') return 'provider must be a string';
+  if (obj.provider !== undefined && !['local', 'keycloak'].includes(obj.provider as string)) return "provider must be 'local' or 'keycloak'";
+  // Clinical thresholds
+  if (typeof obj.therapyInterrupterDays !== 'number' || !Number.isFinite(obj.therapyInterrupterDays)) return 'therapyInterrupterDays must be a number';
+  if (typeof obj.therapyBreakerDays !== 'number' || !Number.isFinite(obj.therapyBreakerDays)) return 'therapyBreakerDays must be a number';
+  // Data source
+  if (obj.dataSource === null || typeof obj.dataSource !== 'object') return 'dataSource must be an object';
   const ds = obj.dataSource as Record<string, unknown>;
-  if (typeof ds.type !== 'string' || ds.type.length === 0) {
-    return 'dataSource.type must be a non-empty string';
+  if (typeof ds.type !== 'string' || !['local', 'blaze'].includes(ds.type)) return "dataSource.type must be 'local' or 'blaze'";
+  if (typeof ds.blazeUrl !== 'string' || ds.blazeUrl.length === 0) return 'dataSource.blazeUrl must be a non-empty string';
+  // Phase 12 / D-11 — optional outcomes section
+  if (obj.outcomes !== undefined) {
+    if (obj.outcomes === null || typeof obj.outcomes !== 'object') return 'outcomes must be an object';
+    const out = obj.outcomes as Record<string, unknown>;
+    if (out.serverAggregationThresholdPatients !== undefined) {
+      if (typeof out.serverAggregationThresholdPatients !== 'number' || !Number.isFinite(out.serverAggregationThresholdPatients) || out.serverAggregationThresholdPatients < 1) {
+        return 'outcomes.serverAggregationThresholdPatients must be a positive number';
+      }
+    }
+    if (out.aggregateCacheTtlMs !== undefined) {
+      if (typeof out.aggregateCacheTtlMs !== 'number' || !Number.isFinite(out.aggregateCacheTtlMs) || out.aggregateCacheTtlMs < 0) {
+        return 'outcomes.aggregateCacheTtlMs must be a non-negative number';
+      }
+    }
   }
-  if (typeof ds.blazeUrl !== 'string' || ds.blazeUrl.length === 0) {
-    return 'dataSource.blazeUrl must be a non-empty string';
-  }
-
   return null;
 }
+
+function parseAndValidateYaml(body: string): { parsed: unknown; error?: string } {
+  let parsed: unknown;
+  try {
+    parsed = yaml.load(body);
+  } catch {
+    return { parsed: null, error: 'Invalid YAML syntax' };
+  }
+  const schemaError = validateSettingsSchema(parsed);
+  if (schemaError) return { parsed, error: schemaError };
+  return { parsed };
+}
+
+// ---------------------------------------------------------------------------
+// Express Router (production)
+// ---------------------------------------------------------------------------
+
+export const settingsApiRouter = Router();
+
+settingsApiRouter.get('/', (req: Request, res: Response): void => {
+  try {
+    const raw = readSettings();
+    // F-12: strip sensitive fields for non-admin users
+    if (req.auth?.role !== 'admin') {
+      const parsed = yaml.load(raw) as Record<string, unknown> | null;
+      if (parsed && typeof parsed === 'object') {
+        const { otpCode: _o, maxLoginAttempts: _m, provider: _p, audit: rawAudit, ...safe } = parsed;
+        // IN-05: preserve other audit fields (e.g. retentionDays) via a single helper.
+        const safeAudit = stripSensitiveAudit(rawAudit);
+        if (safeAudit) {
+          (safe as Record<string, unknown>).audit = safeAudit;
+        }
+        res.setHeader('Content-Type', 'text/yaml');
+        res.send(yaml.dump(safe));
+        return;
+      }
+    }
+    res.setHeader('Content-Type', 'text/yaml');
+    res.send(raw);
+  } catch (err) {
+    console.error('[settings-api] Failed to read settings:', err);
+    res.status(500).json({ error: 'Failed to read settings' });
+  }
+});
+
+settingsApiRouter.put('/', (req: Request, res: Response): void => {
+  if (req.auth?.role !== 'admin') {
+    res.status(403).json({ error: 'Forbidden: admin role required' });
+    return;
+  }
+
+  // F-08: body parsed by express.text() middleware mounted in index.ts
+  const body = typeof req.body === 'string' ? req.body : '';
+  if (!body) {
+    res.status(400).json({ error: 'Empty request body' });
+    return;
+  }
+
+  const { parsed, error } = parseAndValidateYaml(body);
+  if (error) {
+    res.status(400).json({ error });
+    return;
+  }
+  try {
+    writeSettings(body, req.auth!.preferred_username);
+    updateAuthConfig(parsed as Record<string, unknown>);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[settings-api] Failed to write settings:', err);
+    res.status(500).json({ error: 'Failed to write settings' });
+  }
+});
+
+/**
+ * GET /api/settings/fhir-connection-test — admin-only.
+ * Reads the current blazeUrl from settings.yaml and probes the FHIR
+ * capability endpoint directly (avoids the startup-time-fixed proxy target).
+ */
+settingsApiRouter.get('/fhir-connection-test', async (req: Request, res: Response): Promise<void> => {
+  if (req.auth?.role !== 'admin') {
+    res.status(403).json({ error: 'FHIR connection test is restricted to administrators' });
+    return;
+  }
+  let blazeUrl = 'http://localhost:8080/fhir';
+  try {
+    const raw = readSettings();
+    const parsed = yaml.load(raw) as Record<string, unknown> | null;
+    const ds = parsed?.dataSource as Record<string, unknown> | undefined;
+    if (typeof ds?.blazeUrl === 'string' && ds.blazeUrl) blazeUrl = ds.blazeUrl;
+  } catch {
+    // fall through to default
+  }
+  const metadataUrl = blazeUrl.replace(/\/$/, '') + '/metadata';
+  try {
+    const resp = await fetch(metadataUrl, {
+      headers: { Accept: 'application/fhir+json' },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!resp.ok) {
+      res.status(502).json({ error: `FHIR server returned ${resp.status} ${resp.statusText}` });
+      return;
+    }
+    const capability = await resp.json() as {
+      software?: { name?: string; version?: string };
+      fhirVersion?: string;
+    };
+    const name = capability.software?.name ?? 'FHIR Server';
+    const version = capability.software?.version ?? '';
+    const fhir = capability.fhirVersion ? ` (FHIR ${capability.fhirVersion})` : '';
+    res.json({ ok: true, detail: `${name}${version ? ' ' + version : ''}${fhir}` });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: `Cannot reach FHIR server at ${metadataUrl}: ${msg}` });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Vite dev plugin (reuses shared logic)
+// ---------------------------------------------------------------------------
 
 export function settingsApiPlugin(): Plugin {
   return {
     name: 'settings-api',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        // GET /api/settings — read settings.yaml (requires authenticated user)
-        if (req.method === 'GET' && req.url === '/api/settings') {
-          const user = validateAuth(req);
-          if (!user) {
-            sendError(res, 401, 'Authentication required');
-            return;
-          }
-
+        // FHIR connection test — admin-only (dev mode)
+        if (req.url === '/api/settings/fhir-connection-test' && req.method === 'GET') {
+          const authUser = validateAuth(req, 'admin');
+          if (!authUser) { sendError(res, 403, 'FHIR connection test is restricted to administrators'); return; }
+          let blazeUrl = 'http://localhost:8080/fhir';
           try {
-            const content = fs.existsSync(SETTINGS_FILE)
-              ? fs.readFileSync(SETTINGS_FILE, 'utf-8')
-              : '';
+            const raw = readSettings();
+            const parsed = yaml.load(raw) as Record<string, unknown> | null;
+            const ds = parsed?.dataSource as Record<string, unknown> | undefined;
+            if (typeof ds?.blazeUrl === 'string' && ds.blazeUrl) blazeUrl = ds.blazeUrl;
+          } catch { /* use default */ }
+          const metadataUrl = blazeUrl.replace(/\/$/, '') + '/metadata';
+          void fetch(metadataUrl, { headers: { Accept: 'application/fhir+json' }, signal: AbortSignal.timeout(10_000) })
+            .then(async (r) => {
+              if (!r.ok) { sendError(res, 502, `FHIR server returned ${r.status} ${r.statusText}`); return; }
+              const cap = await r.json() as { software?: { name?: string; version?: string }; fhirVersion?: string };
+              const name = cap.software?.name ?? 'FHIR Server';
+              const version = cap.software?.version ?? '';
+              const fhir = cap.fhirVersion ? ` (FHIR ${cap.fhirVersion})` : '';
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ ok: true, detail: `${name}${version ? ' ' + version : ''}${fhir}` }));
+            })
+            .catch((err: Error) => { sendError(res, 502, `Cannot reach FHIR server at ${metadataUrl}: ${err.message}`); });
+          return;
+        }
+
+        if (req.url !== '/api/settings') return next();
+
+        if (req.method === 'GET') {
+          // F-33: Vite plugin must explicitly check auth since production authMiddleware is not mounted in dev
+          if (!validateAuth(req)) { sendError(res, 401, 'Authentication required'); return; }
+          try {
             res.writeHead(200, { 'Content-Type': 'text/yaml' });
-            res.end(content);
+            res.end(readSettings());
           } catch (err) {
             sendError(res, 500, 'Failed to read settings', err);
           }
           return;
         }
 
-        // PUT /api/settings — write settings.yaml (admin-only)
-        if (req.method === 'PUT' && req.url === '/api/settings') {
+        if (req.method === 'PUT') {
           const authUser = validateAuth(req, 'admin');
-          if (!authUser) {
-            sendError(res, 403, 'Forbidden: admin role required');
-            return;
-          }
+          if (!authUser) { sendError(res, 403, 'Forbidden: admin role required'); return; }
 
           readBody(req)
             .then((body) => {
-              // Validate YAML syntax
-              let parsed: unknown;
+              const { parsed: parsedSettings, error } = parseAndValidateYaml(body);
+              if (error) { sendError(res, 400, error); return; }
               try {
-                parsed = yaml.load(body);
-              } catch (yamlErr) {
-                sendError(res, 400, 'Invalid YAML syntax', yamlErr);
-                return;
-              }
-
-              // Validate schema
-              const schemaError = validateSettingsSchema(parsed);
-              if (schemaError) {
-                sendError(res, 400, schemaError);
-                return;
-              }
-
-              try {
-                fs.writeFileSync(SETTINGS_FILE, body, 'utf-8');
-                console.log(`[settings-api] Settings updated by ${authUser.username}`);
+                writeSettings(body, authUser.username);
+                updateAuthConfig(parsedSettings as Record<string, unknown>);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true }));
               } catch (err) {
@@ -116,11 +263,8 @@ export function settingsApiPlugin(): Plugin {
               }
             })
             .catch((err) => {
-              if (err instanceof Error && err.message.includes('too large')) {
-                sendError(res, 413, 'Request body too large');
-              } else {
-                sendError(res, 500, 'Failed to read request body', err);
-              }
+              sendError(res, err instanceof Error && err.message.includes('too large') ? 413 : 500,
+                err instanceof Error && err.message.includes('too large') ? 'Request body too large' : 'Failed to read request body', err);
             });
           return;
         }

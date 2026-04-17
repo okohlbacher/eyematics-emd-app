@@ -22,7 +22,11 @@ export function readBody(req: import('http').IncomingMessage, maxSize = MAX_BODY
       }
       data += chunk.toString();
     });
-    req.on('end', () => resolve(data));
+    req.on('end', () => {
+      // H-07: Expose captured body for auditMiddleware to log mutation details
+      (req as unknown as Record<string, unknown>)._capturedBody = data;
+      resolve(data);
+    });
     req.on('error', reject);
   });
 }

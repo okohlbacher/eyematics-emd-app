@@ -1,6 +1,6 @@
 # Benutzerhandbuch — EyeMatics Klinischer Demonstrator (EMD)
 
-**Version 1.0 — Stand: 09.04.2026**
+**Version 1.4 — Stand: 11.04.2026**
 
 ---
 
@@ -13,8 +13,29 @@ Der EyeMatics Klinische Demonstrator (EMD) ist ein webbasiertes Dashboard zur An
 ### 1.1 Systemvoraussetzungen
 
 - Aktueller Webbrowser (Chrome, Firefox, Edge oder Safari)
-- Netzwerkzugang zum EMD-Server
-- Gültige Zugangsdaten (Benutzername, Passwort, ggf. OTP-Code)
+- Netzwerkzugang zum EMD-Server (Standard: Port 3000)
+- Gültige Zugangsdaten (Benutzername und Passwort)
+
+### 1.2 Standardkonfiguration
+
+Der EMD wird mit folgenden Standardeinstellungen ausgeliefert:
+
+| Einstellung | Standardwert | Beschreibung |
+|-------------|-------------|--------------|
+| Authentifizierung | Lokal (bcrypt + JWT) | Serverseitige Passwortprüfung |
+| Zwei-Faktor-Auth. | Deaktiviert | Kann über Einstellungen aktiviert werden |
+| Datenquelle | Lokale Dateien | FHIR-Bundles aus `public/data/` |
+| Keycloak | Nicht aktiv | Vorbereitet, aber nicht als Provider konfiguriert |
+
+### 1.3 Datenhaltung
+
+Alle Benutzerdaten werden **serverseitig** gespeichert — der Browser speichert keine persistenten Daten:
+
+- **Qualitätsmarkierungen** (Flags) → Server-Datenbank (pro Benutzer)
+- **Gespeicherte Suchen** → Server-Datenbank (pro Benutzer)
+- **Ausgeschlossene Fälle** → Server-Datenbank (pro Benutzer)
+- **Geprüfte Fälle** → Server-Datenbank (pro Benutzer)
+- **Audit-Log** → Server-Datenbank (automatisch, unveränderlich)
 
 ---
 
@@ -22,16 +43,19 @@ Der EyeMatics Klinische Demonstrator (EMD) ist ein webbasiertes Dashboard zur An
 
 ### 2.1 Anmeldung
 
-1. Öffnen Sie die EMD-URL in Ihrem Browser.
+1. Öffnen Sie die EMD-URL in Ihrem Browser (z.B. `http://localhost:3000`).
 2. Geben Sie Ihren **Benutzernamen** und Ihr **Passwort** ein.
 3. Klicken Sie auf **Weiter**.
-4. Falls die Zwei-Faktor-Authentisierung aktiviert ist: Geben Sie den **OTP-Code** ein und klicken Sie auf **Anmelden**.
+4. Bei aktivierter Zwei-Faktor-Authentisierung (standardmäßig deaktiviert): Geben Sie den **OTP-Code** ein und klicken Sie auf **Anmelden**.
 5. Sie gelangen zur Startseite (Landing Page).
 
+> **Hinweis:** Die Anmeldung erfolgt über den Server (`POST /api/auth/login`). Das Passwort wird mit bcrypt geprüft und ein signierter JWT-Token an den Browser zurückgegeben. Der Token ist 10 Minuten gültig.
+
 **Fehlgeschlagene Anmeldung:**
-- Bei falschem Passwort oder unbekanntem Benutzernamen wird eine Fehlermeldung angezeigt.
-- Bei falschem OTP-Code werden Sie zum Passwort-Schritt zurückgeleitet.
-- Nach 5 aufeinanderfolgenden Fehlversuchen wird die Anmeldung vorübergehend gesperrt.
+- Bei falschen Zugangsdaten wird eine generische Fehlermeldung angezeigt (kein Unterschied zwischen falschem Benutzernamen und falschem Passwort — verhindert Benutzernamen-Enumeration).
+- Bei falschem OTP-Code (falls 2FA aktiviert) werden Sie zum Passwort-Schritt zurückgeleitet.
+- Nach 5 aufeinanderfolgenden Fehlversuchen wird die Anmeldung vorübergehend gesperrt (exponentielles Backoff — die Sperrzeit verdoppelt sich mit jedem weiteren Fehlversuch).
+- Passwörter werden nie an den Browser übermittelt — der Server prüft und antwortet nur mit einem Token.
 
 ### 2.2 Abmeldung
 
@@ -44,11 +68,13 @@ Der EyeMatics Klinische Demonstrator (EMD) ist ein webbasiertes Dashboard zur An
 
 Nach der Anmeldung sehen Sie die Startseite mit einer Übersicht der Datengrundlage:
 
-- **Begrüßung** mit Ihrem Anzeigenamen (Vorname Nachname)
+- **Begrüßung** mit Ihrem Anzeigenamen (Vorname Nachname, geladen vom Server)
 - **Zentrenübersicht**: Karten für jedes angeschlossene Zentrum mit:
   - Name und Standort
   - Anzahl der verfügbaren Fälle
   - Letzte Aktualisierung
+
+> **Wichtig:** Sie sehen nur die Daten der Zentren, die Ihnen zugeordnet sind. Administratoren und Benutzer mit Zugang zu allen Zentren sehen die vollständige Übersicht. Die Filterung erfolgt serverseitig — nicht zugewiesene Zentrendaten erreichen den Browser nie.
 
 ---
 
@@ -64,7 +90,7 @@ Sie können Patienten nach folgenden Kriterien filtern:
 |--------|--------------|
 | **Diagnose** | AMD, Diabetische Retinopathie (Checkboxen) |
 | **Geschlecht** | Männlich, Weiblich (Checkboxen) |
-| **Zentrum** | UKA, UKB, LMU, UKT, UKM (Checkboxen) |
+| **Zentrum** | Nur Ihre zugewiesenen Zentren (Checkboxen) |
 | **Alter** | Min–Max Bereich (Jahre) |
 | **Visus** | Min–Max Bereich (0.0–1.0) |
 | **CRT** | Min–Max Bereich (µm) |
@@ -83,9 +109,11 @@ Klicken Sie auf einen Fall, um zur **Einzelfallansicht** zu gelangen.
 
 ### 4.3 Suche speichern und laden
 
-- **Speichern**: Geben Sie einen Namen ein und klicken Sie auf **Suche speichern**. Es wird die Suchdefinition (Filterkriterien) gespeichert, nicht die Ergebnisdaten.
+- **Speichern**: Geben Sie einen Namen ein und klicken Sie auf **Suche speichern**. Es wird die Suchdefinition (Filterkriterien) auf dem Server gespeichert, nicht die Ergebnisdaten.
 - **Laden**: Wählen Sie eine gespeicherte Suche aus der Liste. Die Filter werden angewendet und die Suche auf dem aktuellen Datenbestand neu ausgeführt.
-- **Sortieren**: Gespeicherte Suchen können nach Name oder Datum sortiert werden.
+- **Löschen**: Klicken Sie auf das Löschen-Symbol neben einer gespeicherten Suche.
+
+> Gespeicherte Suchen sind benutzerbezogen — jeder Benutzer sieht nur seine eigenen Suchen. Die Daten werden serverseitig in einer SQLite-Datenbank gespeichert und sind über verschiedene Geräte und Browser verfügbar.
 
 ### 4.4 Kohorte analysieren
 
@@ -245,8 +273,8 @@ Navigieren Sie über die Seitenleiste zu **Einstellungen**. Alle Einstellungen w
 ### 9.1 Zwei-Faktor-Authentisierung
 
 - **Ein/Aus-Schalter**: Aktiviert/deaktiviert den OTP-Schritt beim Login
-- Änderungen werden im Audit-Log protokolliert
-- ⚠️ Warnung bei Deaktivierung
+- **Standardmäßig deaktiviert** — kann bei Bedarf aktiviert werden
+- Änderungen werden automatisch im Audit-Log protokolliert
 
 ### 9.2 Therapieschwellenwerte
 
@@ -257,8 +285,8 @@ Navigieren Sie über die Seitenleiste zu **Einstellungen**. Alle Einstellungen w
 
 ### 9.3 Datenquelle
 
-- **Lokale Dateien**: JSON-Dateien aus `public/data/` (Standard)
-- **FHIR Server**: Blaze FHIR Server via REST API
+- **Lokale Dateien**: JSON-Dateien, serverseitig geladen und center-gefiltert (Standard)
+- **FHIR Server**: Blaze FHIR Server via Server-Proxy (`/api/fhir-proxy`)
   - Server-URL eingeben (z.B. `http://localhost:8080/fhir`)
   - Verbindung testen mit dem **Test**-Button
 
@@ -295,22 +323,23 @@ Navigieren Sie über die Seitenleiste zu **Audit-Log** (nur für Administratoren
 
 ### 11.1 Protokollierte Aktionen
 
-Das Audit-Log protokolliert alle Benutzeraktionen:
-- Seitenaufrufe (Landing Page, Analyse, Datenqualität, etc.)
-- Einzelfallansichten (mit Pseudonym)
-- Einstellungsänderungen (2FA, Datenquelle)
-- An-/Abmeldungen
+Das Audit-Log protokolliert **automatisch alle API-Anfragen** serverseitig in einer SQLite-Datenbank (immutable — kein Löschen oder Ändern möglich):
+- HTTP-Methode (GET, POST, PUT, DELETE)
+- API-Pfad
+- Benutzername (aus JWT)
+- HTTP-Statuscode
+- Zeitstempel
 
 ### 11.2 Filterung
 
 Filtern Sie die Einträge nach:
-- Zeitraum
-- Benutzer
-- Aktionstyp
+- Zeitraum (Heute, 7 Tage, 30 Tage, Gesamt)
+- HTTP-Methode (GET, POST, PUT, DELETE)
 
-### 11.3 CSV-Export
+### 11.3 Export
 
-Klicken Sie auf **CSV exportieren**, um das Audit-Log als CSV-Datei herunterzuladen.
+- **CSV exportieren**: Gefilterte Einträge als CSV-Datei herunterladen
+- **JSON exportieren** (nur Administratoren): Vollständiger Audit-Export als JSON
 
 ---
 
@@ -322,16 +351,24 @@ Navigieren Sie über die Seitenleiste zu **Administration** (nur für Administra
 
 1. Klicken Sie auf **Nutzer hinzufügen**.
 2. Füllen Sie die Felder aus:
-   - Benutzername (eindeutig)
-   - Vorname, Nachname
-   - Passwort
-   - Rolle (IT-Administrator, Forscher/in, Epidemiolog/in, Kliniker/in, DIZ Data Manager, Klinikleitung)
-   - Zugeordnete Zentren (Mehrfachauswahl)
+   - **Benutzername** (eindeutig, Groß-/Kleinschreibung wird nicht unterschieden)
+   - **Vorname, Nachname** (optional, wird als Anzeigename verwendet)
+   - **Rolle**: IT-Administrator, Forscher/in, Epidemiolog/in, Kliniker/in, DIZ Data Manager, Klinikleitung
+   - **Zugeordnete Zentren** (Mehrfachauswahl: UKA, UKC, UKD, UKG, UKL, UKMZ, UKT)
 3. Klicken Sie auf **Speichern**.
+4. Ein **sicheres Passwort** (16 Zeichen, ~96 Bit Entropie) wird vom Server automatisch generiert und in einem grünen Banner einmalig angezeigt.
+
+> **Wichtig:** Das generierte Passwort kann nach dem Schließen des Banners nicht erneut abgerufen werden. Geben Sie es dem Benutzer sofort weiter. Administratoren können über die API ein neues Passwort setzen (`PUT /api/auth/users/:username/password`).
 
 ### 12.2 Benutzer löschen
 
-Klicken Sie auf das Löschen-Symbol neben dem Benutzereintrag.
+Klicken Sie auf das Löschen-Symbol neben dem Benutzereintrag. Der eigene Benutzer kann nicht gelöscht werden (Selbstlöschschutz).
+
+### 12.3 Benutzersuche und -filter
+
+- **Suche**: Volltextsuche über Benutzername, Zentrum und Rolle
+- **Rollenfilter**: Dropdown zur Einschränkung auf eine bestimmte Rolle
+- **Sortierung**: Klicken Sie auf Spaltenüberschriften (Benutzername, Rolle, Zentrum, Erstellt, Letzter Login)
 
 ---
 
@@ -356,11 +393,11 @@ Der EMD unterstützt Deutsch und Englisch. Die Sprache kann über das Sprachmen�
 
 | Problem | Lösung |
 |---------|--------|
-| Login schlägt fehl | Prüfen Sie Benutzername und Passwort. OTP-Code ist `123456` (Demomodus). |
-| Keine Daten sichtbar | Prüfen Sie die Datenquelle in den Einstellungen. Bei Blaze: Ist der Server erreichbar? |
+| Login schlägt fehl | Prüfen Sie Benutzername und Passwort. Das Passwort wurde bei der Erstellung des Kontos angezeigt. Bei aktivierter 2FA: OTP-Code beim Administrator erfragen. Bei Kontosperrung: warten Sie, bis die Sperrzeit abläuft (exponentielles Backoff). |
+| Keine Daten sichtbar | Prüfen Sie, ob Ihnen Zentren zugeordnet sind (nur zugewiesene Zentren sind sichtbar). Bei Blaze: Ist der Server erreichbar? |
 | CSV-Export funktioniert nicht | Warten Sie kurz nach dem Klick — der Download startet automatisch. |
 | Screenshot fehlt im Issue | Der Screenshot wird vor dem Öffnen des Dialogs erfasst. Popups oder Overlays können die Erfassung stören. |
-| Einstellungen gehen verloren | Einstellungen werden in `settings.yaml` auf dem Server gespeichert. Prüfen Sie die Schreibrechte. |
+| Einstellungen gehen verloren | Einstellungen werden in `config/settings.yaml` auf dem Server gespeichert. Prüfen Sie die Schreibrechte. |
 
 ---
 
@@ -390,4 +427,4 @@ Der EMD unterstützt Deutsch und Englisch. Die Sprache kann über das Sprachmen�
 
 ---
 
-*Dieses Benutzerhandbuch bezieht sich auf den EyeMatics Klinischen Demonstrator v1.0.0. Für technische Informationen siehe README.md und Konfiguration.md.*
+*Dieses Benutzerhandbuch bezieht sich auf den EyeMatics Klinischen Demonstrator v1.4. Für technische Informationen siehe README.md und Konfiguration.md.*

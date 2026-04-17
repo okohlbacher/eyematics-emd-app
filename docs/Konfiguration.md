@@ -1,13 +1,19 @@
 # Konfiguration — settings.yaml
 
-Der EyeMatics Klinische Demonstrator (EMD) wird über eine zentrale YAML-Konfigurationsdatei konfiguriert. Diese Datei liegt im Verzeichnis `public/settings.yaml` und wird beim Start der Anwendung geladen.
+Der EyeMatics Klinische Demonstrator (EMD) wird über eine zentrale YAML-Konfigurationsdatei konfiguriert. Diese Datei liegt im Verzeichnis `config/settings.yaml` (außerhalb des Webroot) und wird beim Start der Anwendung geladen.
 
 ## Speicherort
 
 ```
 emd-app/
-  public/
-    settings.yaml    ← Hauptkonfigurationsdatei
+  config/
+    settings.yaml    ← Hauptkonfigurationsdatei (außerhalb von public/)
+  data/
+    centers.json     ← Zentrenkonfiguration
+    users.json       ← Benutzerdaten (bcrypt-Hashes)
+    audit.db         ← Audit-Log (SQLite, immutable)
+    data.db          ← Persistenzdaten (Quality Flags, Searches, etc.)
+    jwt-secret.txt   ← JWT-Signaturschlüssel (automatisch generiert)
 ```
 
 Alle Änderungen, die über die Settings-Seite im UI vorgenommen werden, werden **serverseitig** in diese Datei zurückgeschrieben. Die Konfiguration ist damit persistent und unabhängig vom Browser-Cache oder localStorage.
@@ -21,16 +27,27 @@ Alle Änderungen, die über die Settings-Seite im UI vorgenommen werden, werden 
 # EyeMatics Clinical Demonstrator — Application Settings
 # ──────────────────────────────────────────────────────────────
 
-# Zwei-Faktor-Authentisierung (OTP)
-twoFactorEnabled: true
+server:
+  port: 3000                 # HTTP-Port des Servers
+  host: '0.0.0.0'           # Bind-Adresse des Servers
+  dataDir: './data'          # Verzeichnis fuer Datendateien
 
-# Therapieabbruch-Schwellenwerte (Tage)
-therapyInterrupterDays: 120   # Therapie-Unterbrecher (t)
-therapyBreakerDays: 365       # Therapie-Abbrecher (t')
+audit:
+  retentionDays: 90          # Aufbewahrungsdauer fuer Audit-Log in Tagen
 
-# Datenquelle: "local" (gebündelte JSON-Dateien) oder "blaze" (FHIR Server)
+provider: local              # 'local' oder 'keycloak'
+twoFactorEnabled: false
+maxLoginAttempts: 5
+otpCode: '123456'            # Nur serverseitig gelesen — nicht im Client sichtbar
+# keycloak:
+#   issuer: https://auth.example.com/realms/emd
+#   clientId: emd-app
+
+therapyInterrupterDays: 120  # Therapie-Unterbrecher (t)
+therapyBreakerDays: 365      # Therapie-Abbrecher (t')
+
 dataSource:
-  type: local
+  type: local                # 'local' oder 'blaze'
   blazeUrl: http://localhost:8080/fhir
 ```
 
@@ -38,71 +55,106 @@ dataSource:
 
 | Parameter | Typ | Default | Beschreibung |
 |-----------|-----|---------|--------------|
-| `twoFactorEnabled` | `boolean` | `true` | Aktiviert/deaktiviert den OTP-Schritt beim Login. Bei `false` entfällt die 2FA-Eingabe. Änderungen werden im Audit-Log protokolliert. |
-| `therapyInterrupterDays` | `number` | `120` | Zeitkriterium t in Tagen für die Kennzeichnung als Therapie-Unterbrecher. Patienten ohne Injektion innerhalb von t Tagen werden als Unterbrecher markiert. |
-| `therapyBreakerDays` | `number` | `365` | Zeitkriterium t' in Tagen für die Kennzeichnung als Therapie-Abbrecher. Patienten ohne Injektion innerhalb von t' Tagen werden als Abbrecher markiert. |
-| `dataSource.type` | `"local"` \| `"blaze"` | `"local"` | Art der Datenquelle. `local`: JSON-Dateien aus `public/data/`. `blaze`: Blaze FHIR Server via REST API. |
-| `dataSource.blazeUrl` | `string` | `http://localhost:8080/fhir` | URL des Blaze FHIR Servers. Nur relevant bei `dataSource.type: blaze`. Der Zugriff erfolgt über einen Vite-Server-Proxy, um CORS-Probleme zu vermeiden. |
+| `server.port` | `number` | `3000` | HTTP-Port des Servers |
+| `server.host` | `string` | `"0.0.0.0"` | Bind-Adresse des Servers |
+| `server.dataDir` | `string` | `"./data"` | Verzeichnis fuer Datendateien (users.json, audit.db, etc.) |
+| `audit.retentionDays` | `number` | `90` | Aufbewahrungsdauer fuer Audit-Log-Eintraege in Tagen |
+| `provider` | `"local"` \| `"keycloak"` | `"local"` | Authentifizierungsmethode. `local`: bcrypt + JWT (HS256). `keycloak`: RS256 via JWKS. |
+| `twoFactorEnabled` | `boolean` | `false` | Aktiviert/deaktiviert den OTP-Schritt beim Login. Standardmäßig deaktiviert. |
+| `maxLoginAttempts` | `number` | `5` | Max. Fehlversuche vor Kontosperrung (exponentielles Backoff). |
+| `otpCode` | `string` | `"123456"` | Fester OTP-Code (Demonstrator). Nur serverseitig gelesen. |
+| `therapyInterrupterDays` | `number` | `120` | Zeitkriterium t in Tagen für Therapie-Unterbrecher. |
+| `therapyBreakerDays` | `number` | `365` | Zeitkriterium t' in Tagen für Therapie-Abbrecher. |
+| `dataSource.type` | `"local"` \| `"blaze"` | `"local"` | Art der Datenquelle. `local`: JSON-Dateien aus `public/data/`. `blaze`: Blaze FHIR Server. |
+| `dataSource.blazeUrl` | `string` | `http://localhost:8080/fhir` | URL des Blaze FHIR Servers. Zugriff über Server-Proxy (`/api/fhir-proxy`). |
 
-### Wertebereichsprüfung
+## Zentrenkonfiguration (data/centers.json)
 
-Die Settings-Seite validiert die Eingaben:
-- `therapyInterrupterDays` muss kleiner als `therapyBreakerDays` sein.
-- `therapyInterrupterDays` muss ≥ 1 sein.
-- `therapyBreakerDays` muss ≥ 1 sein.
-- `blazeUrl` muss eine gültige URL sein (wird bei Wechsel auf Blaze-Datenquelle geprüft).
+Die Liste der verfügbaren Zentren ist in `data/centers.json` konfigurierbar:
+
+```json
+[
+  { "id": "org-uka",  "shorthand": "UKA",  "name": "Universitätsklinikum Aachen",     "file": "center-aachen.json" },
+  { "id": "org-ukc",  "shorthand": "UKC",  "name": "Universitätsklinikum Chemnitz",   "file": "center-chemnitz.json" },
+  { "id": "org-ukd",  "shorthand": "UKD",  "name": "Universitätsklinikum Dresden",    "file": "center-dresden.json" },
+  { "id": "org-ukg",  "shorthand": "UKG",  "name": "Universitätsklinikum Greifswald", "file": "center-greifswald.json" },
+  { "id": "org-ukl",  "shorthand": "UKL",  "name": "Universitätsklinikum Leipzig",    "file": "center-leipzig.json" },
+  { "id": "org-ukmz", "shorthand": "UKMZ", "name": "Universitätsmedizin Mainz",       "file": "center-mainz.json" },
+  { "id": "org-ukt",  "shorthand": "UKT",  "name": "Universitätsklinikum Tübingen",   "file": "center-tuebingen.json" }
+]
+```
+
+| Feld | Beschreibung |
+|------|--------------|
+| `id` | Interner Identifier (org-* Präfix, muss mit FHIR Organization.id übereinstimmen) |
+| `shorthand` | Kurzbezeichnung für UI-Anzeige |
+| `name` | Vollständiger Name des Zentrums |
+| `file` | Dateiname der lokalen FHIR-Bundle-Datei (in public/data/) |
 
 ## Änderung der Konfiguration
 
 ### Über die UI (empfohlen)
 
-1. Im EMD einloggen (als beliebiger Nutzer).
+1. Im EMD einloggen (als Administrator).
 2. In der Sidebar auf **Einstellungen** klicken.
 3. Gewünschte Werte anpassen.
 4. **Speichern** klicken.
 
-Die Änderungen werden sofort in `settings.yaml` zurückgeschrieben und sind beim nächsten Laden der Seite wirksam.
+Die Änderungen werden sofort in `config/settings.yaml` zurückgeschrieben.
 
 ### Manuell (Datei bearbeiten)
 
 ```bash
-# Datei direkt bearbeiten
-nano public/settings.yaml
-
-# Anwendung neu starten, damit die Änderungen geladen werden
-npm run dev
+nano config/settings.yaml
+# Anwendung neu starten
+npm start
 ```
 
-> **Hinweis:** Bei manueller Bearbeitung muss die YAML-Syntax korrekt sein. Ungültige YAML-Dateien führen dazu, dass die Standardwerte verwendet werden.
+> **Hinweis:** Bei manueller Bearbeitung muss die YAML-Syntax korrekt sein. Ungültige YAML-Dateien führen zu einem Startabbruch.
 
-## Export und Import
+## Produktionsbetrieb
 
-### Export
-Die aktuelle Konfiguration kann als YAML-Datei heruntergeladen werden:
-- Settings-Seite → **Einstellungen exportieren (YAML)**
+Im Produktionsbetrieb wird der Express-Server mit `npm start` gestartet:
 
-### Zurücksetzen
-Über die Settings-Seite kann die Konfiguration auf die Standardwerte zurückgesetzt werden:
-- Settings-Seite → **Zurücksetzen**
+```bash
+npm run build    # Vite-Build erstellen
+npm start        # Express-Server starten (Port 3000)
+```
+
+Der Server:
+- Liest `config/settings.yaml` beim Start (fail-fast bei Fehler)
+- Lädt Zentren aus `data/centers.json`
+- Initialisiert JWT-Secret, Benutzer, Audit-DB, Daten-DB
+- Dient statische Dateien aus `dist/`
+- Blockiert direkten Zugriff auf `/data/*` (nur über `/api/fhir/bundles`)
+- Alle API-Endpunkte unter `/api/*` sind JWT-geschützt
+
+## Standardbenutzer
+
+Beim ersten Start werden 7 Standardbenutzer angelegt (in `data/users.json`). Alle erhalten das Passwort `changeme2025!` (bcrypt-gehasht). Es wird empfohlen, Passwörter nach dem ersten Login zu ändern.
+
+| Benutzername    | Rolle               | Zentren                                   |
+|-----------------|---------------------|-------------------------------------------|
+| `admin`         | IT-Administrator    | Alle (UKA, UKC, UKD, UKG, UKL, UKMZ, UKT) |
+| `forscher1`     | Forscher/in         | UKA                                       |
+| `forscher2`     | Forscher/in         | UKC                                       |
+| `epidemiologe`  | Epidemiolog/in      | UKA, UKC, UKD                             |
+| `kliniker`      | Kliniker/in         | UKT                                       |
+| `diz_manager`   | DIZ Data Manager    | UKMZ                                      |
+| `klinikleitung` | Klinikleitung       | Alle                                      |
 
 ## Architektur
 
 ```
 Browser (UI)
-    ↓ PUT /api/settings (YAML Body)
-Vite Dev Server (settingsApi Plugin)
+    ↓ POST /api/auth/login (JSON Body)
+Express Server (authApi)
+    ↓ bcrypt-Prüfung → JWT Token (HS256, 10 Min.)
+Browser → Bearer Token → /api/settings, /api/data/*, /api/fhir/bundles
+    ↓ Alle API-Anfragen automatisch im Audit-Log protokolliert
+Express Server
     ↓ fs.writeFileSync()
-public/settings.yaml
-    ↑ GET /api/settings
-Browser (UI)
+config/settings.yaml
 ```
 
-Die Settings-API wird als Vite Server Plugin bereitgestellt (`server/settingsApi.ts`). In einer Produktionsumgebung muss ein entsprechender Endpunkt im Web-Server konfiguriert werden.
-
-## Produktionsbetrieb
-
-Im Produktionsbetrieb (statischer Build mit `npm run build`) steht die Settings-API nicht zur Verfügung. In diesem Fall:
-
-1. Konfigurieren Sie `settings.yaml` vor dem Build.
-2. Alternativ: Stellen Sie einen eigenen REST-Endpunkt bereit, der `GET /api/settings` und `PUT /api/settings` unterstützt.
-3. Die Anwendung fällt automatisch auf das statische Lesen von `/settings.yaml` zurück, wenn die API nicht erreichbar ist (dann ohne Rückschreibung).
+> Siehe [architecture.svg](architecture.svg) und [architecture.md](architecture.md) für das vollständige Architekturdiagramm.

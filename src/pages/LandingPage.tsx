@@ -1,23 +1,21 @@
-import { useData } from '../context/DataContext';
-import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
-import { usePageAudit } from '../hooks/usePageAudit';
 import {
-  Building2,
-  Users,
-  Clock,
   Activity,
+  Building2,
+  Clock,
   ScanEye,
+  Users,
 } from 'lucide-react';
+
+import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
 import { getCenterShorthand } from '../services/fhirLoader';
 import { getDateLocale } from '../utils/dateFormat';
 
 export default function LandingPage() {
   const { loading, centers, cases } = useData();
-  const { displayName, managedUsers } = useAuth();
+  const { displayName } = useAuth();
   const { locale, t } = useLanguage();
-
-  usePageAudit('view_landing', 'audit_detail_view_landing');
 
   if (loading) {
     return (
@@ -117,9 +115,6 @@ export default function LandingPage() {
                 {t('cases')}
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                {t('adminUsersCount')}
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                 {t('lastUpdate')}
               </th>
             </tr>
@@ -127,9 +122,6 @@ export default function LandingPage() {
           <tbody className="divide-y divide-gray-100">
             {centers.map((center) => {
               const shorthand = getCenterShorthand(center.id, center.name);
-              const usersAtCenter = managedUsers.filter(
-                (mu) => mu.centers?.includes(shorthand) || mu.center === shorthand
-              ).length;
               return (
                 <tr key={center.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
@@ -148,9 +140,6 @@ export default function LandingPage() {
                   </td>
                   <td className="px-6 py-4 text-right font-medium">
                     {center.patientCount}
-                  </td>
-                  <td className="px-6 py-4 text-right text-gray-600">
-                    {usersAtCenter}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-1.5 text-sm text-gray-500">

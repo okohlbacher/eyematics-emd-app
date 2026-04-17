@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { AlertCircle, Eye, Globe, Info } from 'lucide-react';
+import { useEffect,useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { getSettings } from '../services/settingsService';
-import { Eye, AlertCircle, Globe } from 'lucide-react';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -11,70 +11,68 @@ export default function LoginPage() {
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
   const [error, setError] = useState('');
-  const [attempts, setAttempts] = useState(0);
+  const [challengeToken, setChallengeToken] = useState('');
+  const [provider, setProvider] = useState<'local' | 'keycloak'>('local');
+  const [showKeycloakInfo, setShowKeycloakInfo] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { locale, setLocale, t } = useLanguage();
 
-  const handleCredentials = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetch('/api/auth/config')
+      .then((r) => r.json() as Promise<{ twoFactorEnabled: boolean; provider?: string }>)
+      .then((cfg) => {
+        setProvider(cfg.provider === 'keycloak' ? 'keycloak' : 'local');
+      })
+      .catch(() => {/* default local on error */});
+  }, []);
+
+  const handleCredentials = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
       setError(t('loginErrorEmpty'));
       return;
     }
-    if (attempts >= 5) {
-      setError(t('loginErrorTooMany'));
-      return;
-    }
-
-    // If 2FA is disabled, log in directly (skip OTP step)
-    const settings = getSettings();
-    if (!settings.twoFactorEnabled) {
-      const result = login(username, password, '');
-      if (result.ok) {
-        navigate('/');
-      } else {
-        setAttempts((a) => a + 1);
-        if (result.error === 'user_not_found') {
-          setError(t('loginErrorUserNotFound'));
-        } else if (result.error === 'wrong_password') {
-          setError(t('loginErrorWrongPassword'));
-        } else {
-          setError(t('loginErrorFailed'));
-        }
+    const result = await login(username, password);
+    if (result.ok) {
+      navigate('/');
+    } else if (result.error === 'otp_required') {
+      // Server determined 2FA is required — proceed to OTP step
+      if (result.challengeToken) {
+        setChallengeToken(result.challengeToken);
       }
-      return;
+      setStep('otp');
+      setError('');
+    } else if (result.error === 'account_locked') {
+      // F-10: server-side rate limiting is the sole enforcement
+      setError(t('loginErrorTooMany'));
+    } else if (result.error === 'invalid_credentials') {
+      // Generic message — do not distinguish user_not_found from wrong_password (prevents enumeration)
+      setError(t('loginErrorWrongPassword'));
+    } else {
+      setError(t('loginErrorFailed'));
     }
-
-    setStep('otp');
-    setError('');
   };
 
-  const handleOtp = (e: React.FormEvent) => {
+  const handleOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!otp) {
       setError(t('loginErrorOtp'));
       return;
     }
-    const result = login(username, password, otp);
+    const result = await login(username, password, otp, challengeToken);
     if (result.ok) {
       navigate('/');
+    } else if (result.error === 'invalid_otp') {
+      // N01.08: On OTP failure, return to password step immediately
+      setStep('credentials');
+      setOtp('');
+      setChallengeToken('');
+      setError(t('loginErrorInvalidOtp'));
+    } else if (result.error === 'account_locked') {
+      setError(t('loginErrorTooMany'));
     } else {
-      setAttempts((a) => a + 1);
-      if (result.error === 'user_not_found') {
-        setStep('credentials');
-        setError(t('loginErrorUserNotFound'));
-      } else if (result.error === 'wrong_password') {
-        setStep('credentials');
-        setError(t('loginErrorWrongPassword'));
-      } else if (result.error === 'invalid_otp') {
-        // N01.08: On OTP failure, return to password step immediately
-        setStep('credentials');
-        setOtp('');
-        setError(t('loginErrorInvalidOtp'));
-      } else {
-        setError(t('loginErrorFailed'));
-      }
+      setError(t('loginErrorFailed'));
     }
   };
 
@@ -85,7 +83,9 @@ export default function LoginPage() {
           <Eye className="w-10 h-10 text-blue-600" />
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{t('loginTitle')}</h1>
-            <p className="text-sm text-gray-500">{t('loginSubtitle')}</p>
+            <p className="text-sm text-gray-500">
+              {provider === 'keycloak' ? t('loginKeycloakSubtitle') : t('loginSubtitle')}
+            </p>
           </div>
         </div>
 
@@ -96,7 +96,29 @@ export default function LoginPage() {
           </div>
         )}
 
-        {step === 'credentials' ? (
+        {provider === 'keycloak' ? (
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => setShowKeycloakInfo(true)}
+              className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-500"
+            >
+              {t('loginKeycloakButton')}
+            </button>
+            {showKeycloakInfo && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                <div className="flex items-start gap-2">
+                  <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">{t('loginKeycloakInfoTitle')}</span>
+                    {' '}
+                    {t('loginKeycloakInfoBody')}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : step === 'credentials' ? (
           <form onSubmit={handleCredentials} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

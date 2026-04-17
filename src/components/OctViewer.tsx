@@ -1,15 +1,16 @@
-import { useState } from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import { getDateLocale } from '../utils/dateFormat';
 import {
   ChevronLeft,
   ChevronRight,
-  ZoomIn,
-  ZoomOut,
+  Image as ImageIcon,
   Maximize2,
   X,
-  Image as ImageIcon,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
+import { useState } from 'react';
+
+import { useLanguage } from '../context/LanguageContext';
+import { getDateLocale } from '../utils/dateFormat';
 
 interface OctImage {
   title: string;
@@ -77,7 +78,8 @@ export default function OctViewer({ images, crt, controlledIdx, onSelectIdx }: O
           style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center' }}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            target.src = '';
+            // L-05: use transparent 1x1 GIF placeholder to avoid infinite error loop
+            target.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
             target.alt = t('octImageUnavailable');
             target.className = 'w-full h-48 bg-gray-800 flex items-center justify-center';
           }}

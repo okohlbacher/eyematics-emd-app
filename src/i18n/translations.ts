@@ -8,8 +8,30 @@ const translations = {
   delete: { de: 'Löschen', en: 'Delete' },
   close: { de: 'Schließen', en: 'Close' },
   reset: { de: 'Zurücksetzen', en: 'Reset' },
+  done: { de: 'Fertig', en: 'Done' },
+  remove: { de: 'Entfernen', en: 'Remove' },
+  retry: { de: 'Erneut versuchen', en: 'Retry' },
+  createUser: { de: 'Benutzer anlegen', en: 'Create User' },
+  userCreated: { de: 'Benutzer erstellt', en: 'User created' },
+  userCreatedSuccess: { de: 'Benutzer erfolgreich erstellt', en: 'User created successfully' },
+  generatedPasswordLabel: { de: 'Generiertes Passwort:', en: 'Generated password:' },
+  copy: { de: 'Kopieren', en: 'Copy' },
+  dismiss: { de: 'Schließen', en: 'Dismiss' },
+  savePasswordHint: { de: 'Passwort jetzt speichern — es kann später nicht abgerufen werden. Wird in 30s automatisch ausgeblendet.', en: 'Save this password — it cannot be retrieved later. Auto-dismisses in 30s.' },
+  copyPasswordNow: { de: 'Passwort jetzt kopieren — es wird nicht erneut angezeigt.', en: 'Copy this password now — it will not be shown again.' },
+  copyPassword: { de: 'Passwort kopieren', en: 'Copy password' },
+  copied: { de: 'Kopiert!', en: 'Copied!' },
+  removeConfirm: { de: '„{username}" entfernen?', en: 'Remove {username}?' },
+  cannotDeleteSelf: { de: 'Eigenes Konto kann nicht entfernt werden', en: 'Cannot remove your own account' },
+  resetPassword: { de: 'Passwort zurücksetzen', en: 'Reset password' },
+  passwordFor: { de: 'Passwort für', en: 'Password for' },
+  dataLoadError: { de: 'Daten konnten nicht geladen werden', en: 'Could not load your data' },
+  dataLoadErrorBody: { de: 'Der Server ist nicht erreichbar. Ihre FHIR-Daten sind nicht betroffen.', en: 'The server could not be reached. Your FHIR data is unaffected.' },
+  mutationErrorGeneric: { de: 'Änderungen konnten nicht gespeichert werden. Bitte erneut versuchen.', en: 'Could not save changes. Please try again.' },
   female: { de: 'Weiblich', en: 'Female' },
+  femaleShort: { de: 'W', en: 'F' },
   male: { de: 'Männlich', en: 'Male' },
+  maleShort: { de: 'M', en: 'M' },
   age: { de: 'Alter', en: 'Age' },
   years: { de: 'Jahre', en: 'years' },
   diagnosis: { de: 'Diagnose', en: 'Diagnosis' },
@@ -69,6 +91,22 @@ const translations = {
     de: 'Ungültiger OTP-Code. Bitte versuchen Sie es erneut.',
     en: 'Invalid OTP code. Please try again.',
   },
+  loginKeycloakButton: {
+    de: 'Mit Keycloak anmelden',
+    en: 'Login with Keycloak',
+  },
+  loginKeycloakInfoTitle: {
+    de: 'Keycloak SSO konfiguriert',
+    en: 'Keycloak SSO configured',
+  },
+  loginKeycloakInfoBody: {
+    de: 'Der Keycloak-Weiterleitungsfluss ist in dieser Version noch nicht verfügbar. Bitte wenden Sie sich an Ihren Administrator.',
+    en: 'Keycloak SSO is configured but the redirect flow is not yet implemented. Contact your administrator.',
+  },
+  loginKeycloakSubtitle: {
+    de: 'Single Sign-On',
+    en: 'Single Sign-On',
+  },
 
   // Landing page
   welcome: { de: 'Willkommen', en: 'Welcome' },
@@ -121,9 +159,18 @@ const translations = {
   pseudonym: { de: 'Pseudonym', en: 'Pseudonym' },
   visus: { de: 'Visus', en: 'Visual Acuity' },
   execute: { de: 'Ausführen', en: 'Execute' },
+  detailedView: { de: 'Detailansicht', en: 'Detailed view' },
+  summaryView: { de: 'Zusammenfassung', en: 'Summary' },
+  cohortSummaryAgeRange: { de: 'Altersbereich', en: 'Age range' },
+  cohortSummaryVisusRange: { de: 'Visusbereich', en: 'Visual acuity range' },
+  cohortSummaryCenters: { de: 'Zentren', en: 'Centers' },
+  cohortSummaryNoData: { de: 'Keine Fälle ausgewählt', en: 'No cases selected' },
+  yearsShort: { de: 'J.', en: 'yr' },
 
   // Analysis page
   analysisTitle: { de: 'Kohortenanalyse', en: 'Cohort Analysis' },
+  analysisTabAggregate: { de: 'Aggregiert', en: 'Aggregate' },
+  analysisTabTrajectories: { de: 'Verläufe', en: 'Trajectories' },
   casesInCohort: { de: 'Fälle in der aktuellen Kohorte', en: 'cases in current cohort' },
   casesWithCritical: {
     de: 'Fälle mit kritischen Werten (CRT > 400 µm)',
@@ -280,6 +327,7 @@ const translations = {
   adminUsersCount: { de: 'Nutzer', en: 'users' },
   adminSearchPlaceholder: { de: 'Nutzer suchen…', en: 'Search users…' },
   adminFilterAllRoles: { de: 'Alle Rollen', en: 'All roles' },
+  adminFilterAllCenters: { de: 'Alle Zentren', en: 'All centers' },
   adminAssignCenters: { de: 'Zentren zuweisen', en: 'Assign Centers' },
   adminAssignedCenters: { de: 'Zugewiesene Zentren', en: 'Assigned Centers' },
 
@@ -335,6 +383,10 @@ const translations = {
   auditClear: { de: 'Protokoll löschen', en: 'Clear Log' },
   auditEmpty: { de: 'Keine Protokolleinträge vorhanden.', en: 'No audit entries.' },
   auditEntries: { de: 'Einträge', en: 'entries' },
+  auditMethod: { de: 'Methode', en: 'Method' },
+  auditPath: { de: 'Pfad', en: 'Path' },
+  auditStatus: { de: 'Status', en: 'Status' },
+  auditExportJson: { de: 'JSON exportieren', en: 'Export JSON' },
 
   // Exclusion
   excludeFromAnalysis: { de: 'Von Analysen ausschließen', en: 'Exclude from analyses' },
@@ -394,6 +446,12 @@ const translations = {
   audit_action_include_case: { de: 'Fall eingeschlossen', en: 'Case Included' },
   audit_action_create_user: { de: 'Nutzer angelegt', en: 'User Created' },
   audit_action_delete_user: { de: 'Nutzer entfernt', en: 'User Deleted' },
+  audit_action_update_settings: { de: 'Einstellungen geändert', en: 'Settings Updated' },
+  audit_action_view_settings: { de: 'Einstellungen', en: 'Settings' },
+  audit_action_view_doc_quality: { de: 'Dokumentationsqualität', en: 'Documentation Quality' },
+  audit_action_export_data: { de: 'Datenexport', en: 'Data Export' },
+  audit_action_data_access: { de: 'Datenzugriff', en: 'Data Access' },
+  audit_action_unknown: { de: 'Sonstige Aktion', en: 'Other Action' },
 
   // Audit detail messages (with {0}, {1} placeholders)
   audit_detail_login: { de: 'Anmeldung als {0}', en: 'Logged in as {0}' },
@@ -475,6 +533,7 @@ const translations = {
   feedbackDescription: { de: 'Beschreiben Sie das Problem:', en: 'Describe the issue:' },
   feedbackPlaceholder: { de: 'Was ist Ihnen aufgefallen? Was sollte verbessert werden?', en: 'What did you notice? What should be improved?' },
   feedbackPage: { de: 'Seite', en: 'Page' },
+  feedbackVersion: { de: 'Version', en: 'Version' },
   feedbackSubmit: { de: 'Absenden', en: 'Submit' },
   feedbackSuccess: { de: 'Problem wurde gemeldet. Vielen Dank!', en: 'Issue has been reported. Thank you!' },
   feedbackExport: { de: 'Issues exportieren', en: 'Export Issues' },
@@ -520,6 +579,177 @@ const translations = {
   diagCoronary: { de: 'Koronare Herzkrankheit', en: 'Coronary artery disease' },
   diagAmdFull: { de: 'Altersbedingte Makuladegeneration (267718000)', en: 'Age-related macular degeneration (267718000)' },
   diagDrFull: { de: 'Diabetische Retinopathie (312898008)', en: 'Diabetic retinopathy (312898008)' },
+
+  // Center-based data restriction (Phase 5)
+  fhir403Heading: { de: 'Zugriff verweigert', en: 'Access Denied' },
+  fhir403Body: { de: 'Ihr Konto hat keine Berechtigung fuer die angeforderten Zentren. Bitte wenden Sie sich an Ihren Administrator.', en: 'Your account is not authorized for the requested centers. Please contact your administrator.' },
+  fhirLoadError: { de: 'Daten konnten nicht geladen werden. Bitte erneut versuchen.', en: 'Failed to load data. Please try again.' },
+  retryButton: { de: 'Erneut versuchen', en: 'Retry' },
+  noCentersAssigned: { de: 'Keine Zentren zugewiesen', en: 'No centers assigned' },
+  mutationForbiddenCase: { de: 'Fall liegt ausserhalb Ihrer erlaubten Zentren.', en: 'Case is outside your permitted centers.' },
+  mutationForbiddenSearch: { de: 'Suche enthaelt Faelle ausserhalb Ihrer erlaubten Zentren.', en: 'Search references cases outside your permitted centers.' },
+
+  // Cohort Outcome Trajectories (Phase 08 — OUTCOME-01..12)
+  outcomesTitle: { de: 'Outcomes', en: 'Outcomes' },
+  outcomesServerComputingLabel: { de: 'Berechnung auf Server\u2026', en: 'Computing on server\u2026' },
+  outcomesTitleWithCohort: { de: 'Outcomes: {cohortName}', en: 'Outcomes: {cohortName}' },
+  outcomesSubtitleSaved: { de: 'Gespeicherte Kohorte · {count} Patient:innen', en: 'Saved cohort · {count} patients' },
+  outcomesSubtitleAdhoc: { de: 'Ad-hoc-Filter · {count} Patient:innen', en: 'Ad-hoc filter · {count} patients' },
+  outcomesOpenSettings: { de: 'Einstellungen öffnen', en: 'Open settings' },
+  outcomesCloseSettings: { de: 'Einstellungen schließen', en: 'Close settings' },
+  outcomesBackToCohort: { de: 'Zurück zur Kohorte', en: 'Back to cohort' },
+
+  // Entry points (CohortBuilderPage — D-02)
+  outcomesOpenForCohort: { de: 'Outcomes anzeigen', en: 'View Outcomes' },
+  outcomesOpenForFilter: { de: 'Outcomes für aktuellen Filter', en: 'Outcomes for current filter' },
+
+  // Summary cards (D-25)
+  outcomesCardPatients: { de: 'Patient:innen', en: 'Patients' },
+  outcomesCardMeasurements: { de: 'Messungen gesamt', en: 'Total measurements' },
+  outcomesCardOdMeasurements: { de: 'Messungen OD', en: 'OD measurements' },
+  outcomesCardOsMeasurements: { de: 'Messungen OS', en: 'OS measurements' },
+  outcomesCardExcluded: { de: '{count} ausgeschlossen', en: '{count} excluded' },
+  outcomesCardExcludedTooltip: { de: 'Patient:innen ohne Visusmessung in diesem Auge.', en: 'Patients with no visus measurement in this eye.' },
+
+  // Chart panels
+  outcomesPanelOd: { de: 'Rechtes Auge (OD)', en: 'Right eye (OD)' },
+  outcomesPanelOs: { de: 'Linkes Auge (OS)', en: 'Left eye (OS)' },
+  outcomesPanelCombined: { de: 'OD + OS kombiniert', en: 'OD + OS combined' },
+  outcomesPanelSubtitle: { de: '{patients} Patient:innen · {measurements} Messungen', en: '{patients} patients · {measurements} measurements' },
+
+  // Settings drawer (D-23)
+  outcomesSettingsTitle: { de: 'Einstellungen', en: 'Settings' },
+  outcomesSectionXAxis: { de: 'X-Achse', en: 'X axis' },
+  outcomesXAxisTime: { de: 'Tage seit Baseline', en: 'Days since baseline' },
+  outcomesXAxisTreatments: { de: 'Anzahl Behandlungen', en: 'Number of treatments' },
+  outcomesSectionYMetric: { de: 'Y-Metrik', en: 'Y metric' },
+  outcomesYAbsolute: { de: 'Absolut (logMAR)', en: 'Absolute (logMAR)' },
+  outcomesYDelta: { de: 'Δ (Differenz zur Baseline)', en: 'Δ (delta from baseline)' },
+  outcomesYDeltaPercent: { de: 'Δ % (prozentuale Änderung)', en: 'Δ % (percent change)' },
+  outcomesSectionLayers: { de: 'Anzeigeebenen', en: 'Display layers' },
+  outcomesLayerMedian: { de: 'Median', en: 'Median' },
+  outcomesLayerPerPatient: { de: 'Individuelle Kurven', en: 'Per-patient curves' },
+  outcomesLayerScatter: { de: 'Streupunkte', en: 'Scatter' },
+  outcomesLayerSpreadBand: { de: 'Streuband (IQR)', en: 'Spread band (IQR)' },
+  outcomesSettingsScatterAdvisory: { de: 'Streupunkte bei Kohorten > 30 Patient:innen standardmäßig aus (Performance)', en: 'Scatter disabled by default for cohorts > 30 patients (performance)' },
+  outcomesSectionGrid: { de: 'Interpolationsraster', en: 'Interpolation grid' },
+  outcomesGridSliderLabel: { de: '{n} Stützstellen', en: '{n} grid points' },
+  outcomesResetSettings: { de: 'Auf Standard zurücksetzen', en: 'Reset to defaults' },
+
+  // Data preview (D-27..D-30)
+  outcomesPreviewToggleOpen: { de: 'Rohdaten anzeigen', en: 'Show raw data' },
+  outcomesPreviewToggleClose: { de: 'Rohdaten ausblenden', en: 'Hide raw data' },
+  outcomesPreviewCaption: { de: '{rows} Messzeilen · identisch zum CSV-Export', en: '{rows} measurement rows · identical to CSV export' },
+  outcomesPreviewExportCsv: { de: 'CSV exportieren', en: 'Export CSV' },
+  outcomesPreviewExportedStatus: { de: 'CSV exportiert', en: 'CSV exported' },
+  outcomesPreviewColPseudonym: { de: 'Pseudonym', en: 'Pseudonym' },
+  outcomesPreviewColEye: { de: 'Auge', en: 'Eye' },
+  outcomesPreviewColDate: { de: 'Datum', en: 'Date' },
+  outcomesPreviewColDaysSinceBaseline: { de: 'Tage seit Baseline', en: 'Days since baseline' },
+  outcomesPreviewColTreatmentIndex: { de: 'Behandlungsindex', en: 'Treatment index' },
+  outcomesPreviewColVisusLogmar: { de: 'Visus (logMAR)', en: 'Visus (logMAR)' },
+  outcomesPreviewColSnellenNum: { de: 'Snellen Zähler', en: 'Snellen numerator' },
+  outcomesPreviewColSnellenDen: { de: 'Snellen Nenner', en: 'Snellen denominator' },
+  outcomesPreviewEyeOd: { de: 'OD', en: 'OD' },
+  outcomesPreviewEyeOs: { de: 'OS', en: 'OS' },
+
+  // Tooltips
+  outcomesTooltipPatient: { de: 'Patient', en: 'Patient' },
+  outcomesTooltipEye: { de: 'Auge', en: 'Eye' },
+  outcomesTooltipDay: { de: 'Tag', en: 'Day' },
+  outcomesTooltipTreatmentIndex: { de: 'Behandlung #', en: 'Treatment #' },
+  outcomesTooltipLogmar: { de: 'logMAR', en: 'logMAR' },
+  outcomesTooltipSnellen: { de: 'Snellen', en: 'Snellen' },
+  outcomesTooltipDelta: { de: 'Δ', en: 'Δ' },
+  outcomesTooltipDeltaPercent: { de: 'Δ %', en: 'Δ %' },
+  outcomesTooltipMedian: { de: 'Median ({n} Patient:innen)', en: 'Median ({n} patients)' },
+  outcomesTooltipIqr: { de: 'IQR {p25} – {p75}', en: 'IQR {p25} – {p75}' },
+  outcomesTooltipClipped: { de: 'außerhalb ±200 % (abgeschnitten)', en: 'outside ±200 % (clipped)' },
+  outcomesTooltipSparse: { de: 'Sparse-Serie ({n} Messpunkte)', en: 'Sparse series ({n} measurements)' },
+
+  // Empty / loading / error
+  outcomesLoading: { de: 'Verlaufsdaten werden berechnet …', en: 'Computing trajectories …' },
+  outcomesEmptyCohortTitle: { de: 'Keine Patient:innen in dieser Kohorte', en: 'No patients in this cohort' },
+  outcomesEmptyCohortBody: { de: 'Passen Sie den Filter in der Kohortenbildung an oder wählen Sie eine andere gespeicherte Suche.', en: 'Adjust filters in the Cohort Builder or pick a different saved search.' },
+  outcomesEmptyCohortAction: { de: 'Zur Kohortenbildung', en: 'Go to Cohort Builder' },
+  outcomesNoVisusTitle: { de: 'Keine Visus-Messungen in dieser Kohorte', en: 'No visus measurements in this cohort' },
+  outcomesNoVisusBody: { de: 'Die ausgewählten Patient:innen haben keine Observation mit LOINC 79880-1.', en: 'The selected patients have no observation with LOINC 79880-1.' },
+  outcomesEmptyAllEyesFilteredTitle: { de: 'Keine Augen entsprechen den aktuellen Filtern.', en: 'No eyes match the current filters.' },
+  outcomesEmptyAllEyesFilteredBody: { de: 'Passen Sie die OD/OS- oder Layer-Filter an, um Daten zu sehen.', en: 'Adjust the OD/OS or layer toggles to see data.' },
+  outcomesPanelEmpty: { de: 'Keine Messwerte für dieses Auge', en: 'No measurements for this eye' },
+  outcomesError: { de: 'Berechnung fehlgeschlagen. Bitte erneut versuchen.', en: 'Computation failed. Please try again.' },
+
+  // ---- Phase 13: Metric Selector (METRIC-04 / D-01) ----
+  metricsVisus: { de: 'Visus', en: 'Visus' },
+  metricsCrt: { de: 'CRT', en: 'CRT' },
+  metricsInterval: { de: 'Behandlungsintervall', en: 'Treatment Interval' },
+  metricsResponder: { de: 'Responder', en: 'Responder' },
+  metricsSelectorLabel: { de: 'Metrik auswählen', en: 'Select metric' },
+
+  // ---- Phase 13: CRT Panel (METRIC-01 / D-03) ----
+  metricsCrtPanelOd: { de: 'Rechtes Auge (OD) — CRT', en: 'Right eye (OD) — CRT' },
+  metricsCrtPanelOs: { de: 'Linkes Auge (OS) — CRT', en: 'Left eye (OS) — CRT' },
+  metricsCrtPanelCombined: { de: 'OD + OS kombiniert — CRT', en: 'OD + OS combined — CRT' },
+  metricsCrtYAxisAbsolute: { de: 'Absolute CRT (µm)', en: 'Absolute CRT (µm)' },
+  metricsCrtYAxisDelta: { de: 'Δ CRT (µm)', en: 'Δ CRT (µm)' },
+  metricsCrtYAxisDeltaPercent: { de: 'Δ CRT (%)', en: 'Δ CRT (%)' },
+  metricsCrtYMetricAbsolute: { de: 'Absolut (µm)', en: 'Absolute (µm)' },
+  metricsCrtYMetricDelta: { de: 'Δ (µm zur Baseline)', en: 'Δ (µm from baseline)' },
+  metricsCrtYMetricDeltaPercent: { de: 'Δ % (prozentuale Änderung)', en: 'Δ % (percent change)' },
+  metricsCrtTooltipValue: { de: 'CRT (µm)', en: 'CRT (µm)' },
+  metricsCrtPanelEmpty: { de: 'Keine CRT-Messungen für dieses Auge', en: 'No CRT measurements for this eye' },
+  metricsCrtNoCrtTitle: { de: 'Keine CRT-Messungen in dieser Kohorte', en: 'No CRT measurements in this cohort' },
+  metricsCrtNoCrtBody: { de: 'Die ausgewählten Patient:innen haben keine CRT-Observation mit LOINC LP267955-5.', en: 'The selected patients have no CRT observation with LOINC LP267955-5.' },
+
+  // ---- Phase 13: Treatment-Interval Histogram (METRIC-02 / D-04) ----
+  metricsIntervalTitle: { de: 'Behandlungsintervalle (Injektionsgaps)', en: 'Treatment Intervals (Injection Gaps)' },
+  metricsIntervalXAxis: { de: 'Tage zwischen Behandlungen', en: 'Days between treatments' },
+  metricsIntervalYAxis: { de: 'Anzahl Intervalle', en: 'Interval count' },
+  metricsIntervalMedianLine: { de: 'Median {days}d', en: 'Median {days}d' },
+  metricsIntervalGapDays: { de: 'Tage', en: 'days' },
+  metricsIntervalEyeSelector: { de: 'Auge', en: 'Eye' },
+  metricsIntervalEyeOd: { de: 'OD', en: 'OD' },
+  metricsIntervalEyeOs: { de: 'OS', en: 'OS' },
+  metricsIntervalEyeCombined: { de: 'OD + OS', en: 'OD + OS' },
+  metricsIntervalBin_0_30: { de: '0–30d', en: '0–30d' },
+  metricsIntervalBin_30_60: { de: '30–60d', en: '30–60d' },
+  metricsIntervalBin_60_90: { de: '60–90d', en: '60–90d' },
+  metricsIntervalBin_90_120: { de: '90–120d', en: '90–120d' },
+  metricsIntervalBin_120_180: { de: '120–180d', en: '120–180d' },
+  metricsIntervalBin_180_plus: { de: '180+d', en: '180+d' },
+  metricsIntervalNoDataTitle: { de: 'Keine Behandlungsintervalle berechenbar', en: 'No treatment intervals calculable' },
+  metricsIntervalNoDataBody: { de: 'Mindestens 2 IVOM-Einträge pro Patient:in erforderlich.', en: 'At least 2 IVOM entries per patient required.' },
+
+  // ---- Phase 13: Responder Classification (METRIC-03 / D-05) ----
+  metricsResponderTitle: { de: 'Responder-Klassifikation', en: 'Responder Classification' },
+  metricsResponderBucketResponder: { de: 'Responder', en: 'Responder' },
+  metricsResponderBucketPartial: { de: 'Partial', en: 'Partial' },
+  metricsResponderBucketNonResponder: { de: 'Non-Responder', en: 'Non-Responder' },
+  metricsResponderBarXAxis: { de: 'Auge', en: 'Eye' },
+  metricsResponderBarYAxis: { de: 'Anzahl Patient:innen', en: 'Patient count' },
+  metricsResponderTrajectoryTitle: { de: 'Medianverlauf nach Bucket', en: 'Median trajectory by bucket' },
+  metricsResponderThreshold: { de: 'Responder-Schwelle: Δvisus ≥ {letters} Buchstaben @ 12 Monate', en: 'Responder threshold: Δvisus ≥ {letters} letters @ 12 months' },
+  metricsResponderThresholdSection: { de: 'Responder-Schwelle', en: 'Responder threshold' },
+  metricsResponderThresholdHelper: { de: 'Nur für aktive Kohorte, setzt sich bei Reload zurück.', en: 'Session-only; resets on page reload.' },
+  metricsResponderNoDataTitle: { de: 'Klassifikation nicht möglich', en: 'Classification not possible' },
+  metricsResponderNoDataBody: { de: 'Zu wenig Messungen für eine Responder-Klassifikation.', en: 'Insufficient measurements for responder classification.' },
+
+  // ---- Phase 13: CSV Export (METRIC-05 / D-07) ----
+  metricsPreviewExportCsvCrt: { de: 'CSV exportieren (CRT)', en: 'Export CSV (CRT)' },
+  metricsPreviewExportCsvInterval: { de: 'CSV exportieren (Intervalle)', en: 'Export CSV (Intervals)' },
+  metricsPreviewExportCsvResponder: { de: 'CSV exportieren (Responder)', en: 'Export CSV (Responder)' },
+  metricsPreviewColCrtUm: { de: 'CRT (µm)', en: 'CRT (µm)' },
+  metricsPreviewColCrtDeltaUm: { de: 'Δ CRT (µm)', en: 'Δ CRT (µm)' },
+  metricsPreviewColGapIndex: { de: 'Lücken-Index', en: 'Gap index' },
+  metricsPreviewColGapDays: { de: 'Tage (Lücke)', en: 'Gap days' },
+  metricsPreviewColProcedureDate: { de: 'Behandlungsdatum', en: 'Procedure date' },
+  metricsPreviewColBucket: { de: 'Responder-Bucket', en: 'Responder bucket' },
+  metricsPreviewColDeltaVisusLetters: { de: 'Δ Visus (Buchstaben)', en: 'Δ visus (letters)' },
+  metricsPreviewColMeasurementDate: { de: 'Messdatum', en: 'Measurement date' },
+
+  // ---- Phase 13: Error States ----
+  metricsErrorComputationFailed: { de: 'Berechnung fehlgeschlagen. Bitte erneut versuchen.', en: 'Computation failed. Please try again.' },
+  metricsSettingsNoControls: { de: 'Keine Einstellungen für dieses Intervall-Diagramm.', en: 'No settings for this interval chart.' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
@@ -528,4 +758,5 @@ export function t(key: TranslationKey, locale: Locale): string {
   return translations[key][locale];
 }
 
+export { translations };
 export default translations;

@@ -1,50 +1,89 @@
-import { useMemo } from 'react';
+/** Cohort analysis page — EMDREQ-ANL-001 to ANL-004 (center distribution, temporal trends, distributions, adverse events).
+ *
+ * Two tabs, selected via ?tab=aggregate|trajectories:
+ *   - aggregate (default): center / diagnosis / visus-trend / CRT / age-vs-visus charts
+ *   - trajectories:        OD / OS / combined Visus trajectory panels (OUTCOME-01..12)
+ */
+import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useData } from '../context/DataContext';
-import { useLanguage } from '../context/LanguageContext';
-import { usePageAudit } from '../hooks/usePageAudit';
-import { CHART_COLORS } from '../config/clinicalThresholds';
-import { computeCrtDistribution } from '../utils/distributionBins';
 import {
-  applyFilters,
-  getObservationsByCode,
-  getAge,
-  getDiagnosisLabel,
-  getCenterShorthand,
-  getDiagnosisFullText,
-  LOINC_VISUS,
-  LOINC_CRT,
-} from '../services/fhirLoader';
-import type { CohortFilter } from '../types/fhir';
-import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Scatter,
+  ScatterChart,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  Legend,
-  PieChart,
-  Pie,
-  Cell,
-  ScatterChart,
-  Scatter,
 } from 'recharts';
+
+import OutcomesView from '../components/outcomes/OutcomesView';
+import { CHART_COLORS } from '../config/clinicalThresholds';
+import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
+import {
+  applyFilters,
+  getAge,
+  getCenterShorthand,
+  getDiagnosisFullText,
+  getDiagnosisLabel,
+  getObservationsByCode,
+  LOINC_CRT,
+  LOINC_VISUS,
+} from '../services/fhirLoader';
+import type { CohortFilter } from '../types/fhir';
+import { computeCrtDistribution } from '../utils/distributionBins';
+
+type AnalysisTab = 'aggregate' | 'trajectories';
+
+function isAnalysisTab(v: string | null): v is AnalysisTab {
+  return v === 'aggregate' || v === 'trajectories';
+}
 
 export default function AnalysisPage() {
   const { activeCases } = useData();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { locale, t } = useLanguage();
 
-  usePageAudit('view_analysis', 'audit_detail_view_analysis');
+  // Tab selection via ?tab=aggregate|trajectories (default: aggregate).
+  const tab: AnalysisTab = useMemo(() => {
+    const raw = searchParams.get('tab');
+    return isAnalysisTab(raw) ? raw : 'aggregate';
+  }, [searchParams]);
+
+  const selectTab = useCallback(
+    (next: AnalysisTab) => {
+      const sp = new URLSearchParams(searchParams);
+      if (next === 'aggregate') sp.delete('tab');
+      else sp.set('tab', next);
+      setSearchParams(sp, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
 
   const filters: CohortFilter = useMemo(() => {
     const raw = searchParams.get('filters');
     if (!raw) return {};
-    try { return JSON.parse(raw); } catch { return {}; }
+    // M-04: explicitly pick known CohortFilter keys to prevent prototype pollution
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+      const safe: CohortFilter = {};
+      if (Array.isArray(parsed.diagnosis)) safe.diagnosis = parsed.diagnosis.map(String);
+      if (Array.isArray(parsed.gender)) safe.gender = parsed.gender.map(String);
+      if (Array.isArray(parsed.ageRange) && parsed.ageRange.length === 2) safe.ageRange = [Number(parsed.ageRange[0]), Number(parsed.ageRange[1])];
+      if (Array.isArray(parsed.visusRange) && parsed.visusRange.length === 2) safe.visusRange = [Number(parsed.visusRange[0]), Number(parsed.visusRange[1])];
+      if (Array.isArray(parsed.crtRange) && parsed.crtRange.length === 2) safe.crtRange = [Number(parsed.crtRange[0]), Number(parsed.crtRange[1])];
+      if (Array.isArray(parsed.centers)) safe.centers = parsed.centers.map(String);
+      return safe;
+    } catch { return {}; }
   }, [searchParams]);
 
   const cohort = useMemo(() => applyFilters(activeCases, filters), [activeCases, filters]);
@@ -119,6 +158,27 @@ export default function AnalysisPage() {
     }).length;
   }, [cohort]);
 
+  const tabButton = (id: AnalysisTab, label: string) => {
+    const active = tab === id;
+    return (
+      <button
+        type="button"
+        role="tab"
+        aria-selected={active}
+        aria-controls={`analysis-tab-${id}`}
+        onClick={() => selectTab(id)}
+        className={
+          'px-4 py-2 text-sm font-medium border-b-2 transition-colors focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2 ' +
+          (active
+            ? 'text-blue-600 border-blue-600'
+            : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300')
+        }
+      >
+        {label}
+      </button>
+    );
+  };
+
   return (
     <div className="p-8">
       <div className="mb-6">
@@ -133,7 +193,33 @@ export default function AnalysisPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      {/* Tab bar */}
+      <div
+        role="tablist"
+        aria-label={t('analysisTitle')}
+        className="mb-6 flex gap-2 border-b border-gray-200"
+      >
+        {tabButton('aggregate', t('analysisTabAggregate'))}
+        {tabButton('trajectories', t('analysisTabTrajectories'))}
+      </div>
+
+      {tab === 'trajectories' ? (
+        <section
+          id="analysis-tab-trajectories"
+          role="tabpanel"
+          aria-labelledby="analysis-tab-trajectories-button"
+          data-testid="analysis-tab-trajectories"
+        >
+          <OutcomesView />
+        </section>
+      ) : (
+        <section
+          id="analysis-tab-aggregate"
+          role="tabpanel"
+          aria-labelledby="analysis-tab-aggregate-button"
+          data-testid="analysis-tab-aggregate"
+          className="grid grid-cols-2 gap-6"
+        >
         {/* Center distribution */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h3 className="font-semibold text-gray-900 mb-4">
@@ -246,7 +332,8 @@ export default function AnalysisPage() {
             </ScatterChart>
           </ResponsiveContainer>
         </div>
-      </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -1,29 +1,27 @@
-import { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Save, RotateCcw, Server, CheckCircle, XCircle, Loader2, Download, ShieldCheck } from 'lucide-react';
-import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
+import { CheckCircle, Download, Loader2, RotateCcw, Save, Server, Settings as SettingsIcon, ShieldCheck,XCircle } from 'lucide-react';
+import { MessageSquarePlus } from 'lucide-react';
+import { useEffect,useState } from 'react';
+
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
-  updateSettings,
-  resetSettings,
-  exportSettingsYaml,
-  loadSettings,
-} from '../services/settingsService';
-import { downloadYaml } from '../utils/download';
-import {
-  testBlazeConnection,
   type DataSourceType,
+  testBlazeConnection,
 } from '../services/dataSource';
 import { invalidateBundleCache } from '../services/fhirLoader';
-import { logAudit } from '../services/auditService';
-import { getIssueCount, exportIssuesFull } from '../services/issueService';
-import { MessageSquarePlus } from 'lucide-react';
+import { exportIssuesFull,getIssueCount } from '../services/issueService';
+import {
+  exportSettingsYaml,
+  loadSettings,
+  resetSettings,
+  updateSettings,
+} from '../services/settingsService';
+import { downloadYaml } from '../utils/download';
 
 type ConnectionStatus = 'idle' | 'testing' | 'ok' | 'failed';
 
 export default function SettingsPage() {
   const { t } = useLanguage();
-  const { user } = useAuth();
   const { reloadData } = useData();
 
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
@@ -76,8 +74,8 @@ export default function SettingsPage() {
     showSaved();
   };
 
-  const handleReset = () => {
-    const defaults = resetSettings();
+  const handleReset = async () => {
+    const defaults = await resetSettings();
     setTwoFactorEnabled(defaults.twoFactorEnabled);
     setInterrupterDays(defaults.therapyInterrupterDays);
     setBreakerDays(defaults.therapyBreakerDays);
@@ -103,9 +101,6 @@ export default function SettingsPage() {
     const next = !twoFactorEnabled;
     setTwoFactorEnabled(next);
     updateSettings({ twoFactorEnabled: next });
-    if (user) {
-      logAudit(user.username, 'change_setting', next ? 'audit_detail_change_2fa_enabled' : 'audit_detail_change_2fa_disabled');
-    }
     showSaved();
   };
 
@@ -116,16 +111,16 @@ export default function SettingsPage() {
     updateSettings({ dataSource: { type, blazeUrl: type === 'blaze' ? blazeUrl : '' } });
     invalidateBundleCache();
     reloadData();
-    if (user) {
-      logAudit(user.username, 'change_setting', 'audit_detail_change_datasource', [type]);
-    }
   };
 
   const handleBlazeUrlChange = (url: string) => {
     setBlazeUrl(url);
     setConnectionStatus('idle');
     setConnectionDetail('');
-    updateSettings({ dataSource: { type: 'blaze', blazeUrl: url } });
+  };
+
+  const handleBlazeUrlCommit = () => {
+    updateSettings({ dataSource: { type: 'blaze', blazeUrl } });
     invalidateBundleCache();
     reloadData();
   };
@@ -316,6 +311,7 @@ export default function SettingsPage() {
                 type="url"
                 value={blazeUrl}
                 onChange={(e) => handleBlazeUrlChange(e.target.value)}
+                onBlur={handleBlazeUrlCommit}
                 placeholder="http://localhost:8080/fhir"
                 className="w-full max-w-md border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
               />

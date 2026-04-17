@@ -1,47 +1,45 @@
-import { useState } from 'react';
+/** Cohort builder page — EMDREQ-KOH-001 to KOH-007, EMDREQ-QUAL-009/010 (filters, saved searches, therapy discontinuation). */
+import {
+  ArrowUpDown,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Filter,
+  LayoutList,
+  LineChart,
+  Play,
+  Save,
+  Search,
+  Table2,
+  Trash2,
+} from 'lucide-react';
+import { useMemo,useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { useData } from '../context/DataContext';
-import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { usePageAudit } from '../hooks/usePageAudit';
-import { logAudit } from '../services/auditService';
-import { downloadCsv, downloadJson, datedFilename } from '../utils/download';
-import { formatDate } from '../utils/dateFormat';
 import {
   applyFilters,
   getAge,
-  getLatestObservation,
-  getDiagnosisLabel,
   getDiagnosisFullText,
-  LOINC_VISUS,
+  getDiagnosisLabel,
+  getLatestObservation,
   LOINC_CRT,
+  LOINC_VISUS,
   SNOMED_AMD,
   SNOMED_DR,
 } from '../services/fhirLoader';
 import type { CohortFilter, SavedSearch } from '../types/fhir';
-import {
-  Search,
-  Save,
-  Trash2,
-  Play,
-  Filter,
-  ChevronDown,
-  ChevronUp,
-  ArrowUpDown,
-  Download,
-} from 'lucide-react';
+import { formatDate } from '../utils/dateFormat';
+import { datedFilename,downloadCsv, downloadJson } from '../utils/download';
 
 type SortField = 'date' | 'name';
 
 export default function CohortBuilderPage() {
   const { activeCases, centers, savedSearches, addSavedSearch, removeSavedSearch } =
     useData();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const { locale, t } = useLanguage();
-
-  // Audit: log page view
-  usePageAudit('view_cohort', 'audit_detail_view_cohort');
 
   const [filters, setFilters] = useState<CohortFilter>({});
   const [showSaved, setShowSaved] = useState(false);
@@ -53,7 +51,26 @@ export default function CohortBuilderPage() {
   const [visusMinText, setVisusMinText] = useState('');
   const [visusMaxText, setVisusMaxText] = useState('');
 
-  const filteredCases = applyFilters(activeCases, filters);
+  const [showDetailedView, setShowDetailedView] = useState(false);
+
+  const filteredCases = useMemo(() => applyFilters(activeCases, filters), [activeCases, filters]);
+
+  // Summary metrics for the default (non-detailed) view
+  const cohortSummary = useMemo(() => {
+    if (filteredCases.length === 0) return null;
+    const ages = filteredCases.map((c) => getAge(c.birthDate)).filter((a) => a > 0);
+    const visusList = filteredCases
+      .map((c) => getLatestObservation(c.observations, LOINC_VISUS)?.valueQuantity?.value)
+      .filter((v): v is number => v !== undefined && v !== null && !isNaN(v));
+    const uniqueCenters = new Set(filteredCases.map((c) => c.centerId));
+    return {
+      ageMin: ages.length ? Math.min(...ages) : null,
+      ageMax: ages.length ? Math.max(...ages) : null,
+      visusMin: visusList.length ? Math.min(...visusList) : null,
+      visusMax: visusList.length ? Math.max(...visusList) : null,
+      centerCount: uniqueCenters.size,
+    };
+  }, [filteredCases]);
 
   const handleSave = () => {
     if (!saveName.trim()) return;
@@ -90,7 +107,6 @@ export default function CohortBuilderPage() {
       ];
     });
     downloadCsv(headers, rows, datedFilename('cohort-export', 'csv'));
-    if (user) logAudit(user.username, 'save_search', 'audit_detail_export_csv', [String(filteredCases.length)]);
   };
 
   const handleExportJson = () => {
@@ -106,7 +122,6 @@ export default function CohortBuilderPage() {
       medications: c.medications,
     }));
     downloadJson(data, datedFilename('cohort-export', 'json'));
-    if (user) logAudit(user.username, 'save_search', 'audit_detail_export_json', [String(filteredCases.length)]);
   };
 
   const diagnoses = [
@@ -123,18 +138,20 @@ export default function CohortBuilderPage() {
             {t('cohortSubtitle')}
           </p>
         </div>
-        <button
-          onClick={() => setShowSaved(!showSaved)}
-          className="flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-        >
-          <Search className="w-4 h-4" />
-          {t('savedSearches')} ({savedSearches.length})
-          {showSaved ? (
-            <ChevronUp className="w-3 h-3" />
-          ) : (
-            <ChevronDown className="w-3 h-3" />
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowSaved(!showSaved)}
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+          >
+            <Search className="w-4 h-4" />
+            {t('savedSearches')} ({savedSearches.length})
+            {showSaved ? (
+              <ChevronUp className="w-3 h-3" />
+            ) : (
+              <ChevronDown className="w-3 h-3" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Saved searches panel */}
@@ -172,6 +189,15 @@ export default function CohortBuilderPage() {
                   </p>
                 </div>
                 <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/analysis?tab=trajectories&cohort=${encodeURIComponent(s.id)}`)}
+                    className="p-1.5 text-violet-600 hover:bg-violet-50 rounded focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
+                    title={t('outcomesOpenForCohort')}
+                    aria-label={t('outcomesOpenForCohort')}
+                  >
+                    <LineChart className="w-4 h-4" />
+                  </button>
                   <button
                     onClick={() => handleLoadSearch(s)}
                     className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
@@ -462,6 +488,24 @@ export default function CohortBuilderPage() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                {/* Detailed view toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowDetailedView((v) => !v)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-colors ${
+                    showDetailedView
+                      ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  }`}
+                  title={showDetailedView ? t('summaryView') : t('detailedView')}
+                >
+                  {showDetailedView ? (
+                    <LayoutList className="w-4 h-4" />
+                  ) : (
+                    <Table2 className="w-4 h-4" />
+                  )}
+                  {showDetailedView ? t('summaryView') : t('detailedView')}
+                </button>
                 {/* K08 N08.01: Dataset download */}
                 <button
                   onClick={handleExportCsv}
@@ -494,83 +538,118 @@ export default function CohortBuilderPage() {
                 </button>
               </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      {t('pseudonym')}
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      {t('gender')}
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      {t('age')}
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      {t('diagnosis')}
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      {t('visus')}
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      CRT (µm)
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      {t('center')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {filteredCases.map((c) => {
-                    const latestVisus = getLatestObservation(
-                      c.observations,
-                      LOINC_VISUS
-                    );
-                    const latestCrt = getLatestObservation(
-                      c.observations,
-                      LOINC_CRT
-                    );
-                    const diagCodes = c.conditions.flatMap((cond) =>
-                      cond.code.coding.map((cd) => cd.code)
-                    );
-                    return (
-                      <tr
-                        key={c.id}
-                        className="hover:bg-blue-50 cursor-pointer"
-                        onClick={() => navigate(`/case/${c.id}`)}
-                      >
-                        <td className="px-4 py-3 font-mono text-sm text-blue-600">
-                          {c.pseudonym}
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          {c.gender === 'female' ? 'W' : 'M'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-right">
-                          {getAge(c.birthDate)}
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          {diagCodes.map((code, i) => (
-                            <span key={code} title={getDiagnosisFullText(code, locale)} className="cursor-help border-b border-dotted border-gray-400">
-                              {i > 0 ? ', ' : ''}{getDiagnosisLabel(code, locale)}
-                            </span>
-                          ))}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-right font-mono">
-                          {latestVisus?.valueQuantity?.value?.toFixed(2) ?? '—'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-right font-mono">
-                          {latestCrt?.valueQuantity?.value ?? '—'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
-                          {c.centerName}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+
+            {/* Summary view (default) */}
+            {!showDetailedView && (
+              <div className="p-6">
+                {!cohortSummary ? (
+                  <p className="text-sm text-gray-400 text-center py-8">{t('cohortSummaryNoData')}</p>
+                ) : (
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-xs font-medium text-gray-500 uppercase mb-1">{t('cohortSummaryAgeRange')}</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {cohortSummary.ageMin ?? '—'}–{cohortSummary.ageMax ?? '—'}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">{t('yearsShort')}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-xs font-medium text-gray-500 uppercase mb-1">{t('cohortSummaryVisusRange')}</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {cohortSummary.visusMin !== null ? cohortSummary.visusMin.toFixed(2) : '—'}–{cohortSummary.visusMax !== null ? cohortSummary.visusMax.toFixed(2) : '—'}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">{t('visusDecimal')}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-xs font-medium text-gray-500 uppercase mb-1">{t('cohortSummaryCenters')}</p>
+                      <p className="text-2xl font-bold text-gray-900">{cohortSummary.centerCount}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{t('centers')}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Detailed view (table) */}
+            {showDetailedView && (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        {t('pseudonym')}
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        {t('gender')}
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        {t('age')}
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        {t('diagnosis')}
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        {t('visus')}
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        CRT (µm)
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        {t('center')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filteredCases.map((c) => {
+                      const latestVisus = getLatestObservation(
+                        c.observations,
+                        LOINC_VISUS
+                      );
+                      const latestCrt = getLatestObservation(
+                        c.observations,
+                        LOINC_CRT
+                      );
+                      const diagCodes = c.conditions.flatMap((cond) =>
+                        cond.code.coding.map((cd) => cd.code)
+                      );
+                      return (
+                        <tr
+                          key={c.id}
+                          className="hover:bg-blue-50 cursor-pointer"
+                          onClick={() => navigate(`/case/${c.id}`)}
+                        >
+                          <td className="px-4 py-3 font-mono text-sm text-blue-600">
+                            {c.pseudonym}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {c.gender === 'female' ? t('femaleShort') : t('maleShort')}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right">
+                            {getAge(c.birthDate)}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {diagCodes.map((code, i) => (
+                              <span key={code} title={getDiagnosisFullText(code, locale)} className="cursor-help border-b border-dotted border-gray-400">
+                                {i > 0 ? ', ' : ''}{getDiagnosisLabel(code, locale)}
+                              </span>
+                            ))}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right font-mono">
+                            {latestVisus?.valueQuantity?.value?.toFixed(2) ?? '—'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right font-mono">
+                            {latestCrt?.valueQuantity?.value ?? '—'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {c.centerName}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>

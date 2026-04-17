@@ -1,13 +1,24 @@
-import { useState, useMemo } from 'react';
+import { ArrowUpDown, Building2, CheckCircle,Database, Filter, Microscope, Search, Shield, ShieldCheck, Stethoscope, Trash2, UserPlus } from 'lucide-react';
+import { useCallback,useEffect, useMemo, useState } from 'react';
+
+import type { UserRole } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import type { TranslationKey } from '../i18n/translations';
-import { usePageAudit } from '../hooks/usePageAudit';
+import { authFetch } from '../services/authHeaders';
 import { getDateLocale } from '../utils/dateFormat';
-import { UserPlus, Trash2, Shield, ShieldCheck, Search, ArrowUpDown, Filter, Microscope, Stethoscope, Database, Building2 } from 'lucide-react';
-import type { ManagedUser, UserRole } from '../context/AuthContext';
 
-const ALL_CENTERS = ['UKA', 'UKB', 'LMU', 'UKT', 'UKM'];
+interface CenterOption { id: string; label: string }
+
+interface ServerUser {
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  role: UserRole;
+  centers: string[];
+  createdAt: string;
+  lastLogin?: string;
+}
 
 /** Map role to translation key */
 function getRoleLabel(role: UserRole, t: (k: TranslationKey) => string): string {
@@ -38,12 +49,16 @@ type SortField = 'username' | 'role' | 'center' | 'createdAt' | 'lastLogin';
 type SortDir = 'asc' | 'desc';
 
 export default function AdminPage() {
-  const { user, managedUsers, addManagedUser, removeManagedUser } = useAuth();
+  const { user } = useAuth();
   const { locale, t } = useLanguage();
 
-  usePageAudit('view_admin', 'audit_detail_view_admin');
-
   const dateFmt = getDateLocale(locale);
+
+  const [users, setUsers] = useState<ServerUser[]>([]);
+  const [centerOptions, setCenterOptions] = useState<CenterOption[]>([]);
+  const [centerLabels, setCenterLabels] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [showForm, setShowForm] = useState(false);
   const [username, setUsername] = useState('');
@@ -51,35 +66,88 @@ export default function AdminPage() {
   const [lastName, setLastName] = useState('');
   const [role, setRole] = useState<UserRole>('researcher');
   const [selectedCenters, setSelectedCenters] = useState<string[]>([]);
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
 
   // Search, filter, sort state
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [centerFilter, setCenterFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('username');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
-  const getCentersDisplay = (mu: ManagedUser): string => {
-    if (mu.centers && mu.centers.length > 0) return mu.centers.join(', ');
-    return mu.center ?? '—';
-  };
+  // F-03: Auto-clear generated password after 30 seconds
+  useEffect(() => {
+    if (!generatedPassword) return;
+    const timer = setTimeout(() => setGeneratedPassword(null), 30_000);
+    return () => clearTimeout(timer);
+  }, [generatedPassword]);
+
+  const loadUsers = useCallback(async () => {
+    setLoadError(null);
+    try {
+      const resp = await authFetch('/api/auth/users');
+      if (resp.ok) {
+        const data = await resp.json() as { users: ServerUser[] };
+        setUsers(data.users);
+      } else {
+        setLoadError(`Server returned ${resp.status}`);
+      }
+    } catch (err) {
+      console.error('[AdminPage] Failed to load users:', err);
+      setLoadError(err instanceof Error ? err.message : 'Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // F-20: Load center options from server instead of hardcoding
+  useEffect(() => {
+    authFetch('/api/fhir/centers')
+      .then((r) => r.ok ? r.json() as Promise<{ centers: Array<{ id: string; shorthand: string }> }> : null)
+      .then((data) => {
+        if (data?.centers) {
+          setCenterOptions(data.centers.map((c) => ({ id: c.id, label: c.shorthand })));
+          setCenterLabels(Object.fromEntries(data.centers.map((c) => [c.id, c.shorthand])));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      void loadUsers();
+    }
+  }, [loadUsers, user?.role]);
+
+  const getCentersDisplay = useCallback((u: ServerUser): string => {
+    if (u.centers && u.centers.length > 0) {
+      return u.centers.map((c) => centerLabels[c] ?? c).join(', ');
+    }
+    return '—';
+  }, [centerLabels]);
 
   const filteredUsers = useMemo(() => {
-    let result = [...managedUsers];
+    let result = [...users];
 
     // Search filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
-        (mu) =>
-          mu.username.toLowerCase().includes(q) ||
-          getCentersDisplay(mu).toLowerCase().includes(q) ||
-          mu.role.toLowerCase().includes(q)
+        (u) =>
+          u.username.toLowerCase().includes(q) ||
+          getCentersDisplay(u).toLowerCase().includes(q) ||
+          u.role.toLowerCase().includes(q)
       );
     }
 
     // Role filter
     if (roleFilter !== 'all') {
-      result = result.filter((mu) => mu.role === roleFilter);
+      result = result.filter((u) => u.role === roleFilter);
+    }
+
+    // Center filter (VQA-01 / D-09)
+    if (centerFilter !== 'all') {
+      result = result.filter((u) => Array.isArray(u.centers) && u.centers.includes(centerFilter));
     }
 
     // Sort
@@ -106,7 +174,7 @@ export default function AdminPage() {
     });
 
     return result;
-  }, [managedUsers, searchQuery, roleFilter, sortField, sortDir]);
+  }, [users, searchQuery, roleFilter, centerFilter, sortField, sortDir, getCentersDisplay]);
 
   // --- Early return AFTER all hooks ---
   if (!user || user.role !== 'admin') {
@@ -135,30 +203,52 @@ export default function AdminPage() {
     );
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!username.trim()) return;
 
-    const newUser: ManagedUser = {
-      username: username.trim(),
-      firstName: firstName.trim() || undefined,
-      lastName: lastName.trim() || undefined,
-      role,
-      centers: selectedCenters.length > 0 ? selectedCenters : undefined,
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const resp = await authFetch('/api/auth/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: username.trim(),
+          firstName: firstName.trim() || undefined,
+          lastName: lastName.trim() || undefined,
+          role,
+          centers: selectedCenters.length > 0 ? selectedCenters : [],
+        }),
+      });
 
-    addManagedUser(newUser);
-
-    setUsername('');
-    setFirstName('');
-    setLastName('');
-    setRole('researcher');
-    setSelectedCenters([]);
-    setShowForm(false);
+      if (resp.ok) {
+        const data = await resp.json() as { user: ServerUser; generatedPassword: string };
+        setGeneratedPassword(data.generatedPassword);
+        setUsername('');
+        setFirstName('');
+        setLastName('');
+        setRole('researcher');
+        setSelectedCenters([]);
+        setShowForm(false);
+        await loadUsers();
+      } else {
+        const err = await resp.json() as { error: string };
+        alert(err.error ?? 'Failed to create user');
+      }
+    } catch (err) {
+      console.error('[AdminPage] Failed to create user:', err);
+    }
   };
 
-  const handleDelete = (targetUsername: string) => {
-    removeManagedUser(targetUsername);
+  const handleDelete = async (targetUsername: string) => {
+    try {
+      const resp = await authFetch(`/api/auth/users/${encodeURIComponent(targetUsername)}`, {
+        method: 'DELETE',
+      });
+      if (resp.ok) {
+        await loadUsers();
+      }
+    } catch (err) {
+      console.error('[AdminPage] Failed to delete user:', err);
+    }
   };
 
   const SortHeader = ({ field, label }: { field: SortField; label: string }) => (
@@ -180,6 +270,32 @@ export default function AdminPage() {
         <h1 className="text-2xl font-bold text-gray-900">{t('adminTitle')}</h1>
         <p className="text-gray-500 mt-1">{t('adminSubtitle')}</p>
       </div>
+
+      {/* Generated password banner */}
+      {generatedPassword && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
+          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-green-800">{t('userCreatedSuccess')}</p>
+            <p className="text-sm text-green-700 mt-1">
+              {t('generatedPasswordLabel')} <code className="bg-green-100 px-2 py-0.5 rounded font-mono text-sm">{generatedPassword}</code>
+              <button
+                onClick={() => { void navigator.clipboard.writeText(generatedPassword); }}
+                className="ml-2 text-xs text-green-600 hover:text-green-800 underline"
+              >
+                {t('copy')}
+              </button>
+            </p>
+            <p className="text-xs text-green-600 mt-1">{t('savePasswordHint')}</p>
+            <button
+              onClick={() => setGeneratedPassword(null)}
+              className="text-xs text-green-600 hover:text-green-800 mt-2 underline"
+            >
+              {t('dismiss')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Add User Section */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
@@ -260,18 +376,18 @@ export default function AdminPage() {
                 {t('adminAssignCenters')}
               </label>
               <div className="flex flex-wrap gap-2">
-                {ALL_CENTERS.map((c) => (
+                {centerOptions.map((c) => (
                   <button
-                    key={c}
+                    key={c.id}
                     type="button"
-                    onClick={() => toggleCenter(c)}
+                    onClick={() => toggleCenter(c.id)}
                     className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                      selectedCenters.includes(c)
+                      selectedCenters.includes(c.id)
                         ? 'bg-blue-50 border-blue-300 text-blue-700 font-medium'
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                     }`}
                   >
-                    {c}
+                    {c.label}
                   </button>
                 ))}
               </div>
@@ -279,7 +395,7 @@ export default function AdminPage() {
 
             <div className="flex gap-3">
               <button
-                onClick={handleAdd}
+                onClick={() => void handleAdd()}
                 className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
               >
                 {t('save')}
@@ -307,9 +423,9 @@ export default function AdminPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">{t('adminUsers')}</h2>
           <span className="text-sm text-gray-500">
-            {filteredUsers.length === managedUsers.length
-              ? `${managedUsers.length} ${t('adminUsersCount')}`
-              : `${filteredUsers.length} ${t('auditFilteredOf')} ${managedUsers.length}`}
+            {loading ? '…' : filteredUsers.length === users.length
+              ? `${users.length} ${t('adminUsersCount')}`
+              : `${filteredUsers.length} ${t('auditFilteredOf')} ${users.length}`}
           </span>
         </div>
 
@@ -341,6 +457,20 @@ export default function AdminPage() {
               <option value="clinic_lead">{t('roleClinicLead')}</option>
             </select>
           </div>
+          <div className="flex items-center gap-1.5">
+            <Building2 className="w-4 h-4 text-gray-400" />
+            <select
+              data-testid="admin-center-filter"
+              value={centerFilter}
+              onChange={(e) => setCenterFilter(e.target.value)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">{t('adminFilterAllCenters')}</option>
+              {centerOptions.map((c) => (
+                <option key={c.id} value={c.id}>{c.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -357,53 +487,61 @@ export default function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-gray-400">Loading…</td>
+                </tr>
+              ) : loadError ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-red-500">{loadError}</td>
+                </tr>
+              ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-gray-400">
                     {t('noData')}
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((mu) => (
-                  <tr key={mu.username} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 font-medium text-gray-900">{mu.username}</td>
+                filteredUsers.map((u) => (
+                  <tr key={u.username} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-3 font-medium text-gray-900">{u.username}</td>
                     <td className="py-3 text-gray-600">
-                      {mu.firstName || mu.lastName
-                        ? `${mu.firstName ?? ''} ${mu.lastName ?? ''}`.trim()
+                      {u.firstName || u.lastName
+                        ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim()
                         : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="py-3">
                       <span className="inline-flex items-center gap-1.5 text-gray-700">
-                        {getRoleIcon(mu.role)}
-                        {getRoleLabel(mu.role, t)}
+                        {getRoleIcon(u.role)}
+                        {getRoleLabel(u.role, t)}
                       </span>
                     </td>
                     <td className="py-3 text-gray-600">
-                      {mu.centers && mu.centers.length > 0 ? (
+                      {u.centers && u.centers.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
-                          {mu.centers.map((c) => (
+                          {u.centers.map((c) => (
                             <span key={c} className="inline-block px-1.5 py-0.5 bg-gray-100 rounded text-xs font-medium">
-                              {c}
+                              {centerLabels[c] ?? c}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        mu.center ?? <span className="text-gray-300">—</span>
+                        <span className="text-gray-300">—</span>
                       )}
                     </td>
                     <td className="py-3 text-gray-600">
-                      {new Date(mu.createdAt).toLocaleDateString(dateFmt)}
+                      {new Date(u.createdAt).toLocaleDateString(dateFmt)}
                     </td>
                     <td className="py-3 text-gray-600">
-                      {mu.lastLogin
-                        ? new Date(mu.lastLogin).toLocaleString(dateFmt, {
+                      {u.lastLogin
+                        ? new Date(u.lastLogin).toLocaleString(dateFmt, {
                             dateStyle: 'short',
                             timeStyle: 'short',
                           })
                         : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="py-3 text-right">
-                      {mu.username === user.username ? (
+                      {u.username === user.username ? (
                         <span
                           className="text-gray-400 cursor-not-allowed inline-flex items-center gap-1"
                           title={t('adminNoDelete')}
@@ -412,7 +550,7 @@ export default function AdminPage() {
                         </span>
                       ) : (
                         <button
-                          onClick={() => handleDelete(mu.username)}
+                          onClick={() => void handleDelete(u.username)}
                           className="text-red-500 hover:text-red-700 inline-flex items-center gap-1"
                           title={t('delete')}
                         >

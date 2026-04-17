@@ -1,0 +1,320 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1050" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrow-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#d97706"/>
+    </marker>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Hintergrund -->
+  <rect width="1400" height="1050" fill="#f8fafc" rx="8"/>
+
+  <!-- Titel -->
+  <text x="700" y="32" text-anchor="middle" font-size="20" font-weight="700" fill="#0f172a">EyeMatics Systemarchitektur v1.4 — Vier-Zonen-Modell (pro Standort)</text>
+  <text x="700" y="52" text-anchor="middle" font-size="11" fill="#64748b">DSF orchestriert standortuebergreifenden Datenaustausch | EMD ist ein lokales Dashboard ueber lokal verfuegbare Daten</text>
+
+  <!-- ================================================================ -->
+  <!-- LINKE SPALTE: EMD-Stack (Zone 4 + 3) — vertikal, oben nach unten -->
+  <!-- ================================================================ -->
+
+  <!-- Standortgrenze (gestrichelt) -->
+  <rect x="15" y="62" width="1370" height="580" rx="12" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="8,4"/>
+  <text x="25" y="78" font-size="8" fill="#94a3b8">Standortgrenze — jedes Universitaetsklinikum betreibt diesen Stack eigenstaendig</text>
+
+  <!-- ==================== ZONE 4: BROWSER ==================== -->
+  <rect x="30" y="85" width="620" height="200" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="35" y="87" width="130" height="18" rx="3" fill="#3b82f6"/>
+  <text x="100" y="100" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">ZONE 4: BROWSER</text>
+  <text x="180" y="101" font-size="11" font-weight="600" fill="#1e40af">React SPA — kommuniziert nur mit dem eigenen lokalen Backend</text>
+
+  <!-- Kontexte -->
+  <rect x="50" y="115" width="130" height="38" rx="5" fill="#fff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="115" y="132" text-anchor="middle" font-size="9" font-weight="600" fill="#1e40af">AuthContext</text>
+  <text x="115" y="144" text-anchor="middle" font-size="7.5" fill="#64748b">Server-JWT | POST /login</text>
+
+  <rect x="190" y="115" width="130" height="38" rx="5" fill="#fff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="255" y="132" text-anchor="middle" font-size="9" font-weight="600" fill="#1e40af">DataContext</text>
+  <text x="255" y="144" text-anchor="middle" font-size="7.5" fill="#64748b">Server-APIs | Zentrenfilter</text>
+
+  <rect x="330" y="115" width="130" height="38" rx="5" fill="#fff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="395" y="132" text-anchor="middle" font-size="9" font-weight="600" fill="#1e40af">LanguageContext</text>
+  <text x="395" y="144" text-anchor="middle" font-size="7.5" fill="#64748b">DE / EN</text>
+
+  <rect x="470" y="115" width="160" height="38" rx="5" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+  <text x="550" y="132" text-anchor="middle" font-size="9" font-weight="600" fill="#92400e">LoginPage</text>
+  <text x="550" y="144" text-anchor="middle" font-size="7.5" fill="#b45309">POST /api/auth/login + 2FA</text>
+
+  <!-- Seiten -->
+  <rect x="50" y="163" width="62" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="81" y="180" text-anchor="middle" font-size="7" font-weight="600" fill="#1e40af">Start</text>
+  <rect x="117" y="163" width="62" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="148" y="180" text-anchor="middle" font-size="7" font-weight="600" fill="#1e40af">Kohorte</text>
+  <rect x="184" y="163" width="62" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="215" y="180" text-anchor="middle" font-size="7" font-weight="600" fill="#1e40af">Analyse</text>
+  <rect x="251" y="163" width="62" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="282" y="180" text-anchor="middle" font-size="7" font-weight="600" fill="#1e40af">Falldetail</text>
+  <rect x="318" y="163" width="62" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="349" y="180" text-anchor="middle" font-size="7" font-weight="600" fill="#1e40af">Qualitaet</text>
+  <rect x="385" y="163" width="62" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="416" y="180" text-anchor="middle" font-size="7" font-weight="600" fill="#1e40af">Dok.Qual.</text>
+  <rect x="452" y="163" width="88" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="496" y="180" text-anchor="middle" font-size="7" font-weight="600" fill="#1e40af">Nutzerverwaltung</text>
+  <rect x="545" y="163" width="55" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="572" y="175" text-anchor="middle" font-size="7" font-weight="600" fill="#1e40af">Protokoll</text>
+  <text x="572" y="185" text-anchor="middle" font-size="6" fill="#3b82f6">(nur lesen)</text>
+  <rect x="604" y="163" width="40" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="624" y="180" text-anchor="middle" font-size="7" font-weight="600" fill="#1e40af">Config</text>
+
+  <!-- Dienste-Leiste -->
+  <rect x="50" y="200" width="580" height="30" rx="4" fill="#fff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="60" y="214" font-size="8" font-weight="600" fill="#1e40af">Dienste:</text>
+  <text x="110" y="214" font-size="7.5" fill="#64748b">authHeaders (JWT Bearer) | settingsService | issueService | fhirLoader → /api/fhir/bundles</text>
+  <text x="60" y="225" font-size="7" fill="#dc2626">Kein Audit-Schreibzugriff | Keine hartkodierten Zugangsdaten | Kein Direktzugriff auf /data/* | Kein localStorage fuer Daten</text>
+
+  <!-- Pfeil Zone 4 → Zone 3 -->
+  <text x="320" y="252" text-anchor="middle" font-size="9" font-weight="600" fill="#64748b">HTTPS (JWT Bearer Token)</text>
+  <line x1="320" y1="258" x2="320" y2="298" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="4,2"/>
+
+  <!-- ==================== ZONE 3: EMD BACKEND ==================== -->
+  <rect x="30" y="300" width="620" height="325" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="35" y="302" width="170" height="18" rx="3" fill="#16a34a"/>
+  <text x="120" y="315" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">ZONE 3: EMD BACKEND</text>
+  <text x="220" y="316" font-size="11" font-weight="600" fill="#166534">Express 5 — liest nur aus lokalem Repository</text>
+
+  <!-- Middleware-Kette -->
+  <rect x="50" y="328" width="580" height="35" rx="5" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="340" y="343" text-anchor="middle" font-size="9" font-weight="600" fill="#166534">Middleware-Kette (auf /api/* gemountet)</text>
+  <text x="340" y="355" text-anchor="middle" font-size="7.5" fill="#4ade80">express.json(/auth,/data,/issues,/fhir) → auditMiddleware (Auto-Log SQLite + Schwaerzung) → authMiddleware (JWT HS256/RS256)</text>
+
+  <!-- API-Routen -->
+  <rect x="50" y="372" width="140" height="38" rx="4" fill="#fff" stroke="#86efac" stroke-width="1"/>
+  <text x="120" y="387" text-anchor="middle" font-size="8.5" font-weight="600" fill="#166534">Auth-API</text>
+  <text x="120" y="400" text-anchor="middle" font-size="7" fill="#64748b">Login | Verify | Users CRUD</text>
+
+  <rect x="198" y="372" width="140" height="38" rx="4" fill="#fff" stroke="#86efac" stroke-width="1"/>
+  <text x="268" y="387" text-anchor="middle" font-size="8.5" font-weight="600" fill="#166534">FHIR-API</text>
+  <text x="268" y="400" text-anchor="middle" font-size="7" fill="#64748b">Bundles | Zentrenfilter</text>
+
+  <rect x="346" y="372" width="140" height="38" rx="4" fill="#fff" stroke="#86efac" stroke-width="1"/>
+  <text x="416" y="387" text-anchor="middle" font-size="8.5" font-weight="600" fill="#166534">Daten-API</text>
+  <text x="416" y="400" text-anchor="middle" font-size="7" fill="#64748b">Flags | Suchen | Faelle</text>
+
+  <rect x="494" y="372" width="136" height="38" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="562" y="387" text-anchor="middle" font-size="8.5" font-weight="600" fill="#991b1b">Audit-API (nur lesen)</text>
+  <text x="562" y="400" text-anchor="middle" font-size="7" fill="#dc2626">Kein POST/PUT/DELETE</text>
+
+  <rect x="50" y="413" width="140" height="24" rx="4" fill="#fff" stroke="#86efac" stroke-width="0.75"/>
+  <text x="120" y="429" text-anchor="middle" font-size="7.5" font-weight="600" fill="#166534">Issues-API | Settings-API</text>
+
+  <!-- Infrastruktur-Zeile -->
+  <rect x="50" y="448" width="140" height="28" rx="4" fill="#fff" stroke="#86efac" stroke-width="0.75"/>
+  <text x="120" y="462" text-anchor="middle" font-size="8" font-weight="600" fill="#166534">FHIR-Proxy</text>
+  <text x="120" y="472" text-anchor="middle" font-size="6.5" fill="#64748b">/api/fhir-proxy (admin)</text>
+
+  <rect x="200" y="448" width="160" height="28" rx="4" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="0.75"/>
+  <text x="280" y="462" text-anchor="middle" font-size="8" font-weight="600" fill="#166534">Static + SPA Fallback</text>
+  <text x="280" y="472" text-anchor="middle" font-size="6.5" fill="#64748b">/data/* → 403 blockiert</text>
+
+  <rect x="370" y="448" width="130" height="28" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="0.75"/>
+  <text x="435" y="462" text-anchor="middle" font-size="8" font-weight="600" fill="#166534">initAuth</text>
+  <text x="435" y="472" text-anchor="middle" font-size="6.5" fill="#64748b">JWT-Geheimnis + bcrypt</text>
+
+  <rect x="510" y="448" width="120" height="28" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="0.75"/>
+  <text x="570" y="462" text-anchor="middle" font-size="8" font-weight="600" fill="#166534">initCenters</text>
+  <text x="570" y="472" text-anchor="middle" font-size="6.5" fill="#64748b">data/centers.json</text>
+
+  <!-- Datenhaltung -->
+  <rect x="50" y="488" width="580" height="68" rx="5" fill="#fefce8" stroke="#fde68a" stroke-width="1"/>
+  <text x="60" y="504" font-size="8.5" font-weight="600" fill="#854d0e">Serverseitige Datenhaltung</text>
+
+  <rect x="60" y="512" width="105" height="30" rx="3" fill="#fff" stroke="#fbbf24" stroke-width="0.5"/>
+  <text x="112" y="526" text-anchor="middle" font-size="8" font-weight="600" fill="#854d0e">audit.db</text>
+  <text x="112" y="537" text-anchor="middle" font-size="6.5" fill="#a16207">SQLite | WAL | immutable</text>
+
+  <rect x="173" y="512" width="105" height="30" rx="3" fill="#fff" stroke="#fbbf24" stroke-width="0.5"/>
+  <text x="225" y="526" text-anchor="middle" font-size="8" font-weight="600" fill="#854d0e">data.db</text>
+  <text x="225" y="537" text-anchor="middle" font-size="6.5" fill="#a16207">SQLite | per-user</text>
+
+  <rect x="286" y="512" width="105" height="30" rx="3" fill="#fff" stroke="#fbbf24" stroke-width="0.5"/>
+  <text x="338" y="526" text-anchor="middle" font-size="8" font-weight="600" fill="#854d0e">users.json</text>
+  <text x="338" y="537" text-anchor="middle" font-size="6.5" fill="#a16207">bcrypt + Rollen + Zentren</text>
+
+  <rect x="399" y="512" width="105" height="30" rx="3" fill="#fff" stroke="#fbbf24" stroke-width="0.5"/>
+  <text x="451" y="526" text-anchor="middle" font-size="8" font-weight="600" fill="#854d0e">centers.json</text>
+  <text x="451" y="537" text-anchor="middle" font-size="6.5" fill="#a16207">Konfigurierbar</text>
+
+  <rect x="512" y="512" width="115" height="30" rx="3" fill="#fff" stroke="#fbbf24" stroke-width="0.5"/>
+  <text x="569" y="526" text-anchor="middle" font-size="8" font-weight="600" fill="#854d0e">jwt-secret.txt</text>
+  <text x="569" y="537" text-anchor="middle" font-size="6.5" fill="#a16207">HS256 (auto-generiert)</text>
+
+  <!-- Konfiguration -->
+  <rect x="50" y="565" width="580" height="22" rx="3" fill="#fef9c3" stroke="#fde68a" stroke-width="0.5"/>
+  <text x="340" y="580" text-anchor="middle" font-size="7.5" font-weight="600" fill="#854d0e">config/settings.yaml (ausserhalb Webroot) — provider | twoFactorEnabled | maxLoginAttempts | otpCode | therapyDays | dataSource (type, blazeUrl)</text>
+
+  <!-- Audit-Hinweis -->
+  <rect x="50" y="595" width="580" height="18" rx="3" fill="#fef2f2" stroke="#fca5a5" stroke-width="0.5"/>
+  <text x="340" y="607" text-anchor="middle" font-size="7" font-weight="700" fill="#dc2626">Sicherheit: nur Server schreibt Audit | /data/* blockiert | settings.yaml nicht im Webroot | Zentrenfilter serverseitig | kein Client-Vertrauen</text>
+
+  <!-- ================================================================ -->
+  <!-- RECHTE SPALTE: DSF + Klinische Zone                              -->
+  <!-- ================================================================ -->
+
+  <!-- ==================== ZONE 2: DSF ==================== -->
+  <rect x="680" y="85" width="690" height="210" rx="8" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="685" y="87" width="165" height="18" rx="3" fill="#7c3aed"/>
+  <text x="767" y="100" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">ZONE 2: DSF-STANDORTKNOTEN</text>
+  <text x="865" y="101" font-size="11" font-weight="600" fill="#5b21b6">Standortuebergreifende Orchestrierung — FHIR R4 + BPMN 2.0</text>
+
+  <rect x="700" y="115" width="240" height="70" rx="6" fill="#fff" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="820" y="133" text-anchor="middle" font-size="10" font-weight="600" fill="#5b21b6">DSF FHIR Server</text>
+  <text x="820" y="147" text-anchor="middle" font-size="8" fill="#64748b">Organization + Endpoint Ressourcen</text>
+  <text x="820" y="160" text-anchor="middle" font-size="8" fill="#64748b">Standort-Zertifikate + mTLS</text>
+  <text x="820" y="173" text-anchor="middle" font-size="7" fill="#7c3aed">Empfaengt Tasks anderer Standorte</text>
+
+  <rect x="960" y="115" width="240" height="70" rx="6" fill="#fff" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="1080" y="133" text-anchor="middle" font-size="10" font-weight="600" fill="#5b21b6">BPE (Prozess-Engine)</text>
+  <text x="1080" y="147" text-anchor="middle" font-size="8" fill="#64748b">BPMN 2.0 Workflow-Orchestrierung</text>
+  <text x="1080" y="160" text-anchor="middle" font-size="8" fill="#64748b">Task-basierte Koordination</text>
+  <text x="1080" y="173" text-anchor="middle" font-size="7" fill="#7c3aed">Verschluesselte Datenuebergabe</text>
+
+  <!-- Pfeil DSF FHIR <-> BPE -->
+  <line x1="940" y1="150" x2="960" y2="150" stroke="#7c3aed" stroke-width="1.5"/>
+
+  <!-- DSF Workflows -->
+  <rect x="700" y="198" width="500" height="40" rx="5" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="0.75"/>
+  <text x="710" y="213" font-size="8.5" font-weight="600" fill="#5b21b6">Standortuebergreifende Workflows (DSF-gesteuert)</text>
+  <text x="710" y="227" font-size="7.5" fill="#64748b">Machbarkeit/Kohortenzaehlung | Pseudonymisierter FHIR-Bundleexport | Verteilte Aktualisierung lokaler Repositories</text>
+
+  <!-- DSF Adapter (Zukunft) -->
+  <rect x="700" y="248" width="500" height="30" rx="5" fill="#ede9fe" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="950" y="267" text-anchor="middle" font-size="9" font-weight="600" fill="#5b21b6">DSF-Adapter-Dienst (zukuenftig v2)</text>
+
+  <!-- Andere Standorte -->
+  <rect x="1220" y="115" width="130" height="40" rx="5" fill="#f5f3ff" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <text x="1285" y="133" text-anchor="middle" font-size="8.5" font-weight="600" fill="#5b21b6">Andere Standorte</text>
+  <text x="1285" y="147" text-anchor="middle" font-size="7" fill="#7c3aed">via DSF-Netzwerk</text>
+  <line x1="1200" y1="135" x2="1220" y2="135" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
+
+  <!-- ==================== ZONE 1: KLINISCHE ZONE ==================== -->
+  <rect x="680" y="310" width="690" height="155" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="685" y="312" width="210" height="18" rx="3" fill="#dc2626"/>
+  <text x="790" y="325" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">ZONE 1: KLINISCHE QUELLZONE</text>
+  <text x="910" y="326" font-size="11" font-weight="600" fill="#991b1b">Quellsysteme, ETL, Pseudonymisierung</text>
+
+  <rect x="700" y="340" width="190" height="50" rx="6" fill="#fff" stroke="#fca5a5" stroke-width="1"/>
+  <text x="795" y="360" text-anchor="middle" font-size="9" font-weight="600" fill="#991b1b">Klinische Quellsysteme</text>
+  <text x="795" y="373" text-anchor="middle" font-size="7.5" fill="#64748b">KIS / KAS / EPA</text>
+  <text x="795" y="384" text-anchor="middle" font-size="7.5" fill="#64748b">Ophthalmologische Daten</text>
+
+  <rect x="900" y="340" width="150" height="50" rx="6" fill="#fff" stroke="#fca5a5" stroke-width="1"/>
+  <text x="975" y="360" text-anchor="middle" font-size="9" font-weight="600" fill="#991b1b">ETL + Pseudonym.</text>
+  <text x="975" y="373" text-anchor="middle" font-size="7.5" fill="#64748b">EyeMatics Kerndatensatz</text>
+  <text x="975" y="384" text-anchor="middle" font-size="7.5" fill="#64748b">FHIR R4 Transformation</text>
+
+  <rect x="1060" y="340" width="290" height="50" rx="6" fill="#fff" stroke="#fca5a5" stroke-width="1"/>
+  <text x="1205" y="360" text-anchor="middle" font-size="9" font-weight="600" fill="#991b1b">Lokales FHIR-Repository</text>
+  <text x="1205" y="373" text-anchor="middle" font-size="7.5" fill="#64748b">Blaze FHIR Server (standortlokal)</text>
+  <text x="1205" y="384" text-anchor="middle" font-size="7.5" fill="#64748b">Patient, Observation, Procedure, Organization</text>
+
+  <!-- Datenfluss-Label Zone 1 -->
+  <rect x="700" y="400" width="650" height="20" rx="3" fill="#fee2e2" stroke="#fca5a5" stroke-width="0.5"/>
+  <text x="1025" y="414" text-anchor="middle" font-size="7.5" font-weight="600" fill="#991b1b">Datenfluss: Quellsysteme → ETL/Pseudonymisierung → Lokales FHIR-Repository → DSF (standortuebergreifend) + EMD Backend (lokal)</text>
+
+  <!-- Pfeil Zone 1 → Zone 2 -->
+  <line x1="1205" y1="340" x2="1080" y2="198" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrow-purple)" stroke-dasharray="4,2"/>
+  <text x="1155" y="268" font-size="7.5" font-weight="600" fill="#7c3aed" transform="rotate(-55 1155 268)">FHIR-Daten</text>
+
+  <!-- Pfeil Zone 1 → Zone 3 -->
+  <line x1="700" y1="435" x2="650" y2="435" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+  <line x1="650" y1="420" x2="650" y2="450" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="675" y="450" font-size="7.5" font-weight="600" fill="#16a34a">Lokale FHIR-Daten (nur lesen)</text>
+
+  <!-- ==================== KEYCLOAK ==================== -->
+  <rect x="680" y="480" width="340" height="55" rx="6" fill="#fff" stroke="#c4b5fd" stroke-width="1" filter="url(#shadow)" stroke-dasharray="4,2"/>
+  <text x="850" y="502" text-anchor="middle" font-size="10" font-weight="600" fill="#5b21b6">Keycloak (optional, vorbereitet)</text>
+  <text x="850" y="516" text-anchor="middle" font-size="8" fill="#64748b">OIDC / JWT | Realm: eyematics | RS256 via JWKS</text>
+  <text x="850" y="528" text-anchor="middle" font-size="7" fill="#7c3aed">Gleiche JWT-Payload wie lokale Auth | Middleware bereit</text>
+
+  <!-- ================================================================ -->
+  <!-- UNTERER BEREICH: Sicherheitsmodell + Phasen                     -->
+  <!-- ================================================================ -->
+
+  <!-- Sicherheitsmodell -->
+  <rect x="30" y="660" width="640" height="190" rx="8" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="50" y="683" font-size="12" font-weight="700" fill="#6b21a8">Sicherheitsmodell + Verantwortlichkeiten</text>
+
+  <text x="50" y="705" font-size="9" font-weight="600" fill="#dc2626">DSF verantwortet:</text>
+  <text x="50" y="718" font-size="8" fill="#64748b">Standort-zu-Standort-Vertrauen | Prozessautorisierung | Transportsicherheit (mTLS) | Workflow-Nachvollziehbarkeit</text>
+
+  <text x="50" y="738" font-size="9" font-weight="600" fill="#166534">EMD verantwortet:</text>
+  <text x="50" y="751" font-size="8" fill="#64748b">Serverseitige JWT-Authentifizierung (bcrypt + HS256/RS256 + 2FA + Ratenbegrenzung) | Manipulationssicheres Audit-Log (SQLite)</text>
+  <text x="50" y="764" font-size="8" fill="#64748b">Zentrenbasierte Dateneinschraenkung (server-seitig erzwungen auf allen Endpunkten) | Visualisierung | Lokale Geschaeftslogik</text>
+
+  <text x="50" y="784" font-size="9" font-weight="600" fill="#5b21b6">Architekturprinzip:</text>
+  <text x="50" y="797" font-size="8" fill="#64748b">EMD kommuniziert niemals mit anderen Kliniken. Express liest nur aus dem lokalen FHIR-Speicher.</text>
+  <text x="50" y="810" font-size="8" fill="#64748b">DSF befuellt den lokalen Speicher. Klare Trennung: Orchestrierung vs. Praesentation.</text>
+
+  <text x="50" y="830" font-size="9" font-weight="600" fill="#854d0e">Zielmuster (v1): Zentrale Konsolidierung</text>
+  <text x="50" y="843" font-size="8" fill="#94a3b8">Jeder Standort sendet pseudonymisierte FHIR-Bundles via DSF → lokales konsolidiertes Repository → EMD liest daraus.</text>
+
+  <!-- Phasen -->
+  <rect x="700" y="660" width="670" height="190" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="720" y="683" font-size="12" font-weight="700" fill="#334155">Implementierungsphasen (v1.0 — v1.3)</text>
+
+  <rect x="720" y="696" width="12" height="12" rx="2" fill="#22c55e"/>
+  <text x="740" y="707" font-size="8.5" font-weight="600" fill="#166534">Phase 1: Produktions-Express-Backend</text>
+  <text x="1320" y="707" text-anchor="end" font-size="7.5" fill="#22c55e">v1.0 ✓</text>
+
+  <rect x="720" y="716" width="12" height="12" rx="2" fill="#22c55e"/>
+  <text x="740" y="727" font-size="8.5" font-weight="600" fill="#166534">Phase 2: Serverseitige Auth + Audit</text>
+  <text x="1320" y="727" text-anchor="end" font-size="7.5" fill="#22c55e">v1.0 ✓</text>
+
+  <rect x="720" y="736" width="12" height="12" rx="2" fill="#22c55e"/>
+  <text x="740" y="747" font-size="8.5" font-weight="600" fill="#166534">Phase 3: Integrationskorrekturen</text>
+  <text x="1320" y="747" text-anchor="end" font-size="7.5" fill="#22c55e">v1.0 ✓</text>
+
+  <rect x="720" y="756" width="12" height="12" rx="2" fill="#22c55e"/>
+  <text x="740" y="767" font-size="8.5" font-weight="600" fill="#166534">Phase 4: Nutzerverwaltung + Datenpersistenz</text>
+  <text x="1320" y="767" text-anchor="end" font-size="7.5" fill="#22c55e">v1.0 ✓</text>
+
+  <rect x="720" y="776" width="12" height="12" rx="2" fill="#22c55e"/>
+  <text x="740" y="787" font-size="8.5" font-weight="600" fill="#166534">Phase 5: Zentrenbasierte Dateneinschraenkung</text>
+  <text x="1320" y="787" text-anchor="end" font-size="7.5" fill="#22c55e">v1.0 ✓</text>
+
+  <rect x="720" y="796" width="12" height="12" rx="2" fill="#22c55e"/>
+  <text x="740" y="807" font-size="8.5" font-weight="600" fill="#166534">Phase 6: Keycloak-Vorbereitung</text>
+  <text x="1320" y="807" text-anchor="end" font-size="7.5" fill="#22c55e">v1.0 ✓</text>
+
+  <rect x="720" y="816" width="12" height="12" rx="2" fill="#3b82f6"/>
+  <text x="740" y="827" font-size="8.5" font-weight="600" fill="#1e40af">v1.1: Frontend-Backend Integration</text>
+  <text x="1320" y="827" text-anchor="end" font-size="7.5" fill="#3b82f6">v1.1 ✓</text>
+
+  <rect x="720" y="836" width="12" height="12" rx="2" fill="#8b5cf6"/>
+  <text x="740" y="847" font-size="8.5" font-weight="600" fill="#5b21b6">v1.2: Lint-Cleanup + Docs-Aktualisierung</text>
+  <text x="1320" y="847" text-anchor="end" font-size="7.5" fill="#8b5cf6">v1.2 ✓</text>
+
+  <rect x="720" y="856" width="12" height="12" rx="2" fill="#f59e0b"/>
+  <text x="740" y="867" font-size="8.5" font-weight="600" fill="#b45309">v1.3: Full-Review (Claude/Gemini/Codex) — 39 Fixes</text>
+  <text x="1320" y="867" text-anchor="end" font-size="7.5" fill="#f59e0b">v1.3 ✓</text>
+
+  <rect x="720" y="876" width="12" height="12" rx="2" fill="#22c55e"/>
+  <text x="740" y="887" font-size="8.5" font-weight="600" fill="#166534">v1.4: Test Coverage Milestone — 221 Tests, 20 Fixes</text>
+  <text x="1320" y="887" text-anchor="end" font-size="7.5" fill="#22c55e">v1.4 ✓</text>
+
+  <!-- Copyright / Stand -->
+  <text x="700" y="915" text-anchor="middle" font-size="9" fill="#94a3b8">Stand: 11.04.2026 — v1.0 (6 Phasen) + v1.1 (Integration) + v1.2 (Cleanup) + v1.3 (Full-Review) + v1.4 (Tests) abgeschlossen</text>
+</svg>

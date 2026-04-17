@@ -1,16 +1,17 @@
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ReferenceLine,
+  ResponsiveContainer,
+  Scatter,
+  ScatterChart,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-  ScatterChart,
-  Scatter,
-  Cell,
 } from 'recharts';
+
 import type { TranslationKey } from '../../i18n/translations';
 import type { DistributionBin } from '../../utils/distributionBins';
 

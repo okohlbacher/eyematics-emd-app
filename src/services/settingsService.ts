@@ -1,5 +1,6 @@
 import yaml from 'js-yaml';
-import { safeJsonParse } from '../utils/safeJson';
+
+import { authFetch } from './authHeaders';
 
 export interface AppSettings {
   twoFactorEnabled: boolean;
@@ -9,37 +10,28 @@ export interface AppSettings {
     type: 'local' | 'blaze';
     blazeUrl: string;
   };
+  outcomes?: {
+    serverAggregationThresholdPatients?: number;
+    aggregateCacheTtlMs?: number;
+  };
 }
 
 const DEFAULTS: AppSettings = {
-  twoFactorEnabled: true,
+  twoFactorEnabled: false,
   therapyInterrupterDays: 120,
   therapyBreakerDays: 365,
   dataSource: {
     type: 'local',
     blazeUrl: 'http://localhost:8080/fhir',
   },
+  outcomes: {
+    serverAggregationThresholdPatients: 1000,
+    aggregateCacheTtlMs: 1800000,
+  },
 };
 
 /** Cached merged settings */
 let _cached: AppSettings | null = null;
-
-/**
- * Build Authorization header from the current session user.
- * Returns `{ Authorization: 'Bearer <base64>' }` if an admin is logged in, or empty object.
- * The token is a base64-encoded JSON `{ username, role }`.
- */
-function getAuthHeaders(): Record<string, string> {
-  const stored = sessionStorage.getItem('emd-user');
-  if (stored) {
-    const user = safeJsonParse<{ username?: string; role?: string } | null>(stored, null);
-    if (user?.username && user?.role) {
-      const token = btoa(JSON.stringify({ username: user.username, role: user.role }));
-      return { Authorization: `Bearer ${token}` };
-    }
-  }
-  return {};
-}
 
 type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
 
@@ -68,22 +60,13 @@ export async function loadSettings(): Promise<AppSettings> {
   let fromYaml: Partial<AppSettings> = {};
   try {
     // Try server API first (supports write-back)
-    const resp = await fetch('/api/settings', { headers: getAuthHeaders() });
+    const resp = await authFetch('/api/settings');
     if (resp.ok) {
       const text = await resp.text();
-      fromYaml = (yaml.load(text) as Partial<AppSettings>) ?? {};
+      fromYaml = (yaml.load(text, { schema: yaml.JSON_SCHEMA }) as Partial<AppSettings>) ?? {};
     }
   } catch {
-    // API unavailable — try static file
-    try {
-      const resp = await fetch('/settings.yaml');
-      if (resp.ok) {
-        const text = await resp.text();
-        fromYaml = (yaml.load(text) as Partial<AppSettings>) ?? {};
-      }
-    } catch {
-      // Neither available — use defaults
-    }
+    // API unavailable — use defaults
   }
 
   _cached = merge(DEFAULTS, fromYaml);
@@ -99,42 +82,47 @@ export function getSettings(): AppSettings {
   return { ...DEFAULTS };
 }
 
+/** F-23: persist helper returns promise; callers resync on failure */
+async function persistSettings(settings: AppSettings): Promise<void> {
+  const yamlStr = yaml.dump(settings, { indent: 2, lineWidth: 120, noRefs: true });
+  const resp = await authFetch('/api/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'text/yaml' },
+    body: yamlStr,
+  });
+  if (!resp.ok) {
+    throw new Error(`Failed to persist settings: ${resp.status}`);
+  }
+}
+
 /**
  * Update a subset of settings. Persists to server-side settings.yaml.
+ * On server rejection, reloads settings to resync client cache.
  */
-export function updateSettings(patch: DeepPartial<AppSettings>): AppSettings {
+export async function updateSettings(patch: DeepPartial<AppSettings>): Promise<AppSettings> {
   _cached = merge(_cached ?? DEFAULTS, patch);
-
-  // Persist to server asynchronously (requires admin authorization)
-  const yamlStr = yaml.dump(_cached, { indent: 2, lineWidth: 120, noRefs: true });
-  fetch('/api/settings', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'text/yaml', ...getAuthHeaders() },
-    body: yamlStr,
-  }).catch((err) => {
-    console.error('[settingsService] Failed to persist settings to server:', err);
-  });
-
-  return _cached;
+  try {
+    await persistSettings(_cached);
+  } catch (err) {
+    console.error('[settingsService] Persist failed, reloading from server:', err);
+    await loadSettings();
+  }
+  return _cached!;
 }
 
 /**
  * Reset all settings to defaults and persist.
+ * On server rejection, reloads settings to resync client cache.
  */
-export function resetSettings(): AppSettings {
+export async function resetSettings(): Promise<AppSettings> {
   _cached = { ...DEFAULTS };
-
-  // Persist defaults to server (requires admin authorization)
-  const yamlStr = yaml.dump(_cached, { indent: 2, lineWidth: 120, noRefs: true });
-  fetch('/api/settings', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'text/yaml', ...getAuthHeaders() },
-    body: yamlStr,
-  }).catch((err) => {
-    console.error('[settingsService] Failed to reset settings on server:', err);
-  });
-
-  return _cached;
+  try {
+    await persistSettings(_cached);
+  } catch (err) {
+    console.error('[settingsService] Persist failed, reloading from server:', err);
+    await loadSettings();
+  }
+  return _cached!;
 }
 
 /**

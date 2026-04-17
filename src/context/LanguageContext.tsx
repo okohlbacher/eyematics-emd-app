@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import { t as translate, type Locale, type TranslationKey } from '../i18n/translations';
+import { createContext, useCallback, useContext, useMemo,useState } from 'react';
+
+import { type Locale, t as translate, type TranslationKey } from '../i18n/translations';
 
 interface LanguageContextType {
   locale: Locale;
@@ -26,8 +27,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     [locale]
   );
 
+  const value = useMemo(() => ({ locale, setLocale, t }), [locale, setLocale, t]);
+
   return (
-    <LanguageContext.Provider value={{ locale, setLocale, t }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );

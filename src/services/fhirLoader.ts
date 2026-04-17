@@ -1,18 +1,24 @@
 import type {
+  CenterInfo,
   FhirBundle,
   FhirResource,
   Organization,
   Patient,
-  Condition,
-  Observation,
-  Procedure,
-  ImagingStudy,
-  MedicationStatement,
-  CenterInfo,
-  PatientCase,
-  CohortFilter,
 } from '../types/fhir';
+import { authFetch } from './authHeaders';
 import { getDataSourceConfig, loadBundlesFromSource } from './dataSource';
+
+// Re-export shared pure constants + FHIR query helpers for backward compatibility.
+// Canonical sources: shared/fhirCodes.ts, shared/fhirQueries.ts, shared/patientCases.ts
+export * from '../../shared/fhirCodes';
+export { getObservationsByCode, getLatestObservation } from '../../shared/fhirQueries';
+export { extractPatientCases, applyFilters, getAge } from '../../shared/patientCases';
+
+// Internal references for getDiagnosisLabel, getDiagnosisFullText.
+import {
+  SNOMED_AMD,
+  SNOMED_DR,
+} from '../../shared/fhirCodes';
 
 let cachedBundles: FhirBundle[] | null = null;
 
@@ -40,10 +46,6 @@ function resourcesOfType<T extends FhirResource>(
   );
 }
 
-function patientRef(id: string): string {
-  return `Patient/${id}`;
-}
-
 export function extractCenters(bundles: FhirBundle[]): CenterInfo[] {
   const orgs = resourcesOfType<Organization>(bundles, 'Organization');
   const patients = resourcesOfType<Patient>(bundles, 'Patient');
@@ -66,96 +68,42 @@ export function extractCenters(bundles: FhirBundle[]): CenterInfo[] {
   });
 }
 
-export function extractPatientCases(bundles: FhirBundle[]): PatientCase[] {
-  const patients = resourcesOfType<Patient>(bundles, 'Patient');
-  const conditions = resourcesOfType<Condition>(bundles, 'Condition');
-  const observations = resourcesOfType<Observation>(bundles, 'Observation');
-  const procedures = resourcesOfType<Procedure>(bundles, 'Procedure');
-  const imaging = resourcesOfType<ImagingStudy>(bundles, 'ImagingStudy');
-  const medications = resourcesOfType<MedicationStatement>(bundles, 'MedicationStatement');
-  const orgs = resourcesOfType<Organization>(bundles, 'Organization');
+// extractPatientCases, getAge — re-exported from shared/patientCases above (M1 fix).
 
-  return patients.map((pat) => {
-    const ref = patientRef(pat.id);
-    const org = orgs.find((o) => o.id === pat.meta?.source);
-    return {
-      id: pat.id,
-      pseudonym:
-        pat.identifier?.find((i) => i.system === 'urn:eyematics:pseudonym')
-          ?.value ?? pat.id,
-      gender: pat.gender ?? 'unknown',
-      birthDate: pat.birthDate ?? '',
-      centerId: pat.meta?.source ?? '',
-      centerName: org?.name ?? pat.meta?.source ?? '',
-      conditions: conditions.filter((c) => c.subject.reference === ref),
-      observations: observations.filter((o) => o.subject.reference === ref),
-      procedures: procedures.filter((p) => p.subject.reference === ref),
-      imagingStudies: imaging.filter((i) => i.subject.reference === ref),
-      medications: medications.filter((m) => m.subject.reference === ref),
-    };
-  });
-}
-
-export function getAge(birthDate: string): number {
-  const birth = new Date(birthDate);
-  const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
-  const m = now.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
-  return age;
-}
-
-export function getLatestObservation(
-  observations: Observation[],
-  loincCode: string
-): Observation | undefined {
-  return observations
-    .filter((o) => o.code.coding.some((c) => c.code === loincCode))
-    .sort(
-      (a, b) =>
-        new Date(b.effectiveDateTime ?? 0).getTime() -
-        new Date(a.effectiveDateTime ?? 0).getTime()
-    )[0];
-}
-
-export function getObservationsByCode(
-  observations: Observation[],
-  loincCode: string
-): Observation[] {
-  return observations
-    .filter((o) => o.code.coding.some((c) => c.code === loincCode))
-    .sort(
-      (a, b) =>
-        new Date(a.effectiveDateTime ?? 0).getTime() -
-        new Date(b.effectiveDateTime ?? 0).getTime()
-    );
-}
-
-export const LOINC_VISUS = '79880-1';
-export const LOINC_CRT = 'LP267955-5';
-export const LOINC_IOP = '56844-4';
-export const LOINC_HBA1C = '4548-4';
-export const LOINC_REFRACTION_SPH = '79846-2';
-export const LOINC_REFRACTION_CYL = '79847-0';
-export const LOINC_REFRACTION_AXIS = '79848-8';
-export const SNOMED_AMD = '267718000';
-export const SNOMED_DR = '312898008';
-export const SNOMED_IVI = '36189003';
-export const SNOMED_EYE_RIGHT = '362503005';
-export const SNOMED_EYE_LEFT = '362502000';
-
-/** Short display names for centers (used in charts/tables) */
-export const CENTER_SHORTHANDS: Record<string, string> = {
-  'org-uka': 'UKA',
-  'org-ukb': 'UKB',
-  'org-lmu': 'LMU',
-  'org-ukt': 'UKT',
-  'org-ukm': 'UKM',
+/**
+ * Center shorthand cache — loaded from server via /api/fhir/centers (M-03).
+ * Falls back to built-in defaults until the API response arrives.
+ */
+let _centerShorthands: Record<string, string> = {
+  'org-uka':  'UKA',
+  'org-ukc':  'UKC',
+  'org-ukd':  'UKD',
+  'org-ukg':  'UKG',
+  'org-ukl':  'UKL',
+  'org-ukmz': 'UKMZ',
+  'org-ukt':  'UKT',
 };
+
+/** Load center shorthands from server. Called once at app startup. */
+export async function loadCenterShorthands(): Promise<void> {
+  try {
+    const resp = await authFetch('/api/fhir/centers');
+    if (resp.ok) {
+      const data = await resp.json() as { centers: Array<{ id: string; shorthand: string }> };
+      const map: Record<string, string> = {};
+      for (const c of data.centers) {
+        map[c.id] = c.shorthand;
+      }
+      _centerShorthands = map;
+    }
+  } catch {
+    // Keep defaults on failure
+  }
+}
 
 /** Get the shorthand label for a center, falling back to full name */
 export function getCenterShorthand(centerId: string, fallback?: string): string {
-  return CENTER_SHORTHANDS[centerId] ?? fallback ?? centerId;
+  return _centerShorthands[centerId] ?? fallback ?? centerId;
 }
 
 export function getDiagnosisLabel(code: string, locale: string = 'de'): string {
@@ -218,40 +166,4 @@ export function getDiagnosisFullText(code: string, locale: string = 'de'): strin
   }
 }
 
-export function applyFilters(
-  cases: PatientCase[],
-  filters: CohortFilter
-): PatientCase[] {
-  return cases.filter((c) => {
-    if (filters.centers?.length && !filters.centers.includes(c.centerId)) {
-      return false;
-    }
-    if (filters.gender?.length && !filters.gender.includes(c.gender)) {
-      return false;
-    }
-    if (filters.diagnosis?.length) {
-      const codes = c.conditions.flatMap((cond) =>
-        cond.code.coding.map((cd) => cd.code)
-      );
-      if (!filters.diagnosis.some((d) => codes.includes(d))) return false;
-    }
-    if (filters.ageRange) {
-      const age = getAge(c.birthDate);
-      if (age < filters.ageRange[0] || age > filters.ageRange[1]) return false;
-    }
-    if (filters.visusRange) {
-      const latest = getLatestObservation(c.observations, LOINC_VISUS);
-      const val = latest?.valueQuantity?.value;
-      if (val == null) return false;
-      if (val < filters.visusRange[0] || val > filters.visusRange[1])
-        return false;
-    }
-    if (filters.crtRange) {
-      const latest = getLatestObservation(c.observations, LOINC_CRT);
-      const val = latest?.valueQuantity?.value;
-      if (val == null) return false;
-      if (val < filters.crtRange[0] || val > filters.crtRange[1]) return false;
-    }
-    return true;
-  });
-}
+// applyFilters — re-exported from shared/patientCases above (M1 fix).

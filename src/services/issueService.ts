@@ -1,19 +1,7 @@
 // Issue reporting service — stores issues on the server filesystem via /api/issues
 
-/** Build Authorization header from the current session user. */
-function getAuthHeaders(): Record<string, string> {
-  try {
-    const stored = sessionStorage.getItem('emd-user');
-    if (stored) {
-      const user = JSON.parse(stored);
-      if (user?.username && user?.role) {
-        const token = btoa(JSON.stringify({ username: user.username, role: user.role }));
-        return { Authorization: `Bearer ${token}` };
-      }
-    }
-  } catch { /* sessionStorage unavailable */ }
-  return {};
-}
+import { downloadBlob } from '../utils/download';
+import { authFetch } from './authHeaders';
 
 export interface ReportedIssue {
   id: string;
@@ -23,6 +11,7 @@ export interface ReportedIssue {
   description: string;
   screenshot?: string; // base64 data URL
   hasScreenshot?: boolean; // set when screenshot is stripped in listing
+  appVersion?: string; // build version from package.json, injected by Vite
 }
 
 /**
@@ -32,9 +21,9 @@ export interface ReportedIssue {
 export async function addIssue(
   issue: Omit<ReportedIssue, 'id' | 'timestamp'>
 ): Promise<{ id: string; filename: string }> {
-  const resp = await fetch('/api/issues', {
+  const resp = await authFetch('/api/issues', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(issue),
   });
   if (!resp.ok) {
@@ -47,17 +36,21 @@ export async function addIssue(
  * Fetch all issues from the server (without screenshot data).
  */
 export async function getIssues(): Promise<ReportedIssue[]> {
-  const resp = await fetch('/api/issues', { headers: getAuthHeaders() });
+  const resp = await authFetch('/api/issues');
   if (!resp.ok) return [];
-  return resp.json();
+  const data = await resp.json() as { issues: ReportedIssue[] };
+  return data.issues;
 }
 
 /**
  * Fetch the issue count from the server.
  */
+// F-28: use total field from server instead of fetching all issues
 export async function getIssueCount(): Promise<number> {
-  const issues = await getIssues();
-  return issues.length;
+  const resp = await authFetch('/api/issues');
+  if (!resp.ok) return 0;
+  const data = await resp.json() as { total: number };
+  return data.total;
 }
 
 /**
@@ -65,20 +58,11 @@ export async function getIssueCount(): Promise<number> {
  * Fetches with auth headers, then triggers browser download.
  */
 export async function exportIssuesFull(): Promise<void> {
-  const resp = await fetch('/api/issues/export', { headers: getAuthHeaders() });
+  const resp = await authFetch('/api/issues/export');
   if (!resp.ok) {
     console.error('[issueService] Export failed:', resp.status);
     return;
   }
   const blob = await resp.blob();
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `emd-issues-${new Date().toISOString().slice(0, 10)}.json`;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 500);
+  downloadBlob(blob, `emd-issues-${new Date().toISOString().slice(0, 10)}.json`);
 }
