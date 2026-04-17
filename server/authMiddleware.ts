@@ -44,7 +44,7 @@ declare global {
 // Public paths (no JWT required)
 // ---------------------------------------------------------------------------
 
-const PUBLIC_PATHS = ['/api/auth/login', '/api/auth/verify', '/api/auth/config'];
+const PUBLIC_PATHS = ['/api/auth/login', '/api/auth/verify', '/api/auth/config', '/api/auth/change-password'];
 
 // ---------------------------------------------------------------------------
 // Local HS256 verification (existing behavior)
@@ -57,7 +57,7 @@ const PUBLIC_PATHS = ['/api/auth/login', '/api/auth/verify', '/api/auth/config']
 function verifyLocalToken(token: string, req: Request, res: Response, next: NextFunction): void {
   try {
     const payload = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] }) as AuthPayload;
-    if (payload.purpose === 'challenge') {
+    if (payload.purpose === 'challenge' || payload.purpose === 'change-password') {
       res.status(401).json({ error: 'Challenge tokens cannot be used for authentication' });
       return;
     }

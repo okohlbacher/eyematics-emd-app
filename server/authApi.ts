@@ -142,6 +142,17 @@ authApiRouter.post('/login', async (req: Request, res: Response): Promise<void> 
   // Successful login — reset attempts
   limiter().resetAttempts(key);
 
+  // SEC-03: user must change default password before receiving a session token
+  if (user.mustChangePassword) {
+    const changeToken = jwt.sign(
+      { sub: user.username, purpose: 'change-password' },
+      getJwtSecret(),
+      { algorithm: 'HS256', expiresIn: '5m' },
+    );
+    res.json({ mustChangePassword: true, changeToken });
+    return;
+  }
+
   const { twoFactorEnabled } = getAuthConfig();
 
   if (twoFactorEnabled) {
@@ -243,6 +254,66 @@ authApiRouter.get('/config', (_req: Request, res: Response): void => {
   const { twoFactorEnabled } = getAuthConfig();
   const provider = getAuthProvider();
   res.json({ twoFactorEnabled, provider });
+});
+
+/**
+ * POST /change-password
+ *
+ * Accepts a short-lived changeToken (purpose='change-password') and a new password.
+ * Validates, hashes, updates UserRecord, returns full session JWT.
+ * No session JWT required — changeToken is the credential (route is in PUBLIC_PATHS).
+ */
+authApiRouter.post('/change-password', async (req: Request, res: Response): Promise<void> => {
+  const { changeToken, newPassword } = req.body as { changeToken?: string; newPassword?: string };
+
+  if (typeof changeToken !== 'string' || typeof newPassword !== 'string' || !changeToken || !newPassword) {
+    res.status(400).json({ error: 'changeToken and newPassword are required' });
+    return;
+  }
+
+  // Verify changeToken
+  let username: string;
+  try {
+    const payload = jwt.verify(changeToken, getJwtSecret(), { algorithms: ['HS256'] }) as { sub: string; purpose?: string };
+    if (payload.purpose !== 'change-password') {
+      res.status(401).json({ error: 'Invalid change token' });
+      return;
+    }
+    username = payload.sub;
+  } catch {
+    res.status(401).json({ error: 'Invalid or expired change token' });
+    return;
+  }
+
+  // Validate new password
+  if (newPassword.length < 8) {
+    res.status(400).json({ error: 'New password must be at least 8 characters' });
+    return;
+  }
+  if (newPassword === 'changeme2025!') {
+    res.status(400).json({ error: 'New password cannot be the default password' });
+    return;
+  }
+
+  // Hash and update
+  const newHash = await bcrypt.hash(newPassword, 12);
+  await modifyUsers((users) =>
+    users.map((u) =>
+      u.username === username
+        ? { ...u, passwordHash: newHash, mustChangePassword: false }
+        : u,
+    ),
+  );
+
+  // Issue full session JWT
+  const users = loadUsers();
+  const user = users.find((u) => u.username === username);
+  if (!user) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+  const token = signSessionToken(user.username, user.role, user.centers);
+  res.json({ token });
 });
 
 /**
