@@ -7,8 +7,8 @@
 
 ### Security (SEC)
 
-- [ ] **SEC-01**: JWT algorithm pinned to HS256 on all local token verification call sites (`authMiddleware.ts` verifyLocalToken + `authApi.ts` challenge verify)
-- [ ] **SEC-02**: `cohortHashSecret` auto-generated into `data/cohort-hash-secret.txt` on first startup if absent (same pattern as `jwt-secret.txt`); settings fallback removed
+- [x] **SEC-01**: JWT algorithm pinned to HS256 on all local token verification call sites (`authMiddleware.ts` verifyLocalToken + `authApi.ts` challenge verify)
+- [x] **SEC-02**: `cohortHashSecret` auto-generated into `data/cohort-hash-secret.txt` on first startup if absent (same pattern as `jwt-secret.txt`); settings fallback removed
 - [ ] **SEC-03**: Users with the default migrated password (`changeme2025!`) are forced to change password on first login
 - [ ] **SEC-04**: TOTP (RFC 6238) per-user secret replaces site-wide static OTP code; enrollment via QR code display; ±1 window tolerance for clock skew
 - [ ] **SEC-05**: TOTP recovery codes generated at enrollment, bcrypt-hashed and stored per user, burned on use
@@ -73,8 +73,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEC-01 | Phase 14 | Pending |
-| SEC-02 | Phase 14 | Pending |
+| SEC-01 | Phase 14 | Complete |
+| SEC-02 | Phase 14 | Complete |
 | SEC-03 | Phase 14 | Pending |
 | PERF-01 | Phase 14 | Pending |
 | PERF-02 | Phase 14 | Pending |
