@@ -69,7 +69,7 @@ beforeEach(() => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'auditapi-test-'));
   initAuditDb(tmpDir);
   _resetHashCohortId();
-  initHashCohortId({ audit: { cohortHashSecret: 'test-cohort-hash-secret-32-chars-min-xxx' } });
+  initHashCohortId(tmpDir, { audit: { cohortHashSecret: 'test-cohort-hash-secret-32-chars-min-xxx' } });
   seedEntries();
 });
 

@@ -176,7 +176,7 @@ beforeEach(() => {
   initAuditDb(tmpDir);
   initDataDb(tmpDir);
   _resetHashCohortId();
-  initHashCohortId({ audit: { cohortHashSecret: 'x'.repeat(64) } });
+  initHashCohortId(tmpDir, { audit: { cohortHashSecret: 'x'.repeat(64) } });
   initOutcomesAggregateCache({});
   resetCache();
 
