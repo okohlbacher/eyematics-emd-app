@@ -44,7 +44,8 @@ export interface ManagedUser {
 type LoginResult =
   | { ok: true }
   | { ok: false; error: 'invalid_credentials' | 'otp_required' | 'account_locked' | 'invalid_otp' | 'network_error'; challengeToken?: string; retryAfterMs?: number }
-  | { ok: false; error: 'must_change_password'; changeToken: string };
+  | { ok: false; error: 'must_change_password'; changeToken: string }
+  | { ok: false; error: 'totp_enrollment_required'; enrollToken: string };
 
 interface AuthContextType {
   user: User | null;
@@ -63,6 +64,16 @@ interface AuthContextType {
   pendingChangeToken: string | null;
   /** SEC-03: submit a new password using the pending changeToken */
   changePassword: (changeToken: string, newPassword: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+  /** SEC-04: true when user must complete TOTP enrollment before accessing the app */
+  requiresTotpEnrollment: boolean;
+  /** SEC-04: short-lived enrollToken issued by /login for unenrolled users */
+  pendingEnrollToken: string | null;
+  /** SEC-04 Step 1: request QR code + manual key from server */
+  startTotpEnroll: () => Promise<{ ok: true; qrDataUrl: string; manualKey: string; enrollToken: string } | { ok: false; error: string }>;
+  /** SEC-04 Step 2: submit 6-digit confirmation code */
+  confirmTotpEnroll: (otp: string) => Promise<{ ok: true; recoveryCodes: string[]; token: string } | { ok: false; error: string }>;
+  /** SEC-04 Step 3: called after user confirms they saved recovery codes — activates session */
+  completeTotpEnroll: (token: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -110,6 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [inactivityWarning, setInactivityWarning] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const [pendingChangeToken, setPendingChangeToken] = useState<string | null>(null);
+  const [requiresTotpEnrollment, setRequiresTotpEnrollment] = useState(false);
+  const [pendingEnrollToken, setPendingEnrollToken] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const warningRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -139,6 +152,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setToken(null);
     setInactivityWarning(false);
+    setMustChangePassword(false);
+    setPendingChangeToken(null);
+    setRequiresTotpEnrollment(false);
+    setPendingEnrollToken(null);
     sessionStorage.removeItem('emd-token');
     invalidateBundleCache(); // L-12: clear stale data from previous user's center scope
   }, []);
@@ -215,13 +232,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (resp.ok) {
-        const data = await resp.json() as { token?: string; challengeToken?: string; mustChangePassword?: boolean; changeToken?: string };
+        const data = await resp.json() as { token?: string; challengeToken?: string; mustChangePassword?: boolean; changeToken?: string; requiresTotpEnrollment?: boolean; enrollToken?: string };
 
         if (data.mustChangePassword && data.changeToken) {
           // SEC-03: user must change default password before getting a session
           setMustChangePassword(true);
           setPendingChangeToken(data.changeToken);
           return { ok: false, error: 'must_change_password', changeToken: data.changeToken };
+        }
+
+        if (data.requiresTotpEnrollment && data.enrollToken) {
+          // SEC-04: user must complete TOTP enrollment before getting a session
+          setRequiresTotpEnrollment(true);
+          setPendingEnrollToken(data.enrollToken);
+          return { ok: false, error: 'totp_enrollment_required', enrollToken: data.enrollToken };
         }
 
         if (data.token) {
@@ -274,6 +298,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  /** SEC-04 Step 1: request QR code + manual key from server. */
+  const startTotpEnroll = useCallback(async (): Promise<
+    { ok: true; qrDataUrl: string; manualKey: string; enrollToken: string } | { ok: false; error: string }
+  > => {
+    if (!pendingEnrollToken) return { ok: false, error: 'no_pending_token' };
+    try {
+      const resp = await fetch('/api/auth/totp/enroll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enrollToken: pendingEnrollToken }),
+      });
+      const data = await resp.json() as { qrDataUrl?: string; manualKey?: string; enrollToken?: string; error?: string };
+      if (!resp.ok) return { ok: false, error: data.error ?? 'enroll_failed' };
+      setPendingEnrollToken(data.enrollToken ?? pendingEnrollToken); // refresh with fresh token
+      return { ok: true, qrDataUrl: data.qrDataUrl!, manualKey: data.manualKey!, enrollToken: data.enrollToken! };
+    } catch {
+      return { ok: false, error: 'network_error' };
+    }
+  }, [pendingEnrollToken]);
+
+  /** SEC-04 Step 2: submit 6-digit confirmation code. */
+  const confirmTotpEnroll = useCallback(async (otp: string): Promise<
+    { ok: true; recoveryCodes: string[]; token: string } | { ok: false; error: string }
+  > => {
+    if (!pendingEnrollToken) return { ok: false, error: 'no_pending_token' };
+    try {
+      const resp = await fetch('/api/auth/totp/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enrollToken: pendingEnrollToken, otp }),
+      });
+      const data = await resp.json() as { recoveryCodes?: string[]; token?: string; error?: string };
+      if (!resp.ok) return { ok: false, error: data.error ?? 'confirm_failed' };
+      // Do NOT clear requiresTotpEnrollment yet — wait for user to save recovery codes
+      return { ok: true, recoveryCodes: data.recoveryCodes!, token: data.token! };
+    } catch {
+      return { ok: false, error: 'network_error' };
+    }
+  }, [pendingEnrollToken]);
+
+  /** SEC-04 Step 3: called after user confirms they saved recovery codes — activates session. */
+  const completeTotpEnroll = useCallback((sessionToken: string) => {
+    setRequiresTotpEnrollment(false);
+    setPendingEnrollToken(null);
+    sessionStorage.setItem('emd-token', sessionToken);
+    setToken(sessionToken);
+    setUser(userFromToken(sessionToken));
+  }, []);
+
   const hasRole = useCallback((roles: UserRole[]): boolean => {
     if (!user) return false;
     return roles.includes(user.role);
@@ -282,7 +355,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextType>(() => ({
     user, displayName, login, logout, inactivityWarning, hasRole, token,
     mustChangePassword, pendingChangeToken, changePassword,
-  }), [user, displayName, login, logout, inactivityWarning, hasRole, token, mustChangePassword, pendingChangeToken, changePassword]);
+    requiresTotpEnrollment, pendingEnrollToken, startTotpEnroll, confirmTotpEnroll, completeTotpEnroll,
+  }), [user, displayName, login, logout, inactivityWarning, hasRole, token, mustChangePassword, pendingChangeToken, changePassword, requiresTotpEnrollment, pendingEnrollToken, startTotpEnroll, confirmTotpEnroll, completeTotpEnroll]);
 
   return (
     <AuthContext.Provider value={value}>
