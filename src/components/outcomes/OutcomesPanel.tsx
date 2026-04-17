@@ -120,6 +120,8 @@ export default function OutcomesPanel({
     <div
       data-testid={`outcomes-panel-${eye}`}
       className="bg-white rounded-xl border border-gray-200 p-5"
+      role="img"
+      aria-label={`${t(titleKey)} — ${panel.summary.patientCount} ${t('outcomesCardPatients')}`}
     >
       <h3 className="text-base font-semibold text-gray-900">{t(titleKey)}</h3>
       <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
