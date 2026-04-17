@@ -56,11 +56,11 @@ All sizes are as-observed from PasswordChangePage.tsx (the template), LoginPage.
 | Role | Size | Weight | Line Height | Tailwind Class |
 |------|------|--------|-------------|----------------|
 | Body / form labels | 14px | 500 (medium) | 1.4 | `text-sm font-medium` |
-| Body / helper text | 14px | 400 (regular) | 1.5 | `text-sm` |
+| Body / helper text | 14px | 500 (medium) | 1.5 | `text-sm font-medium` |
 | Page heading | 20px | 600 (semibold) | 1.2 | `text-xl font-semibold` |
-| Recovery code mono | 14px | 400 (regular) | 1.4 | `text-sm font-mono` |
+| Recovery code mono | 14px | 500 (medium) | 1.4 | `text-sm font-mono font-medium` |
 
-Only 2 weights in use: **400 regular** and **600 semibold** (matching PasswordChangePage `font-semibold` heading + unlabeled body).
+Only 2 weights in use: **500 medium** and **600 semibold** (matching existing Tailwind component patterns: `font-medium` for body/labels/mono, `font-semibold` for headings).
 
 ---
 
@@ -106,7 +106,7 @@ Full-page interstitial — mirrors PasswordChangePage exactly.
 
 **Step 1 — QR Code display:**
 - QR code image: `<img src={qrDataUrl} alt="TOTP QR code" className="w-40 h-40 mx-auto my-4" />`
-- Manual key section: collapsible `<details>` with `<summary className="text-sm text-blue-600 cursor-pointer">` + monospace key display `className="text-sm font-mono bg-gray-100 rounded px-2 py-1 break-all"`
+- Manual key section: collapsible `<details>` with `<summary className="text-sm text-blue-600 cursor-pointer">` + monospace key display `className="text-sm font-mono font-medium bg-gray-100 rounded px-2 py-1 break-all"`
 - 6-digit confirmation input: `type="text"` `inputMode="numeric"` `maxLength={9}` `placeholder="123456 or recovery code"` — same input styling as existing OTP field: `w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`
 - Submit button: `w-full bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50`
 
@@ -122,7 +122,7 @@ Displayed inline within TotpEnrollPage after enrollment confirmation.
 - Container: `bg-gray-50 border border-gray-200 rounded-lg p-4 my-4`
 - Heading: `text-sm font-semibold text-gray-900 mb-3`
 - Warning banner: `bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-sm text-amber-800 mb-3`
-- Code grid: `grid grid-cols-2 gap-2` of `<code className="text-sm font-mono bg-white border border-gray-200 rounded px-2 py-1 text-center text-gray-800">`
+- Code grid: `grid grid-cols-2 gap-2` of `<code className="text-sm font-mono font-medium bg-white border border-gray-200 rounded px-2 py-1 text-center text-gray-800">`
 - Action row: `flex gap-2 mt-3`
   - Copy all button: `text-sm text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-3 py-1`
   - Download button: `text-sm text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-3 py-1`
@@ -135,6 +135,8 @@ Inserted in the user row actions column, visible only when `u.totpEnabled === tr
 
 **Button:**
 - Icon: `<ShieldOff className="w-4 h-4" />` from lucide-react (new icon import)
+- Visible text label: `Reset 2FA` — rendered as `<span>` after the icon, matching the text+icon pattern of other AdminPage action buttons
+- Full button content: `<ShieldOff className="w-4 h-4" /><span>Reset 2FA</span>`
 - Style: `text-amber-600 hover:text-amber-800 inline-flex items-center gap-1` — matches amber warning tone for a non-delete but security-impacting action
 - Positioned: before the existing delete button in the actions cell
 - `title={t('adminResetTotp')}` for tooltip
@@ -208,7 +210,7 @@ All copy is bilingual (DE + EN) per established i18n pattern in `src/i18n/transl
 
 | State | Trigger | Visual |
 |-------|---------|--------|
-| Button visible | `u.totpEnabled === true` | `<ShieldOff>` amber button appears in actions cell |
+| Button visible | `u.totpEnabled === true` | `<ShieldOff>` + "Reset 2FA" amber button appears in actions cell |
 | Button hidden | `u.totpEnabled !== true` | Button not rendered |
 | Confirm dismissed | User cancels `window.confirm()` | No change |
 | Reset in progress | `DELETE` sent | Button disabled (optimistic: no spinner, matches delete pattern) |
