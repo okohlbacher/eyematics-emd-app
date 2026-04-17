@@ -26,6 +26,13 @@ export interface UserRecord {
   lastName?: string;
   createdAt: string;
   lastLogin?: string;
+  mustChangePassword?: boolean;
+  /** Base32-encoded TOTP secret. Absent = user has not enrolled (D-08). */
+  totpSecret?: string;
+  /** True only after successful TOTP enrollment confirmation (D-08). */
+  totpEnabled?: boolean;
+  /** Bcrypt hashes of one-time recovery codes; burned codes removed from array (D-03, D-08). */
+  totpRecoveryCodes?: string[];
 }
 
 interface AuthConfig {
