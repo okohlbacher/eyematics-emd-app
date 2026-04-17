@@ -9,8 +9,8 @@ progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 3
-  completed_plans: 2
-  percent: 67
+  completed_plans: 3
+  percent: 100
 ---
 
 # Project State
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 ## Current Position
 
 Phase: 14 of 18 (Security Quick Wins & Performance)
-Plan: — (not yet planned)
-Status: Ready to execute
-Last activity: 2026-04-17 -- Phase 14 planning complete
+Plan: 03 of 03 (Complete)
+Status: Executing
+Last activity: 2026-04-17 -- Phase 14 Plan 03 complete (SEC-03 + A11Y-01)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████████] 100%
 
 ## Milestones Shipped
 
@@ -67,6 +67,14 @@ None.
 
 - Phase 18: No live Keycloak instance available for E2E testing. Plan must explicitly scope unit/integration tests as sufficient for merge; E2E deferred.
 
+### Decisions (Phase 14)
+
+- changeToken uses purpose='change-password'; verifyLocalToken rejects this purpose on protected routes (T-14-08 closed)
+- mustChangePassword gate in App.tsx is before Routes, inside AppRoutes() inside AuthProvider — no URL bypass possible (T-14-09 closed)
+- aria-label placed on outer OutcomesPanel div, not inside ResponsiveContainer — Recharts filters arbitrary DOM props
+- _migrateUsersJson exported for testing (SEC-03 scan required file-system test assertions)
+
 ## Session Log
 
 - 2026-04-17: Milestone v1.6 shipped. v1.7 roadmap created — 5 phases (14–18), 18 requirements mapped, 100% coverage.
+- 2026-04-17: Phase 14 complete — 3/3 plans executed. SEC-01 (JWT pin), SEC-02 (perf: cache warm + O(N+M)), SEC-03 (forced pwd change), A11Y-01 (aria-label). 449/449 tests passing.

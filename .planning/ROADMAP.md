@@ -33,7 +33,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ### Phases
 
-- [ ] **Phase 14: Security Quick Wins & Performance** — JWT algorithm pin, cohort hash secret auto-generation, forced password change on default credential, FHIR bundle cache warming, O(N+M) patient case extraction, ARIA chart labels
+- [x] **Phase 14: Security Quick Wins & Performance** — JWT algorithm pin, cohort hash secret auto-generation, forced password change on default credential, FHIR bundle cache warming, O(N+M) patient case extraction, ARIA chart labels (completed 2026-04-17)
 - [ ] **Phase 15: TOTP 2FA** — Per-user TOTP enrollment with QR code, ±1 window tolerance, recovery codes
 - [ ] **Phase 16: Cross-Cohort Comparison** — Overlay up to 4 saved cohorts on a single trajectory chart, spaghetti-plot visual hierarchy
 - [ ] **Phase 17: Audit Log Upgrade & Dark Mode** — Filterable audit controls, dark-mode infrastructure and WCAG-compliant chart palette
@@ -57,7 +57,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 Plans:
 - [x] 14-01-PLAN.md — JWT algorithm pin (SEC-01) + cohort hash secret auto-generation (SEC-02)
 - [x] 14-02-PLAN.md — O(N+M) patient case extraction (PERF-01) + FHIR bundle cache warming (PERF-02)
-- [ ] 14-03-PLAN.md — Forced password change enforcement backend + frontend (SEC-03) + ARIA chart labels (A11Y-01)
+- [x] 14-03-PLAN.md — Forced password change enforcement backend + frontend (SEC-03) + ARIA chart labels (A11Y-01)
 
 #### Phase 15: TOTP 2FA
 **Goal**: Each user account has its own TOTP secret; the shared static OTP code is retired; users locked out of TOTP have a recovery path
@@ -112,7 +112,7 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 14. Security Quick Wins & Performance | v1.7 | 2/3 | In Progress|  |
+| 14. Security Quick Wins & Performance | v1.7 | 3/3 | Complete   | 2026-04-17 |
 | 15. TOTP 2FA | v1.7 | 0/TBD | Not started | - |
 | 16. Cross-Cohort Comparison | v1.7 | 0/TBD | Not started | - |
 | 17. Audit Log Upgrade & Dark Mode | v1.7 | 0/TBD | Not started | - |
