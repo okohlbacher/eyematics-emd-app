@@ -661,6 +661,55 @@ authApiRouter.delete('/users/:username', async (req: Request, res: Response): Pr
 });
 
 /**
+ * DELETE /api/auth/users/:username/totp
+ *
+ * Reset a user's TOTP enrollment (D-04). Admin only.
+ * Clears totpSecret, totpEnabled, totpRecoveryCodes from the UserRecord.
+ * The user will be forced to re-enroll on their next login (T-15-12).
+ * Audit event 'totp-reset' is recorded via res.locals.auditAction (D-12).
+ */
+authApiRouter.delete('/users/:username/totp', async (req: Request, res: Response): Promise<void> => {
+  if (!req.auth) {
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+  if (req.auth.role !== 'admin') {
+    res.status(403).json({ error: 'Admin role required' });
+    return;
+  }
+
+  const targetUsername = String(req.params.username ?? '');
+  if (!targetUsername) {
+    res.status(400).json({ error: 'username is required' });
+    return;
+  }
+
+  // Verify target user exists before modifying
+  const existing = loadUsers();
+  const target = existing.find((u) => u.username === targetUsername);
+  if (!target) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  await modifyUsers((users) =>
+    users.map((u) => {
+      if (u.username !== targetUsername) return u;
+      // Delete the three TOTP fields entirely — JSON.stringify omits undefined values
+      const cleaned = { ...u };
+      delete cleaned.totpSecret;
+      delete cleaned.totpEnabled;
+      delete cleaned.totpRecoveryCodes;
+      return cleaned;
+    }),
+  );
+
+  // D-12: mark audit action for admin TOTP reset
+  (res.locals as Record<string, string>).auditAction = 'totp-reset';
+  res.json({ ok: true });
+});
+
+/**
  * PUT /api/auth/users/:username/password
  *
  * Reset a user's password (USER-11, D-03). Admin only.

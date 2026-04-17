@@ -314,12 +314,20 @@ export function _migrateUsersJson(filePath: string): void {
   let needsWrite = false;
   let workingUsers = users;
 
-  // Migrate password hashes
+  // Migrate password hashes and flag users with the default password for forced change
+  const DEFAULT_PASSWORD = 'changeme2025!';
   const withHashes = workingUsers.map((user) => {
     if (!user.passwordHash) {
       needsWrite = true;
-      const hash = bcrypt.hashSync('changeme2025!', 12); // sync OK at startup (one-time migration)
-      return { ...user, passwordHash: hash };
+      const hash = bcrypt.hashSync(DEFAULT_PASSWORD, 12); // sync OK at startup (one-time migration)
+      // Also flag for forced password change (SEC-03) — unless explicitly cleared
+      const mustChangePassword = user.mustChangePassword === false ? false : true;
+      return { ...user, passwordHash: hash, mustChangePassword };
+    }
+    // SEC-03: flag users whose stored hash is the default password (unless already cleared)
+    if (user.mustChangePassword !== false && bcrypt.compareSync(DEFAULT_PASSWORD, user.passwordHash)) {
+      needsWrite = true;
+      return { ...user, mustChangePassword: true };
     }
     return user;
   });
