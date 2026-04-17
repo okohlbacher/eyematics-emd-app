@@ -761,6 +761,41 @@ const translations = {
   // ---- Phase 13: Error States ----
   metricsErrorComputationFailed: { de: 'Berechnung fehlgeschlagen. Bitte erneut versuchen.', en: 'Computation failed. Please try again.' },
   metricsSettingsNoControls: { de: 'Keine Einstellungen für dieses Intervall-Diagramm.', en: 'No settings for this interval chart.' },
+
+  // ---- Phase 15: TOTP 2FA Enrollment ----
+  totpEnrollTitle: { de: 'Zwei-Faktor-Authentisierung einrichten', en: 'Set Up Two-Factor Authentication' },
+  totpEnrollSubtitle: {
+    de: 'Scannen Sie den QR-Code mit Ihrer Authenticator-App (z.B. Google Authenticator, Authy) und geben Sie den 6-stelligen Code zur Bestätigung ein.',
+    en: 'Scan the QR code with your authenticator app (e.g. Google Authenticator, Authy), then enter the 6-digit code to confirm.',
+  },
+  totpEnrollManualKey: { de: 'Kein Scan möglich? Schlüssel manuell eingeben', en: "Can't scan? Enter key manually" },
+  totpEnrollCodeLabel: { de: 'Bestätigungscode', en: 'Confirmation Code' },
+  totpEnrollCodePlaceholder: { de: '6-stelliger Code', en: '6-digit code' },
+  totpEnrollSubmit: { de: 'Zwei-Faktor-Authentisierung aktivieren', en: 'Activate Two-Factor Authentication' },
+  totpEnrollQrAlt: { de: 'TOTP-QR-Code — mit Ihrer Authenticator-App scannen', en: 'TOTP QR code — scan with your authenticator app' },
+  totpRecoveryCodesTitle: { de: 'Wiederherstellungscodes speichern', en: 'Save Your Recovery Codes' },
+  totpRecoveryCodesWarning: {
+    de: 'Diese Codes werden nicht erneut angezeigt. Bewahren Sie sie an einem sicheren Ort auf. Falls Sie keinen Zugriff auf Ihre Authenticator-App haben, können Sie einen dieser Codes zur Anmeldung verwenden — jeder Code kann nur einmal verwendet werden.',
+    en: 'These codes will not be shown again. Store them somewhere safe. If you lose access to your authenticator app, you can use one of these codes to log in — each code can only be used once.',
+  },
+  totpCopyAllCodes: { de: 'Alle Codes kopieren', en: 'Copy all codes' },
+  totpDownloadCodes: { de: 'Als .txt herunterladen', en: 'Download as .txt' },
+  totpSavedCodesCheckbox: { de: 'Ich habe meine Wiederherstellungscodes sicher gespeichert', en: 'I have saved my recovery codes in a safe place' },
+  totpEnrollDone: { de: 'Zur App', en: 'Continue to App' },
+  totpEnrollErrorInvalid: { de: 'Ungültiger Code. Bitte überprüfen Sie Ihre Authenticator-App und versuchen Sie es erneut.', en: 'Invalid code. Please check your authenticator app and try again.' },
+  totpEnrollErrorExpired: { de: 'Ihre Anmeldesitzung ist abgelaufen. Bitte melden Sie sich erneut an.', en: 'Your enrollment session has expired. Please log in again.' },
+  totpEnrollErrorGeneric: { de: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.', en: 'An error occurred. Please try again.' },
+  totpRecoveryCodeUsedWarning: {
+    de: 'Sie haben sich mit einem Wiederherstellungscode angemeldet. Noch {N} Wiederherstellungscodes verbleibend. Wenden Sie sich an Ihren Administrator, um 2FA zurückzusetzen und sich bei Bedarf erneut anzumelden.',
+    en: 'You logged in with a recovery code. {N} recovery codes remaining. Contact your administrator to reset 2FA and re-enroll if needed.',
+  },
+  adminResetTotp: { de: '2FA zurücksetzen', en: 'Reset 2FA' },
+  adminResetTotpConfirm: {
+    de: '2FA für {username} zurücksetzen? Sie müssen sich bei der nächsten Anmeldung erneut registrieren.',
+    en: 'Reset 2FA for {username}? They will be required to re-enroll on next login.',
+  },
+  adminResetTotpSuccess: { de: '2FA für {username} zurückgesetzt', en: '2FA reset for {username}' },
+  loginOtpPlaceholder: { de: 'Code oder Wiederherstellungscode', en: 'Code or recovery code' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

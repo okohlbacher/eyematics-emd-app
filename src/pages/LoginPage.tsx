@@ -169,8 +169,8 @@ export default function LoginPage() {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none tracking-widest text-center text-lg"
-                placeholder="123456"
-                maxLength={6}
+                placeholder={t('loginOtpPlaceholder')}
+                maxLength={9}
                 autoFocus
               />
             </div>
