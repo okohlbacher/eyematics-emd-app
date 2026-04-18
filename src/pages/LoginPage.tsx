@@ -1,6 +1,6 @@
 import { AlertCircle, Eye, Globe, Info } from 'lucide-react';
 import { useEffect,useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -14,9 +14,11 @@ export default function LoginPage() {
   const [challengeToken, setChallengeToken] = useState('');
   const [provider, setProvider] = useState<'local' | 'keycloak'>('local');
   const [showKeycloakInfo, setShowKeycloakInfo] = useState(false);
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
   const { locale, setLocale, t } = useLanguage();
+
+  if (user) return <Navigate to="/" replace />;
 
   useEffect(() => {
     fetch('/api/auth/config')
