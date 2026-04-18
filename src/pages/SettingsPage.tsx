@@ -1,4 +1,4 @@
-import { CheckCircle, Download, Loader2, RotateCcw, Save, Server, Settings as SettingsIcon, ShieldCheck,XCircle } from 'lucide-react';
+import { CheckCircle, Download, Loader2, RotateCcw, Save, Server, Settings as SettingsIcon, ShieldCheck, Trash2, XCircle } from 'lucide-react';
 import { MessageSquarePlus } from 'lucide-react';
 import { useEffect,useState } from 'react';
 
@@ -9,7 +9,7 @@ import {
   testBlazeConnection,
 } from '../services/dataSource';
 import { invalidateBundleCache } from '../services/fhirLoader';
-import { exportIssuesFull,getIssueCount } from '../services/issueService';
+import { deleteAllIssues, exportIssuesFull, getIssueCount } from '../services/issueService';
 import {
   exportSettingsYaml,
   loadSettings,
@@ -49,6 +49,13 @@ export default function SettingsPage() {
       setBlazeUrl(s.dataSource.blazeUrl);
     });
   }, []);
+
+  const handleDeleteAllIssues = async () => {
+    const msg = t('feedbackDeleteConfirm').replace('{0}', String(issueCount));
+    if (!window.confirm(msg)) return;
+    await deleteAllIssues();
+    setIssueCount(0);
+  };
 
   const validate = (interrupter: number, breaker: number): boolean => {
     return interrupter > 0 && breaker > 0 && interrupter < breaker;
@@ -357,14 +364,24 @@ export default function SettingsPage() {
         <p className="text-sm text-gray-500">
           {t('feedbackCount').replace('{0}', String(issueCount))}
         </p>
-        <button
-          onClick={exportIssuesFull}
-          disabled={issueCount === 0}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <Download className="w-4 h-4" />
-          {t('feedbackExport')}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={exportIssuesFull}
+            disabled={issueCount === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            {t('feedbackExport')}
+          </button>
+          <button
+            onClick={handleDeleteAllIssues}
+            disabled={issueCount === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            {t('feedbackDeleteAll')}
+          </button>
+        </div>
       </div>
 
       {/* Settings file hint */}

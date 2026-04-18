@@ -549,6 +549,8 @@ const translations = {
   feedbackSuccess: { de: 'Problem wurde gemeldet. Vielen Dank!', en: 'Issue has been reported. Thank you!' },
   feedbackExport: { de: 'Issues exportieren', en: 'Export Issues' },
   feedbackCount: { de: '{0} gemeldete(s) Problem(e)', en: '{0} reported issue(s)' },
+  feedbackDeleteAll: { de: 'Alle Issues löschen', en: 'Delete All Issues' },
+  feedbackDeleteConfirm: { de: 'Alle {0} gemeldeten Issue(s) wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.', en: 'Really delete all {0} reported issue(s)? This action cannot be undone.' },
 
   // Case Detail — additional analytics (N05.19, N05.31, N05.32, N05.33, N05.35)
   criticalExceedances: { de: 'Kritische Überschreitungen', en: 'Critical Exceedances' },
