@@ -10,7 +10,7 @@
  * Phase 13 / METRIC-04: inline metric tab strip (?metric= URL param).
  */
 import { useEffect, useMemo, useState } from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, GitCompare } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 import { useData } from '../../context/DataContext';
@@ -37,7 +37,9 @@ import OutcomesPanel from './OutcomesPanel';
 import ResponderView from './ResponderView';
 import OutcomesSettingsDrawer from './OutcomesSettingsDrawer';
 import OutcomesSummaryCards from './OutcomesSummaryCards';
-import { EYE_COLORS } from './palette';
+import CohortCompareDrawer from './CohortCompareDrawer';
+import type { CohortSeriesEntry } from './OutcomesPanel';
+import { EYE_COLORS, COHORT_PALETTES } from './palette';
 
 // ---------------------------------------------------------------------------
 // Metric types + constants (METRIC-04)
@@ -80,8 +82,25 @@ export default function OutcomesView() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale } = useLanguage();
 
+  // Phase 16 / XCOHORT-01..04: cross-cohort URL parsing (placed here, above any early return, per Pitfall 3 hook-order rule).
+  const rawCohortsParam = searchParams.get('cohorts');
+  const primaryCohortId = searchParams.get('cohort');
+  const isCrossMode = Boolean(rawCohortsParam);
+
+  // Parse, cap at 4, drop unknown ids, always include primary first.
+  const crossCohortIds: string[] = useMemo(() => {
+    if (!rawCohortsParam) return [];
+    const raw = rawCohortsParam.split(',').map((s) => s.trim()).filter(Boolean);
+    const known = raw.filter((id) => savedSearches.some((s) => s.id === id));
+    const withPrimary = primaryCohortId && !known.includes(primaryCohortId)
+      ? [primaryCohortId, ...known]
+      : known;
+    return withPrimary.slice(0, 4);
+  }, [rawCohortsParam, primaryCohortId, savedSearches]);
+
   // Session-only toggle state (D-24).
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
   const [axisMode, setAxisMode] = useState<AxisMode>('days');
   const [yMetric, setYMetric] = useState<YMetric>('delta');
   const [gridPoints, setGridPoints] = useState<number>(120);
@@ -160,8 +179,9 @@ export default function OutcomesView() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Phase 12 / AGG-03 / D-13 — size-based routing to server endpoint.
+  // Phase 16 / Pitfall 6: bypass server routing in cross-cohort mode.
   const cohortId = searchParams.get('cohort');
-  const routeServerSide = Boolean(
+  const routeServerSide = !isCrossMode && Boolean(
     cohort && cohortId && cohort.cases.length > threshold
   );
 
@@ -295,6 +315,71 @@ export default function OutcomesView() {
     [activeMetric, routeServerSide, serverAggregate, serverLoading, cohort, axisMode, yMetric, gridPoints, spreadMode],
   );
 
+  // Phase 16 / XCOHORT-01..04: per-cohort aggregate memo.
+  const crossCohortAggregates = useMemo((): null | {
+    od: CohortSeriesEntry[]; os: CohortSeriesEntry[]; combined: CohortSeriesEntry[];
+  } => {
+    if (!isCrossMode || crossCohortIds.length === 0) return null;
+    const od: CohortSeriesEntry[] = [];
+    const os: CohortSeriesEntry[] = [];
+    const combined: CohortSeriesEntry[] = [];
+    crossCohortIds.forEach((id, idx) => {
+      const saved = savedSearches.find((s) => s.id === id);
+      if (!saved) return;
+      const cases = applyFilters(activeCases, saved.filters);
+      const result = activeMetric === 'crt'
+        ? computeCrtTrajectory({ cases, axisMode, yMetric, gridPoints, spreadMode })
+        : computeCohortTrajectory({ cases, axisMode, yMetric, gridPoints, spreadMode });
+      const color = COHORT_PALETTES[idx % COHORT_PALETTES.length];
+      const base = {
+        cohortId: id,
+        cohortName: saved.name,
+        patientCount: cases.length,
+        color,
+      };
+      od.push({ ...base, panel: result.od });
+      os.push({ ...base, panel: result.os });
+      combined.push({ ...base, panel: result.combined });
+    });
+    return { od, os, combined };
+  }, [isCrossMode, crossCohortIds, savedSearches, activeCases, activeMetric, axisMode, yMetric, gridPoints, spreadMode]);
+
+  // Phase 16: patient counts for the compare drawer.
+  const patientCounts = useMemo<Record<string, number>>(() => {
+    const counts: Record<string, number> = {};
+    savedSearches.forEach((s) => {
+      counts[s.id] = applyFilters(activeCases, s.filters).length;
+    });
+    return counts;
+  }, [savedSearches, activeCases]);
+
+  // Phase 16: drawer onChange + onReset handlers.
+  const handleCompareChange = (nextIds: string[]) => {
+    setSearchParams((p) => {
+      const primary = primaryCohortId;
+      const ensured = primary && !nextIds.includes(primary) ? [primary, ...nextIds] : nextIds;
+      const capped = ensured.slice(0, 4);
+      if (capped.length >= 2) {
+        p.set('cohorts', capped.join(','));
+        // D-05: ?cohorts= takes precedence — remove ?cohort= to avoid ambiguity, then re-add primary.
+        p.delete('cohort');
+        if (primary) p.set('cohort', primary);
+      } else {
+        p.delete('cohorts');
+      }
+      return p;
+    });
+  };
+
+  const handleCompareReset = () => {
+    setSearchParams((p) => {
+      p.delete('cohorts');
+      if (primaryCohortId) p.set('cohort', primaryCohortId);
+      return p;
+    });
+    setCompareOpen(false);
+  };
+
   // ---------------------------------------------------------------------------
   // Render helpers
   // ---------------------------------------------------------------------------
@@ -389,6 +474,7 @@ export default function OutcomesView() {
               t={t as (key: string) => string}
               locale={locale as 'de' | 'en'}
               titleKey="outcomesPanelOd"
+              cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.od : undefined}
             />
             <OutcomesPanel
               panel={aggregate.os}
@@ -400,6 +486,7 @@ export default function OutcomesView() {
               t={t as (key: string) => string}
               locale={locale as 'de' | 'en'}
               titleKey="outcomesPanelOs"
+              cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.os : undefined}
             />
             <OutcomesPanel
               panel={aggregate.combined}
@@ -411,6 +498,7 @@ export default function OutcomesView() {
               t={t as (key: string) => string}
               locale={locale as 'de' | 'en'}
               titleKey="outcomesPanelCombined"
+              cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.combined : undefined}
             />
           </div>
           <OutcomesDataPreview
@@ -442,6 +530,7 @@ export default function OutcomesView() {
               locale={locale as 'de' | 'en'}
               titleKey="metricsCrtPanelOd"
               metric="crt"
+              cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.od : undefined}
             />
             <OutcomesPanel
               panel={crtAggregate.os}
@@ -454,6 +543,7 @@ export default function OutcomesView() {
               locale={locale as 'de' | 'en'}
               titleKey="metricsCrtPanelOs"
               metric="crt"
+              cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.os : undefined}
             />
             <OutcomesPanel
               panel={crtAggregate.combined}
@@ -466,6 +556,7 @@ export default function OutcomesView() {
               locale={locale as 'de' | 'en'}
               titleKey="metricsCrtPanelCombined"
               metric="crt"
+              cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.combined : undefined}
             />
           </div>
           <OutcomesDataPreview
@@ -530,8 +621,16 @@ export default function OutcomesView() {
             {cohort?.name ? `${t('outcomesTitle')}: ${cohort.name}` : t('outcomesTitle')}
           </h2>
           <p className="text-gray-500 text-sm mt-1">
-            {(cohort?.name ? t('outcomesSubtitleSaved') : t('outcomesSubtitleAdhoc'))
-              .replace('{count}', String(cohort?.cases.length ?? 0))}
+            {isCrossMode && crossCohortAggregates
+              ? (() => {
+                  const names = crossCohortAggregates.combined.map((c) => c.cohortName);
+                  let namesStr = names.join(', ');
+                  if (namesStr.length > 50) namesStr = namesStr.slice(0, 47) + '…';
+                  const base = t('outcomesCrossMode').replace('{count}', String(names.length));
+                  return `${base} · ${namesStr}`;
+                })()
+              : (cohort?.name ? t('outcomesSubtitleSaved') : t('outcomesSubtitleAdhoc'))
+                  .replace('{count}', String(cohort?.cases.length ?? 0))}
           </p>
           {routeServerSide && serverLoading && (
             <span
@@ -544,16 +643,26 @@ export default function OutcomesView() {
             </span>
           )}
         </div>
-        <button
-          type="button"
-          aria-label={t('outcomesOpenSettings')}
-          aria-expanded={drawerOpen}
-          aria-controls="outcomes-settings-drawer"
-          onClick={() => setDrawerOpen((v) => !v)}
-          className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
-        >
-          <Settings className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label={t('outcomesCompareOpenDrawer')}
+            className="p-2 rounded hover:bg-gray-100"
+            onClick={() => setCompareOpen(true)}
+          >
+            <GitCompare className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            aria-label={t('outcomesOpenSettings')}
+            aria-expanded={drawerOpen}
+            aria-controls="outcomes-settings-drawer"
+            onClick={() => setDrawerOpen((v) => !v)}
+            className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+        </div>
       </header>
 
       {/* Phase 13 / METRIC-04: inline metric tab strip */}
@@ -579,6 +688,20 @@ export default function OutcomesView() {
         setThresholdLetters={setThresholdLetters}
         patientCount={cohort?.cases.length ?? 0}
         t={t as (key: string) => string}
+        isCrossMode={isCrossMode}
+      />
+
+      {/* Phase 16 / XCOHORT-01..03: cohort compare drawer */}
+      <CohortCompareDrawer
+        open={compareOpen}
+        onClose={() => setCompareOpen(false)}
+        savedSearches={savedSearches}
+        patientCounts={patientCounts}
+        primaryCohortId={primaryCohortId}
+        selectedIds={crossCohortIds.length > 0 ? crossCohortIds : (primaryCohortId ? [primaryCohortId] : [])}
+        onChange={handleCompareChange}
+        onReset={handleCompareReset}
+        t={t as (k: string) => string}
       />
     </div>
   );
