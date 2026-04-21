@@ -157,10 +157,17 @@ export default function AuditPage() {
   };
 
   const handleExportJson = async () => {
-    const resp = await authFetch('/api/audit/export');
-    if (!resp.ok) return;
-    const blob = await resp.blob();
-    downloadBlob(blob, datedFilename('audit-export', 'json'));
+    try {
+      const resp = await authFetch('/api/audit/export');
+      if (!resp.ok) {
+        console.error('[AuditPage] Export failed:', resp.status);
+        return;
+      }
+      const blob = await resp.blob();
+      downloadBlob(blob, datedFilename('audit-export', 'json'));
+    } catch (err) {
+      console.error('[AuditPage] Export network error:', err);
+    }
   };
 
   return (
