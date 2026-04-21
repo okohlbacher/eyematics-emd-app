@@ -195,3 +195,84 @@ describe('auditDb', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 17 filter arms
+// ---------------------------------------------------------------------------
+
+describe('Phase 17 filter arms', () => {
+  let tmpDir17: string;
+
+  beforeEach(() => {
+    tmpDir17 = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-p17-test-'));
+    initAuditDb(tmpDir17, 90);
+
+    // Seed rows covering all action-category buckets and search variants
+    logAuditEntry(makeEntry({ path: '/api/auth/login', method: 'POST', status: 200, body: '{}', query: null, user: 'alice' }));
+    logAuditEntry(makeEntry({ path: '/api/auth/login', method: 'POST', status: 401, body: '{"err":"bad"}', query: null, user: 'bob' }));
+    logAuditEntry(makeEntry({ path: '/api/auth/users/alice', method: 'DELETE', status: 204, body: '', query: null, user: 'admin' }));
+    logAuditEntry(makeEntry({ path: '/api/data/bundle', method: 'GET', status: 200, body: '', query: '?center=abc123', user: 'alice' }));
+    logAuditEntry(makeEntry({ path: '/api/settings', method: 'GET', status: 200, body: '', query: null, user: 'admin' }));
+    logAuditEntry(makeEntry({ path: '/api/outcomes/aggregate', method: 'POST', status: 200, body: '{"cohort":"xyz"}', query: null, user: 'alice' }));
+    logAuditEntry(makeEntry({ path: '/api/audit/events/view-open', method: 'POST', status: 204, body: '', query: null, user: 'alice' }));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir17, { recursive: true, force: true });
+  });
+
+  it('action_category: auth returns only /api/auth/* rows excluding /api/auth/users/*', () => {
+    const { rows } = queryAudit({ action_category: 'auth' });
+    expect(rows).toHaveLength(2);
+    expect(rows.every((r) => r.path.startsWith('/api/auth/'))).toBe(true);
+    expect(rows.some((r) => r.path.startsWith('/api/auth/users/'))).toBe(false);
+  });
+
+  it('action_category: data returns only /api/data/* rows', () => {
+    const { rows } = queryAudit({ action_category: 'data' });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].path).toBe('/api/data/bundle');
+  });
+
+  it('action_category: admin returns /api/auth/users/* and /api/settings rows', () => {
+    const { rows } = queryAudit({ action_category: 'admin' });
+    expect(rows).toHaveLength(2);
+    const paths = rows.map((r) => r.path);
+    expect(paths).toContain('/api/auth/users/alice');
+    expect(paths).toContain('/api/settings');
+  });
+
+  it('action_category: outcomes returns /api/outcomes/* and /api/audit/events/view-open rows', () => {
+    const { rows } = queryAudit({ action_category: 'outcomes' });
+    expect(rows).toHaveLength(2);
+    const paths = rows.map((r) => r.path);
+    expect(paths).toContain('/api/outcomes/aggregate');
+    expect(paths).toContain('/api/audit/events/view-open');
+  });
+
+  it('body_search: abc123 matches via query column', () => {
+    const { rows } = queryAudit({ body_search: 'abc123' });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].path).toBe('/api/data/bundle');
+  });
+
+  it('body_search: xyz matches via body column', () => {
+    const { rows } = queryAudit({ body_search: 'xyz' });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].path).toBe('/api/outcomes/aggregate');
+  });
+
+  it('status_gte: 400 returns only rows with status >= 400', () => {
+    const { rows } = queryAudit({ status_gte: 400 });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].status).toBe(401);
+    expect(rows.every((r) => r.status >= 400)).toBe(true);
+  });
+
+  it('action_category: auth + status_gte: 400 intersects both conditions', () => {
+    const { rows } = queryAudit({ action_category: 'auth', status_gte: 400 });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].status).toBe(401);
+    expect(rows[0].path).toBe('/api/auth/login');
+  });
+});
