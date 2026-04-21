@@ -92,26 +92,26 @@ export default function QualityCaseList({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
       {/* Search bar */}
-      <div className="px-3 py-2 border-b border-gray-200 bg-gray-50">
+      <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder={t('qualitySearchPlaceholder')}
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-400"
+              className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-400 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
             />
           </div>
           <button
             onClick={onToggleFilters}
             className={`p-1.5 rounded-lg border text-sm transition-colors ${
               showFilters
-                ? 'bg-blue-50 border-blue-200 text-blue-600'
-                : 'border-gray-200 text-gray-500 hover:bg-gray-100'
+                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 text-blue-600'
+                : 'border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600/50'
             }`}
             title={t('filterCriteria')}
           >
@@ -122,16 +122,16 @@ export default function QualityCaseList({
 
       {/* Filter dropdowns */}
       {showFilters && (
-        <div className="px-3 py-2 border-b border-gray-200 bg-gray-50/50 space-y-2">
+        <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/50 space-y-2">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-[10px] font-medium text-gray-500 uppercase mb-0.5">
+              <label className="block text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-0.5">
                 {t('qualityFilterStatus')}
               </label>
               <select
                 value={filterStatus}
                 onChange={(e) => onFilterStatusChange(e.target.value as QualityStatus | 'all')}
-                className="w-full text-xs border border-gray-200 rounded px-2 py-1"
+                className="w-full text-xs border border-gray-200 dark:border-gray-600 rounded px-2 py-1 dark:bg-gray-700 dark:text-white"
               >
                 <option value="all">{t('qualityFilterAll')}</option>
                 <option value="unchecked">{t('unchecked')}</option>
@@ -140,13 +140,13 @@ export default function QualityCaseList({
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-medium text-gray-500 uppercase mb-0.5">
+              <label className="block text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-0.5">
                 {t('qualityFilterCenter')}
               </label>
               <select
                 value={filterCenter}
                 onChange={(e) => onFilterCenterChange(e.target.value)}
-                className="w-full text-xs border border-gray-200 rounded px-2 py-1"
+                className="w-full text-xs border border-gray-200 dark:border-gray-600 rounded px-2 py-1 dark:bg-gray-700 dark:text-white"
               >
                 <option value="all">{t('qualityFilterAll')}</option>
                 {centerNames.map((name) => (
@@ -157,13 +157,13 @@ export default function QualityCaseList({
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-medium text-gray-500 uppercase mb-0.5">
+              <label className="block text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-0.5">
                 {t('qualityFilterTherapy')}
               </label>
               <select
                 value={filterTherapy}
                 onChange={(e) => onFilterTherapyChange(e.target.value)}
-                className="w-full text-xs border border-gray-200 rounded px-2 py-1"
+                className="w-full text-xs border border-gray-200 dark:border-gray-600 rounded px-2 py-1 dark:bg-gray-700 dark:text-white"
               >
                 <option value="all">{t('qualityFilterAll')}</option>
                 <option value="active">{t('therapyActive')}</option>
@@ -172,7 +172,7 @@ export default function QualityCaseList({
               </select>
             </div>
             <div className="flex items-end pb-0.5">
-              <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+              <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={showExcluded}
@@ -187,15 +187,15 @@ export default function QualityCaseList({
       )}
 
       {/* Case count */}
-      <div className="px-4 py-2 border-b border-gray-100">
-        <p className="text-xs text-gray-500">
+      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
           {filteredCases.length === cases.length
             ? `${cases.length} ${t('cases')}`
             : `${filteredCases.length} ${t('qualityFilteredCount')} / ${cases.length} ${t('cases')}`}
         </p>
       </div>
 
-      <div className="max-h-[55vh] overflow-y-auto divide-y divide-gray-100">
+      <div className="max-h-[55vh] overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
         {filteredCases.map((c) => {
           const status = caseStatus.get(c.id) ?? 'unchecked';
           const isExcluded = excludedCases.includes(c.id);
@@ -203,8 +203,8 @@ export default function QualityCaseList({
             <button
               key={c.id}
               onClick={() => onSelectCase(c)}
-              className={`w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-blue-50 transition-colors ${
-                selectedCase?.id === c.id ? 'bg-blue-50' : ''
+              className={`w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors ${
+                selectedCase?.id === c.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
               } ${isExcluded ? 'opacity-50' : ''}`}
             >
               {statusIcon(status)}
@@ -214,9 +214,9 @@ export default function QualityCaseList({
                   {therapyBadge(c.id)}
                   {isExcluded && <Ban className="w-3 h-3 text-red-400 flex-shrink-0" />}
                 </div>
-                <p className="text-xs text-gray-400">{c.centerName}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{c.centerName}</p>
               </div>
-              <ChevronRight className="w-4 h-4 text-gray-300" />
+              <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
             </button>
           );
         })}
