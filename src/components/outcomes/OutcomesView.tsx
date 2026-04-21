@@ -16,6 +16,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useData } from '../../context/DataContext';
 import { useLanguage } from '../../context/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
+import { authFetch } from '../../services/authHeaders';
 import { applyFilters } from '../../services/fhirLoader';
 import { postAggregate, type AggregateResponse } from '../../services/outcomesAggregateService';
 import { loadSettings } from '../../services/settingsService';
@@ -167,12 +168,11 @@ export default function OutcomesView() {
         // Malformed filter param — drop from the beacon payload.
       }
     }
-    fetch('/api/audit/events/view-open', {
+    authFetch('/api/audit/events/view-open', {
       method: 'POST',
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },
       keepalive: true,
-      credentials: 'include',
     }).catch(() => {
       /* beacon is fire-and-forget (D-03) */
     });
