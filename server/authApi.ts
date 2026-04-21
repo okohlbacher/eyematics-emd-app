@@ -67,6 +67,20 @@ function signSessionToken(username: string, role: string, centers: string[]): st
   return jwt.sign(payload, getJwtSecret(), { algorithm: 'HS256', expiresIn: '10m' });
 }
 
+/**
+ * M8: Fire-and-forget last-login write. Factored out of /login and /verify
+ * so a future policy change (e.g. debouncing writes, recording login source)
+ * lives in one place. Intentionally best-effort: never block or fail the
+ * login response if the users.json write fails.
+ */
+function touchLastLogin(username: string): void {
+  try {
+    modifyUsers((users) =>
+      users.map((u) => u.username === username ? { ...u, lastLogin: new Date().toISOString() } : u),
+    ).catch(() => {});
+  } catch { /* best-effort */ }
+}
+
 /** Sign a challenge token for 2FA step 2 (2 min expiry, purpose='challenge'). */
 function signChallengeToken(username: string): string {
   return jwt.sign(
@@ -155,11 +169,7 @@ authApiRouter.post('/login', async (req: Request, res: Response): Promise<void> 
   } else {
     // Return full session JWT directly — update lastLogin (H-12)
     const token = signSessionToken(user.username, user.role, user.centers);
-    try {
-      modifyUsers((users) =>
-        users.map((u) => u.username === user.username ? { ...u, lastLogin: new Date().toISOString() } : u),
-      ).catch(() => {});
-    } catch { /* best-effort — don't fail login if write fails */ }
+    touchLastLogin(user.username);
     res.json({ token });
   }
 });
@@ -273,12 +283,7 @@ authApiRouter.post('/verify', async (req: Request, res: Response): Promise<void>
   }
 
   const token = signSessionToken(user.username, user.role, user.centers);
-  // Update lastLogin (H-12)
-  try {
-    modifyUsers((u) =>
-      u.map((r) => r.username === user.username ? { ...r, lastLogin: new Date().toISOString() } : r),
-    ).catch(() => {});
-  } catch { /* best-effort */ }
+  touchLastLogin(user.username);
   res.json({ token });
 });
 

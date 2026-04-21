@@ -219,13 +219,18 @@ export function queryAudit(
  * Used for GET /api/audit/export (admin full dump).
  * F-05: Capped at 100 000 rows to prevent OOM on large databases.
  */
-const MAX_EXPORT_ROWS = 100_000;
+export const MAX_EXPORT_ROWS = 100_000;
 
-export function queryAuditExport(): AuditDbRow[] {
+/**
+ * L5: Returns rows + the true un-capped total so the handler can surface
+ * truncation to the caller via headers. `total` is the row count in the
+ * table; `rows` is at most MAX_EXPORT_ROWS of them.
+ */
+export function queryAuditExport(): { rows: AuditDbRow[]; total: number } {
   if (!db) {
     throw new Error('[auditDb] queryAuditExport called before initAuditDb()');
   }
-  return db
+  const rows = db
     .prepare(
       `SELECT id, timestamp, method, path, user, status, duration_ms, body, query
        FROM audit_log
@@ -233,6 +238,10 @@ export function queryAuditExport(): AuditDbRow[] {
        LIMIT ?`,
     )
     .all(MAX_EXPORT_ROWS) as AuditDbRow[];
+  const { total } = db
+    .prepare('SELECT COUNT(*) as total FROM audit_log')
+    .get() as { total: number };
+  return { rows, total };
 }
 
 // ---------------------------------------------------------------------------

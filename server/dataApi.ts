@@ -34,6 +34,20 @@ export const dataApiRouter = Router();
 /** Maximum array size for bulk replacement endpoints (review suggestion: cap list sizes) */
 const MAX_ARRAY_SIZE = 10000;
 
+// M8: single source of truth for the snake_case → camelCase quality-flag shape
+// returned to clients. Used by both GET and PUT handlers.
+function qualityFlagRowToClient(f: QualityFlagRow) {
+  return {
+    id: f.id,
+    caseId: f.case_id,
+    parameter: f.parameter,
+    errorType: f.error_type,
+    flaggedAt: f.flagged_at,
+    flaggedBy: f.flagged_by,
+    status: f.status,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Center validation helper (CENTER-03, D-10, T-05-02)
 // ---------------------------------------------------------------------------
@@ -69,17 +83,7 @@ function validateCaseCenters(caseIds: string[], userCenters: string[], role: str
 dataApiRouter.get('/quality-flags', (req: Request, res: Response): void => {
   const username = req.auth!.preferred_username;
   const flags = getQualityFlags(username);
-  // Map snake_case DB rows to camelCase for client
-  const qualityFlags = flags.map((f) => ({
-    id: f.id,
-    caseId: f.case_id,
-    parameter: f.parameter,
-    errorType: f.error_type,
-    flaggedAt: f.flagged_at,
-    flaggedBy: f.flagged_by,
-    status: f.status,
-  }));
-  res.json({ qualityFlags });
+  res.json({ qualityFlags: flags.map(qualityFlagRowToClient) });
 });
 
 dataApiRouter.put('/quality-flags', (req: Request, res: Response): void => {
@@ -139,19 +143,8 @@ dataApiRouter.put('/quality-flags', (req: Request, res: Response): void => {
 
   setQualityFlags(username, rows);
 
-  // Return saved flags in camelCase
   const saved = getQualityFlags(username);
-  res.json({
-    qualityFlags: saved.map((f) => ({
-      id: f.id,
-      caseId: f.case_id,
-      parameter: f.parameter,
-      errorType: f.error_type,
-      flaggedAt: f.flagged_at,
-      flaggedBy: f.flagged_by,
-      status: f.status,
-    })),
-  });
+  res.json({ qualityFlags: saved.map(qualityFlagRowToClient) });
 });
 
 // ---------------------------------------------------------------------------

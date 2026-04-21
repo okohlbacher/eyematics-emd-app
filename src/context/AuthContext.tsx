@@ -80,12 +80,23 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   }
 }
 
+/** All valid roles — kept in sync with UserRole union above. */
+const VALID_ROLES: ReadonlySet<UserRole> = new Set<UserRole>([
+  'researcher', 'admin', 'epidemiologist', 'clinician', 'data_manager', 'clinic_lead',
+]);
+
 /** Extract User from JWT payload. */
 function userFromToken(token: string): User | null {
   const payload = decodeJwtPayload(token);
   if (!payload) return null;
   const username = (payload.preferred_username ?? payload.sub) as string;
-  const role = (payload.role ?? 'researcher') as UserRole;
+  // L2: validate role against the known enum instead of trusting the cast.
+  // A malformed token shouldn't silently show the UI as "researcher" — the
+  // server still enforces authz, but a mismatch here means the session is
+  // broken, so refuse to hydrate a user from it.
+  const rawRole = payload.role;
+  if (typeof rawRole !== 'string' || !VALID_ROLES.has(rawRole as UserRole)) return null;
+  const role = rawRole as UserRole;
   const centers = (Array.isArray(payload.centers) ? payload.centers : []) as string[];
   if (!username) return null;
   return { username, role, centers };

@@ -16,7 +16,7 @@ import type { Request, Response } from 'express';
 import { Router } from 'express';
 
 import type { AuditFilters } from './auditDb.js';
-import { logAuditEntry, queryAudit, queryAuditExport } from './auditDb.js';
+import { logAuditEntry, MAX_EXPORT_ROWS, queryAudit, queryAuditExport } from './auditDb.js';
 import { hashCohortId } from './hashCohortId.js';
 
 export const auditApiRouter = Router();
@@ -145,12 +145,17 @@ auditApiRouter.get('/export', (req: Request, res: Response): void => {
     return;
   }
 
-  const entries = queryAuditExport();
+  const { rows: entries, total } = queryAuditExport();
 
   // F-19: consistent wrapper object pattern
+  // L5: surface truncation explicitly — callers (curl, dashboards, archival
+  // jobs) can detect that they did not receive the full dataset.
   res.setHeader('Content-Disposition', 'attachment; filename="audit-export.json"');
   res.setHeader('Content-Type', 'application/json');
-  res.json({ entries });
+  res.setHeader('X-Total-Count', String(total));
+  res.setHeader('X-Truncated', total > entries.length ? 'true' : 'false');
+  res.setHeader('X-Max-Export-Rows', String(MAX_EXPORT_ROWS));
+  res.json({ entries, total, truncated: total > entries.length });
 });
 
 // ---------------------------------------------------------------------------

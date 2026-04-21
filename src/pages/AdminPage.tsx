@@ -67,6 +67,8 @@ export default function AdminPage() {
   const [role, setRole] = useState<UserRole>('researcher');
   const [selectedCenters, setSelectedCenters] = useState<string[]>([]);
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  // L3: inline action-error banner replaces blocking alert() for create/update failures.
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const [editUsername, setEditUsername] = useState<string | null>(null);
   const [editFirstName, setEditFirstName] = useState('');
@@ -237,10 +239,11 @@ export default function AdminPage() {
         await loadUsers();
       } else {
         const err = await resp.json() as { error: string };
-        alert(err.error ?? 'Failed to create user');
+        setActionError(err.error ?? 'Failed to create user');
       }
     } catch (err) {
       console.error('[AdminPage] Failed to create user:', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to create user');
     }
   };
 
@@ -299,10 +302,11 @@ export default function AdminPage() {
         await loadUsers();
       } else {
         const err = await resp.json() as { error: string };
-        alert(err.error ?? 'Failed to update user');
+        setActionError(err.error ?? 'Failed to update user');
       }
     } catch (err) {
       console.error('[AdminPage] Failed to update user:', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to update user');
     }
   };
 
@@ -329,6 +333,19 @@ export default function AdminPage() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('adminTitle')}</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">{t('adminSubtitle')}</p>
       </div>
+
+      {/* L3: action error banner (replaces blocking alert()) */}
+      {actionError && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-start justify-between gap-3">
+          <p className="text-sm text-red-800 dark:text-red-200">{actionError}</p>
+          <button
+            onClick={() => setActionError(null)}
+            className="text-xs text-red-600 hover:text-red-800 dark:text-red-300 underline"
+          >
+            {t('dismiss')}
+          </button>
+        </div>
+      )}
 
       {/* Generated password banner */}
       {generatedPassword && (

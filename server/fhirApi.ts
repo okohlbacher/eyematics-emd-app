@@ -52,6 +52,11 @@ export interface FhirBundle {
 
 let _bundleCache: FhirBundle[] | null = null;
 let _caseIndex: Map<string, string> | null = null;
+// L6: time-bounded cache. Without a TTL, Blaze-side edits never surface until
+// a settings write (invalidateFhirCache) or a server restart. 15 min balances
+// freshness against the expensive bundle reload.
+const BUNDLE_CACHE_TTL_MS = 15 * 60 * 1000;
+let _bundleCacheLoadedAt: number = 0;
 
 /**
  * Invalidate the in-memory FHIR bundle cache.
@@ -60,6 +65,7 @@ let _caseIndex: Map<string, string> | null = null;
 export function invalidateFhirCache(): void {
   _bundleCache = null;
   _caseIndex = null;
+  _bundleCacheLoadedAt = 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -361,12 +367,13 @@ async function loadFromBlaze(blazeUrl: string): Promise<FhirBundle[]> {
 // ---------------------------------------------------------------------------
 
 export async function getCachedBundles(): Promise<FhirBundle[]> {
-  if (_bundleCache !== null) {
+  if (_bundleCache !== null && Date.now() - _bundleCacheLoadedAt < BUNDLE_CACHE_TTL_MS) {
     return _bundleCache;
   }
   const bundles = await loadBundlesFromServer();
   _bundleCache = bundles;
   _caseIndex = buildCaseIndex(bundles);
+  _bundleCacheLoadedAt = Date.now();
   return bundles;
 }
 
