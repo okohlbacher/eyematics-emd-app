@@ -1,5 +1,5 @@
-import { Download, FileText, Filter } from 'lucide-react';
-import { useEffect,useMemo, useState } from 'react';
+import { Download, FileText } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -17,8 +17,6 @@ interface ServerAuditEntry {
   status: number;
   duration_ms: number;
 }
-
-type TimeRange = 'today' | '7d' | '30d' | 'all';
 
 // ---------------------------------------------------------------------------
 // Map raw (method, path) to a semantic audit_action_* translation key.
@@ -79,24 +77,11 @@ function isRelevantEntry(entry: ServerAuditEntry): boolean {
 }
 
 function statusBadgeClass(status: number): string {
-  if (status >= 500) return 'bg-red-100 text-red-700';
-  if (status >= 400) return 'bg-amber-100 text-amber-700';
-  if (status >= 300) return 'bg-blue-100 text-blue-700';
-  if (status >= 200) return 'bg-green-100 text-green-700';
-  return 'bg-gray-100 text-gray-700';
-}
-
-function getTimeRangeStart(range: TimeRange): number {
-  const now = new Date();
-  switch (range) {
-    case 'today': {
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      return start.getTime();
-    }
-    case '7d':  return now.getTime() - 7  * 24 * 60 * 60 * 1000;
-    case '30d': return now.getTime() - 30 * 24 * 60 * 60 * 1000;
-    default:    return 0;
-  }
+  if (status >= 500) return 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400';
+  if (status >= 400) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400';
+  if (status >= 300) return 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400';
+  if (status >= 200) return 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400';
+  return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
 }
 
 export default function AuditPage() {
@@ -108,54 +93,56 @@ export default function AuditPage() {
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState<string | null>(null);
 
-  // Filter state
-  const [timeRange, setTimeRange]       = useState<TimeRange>('all');
-  const [showFilters, setShowFilters]   = useState(false);
+  // Filter state (5 controls per UI-SPEC D-01..D-04)
+  const [filterUser, setFilterUser] = useState<string>('');
+  const [filterCategory, setFilterCategory] = useState<'' | 'auth' | 'data' | 'admin' | 'outcomes'>('');
+  const [filterFrom, setFilterFrom] = useState<string>('');   // YYYY-MM-DD
+  const [filterTo, setFilterTo] = useState<string>('');       // YYYY-MM-DD
+  const [filterSearch, setFilterSearch] = useState<string>('');
+  const [filterFailures, setFilterFailures] = useState<boolean>(false);
 
   const dateFmt = getDateLocale(locale);
 
-  // Load entries from the server on mount
+  // Admin check + distinct user list for dropdown
+  const isAdmin = user?.role === 'admin';
+  const distinctUsers = useMemo(
+    () => Array.from(new Set(entries.map(e => e.user).filter(Boolean))).sort(),
+    [entries]
+  );
+
+  // Debounced server-side fetch (300ms) — fires on any filter change
   useEffect(() => {
     let cancelled = false;
-
-    async function fetchAudit() {
+    const timer = setTimeout(async () => {
       setLoading(true);
       setError(null);
+      const params = new URLSearchParams({ limit: '500', offset: '0' });
+      if (filterUser) params.set('user', filterUser);
+      if (filterCategory) params.set('action_category', filterCategory);
+      if (filterFrom) params.set('fromTime', filterFrom);
+      if (filterTo) params.set('toTime', `${filterTo}T23:59:59`);
+      if (filterSearch) params.set('body_search', filterSearch);
+      if (filterFailures) params.set('status_gte', '400');
       try {
-        const res = await authFetch('/api/audit?limit=500&offset=0');
-        if (!res.ok) {
-          throw new Error(`Server returned ${res.status}`);
-        }
-        const data = (await res.json()) as { entries: ServerAuditEntry[]; total: number };
-        if (!cancelled) {
-          setEntries(data.entries);
-          setTotal(data.total);
-        }
+        const res = await authFetch(`/api/audit?${params.toString()}`);
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+        const data = await res.json() as { entries: ServerAuditEntry[]; total: number };
+        if (!cancelled) { setEntries(data.entries); setTotal(data.total); }
       } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load audit log');
-        }
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load audit log');
       } finally {
         if (!cancelled) setLoading(false);
       }
-    }
+    }, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [filterUser, filterCategory, filterFrom, filterTo, filterSearch, filterFailures]);
 
-    void fetchAudit();
-    return () => { cancelled = true; };
-  }, []);
-
-  // Client-side filter + sort on the already-fetched 500 entries
+  // Client-side relevance filter + sort on the already-fetched entries
   const filteredEntries = useMemo(() => {
-    const rangeStart = getTimeRangeStart(timeRange);
-
     return entries
-      .filter((e) => {
-        if (!isRelevantEntry(e)) return false;
-        if (new Date(e.timestamp).getTime() < rangeStart) return false;
-        return true;
-      })
+      .filter(isRelevantEntry)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }, [entries, timeRange]);
+  }, [entries]);
 
   const handleExportCsv = () => {
     const headers = [t('auditTime'), t('auditUser'), t('auditAction'), t('auditDetail'), t('auditStatus')];
@@ -177,39 +164,75 @@ export default function AuditPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-8 dark:bg-gray-900 min-h-screen">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <FileText className="w-6 h-6" />
           {t('auditTitle')}
         </h1>
-        <p className="text-gray-500 mt-1">{t('auditSubtitle')}</p>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">{t('auditSubtitle')}</p>
       </div>
 
-      {/* Controls */}
+      {/* 5-control filter panel */}
+      <div className="mb-4 bg-white rounded-xl border border-gray-200 p-4 dark:bg-gray-800 dark:border-gray-700 flex flex-wrap items-end gap-3">
+        {isAdmin && (
+          <div className="flex flex-col">
+            <label className="text-xs font-medium text-gray-500 uppercase mb-1 dark:text-gray-400">{t('auditFilterUser')}</label>
+            <select value={filterUser} onChange={e => setFilterUser(e.target.value)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 max-w-[160px] focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">{t('auditFilterAllUsers')}</option>
+              {distinctUsers.map(u => <option key={u} value={u}>{u}</option>)}
+            </select>
+          </div>
+        )}
+        <div className="flex flex-col">
+          <label className="text-xs font-medium text-gray-500 uppercase mb-1 dark:text-gray-400">{t('auditFilterCategory')}</label>
+          <select value={filterCategory} onChange={e => setFilterCategory(e.target.value as typeof filterCategory)}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 max-w-[180px] focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">{t('auditFilterAllCategories')}</option>
+            <option value="auth">{t('auditCategoryAuth')}</option>
+            <option value="data">{t('auditCategoryData')}</option>
+            <option value="admin">{t('auditCategoryAdmin')}</option>
+            <option value="outcomes">{t('auditCategoryOutcomes')}</option>
+          </select>
+        </div>
+        <div className="flex flex-col">
+          <label className="text-xs font-medium text-gray-500 uppercase mb-1 dark:text-gray-400">{t('auditFilterFrom')}</label>
+          <input type="date" value={filterFrom} onChange={e => setFilterFrom(e.target.value)}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 max-w-[140px] focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div className="flex flex-col">
+          <label className="text-xs font-medium text-gray-500 uppercase mb-1 dark:text-gray-400">{t('auditFilterTo')}</label>
+          <input type="date" value={filterTo} onChange={e => setFilterTo(e.target.value)}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 max-w-[140px] focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div className="flex flex-col flex-1 min-w-[160px]">
+          <label className="text-xs font-medium text-gray-500 uppercase mb-1 dark:text-gray-400">{t('auditFilterCohortHash')}</label>
+          <input type="search" value={filterSearch} onChange={e => setFilterSearch(e.target.value)}
+            placeholder={t('auditFilterCohortHash')}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input type="checkbox" checked={filterFailures} onChange={e => setFilterFailures(e.target.checked)} />
+          {t('auditFilterFailuresOnly')}
+        </label>
+      </div>
+
+      {/* Controls row */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           {t('auditEntries')}:{' '}
-          <span className="font-semibold text-gray-900">
-            {filteredEntries.length === entries.length
+          <span className="font-semibold text-gray-900 dark:text-gray-100">
+            {filteredEntries.length === total
               ? total
               : `${filteredEntries.length} ${t('auditFilteredOf')} ${total}`}
           </span>
         </p>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded-lg transition-colors ${
-              showFilters ? 'bg-blue-50 border-blue-200 text-blue-600' : 'border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            <Filter className="w-4 h-4" />
-            {t('filterCriteria')}
-          </button>
-          <button
             onClick={handleExportCsv}
             disabled={filteredEntries.length === 0}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 dark:text-gray-300"
           >
             <Download className="w-4 h-4" />
             {t('auditExportCsv')}
@@ -217,7 +240,7 @@ export default function AuditPage() {
           {user?.role === 'admin' && (
             <button
               onClick={handleExportJson}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:text-gray-300"
             >
               <Download className="w-4 h-4" />
               {t('auditExportJson')}
@@ -226,83 +249,62 @@ export default function AuditPage() {
         </div>
       </div>
 
-      {/* Filter panel */}
-      {showFilters && (
-        <div className="mb-4 bg-white rounded-xl border border-gray-200 p-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase mb-1">
-              {t('auditFilterTime')}
-            </label>
-            <select
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 max-w-xs"
-            >
-              <option value="all">{t('auditAllTime')}</option>
-              <option value="today">{t('auditToday')}</option>
-              <option value="7d">{t('auditLast7Days')}</option>
-              <option value="30d">{t('auditLast30Days')}</option>
-            </select>
-          </div>
-        </div>
-      )}
-
       {/* Loading / error states */}
       {loading && (
-        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 text-center text-gray-400 dark:text-gray-500">
           Loading audit log…
         </div>
       )}
 
       {!loading && error && (
-        <div className="bg-white rounded-xl border border-red-200 p-8 text-center text-red-500">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-red-200 dark:border-red-800 p-8 text-center text-red-500">
           {error}
         </div>
       )}
 
       {/* Table */}
       {!loading && !error && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           {filteredEntries.length === 0 ? (
-            <div className="p-8 text-center text-gray-400">{t('auditEmpty')}</div>
+            <div className="p-8 text-center text-gray-400 dark:text-gray-500">{t('auditEmptyFiltered')}</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
                       {t('auditTime')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
                       {t('auditUser')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
                       {t('auditAction')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
                       {t('auditDetail')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
                       {t('auditStatus')}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {filteredEntries.map((entry) => (
-                    <tr key={entry.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                    <tr key={entry.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
                         {new Date(entry.timestamp).toLocaleString(dateFmt, {
                           dateStyle: 'short',
                           timeStyle: 'medium',
                         })}
                       </td>
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
                         {entry.user}
                       </td>
-                      <td className="px-4 py-3 text-gray-900">
+                      <td className="px-4 py-3 text-gray-900 dark:text-gray-100">
                         {describeAction(entry.method, entry.path, t)}
                       </td>
-                      <td className="px-4 py-3 text-gray-600 text-sm">
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300 text-sm">
                         {describeDetail(entry.method, entry.path, entry.user, t)}
                       </td>
                       <td className="px-4 py-3">
