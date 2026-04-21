@@ -314,3 +314,119 @@ describe('AGG-03 — size-based routing in OutcomesView', () => {
     warnSpy.mockRestore();
   });
 });
+
+// ---------------------------------------------------------------------------
+// XCOHORT-04 — cross-cohort deep-link restoration (Phase 16)
+// ---------------------------------------------------------------------------
+
+const CROSS_COHORT_SAVED_SEARCHES: SavedSearch[] = [
+  { id: 'p1', name: 'Cohort A', createdAt: '2026-01-01', filters: {} },
+  { id: 'p2', name: 'Cohort B', createdAt: '2026-01-02', filters: {} },
+  { id: 'p3', name: 'Cohort C', createdAt: '2026-01-03', filters: {} },
+  { id: 'p4', name: 'Cohort D', createdAt: '2026-01-04', filters: {} },
+  { id: 'p5', name: 'Cohort E', createdAt: '2026-01-05', filters: {} },
+];
+
+/**
+ * Render OutcomesView at a URL with cross-cohort params.
+ * savedSearches defaults to CROSS_COHORT_SAVED_SEARCHES (5 entries p1–p5).
+ */
+function renderCrossView(
+  initialUrl: string,
+  options: { savedSearches?: SavedSearch[] } = {},
+) {
+  const savedSearches = options.savedSearches ?? CROSS_COHORT_SAVED_SEARCHES;
+  const activeCases = buildCases(5);
+
+  (useData as ReturnType<typeof vi.fn>).mockReturnValue({
+    activeCases,
+    savedSearches,
+    centers: [],
+    addSavedSearch: vi.fn(),
+    removeSavedSearch: vi.fn(),
+    qualityFlags: [],
+    excludedCases: [],
+    reviewedCases: [],
+    loading: false,
+    error: null,
+    bundles: [],
+    cases: [],
+  });
+  (useLanguage as ReturnType<typeof vi.fn>).mockReturnValue({
+    locale: 'en',
+    setLocale: vi.fn(),
+    t: (k: string) => k,
+  });
+  (applyFilters as ReturnType<typeof vi.fn>).mockImplementation(
+    (cases: PatientCase[]) => cases,
+  );
+
+  return render(
+    <MemoryRouter initialEntries={[initialUrl]}>
+      <Routes>
+        <Route path="/analysis" element={<OutcomesView />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+describe('OutcomesView — cross-cohort routing (Phase 16)', () => {
+  it('XCOHORT-04: ?cohorts=p1,p2 enters cross-cohort mode without user interaction', async () => {
+    loadSettingsMock.mockResolvedValue({
+      twoFactorEnabled: false,
+      therapyInterrupterDays: 120,
+      therapyBreakerDays: 365,
+      dataSource: { type: 'local' as const, blazeUrl: '' },
+      outcomes: { serverAggregationThresholdPatients: 1000, aggregateCacheTtlMs: 1800000 },
+    });
+
+    renderCrossView('/analysis?cohort=p1&cohorts=p1,p2');
+
+    // Subtitle reflects cross mode via the outcomesCrossMode key.
+    // The t() mock returns the key, so the subtitle will contain 'outcomesCrossMode'.
+    await waitFor(() =>
+      expect(screen.getByText(/outcomesCrossMode/i)).toBeDefined(),
+    );
+  });
+
+  it('XCOHORT-04: ?cohorts= caps at 4 cohorts (fifth id dropped)', async () => {
+    loadSettingsMock.mockResolvedValue({
+      twoFactorEnabled: false,
+      therapyInterrupterDays: 120,
+      therapyBreakerDays: 365,
+      dataSource: { type: 'local' as const, blazeUrl: '' },
+      outcomes: { serverAggregationThresholdPatients: 1000, aggregateCacheTtlMs: 1800000 },
+    });
+
+    renderCrossView('/analysis?cohort=p1&cohorts=p1,p2,p3,p4,p5');
+
+    // The subtitle is built from crossCohortAggregates.combined which has at most 4 entries.
+    // With t() returning the key, the text will be "outcomesCrossMode · Cohort A, Cohort B, Cohort C, Cohort D"
+    // (4 cohorts, not 5). Check that 5 cohorts are not all shown.
+    await waitFor(() => {
+      const subtitle = screen.getByText(/outcomesCrossMode/i);
+      // Cohort E should be absent (5th cohort dropped)
+      expect(subtitle.textContent).not.toContain('Cohort E');
+    });
+  });
+
+  it('XCOHORT-04: unknown cohort ids in ?cohorts= are silently dropped', async () => {
+    loadSettingsMock.mockResolvedValue({
+      twoFactorEnabled: false,
+      therapyInterrupterDays: 120,
+      therapyBreakerDays: 365,
+      dataSource: { type: 'local' as const, blazeUrl: '' },
+      outcomes: { serverAggregationThresholdPatients: 1000, aggregateCacheTtlMs: 1800000 },
+    });
+
+    renderCrossView('/analysis?cohort=p1&cohorts=p1,pUNKNOWN');
+
+    // Unknown id pUNKNOWN is filtered out; only p1 remains.
+    // With 1 entry crossCohortAggregates still resolves (1 valid cohort).
+    // Panels must render without crashing.
+    await waitFor(() => {
+      const panel = screen.getByTestId('outcomes-panel-od');
+      expect(panel).toBeDefined();
+    });
+  });
+});
