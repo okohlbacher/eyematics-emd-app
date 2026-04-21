@@ -57,6 +57,35 @@ describe('outcomes* i18n bundle', () => {
   });
 });
 
+describe('Phase 17 i18n keys (theme + audit filters)', () => {
+  const PHASE_17_KEYS = [
+    'themeLight', 'themeDark', 'themeSystem',
+    'auditFilterUser', 'auditFilterAllUsers',
+    'auditFilterCategory', 'auditFilterAllCategories',
+    'auditCategoryAuth', 'auditCategoryData', 'auditCategoryAdmin', 'auditCategoryOutcomes',
+    'auditFilterFrom', 'auditFilterTo',
+    'auditFilterCohortHash', 'auditFilterFailuresOnly',
+    'auditEmptyFiltered',
+  ] as const;
+
+  for (const key of PHASE_17_KEYS) {
+    it(`translations.en.${key} is a non-empty string`, async () => {
+      const mod = await import('../src/i18n/translations');
+      const t = (mod as any).translations ?? (mod as any).default;
+      expect(t[key]).toBeDefined();
+      expect(typeof t[key].en).toBe('string');
+      expect((t[key].en as string).length).toBeGreaterThan(0);
+    });
+    it(`translations.de.${key} is a non-empty string`, async () => {
+      const mod = await import('../src/i18n/translations');
+      const t = (mod as any).translations ?? (mod as any).default;
+      expect(t[key]).toBeDefined();
+      expect(typeof t[key].de).toBe('string');
+      expect((t[key].de as string).length).toBeGreaterThan(0);
+    });
+  }
+});
+
 describe('metrics* i18n bundle', () => {
   // METRIC-06: enforce completeness of metrics* namespace seeded by Phase 13-01
   it('every metrics* key has a non-empty de and en translation', async () => {

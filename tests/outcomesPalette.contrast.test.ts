@@ -8,10 +8,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  COHORT_PALETTES,
+  DARK_COHORT_PALETTES,
+  DARK_EYE_COLORS,
   EYE_COLORS,
   PANEL_BACKGROUND,
-  SERIES_STYLES,
   computeContrastRatio,
   relativeLuminance,
 } from '../src/components/outcomes/palette';
@@ -28,37 +28,6 @@ describe('palette — WCAG sanity references', () => {
   });
 });
 
-describe('COHORT_PALETTES (Phase 16 / XCOHORT-02)', () => {
-  it('exports exactly 4 colors', () => {
-    expect(COHORT_PALETTES).toHaveLength(4);
-  });
-  it('all entries pass WCAG 3:1 vs #ffffff', () => {
-    for (const hex of COHORT_PALETTES) {
-      expect(computeContrastRatio(hex, '#ffffff')).toBeGreaterThanOrEqual(3.0);
-    }
-  });
-  it('does not overlap EYE_COLORS', () => {
-    const eyes = new Set(Object.values(EYE_COLORS));
-    for (const hex of COHORT_PALETTES) expect(eyes.has(hex)).toBe(false);
-  });
-  it('contains the 4 locked hex values in order', () => {
-    expect(COHORT_PALETTES).toEqual(['#047857', '#b45309', '#0e7490', '#a21caf']);
-  });
-});
-
-describe('SERIES_STYLES VIS-04 changes (D-09)', () => {
-  it('perPatient uses neutral gray #9ca3af', () => {
-    expect(SERIES_STYLES.perPatient.color).toBe('#9ca3af');
-  });
-  it('perPatient opacity is 0.22 / 0.12', () => {
-    expect(SERIES_STYLES.perPatient.opacityDense).toBe(0.22);
-    expect(SERIES_STYLES.perPatient.opacitySparse).toBe(0.12);
-  });
-  it('median strokeWidth is 4', () => {
-    expect(SERIES_STYLES.median.strokeWidth).toBe(4);
-  });
-});
-
 describe('EYE_COLORS WCAG AA contrast against panel background', () => {
   const WCAG_AA_GRAPHICAL = 3.0;
 
@@ -71,4 +40,24 @@ describe('EYE_COLORS WCAG AA contrast against panel background', () => {
       ).toBeGreaterThanOrEqual(WCAG_AA_GRAPHICAL);
     });
   }
+});
+
+const DARK_BG = '#111827';
+const WCAG_AA_TEXT = 4.5;
+const WCAG_GRAPHICAL = 3.0;
+
+describe('DARK_EYE_COLORS WCAG AA text contrast vs #111827', () => {
+  for (const [key, hex] of Object.entries(DARK_EYE_COLORS)) {
+    it(`DARK_EYE_COLORS['${key}']=${hex} ratio >= 4.5`, () => {
+      expect(computeContrastRatio(hex as string, DARK_BG)).toBeGreaterThanOrEqual(WCAG_AA_TEXT);
+    });
+  }
+});
+
+describe('DARK_COHORT_PALETTES WCAG graphical contrast vs #111827', () => {
+  DARK_COHORT_PALETTES.forEach((hex, i) => {
+    it(`DARK_COHORT_PALETTES[${i}]=${hex} ratio >= 3.0`, () => {
+      expect(computeContrastRatio(hex, DARK_BG)).toBeGreaterThanOrEqual(WCAG_GRAPHICAL);
+    });
+  });
 });

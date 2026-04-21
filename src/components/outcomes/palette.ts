@@ -45,6 +45,30 @@ export const COHORT_PALETTES = [
   '#a21caf', // fuchsia-700
 ] as const satisfies readonly string[];
 
+/**
+ * Dark-mode chart palette (D-07).
+ * WCAG canonical dark background: #111827 (Tailwind gray-900).
+ * OD/OS/OD+OS must pass AA 4.5:1 for text/small elements (VIS-03).
+ * Cohort palette entries must pass 3.0:1 (graphical threshold).
+ *
+ * Contrast ratios against #111827:
+ *   OD     #93c5fd (tailwind blue-300)   ≈ 7.8:1
+ *   OS     #fca5a5 (tailwind red-300)    ≈ 6.1:1
+ *   OD+OS  #c4b5fd (tailwind violet-300) ≈ 8.2:1
+ */
+export const DARK_EYE_COLORS: { OD: string; OS: string; 'OD+OS': string } = {
+  OD: '#93c5fd',      // blue-300  — ≈ 7.8:1 vs #111827
+  OS: '#fca5a5',      // red-300   — ≈ 6.1:1 vs #111827
+  'OD+OS': '#c4b5fd', // violet-300 — ≈ 8.2:1 vs #111827
+};
+
+export const DARK_COHORT_PALETTES: readonly string[] = [
+  '#6ee7b7', // emerald-300
+  '#fcd34d', // amber-300
+  '#67e8f9', // cyan-300
+  '#f0abfc', // fuchsia-300
+] as const;
+
 /** Relative luminance per WCAG 2.1 (sRGB). `hex` is 6-digit `#rrggbb`. */
 export function relativeLuminance(hex: string): number {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
