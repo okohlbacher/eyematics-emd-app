@@ -42,16 +42,40 @@ export const auditApiRouter = Router();
 auditApiRouter.get('/', (req: Request, res: Response): void => {
   const filters: AuditFilters = {};
 
-  // H-03: Auto-scope — non-admins see only their own audit entries
-  if (req.auth?.role !== 'admin') {
-    filters.user = req.auth!.preferred_username;
-  } else if (typeof req.query.user === 'string') {
-    filters.user = req.query.user;
-  }
+  // Parse base filters (user from query only applies when admin — overwritten below for non-admins)
+  if (typeof req.query.user === 'string') filters.user = req.query.user;
   if (typeof req.query.method === 'string') filters.method = req.query.method;
   if (typeof req.query.path === 'string') filters.path = req.query.path;
   if (typeof req.query.fromTime === 'string') filters.fromTime = req.query.fromTime;
   if (typeof req.query.toTime === 'string') filters.toTime = req.query.toTime;
+
+  // Phase 17: new filter params with enum + NaN validation (T-17-01, T-17-02, T-17-04)
+  const VALID_CATEGORIES = ['auth', 'data', 'admin', 'outcomes'] as const;
+  type ActionCategory = typeof VALID_CATEGORIES[number];
+
+  const rawCategory = req.query.action_category;
+  if (typeof rawCategory === 'string' && (VALID_CATEGORIES as readonly string[]).includes(rawCategory)) {
+    filters.action_category = rawCategory as ActionCategory;
+  }
+
+  const rawBodySearch = req.query.body_search;
+  if (typeof rawBodySearch === 'string' && rawBodySearch.length > 0) {
+    filters.body_search = rawBodySearch;
+  }
+
+  const rawStatusGte = req.query.status_gte;
+  if (typeof rawStatusGte === 'string' && rawStatusGte.length > 0) {
+    const parsed = Number(rawStatusGte);
+    if (!Number.isNaN(parsed) && Number.isFinite(parsed)) {
+      filters.status_gte = parsed;
+    }
+  }
+
+  // H-03: Auto-scope — non-admins see only their own audit entries.
+  // Applied AFTER new param parsing so it overwrites any user-provided user value last.
+  if (req.auth?.role !== 'admin') {
+    filters.user = req.auth!.preferred_username;
+  }
 
   const rawLimit = Number(req.query.limit);
   if (!Number.isNaN(rawLimit) && rawLimit > 0) filters.limit = rawLimit;
