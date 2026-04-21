@@ -145,13 +145,23 @@ export function purgeOldEntries(): number {
 // 4. startPurgeInterval
 // ---------------------------------------------------------------------------
 
+let _purgeTimer: ReturnType<typeof setInterval> | null = null;
+
 /**
  * Run purgeOldEntries immediately, then schedule it every 24 hours (D-15).
  * Call once at server startup after initAuditDb().
+ * Guards against timer accumulation on hot-reload by clearing any existing
+ * interval before registering a new one.
  */
 export function startPurgeInterval(): void {
+  if (_purgeTimer !== null) clearInterval(_purgeTimer);
   purgeOldEntries();
-  setInterval(purgeOldEntries, 24 * 60 * 60 * 1000);
+  _purgeTimer = setInterval(purgeOldEntries, 24 * 60 * 60 * 1000);
+}
+
+/** Exported for test teardown only — stops the purge interval. */
+export function stopPurgeInterval(): void {
+  if (_purgeTimer !== null) { clearInterval(_purgeTimer); _purgeTimer = null; }
 }
 
 // ---------------------------------------------------------------------------
