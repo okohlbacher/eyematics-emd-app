@@ -1,13 +1,11 @@
 /**
- * Issue reporting API — Express Router + Vite dev plugin.
+ * Issue reporting API — Express Router.
  * Issues are stored as JSON files in the `feedback/` directory.
  *
  * Endpoints:
  *   POST /api/issues        — create a new issue (authenticated users)
  *   GET  /api/issues         — list all issues without screenshots (authenticated)
  *   GET  /api/issues/export  — download full export with screenshots (admin-only)
- *
- * H-01: Shared core logic between production Router and Vite plugin.
  */
 
 import crypto from 'node:crypto';
@@ -16,10 +14,8 @@ import path from 'node:path';
 
 import type { Request, Response } from 'express';
 import { Router } from 'express';
-import type { Plugin } from 'vite';
 
 import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
-import { readBody, sendError,validateAuth } from './utils.js';
 
 const FEEDBACK_DIR = path.resolve(process.cwd(), 'feedback');
 
@@ -118,57 +114,3 @@ issueApiRouter.get('/', (_req: Request, res: Response): void => {
   res.json({ issues, total: issues.length });
 });
 
-// ---------------------------------------------------------------------------
-// Vite dev plugin (reuses shared logic)
-// ---------------------------------------------------------------------------
-
-export function issueApiPlugin(): Plugin {
-  return {
-    name: 'issue-api',
-    configureServer(server) {
-      server.middlewares.use((req, res, next) => {
-        if (!req.url?.startsWith('/api/issues')) return next();
-
-        const user = validateAuth(req, req.method === 'GET' && req.url === '/api/issues/export' ? 'admin' : undefined);
-        if (!user) {
-          sendError(res, req.url === '/api/issues/export' ? 403 : 401,
-            req.url === '/api/issues/export' ? 'Forbidden: admin role required' : 'Authentication required');
-          return;
-        }
-
-        if (req.method === 'POST' && req.url === '/api/issues') {
-          readBody(req)
-            .then((body) => {
-              const issue = JSON.parse(body);
-              const error = validateIssueBody(issue);
-              if (error) { sendError(res, 400, error); return; }
-              const result = createIssue(issue);
-              res.writeHead(201, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify(result));
-            })
-            .catch((err) => {
-              sendError(res, err instanceof Error && err.message.includes('too large') ? 413 : 500,
-                err instanceof Error && err.message.includes('too large') ? 'Request body too large' : 'Failed to read request body', err);
-            });
-          return;
-        }
-
-        if (req.method === 'GET' && req.url === '/api/issues/export') {
-          const issues = loadAllIssues(true);
-          const dateStr = new Date().toISOString().slice(0, 10);
-          res.writeHead(200, { 'Content-Type': 'application/json', 'Content-Disposition': `attachment; filename="emd-issues-${dateStr}.json"` });
-          res.end(JSON.stringify(issues, null, 2));
-          return;
-        }
-
-        if (req.method === 'GET' && req.url === '/api/issues') {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(loadAllIssues(false)));
-          return;
-        }
-
-        next();
-      });
-    },
-  };
-}

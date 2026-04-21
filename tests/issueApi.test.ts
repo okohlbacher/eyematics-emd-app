@@ -8,16 +8,10 @@ import path from 'node:path';
 
 import express from 'express';
 import request from 'supertest';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 // Redirect FEEDBACK_DIR to a temp directory
 let tmpFeedbackDir: string;
-
-vi.mock('../server/utils.js', () => ({
-  readBody: vi.fn(),
-  sendError: vi.fn(),
-  validateAuth: vi.fn(),
-}));
 
 // We need to patch the FEEDBACK_DIR constant. Since it's a module-level const,
 // we'll test the Router directly with a custom feedback dir by writing test

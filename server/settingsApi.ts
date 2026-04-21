@@ -1,13 +1,11 @@
 /**
- * Settings API — Express Router + Vite dev plugin.
+ * Settings API — Express Router.
  * Settings are stored in config/settings.yaml (outside webroot).
  *
  * Endpoints:
  *   GET  /api/settings                      — read current settings (authenticated users)
  *   PUT  /api/settings                      — update settings (admin-only)
  *   GET  /api/settings/fhir-connection-test — test FHIR server connectivity (admin-only)
- *
- * H-01: Shared core logic between production Router and Vite plugin.
  */
 
 import fs from 'node:fs';
@@ -15,13 +13,11 @@ import fs from 'node:fs';
 import type { Request, Response } from 'express';
 import { Router } from 'express';
 import yaml from 'js-yaml';
-import type { Plugin } from 'vite';
 
 import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
 import { SETTINGS_FILE } from './constants.js';
 import { invalidateFhirCache } from './fhirApi.js';
 import { updateAuthConfig } from './initAuth.js';
-import { readBody, sendError,validateAuth } from './utils.js';
 
 // ---------------------------------------------------------------------------
 // Shared core logic
@@ -196,81 +192,3 @@ settingsApiRouter.get('/fhir-connection-test', async (req: Request, res: Respons
   }
 });
 
-// ---------------------------------------------------------------------------
-// Vite dev plugin (reuses shared logic)
-// ---------------------------------------------------------------------------
-
-export function settingsApiPlugin(): Plugin {
-  return {
-    name: 'settings-api',
-    configureServer(server) {
-      server.middlewares.use((req, res, next) => {
-        // FHIR connection test — admin-only (dev mode)
-        if (req.url === '/api/settings/fhir-connection-test' && req.method === 'GET') {
-          const authUser = validateAuth(req, 'admin');
-          if (!authUser) { sendError(res, 403, 'FHIR connection test is restricted to administrators'); return; }
-          let blazeUrl = 'http://localhost:8080/fhir';
-          try {
-            const raw = readSettings();
-            const parsed = yaml.load(raw) as Record<string, unknown> | null;
-            const ds = parsed?.dataSource as Record<string, unknown> | undefined;
-            if (typeof ds?.blazeUrl === 'string' && ds.blazeUrl) blazeUrl = ds.blazeUrl;
-          } catch { /* use default */ }
-          const metadataUrl = blazeUrl.replace(/\/$/, '') + '/metadata';
-          void fetch(metadataUrl, { headers: { Accept: 'application/fhir+json' }, signal: AbortSignal.timeout(10_000) })
-            .then(async (r) => {
-              if (!r.ok) { sendError(res, 502, `FHIR server returned ${r.status} ${r.statusText}`); return; }
-              const cap = await r.json() as { software?: { name?: string; version?: string }; fhirVersion?: string };
-              const name = cap.software?.name ?? 'FHIR Server';
-              const version = cap.software?.version ?? '';
-              const fhir = cap.fhirVersion ? ` (FHIR ${cap.fhirVersion})` : '';
-              res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ ok: true, detail: `${name}${version ? ' ' + version : ''}${fhir}` }));
-            })
-            .catch((err: Error) => { sendError(res, 502, `Cannot reach FHIR server at ${metadataUrl}: ${err.message}`); });
-          return;
-        }
-
-        if (req.url !== '/api/settings') return next();
-
-        if (req.method === 'GET') {
-          // F-33: Vite plugin must explicitly check auth since production authMiddleware is not mounted in dev
-          if (!validateAuth(req)) { sendError(res, 401, 'Authentication required'); return; }
-          try {
-            res.writeHead(200, { 'Content-Type': 'text/yaml' });
-            res.end(readSettings());
-          } catch (err) {
-            sendError(res, 500, 'Failed to read settings', err);
-          }
-          return;
-        }
-
-        if (req.method === 'PUT') {
-          const authUser = validateAuth(req, 'admin');
-          if (!authUser) { sendError(res, 403, 'Forbidden: admin role required'); return; }
-
-          readBody(req)
-            .then((body) => {
-              const { parsed: parsedSettings, error } = parseAndValidateYaml(body);
-              if (error) { sendError(res, 400, error); return; }
-              try {
-                writeSettings(body, authUser.username);
-                updateAuthConfig(parsedSettings as Record<string, unknown>);
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ ok: true }));
-              } catch (err) {
-                sendError(res, 500, 'Failed to write settings', err);
-              }
-            })
-            .catch((err) => {
-              sendError(res, err instanceof Error && err.message.includes('too large') ? 413 : 500,
-                err instanceof Error && err.message.includes('too large') ? 'Request body too large' : 'Failed to read request body', err);
-            });
-          return;
-        }
-
-        next();
-      });
-    },
-  };
-}
