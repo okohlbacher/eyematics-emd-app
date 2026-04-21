@@ -1,5 +1,22 @@
 # Milestones
 
+## v1.7 Security, Performance & Cross-Cohort (Shipped: 2026-04-21)
+
+**Phases completed:** 4 phases (14–17), 16 plans
+**Timeline:** 2026-04-17 → 2026-04-21
+
+**Key accomplishments:**
+
+- **Security hardening (Phase 14):** JWT algorithm pin (HS256 only), cohort hash secret auto-generation, forced password change on default credential, ARIA chart labels
+- **TOTP 2FA (Phase 15):** Per-user TOTP enrollment with QR code, ±1 window tolerance, recovery codes, admin reset
+- **Cross-cohort comparison (Phase 16):** Overlay up to 4 saved cohorts on a single trajectory chart; `?cohorts=` URL param; spaghetti-plot visual hierarchy (VIS-04); COHORT_PALETTES (4-color WCAG set)
+- **Audit log + dark mode (Phase 17):** Multi-dimension audit filters (user, category, date range, body search, failures-only); ThemeContext/ThemeToggle; DARK_EYE_COLORS WCAG 4.5:1; FOUC prevention; `@variant dark` Tailwind v4 class-based dark mode
+
+**Deferred to future milestone:**
+- Phase 18 (Keycloak OIDC Redirect, KEYCLK-01) — requires real Keycloak instance; infrastructure prepared in Phase 6 (v1.0)
+
+---
+
 ## v1.6 Outcomes Polish & Scale (Shipped: 2026-04-17)
 
 **Phases completed:** 4 phases (10–13), 19 plans, 116 commits

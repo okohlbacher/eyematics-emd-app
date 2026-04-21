@@ -29,7 +29,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ## Active Milestone: v1.7 Security, Performance & Cross-Cohort
 
-**Milestone Goal:** Harden production security (JWT pin, secret auto-generation, forced password change, TOTP 2FA), improve runtime performance (O(N+M) case extraction, startup cache warming), improve accessibility, add cross-cohort comparison, upgrade the audit log UI, add dark-mode infrastructure, and complete the Keycloak OIDC redirect flow.
+**Milestone Goal:** Harden production security (JWT pin, secret auto-generation, forced password change, TOTP 2FA), improve runtime performance (O(N+M) case extraction, startup cache warming), improve accessibility, add cross-cohort comparison, upgrade the audit log UI, and add dark-mode infrastructure.
 
 ### Phases
 
@@ -37,7 +37,8 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 - [x] **Phase 15: TOTP 2FA** — Per-user TOTP enrollment with QR code, ±1 window tolerance, recovery codes (completed 2026-04-21)
 - [x] **Phase 16: Cross-Cohort Comparison** — Overlay up to 4 saved cohorts on a single trajectory chart, spaghetti-plot visual hierarchy (completed 2026-04-21)
 - [x] **Phase 17: Audit Log Upgrade & Dark Mode** — Filterable audit controls, dark-mode infrastructure and WCAG-compliant chart palette (completed 2026-04-21)
-- [ ] **Phase 18: Keycloak OIDC Redirect** — Authorization-code + PKCE redirect flow, server-mediated callback, local JWT issuance
+
+> **Phase 18 (Keycloak OIDC Redirect) deferred** — postponed from v1.7; infrastructure prepared in Phase 6 (v1.0). Carry to next milestone when a real Keycloak instance is available.
 
 ### Phase Details
 
@@ -116,17 +117,6 @@ Plans:
 - [x] 17-04-PLAN.md — Dark mode classes sweep across all pages and components
 - [x] 17-05-PLAN.md — Fix @custom-variant → @variant for class-based dark mode (UAT gap closure)
 
-#### Phase 18: Keycloak OIDC Redirect
-**Goal**: Deployments configured with `provider: keycloak` in `settings.yaml` have a fully functional browser-redirect login flow; the frontend receives the same JWT shape regardless of auth provider
-**Depends on**: Phase 14, Phase 15
-**Requirements**: KEYCLK-01
-**Success Criteria** (what must be TRUE):
-  1. Clicking "Login with Keycloak" on the login page redirects the browser to the Keycloak authorization endpoint with a valid PKCE `code_challenge`
-  2. After Keycloak authentication, the browser is redirected back to `/api/auth/keycloak/callback`; the server completes the authorization-code exchange, validates the ID token, and issues an EMD HS256 JWT with the standard `AuthPayload` shape (`sub`, `preferred_username`, `role`, `centers`)
-  3. The PKCE `code_verifier` and OIDC `state` parameter are stored server-side in a signed HttpOnly cookie and never exposed to client JavaScript
-  4. The React frontend's existing `AuthContext` receives the EMD JWT without modification — no frontend code change is required for a Keycloak login vs. a local login
-**Plans**: TBD
-
 ### Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -135,8 +125,7 @@ Plans:
 | 15. TOTP 2FA | v1.7 | 4/4 | Complete | 2026-04-21 |
 | 16. Cross-Cohort Comparison | v1.7 | 4/4 | Complete | 2026-04-21 |
 | 17. Audit Log Upgrade & Dark Mode | v1.7 | 5/5 | Complete | 2026-04-21 |
-| 18. Keycloak OIDC Redirect | v1.7 | 0/TBD | Not started | — |
 
 ---
 
-*Last updated: 2026-04-21 — Phases 14–17 complete. Phase 18 (Keycloak OIDC) pending.*
+*Last updated: 2026-04-21 — v1.7 complete (phases 14–17). Phase 18 (Keycloak OIDC) deferred to next milestone.*

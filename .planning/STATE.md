@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.7
-milestone_name: Security, Performance & Cross-Cohort
+milestone: v1.8
+milestone_name: TBD
 status: planning
-stopped_at: Phase 17 complete — advancing to Phase 18
-last_updated: "2026-04-21T19:12:00.000Z"
+stopped_at: v1.7 closed — defining v1.8
+last_updated: "2026-04-21T19:20:00.000Z"
 last_activity: 2026-04-21
 progress:
-  total_phases: 5
-  completed_phases: 4
-  total_plans: 15
-  completed_plans: 16
-  percent: 80
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Every user sees only authorized data, with tamper-proof audit trail — while `/outcomes` stays fast, visually polished, and useful beyond visus.
-**Current focus:** Phase 18 — Keycloak OIDC Redirect
+**Current focus:** Defining v1.8 milestone scope
 
 ## Current Position
 
-Phase: 18
-Plan: Not started
-Status: Ready to discuss
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
 Last activity: 2026-04-21
 
 ## Milestones Shipped
