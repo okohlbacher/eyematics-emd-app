@@ -102,10 +102,15 @@ export default function OutcomesPanel({
   // Select eye color palette based on theme
   const eyeColors = isDark ? DARK_EYE_COLORS : EYE_COLORS;
   const resolvedColor = eye === 'od' ? eyeColors.OD : eye === 'os' ? eyeColors.OS : eyeColors['OD+OS'];
-  // Use resolved theme color unless caller passes an explicit cohort-compare color
-  const seriesColor = color !== eyeColors.OD && color !== eyeColors.OS && color !== eyeColors['OD+OS']
-    ? color  // explicit cohort compare color from caller — use as-is
-    : resolvedColor;
+  // Use resolved theme color unless caller passes an explicit cohort-compare color.
+  // Guard against stale light-mode colors passed by a parent that hasn't re-mounted
+  // after a theme switch: compare against both palettes so any eye-color hex
+  // (light or dark) is treated as "use resolvedColor", not "use as-is".
+  const ALL_EYE_HEX = new Set([
+    ...Object.values(EYE_COLORS),
+    ...Object.values(DARK_EYE_COLORS),
+  ]);
+  const seriesColor = ALL_EYE_HEX.has(color) ? resolvedColor : color;
 
   const subtitle = `${panel.summary.patientCount} · ${panel.summary.measurementCount}`;
   // CRT tooltip value label key — passed to OutcomesTooltip for µm unit display
