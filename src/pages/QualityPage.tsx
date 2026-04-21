@@ -22,11 +22,11 @@ import { datedFilename, downloadCsv } from '../utils/download';
 
 function SummaryCard({ icon, count, label }: { icon: ReactNode; count: number; label: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-3">
       {icon}
       <div>
-        <p className="text-xl font-bold">{count}</p>
-        <p className="text-sm text-gray-500">{label}</p>
+        <p className="text-xl font-bold dark:text-white">{count}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
       </div>
     </div>
   );
@@ -196,8 +196,8 @@ export default function QualityPage() {
   return (
     <div className="p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{t('qualityTitle')}</h1>
-        <p className="text-gray-500 mt-1">{t('qualitySubtitle')}</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('qualityTitle')}</h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">{t('qualitySubtitle')}</p>
       </div>
 
       {/* Export button */}
@@ -205,7 +205,7 @@ export default function QualityPage() {
         <button
           onClick={handleExportCsv}
           disabled={filteredCases.length === 0}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:text-gray-300 transition-colors disabled:opacity-50"
         >
           <Download className="w-4 h-4" />
           {t('exportCsv')}
@@ -250,7 +250,7 @@ export default function QualityPage() {
         {/* Detail panel */}
         <div className="col-span-8">
           {!selectedCase ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 text-center text-gray-400 dark:text-gray-500">
               {t('selectCaseToReview')}
             </div>
           ) : (
