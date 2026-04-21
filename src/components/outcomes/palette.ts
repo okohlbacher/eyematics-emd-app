@@ -24,13 +24,26 @@ export const EYE_COLORS = {
 export type EyeKey = keyof typeof EYE_COLORS;
 
 export const SERIES_STYLES = {
-  median: { strokeWidth: 3 },
-  perPatient: { strokeWidth: 1.5, opacityDense: 0.6, opacitySparse: 0.3 },
+  median: { strokeWidth: 4 },
+  perPatient: { strokeWidth: 1.5, opacityDense: 0.22, opacitySparse: 0.12, color: '#9ca3af' },
   scatter: { fillOpacity: 0.7 },
   iqr: { fillOpacity: 0.15, stroke: 'none' as const },
 } as const;
 
 export const PANEL_BACKGROUND = '#ffffff';
+
+/**
+ * Phase 16 / D-06 / XCOHORT-02: categorical palette for cross-cohort overlays.
+ * 4 colors, distinct from EYE_COLORS (blue/red/violet family),
+ * each >= 3.0:1 contrast vs #ffffff (WCAG 2.1 SC 1.4.11 graphical threshold).
+ * Verified ratios: emerald-700 5.48:1, amber-700 5.02:1, cyan-700 5.36:1, fuchsia-700 6.32:1.
+ */
+export const COHORT_PALETTES = [
+  '#047857', // emerald-700
+  '#b45309', // amber-700
+  '#0e7490', // cyan-700
+  '#a21caf', // fuchsia-700
+] as const satisfies readonly string[];
 
 /** Relative luminance per WCAG 2.1 (sRGB). `hex` is 6-digit `#rrggbb`. */
 export function relativeLuminance(hex: string): number {
