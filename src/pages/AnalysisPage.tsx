@@ -318,7 +318,7 @@ export default function AnalysisPage() {
         </div>
 
         {/* Age vs Visus scatter */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 col-span-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 col-span-2">
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
             {t('ageVsVisus')}
           </h3>
