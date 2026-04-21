@@ -27,6 +27,7 @@ interface Props {
   setThresholdLetters: (n: number) => void;
   patientCount: number;
   t: (key: string) => string;
+  isCrossMode?: boolean;
 }
 
 function yMetricKey(m: MetricType, y: YMetric): string {
@@ -57,6 +58,7 @@ export default function OutcomesSettingsDrawer({
   setThresholdLetters,
   patientCount,
   t,
+  isCrossMode = false,
 }: Props) {
   const firstRadioRef = useRef<HTMLInputElement>(null);
 
@@ -174,20 +176,27 @@ export default function OutcomesSettingsDrawer({
                   ['scatter', 'outcomesLayerScatter'],
                   ['spreadBand', 'outcomesLayerSpreadBand'],
                 ] as const
-              ).map(([key, labelKey]) => (
-                <label key={key} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    aria-label={t(labelKey)}
-                    className="accent-blue-600"
-                    checked={layers[key]}
-                    onChange={() =>
-                      setLayers((L) => ({ ...L, [key]: !L[key] }))
-                    }
-                  />
-                  {t(labelKey)}
-                </label>
-              ))}
+              )
+                .filter(([key]) => !(isCrossMode && key === 'perPatient'))
+                .map(([key, labelKey]) => (
+                  <label key={key} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      aria-label={t(labelKey)}
+                      className="accent-blue-600"
+                      checked={layers[key]}
+                      onChange={() =>
+                        setLayers((L) => ({ ...L, [key]: !L[key] }))
+                      }
+                    />
+                    {t(labelKey)}
+                  </label>
+                ))}
+              {isCrossMode && (
+                <p className="text-xs text-gray-500 italic mt-2" data-testid="perpatient-suppressed-note">
+                  {t('outcomesComparePerPatientSuppressed')}
+                </p>
+              )}
               {patientCount > 30 && (
                 <p className="text-xs text-gray-500 mt-1">
                   {t('outcomesSettingsScatterAdvisory')}
