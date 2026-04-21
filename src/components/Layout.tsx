@@ -117,7 +117,7 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto dark:text-gray-100">
         <Outlet />
       </main>
 
