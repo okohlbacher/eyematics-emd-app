@@ -133,15 +133,15 @@ export default function CohortBuilderPage() {
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('cohortTitle')}</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('cohortTitle')}</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">
             {t('cohortSubtitle')}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowSaved(!showSaved)}
-            className="flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:text-gray-300"
           >
             <Search className="w-4 h-4" />
             {t('savedSearches')} ({savedSearches.length})
@@ -156,14 +156,14 @@ export default function CohortBuilderPage() {
 
       {/* Saved searches panel */}
       {showSaved && savedSearches.length > 0 && (
-        <div className="mb-6 bg-white rounded-xl border border-gray-200 p-4">
+        <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-700">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
               {t('savedSearchDefs')}
             </h3>
             <button
               onClick={() => setSavedSort(savedSort === 'date' ? 'name' : 'date')}
-              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100"
+              className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-600/50"
               title={savedSort === 'date' ? t('sortByName') : t('sortByDate')}
             >
               <ArrowUpDown className="w-3 h-3" />
@@ -180,11 +180,11 @@ export default function CohortBuilderPage() {
               .map((s) => (
               <div
                 key={s.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
               >
                 <div>
                   <p className="font-medium text-sm">{s.name}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {formatDate(s.createdAt, locale)}
                   </p>
                 </div>
@@ -192,7 +192,7 @@ export default function CohortBuilderPage() {
                   <button
                     type="button"
                     onClick={() => navigate(`/analysis?tab=trajectories&cohort=${encodeURIComponent(s.id)}`)}
-                    className="p-1.5 text-violet-600 hover:bg-violet-50 rounded focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
+                    className="p-1.5 text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/20 rounded focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
                     title={t('outcomesOpenForCohort')}
                     aria-label={t('outcomesOpenForCohort')}
                   >
@@ -200,14 +200,14 @@ export default function CohortBuilderPage() {
                   </button>
                   <button
                     onClick={() => handleLoadSearch(s)}
-                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
+                    className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
                     title={t('execute')}
                   >
                     <Play className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => removeSavedSearch(s.id)}
-                    className="p-1.5 text-red-500 hover:bg-red-50 rounded"
+                    className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                     title={t('delete')}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -222,15 +222,15 @@ export default function CohortBuilderPage() {
       <div className="grid grid-cols-12 gap-6">
         {/* Filter panel */}
         <div className="col-span-4 space-y-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <Filter className="w-4 h-4" />
               {t('filterCriteria')}
             </h3>
 
             {/* Diagnosis */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('diagnosis')}
               </label>
               {diagnoses.map((d) => (
@@ -259,7 +259,7 @@ export default function CohortBuilderPage() {
 
             {/* Gender */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('gender')}
               </label>
               {['female', 'male'].map((g) => (
@@ -288,7 +288,7 @@ export default function CohortBuilderPage() {
 
             {/* Centers */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('centers')}
               </label>
               {centers.map((c) => (
@@ -317,7 +317,7 @@ export default function CohortBuilderPage() {
 
             {/* Age range */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('ageYears')}
               </label>
               <div className="flex items-center gap-2">
@@ -334,9 +334,9 @@ export default function CohortBuilderPage() {
                       ],
                     })
                   }
-                  className="w-20 px-2 py-1.5 border rounded text-sm"
+                  className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
-                <span className="text-gray-400">—</span>
+                <span className="text-gray-400 dark:text-gray-500">—</span>
                 <input
                   type="number"
                   placeholder="Max"
@@ -350,14 +350,14 @@ export default function CohortBuilderPage() {
                       ],
                     })
                   }
-                  className="w-20 px-2 py-1.5 border rounded text-sm"
+                  className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
             </div>
 
             {/* Visus range */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('visusDecimal')}
               </label>
               <div className="flex items-center gap-2">
@@ -378,9 +378,9 @@ export default function CohortBuilderPage() {
                       setFilters((f) => ({ ...f, visusRange: [v, f.visusRange?.[1] ?? 2] }));
                     }
                   }}
-                  className="w-20 px-2 py-1.5 border rounded text-sm"
+                  className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
-                <span className="text-gray-400">—</span>
+                <span className="text-gray-400 dark:text-gray-500">—</span>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -398,14 +398,14 @@ export default function CohortBuilderPage() {
                       setFilters((f) => ({ ...f, visusRange: [f.visusRange?.[0] ?? 0, v] }));
                     }
                   }}
-                  className="w-20 px-2 py-1.5 border rounded text-sm"
+                  className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
             </div>
 
             {/* CRT range */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('retinalThickness')}
               </label>
               <div className="flex items-center gap-2">
@@ -422,9 +422,9 @@ export default function CohortBuilderPage() {
                       ],
                     })
                   }
-                  className="w-20 px-2 py-1.5 border rounded text-sm"
+                  className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
-                <span className="text-gray-400">—</span>
+                <span className="text-gray-400 dark:text-gray-500">—</span>
                 <input
                   type="number"
                   placeholder="Max"
@@ -438,7 +438,7 @@ export default function CohortBuilderPage() {
                       ],
                     })
                   }
-                  className="w-20 px-2 py-1.5 border rounded text-sm"
+                  className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
             </div>
@@ -446,21 +446,21 @@ export default function CohortBuilderPage() {
             <div className="flex gap-2 pt-2">
               <button
                 onClick={() => setFilters({})}
-                className="flex-1 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+                className="flex-1 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:text-gray-300"
               >
                 {t('reset')}
               </button>
             </div>
 
             {/* Save search */}
-            <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
               <div className="flex gap-2">
                 <input
                   type="text"
                   placeholder={t('searchNamePlaceholder')}
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
-                  className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                  className="flex-1 px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
                 <button
                   onClick={handleSave}
@@ -477,13 +477,13 @@ export default function CohortBuilderPage() {
 
         {/* Results */}
         <div className="col-span-8">
-          <div className="bg-white rounded-xl border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-gray-900">
+                <h3 className="font-semibold text-gray-900 dark:text-white">
                   {t('cohortCases')}: {filteredCases.length} {t('cases')}
                 </h3>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {t('of')} {activeCases.length} {t('totalCases')}
                 </p>
               </div>
@@ -495,7 +495,7 @@ export default function CohortBuilderPage() {
                   className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-colors ${
                     showDetailedView
                       ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                   }`}
                   title={showDetailedView ? t('summaryView') : t('detailedView')}
                 >
@@ -510,7 +510,7 @@ export default function CohortBuilderPage() {
                 <button
                   onClick={handleExportCsv}
                   disabled={filteredCases.length === 0}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:text-gray-300 disabled:opacity-50"
                   title={t('downloadCsv')}
                 >
                   <Download className="w-4 h-4" />
@@ -519,7 +519,7 @@ export default function CohortBuilderPage() {
                 <button
                   onClick={handleExportJson}
                   disabled={filteredCases.length === 0}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:text-gray-300 disabled:opacity-50"
                   title={t('downloadJson')}
                 >
                   <Download className="w-4 h-4" />
@@ -543,27 +543,27 @@ export default function CohortBuilderPage() {
             {!showDetailedView && (
               <div className="p-6">
                 {!cohortSummary ? (
-                  <p className="text-sm text-gray-400 text-center py-8">{t('cohortSummaryNoData')}</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">{t('cohortSummaryNoData')}</p>
                 ) : (
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-xs font-medium text-gray-500 uppercase mb-1">{t('cohortSummaryAgeRange')}</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">{t('cohortSummaryAgeRange')}</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {cohortSummary.ageMin ?? '—'}–{cohortSummary.ageMax ?? '—'}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">{t('yearsShort')}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('yearsShort')}</p>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-xs font-medium text-gray-500 uppercase mb-1">{t('cohortSummaryVisusRange')}</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">{t('cohortSummaryVisusRange')}</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {cohortSummary.visusMin !== null ? cohortSummary.visusMin.toFixed(2) : '—'}–{cohortSummary.visusMax !== null ? cohortSummary.visusMax.toFixed(2) : '—'}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">{t('visusDecimal')}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('visusDecimal')}</p>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-xs font-medium text-gray-500 uppercase mb-1">{t('cohortSummaryCenters')}</p>
-                      <p className="text-2xl font-bold text-gray-900">{cohortSummary.centerCount}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{t('centers')}</p>
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">{t('cohortSummaryCenters')}</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{cohortSummary.centerCount}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('centers')}</p>
                     </div>
                   </div>
                 )}
@@ -574,32 +574,32 @@ export default function CohortBuilderPage() {
             {showDetailedView && (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                         {t('pseudonym')}
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                         {t('gender')}
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                         {t('age')}
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                         {t('diagnosis')}
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                         {t('visus')}
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                         CRT (µm)
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                         {t('center')}
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                     {filteredCases.map((c) => {
                       const latestVisus = getLatestObservation(
                         c.observations,
@@ -615,7 +615,7 @@ export default function CohortBuilderPage() {
                       return (
                         <tr
                           key={c.id}
-                          className="hover:bg-blue-50 cursor-pointer"
+                          className="hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer"
                           onClick={() => navigate(`/case/${c.id}`)}
                         >
                           <td className="px-4 py-3 font-mono text-sm text-blue-600">
@@ -629,7 +629,7 @@ export default function CohortBuilderPage() {
                           </td>
                           <td className="px-4 py-3 text-sm">
                             {diagCodes.map((code, i) => (
-                              <span key={code} title={getDiagnosisFullText(code, locale)} className="cursor-help border-b border-dotted border-gray-400">
+                              <span key={code} title={getDiagnosisFullText(code, locale)} className="cursor-help border-b border-dotted border-gray-400 dark:border-gray-500">
                                 {i > 0 ? ', ' : ''}{getDiagnosisLabel(code, locale)}
                               </span>
                             ))}
@@ -640,7 +640,7 @@ export default function CohortBuilderPage() {
                           <td className="px-4 py-3 text-sm text-right font-mono">
                             {latestCrt?.valueQuantity?.value ?? '—'}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
+                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                             {c.centerName}
                           </td>
                         </tr>
