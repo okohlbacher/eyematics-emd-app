@@ -43,19 +43,19 @@ Declared values (multiples of 4 only):
 | 3xl | 64px | Not used in this phase |
 
 Exceptions:
-- Theme toggle button hit target: 32px × 32px minimum (`p-1.5` on a `w-5 h-5` icon). Matches existing language switcher button pattern in Layout.tsx:91-97.
-- Sidebar footer language/theme row: `px-2 py-1.5` (10px × 6px) — existing pattern, retain as-is.
+- Theme toggle button hit target: 32px × 32px minimum (`p-1.5` on a `w-5 h-5` icon). This is an inherited non-modifiable value: ThemeToggle inherits `py-1.5` from the existing language switcher row unchanged (Layout.tsx:93) — this is not a new spacing token; no modification required.
 
 ---
 
 ## Typography
 
+Declared weights: 2 maximum — `font-medium` (500) and `font-bold` (700). Regular weight (400) is the CSS/Tailwind default and is not declared as an explicit class; it applies to body and filter control text without a weight utility.
+
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
-| Body | 14px (`text-sm`) | 400 regular | 1.5 |
-| Label / table header | 12px (`text-xs`) | 500 medium | 1.4 |
-| Page heading | 24px (`text-2xl`) | 700 bold | 1.2 |
-| Filter control text | 14px (`text-sm`) | 400 regular | 1.5 |
+| Label / table header | 12px (`text-xs`) | 500 (`font-medium`) | 1.4 |
+| Page heading | 24px (`text-2xl`) | 700 (`font-bold`) | 1.2 |
+| Body / filter control text | 14px (`text-sm`) | default (400, no class) | 1.5 |
 
 Source: Measured from existing AuditPage.tsx class usage (`text-2xl font-bold`, `text-sm`, `text-xs font-medium`). No new type scale introduced.
 
@@ -131,6 +131,16 @@ The test suite must assert each `DARK_COHORT_PALETTES` entry >= 3.0:1 (graphical
 
 ---
 
+## Visual Hierarchy
+
+**Primary focal point:** the audit log table body — this is the highest-information-density element and the user's destination on every page visit.
+
+**Visual entry point:** the page heading (`<h1>` at `text-2xl font-bold`) — serves as the first landmark the eye lands on before scanning down to the filter panel and table.
+
+**Focal point order:** Page heading → Filter panel (secondary, revealed on demand) → Table header row → Table body rows.
+
+---
+
 ## Interaction Contracts
 
 ### Theme Toggle (D-08, D-09)
@@ -139,7 +149,8 @@ The test suite must assert each `DARK_COHORT_PALETTES` entry >= 3.0:1 (graphical
 - **Component:** Single icon button `<ThemeToggle />`. Cycles: Sun (Light) → Moon (Dark) → Monitor (System) → Sun.
 - **Icon map:** Sun = `<Sun className="w-3.5 h-3.5" />`, Dark = `<Moon className="w-3.5 h-3.5" />`, System = `<Monitor className="w-3.5 h-3.5" />`.
 - **Button class:** Matches language switcher: `flex items-center gap-2 w-full px-2 py-1.5 text-xs text-slate-400 hover:text-white transition-colors rounded hover:bg-slate-700/50`.
-- **Tooltip:** Title attribute shows the NEXT mode label (e.g. when Light is active, tooltip reads "Switch to Dark"). i18n keys: `themeLight`, `themeDark`, `themeSystem`.
+- **Accessibility:** `aria-label` is set to the i18n string for the NEXT mode — e.g. when current theme is Light, `aria-label={t('themeDark')}` ("Switch to dark mode"). This matches the tooltip title attribute content. Both `aria-label` and `title` update together on each cycle.
+- **Tooltip:** `title` attribute shows the NEXT mode label (e.g. when Light is active, tooltip reads "Switch to Dark"). i18n keys: `themeLight`, `themeDark`, `themeSystem`.
 - **State persistence:** `localStorage` key `emd-theme`. Values: `'light'` | `'dark'` | `'system'`.
 - **FOUC prevention:** Inline `<script>` in `index.html` `<head>` before all other scripts (D-12). Reads `emd-theme`, applies `document.documentElement.classList.add('dark')` synchronously.
 
