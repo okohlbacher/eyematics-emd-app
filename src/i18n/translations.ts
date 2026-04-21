@@ -804,6 +804,36 @@ const translations = {
   },
   adminResetTotpSuccess: { de: '2FA für {username} zurückgesetzt', en: '2FA reset for {username}' },
   loginOtpPlaceholder: { de: 'Code oder Wiederherstellungscode', en: 'Code or recovery code' },
+
+  // ---- Phase 16: Cross-Cohort Comparison (XCOHORT-01..03) ----
+  outcomesCompareDrawerTitle: {
+    de: 'Kohorten vergleichen',
+    en: 'Compare Cohorts',
+  },
+  outcomesCompareDrawerHint: {
+    de: 'Bis zu 4 Kohorten auswählen',
+    en: 'Select up to 4 cohorts',
+  },
+  outcomesComparePrimaryLabel: {
+    de: 'Basis-Kohorte (fest)',
+    en: 'Primary cohort (locked)',
+  },
+  outcomesCompareOpenDrawer: {
+    de: 'Kohorten vergleichen',
+    en: 'Compare cohorts',
+  },
+  outcomesCrossMode: {
+    de: '{count} Kohorten verglichen',
+    en: '{count} cohorts compared',
+  },
+  outcomesCompareReset: {
+    de: 'Einzelne Kohorte anzeigen',
+    en: 'Reset to single cohort',
+  },
+  outcomesComparePerPatientSuppressed: {
+    de: 'Einzelkurven sind im Vergleichsmodus ausgeblendet.',
+    en: 'Per-patient lines are suppressed in comparison mode.',
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
