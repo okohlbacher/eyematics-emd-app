@@ -151,9 +151,11 @@ export default function LoginPage() {
             >
               {t('loginContinue')}
             </button>
-            <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-4">
-              {t('loginDemoHint')}
-            </p>
+            {import.meta.env.DEV && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-4">
+                {t('loginDemoHint')}
+              </p>
+            )}
           </form>
         ) : (
           <form onSubmit={handleOtp} className="space-y-4">

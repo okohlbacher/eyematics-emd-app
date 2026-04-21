@@ -679,6 +679,7 @@ const translations = {
   outcomesPanelEmpty: { de: 'Keine Messwerte für dieses Auge', en: 'No measurements for this eye' },
   outcomesError: { de: 'Berechnung fehlgeschlagen. Bitte erneut versuchen.', en: 'Computation failed. Please try again.' },
   outcomesCompareDrawerTitle: { de: 'Kohorten vergleichen', en: 'Compare Cohorts' },
+  outcomesCompareCloseDrawer: { de: 'Vergleichsansicht schließen', en: 'Close compare drawer' },
   outcomesCompareDrawerHint: { de: 'Bis zu 4 Kohorten auswählen', en: 'Select up to 4 cohorts' },
   outcomesComparePrimaryLabel: { de: 'Basis-Kohorte (fest)', en: 'Primary cohort (locked)' },
   outcomesCompareOpenDrawer: { de: 'Kohorten vergleichen', en: 'Compare cohorts' },

@@ -59,7 +59,7 @@ export default function CohortCompareDrawer({
         <button
           type="button"
           onClick={onClose}
-          aria-label={t('outcomesCompareDrawerTitle')}
+          aria-label={t('outcomesCompareCloseDrawer')}
           className="p-1 rounded hover:bg-gray-100"
         >
           <X className="w-4 h-4" />
