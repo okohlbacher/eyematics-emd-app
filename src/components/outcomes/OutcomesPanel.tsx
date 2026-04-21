@@ -22,6 +22,14 @@ type LayerState = {
   spreadBand: boolean;
 };
 
+export interface CohortSeriesEntry {
+  cohortId: string;
+  cohortName: string;
+  patientCount: number;
+  color: string;
+  panel: PanelResult;
+}
+
 interface Props {
   panel: PanelResult;
   eye: 'od' | 'os' | 'combined';
@@ -34,6 +42,7 @@ interface Props {
   titleKey: 'outcomesPanelOd' | 'outcomesPanelOs' | 'outcomesPanelCombined'
           | 'metricsCrtPanelOd' | 'metricsCrtPanelOs' | 'metricsCrtPanelCombined';
   metric?: 'visus' | 'crt';  // NEW — default 'visus' for backward compat
+  cohortSeries?: CohortSeriesEntry[];
 }
 
 function yDomain(
@@ -76,6 +85,7 @@ export default function OutcomesPanel({
   locale,
   titleKey,
   metric = 'visus',
+  cohortSeries,
 }: Props) {
   const subtitle = `${panel.summary.patientCount} · ${panel.summary.measurementCount}`;
   // CRT tooltip value label key — passed to OutcomesTooltip for µm unit display
@@ -87,7 +97,13 @@ export default function OutcomesPanel({
       ? t('outcomesTooltipDay')
       : t('outcomesTooltipTreatmentIndex');
 
-  if (panel.summary.patientCount === 0) {
+  const isCrossMode = Array.isArray(cohortSeries) && cohortSeries.length > 0;
+
+  const totalPatients = isCrossMode
+    ? cohortSeries!.reduce((n, s) => n + s.panel.summary.patientCount, 0)
+    : panel.summary.patientCount;
+
+  if (totalPatients === 0) {
     return (
       <div
         data-testid={`outcomes-panel-${eye}`}
@@ -180,7 +196,7 @@ export default function OutcomesPanel({
           />
           <Legend wrapperStyle={{ fontSize: 12 }} />
 
-          {layers.spreadBand && (
+          {!isCrossMode && layers.spreadBand && (
             <Area
               data={iqrData}
               dataKey="iqrHigh"
@@ -194,7 +210,7 @@ export default function OutcomesPanel({
             />
           )}
 
-          {layers.perPatient &&
+          {!isCrossMode && layers.perPatient &&
             panel.patients
               .filter((p) => !p.excluded && p.measurements.length >= 2)
               .map((p) => (
@@ -207,7 +223,7 @@ export default function OutcomesPanel({
                   }))}
                   dataKey="y"
                   type="linear"
-                  stroke={color}
+                  stroke={SERIES_STYLES.perPatient.color}
                   strokeWidth={SERIES_STYLES.perPatient.strokeWidth}
                   strokeOpacity={p.sparse ? SERIES_STYLES.perPatient.opacitySparse : SERIES_STYLES.perPatient.opacityDense}
                   dot={false}
@@ -220,7 +236,7 @@ export default function OutcomesPanel({
                 />
               ))}
 
-          {layers.scatter && (
+          {!isCrossMode && layers.scatter && (
             <Scatter
               data={panel.scatterPoints}
               fill={color}
@@ -231,7 +247,7 @@ export default function OutcomesPanel({
             />
           )}
 
-          {layers.median && (
+          {!isCrossMode && layers.median && (
             <Line
               data={panel.medianGrid}
               dataKey="y"
@@ -245,6 +261,39 @@ export default function OutcomesPanel({
               name={t('outcomesLayerMedian')}
             />
           )}
+
+          {isCrossMode && cohortSeries!.map((series) => {
+            const seriesIqrData = series.panel.medianGrid.map((g) => ({
+              x: g.x, iqrLow: g.p25, iqrHigh: g.p75,
+            }));
+            const seriesBaseLine = series.panel.medianGrid.map((g) => ({ x: g.x, y: g.p25 }));
+            return (
+              <Area
+                key={`iqr-${series.cohortId}`}
+                data={seriesIqrData}
+                dataKey="iqrHigh"
+                baseLine={seriesBaseLine}
+                fill={series.color}
+                fillOpacity={SERIES_STYLES.iqr.fillOpacity}
+                stroke={SERIES_STYLES.iqr.stroke}
+                isAnimationActive={false}
+                legendType="none"
+              />
+            );
+          })}
+          {isCrossMode && cohortSeries!.map((series) => (
+            <Line
+              key={`median-${series.cohortId}`}
+              data={series.panel.medianGrid}
+              dataKey="y"
+              type="linear"
+              stroke={series.color}
+              strokeWidth={SERIES_STYLES.median.strokeWidth}
+              dot={false}
+              isAnimationActive={false}
+              name={`${series.cohortName} (N=${series.patientCount} patients)`}
+            />
+          ))}
         </ComposedChart>
       </ResponsiveContainer>
     </div>

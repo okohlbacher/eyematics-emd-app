@@ -19,7 +19,6 @@
 import crypto from 'node:crypto';
 
 import type { NextFunction,Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
 
 import { logAuditEntry } from './auditDb.js';
 
@@ -37,8 +36,6 @@ const REDACT_PATHS = new Set([
   '/api/auth/login',
   '/api/auth/verify',
   '/api/auth/users',           // POST /api/auth/users — response contains generatedPassword
-  '/api/auth/totp/enroll',
-  '/api/auth/totp/confirm',
 ]);
 
 /**
@@ -58,7 +55,7 @@ const SKIP_AUDIT_PATHS = new Set([
 /**
  * Field names that must never appear in plaintext in the audit database.
  */
-const REDACT_FIELDS = new Set(['password', 'otp', 'challengeToken', 'generatedPassword', 'enrollToken', 'totpSecret']);
+const REDACT_FIELDS = new Set(['password', 'otp', 'challengeToken', 'generatedPassword']);
 
 /**
  * Return the request body as a JSON string with sensitive fields replaced
@@ -95,29 +92,6 @@ function redactBody(urlPath: string, body: unknown): string | null {
  * can traverse REDACT_PATHS. Non-JSON bodies (PUT /api/settings sends YAML)
  * stay as raw strings -- redactBody handles strings via String(body).
  */
-/**
- * Try to extract a username from a signed JWT embedded in the request body.
- * Used for unauthenticated TOTP/2FA endpoints where req.auth is absent but the
- * user identity is encoded in the enrollToken or challengeToken payload.
- * Uses jwt.decode() (no signature verification) — this is intentional: the
- * route handler verifies the token before accepting it; here we only need the
- * subject for audit logging, not for authorization.
- */
-function extractUserFromBodyToken(body: unknown): string | null {
-  if (!body || typeof body !== 'object') return null;
-  const b = body as Record<string, unknown>;
-  const token = typeof b.enrollToken === 'string' ? b.enrollToken
-    : typeof b.challengeToken === 'string' ? b.challengeToken
-    : null;
-  if (!token) return null;
-  try {
-    const decoded = jwt.decode(token) as { sub?: string } | null;
-    return typeof decoded?.sub === 'string' ? decoded.sub : null;
-  } catch {
-    return null;
-  }
-}
-
 function tryParseJson(str: string): unknown {
   try {
     return JSON.parse(str);
@@ -161,14 +135,9 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
     if (SKIP_AUDIT_PATHS.has(urlPath)) return;
 
     const duration = Date.now() - startMs;
-    // req.auth is populated by authMiddleware for authenticated requests.
-    // For public TOTP/2FA endpoints the session JWT is absent but the user
-    // identity is encoded in the enrollToken / challengeToken body field —
-    // decode it (no verification needed; handler already verified it) so the
-    // audit row shows the real username instead of 'anonymous'.
-    const user = req.auth?.preferred_username
-      ?? extractUserFromBodyToken(req.body)
-      ?? 'anonymous';
+    // req.auth is populated by authMiddleware for authenticated requests;
+    // undefined for requests that were rejected (401) — fall back to 'anonymous'
+    const user = req.auth?.preferred_username ?? 'anonymous';
 
     // Per D-11: mutations log (redacted) body; GETs log query params only
     // Body capture priority (Bug 1 fix):

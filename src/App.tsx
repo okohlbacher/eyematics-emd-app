@@ -14,10 +14,8 @@ import CohortBuilderPage from './pages/CohortBuilderPage';
 import DocQualityPage from './pages/DocQualityPage';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
-import PasswordChangePage from './pages/PasswordChangePage';
 import QualityPage from './pages/QualityPage';
 import SettingsPage from './pages/SettingsPage';
-import TotpEnrollPage from './pages/TotpEnrollPage';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -40,18 +38,6 @@ function QualityRoute({ children }: { children: ReactNode }) {
 }
 
 function AppRoutes() {
-  const { mustChangePassword, requiresTotpEnrollment } = useAuth();
-
-  // SEC-03: block all navigation until user sets a new password
-  if (mustChangePassword) {
-    return <PasswordChangePage />;
-  }
-
-  // SEC-04: block all navigation until user completes TOTP enrollment
-  if (requiresTotpEnrollment) {
-    return <TotpEnrollPage />;
-  }
-
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />

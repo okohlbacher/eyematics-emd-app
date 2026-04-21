@@ -1,6 +1,6 @@
 import { AlertCircle, Eye, Globe, Info } from 'lucide-react';
 import { useEffect,useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -14,11 +14,9 @@ export default function LoginPage() {
   const [challengeToken, setChallengeToken] = useState('');
   const [provider, setProvider] = useState<'local' | 'keycloak'>('local');
   const [showKeycloakInfo, setShowKeycloakInfo] = useState(false);
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const { locale, setLocale, t } = useLanguage();
-
-  if (user) return <Navigate to="/" replace />;
 
   useEffect(() => {
     fetch('/api/auth/config')
@@ -51,10 +49,6 @@ export default function LoginPage() {
     } else if (result.error === 'invalid_credentials') {
       // Generic message — do not distinguish user_not_found from wrong_password (prevents enumeration)
       setError(t('loginErrorWrongPassword'));
-    } else if (result.error === 'totp_enrollment_required') {
-      // SEC-04: AuthContext has set requiresTotpEnrollment=true; AppRoutes will render
-      // TotpEnrollPage automatically. Do NOT show an error — the redirect is intentional.
-      setError('');
     } else {
       setError(t('loginErrorFailed'));
     }
@@ -175,8 +169,8 @@ export default function LoginPage() {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none tracking-widest text-center text-lg"
-                placeholder={t('loginOtpPlaceholder')}
-                maxLength={9}
+                placeholder="123456"
+                maxLength={6}
                 autoFocus
               />
             </div>

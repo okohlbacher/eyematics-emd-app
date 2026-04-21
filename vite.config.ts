@@ -18,13 +18,6 @@ export default defineConfig({
   },
   plugins: [react(), tailwindcss()],
   server: {
-    watch: {
-      // Exclude the runtime data directory from Vite's file watcher.
-      // Without this, writing to data/users.json (e.g. during TOTP enrollment)
-      // triggers a full-page reload in dev mode because Vite can't HMR a
-      // non-module JSON file — destroying in-progress auth flows.
-      ignored: ['**/data/**'],
-    },
     proxy: {
       // Proxy FHIR requests to avoid CORS issues during development
       '/fhir': {
