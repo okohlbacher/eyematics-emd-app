@@ -1,4 +1,4 @@
-import { ArrowUpDown, Building2, CheckCircle, Database, Filter, Microscope, Search, Shield, ShieldCheck, ShieldOff, Stethoscope, Trash2, UserPlus } from 'lucide-react';
+import { ArrowUpDown, Building2, CheckCircle,Database, Filter, Microscope, Search, Shield, ShieldCheck, Stethoscope, Trash2, UserPlus } from 'lucide-react';
 import { useCallback,useEffect, useMemo, useState } from 'react';
 
 import type { UserRole } from '../context/AuthContext';
@@ -18,7 +18,6 @@ interface ServerUser {
   centers: string[];
   createdAt: string;
   lastLogin?: string;
-  totpEnabled?: boolean;
 }
 
 /** Map role to translation key */
@@ -249,24 +248,6 @@ export default function AdminPage() {
       }
     } catch (err) {
       console.error('[AdminPage] Failed to delete user:', err);
-    }
-  };
-
-  const handleResetTotp = async (targetUsername: string) => {
-    const confirmCopy = t('adminResetTotpConfirm').replace('{username}', targetUsername);
-    if (!window.confirm(confirmCopy)) return;
-    try {
-      const resp = await authFetch(
-        `/api/auth/users/${encodeURIComponent(targetUsername)}/totp`,
-        { method: 'DELETE' },
-      );
-      if (!resp.ok) {
-        alert(t('mutationErrorGeneric'));
-        return;
-      }
-      await loadUsers();
-    } catch {
-      alert(t('mutationErrorGeneric'));
     }
   };
 
@@ -502,22 +483,21 @@ export default function AdminPage() {
                 <SortHeader field="center" label={t('adminAssignedCenters')} />
                 <SortHeader field="createdAt" label={t('adminCreated')} />
                 <SortHeader field="lastLogin" label={t('adminLastLogin')} />
-                <th className="pb-3 font-medium text-center">{t('adminTotpStatus')}</th>
                 <th className="pb-3 font-medium" />
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-gray-400">Loading…</td>
+                  <td colSpan={7} className="py-8 text-center text-gray-400">Loading…</td>
                 </tr>
               ) : loadError ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-red-500">{loadError}</td>
+                  <td colSpan={7} className="py-8 text-center text-red-500">{loadError}</td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-gray-400">
+                  <td colSpan={7} className="py-8 text-center text-gray-400">
                     {t('noData')}
                   </td>
                 </tr>
@@ -560,47 +540,23 @@ export default function AdminPage() {
                           })
                         : <span className="text-gray-300">—</span>}
                     </td>
-                    <td className="py-3 text-center">
-                      {u.totpEnabled === true ? (
-                        <span className="inline-flex items-center gap-1 text-green-700 text-xs font-medium">
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          {t('adminTotpEnabled')}
+                    <td className="py-3 text-right">
+                      {u.username === user.username ? (
+                        <span
+                          className="text-gray-400 cursor-not-allowed inline-flex items-center gap-1"
+                          title={t('adminNoDelete')}
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </span>
                       ) : (
-                        <span className="text-gray-400 text-xs">{t('adminTotpDisabled')}</span>
+                        <button
+                          onClick={() => void handleDelete(u.username)}
+                          className="text-red-500 hover:text-red-700 inline-flex items-center gap-1"
+                          title={t('delete')}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       )}
-                    </td>
-                    <td className="py-3 text-right">
-                      <div className="inline-flex items-center gap-2">
-                        {u.totpEnabled === true && (
-                          <button
-                            type="button"
-                            onClick={() => void handleResetTotp(u.username)}
-                            className="text-amber-600 hover:text-amber-800 inline-flex items-center gap-1"
-                            title={t('adminResetTotp')}
-                            aria-label={`${t('adminResetTotp')} ${u.username}`}
-                          >
-                            <ShieldOff className="w-4 h-4" />
-                            <span>{t('adminResetTotp')}</span>
-                          </button>
-                        )}
-                        {u.username === user.username ? (
-                          <span
-                            className="text-gray-400 cursor-not-allowed inline-flex items-center gap-1"
-                            title={t('adminNoDelete')}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => void handleDelete(u.username)}
-                            className="text-red-500 hover:text-red-700 inline-flex items-center gap-1"
-                            title={t('delete')}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
                     </td>
                   </tr>
                 ))

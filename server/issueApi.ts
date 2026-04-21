@@ -3,10 +3,9 @@
  * Issues are stored as JSON files in the `feedback/` directory.
  *
  * Endpoints:
- *   POST   /api/issues        — create a new issue (authenticated users)
- *   GET    /api/issues        — list all issues without screenshots (authenticated)
- *   GET    /api/issues/export — download full export with screenshots (admin-only)
- *   DELETE /api/issues        — delete all issues (admin-only)
+ *   POST /api/issues        — create a new issue (authenticated users)
+ *   GET  /api/issues         — list all issues without screenshots (authenticated)
+ *   GET  /api/issues/export  — download full export with screenshots (admin-only)
  *
  * H-01: Shared core logic between production Router and Vite plugin.
  */
@@ -69,16 +68,6 @@ function validateIssueBody(data: unknown): string | null {
   return null;
 }
 
-function deleteAllIssues(): number {
-  ensureDir();
-  const files = fs.readdirSync(FEEDBACK_DIR)
-    .filter(f => f.startsWith('issue-') && f.endsWith('.json'));
-  for (const f of files) {
-    fs.rmSync(path.join(FEEDBACK_DIR, f));
-  }
-  return files.length;
-}
-
 function createIssue(issue: Record<string, unknown>): { id: string; filename: string } {
   const id = crypto.randomUUID();
   const timestamp = new Date().toISOString();
@@ -129,15 +118,6 @@ issueApiRouter.get('/', (_req: Request, res: Response): void => {
   res.json({ issues, total: issues.length });
 });
 
-issueApiRouter.delete('/', (req: Request, res: Response): void => {
-  if (req.auth?.role !== 'admin') {
-    res.status(403).json({ error: 'Forbidden: admin role required' });
-    return;
-  }
-  const deleted = deleteAllIssues();
-  res.json({ deleted });
-});
-
 // ---------------------------------------------------------------------------
 // Vite dev plugin (reuses shared logic)
 // ---------------------------------------------------------------------------
@@ -149,11 +129,10 @@ export function issueApiPlugin(): Plugin {
       server.middlewares.use((req, res, next) => {
         if (!req.url?.startsWith('/api/issues')) return next();
 
-        const requiresAdmin = (req.method === 'GET' && req.url === '/api/issues/export') || req.method === 'DELETE';
-        const user = validateAuth(req, requiresAdmin ? 'admin' : undefined);
+        const user = validateAuth(req, req.method === 'GET' && req.url === '/api/issues/export' ? 'admin' : undefined);
         if (!user) {
-          sendError(res, requiresAdmin ? 403 : 401,
-            requiresAdmin ? 'Forbidden: admin role required' : 'Authentication required');
+          sendError(res, req.url === '/api/issues/export' ? 403 : 401,
+            req.url === '/api/issues/export' ? 'Forbidden: admin role required' : 'Authentication required');
           return;
         }
 
@@ -185,13 +164,6 @@ export function issueApiPlugin(): Plugin {
         if (req.method === 'GET' && req.url === '/api/issues') {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(loadAllIssues(false)));
-          return;
-        }
-
-        if (req.method === 'DELETE' && req.url === '/api/issues') {
-          const deleted = deleteAllIssues();
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ deleted }));
           return;
         }
 

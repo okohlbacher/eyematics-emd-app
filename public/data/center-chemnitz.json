@@ -2468,7 +2468,7 @@
         },
         "effectiveDateTime": "2022-03-26",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -2510,7 +2510,7 @@
         },
         "effectiveDateTime": "2022-05-22",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.28,
           "unit": "decimal"
         },
         "bodySite": {
@@ -2552,7 +2552,7 @@
         },
         "effectiveDateTime": "2022-06-22",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -2594,7 +2594,7 @@
         },
         "effectiveDateTime": "2022-08-19",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -2636,7 +2636,7 @@
         },
         "effectiveDateTime": "2022-10-09",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -2678,7 +2678,7 @@
         },
         "effectiveDateTime": "2022-11-30",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -2720,7 +2720,7 @@
         },
         "effectiveDateTime": "2023-01-01",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -2762,7 +2762,7 @@
         },
         "effectiveDateTime": "2023-02-06",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -2804,7 +2804,7 @@
         },
         "effectiveDateTime": "2023-04-05",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.34,
           "unit": "decimal"
         },
         "bodySite": {
@@ -2846,7 +2846,7 @@
         },
         "effectiveDateTime": "2023-05-06",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -2888,7 +2888,7 @@
         },
         "effectiveDateTime": "2023-06-07",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -2930,7 +2930,7 @@
         },
         "effectiveDateTime": "2023-07-25",
         "valueQuantity": {
-          "value": 0.4,
+          "value": 0.37,
           "unit": "decimal"
         },
         "bodySite": {
@@ -2972,7 +2972,7 @@
         },
         "effectiveDateTime": "2023-09-19",
         "valueQuantity": {
-          "value": 0.4,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3014,7 +3014,7 @@
         },
         "effectiveDateTime": "2023-10-28",
         "valueQuantity": {
-          "value": 0.39,
+          "value": 0.37,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3056,7 +3056,7 @@
         },
         "effectiveDateTime": "2023-12-27",
         "valueQuantity": {
-          "value": 0.4,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3098,7 +3098,7 @@
         },
         "effectiveDateTime": "2024-02-18",
         "valueQuantity": {
-          "value": 0.4,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3140,7 +3140,7 @@
         },
         "effectiveDateTime": "2024-03-18",
         "valueQuantity": {
-          "value": 0.39,
+          "value": 0.37,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3500,7 +3500,7 @@
         },
         "effectiveDateTime": "2023-10-07",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.28,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3542,7 +3542,7 @@
         },
         "effectiveDateTime": "2023-11-08",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3584,7 +3584,7 @@
         },
         "effectiveDateTime": "2023-12-17",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3626,7 +3626,7 @@
         },
         "effectiveDateTime": "2024-02-09",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3668,7 +3668,7 @@
         },
         "effectiveDateTime": "2024-03-22",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.26,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3710,7 +3710,7 @@
         },
         "effectiveDateTime": "2024-05-13",
         "valueQuantity": {
-          "value": 0.28,
+          "value": 0.26,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3752,7 +3752,7 @@
         },
         "effectiveDateTime": "2024-06-22",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3794,7 +3794,7 @@
         },
         "effectiveDateTime": "2024-08-03",
         "valueQuantity": {
-          "value": 0.3,
+          "value": 0.28,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3836,7 +3836,7 @@
         },
         "effectiveDateTime": "2024-09-12",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3878,7 +3878,7 @@
         },
         "effectiveDateTime": "2024-11-06",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3920,7 +3920,7 @@
         },
         "effectiveDateTime": "2024-12-04",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -3962,7 +3962,7 @@
         },
         "effectiveDateTime": "2025-01-17",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4004,7 +4004,7 @@
         },
         "effectiveDateTime": "2025-03-08",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.25,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4046,7 +4046,7 @@
         },
         "effectiveDateTime": "2025-04-19",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4349,7 +4349,7 @@
         },
         "effectiveDateTime": "2022-09-22",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.37,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4391,7 +4391,7 @@
         },
         "effectiveDateTime": "2022-11-15",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4433,7 +4433,7 @@
         },
         "effectiveDateTime": "2022-12-26",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4532,7 +4532,7 @@
         },
         "effectiveDateTime": "2023-07-17",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4574,7 +4574,7 @@
         },
         "effectiveDateTime": "2023-09-07",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.17,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4616,7 +4616,7 @@
         },
         "effectiveDateTime": "2023-10-28",
         "valueQuantity": {
-          "value": 0.19,
+          "value": 0.16,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4715,7 +4715,7 @@
         },
         "effectiveDateTime": "2023-08-18",
         "valueQuantity": {
-          "value": 0.19,
+          "value": 0.16,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4757,7 +4757,7 @@
         },
         "effectiveDateTime": "2023-09-24",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4799,7 +4799,7 @@
         },
         "effectiveDateTime": "2023-11-10",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4841,7 +4841,7 @@
         },
         "effectiveDateTime": "2024-01-03",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4883,7 +4883,7 @@
         },
         "effectiveDateTime": "2024-02-04",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4925,7 +4925,7 @@
         },
         "effectiveDateTime": "2024-03-09",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -4967,7 +4967,7 @@
         },
         "effectiveDateTime": "2024-04-23",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.24,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5009,7 +5009,7 @@
         },
         "effectiveDateTime": "2024-05-31",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.26,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5198,7 +5198,7 @@
         },
         "effectiveDateTime": "2022-04-23",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.17,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5240,7 +5240,7 @@
         },
         "effectiveDateTime": "2022-06-22",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.17,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5282,7 +5282,7 @@
         },
         "effectiveDateTime": "2022-08-05",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5324,7 +5324,7 @@
         },
         "effectiveDateTime": "2022-09-27",
         "valueQuantity": {
-          "value": 0.2,
+          "value": 0.16,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5366,7 +5366,7 @@
         },
         "effectiveDateTime": "2022-10-25",
         "valueQuantity": {
-          "value": 0.19,
+          "value": 0.15,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5408,7 +5408,7 @@
         },
         "effectiveDateTime": "2022-12-13",
         "valueQuantity": {
-          "value": 0.18,
+          "value": 0.15,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5450,7 +5450,7 @@
         },
         "effectiveDateTime": "2023-01-29",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.17,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5492,7 +5492,7 @@
         },
         "effectiveDateTime": "2023-02-27",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5534,7 +5534,7 @@
         },
         "effectiveDateTime": "2023-04-15",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5576,7 +5576,7 @@
         },
         "effectiveDateTime": "2023-05-20",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5618,7 +5618,7 @@
         },
         "effectiveDateTime": "2023-06-26",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5660,7 +5660,7 @@
         },
         "effectiveDateTime": "2023-07-31",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5702,7 +5702,7 @@
         },
         "effectiveDateTime": "2023-09-22",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5744,7 +5744,7 @@
         },
         "effectiveDateTime": "2023-11-04",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5786,7 +5786,7 @@
         },
         "effectiveDateTime": "2024-01-03",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5828,7 +5828,7 @@
         },
         "effectiveDateTime": "2024-02-26",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.24,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5870,7 +5870,7 @@
         },
         "effectiveDateTime": "2024-03-26",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5912,7 +5912,7 @@
         },
         "effectiveDateTime": "2024-05-21",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.26,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5954,7 +5954,7 @@
         },
         "effectiveDateTime": "2024-07-07",
         "valueQuantity": {
-          "value": 0.3,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -5996,7 +5996,7 @@
         },
         "effectiveDateTime": "2024-08-12",
         "valueQuantity": {
-          "value": 0.3,
+          "value": 0.26,
           "unit": "decimal"
         },
         "bodySite": {
@@ -6389,7 +6389,7 @@
         },
         "effectiveDateTime": "2024-04-18",
         "valueQuantity": {
-          "value": 0.17,
+          "value": 0.13,
           "unit": "decimal"
         },
         "bodySite": {
@@ -6431,7 +6431,7 @@
         },
         "effectiveDateTime": "2024-05-27",
         "valueQuantity": {
-          "value": 0.16,
+          "value": 0.11,
           "unit": "decimal"
         },
         "bodySite": {
@@ -6473,7 +6473,7 @@
         },
         "effectiveDateTime": "2024-07-14",
         "valueQuantity": {
-          "value": 0.14,
+          "value": 0.1,
           "unit": "decimal"
         },
         "bodySite": {
@@ -6515,7 +6515,7 @@
         },
         "effectiveDateTime": "2024-09-07",
         "valueQuantity": {
-          "value": 0.14,
+          "value": 0.1,
           "unit": "decimal"
         },
         "bodySite": {
@@ -6557,7 +6557,7 @@
         },
         "effectiveDateTime": "2024-10-26",
         "valueQuantity": {
-          "value": 0.16,
+          "value": 0.11,
           "unit": "decimal"
         },
         "bodySite": {
@@ -6599,7 +6599,7 @@
         },
         "effectiveDateTime": "2024-12-09",
         "valueQuantity": {
-          "value": 0.16,
+          "value": 0.11,
           "unit": "decimal"
         },
         "bodySite": {
@@ -6641,7 +6641,7 @@
         },
         "effectiveDateTime": "2025-01-30",
         "valueQuantity": {
-          "value": 0.19,
+          "value": 0.14,
           "unit": "decimal"
         },
         "bodySite": {
@@ -6683,7 +6683,7 @@
         },
         "effectiveDateTime": "2025-03-22",
         "valueQuantity": {
-          "value": 0.18,
+          "value": 0.14,
           "unit": "decimal"
         },
         "bodySite": {
@@ -6725,7 +6725,7 @@
         },
         "effectiveDateTime": "2025-04-23",
         "valueQuantity": {
-          "value": 0.2,
+          "value": 0.16,
           "unit": "decimal"
         },
         "bodySite": {
@@ -6767,7 +6767,7 @@
         },
         "effectiveDateTime": "2025-06-11",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7013,7 +7013,7 @@
         },
         "effectiveDateTime": "2023-12-17",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7055,7 +7055,7 @@
         },
         "effectiveDateTime": "2024-02-09",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7097,7 +7097,7 @@
         },
         "effectiveDateTime": "2024-03-23",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7139,7 +7139,7 @@
         },
         "effectiveDateTime": "2024-05-03",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7181,7 +7181,7 @@
         },
         "effectiveDateTime": "2024-06-26",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7223,7 +7223,7 @@
         },
         "effectiveDateTime": "2024-07-30",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7265,7 +7265,7 @@
         },
         "effectiveDateTime": "2024-09-24",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7307,7 +7307,7 @@
         },
         "effectiveDateTime": "2024-11-23",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7349,7 +7349,7 @@
         },
         "effectiveDateTime": "2024-12-26",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7391,7 +7391,7 @@
         },
         "effectiveDateTime": "2025-01-26",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7433,7 +7433,7 @@
         },
         "effectiveDateTime": "2025-03-27",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.34,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7475,7 +7475,7 @@
         },
         "effectiveDateTime": "2025-04-25",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7721,7 +7721,7 @@
         },
         "effectiveDateTime": "2023-07-19",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7763,7 +7763,7 @@
         },
         "effectiveDateTime": "2023-08-30",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7805,7 +7805,7 @@
         },
         "effectiveDateTime": "2023-10-13",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.25,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7847,7 +7847,7 @@
         },
         "effectiveDateTime": "2023-12-01",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7889,7 +7889,7 @@
         },
         "effectiveDateTime": "2024-01-09",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7931,7 +7931,7 @@
         },
         "effectiveDateTime": "2024-02-11",
         "valueQuantity": {
-          "value": 0.3,
+          "value": 0.28,
           "unit": "decimal"
         },
         "bodySite": {
@@ -7973,7 +7973,7 @@
         },
         "effectiveDateTime": "2024-03-30",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8015,7 +8015,7 @@
         },
         "effectiveDateTime": "2024-04-29",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8057,7 +8057,7 @@
         },
         "effectiveDateTime": "2024-06-15",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8099,7 +8099,7 @@
         },
         "effectiveDateTime": "2024-07-31",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8141,7 +8141,7 @@
         },
         "effectiveDateTime": "2024-09-09",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8183,7 +8183,7 @@
         },
         "effectiveDateTime": "2024-10-28",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8225,7 +8225,7 @@
         },
         "effectiveDateTime": "2024-12-19",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8267,7 +8267,7 @@
         },
         "effectiveDateTime": "2025-01-18",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8309,7 +8309,7 @@
         },
         "effectiveDateTime": "2025-02-24",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8351,7 +8351,7 @@
         },
         "effectiveDateTime": "2025-03-27",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8393,7 +8393,7 @@
         },
         "effectiveDateTime": "2025-04-26",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8435,7 +8435,7 @@
         },
         "effectiveDateTime": "2025-05-25",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8477,7 +8477,7 @@
         },
         "effectiveDateTime": "2025-07-10",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8519,7 +8519,7 @@
         },
         "effectiveDateTime": "2025-09-08",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8912,7 +8912,7 @@
         },
         "effectiveDateTime": "2022-03-27",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.24,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8954,7 +8954,7 @@
         },
         "effectiveDateTime": "2022-04-28",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.24,
           "unit": "decimal"
         },
         "bodySite": {
@@ -8996,7 +8996,7 @@
         },
         "effectiveDateTime": "2022-06-01",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.26,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9095,7 +9095,7 @@
         },
         "effectiveDateTime": "2023-05-03",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9137,7 +9137,7 @@
         },
         "effectiveDateTime": "2023-06-28",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9179,7 +9179,7 @@
         },
         "effectiveDateTime": "2023-08-09",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9221,7 +9221,7 @@
         },
         "effectiveDateTime": "2023-09-26",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9263,7 +9263,7 @@
         },
         "effectiveDateTime": "2023-11-14",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9305,7 +9305,7 @@
         },
         "effectiveDateTime": "2023-12-20",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9347,7 +9347,7 @@
         },
         "effectiveDateTime": "2024-01-21",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9389,7 +9389,7 @@
         },
         "effectiveDateTime": "2024-03-16",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9431,7 +9431,7 @@
         },
         "effectiveDateTime": "2024-05-14",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9473,7 +9473,7 @@
         },
         "effectiveDateTime": "2024-06-23",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9515,7 +9515,7 @@
         },
         "effectiveDateTime": "2024-08-20",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9557,7 +9557,7 @@
         },
         "effectiveDateTime": "2024-10-10",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9599,7 +9599,7 @@
         },
         "effectiveDateTime": "2024-11-14",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9641,7 +9641,7 @@
         },
         "effectiveDateTime": "2025-01-01",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9683,7 +9683,7 @@
         },
         "effectiveDateTime": "2025-02-06",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -9986,7 +9986,7 @@
         },
         "effectiveDateTime": "2022-06-25",
         "valueQuantity": {
-          "value": 0.2,
+          "value": 0.17,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10028,7 +10028,7 @@
         },
         "effectiveDateTime": "2022-08-05",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10070,7 +10070,7 @@
         },
         "effectiveDateTime": "2022-09-26",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10112,7 +10112,7 @@
         },
         "effectiveDateTime": "2022-11-09",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10154,7 +10154,7 @@
         },
         "effectiveDateTime": "2022-12-09",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10196,7 +10196,7 @@
         },
         "effectiveDateTime": "2023-01-24",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10238,7 +10238,7 @@
         },
         "effectiveDateTime": "2023-03-16",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10280,7 +10280,7 @@
         },
         "effectiveDateTime": "2023-04-21",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10322,7 +10322,7 @@
         },
         "effectiveDateTime": "2023-06-05",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10364,7 +10364,7 @@
         },
         "effectiveDateTime": "2023-07-11",
         "valueQuantity": {
-          "value": 0.28,
+          "value": 0.24,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10406,7 +10406,7 @@
         },
         "effectiveDateTime": "2023-09-04",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.25,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10652,7 +10652,7 @@
         },
         "effectiveDateTime": "2022-04-30",
         "valueQuantity": {
-          "value": 0.4,
+          "value": 0.39,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10694,7 +10694,7 @@
         },
         "effectiveDateTime": "2022-06-04",
         "valueQuantity": {
-          "value": 0.42,
+          "value": 0.41,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10736,7 +10736,7 @@
         },
         "effectiveDateTime": "2022-07-24",
         "valueQuantity": {
-          "value": 0.44,
+          "value": 0.43,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10778,7 +10778,7 @@
         },
         "effectiveDateTime": "2022-08-22",
         "valueQuantity": {
-          "value": 0.45,
+          "value": 0.44,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10910,7 +10910,7 @@
         },
         "effectiveDateTime": "2024-02-29",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10952,7 +10952,7 @@
         },
         "effectiveDateTime": "2024-04-01",
         "valueQuantity": {
-          "value": 0.2,
+          "value": 0.17,
           "unit": "decimal"
         },
         "bodySite": {
@@ -10994,7 +10994,7 @@
         },
         "effectiveDateTime": "2024-05-31",
         "valueQuantity": {
-          "value": 0.19,
+          "value": 0.16,
           "unit": "decimal"
         },
         "bodySite": {
@@ -11036,7 +11036,7 @@
         },
         "effectiveDateTime": "2024-07-20",
         "valueQuantity": {
-          "value": 0.18,
+          "value": 0.15,
           "unit": "decimal"
         },
         "bodySite": {
@@ -11078,7 +11078,7 @@
         },
         "effectiveDateTime": "2024-09-09",
         "valueQuantity": {
-          "value": 0.2,
+          "value": 0.16,
           "unit": "decimal"
         },
         "bodySite": {
@@ -11120,7 +11120,7 @@
         },
         "effectiveDateTime": "2024-10-29",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -11162,7 +11162,7 @@
         },
         "effectiveDateTime": "2024-12-27",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -11204,7 +11204,7 @@
         },
         "effectiveDateTime": "2025-02-01",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -11246,7 +11246,7 @@
         },
         "effectiveDateTime": "2025-03-11",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -11288,7 +11288,7 @@
         },
         "effectiveDateTime": "2025-04-15",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -11330,7 +11330,7 @@
         },
         "effectiveDateTime": "2025-06-05",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -11660,7 +11660,7 @@
         },
         "effectiveDateTime": "2022-06-24",
         "valueQuantity": {
-          "value": 0.44,
+          "value": 0.43,
           "unit": "decimal"
         },
         "bodySite": {
@@ -12383,7 +12383,7 @@
         },
         "effectiveDateTime": "2024-04-15",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.26,
           "unit": "decimal"
         },
         "bodySite": {
@@ -12425,7 +12425,7 @@
         },
         "effectiveDateTime": "2024-06-14",
         "valueQuantity": {
-          "value": 0.28,
+          "value": 0.26,
           "unit": "decimal"
         },
         "bodySite": {
@@ -12467,7 +12467,7 @@
         },
         "effectiveDateTime": "2024-08-08",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.28,
           "unit": "decimal"
         },
         "bodySite": {
@@ -12509,7 +12509,7 @@
         },
         "effectiveDateTime": "2024-09-13",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -12551,7 +12551,7 @@
         },
         "effectiveDateTime": "2024-10-17",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -12593,7 +12593,7 @@
         },
         "effectiveDateTime": "2024-12-05",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -12635,7 +12635,7 @@
         },
         "effectiveDateTime": "2025-01-14",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -12677,7 +12677,7 @@
         },
         "effectiveDateTime": "2025-03-01",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -12719,7 +12719,7 @@
         },
         "effectiveDateTime": "2025-04-03",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.34,
           "unit": "decimal"
         },
         "bodySite": {
@@ -12761,7 +12761,7 @@
         },
         "effectiveDateTime": "2025-05-29",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13007,7 +13007,7 @@
         },
         "effectiveDateTime": "2024-05-14",
         "valueQuantity": {
-          "value": 0.2,
+          "value": 0.16,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13049,7 +13049,7 @@
         },
         "effectiveDateTime": "2024-07-13",
         "valueQuantity": {
-          "value": 0.18,
+          "value": 0.14,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13091,7 +13091,7 @@
         },
         "effectiveDateTime": "2024-08-17",
         "valueQuantity": {
-          "value": 0.18,
+          "value": 0.15,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13133,7 +13133,7 @@
         },
         "effectiveDateTime": "2024-10-15",
         "valueQuantity": {
-          "value": 0.19,
+          "value": 0.16,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13175,7 +13175,7 @@
         },
         "effectiveDateTime": "2024-11-25",
         "valueQuantity": {
-          "value": 0.2,
+          "value": 0.17,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13217,7 +13217,7 @@
         },
         "effectiveDateTime": "2025-01-24",
         "valueQuantity": {
-          "value": 0.19,
+          "value": 0.16,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13259,7 +13259,7 @@
         },
         "effectiveDateTime": "2025-03-03",
         "valueQuantity": {
-          "value": 0.18,
+          "value": 0.15,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13448,7 +13448,7 @@
         },
         "effectiveDateTime": "2023-08-23",
         "valueQuantity": {
-          "value": 0.16,
+          "value": 0.12,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13490,7 +13490,7 @@
         },
         "effectiveDateTime": "2023-10-07",
         "valueQuantity": {
-          "value": 0.16,
+          "value": 0.12,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13532,7 +13532,7 @@
         },
         "effectiveDateTime": "2023-11-09",
         "valueQuantity": {
-          "value": 0.14,
+          "value": 0.1,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13574,7 +13574,7 @@
         },
         "effectiveDateTime": "2023-12-21",
         "valueQuantity": {
-          "value": 0.15,
+          "value": 0.1,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13616,7 +13616,7 @@
         },
         "effectiveDateTime": "2024-01-18",
         "valueQuantity": {
-          "value": 0.17,
+          "value": 0.13,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13658,7 +13658,7 @@
         },
         "effectiveDateTime": "2024-03-08",
         "valueQuantity": {
-          "value": 0.18,
+          "value": 0.14,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13700,7 +13700,7 @@
         },
         "effectiveDateTime": "2024-05-07",
         "valueQuantity": {
-          "value": 0.18,
+          "value": 0.14,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13742,7 +13742,7 @@
         },
         "effectiveDateTime": "2024-06-10",
         "valueQuantity": {
-          "value": 0.17,
+          "value": 0.13,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13784,7 +13784,7 @@
         },
         "effectiveDateTime": "2024-08-01",
         "valueQuantity": {
-          "value": 0.2,
+          "value": 0.16,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13826,7 +13826,7 @@
         },
         "effectiveDateTime": "2024-09-04",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.16,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13868,7 +13868,7 @@
         },
         "effectiveDateTime": "2024-11-03",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.16,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13910,7 +13910,7 @@
         },
         "effectiveDateTime": "2024-12-29",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.17,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13952,7 +13952,7 @@
         },
         "effectiveDateTime": "2025-02-13",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -13994,7 +13994,7 @@
         },
         "effectiveDateTime": "2025-04-06",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -14036,7 +14036,7 @@
         },
         "effectiveDateTime": "2025-05-31",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.17,
           "unit": "decimal"
         },
         "bodySite": {
@@ -14078,7 +14078,7 @@
         },
         "effectiveDateTime": "2025-07-21",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -14120,7 +14120,7 @@
         },
         "effectiveDateTime": "2025-09-13",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -14162,7 +14162,7 @@
         },
         "effectiveDateTime": "2025-10-30",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.17,
           "unit": "decimal"
         },
         "bodySite": {
@@ -14522,7 +14522,7 @@
         },
         "effectiveDateTime": "2022-01-05",
         "valueQuantity": {
-          "value": 0.11,
+          "value": 0.06,
           "unit": "decimal"
         },
         "bodySite": {
@@ -14564,7 +14564,7 @@
         },
         "effectiveDateTime": "2022-02-18",
         "valueQuantity": {
-          "value": 0.1,
+          "value": 0.05,
           "unit": "decimal"
         },
         "bodySite": {
@@ -14606,7 +14606,7 @@
         },
         "effectiveDateTime": "2022-04-01",
         "valueQuantity": {
-          "value": 0.12,
+          "value": 0.07,
           "unit": "decimal"
         },
         "bodySite": {
@@ -14648,7 +14648,7 @@
         },
         "effectiveDateTime": "2022-05-16",
         "valueQuantity": {
-          "value": 0.12,
+          "value": 0.07,
           "unit": "decimal"
         },
         "bodySite": {
@@ -14780,7 +14780,7 @@
         },
         "effectiveDateTime": "2023-08-12",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -14822,7 +14822,7 @@
         },
         "effectiveDateTime": "2023-10-02",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -14864,7 +14864,7 @@
         },
         "effectiveDateTime": "2023-10-30",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -14906,7 +14906,7 @@
         },
         "effectiveDateTime": "2023-12-24",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -14948,7 +14948,7 @@
         },
         "effectiveDateTime": "2024-02-12",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -14990,7 +14990,7 @@
         },
         "effectiveDateTime": "2024-04-03",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15032,7 +15032,7 @@
         },
         "effectiveDateTime": "2024-05-02",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15074,7 +15074,7 @@
         },
         "effectiveDateTime": "2024-06-24",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15263,7 +15263,7 @@
         },
         "effectiveDateTime": "2023-05-13",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15305,7 +15305,7 @@
         },
         "effectiveDateTime": "2023-06-17",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15347,7 +15347,7 @@
         },
         "effectiveDateTime": "2023-08-07",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15389,7 +15389,7 @@
         },
         "effectiveDateTime": "2023-09-14",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15431,7 +15431,7 @@
         },
         "effectiveDateTime": "2023-10-14",
         "valueQuantity": {
-          "value": 0.28,
+          "value": 0.25,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15473,7 +15473,7 @@
         },
         "effectiveDateTime": "2023-12-13",
         "valueQuantity": {
-          "value": 0.28,
+          "value": 0.25,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15515,7 +15515,7 @@
         },
         "effectiveDateTime": "2024-01-21",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.24,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15557,7 +15557,7 @@
         },
         "effectiveDateTime": "2024-02-22",
         "valueQuantity": {
-          "value": 0.28,
+          "value": 0.25,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15599,7 +15599,7 @@
         },
         "effectiveDateTime": "2024-04-16",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.26,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15641,7 +15641,7 @@
         },
         "effectiveDateTime": "2024-06-13",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.28,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15683,7 +15683,7 @@
         },
         "effectiveDateTime": "2024-07-16",
         "valueQuantity": {
-          "value": 0.3,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15725,7 +15725,7 @@
         },
         "effectiveDateTime": "2024-08-23",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.28,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15767,7 +15767,7 @@
         },
         "effectiveDateTime": "2024-09-21",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15809,7 +15809,7 @@
         },
         "effectiveDateTime": "2024-11-19",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15851,7 +15851,7 @@
         },
         "effectiveDateTime": "2025-01-05",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15893,7 +15893,7 @@
         },
         "effectiveDateTime": "2025-02-15",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15935,7 +15935,7 @@
         },
         "effectiveDateTime": "2025-04-15",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -15977,7 +15977,7 @@
         },
         "effectiveDateTime": "2025-06-09",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.34,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16019,7 +16019,7 @@
         },
         "effectiveDateTime": "2025-07-11",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16412,7 +16412,7 @@
         },
         "effectiveDateTime": "2022-07-14",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16454,7 +16454,7 @@
         },
         "effectiveDateTime": "2022-08-25",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16496,7 +16496,7 @@
         },
         "effectiveDateTime": "2022-10-12",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16538,7 +16538,7 @@
         },
         "effectiveDateTime": "2022-11-17",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.34,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16580,7 +16580,7 @@
         },
         "effectiveDateTime": "2023-01-07",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16622,7 +16622,7 @@
         },
         "effectiveDateTime": "2023-02-13",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16664,7 +16664,7 @@
         },
         "effectiveDateTime": "2023-03-30",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16706,7 +16706,7 @@
         },
         "effectiveDateTime": "2023-05-16",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16748,7 +16748,7 @@
         },
         "effectiveDateTime": "2023-06-16",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.34,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16790,7 +16790,7 @@
         },
         "effectiveDateTime": "2023-08-12",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.34,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16832,7 +16832,7 @@
         },
         "effectiveDateTime": "2023-10-05",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16874,7 +16874,7 @@
         },
         "effectiveDateTime": "2023-11-26",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.34,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16916,7 +16916,7 @@
         },
         "effectiveDateTime": "2024-01-18",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.37,
           "unit": "decimal"
         },
         "bodySite": {
@@ -16958,7 +16958,7 @@
         },
         "effectiveDateTime": "2024-03-03",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -17000,7 +17000,7 @@
         },
         "effectiveDateTime": "2024-04-07",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -17042,7 +17042,7 @@
         },
         "effectiveDateTime": "2024-05-19",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -17084,7 +17084,7 @@
         },
         "effectiveDateTime": "2024-07-16",
         "valueQuantity": {
-          "value": 0.41,
+          "value": 0.39,
           "unit": "decimal"
         },
         "bodySite": {
@@ -17126,7 +17126,7 @@
         },
         "effectiveDateTime": "2024-09-09",
         "valueQuantity": {
-          "value": 0.41,
+          "value": 0.39,
           "unit": "decimal"
         },
         "bodySite": {
@@ -17168,7 +17168,7 @@
         },
         "effectiveDateTime": "2024-11-03",
         "valueQuantity": {
-          "value": 0.41,
+          "value": 0.39,
           "unit": "decimal"
         },
         "bodySite": {
@@ -17210,7 +17210,7 @@
         },
         "effectiveDateTime": "2024-12-31",
         "valueQuantity": {
-          "value": 0.42,
+          "value": 0.4,
           "unit": "decimal"
         },
         "bodySite": {
@@ -17603,7 +17603,7 @@
         },
         "effectiveDateTime": "2022-04-12",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -17645,7 +17645,7 @@
         },
         "effectiveDateTime": "2022-06-04",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -17687,7 +17687,7 @@
         },
         "effectiveDateTime": "2022-07-11",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -17729,7 +17729,7 @@
         },
         "effectiveDateTime": "2022-08-17",
         "valueQuantity": {
-          "value": 0.3,
+          "value": 0.28,
           "unit": "decimal"
         },
         "bodySite": {
@@ -17771,7 +17771,7 @@
         },
         "effectiveDateTime": "2022-10-16",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -17813,7 +17813,7 @@
         },
         "effectiveDateTime": "2022-11-27",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.25,
           "unit": "decimal"
         },
         "bodySite": {
@@ -17969,7 +17969,7 @@
         },
         "effectiveDateTime": "2023-05-12",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18011,7 +18011,7 @@
         },
         "effectiveDateTime": "2023-07-07",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18053,7 +18053,7 @@
         },
         "effectiveDateTime": "2023-08-31",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18095,7 +18095,7 @@
         },
         "effectiveDateTime": "2023-10-28",
         "valueQuantity": {
-          "value": 0.39,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18137,7 +18137,7 @@
         },
         "effectiveDateTime": "2023-12-17",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18179,7 +18179,7 @@
         },
         "effectiveDateTime": "2024-01-19",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18221,7 +18221,7 @@
         },
         "effectiveDateTime": "2024-03-07",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.37,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18263,7 +18263,7 @@
         },
         "effectiveDateTime": "2024-04-12",
         "valueQuantity": {
-          "value": 0.39,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18452,7 +18452,7 @@
         },
         "effectiveDateTime": "2022-04-29",
         "valueQuantity": {
-          "value": 0.39,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18494,7 +18494,7 @@
         },
         "effectiveDateTime": "2022-06-28",
         "valueQuantity": {
-          "value": 0.39,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18536,7 +18536,7 @@
         },
         "effectiveDateTime": "2022-07-30",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18578,7 +18578,7 @@
         },
         "effectiveDateTime": "2022-09-16",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.34,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18620,7 +18620,7 @@
         },
         "effectiveDateTime": "2022-10-17",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18662,7 +18662,7 @@
         },
         "effectiveDateTime": "2022-12-16",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.34,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18704,7 +18704,7 @@
         },
         "effectiveDateTime": "2023-01-22",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18746,7 +18746,7 @@
         },
         "effectiveDateTime": "2023-03-20",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18788,7 +18788,7 @@
         },
         "effectiveDateTime": "2023-04-20",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18830,7 +18830,7 @@
         },
         "effectiveDateTime": "2023-06-05",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18872,7 +18872,7 @@
         },
         "effectiveDateTime": "2023-07-08",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18914,7 +18914,7 @@
         },
         "effectiveDateTime": "2023-08-28",
         "valueQuantity": {
-          "value": 0.3,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18956,7 +18956,7 @@
         },
         "effectiveDateTime": "2023-10-11",
         "valueQuantity": {
-          "value": 0.3,
+          "value": 0.28,
           "unit": "decimal"
         },
         "bodySite": {
@@ -18998,7 +18998,7 @@
         },
         "effectiveDateTime": "2023-12-05",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.28,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19040,7 +19040,7 @@
         },
         "effectiveDateTime": "2024-01-14",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19082,7 +19082,7 @@
         },
         "effectiveDateTime": "2024-03-09",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19124,7 +19124,7 @@
         },
         "effectiveDateTime": "2024-04-15",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19166,7 +19166,7 @@
         },
         "effectiveDateTime": "2024-05-18",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.34,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19208,7 +19208,7 @@
         },
         "effectiveDateTime": "2024-07-02",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19250,7 +19250,7 @@
         },
         "effectiveDateTime": "2024-08-27",
         "valueQuantity": {
-          "value": 0.39,
+          "value": 0.37,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19643,7 +19643,7 @@
         },
         "effectiveDateTime": "2023-01-18",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19685,7 +19685,7 @@
         },
         "effectiveDateTime": "2023-03-18",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19727,7 +19727,7 @@
         },
         "effectiveDateTime": "2023-05-02",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19769,7 +19769,7 @@
         },
         "effectiveDateTime": "2023-06-19",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.28,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19811,7 +19811,7 @@
         },
         "effectiveDateTime": "2023-08-17",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19853,7 +19853,7 @@
         },
         "effectiveDateTime": "2023-10-09",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19895,7 +19895,7 @@
         },
         "effectiveDateTime": "2023-11-28",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19937,7 +19937,7 @@
         },
         "effectiveDateTime": "2024-01-17",
         "valueQuantity": {
-          "value": 0.28,
+          "value": 0.26,
           "unit": "decimal"
         },
         "bodySite": {
@@ -19979,7 +19979,7 @@
         },
         "effectiveDateTime": "2024-02-23",
         "valueQuantity": {
-          "value": 0.3,
+          "value": 0.28,
           "unit": "decimal"
         },
         "bodySite": {
@@ -20021,7 +20021,7 @@
         },
         "effectiveDateTime": "2024-04-08",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.26,
           "unit": "decimal"
         },
         "bodySite": {
@@ -20063,7 +20063,7 @@
         },
         "effectiveDateTime": "2024-05-22",
         "valueQuantity": {
-          "value": 0.28,
+          "value": 0.25,
           "unit": "decimal"
         },
         "bodySite": {
@@ -20105,7 +20105,7 @@
         },
         "effectiveDateTime": "2024-06-27",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.24,
           "unit": "decimal"
         },
         "bodySite": {
@@ -20147,7 +20147,7 @@
         },
         "effectiveDateTime": "2024-08-17",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -20450,7 +20450,7 @@
         },
         "effectiveDateTime": "2022-11-28",
         "valueQuantity": {
-          "value": 0.12,
+          "value": 0.08,
           "unit": "decimal"
         },
         "bodySite": {
@@ -20492,7 +20492,7 @@
         },
         "effectiveDateTime": "2022-12-28",
         "valueQuantity": {
-          "value": 0.13,
+          "value": 0.09,
           "unit": "decimal"
         },
         "bodySite": {
@@ -20534,7 +20534,7 @@
         },
         "effectiveDateTime": "2023-01-29",
         "valueQuantity": {
-          "value": 0.16,
+          "value": 0.12,
           "unit": "decimal"
         },
         "bodySite": {
@@ -20576,7 +20576,7 @@
         },
         "effectiveDateTime": "2023-03-08",
         "valueQuantity": {
-          "value": 0.15,
+          "value": 0.1,
           "unit": "decimal"
         },
         "bodySite": {
@@ -20618,7 +20618,7 @@
         },
         "effectiveDateTime": "2023-04-09",
         "valueQuantity": {
-          "value": 0.13,
+          "value": 0.09,
           "unit": "decimal"
         },
         "bodySite": {
@@ -20660,7 +20660,7 @@
         },
         "effectiveDateTime": "2023-05-29",
         "valueQuantity": {
-          "value": 0.13,
+          "value": 0.09,
           "unit": "decimal"
         },
         "bodySite": {
@@ -20702,7 +20702,7 @@
         },
         "effectiveDateTime": "2023-07-17",
         "valueQuantity": {
-          "value": 0.16,
+          "value": 0.12,
           "unit": "decimal"
         },
         "bodySite": {
@@ -20744,7 +20744,7 @@
         },
         "effectiveDateTime": "2023-08-29",
         "valueQuantity": {
-          "value": 0.18,
+          "value": 0.14,
           "unit": "decimal"
         },
         "bodySite": {
@@ -20933,7 +20933,7 @@
         },
         "effectiveDateTime": "2022-07-29",
         "valueQuantity": {
-          "value": 0.12,
+          "value": 0.07,
           "unit": "decimal"
         },
         "bodySite": {
@@ -20975,7 +20975,7 @@
         },
         "effectiveDateTime": "2022-08-30",
         "valueQuantity": {
-          "value": 0.14,
+          "value": 0.09,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21017,7 +21017,7 @@
         },
         "effectiveDateTime": "2022-10-18",
         "valueQuantity": {
-          "value": 0.13,
+          "value": 0.08,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21116,7 +21116,7 @@
         },
         "effectiveDateTime": "2022-07-09",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21158,7 +21158,7 @@
         },
         "effectiveDateTime": "2022-08-13",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21200,7 +21200,7 @@
         },
         "effectiveDateTime": "2022-09-13",
         "valueQuantity": {
-          "value": 0.39,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21242,7 +21242,7 @@
         },
         "effectiveDateTime": "2022-10-22",
         "valueQuantity": {
-          "value": 0.39,
+          "value": 0.37,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21284,7 +21284,7 @@
         },
         "effectiveDateTime": "2022-12-20",
         "valueQuantity": {
-          "value": 0.41,
+          "value": 0.4,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21326,7 +21326,7 @@
         },
         "effectiveDateTime": "2023-01-30",
         "valueQuantity": {
-          "value": 0.43,
+          "value": 0.41,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21368,7 +21368,7 @@
         },
         "effectiveDateTime": "2023-03-14",
         "valueQuantity": {
-          "value": 0.45,
+          "value": 0.43,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21410,7 +21410,7 @@
         },
         "effectiveDateTime": "2023-05-08",
         "valueQuantity": {
-          "value": 0.43,
+          "value": 0.42,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21452,7 +21452,7 @@
         },
         "effectiveDateTime": "2023-06-25",
         "valueQuantity": {
-          "value": 0.46,
+          "value": 0.44,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21494,7 +21494,7 @@
         },
         "effectiveDateTime": "2023-08-18",
         "valueQuantity": {
-          "value": 0.45,
+          "value": 0.44,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21740,7 +21740,7 @@
         },
         "effectiveDateTime": "2023-01-29",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21782,7 +21782,7 @@
         },
         "effectiveDateTime": "2023-03-26",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21824,7 +21824,7 @@
         },
         "effectiveDateTime": "2023-05-01",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21866,7 +21866,7 @@
         },
         "effectiveDateTime": "2023-06-27",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -21908,7 +21908,7 @@
         },
         "effectiveDateTime": "2023-08-25",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22064,7 +22064,7 @@
         },
         "effectiveDateTime": "2023-05-28",
         "valueQuantity": {
-          "value": 0.41,
+          "value": 0.4,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22106,7 +22106,7 @@
         },
         "effectiveDateTime": "2023-07-21",
         "valueQuantity": {
-          "value": 0.42,
+          "value": 0.41,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22148,7 +22148,7 @@
         },
         "effectiveDateTime": "2023-09-06",
         "valueQuantity": {
-          "value": 0.44,
+          "value": 0.43,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22190,7 +22190,7 @@
         },
         "effectiveDateTime": "2023-10-22",
         "valueQuantity": {
-          "value": 0.44,
+          "value": 0.43,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22232,7 +22232,7 @@
         },
         "effectiveDateTime": "2023-11-19",
         "valueQuantity": {
-          "value": 0.45,
+          "value": 0.44,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22316,7 +22316,7 @@
         },
         "effectiveDateTime": "2024-02-10",
         "valueQuantity": {
-          "value": 0.5,
+          "value": 0.49,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22358,7 +22358,7 @@
         },
         "effectiveDateTime": "2024-03-24",
         "valueQuantity": {
-          "value": 0.49,
+          "value": 0.48,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22400,7 +22400,7 @@
         },
         "effectiveDateTime": "2024-04-24",
         "valueQuantity": {
-          "value": 0.48,
+          "value": 0.47,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22526,7 +22526,7 @@
         },
         "effectiveDateTime": "2024-09-22",
         "valueQuantity": {
-          "value": 0.48,
+          "value": 0.47,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22772,7 +22772,7 @@
         },
         "effectiveDateTime": "2023-07-26",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.17,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22814,7 +22814,7 @@
         },
         "effectiveDateTime": "2023-09-12",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22856,7 +22856,7 @@
         },
         "effectiveDateTime": "2023-11-03",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22898,7 +22898,7 @@
         },
         "effectiveDateTime": "2023-12-26",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22940,7 +22940,7 @@
         },
         "effectiveDateTime": "2024-01-29",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -22982,7 +22982,7 @@
         },
         "effectiveDateTime": "2024-03-02",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23024,7 +23024,7 @@
         },
         "effectiveDateTime": "2024-04-22",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23066,7 +23066,7 @@
         },
         "effectiveDateTime": "2024-06-20",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23108,7 +23108,7 @@
         },
         "effectiveDateTime": "2024-08-05",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23150,7 +23150,7 @@
         },
         "effectiveDateTime": "2024-10-04",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23192,7 +23192,7 @@
         },
         "effectiveDateTime": "2024-12-01",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23234,7 +23234,7 @@
         },
         "effectiveDateTime": "2024-12-29",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23276,7 +23276,7 @@
         },
         "effectiveDateTime": "2025-02-09",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23318,7 +23318,7 @@
         },
         "effectiveDateTime": "2025-03-26",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23360,7 +23360,7 @@
         },
         "effectiveDateTime": "2025-05-23",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23402,7 +23402,7 @@
         },
         "effectiveDateTime": "2025-07-06",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.25,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23444,7 +23444,7 @@
         },
         "effectiveDateTime": "2025-08-08",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23486,7 +23486,7 @@
         },
         "effectiveDateTime": "2025-09-15",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23528,7 +23528,7 @@
         },
         "effectiveDateTime": "2025-10-31",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23921,7 +23921,7 @@
         },
         "effectiveDateTime": "2023-08-27",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -23963,7 +23963,7 @@
         },
         "effectiveDateTime": "2023-10-20",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24005,7 +24005,7 @@
         },
         "effectiveDateTime": "2023-11-22",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24047,7 +24047,7 @@
         },
         "effectiveDateTime": "2024-01-02",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24089,7 +24089,7 @@
         },
         "effectiveDateTime": "2024-02-17",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24131,7 +24131,7 @@
         },
         "effectiveDateTime": "2024-03-20",
         "valueQuantity": {
-          "value": 0.4,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24287,7 +24287,7 @@
         },
         "effectiveDateTime": "2023-12-08",
         "valueQuantity": {
-          "value": 0.39,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24329,7 +24329,7 @@
         },
         "effectiveDateTime": "2024-01-18",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24371,7 +24371,7 @@
         },
         "effectiveDateTime": "2024-02-23",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24413,7 +24413,7 @@
         },
         "effectiveDateTime": "2024-04-07",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.37,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24455,7 +24455,7 @@
         },
         "effectiveDateTime": "2024-05-08",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.37,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24497,7 +24497,7 @@
         },
         "effectiveDateTime": "2024-07-04",
         "valueQuantity": {
-          "value": 0.39,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24539,7 +24539,7 @@
         },
         "effectiveDateTime": "2024-08-04",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24581,7 +24581,7 @@
         },
         "effectiveDateTime": "2024-10-02",
         "valueQuantity": {
-          "value": 0.39,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24623,7 +24623,7 @@
         },
         "effectiveDateTime": "2024-11-18",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24665,7 +24665,7 @@
         },
         "effectiveDateTime": "2025-01-03",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.37,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24707,7 +24707,7 @@
         },
         "effectiveDateTime": "2025-03-04",
         "valueQuantity": {
-          "value": 0.4,
+          "value": 0.39,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24749,7 +24749,7 @@
         },
         "effectiveDateTime": "2025-04-29",
         "valueQuantity": {
-          "value": 0.4,
+          "value": 0.39,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24791,7 +24791,7 @@
         },
         "effectiveDateTime": "2025-06-16",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.37,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24833,7 +24833,7 @@
         },
         "effectiveDateTime": "2025-07-28",
         "valueQuantity": {
-          "value": 0.4,
+          "value": 0.39,
           "unit": "decimal"
         },
         "bodySite": {
@@ -24917,7 +24917,7 @@
         },
         "effectiveDateTime": "2025-09-30",
         "valueQuantity": {
-          "value": 0.42,
+          "value": 0.41,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25001,7 +25001,7 @@
         },
         "effectiveDateTime": "2026-01-02",
         "valueQuantity": {
-          "value": 0.45,
+          "value": 0.44,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25043,7 +25043,7 @@
         },
         "effectiveDateTime": "2026-02-11",
         "valueQuantity": {
-          "value": 0.45,
+          "value": 0.44,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25085,7 +25085,7 @@
         },
         "effectiveDateTime": "2026-04-04",
         "valueQuantity": {
-          "value": 0.44,
+          "value": 0.43,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25478,7 +25478,7 @@
         },
         "effectiveDateTime": "2023-01-01",
         "valueQuantity": {
-          "value": 0.18,
+          "value": 0.15,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25520,7 +25520,7 @@
         },
         "effectiveDateTime": "2023-03-02",
         "valueQuantity": {
-          "value": 0.19,
+          "value": 0.15,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25562,7 +25562,7 @@
         },
         "effectiveDateTime": "2023-04-25",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25604,7 +25604,7 @@
         },
         "effectiveDateTime": "2023-05-24",
         "valueQuantity": {
-          "value": 0.2,
+          "value": 0.16,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25646,7 +25646,7 @@
         },
         "effectiveDateTime": "2023-07-23",
         "valueQuantity": {
-          "value": 0.19,
+          "value": 0.15,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25688,7 +25688,7 @@
         },
         "effectiveDateTime": "2023-09-01",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.17,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25730,7 +25730,7 @@
         },
         "effectiveDateTime": "2023-10-09",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25772,7 +25772,7 @@
         },
         "effectiveDateTime": "2023-11-25",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25814,7 +25814,7 @@
         },
         "effectiveDateTime": "2024-01-11",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25856,7 +25856,7 @@
         },
         "effectiveDateTime": "2024-03-04",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.25,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25898,7 +25898,7 @@
         },
         "effectiveDateTime": "2024-04-14",
         "valueQuantity": {
-          "value": 0.28,
+          "value": 0.24,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25940,7 +25940,7 @@
         },
         "effectiveDateTime": "2024-05-12",
         "valueQuantity": {
-          "value": 0.28,
+          "value": 0.24,
           "unit": "decimal"
         },
         "bodySite": {
@@ -25982,7 +25982,7 @@
         },
         "effectiveDateTime": "2024-07-01",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26285,7 +26285,7 @@
         },
         "effectiveDateTime": "2022-06-12",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.37,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26327,7 +26327,7 @@
         },
         "effectiveDateTime": "2022-07-14",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26369,7 +26369,7 @@
         },
         "effectiveDateTime": "2022-08-20",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26411,7 +26411,7 @@
         },
         "effectiveDateTime": "2022-09-30",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26453,7 +26453,7 @@
         },
         "effectiveDateTime": "2022-11-13",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26495,7 +26495,7 @@
         },
         "effectiveDateTime": "2022-12-27",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26651,7 +26651,7 @@
         },
         "effectiveDateTime": "2022-04-15",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26693,7 +26693,7 @@
         },
         "effectiveDateTime": "2022-05-28",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26735,7 +26735,7 @@
         },
         "effectiveDateTime": "2022-06-29",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26777,7 +26777,7 @@
         },
         "effectiveDateTime": "2022-08-13",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26819,7 +26819,7 @@
         },
         "effectiveDateTime": "2022-09-22",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26861,7 +26861,7 @@
         },
         "effectiveDateTime": "2022-10-20",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26903,7 +26903,7 @@
         },
         "effectiveDateTime": "2022-11-24",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26945,7 +26945,7 @@
         },
         "effectiveDateTime": "2023-01-03",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -26987,7 +26987,7 @@
         },
         "effectiveDateTime": "2023-02-02",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27029,7 +27029,7 @@
         },
         "effectiveDateTime": "2023-03-21",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27071,7 +27071,7 @@
         },
         "effectiveDateTime": "2023-04-25",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27317,7 +27317,7 @@
         },
         "effectiveDateTime": "2024-04-14",
         "valueQuantity": {
-          "value": 0.17,
+          "value": 0.13,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27359,7 +27359,7 @@
         },
         "effectiveDateTime": "2024-06-12",
         "valueQuantity": {
-          "value": 0.16,
+          "value": 0.12,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27401,7 +27401,7 @@
         },
         "effectiveDateTime": "2024-07-23",
         "valueQuantity": {
-          "value": 0.18,
+          "value": 0.14,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27500,7 +27500,7 @@
         },
         "effectiveDateTime": "2023-01-29",
         "valueQuantity": {
-          "value": 0.3,
+          "value": 0.28,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27542,7 +27542,7 @@
         },
         "effectiveDateTime": "2023-03-29",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27584,7 +27584,7 @@
         },
         "effectiveDateTime": "2023-05-02",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27626,7 +27626,7 @@
         },
         "effectiveDateTime": "2023-06-04",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27668,7 +27668,7 @@
         },
         "effectiveDateTime": "2023-07-08",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27710,7 +27710,7 @@
         },
         "effectiveDateTime": "2023-08-11",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27752,7 +27752,7 @@
         },
         "effectiveDateTime": "2023-09-27",
         "valueQuantity": {
-          "value": 0.4,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27794,7 +27794,7 @@
         },
         "effectiveDateTime": "2023-11-20",
         "valueQuantity": {
-          "value": 0.41,
+          "value": 0.39,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27836,7 +27836,7 @@
         },
         "effectiveDateTime": "2023-12-29",
         "valueQuantity": {
-          "value": 0.39,
+          "value": 0.37,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27878,7 +27878,7 @@
         },
         "effectiveDateTime": "2024-02-16",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27920,7 +27920,7 @@
         },
         "effectiveDateTime": "2024-03-29",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -27962,7 +27962,7 @@
         },
         "effectiveDateTime": "2024-05-18",
         "valueQuantity": {
-          "value": 0.35,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28004,7 +28004,7 @@
         },
         "effectiveDateTime": "2024-07-02",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28046,7 +28046,7 @@
         },
         "effectiveDateTime": "2024-08-24",
         "valueQuantity": {
-          "value": 0.4,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28088,7 +28088,7 @@
         },
         "effectiveDateTime": "2024-10-08",
         "valueQuantity": {
-          "value": 0.43,
+          "value": 0.41,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28130,7 +28130,7 @@
         },
         "effectiveDateTime": "2024-11-12",
         "valueQuantity": {
-          "value": 0.46,
+          "value": 0.44,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28172,7 +28172,7 @@
         },
         "effectiveDateTime": "2025-01-11",
         "valueQuantity": {
-          "value": 0.48,
+          "value": 0.46,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28214,7 +28214,7 @@
         },
         "effectiveDateTime": "2025-02-09",
         "valueQuantity": {
-          "value": 0.47,
+          "value": 0.45,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28256,7 +28256,7 @@
         },
         "effectiveDateTime": "2025-04-01",
         "valueQuantity": {
-          "value": 0.5,
+          "value": 0.48,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28298,7 +28298,7 @@
         },
         "effectiveDateTime": "2025-04-30",
         "valueQuantity": {
-          "value": 0.51,
+          "value": 0.49,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28691,7 +28691,7 @@
         },
         "effectiveDateTime": "2024-05-29",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28733,7 +28733,7 @@
         },
         "effectiveDateTime": "2024-07-18",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.24,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28775,7 +28775,7 @@
         },
         "effectiveDateTime": "2024-09-01",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28817,7 +28817,7 @@
         },
         "effectiveDateTime": "2024-10-28",
         "valueQuantity": {
-          "value": 0.28,
+          "value": 0.25,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28859,7 +28859,7 @@
         },
         "effectiveDateTime": "2024-12-14",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28901,7 +28901,7 @@
         },
         "effectiveDateTime": "2025-01-30",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28943,7 +28943,7 @@
         },
         "effectiveDateTime": "2025-03-20",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -28985,7 +28985,7 @@
         },
         "effectiveDateTime": "2025-04-28",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29027,7 +29027,7 @@
         },
         "effectiveDateTime": "2025-06-26",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29069,7 +29069,7 @@
         },
         "effectiveDateTime": "2025-08-01",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29111,7 +29111,7 @@
         },
         "effectiveDateTime": "2025-09-09",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29153,7 +29153,7 @@
         },
         "effectiveDateTime": "2025-10-28",
         "valueQuantity": {
-          "value": 0.21,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29195,7 +29195,7 @@
         },
         "effectiveDateTime": "2025-11-26",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29237,7 +29237,7 @@
         },
         "effectiveDateTime": "2025-12-24",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29279,7 +29279,7 @@
         },
         "effectiveDateTime": "2026-01-28",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29321,7 +29321,7 @@
         },
         "effectiveDateTime": "2026-02-25",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29363,7 +29363,7 @@
         },
         "effectiveDateTime": "2026-04-09",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29405,7 +29405,7 @@
         },
         "effectiveDateTime": "2026-05-22",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29447,7 +29447,7 @@
         },
         "effectiveDateTime": "2026-07-17",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29840,7 +29840,7 @@
         },
         "effectiveDateTime": "2023-07-09",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29882,7 +29882,7 @@
         },
         "effectiveDateTime": "2023-08-06",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.3,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29924,7 +29924,7 @@
         },
         "effectiveDateTime": "2023-09-06",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -29966,7 +29966,7 @@
         },
         "effectiveDateTime": "2023-10-21",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30008,7 +30008,7 @@
         },
         "effectiveDateTime": "2023-12-04",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30050,7 +30050,7 @@
         },
         "effectiveDateTime": "2024-02-02",
         "valueQuantity": {
-          "value": 0.32,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30092,7 +30092,7 @@
         },
         "effectiveDateTime": "2024-03-14",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30134,7 +30134,7 @@
         },
         "effectiveDateTime": "2024-04-16",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.27,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30176,7 +30176,7 @@
         },
         "effectiveDateTime": "2024-06-01",
         "valueQuantity": {
-          "value": 0.3,
+          "value": 0.28,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30218,7 +30218,7 @@
         },
         "effectiveDateTime": "2024-07-16",
         "valueQuantity": {
-          "value": 0.31,
+          "value": 0.29,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30260,7 +30260,7 @@
         },
         "effectiveDateTime": "2024-09-10",
         "valueQuantity": {
-          "value": 0.33,
+          "value": 0.31,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30302,7 +30302,7 @@
         },
         "effectiveDateTime": "2024-10-17",
         "valueQuantity": {
-          "value": 0.34,
+          "value": 0.32,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30344,7 +30344,7 @@
         },
         "effectiveDateTime": "2024-12-01",
         "valueQuantity": {
-          "value": 0.36,
+          "value": 0.33,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30386,7 +30386,7 @@
         },
         "effectiveDateTime": "2025-01-03",
         "valueQuantity": {
-          "value": 0.37,
+          "value": 0.35,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30428,7 +30428,7 @@
         },
         "effectiveDateTime": "2025-02-26",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30470,7 +30470,7 @@
         },
         "effectiveDateTime": "2025-04-01",
         "valueQuantity": {
-          "value": 0.38,
+          "value": 0.36,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30512,7 +30512,7 @@
         },
         "effectiveDateTime": "2025-05-09",
         "valueQuantity": {
-          "value": 0.4,
+          "value": 0.38,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30554,7 +30554,7 @@
         },
         "effectiveDateTime": "2025-06-10",
         "valueQuantity": {
-          "value": 0.42,
+          "value": 0.4,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30596,7 +30596,7 @@
         },
         "effectiveDateTime": "2025-07-23",
         "valueQuantity": {
-          "value": 0.43,
+          "value": 0.41,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30638,7 +30638,7 @@
         },
         "effectiveDateTime": "2025-09-01",
         "valueQuantity": {
-          "value": 0.45,
+          "value": 0.43,
           "unit": "decimal"
         },
         "bodySite": {
@@ -30680,7 +30680,7 @@
         },
         "effectiveDateTime": "2025-10-13",
         "valueQuantity": {
-          "value": 0.45,
+          "value": 0.43,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31097,7 +31097,7 @@
         },
         "effectiveDateTime": "2023-01-17",
         "valueQuantity": {
-          "value": 0.29,
+          "value": 0.26,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31139,7 +31139,7 @@
         },
         "effectiveDateTime": "2023-03-18",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.25,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31181,7 +31181,7 @@
         },
         "effectiveDateTime": "2023-04-26",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.24,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31223,7 +31223,7 @@
         },
         "effectiveDateTime": "2023-06-06",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.25,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31265,7 +31265,7 @@
         },
         "effectiveDateTime": "2023-08-03",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.24,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31307,7 +31307,7 @@
         },
         "effectiveDateTime": "2023-09-01",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.24,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31349,7 +31349,7 @@
         },
         "effectiveDateTime": "2023-10-23",
         "valueQuantity": {
-          "value": 0.26,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31391,7 +31391,7 @@
         },
         "effectiveDateTime": "2023-11-29",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31433,7 +31433,7 @@
         },
         "effectiveDateTime": "2024-01-06",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31475,7 +31475,7 @@
         },
         "effectiveDateTime": "2024-02-25",
         "valueQuantity": {
-          "value": 0.24,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31517,7 +31517,7 @@
         },
         "effectiveDateTime": "2024-03-28",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.23,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31559,7 +31559,7 @@
         },
         "effectiveDateTime": "2024-05-24",
         "valueQuantity": {
-          "value": 0.28,
+          "value": 0.26,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31601,7 +31601,7 @@
         },
         "effectiveDateTime": "2024-06-30",
         "valueQuantity": {
-          "value": 0.28,
+          "value": 0.26,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31904,7 +31904,7 @@
         },
         "effectiveDateTime": "2022-11-25",
         "valueQuantity": {
-          "value": 0.42,
+          "value": 0.41,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31946,7 +31946,7 @@
         },
         "effectiveDateTime": "2023-01-12",
         "valueQuantity": {
-          "value": 0.41,
+          "value": 0.4,
           "unit": "decimal"
         },
         "bodySite": {
@@ -31988,7 +31988,7 @@
         },
         "effectiveDateTime": "2023-02-27",
         "valueQuantity": {
-          "value": 0.43,
+          "value": 0.42,
           "unit": "decimal"
         },
         "bodySite": {
@@ -32030,7 +32030,7 @@
         },
         "effectiveDateTime": "2023-03-28",
         "valueQuantity": {
-          "value": 0.44,
+          "value": 0.43,
           "unit": "decimal"
         },
         "bodySite": {
@@ -32156,7 +32156,7 @@
         },
         "effectiveDateTime": "2023-07-27",
         "valueQuantity": {
-          "value": 0.43,
+          "value": 0.42,
           "unit": "decimal"
         },
         "bodySite": {
@@ -32198,7 +32198,7 @@
         },
         "effectiveDateTime": "2023-09-07",
         "valueQuantity": {
-          "value": 0.43,
+          "value": 0.42,
           "unit": "decimal"
         },
         "bodySite": {
@@ -32282,7 +32282,7 @@
         },
         "effectiveDateTime": "2023-12-21",
         "valueQuantity": {
-          "value": 0.42,
+          "value": 0.41,
           "unit": "decimal"
         },
         "bodySite": {
@@ -32366,7 +32366,7 @@
         },
         "effectiveDateTime": "2024-04-11",
         "valueQuantity": {
-          "value": 0.44,
+          "value": 0.43,
           "unit": "decimal"
         },
         "bodySite": {
@@ -32408,7 +32408,7 @@
         },
         "effectiveDateTime": "2024-05-14",
         "valueQuantity": {
-          "value": 0.42,
+          "value": 0.41,
           "unit": "decimal"
         },
         "bodySite": {
@@ -32450,7 +32450,7 @@
         },
         "effectiveDateTime": "2024-06-14",
         "valueQuantity": {
-          "value": 0.42,
+          "value": 0.41,
           "unit": "decimal"
         },
         "bodySite": {
@@ -32492,7 +32492,7 @@
         },
         "effectiveDateTime": "2024-08-10",
         "valueQuantity": {
-          "value": 0.44,
+          "value": 0.43,
           "unit": "decimal"
         },
         "bodySite": {
@@ -32978,7 +32978,7 @@
         },
         "effectiveDateTime": "2022-11-24",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.22,
           "unit": "decimal"
         },
         "bodySite": {
@@ -33020,7 +33020,7 @@
         },
         "effectiveDateTime": "2023-01-09",
         "valueQuantity": {
-          "value": 0.27,
+          "value": 0.24,
           "unit": "decimal"
         },
         "bodySite": {
@@ -33119,7 +33119,7 @@
         },
         "effectiveDateTime": "2023-12-11",
         "valueQuantity": {
-          "value": 0.2,
+          "value": 0.17,
           "unit": "decimal"
         },
         "bodySite": {
@@ -33161,7 +33161,7 @@
         },
         "effectiveDateTime": "2024-01-18",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -33203,7 +33203,7 @@
         },
         "effectiveDateTime": "2024-02-29",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {
@@ -33245,7 +33245,7 @@
         },
         "effectiveDateTime": "2024-04-10",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -33287,7 +33287,7 @@
         },
         "effectiveDateTime": "2024-05-15",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.2,
           "unit": "decimal"
         },
         "bodySite": {
@@ -33329,7 +33329,7 @@
         },
         "effectiveDateTime": "2024-07-13",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -33371,7 +33371,7 @@
         },
         "effectiveDateTime": "2024-08-24",
         "valueQuantity": {
-          "value": 0.25,
+          "value": 0.21,
           "unit": "decimal"
         },
         "bodySite": {
@@ -33413,7 +33413,7 @@
         },
         "effectiveDateTime": "2024-09-26",
         "valueQuantity": {
-          "value": 0.23,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -33455,7 +33455,7 @@
         },
         "effectiveDateTime": "2024-10-24",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.19,
           "unit": "decimal"
         },
         "bodySite": {
@@ -33497,7 +33497,7 @@
         },
         "effectiveDateTime": "2024-12-15",
         "valueQuantity": {
-          "value": 0.22,
+          "value": 0.18,
           "unit": "decimal"
         },
         "bodySite": {

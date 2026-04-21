@@ -44,14 +44,7 @@ declare global {
 // Public paths (no JWT required)
 // ---------------------------------------------------------------------------
 
-const PUBLIC_PATHS = [
-  '/api/auth/login',
-  '/api/auth/verify',
-  '/api/auth/config',
-  '/api/auth/change-password',
-  '/api/auth/totp/enroll',
-  '/api/auth/totp/confirm',
-];
+const PUBLIC_PATHS = ['/api/auth/login', '/api/auth/verify', '/api/auth/config'];
 
 // ---------------------------------------------------------------------------
 // Local HS256 verification (existing behavior)
@@ -64,11 +57,7 @@ const PUBLIC_PATHS = [
 function verifyLocalToken(token: string, req: Request, res: Response, next: NextFunction): void {
   try {
     const payload = jwt.verify(token, getJwtSecret()) as AuthPayload;
-    if (
-      payload.purpose === 'challenge' ||
-      payload.purpose === 'change-password' ||
-      payload.purpose === 'totp-enroll'
-    ) {
+    if (payload.purpose === 'challenge') {
       res.status(401).json({ error: 'Challenge tokens cannot be used for authentication' });
       return;
     }
@@ -114,7 +103,7 @@ async function verifyKeycloakToken(token: string, req: Request, res: Response, n
     }) as Record<string, unknown>;
 
     // Reject challenge-purpose tokens (T-02-02)
-    if (raw.purpose === 'challenge' || raw.purpose === 'totp-enroll') {
+    if (raw.purpose === 'challenge') {
       res.status(401).json({ error: 'Challenge tokens cannot be used for authentication' });
       return;
     }

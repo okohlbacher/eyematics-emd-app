@@ -54,19 +54,6 @@ export async function getIssueCount(): Promise<number> {
 }
 
 /**
- * Delete all issues on the server (admin-only).
- * Returns the number of deleted files.
- */
-export async function deleteAllIssues(): Promise<number> {
-  const resp = await authFetch('/api/issues', { method: 'DELETE' });
-  if (!resp.ok) {
-    throw new Error(`Failed to delete issues: ${resp.status}`);
-  }
-  const data = await resp.json() as { deleted: number };
-  return data.deleted;
-}
-
-/**
  * Export all issues (with screenshots) as a JSON file download.
  * Fetches with auth headers, then triggers browser download.
  */

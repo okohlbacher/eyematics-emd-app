@@ -1,8 +1,0 @@
-{
-  "id": "f6061cc6-b49e-4ebb-b61d-902abd514c90",
-  "timestamp": "2026-04-17T06:10:22.374Z",
-  "user": "admin",
-  "page": "Analyse",
-  "description": "Die Beschriftungen der Y-Achsen sind arbiträr und merkwürdig - der Visus müsste immer zwischen 0 und 1 liegen und damit das Delta zwischen -1 und 1",
-  "appVersion": "1.4.0"
-}

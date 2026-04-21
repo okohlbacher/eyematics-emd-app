@@ -26,13 +26,6 @@ export interface UserRecord {
   lastName?: string;
   createdAt: string;
   lastLogin?: string;
-  mustChangePassword?: boolean;
-  /** Base32-encoded TOTP secret. Absent = user has not enrolled (D-08). */
-  totpSecret?: string;
-  /** True only after successful TOTP enrollment confirmation (D-08). */
-  totpEnabled?: boolean;
-  /** Bcrypt hashes of one-time recovery codes; burned codes removed from array (D-03, D-08). */
-  totpRecoveryCodes?: string[];
 }
 
 interface AuthConfig {
@@ -305,29 +298,20 @@ export function _migrateRemovedCenters(
  * Migrate users.json: add passwordHash for any user missing it,
  * and convert center IDs from shorthand to org-* format.
  * Uses bcrypt with 12 rounds and the default password 'changeme2025!'.
- * Exported for testing (mustChangePassword.test.ts).
  */
-export function _migrateUsersJson(filePath: string): void {
+function _migrateUsersJson(filePath: string): void {
   const raw = fs.readFileSync(filePath, 'utf-8');
   const users = JSON.parse(raw) as UserRecord[];
 
   let needsWrite = false;
   let workingUsers = users;
 
-  // Migrate password hashes and flag users with the default password for forced change
-  const DEFAULT_PASSWORD = 'changeme2025!';
+  // Migrate password hashes
   const withHashes = workingUsers.map((user) => {
     if (!user.passwordHash) {
       needsWrite = true;
-      const hash = bcrypt.hashSync(DEFAULT_PASSWORD, 12); // sync OK at startup (one-time migration)
-      // Also flag for forced password change (SEC-03) — unless explicitly cleared
-      const mustChangePassword = user.mustChangePassword === false ? false : true;
-      return { ...user, passwordHash: hash, mustChangePassword };
-    }
-    // SEC-03: flag users whose stored hash is the default password (unless already cleared)
-    if (user.mustChangePassword !== false && bcrypt.compareSync(DEFAULT_PASSWORD, user.passwordHash)) {
-      needsWrite = true;
-      return { ...user, mustChangePassword: true };
+      const hash = bcrypt.hashSync('changeme2025!', 12); // sync OK at startup (one-time migration)
+      return { ...user, passwordHash: hash };
     }
     return user;
   });
