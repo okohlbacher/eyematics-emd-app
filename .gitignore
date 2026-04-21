@@ -32,3 +32,9 @@ dist-ssr
 # Per-host secrets (auto-generated on first launch — never commit)
 data/jwt-secret.txt
 data/cohort-hash-secret.txt
+
+# Runtime data — never commit (seeded/generated at runtime)
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/users.json
