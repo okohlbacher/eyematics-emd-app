@@ -22,7 +22,7 @@ import { Router } from 'express';
 import yaml from 'js-yaml';
 
 import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
-import { BLAZE_RESOURCE_TYPES, getCenters, getFallbackCenterFiles, getValidCenterIds, SETTINGS_FILE } from './constants.js';
+import { BLAZE_RESOURCE_TYPES, getCenters, getFallbackCenterFiles, SETTINGS_FILE } from './constants.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -68,17 +68,12 @@ export function invalidateFhirCache(): void {
 
 /**
  * Returns true if the user should bypass center filtering.
- * Admin users always bypass (D-12).
- * Non-admin users with all configured centers also bypass (D-13, D-14).
+ * Only admin bypasses (H1 / F-05 fix): the former "has all centers → bypass"
+ * heuristic silently over-granted when the center roster shrank. If a
+ * non-admin needs global view, give them an explicit role/flag.
  */
-export function isBypass(role: string, centers: string[]): boolean {
-  if (role === 'admin') return true;
-  const valid = getValidCenterIds();
-  if (valid.size === 0) return false;
-  for (const id of valid) {
-    if (!centers.includes(id)) return false;
-  }
-  return true;
+export function isBypass(role: string, _centers: string[]): boolean {
+  return role === 'admin';
 }
 
 // ---------------------------------------------------------------------------

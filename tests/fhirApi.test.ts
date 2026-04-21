@@ -252,15 +252,15 @@ describe('fhirApi — filtering and bypass logic', () => {
     expect(isBypass('admin', ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukmz', 'org-ukt'])).toBe(true);
   });
 
-  // Test 4: isBypass() returns true for non-admin with all 7 org-* centers
-  it('Test 4: isBypass() returns true for non-admin with all 7 org-* centers', () => {
+  // Test 4 (H1/F-05 fix): non-admin never bypasses, even with all 7 org-* centers
+  it('Test 4: isBypass() returns false for non-admin even with all 7 org-* centers (H1 / F-05)', () => {
     const allCenters = ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukmz', 'org-ukt'];
-    expect(isBypass('researcher', allCenters)).toBe(true);
-    expect(isBypass('clinic_lead', allCenters)).toBe(true);
+    expect(isBypass('researcher', allCenters)).toBe(false);
+    expect(isBypass('clinic_lead', allCenters)).toBe(false);
   });
 
-  // Test 5: isBypass() returns false for non-admin with 3 centers
-  it('Test 5: isBypass() returns false for non-admin with fewer than 7 centers', () => {
+  // Test 5: isBypass() returns false for non-admin with any other center combination
+  it('Test 5: isBypass() returns false for non-admin with fewer than all centers', () => {
     expect(isBypass('researcher', ['org-uka', 'org-ukc', 'org-ukd'])).toBe(false);
     expect(isBypass('clinician', ['org-uka'])).toBe(false);
     expect(isBypass('epidemiologist', [])).toBe(false);

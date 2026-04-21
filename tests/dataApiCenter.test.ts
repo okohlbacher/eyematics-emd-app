@@ -60,9 +60,7 @@ vi.mock('../server/fhirApi.js', () => ({
   fhirApiRouter: express.Router(),
   invalidateFhirCache: vi.fn(),
   getCaseToCenter: vi.fn(() => mockCaseIndex),
-  isBypass: vi.fn((role: string, centers: string[]) =>
-    role === 'admin' || centers.length >= 7,
-  ),
+  isBypass: vi.fn((role: string) => role === 'admin'),
   getOrgIdFromBundle: vi.fn(() => null),
   filterBundlesByCenters: vi.fn((bundles: unknown[]) => bundles),
   buildCaseIndex: vi.fn(() => new Map()),

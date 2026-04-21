@@ -23,31 +23,28 @@ vi.mock('../server/constants.js', () => ({
 
 import { isBypass } from '../server/fhirApi';
 
-describe('isBypass — center filtering bypass logic', () => {
-  it('admin always bypasses', () => {
+describe('isBypass — center filtering bypass logic (H1 / F-05)', () => {
+  it('admin always bypasses regardless of centers', () => {
     expect(isBypass('admin', [])).toBe(true);
     expect(isBypass('admin', ['org-uka'])).toBe(true);
+    expect(isBypass('admin', ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukmz', 'org-ukt'])).toBe(true);
   });
 
-  it('user with all 7 valid centers bypasses', () => {
-    expect(isBypass('researcher', ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukmz', 'org-ukt'])).toBe(true);
+  it('non-admin never bypasses, even with all valid centers (superset heuristic removed)', () => {
+    expect(isBypass('researcher', ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukmz', 'org-ukt'])).toBe(false);
+    expect(isBypass('clinic_lead', ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukmz', 'org-ukt'])).toBe(false);
   });
 
-  it('user with fewer than 7 valid centers does NOT bypass', () => {
+  it('non-admin with fewer centers does not bypass', () => {
     expect(isBypass('researcher', ['org-uka', 'org-ukc'])).toBe(false);
-    expect(isBypass('researcher', ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukmz'])).toBe(false);
+    expect(isBypass('clinician', ['org-uka'])).toBe(false);
   });
 
-  it('user with 7 INVALID center strings does NOT bypass (set membership check)', () => {
-    // This was the old bug: centers.length >= N would bypass with any N strings
+  it('non-admin with forged/invalid center ids does not bypass', () => {
     expect(isBypass('researcher', ['fake-1', 'fake-2', 'fake-3', 'fake-4', 'fake-5', 'fake-6', 'fake-7'])).toBe(false);
   });
 
-  it('user with mix of valid and invalid centers does NOT bypass if under threshold', () => {
-    expect(isBypass('researcher', ['org-uka', 'org-ukc', 'fake-1', 'fake-2', 'fake-3', 'fake-4', 'fake-5'])).toBe(false);
-  });
-
-  it('empty centers array does NOT bypass', () => {
+  it('empty centers array does not bypass for non-admin', () => {
     expect(isBypass('researcher', [])).toBe(false);
   });
 });
