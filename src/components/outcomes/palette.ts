@@ -33,6 +33,17 @@ export const SERIES_STYLES = {
 export const PANEL_BACKGROUND = '#ffffff';
 
 /**
+ * Phase 16 / D-06: categorical palette for cross-cohort overlays.
+ * Each entry >= 3.0:1 contrast vs #ffffff (WCAG 2.1 SC 1.4.11 graphical threshold).
+ */
+export const COHORT_PALETTES = [
+  '#047857', // emerald-700 — 5.48:1
+  '#b45309', // amber-700   — 5.02:1
+  '#0e7490', // cyan-700    — 5.36:1
+  '#a21caf', // fuchsia-700 — 6.32:1
+] as const satisfies readonly string[];
+
+/**
  * Dark-mode chart palette (Phase 17 / D-07).
  * WCAG canonical dark background: #111827 (Tailwind gray-900).
  * OD/OS/OD+OS must pass AA 4.5:1 for text/small elements (VIS-03).
