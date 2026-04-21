@@ -38,7 +38,20 @@ const REDACT_PATHS = new Set([
   '/api/auth/users',           // POST /api/auth/users — response contains generatedPassword
   '/api/auth/totp/confirm',    // SEC-15: body contains OTP
   '/api/auth/totp/disable',    // SEC-15: body contains OTP / recovery code
+  '/api/settings',             // H4 / F-11: YAML body carries cohortHashSecret, otpCode
 ]);
+
+/**
+ * Regex-redaction for YAML/text bodies on REDACT_PATHS. Replaces the value
+ * of any line whose key matches a sensitive name with "[REDACTED]".
+ *
+ * Covers the PUT /api/settings case where the body is raw YAML text, not
+ * a JSON object — the field-level sanitizer cannot walk it.
+ */
+const SENSITIVE_YAML_KEY = /^(\s*(?:otpCode|cohortHashSecret|password|jwtSecret|clientSecret)\s*:\s*).*$/gim;
+function redactYamlString(yaml: string): string {
+  return yaml.replace(SENSITIVE_YAML_KEY, '$1[REDACTED]');
+}
 
 /**
  * Paths whose audit row is written DIRECTLY by the route handler (not by this middleware).
@@ -68,9 +81,14 @@ const REDACT_FIELDS = new Set(['password', 'otp', 'challengeToken', 'generatedPa
  */
 function redactBody(urlPath: string, body: unknown): string | null {
   if (body === undefined || body === null) return null;
-  if (typeof body !== 'object') return String(body);
+  const isRedactPath = REDACT_PATHS.has(urlPath);
 
-  if (!REDACT_PATHS.has(urlPath)) {
+  if (typeof body !== 'object') {
+    const s = String(body);
+    return isRedactPath ? redactYamlString(s) : s;
+  }
+
+  if (!isRedactPath) {
     return JSON.stringify(body);
   }
 

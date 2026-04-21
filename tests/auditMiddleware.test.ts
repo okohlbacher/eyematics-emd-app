@@ -114,6 +114,33 @@ describe('auditMiddleware', () => {
     expect(body.username).toBe('newuser');
   });
 
+  it('redacts cohortHashSecret/otpCode from YAML body on PUT /api/settings (H4)', () => {
+    const yamlBody = [
+      'twoFactorEnabled: false',
+      "otpCode: '123456'",
+      'audit:',
+      '  cohortHashSecret: deadbeefcafebabe1234567890abcdef',
+      'dataSource:',
+      '  type: blaze',
+      '  blazeUrl: http://localhost:8080/fhir',
+    ].join('\n');
+    const req = mockReq({
+      originalUrl: '/api/settings',
+      method: 'PUT',
+      body: yamlBody, // express.text() gives a string
+    });
+    const res = mockRes();
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    const stored = loggedEntries[0].body!;
+    expect(stored).not.toContain('123456');
+    expect(stored).not.toContain('deadbeefcafebabe');
+    expect(stored).toMatch(/otpCode:\s*\[REDACTED\]/);
+    expect(stored).toMatch(/cohortHashSecret:\s*\[REDACTED\]/);
+    // Non-sensitive fields preserved
+    expect(stored).toContain('blazeUrl: http://localhost:8080/fhir');
+  });
+
   it('does NOT redact body on non-auth paths', () => {
     const req = mockReq({
       originalUrl: '/api/data/quality-flags',
