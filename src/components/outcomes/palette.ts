@@ -24,8 +24,8 @@ export const EYE_COLORS = {
 export type EyeKey = keyof typeof EYE_COLORS;
 
 export const SERIES_STYLES = {
-  median: { strokeWidth: 3 },
-  perPatient: { strokeWidth: 1.5, opacityDense: 0.6, opacitySparse: 0.3 },
+  median: { strokeWidth: 4 },
+  perPatient: { strokeWidth: 1.5, opacityDense: 0.22, opacitySparse: 0.12, color: '#9ca3af' },
   scatter: { fillOpacity: 0.7 },
   iqr: { fillOpacity: 0.15, stroke: 'none' as const },
 } as const;

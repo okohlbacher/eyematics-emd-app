@@ -252,7 +252,7 @@ export default function OutcomesPanel({
                   }))}
                   dataKey="y"
                   type="linear"
-                  stroke={seriesColor}
+                  stroke={SERIES_STYLES.perPatient.color}
                   strokeWidth={SERIES_STYLES.perPatient.strokeWidth}
                   strokeOpacity={p.sparse ? SERIES_STYLES.perPatient.opacitySparse : SERIES_STYLES.perPatient.opacityDense}
                   dot={false}
