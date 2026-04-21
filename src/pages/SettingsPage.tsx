@@ -148,15 +148,15 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <SettingsIcon className="w-6 h-6 text-gray-500" />
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <SettingsIcon className="w-6 h-6 text-gray-500 dark:text-gray-400" />
             {t('settingsTitle')}
           </h1>
-          <p className="text-gray-500 mt-1">{t('settingsSubtitle')}</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">{t('settingsSubtitle')}</p>
         </div>
         <button
           onClick={handleExportYaml}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600/50 transition-colors"
         >
           <Download className="w-4 h-4" />
           {t('settingsExportYaml')}
@@ -165,26 +165,26 @@ export default function SettingsPage() {
 
       {/* Success banner */}
       {savedBanner && (
-        <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm font-medium">
+        <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 rounded-lg px-4 py-3 text-sm font-medium">
           <Save className="w-4 h-4 shrink-0" />
           {t('settingsSaved')}
         </div>
       )}
 
       {/* Two-Factor Authentication */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-gray-500" />
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <ShieldCheck className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           {t('settings2faTitle')}
         </h2>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-700">{t('settings2faLabel')}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{t('settings2faHint')}</p>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings2faLabel')}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('settings2faHint')}</p>
           </div>
           <button
             onClick={handleTwoFactorToggle}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-800 ${
               twoFactorEnabled ? 'bg-blue-600' : 'bg-gray-300'
             }`}
             role="switch"
@@ -205,12 +205,12 @@ export default function SettingsPage() {
       </div>
 
       {/* Therapy Discontinuation Thresholds */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-5">
-        <h2 className="text-lg font-semibold text-gray-900">{t('settingsTherapy')}</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-5">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('settingsTherapy')}</h2>
 
         {/* Therapy Interrupter */}
         <div className="space-y-1.5">
-          <label htmlFor="interrupter-days" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="interrupter-days" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             {t('settingsInterrupterDays')}
             <span className="ml-1 font-mono text-blue-600">(t)</span>
           </label>
@@ -221,15 +221,15 @@ export default function SettingsPage() {
             value={interrupterDays}
             onChange={(e) => handleInterrupterChange(e.target.value)}
             className={`w-full max-w-xs border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              validationError ? 'border-red-400 bg-red-50' : 'border-gray-300'
+              validationError ? 'border-red-400 bg-red-50' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
             }`}
           />
-          <p className="text-xs text-gray-500">{t('settingsInterrupterHint')}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{t('settingsInterrupterHint')}</p>
         </div>
 
         {/* Therapy Breaker */}
         <div className="space-y-1.5">
-          <label htmlFor="breaker-days" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="breaker-days" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             {t('settingsBreakerDays')}
             <span className="ml-1 font-mono text-blue-600">(t&apos;)</span>
           </label>
@@ -240,10 +240,10 @@ export default function SettingsPage() {
             value={breakerDays}
             onChange={(e) => handleBreakerChange(e.target.value)}
             className={`w-full max-w-xs border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              validationError ? 'border-red-400 bg-red-50' : 'border-gray-300'
+              validationError ? 'border-red-400 bg-red-50' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
             }`}
           />
-          <p className="text-xs text-gray-500">{t('settingsBreakerHint')}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{t('settingsBreakerHint')}</p>
         </div>
 
         {validationError && (
@@ -253,14 +253,14 @@ export default function SettingsPage() {
         <div className="flex items-center gap-3 pt-1">
           <button
             onClick={handleSave}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-800 transition-colors"
           >
             <Save className="w-4 h-4" />
             {t('save')}
           </button>
           <button
             onClick={handleReset}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600/50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 dark:focus:ring-offset-gray-800 transition-colors"
           >
             <RotateCcw className="w-4 h-4" />
             {t('settingsReset')}
@@ -269,9 +269,9 @@ export default function SettingsPage() {
       </div>
 
       {/* Data Source */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-5">
-        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <Server className="w-5 h-5 text-gray-500" />
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-5">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <Server className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           {t('settingsDataSource')}
         </h2>
 
@@ -285,7 +285,7 @@ export default function SettingsPage() {
               onChange={() => handleDataSourceTypeChange('local')}
               className="accent-blue-600"
             />
-            <span className="text-sm font-medium text-gray-700">{t('settingsDataSourceLocal')}</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settingsDataSourceLocal')}</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -296,14 +296,14 @@ export default function SettingsPage() {
               onChange={() => handleDataSourceTypeChange('blaze')}
               className="accent-blue-600"
             />
-            <span className="text-sm font-medium text-gray-700">{t('settingsDataSourceBlaze')}</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settingsDataSourceBlaze')}</span>
           </label>
         </div>
 
         {dataSourceType === 'blaze' && (
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <label htmlFor="blaze-url" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="blaze-url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 {t('settingsDataSourceUrl')}
               </label>
               <input
@@ -313,14 +313,14 @@ export default function SettingsPage() {
                 onChange={(e) => handleBlazeUrlChange(e.target.value)}
                 onBlur={handleBlazeUrlCommit}
                 placeholder="http://localhost:8080/fhir"
-                className="w-full max-w-md border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full max-w-md border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
               />
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               <button
                 onClick={() => { void handleTestConnection(); }}
                 disabled={connectionStatus === 'testing'}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600/50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 dark:focus:ring-offset-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {connectionStatus === 'testing' ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -349,12 +349,12 @@ export default function SettingsPage() {
       </div>
 
       {/* Reported Issues Export */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
           <MessageSquarePlus className="w-5 h-5 text-amber-500" />
           {t('feedbackExport')}
         </h2>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           {t('feedbackCount').replace('{0}', String(issueCount))}
         </p>
         <button
@@ -368,7 +368,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Settings file hint */}
-      <p className="text-xs text-gray-400 text-center">
+      <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
         {t('settingsFileHint')}
       </p>
     </div>
