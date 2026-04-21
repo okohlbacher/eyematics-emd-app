@@ -356,7 +356,9 @@ export default function OutcomesView() {
   // Phase 16: drawer onChange + onReset handlers.
   const handleCompareChange = (nextIds: string[]) => {
     setSearchParams((p) => {
-      const primary = primaryCohortId;
+      // If no primary is set in the URL, promote the first selection to primary
+      // so single-selection clicks in the drawer produce visible state.
+      const primary = primaryCohortId ?? nextIds[0] ?? null;
       const ensured = primary && !nextIds.includes(primary) ? [primary, ...nextIds] : nextIds;
       const capped = ensured.slice(0, 4);
       if (capped.length >= 2) {
@@ -366,6 +368,7 @@ export default function OutcomesView() {
         if (primary) p.set('cohort', primary);
       } else {
         p.delete('cohorts');
+        if (primary) p.set('cohort', primary);
       }
       return p;
     });
@@ -647,10 +650,11 @@ export default function OutcomesView() {
           <button
             type="button"
             aria-label={t('outcomesCompareOpenDrawer')}
-            className="p-2 rounded hover:bg-gray-100"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
             onClick={() => setCompareOpen(true)}
           >
             <GitCompare className="w-4 h-4" />
+            <span>{t('outcomesCompareOpenDrawer')}</span>
           </button>
           <button
             type="button"
