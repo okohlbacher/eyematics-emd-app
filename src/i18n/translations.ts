@@ -314,7 +314,7 @@ const translations = {
   visusJump: { de: 'Sprung > 0.3', en: 'Jump > 0.3' },
 
   // Admin page
-  navAdmin: { de: 'Verwaltung', en: 'Administration' },
+  navAdmin: { de: 'Nutzer', en: 'Users' },
   adminTitle: { de: 'Nutzerverwaltung', en: 'User Management' },
   adminSubtitle: {
     de: 'Nutzerkonten anlegen, bearbeiten und entfernen',
@@ -794,6 +794,9 @@ const translations = {
     de: 'Sie haben sich mit einem Wiederherstellungscode angemeldet. Noch {N} Wiederherstellungscodes verbleibend. Wenden Sie sich an Ihren Administrator, um 2FA zurückzusetzen und sich bei Bedarf erneut anzumelden.',
     en: 'You logged in with a recovery code. {N} recovery codes remaining. Contact your administrator to reset 2FA and re-enroll if needed.',
   },
+  adminTotpStatus: { de: '2FA', en: '2FA' },
+  adminTotpEnabled: { de: 'Aktiv', en: 'Active' },
+  adminTotpDisabled: { de: 'Nicht eingerichtet', en: 'Not set up' },
   adminResetTotp: { de: '2FA zurücksetzen', en: 'Reset 2FA' },
   adminResetTotpConfirm: {
     de: '2FA für {username} zurücksetzen? Sie müssen sich bei der nächsten Anmeldung erneut registrieren.',

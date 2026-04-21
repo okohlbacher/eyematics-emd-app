@@ -502,21 +502,22 @@ export default function AdminPage() {
                 <SortHeader field="center" label={t('adminAssignedCenters')} />
                 <SortHeader field="createdAt" label={t('adminCreated')} />
                 <SortHeader field="lastLogin" label={t('adminLastLogin')} />
+                <th className="pb-3 font-medium text-center">{t('adminTotpStatus')}</th>
                 <th className="pb-3 font-medium" />
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-400">Loading…</td>
+                  <td colSpan={8} className="py-8 text-center text-gray-400">Loading…</td>
                 </tr>
               ) : loadError ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-red-500">{loadError}</td>
+                  <td colSpan={8} className="py-8 text-center text-red-500">{loadError}</td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-400">
+                  <td colSpan={8} className="py-8 text-center text-gray-400">
                     {t('noData')}
                   </td>
                 </tr>
@@ -558,6 +559,16 @@ export default function AdminPage() {
                             timeStyle: 'short',
                           })
                         : <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="py-3 text-center">
+                      {u.totpEnabled === true ? (
+                        <span className="inline-flex items-center gap-1 text-green-700 text-xs font-medium">
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          {t('adminTotpEnabled')}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-xs">{t('adminTotpDisabled')}</span>
+                      )}
                     </td>
                     <td className="py-3 text-right">
                       <div className="inline-flex items-center gap-2">
