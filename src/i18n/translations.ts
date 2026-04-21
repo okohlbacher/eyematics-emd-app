@@ -61,8 +61,8 @@ const translations = {
   loginContinue: { de: 'Weiter', en: 'Continue' },
   loginSubmit: { de: 'Anmelden', en: 'Log in' },
   loginDemoHint: {
-    de: 'Demo: admin/admin2025! oder forscher1/forscher2025! — OTP: 123456',
-    en: 'Demo: admin/admin2025! or forscher1/forscher2025! — OTP: 123456',
+    de: 'Demo: admin/admin oder forscher1/changeme2025!',
+    en: 'Demo: admin/admin or forscher1/changeme2025!',
   },
   login2faTitle: {
     de: 'Zwei-Faktor-Authentisierung: Bitte geben Sie den OTP-Code ein.',
@@ -317,8 +317,8 @@ const translations = {
   navAdmin: { de: 'Nutzer', en: 'Users' },
   adminTitle: { de: 'Nutzerverwaltung', en: 'User Management' },
   adminSubtitle: {
-    de: 'Nutzerkonten anlegen, bearbeiten und entfernen',
-    en: 'Create, edit, and remove user accounts',
+    de: 'Nutzerkonten anlegen und entfernen',
+    en: 'Create and remove user accounts',
   },
   adminUsers: { de: 'Registrierte Nutzer', en: 'Registered Users' },
   adminAddUser: { de: 'Nutzer anlegen', en: 'Add User' },
@@ -550,7 +550,7 @@ const translations = {
 
   // Settings: YAML export
   settingsExportYaml: { de: 'YAML exportieren', en: 'Export YAML' },
-  settingsFileHint: { de: 'Standardwerte werden aus settings.yaml geladen. Änderungen werden lokal im Browser gespeichert.', en: 'Defaults are loaded from settings.yaml. Changes are stored locally in the browser.' },
+  settingsFileHint: { de: 'Einstellungen werden in settings.yaml geladen und gespeichert.', en: 'Settings are loaded from and saved to settings.yaml.' },
 
   // Audit: settings changes
   audit_detail_change_2fa_enabled: { de: '2FA aktiviert', en: '2FA enabled' },
