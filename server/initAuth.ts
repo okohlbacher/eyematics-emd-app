@@ -68,6 +68,20 @@ export function initAuth(dataDir: string, settings: Record<string, unknown>): vo
     if (!_jwtSecret) {
       throw new Error('[initAuth] jwt-secret.txt exists but is empty — delete it to regenerate');
     }
+    // L10: re-verify file mode on every boot. If a prior deployment wrote it
+    // world-readable (or an operator loosened it), tighten back to 0o600 and
+    // warn. We do not fail hard — tightening is always a strict improvement.
+    if (process.platform !== 'win32') {
+      try {
+        const mode = fs.statSync(secretFile).mode & 0o777;
+        if (mode !== 0o600) {
+          fs.chmodSync(secretFile, 0o600);
+          console.warn(`[initAuth] jwt-secret.txt had mode 0o${mode.toString(8)}; tightened to 0o600`);
+        }
+      } catch (err) {
+        console.warn('[initAuth] could not verify jwt-secret.txt mode:', err instanceof Error ? err.message : err);
+      }
+    }
   } else {
     _jwtSecret = crypto.randomBytes(32).toString('hex');
     fs.writeFileSync(secretFile, _jwtSecret, { encoding: 'utf-8', mode: 0o600 });
@@ -84,6 +98,17 @@ export function initAuth(dataDir: string, settings: Record<string, unknown>): vo
   // Parse auth provider and initialize Keycloak if needed
   const provider = typeof settings.provider === 'string' ? settings.provider : 'local';
   if (provider === 'keycloak') {
+    // M7: reject provider=keycloak until the OIDC redirect/callback flow ships.
+    // The JWKS verification path is wired (authMiddleware RS256 branch), but the
+    // browser-side login flow that actually acquires a Keycloak-issued token is
+    // not yet implemented. Enabling this mode today yields an app that accepts
+    // tokens no client can obtain — leaving users locked out and /login returning
+    // 405. Fail fast at startup instead of half-starting.
+    throw new Error(
+      '[initAuth] provider=keycloak is not yet supported: the OIDC redirect flow has not shipped. ' +
+      'Set auth.provider=local in settings.yaml until the redirect flow is available.',
+    );
+    // eslint-disable-next-line no-unreachable
     const kc = (settings.keycloak ?? {}) as Record<string, unknown>;
     if (typeof kc.issuer !== 'string' || !kc.issuer) {
       throw new Error('[initAuth] keycloak.issuer is required when provider=keycloak');

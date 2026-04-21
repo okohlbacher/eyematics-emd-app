@@ -50,6 +50,14 @@ export function invalidateByCohort(cohortId: string): void {
   }
 }
 
+/**
+ * M4: Drop every cached aggregate. Called after a settings write so stale
+ * responses can't outlive a threshold or secret change.
+ */
+export function invalidateAllAggregates(): void {
+  _cache.clear();
+}
+
 /** Test-only reset. */
 export function _resetForTesting(): void {
   _cache = new Map();

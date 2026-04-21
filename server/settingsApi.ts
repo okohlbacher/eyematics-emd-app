@@ -17,7 +17,17 @@ import yaml from 'js-yaml';
 import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
 import { SETTINGS_FILE } from './constants.js';
 import { invalidateFhirCache } from './fhirApi.js';
+import { initHashCohortId } from './hashCohortId.js';
 import { updateAuthConfig } from './initAuth.js';
+import { initOutcomesAggregateCache, invalidateAllAggregates } from './outcomesAggregateCache.js';
+
+// M4: DATA_DIR is required to re-init the cohort-hash secret (file-based path).
+// Captured at server boot via configureSettingsApi so the PUT handler can pass
+// it through to initHashCohortId without reading it from settings on every call.
+let _dataDir: string | null = null;
+export function configureSettingsApi(dataDir: string): void {
+  _dataDir = dataDir;
+}
 
 // ---------------------------------------------------------------------------
 // Shared core logic
@@ -141,7 +151,15 @@ settingsApiRouter.put('/', (req: Request, res: Response): void => {
   }
   try {
     writeSettings(body, req.auth!.preferred_username);
-    updateAuthConfig(parsed as Record<string, unknown>);
+    const parsedObj = parsed as Record<string, unknown>;
+    updateAuthConfig(parsedObj);
+    // M4: refresh cohort-hash secret (honors a rotated settings.audit.cohortHashSecret
+    // or a newly dropped-in data/cohort-hash-secret.txt) and re-read the aggregate
+    // cache TTL. Drop all cached aggregates so responses can't outlive the config
+    // snapshot they were computed under — cheap because the cache is small.
+    if (_dataDir) initHashCohortId(parsedObj, _dataDir);
+    initOutcomesAggregateCache(parsedObj);
+    invalidateAllAggregates();
     res.json({ ok: true });
   } catch (err) {
     console.error('[settings-api] Failed to write settings:', err);

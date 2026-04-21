@@ -47,7 +47,7 @@ import { initAuth } from './initAuth.js';
 import { issueApiRouter } from './issueApi.js';
 import { outcomesAggregateRouter } from './outcomesAggregateApi.js';
 import { initOutcomesAggregateCache } from './outcomesAggregateCache.js';
-import { settingsApiRouter } from './settingsApi.js';
+import { configureSettingsApi, settingsApiRouter } from './settingsApi.js';
 
 // ---------------------------------------------------------------------------
 // 1. Read settings.yaml at startup (fail fast)
@@ -127,6 +127,10 @@ initHashCohortId(settings, DATA_DIR);
 
 // Phase 12 — load aggregate cache TTL from outcomes section (defaults to 30 min)
 initOutcomesAggregateCache(settings);
+
+// M4: thread DATA_DIR into settingsApi so PUT /api/settings can re-init the
+// cohort-hash secret (file-based path) after a settings write.
+configureSettingsApi(DATA_DIR);
 
 // ---------------------------------------------------------------------------
 // 4. initAuditDb — open/create SQLite audit database
