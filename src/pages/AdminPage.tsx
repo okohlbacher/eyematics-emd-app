@@ -1,4 +1,4 @@
-import { ArrowUpDown, Building2, CheckCircle,Database, Filter, Microscope, Search, Shield, ShieldCheck, Stethoscope, Trash2, UserPlus } from 'lucide-react';
+import { ArrowUpDown, Building2, CheckCircle, Database, Filter, Microscope, Pencil, Search, Shield, ShieldCheck, Stethoscope, Trash2, UserPlus, X } from 'lucide-react';
 import { useCallback,useEffect, useMemo, useState } from 'react';
 
 import type { UserRole } from '../context/AuthContext';
@@ -67,6 +67,12 @@ export default function AdminPage() {
   const [role, setRole] = useState<UserRole>('researcher');
   const [selectedCenters, setSelectedCenters] = useState<string[]>([]);
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+
+  const [editUsername, setEditUsername] = useState<string | null>(null);
+  const [editFirstName, setEditFirstName] = useState('');
+  const [editLastName, setEditLastName] = useState('');
+  const [editRole, setEditRole] = useState<UserRole>('researcher');
+  const [editCenters, setEditCenters] = useState<string[]>([]);
 
   // Search, filter, sort state
   const [searchQuery, setSearchQuery] = useState('');
@@ -249,6 +255,45 @@ export default function AdminPage() {
     } catch (err) {
       console.error('[AdminPage] Failed to delete user:', err);
     }
+  };
+
+  const startEdit = (u: ServerUser) => {
+    setEditUsername(u.username);
+    setEditFirstName(u.firstName ?? '');
+    setEditLastName(u.lastName ?? '');
+    setEditRole(u.role);
+    setEditCenters(u.centers ?? []);
+  };
+
+  const cancelEdit = () => setEditUsername(null);
+
+  const handleEditSave = async () => {
+    if (!editUsername) return;
+    try {
+      const resp = await authFetch(`/api/auth/users/${encodeURIComponent(editUsername)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: editFirstName.trim() || undefined,
+          lastName: editLastName.trim() || undefined,
+          role: editRole,
+          centers: editCenters,
+        }),
+      });
+      if (resp.ok) {
+        setEditUsername(null);
+        await loadUsers();
+      } else {
+        const err = await resp.json() as { error: string };
+        alert(err.error ?? 'Failed to update user');
+      }
+    } catch (err) {
+      console.error('[AdminPage] Failed to update user:', err);
+    }
+  };
+
+  const toggleEditCenter = (c: string) => {
+    setEditCenters((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]);
   };
 
   const SortHeader = ({ field, label }: { field: SortField; label: string }) => (
@@ -503,62 +548,142 @@ export default function AdminPage() {
                 </tr>
               ) : (
                 filteredUsers.map((u) => (
-                  <tr key={u.username} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="py-3 font-medium text-gray-900 dark:text-gray-100">{u.username}</td>
-                    <td className="py-3 text-gray-600 dark:text-gray-300">
-                      {u.firstName || u.lastName
-                        ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim()
-                        : <span className="text-gray-300">—</span>}
-                    </td>
-                    <td className="py-3">
-                      <span className="inline-flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
-                        {getRoleIcon(u.role)}
-                        {getRoleLabel(u.role, t)}
-                      </span>
-                    </td>
-                    <td className="py-3 text-gray-600 dark:text-gray-300">
-                      {u.centers && u.centers.length > 0 ? (
+                  editUsername === u.username ? (
+                    <tr key={u.username} className="border-b border-blue-100 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-900/10">
+                      <td className="py-3 font-medium text-gray-900 dark:text-gray-100">{u.username}</td>
+                      <td className="py-2" colSpan={2}>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={editFirstName}
+                            onChange={(e) => setEditFirstName(e.target.value)}
+                            placeholder={t('adminFirstName')}
+                            className="w-28 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <input
+                            type="text"
+                            value={editLastName}
+                            onChange={(e) => setEditLastName(e.target.value)}
+                            placeholder={t('adminLastName')}
+                            className="w-28 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <select
+                            value={editRole}
+                            onChange={(e) => setEditRole(e.target.value as UserRole)}
+                            className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="researcher">{t('roleResearcher')}</option>
+                            <option value="admin">{t('roleAdmin')}</option>
+                            <option value="epidemiologist">{t('roleEpidemiologist')}</option>
+                            <option value="clinician">{t('roleClinician')}</option>
+                            <option value="data_manager">{t('roleDataManager')}</option>
+                            <option value="clinic_lead">{t('roleClinicLead')}</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td className="py-2">
                         <div className="flex flex-wrap gap-1">
-                          {u.centers.map((c) => (
-                            <span key={c} className="inline-block px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 rounded text-xs font-medium">
-                              {centerLabels[c] ?? c}
-                            </span>
+                          {centerOptions.map((c) => (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => toggleEditCenter(c.id)}
+                              className={`px-2 py-0.5 text-xs rounded border transition-colors ${
+                                editCenters.includes(c.id)
+                                  ? 'bg-blue-50 border-blue-300 text-blue-700 font-medium'
+                                  : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                              }`}
+                            >
+                              {c.label}
+                            </button>
                           ))}
                         </div>
-                      ) : (
-                        <span className="text-gray-300">—</span>
-                      )}
-                    </td>
-                    <td className="py-3 text-gray-600 dark:text-gray-300">
-                      {new Date(u.createdAt).toLocaleDateString(dateFmt)}
-                    </td>
-                    <td className="py-3 text-gray-600 dark:text-gray-300">
-                      {u.lastLogin
-                        ? new Date(u.lastLogin).toLocaleString(dateFmt, {
-                            dateStyle: 'short',
-                            timeStyle: 'short',
-                          })
-                        : <span className="text-gray-300">—</span>}
-                    </td>
-                    <td className="py-3 text-right">
-                      {u.username === user.username ? (
-                        <span
-                          className="text-gray-400 cursor-not-allowed inline-flex items-center gap-1"
-                          title={t('adminNoDelete')}
-                        >
-                          <Trash2 className="w-4 h-4" />
+                      </td>
+                      <td className="py-2 text-gray-600 dark:text-gray-300">
+                        {new Date(u.createdAt).toLocaleDateString(dateFmt)}
+                      </td>
+                      <td />
+                      <td className="py-2 text-right">
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            onClick={() => void handleEditSave()}
+                            className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                          >
+                            {t('save')}
+                          </button>
+                          <button onClick={cancelEdit} className="text-gray-400 hover:text-gray-600">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={u.username} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="py-3 font-medium text-gray-900 dark:text-gray-100">{u.username}</td>
+                      <td className="py-3 text-gray-600 dark:text-gray-300">
+                        {u.firstName || u.lastName
+                          ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim()
+                          : <span className="text-gray-300">—</span>}
+                      </td>
+                      <td className="py-3">
+                        <span className="inline-flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
+                          {getRoleIcon(u.role)}
+                          {getRoleLabel(u.role, t)}
                         </span>
-                      ) : (
-                        <button
-                          onClick={() => void handleDelete(u.username)}
-                          className="text-red-500 hover:text-red-700 inline-flex items-center gap-1"
-                          title={t('delete')}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="py-3 text-gray-600 dark:text-gray-300">
+                        {u.centers && u.centers.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {u.centers.map((c) => (
+                              <span key={c} className="inline-block px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 rounded text-xs font-medium">
+                                {centerLabels[c] ?? c}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 text-gray-600 dark:text-gray-300">
+                        {new Date(u.createdAt).toLocaleDateString(dateFmt)}
+                      </td>
+                      <td className="py-3 text-gray-600 dark:text-gray-300">
+                        {u.lastLogin
+                          ? new Date(u.lastLogin).toLocaleString(dateFmt, {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            })
+                          : <span className="text-gray-300">—</span>}
+                      </td>
+                      <td className="py-3 text-right">
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            onClick={() => startEdit(u)}
+                            className="text-gray-400 hover:text-blue-600"
+                            title={t('edit')}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          {u.username === user.username ? (
+                            <span
+                              className="text-gray-300 cursor-not-allowed"
+                              title={t('adminNoDelete')}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => void handleDelete(u.username)}
+                              className="text-red-500 hover:text-red-700"
+                              title={t('delete')}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
                 ))
               )}
             </tbody>

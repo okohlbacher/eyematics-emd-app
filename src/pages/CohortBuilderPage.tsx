@@ -454,6 +454,9 @@ export default function CohortBuilderPage() {
 
             {/* Save search */}
             <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
+                {t('saveCohortLabel')}
+              </p>
               <div className="flex gap-2">
                 <input
                   type="text"

@@ -399,6 +399,62 @@ authApiRouter.delete('/users/:username', async (req: Request, res: Response): Pr
 });
 
 /**
+ * PUT /api/auth/users/:username
+ *
+ * Update a user's profile (firstName, lastName, role, centers). Admin only.
+ * Username and passwordHash are immutable via this endpoint.
+ */
+authApiRouter.put('/users/:username', async (req: Request, res: Response): Promise<void> => {
+  if (!req.auth || req.auth.role !== 'admin') {
+    res.status(403).json({ error: 'Admin access required' });
+    return;
+  }
+
+  const target = String(req.params.username ?? '');
+  const { role, centers, firstName, lastName } = req.body as Record<string, unknown>;
+
+  // Validate role against allowlist
+  if (role !== undefined && (typeof role !== 'string' || !VALID_ROLES.has(role))) {
+    res.status(400).json({ error: `Invalid role. Must be one of: ${[...VALID_ROLES].join(', ')}` });
+    return;
+  }
+
+  // Validate centers against allowlist
+  const rawCenters = Array.isArray(centers) ? centers.filter((c): c is string => typeof c === 'string') : undefined;
+  if (rawCenters !== undefined) {
+    const validCenterIds = getValidCenterIds();
+    const invalidCenters = rawCenters.filter((c) => !validCenterIds.has(c));
+    if (invalidCenters.length > 0) {
+      res.status(400).json({ error: `Invalid center codes: ${invalidCenters.join(', ')}` });
+      return;
+    }
+  }
+
+  let updated: UserRecord | undefined;
+  try {
+    await modifyUsers((users) => {
+      const user = users.find((u) => u.username.toLowerCase() === target.toLowerCase());
+      if (!user) throw new Error('USER_NOT_FOUND');
+      if (role !== undefined && typeof role === 'string') user.role = role;
+      if (rawCenters !== undefined) user.centers = rawCenters;
+      if (typeof firstName === 'string') user.firstName = firstName.trim() || undefined;
+      if (typeof lastName === 'string') user.lastName = lastName.trim() || undefined;
+      updated = user;
+      return users;
+    });
+  } catch (err) {
+    if (err instanceof Error && err.message === 'USER_NOT_FOUND') {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    throw err;
+  }
+
+  const { passwordHash: _omit, ...safeUser } = updated!;
+  res.json({ user: safeUser });
+});
+
+/**
  * PUT /api/auth/users/:username/password
  *
  * Reset a user's password (USER-11, D-03). Admin only.
