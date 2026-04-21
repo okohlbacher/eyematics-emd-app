@@ -56,7 +56,7 @@ const PUBLIC_PATHS = ['/api/auth/login', '/api/auth/verify', '/api/auth/config']
  */
 function verifyLocalToken(token: string, req: Request, res: Response, next: NextFunction): void {
   try {
-    const payload = jwt.verify(token, getJwtSecret()) as AuthPayload;
+    const payload = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] }) as AuthPayload;
     if (payload.purpose === 'challenge') {
       res.status(401).json({ error: 'Challenge tokens cannot be used for authentication' });
       return;

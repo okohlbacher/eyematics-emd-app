@@ -127,6 +127,35 @@ describe('authMiddleware (local HS256)', () => {
       expect(res.body.error).toContain('Challenge tokens');
     });
 
+    it('rejects "none"-algorithm tokens (H2 / algorithm pin)', async () => {
+      const app = createApp();
+      // Craft an unsigned alg:none JWT
+      const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
+      const body = Buffer.from(JSON.stringify({
+        sub: 'admin', preferred_username: 'admin', role: 'admin', centers: [],
+        exp: Math.floor(Date.now() / 1000) + 600,
+      })).toString('base64url');
+      const token = `${header}.${body}.`;
+      const res = await request(app)
+        .get('/api/protected')
+        .set('Authorization', `Bearer ${token}`);
+      expect(res.status).toBe(401);
+    });
+
+    it('rejects tokens signed with non-allowed algorithms (H2)', async () => {
+      const app = createApp();
+      // Sign with HS384 while the middleware only accepts HS256
+      const token = jwt.sign(
+        { sub: 'admin', preferred_username: 'admin', role: 'admin', centers: [] },
+        TEST_SECRET,
+        { algorithm: 'HS384', expiresIn: '10m' },
+      );
+      const res = await request(app)
+        .get('/api/protected')
+        .set('Authorization', `Bearer ${token}`);
+      expect(res.status).toBe(401);
+    });
+
     it('returns 401 without Bearer prefix', async () => {
       const app = createApp();
       const token = signToken({ sub: 'admin', preferred_username: 'admin', role: 'admin', centers: [] });
