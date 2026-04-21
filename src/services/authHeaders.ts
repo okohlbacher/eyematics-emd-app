@@ -16,13 +16,18 @@ export function getAuthHeaders(): Record<string, string> {
  * Use this instead of raw fetch() for all authenticated API calls.
  */
 export async function authFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const headers = { ...getAuthHeaders(), ...(init?.headers as Record<string, string> ?? {}) };
+  const authHeaders = getAuthHeaders();
+  // Capture at REQUEST time whether we had a session token.
+  // A 401 on a request that was sent WITHOUT a token is expected (e.g. during
+  // TOTP enrollment before the session is established) and must not trigger a
+  // hard redirect — that would destroy the enrollment flow mid-flight.
+  const sentWithToken = 'Authorization' in authHeaders;
+  const headers = { ...authHeaders, ...(init?.headers as Record<string, string> ?? {}) };
   const resp = await fetch(input, { ...init, headers });
 
   if (resp.status === 401) {
     sessionStorage.removeItem('emd-token');
-    // Only redirect if not already on the login page
-    if (!window.location.pathname.includes('/login')) {
+    if (sentWithToken && !window.location.pathname.includes('/login')) {
       window.location.href = '/login';
     }
   }

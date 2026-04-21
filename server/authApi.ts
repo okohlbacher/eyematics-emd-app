@@ -543,8 +543,8 @@ authApiRouter.get('/users', (req: Request, res: Response): void => {
     res.status(403).json({ error: 'Admin access required' });
     return;
   }
-  const users = loadUsers().map(({ username, firstName, lastName, role, centers, createdAt, lastLogin }) => ({
-    username, firstName, lastName, role, centers, createdAt, lastLogin,
+  const users = loadUsers().map(({ username, firstName, lastName, role, centers, createdAt, lastLogin, totpEnabled }) => ({
+    username, firstName, lastName, role, centers, createdAt, lastLogin, totpEnabled: totpEnabled === true,
   }));
   res.json({ users });
 });

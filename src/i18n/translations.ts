@@ -462,6 +462,9 @@ const translations = {
   audit_action_view_doc_quality: { de: 'Dokumentationsqualität', en: 'Documentation Quality' },
   audit_action_export_data: { de: 'Datenexport', en: 'Data Export' },
   audit_action_data_access: { de: 'Datenzugriff', en: 'Data Access' },
+  audit_action_totp_enroll: { de: '2FA-Einrichtung gestartet', en: '2FA Setup Started' },
+  audit_action_totp_enrolled: { de: '2FA eingerichtet', en: '2FA Enrolled' },
+  audit_action_totp_reset: { de: '2FA zurückgesetzt', en: '2FA Reset' },
   audit_action_unknown: { de: 'Sonstige Aktion', en: 'Other Action' },
 
   // Audit detail messages (with {0}, {1} placeholders)
@@ -803,7 +806,9 @@ const translations = {
 export type TranslationKey = keyof typeof translations;
 
 export function t(key: TranslationKey, locale: Locale): string {
-  return translations[key][locale];
+  // Defensive: guard against HMR race conditions where a component hot-reloads
+  // before translations.ts, causing translations[key] to be transiently undefined.
+  return translations[key]?.[locale] ?? String(key);
 }
 
 export { translations };

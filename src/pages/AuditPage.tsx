@@ -33,7 +33,11 @@ function describeAction(method: string, path: string, t: TranslationFn): string 
   if (method === 'POST' && path === '/api/auth/login') return t('audit_action_login');
   if (method === 'POST' && path === '/api/auth/verify') return t('audit_action_login');
   if (method === 'POST' && path === '/api/auth/users') return t('audit_action_create_user');
+  if (method === 'DELETE' && path.endsWith('/totp')) return t('audit_action_totp_reset');
   if (method === 'DELETE' && path.startsWith('/api/auth/users/')) return t('audit_action_delete_user');
+  // TOTP enrollment steps
+  if (method === 'POST' && path === '/api/auth/totp/enroll') return t('audit_action_totp_enroll');
+  if (method === 'POST' && path === '/api/auth/totp/confirm') return t('audit_action_totp_enrolled');
   // Settings
   if (method === 'PUT' && path === '/api/settings') return t('audit_action_update_settings');
   if (method === 'GET' && path === '/api/settings') return t('audit_action_view_settings');

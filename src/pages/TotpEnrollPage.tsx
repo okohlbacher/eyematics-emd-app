@@ -1,10 +1,9 @@
+import { Shield } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { Shield } from 'lucide-react';
-
+import RecoveryCodesPanel from '../components/RecoveryCodesPanel';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import RecoveryCodesPanel from '../components/RecoveryCodesPanel';
 
 type Phase = 'loading' | 'scan' | 'recovery';
 
