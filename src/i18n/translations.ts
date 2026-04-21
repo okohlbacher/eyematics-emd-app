@@ -501,6 +501,22 @@ const translations = {
   auditFilteredOf: { de: 'von', en: 'of' },
   auditRefresh: { de: 'Aktualisieren', en: 'Refresh' },
 
+  // Phase 17: audit log filter panel + theme toggle (VIS-01)
+  themeLight: { de: 'Zum hellen Modus wechseln', en: 'Switch to light mode' },
+  themeDark: { de: 'Zum dunklen Modus wechseln', en: 'Switch to dark mode' },
+  themeSystem: { de: 'Systemdesign verwenden', en: 'Use system theme' },
+  auditFilterUser: { de: 'Benutzer', en: 'User' },
+  auditFilterAllUsers: { de: 'Alle Benutzer', en: 'All users' },
+  auditFilterCategory: { de: 'Kategorie', en: 'Category' },
+  auditFilterAllCategories: { de: 'Alle Kategorien', en: 'All categories' },
+  auditCategoryData: { de: 'Daten', en: 'Data' },
+  auditCategoryOutcomes: { de: 'Outcomes', en: 'Outcomes' },
+  auditFilterFrom: { de: 'Von', en: 'From' },
+  auditFilterTo: { de: 'Bis', en: 'To' },
+  auditFilterCohortHash: { de: 'Kohorten-Hash suchen\u2026', en: 'Search cohort hash\u2026' },
+  auditFilterFailuresOnly: { de: 'Nur Fehler', en: 'Failures only' },
+  auditEmptyFiltered: { de: 'Keine Audit-Eintr\u00e4ge entsprechen Ihren Filtern.', en: 'No audit entries match your filters.' },
+
   // Quality review actions
   markAsReviewed: { de: 'Als geprüft markieren', en: 'Mark as reviewed' },
   unmarkReviewed: { de: 'Prüfung aufheben', en: 'Unmark reviewed' },
