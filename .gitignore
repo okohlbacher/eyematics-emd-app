@@ -28,3 +28,7 @@ dist-ssr
 
 # Claude Code local config
 .claude/
+
+# Per-host secrets (auto-generated on first launch — never commit)
+data/jwt-secret.txt
+data/cohort-hash-secret.txt

@@ -69,7 +69,7 @@ beforeEach(() => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'auditapi-test-'));
   initAuditDb(tmpDir);
   _resetHashCohortId();
-  initHashCohortId({ audit: { cohortHashSecret: 'test-cohort-hash-secret-32-chars-min-xxx' } });
+  initHashCohortId({ audit: { cohortHashSecret: 'x'.repeat(64) } });
   seedEntries();
 });
 
@@ -220,7 +220,7 @@ describe('Phase 17 audit API params', () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'auditapi-p17-test-'));
     initAuditDb(tmpDir);
     _resetHashCohortId();
-    initHashCohortId({ audit: { cohortHashSecret: 'test-cohort-hash-secret-32-chars-min-xxx' } });
+    initHashCohortId({ audit: { cohortHashSecret: 'x'.repeat(64) } });
     // Seed entries covering auth, data, admin, outcomes categories + needle body
     const entries = [
       { path: '/api/auth/login', method: 'POST', status: 200, body: null, query: null, user: 'admin' },

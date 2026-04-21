@@ -19,18 +19,87 @@
  */
 
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 
 let _secret: string | null = null;
 
-export function initHashCohortId(settings: Record<string, unknown>): void {
+/**
+ * Secret values we ship in this repo or know to be unsafe defaults.
+ * Any of these appearing in settings.yaml must fail-closed — they
+ * would otherwise pass the length guard and let a deployment ship a
+ * publicly known HMAC key (C4 / T-11-03 hardened).
+ */
+const KNOWN_DEFAULT_SECRETS = new Set<string>([
+  'dev-cohort-hash-secret-please-replace-in-prod-xxxxxxxxxxxxxx',
+  'changeme',
+  'please-change-me',
+]);
+
+/**
+ * Initialize the cohort-id HMAC secret.
+ *
+ * Precedence:
+ *   1. `data/cohort-hash-secret.txt` — generated on first launch (mode 0o600).
+ *      This is the canonical source so no deployment accidentally ships the
+ *      repo's placeholder value.
+ *   2. `settings.audit.cohortHashSecret` — honored only if the file does not
+ *      exist AND the value is not in KNOWN_DEFAULT_SECRETS AND is ≥64 chars.
+ *      (v1.7+: new deployments use the file; the settings-key path is kept
+ *      for backward compatibility with existing sites that already rotated
+ *      to a strong secret in settings.yaml.)
+ *
+ * If neither source yields a usable secret, a fresh 256-bit secret is
+ * generated and persisted to `data/cohort-hash-secret.txt`.
+ */
+export function initHashCohortId(settings: Record<string, unknown>, dataDir?: string): void {
+  // Path-1: file on disk takes precedence
+  if (dataDir) {
+    const secretFile = path.join(dataDir, 'cohort-hash-secret.txt');
+    if (fs.existsSync(secretFile)) {
+      const fromFile = fs.readFileSync(secretFile, 'utf-8').trim();
+      if (!fromFile) {
+        throw new Error('[hashCohortId] cohort-hash-secret.txt exists but is empty — delete it to regenerate');
+      }
+      if (fromFile.length < 32) {
+        throw new Error('[hashCohortId] FATAL: cohort-hash-secret.txt must contain at least 32 chars');
+      }
+      _secret = fromFile;
+      return;
+    }
+  }
+
+  // Path-2: settings.yaml value (legacy)
   const auditSection = (settings.audit ?? {}) as Record<string, unknown>;
-  const secret = auditSection.cohortHashSecret;
-  if (typeof secret !== 'string' || secret.length < 32) {
+  const fromSettings = auditSection.cohortHashSecret;
+  if (typeof fromSettings === 'string' && fromSettings.length > 0) {
+    if (KNOWN_DEFAULT_SECRETS.has(fromSettings)) {
+      throw new Error(
+        '[hashCohortId] FATAL: settings.audit.cohortHashSecret is a known placeholder value. ' +
+        'Delete it from settings.yaml and restart — a strong secret will be auto-generated at data/cohort-hash-secret.txt.',
+      );
+    }
+    if (fromSettings.length < 64) {
+      throw new Error(
+        '[hashCohortId] FATAL: settings.audit.cohortHashSecret must be at least 64 chars (256-bit hex). ' +
+        'Remove it from settings.yaml to use the auto-generated file-based secret instead.',
+      );
+    }
+    _secret = fromSettings;
+    return;
+  }
+
+  // Path-3: auto-generate — requires dataDir
+  if (!dataDir) {
     throw new Error(
-      '[hashCohortId] FATAL: settings.audit.cohortHashSecret is required and must be a string of at least 32 characters',
+      '[hashCohortId] FATAL: no cohort hash secret found and no dataDir supplied for auto-generation',
     );
   }
-  _secret = secret;
+  const generated = crypto.randomBytes(32).toString('hex');
+  const secretFile = path.join(dataDir, 'cohort-hash-secret.txt');
+  fs.writeFileSync(secretFile, generated, { encoding: 'utf-8', mode: 0o600 });
+  console.log(`[hashCohortId] Generated new cohort-hash secret at ${secretFile}`);
+  _secret = generated;
 }
 
 export function hashCohortId(id: string): string {

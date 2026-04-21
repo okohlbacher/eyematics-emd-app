@@ -119,8 +119,11 @@ initCenters(DATA_DIR);
 // initAuth: loads/generates JWT secret, migrates users.json to add bcrypt hashes
 initAuth(DATA_DIR, settings);
 
-// Phase 11 / D-05 / D-06 — initialize cohort-id hash secret (fail-fast if missing)
-initHashCohortId(settings);
+// Phase 11 / D-05 / D-06 — initialize cohort-id hash secret.
+// C4 hardening: file-based secret (data/cohort-hash-secret.txt) takes precedence
+// over settings.yaml, known-default placeholder values are rejected, and a
+// 256-bit secret is auto-generated on first launch.
+initHashCohortId(settings, DATA_DIR);
 
 // Phase 12 — load aggregate cache TTL from outcomes section (defaults to 30 min)
 initOutcomesAggregateCache(settings);

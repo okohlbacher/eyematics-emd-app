@@ -11,8 +11,8 @@ import {
   initHashCohortId,
 } from '../server/hashCohortId.js';
 
-const VALID_SECRET = 'deterministic-test-secret-32-chars-minimum-xxxxx';
-const OTHER_SECRET = 'different-test-secret-32-chars-minimum-abcdefgh';
+const VALID_SECRET = 'a'.repeat(64);
+const OTHER_SECRET = 'b'.repeat(64);
 
 beforeEach(() => {
   _resetForTesting();
@@ -34,14 +34,22 @@ describe('hashCohortId', () => {
     expect(hashCohortId('abc')).toMatch(/^[0-9a-f]{16}$/);
   });
 
-  it('throws if secret missing (T-11-03)', () => {
-    expect(() => initHashCohortId({})).toThrow(/cohortHashSecret/);
+  it('throws if secret missing and no dataDir for auto-generation (T-11-03)', () => {
+    expect(() => initHashCohortId({})).toThrow(/no cohort hash secret|cohortHashSecret/);
   });
 
-  it('throws if secret shorter than 32 chars (T-11-03)', () => {
+  it('throws if secret shorter than 64 chars (C4 hardening)', () => {
     expect(() => initHashCohortId({ audit: { cohortHashSecret: 'short' } })).toThrow(
       /cohortHashSecret/,
     );
+  });
+
+  it('rejects the repo placeholder value (C4 denylist)', () => {
+    expect(() =>
+      initHashCohortId({
+        audit: { cohortHashSecret: 'dev-cohort-hash-secret-please-replace-in-prod-xxxxxxxxxxxxxx' },
+      }),
+    ).toThrow(/placeholder/);
   });
 
   it('throws if hashCohortId called before initHashCohortId', () => {
