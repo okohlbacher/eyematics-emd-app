@@ -180,10 +180,10 @@ export default function AnalysisPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-8 dark:bg-gray-900 min-h-screen">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{t('analysisTitle')}</h1>
-        <p className="text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('analysisTitle')}</h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">
           {cohort.length} {t('casesInCohort')}
           {criticalCount > 0 && (
             <span className="ml-3 text-red-600 font-medium">
@@ -197,7 +197,7 @@ export default function AnalysisPage() {
       <div
         role="tablist"
         aria-label={t('analysisTitle')}
-        className="mb-6 flex gap-2 border-b border-gray-200"
+        className="mb-6 flex gap-2 border-b border-gray-200 dark:border-gray-700"
       >
         {tabButton('aggregate', t('analysisTabAggregate'))}
         {tabButton('trajectories', t('analysisTabTrajectories'))}
@@ -221,8 +221,8 @@ export default function AnalysisPage() {
           className="grid grid-cols-2 gap-6"
         >
         {/* Center distribution */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="font-semibold text-gray-900 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
             {t('centerDistribution')}
           </h3>
           <ResponsiveContainer width="100%" height={250}>
@@ -237,8 +237,8 @@ export default function AnalysisPage() {
         </div>
 
         {/* Diagnosis distribution */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="font-semibold text-gray-900 mb-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
             {t('diagnosisDistribution')}
           </h3>
           <p className="text-xs text-gray-400 mb-2">{t('diagnosisHoverHint')}</p>
@@ -275,8 +275,8 @@ export default function AnalysisPage() {
         </div>
 
         {/* Temporal visus trend */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="font-semibold text-gray-900 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
             {t('visusTrend')}
           </h3>
           <ResponsiveContainer width="100%" height={250}>
@@ -302,8 +302,8 @@ export default function AnalysisPage() {
         </div>
 
         {/* CRT distribution */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="font-semibold text-gray-900 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
             {t('crtDistribution')}
           </h3>
           <ResponsiveContainer width="100%" height={250}>
@@ -319,7 +319,7 @@ export default function AnalysisPage() {
 
         {/* Age vs Visus scatter */}
         <div className="bg-white rounded-xl border border-gray-200 p-5 col-span-2">
-          <h3 className="font-semibold text-gray-900 mb-4">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
             {t('ageVsVisus')}
           </h3>
           <ResponsiveContainer width="100%" height={280}>

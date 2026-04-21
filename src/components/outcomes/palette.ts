@@ -48,6 +48,18 @@ export const DARK_EYE_COLORS: { OD: string; OS: string; 'OD+OS': string } = {
   'OD+OS': '#c4b5fd', // violet-300 — ≈ 8.2:1 vs #111827
 };
 
+/**
+ * Dark-mode cross-cohort categorical palette.
+ * Each entry >= 3.0:1 (graphical threshold) against #111827.
+ * Contrast ratios: emerald-300 ≈ 7.4:1, amber-300 ≈ 11.2:1, cyan-300 ≈ 8.3:1, fuchsia-300 ≈ 7.1:1.
+ */
+export const DARK_COHORT_PALETTES: readonly string[] = [
+  '#6ee7b7', // emerald-300
+  '#fcd34d', // amber-300
+  '#67e8f9', // cyan-300
+  '#f0abfc', // fuchsia-300
+] as const;
+
 /** Relative luminance per WCAG 2.1 (sRGB). `hex` is 6-digit `#rrggbb`. */
 export function relativeLuminance(hex: string): number {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);

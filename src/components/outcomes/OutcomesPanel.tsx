@@ -11,9 +11,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useThemeSafe } from '../../context/ThemeContext';
 import type { AxisMode, GridPoint, PanelResult, YMetric } from '../../utils/cohortTrajectory';
 import OutcomesTooltip from './OutcomesTooltip';
-import { SERIES_STYLES } from './palette';
+import { DARK_EYE_COLORS, EYE_COLORS, SERIES_STYLES } from './palette';
 
 type LayerState = {
   median: boolean;
@@ -87,6 +88,25 @@ export default function OutcomesPanel({
   metric = 'visus',
   cohortSeries,
 }: Props) {
+  const { effectiveTheme } = useThemeSafe();
+  const isDark = effectiveTheme === 'dark';
+  const chartColors = {
+    grid:         isDark ? '#374151' : '#e5e7eb', // gray-700 / gray-200
+    axisTick:     isDark ? '#9ca3af' : '#6b7280', // gray-400 / gray-500
+    axisLabel:    isDark ? '#d1d5db' : '#374151', // gray-300 / gray-700
+    legend:       isDark ? '#d1d5db' : '#374151',
+    tooltipBg:    isDark ? '#1f2937' : '#ffffff',
+    tooltipText:  isDark ? '#f3f4f6' : '#111827',
+    tooltipBorder: isDark ? '#374151' : '#e5e7eb',
+  };
+  // Select eye color palette based on theme
+  const eyeColors = isDark ? DARK_EYE_COLORS : EYE_COLORS;
+  const resolvedColor = eye === 'od' ? eyeColors.OD : eye === 'os' ? eyeColors.OS : eyeColors['OD+OS'];
+  // Use resolved theme color unless caller passes an explicit cohort-compare color
+  const seriesColor = color !== eyeColors.OD && color !== eyeColors.OS && color !== eyeColors['OD+OS']
+    ? color  // explicit cohort compare color from caller — use as-is
+    : resolvedColor;
+
   const subtitle = `${panel.summary.patientCount} · ${panel.summary.measurementCount}`;
   // CRT tooltip value label key — passed to OutcomesTooltip for µm unit display
   const valueLabelKey = metric === 'crt'
@@ -107,12 +127,12 @@ export default function OutcomesPanel({
     return (
       <div
         data-testid={`outcomes-panel-${eye}`}
-        className="bg-white rounded-xl border border-gray-200 p-5"
+        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
       >
-        <h3 className="text-base font-semibold text-gray-900">{t(titleKey)}</h3>
-        <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t(titleKey)}</h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
         <div className="h-80 flex items-center justify-center">
-          <p className="text-sm text-gray-400">{t('outcomesPanelEmpty')}</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">{t('outcomesPanelEmpty')}</p>
         </div>
       </div>
     );
@@ -135,12 +155,12 @@ export default function OutcomesPanel({
   return (
     <div
       data-testid={`outcomes-panel-${eye}`}
-      className="bg-white rounded-xl border border-gray-200 p-5"
+      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
       role="img"
       aria-label={`${t(titleKey)} — ${panel.summary.patientCount} ${t('outcomesCardPatients')}`}
     >
-      <h3 className="text-base font-semibold text-gray-900">{t(titleKey)}</h3>
-      <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t(titleKey)}</h3>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
 
       {/* IQR marker: conditionally rendered div for test 10 assertion (presence/absence).
           Recharts does not accept arbitrary <g> wrappers as ComposedChart children,
@@ -165,23 +185,24 @@ export default function OutcomesPanel({
 
       <ResponsiveContainer width="100%" height={320}>
         <ComposedChart data={panel.medianGrid}>
-          <CartesianGrid strokeDasharray="3 3" />
+          <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
           {yMetric !== 'absolute' && (
             <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="5 5" />
           )}
           <XAxis
             dataKey="x"
             type="number"
-            tick={{ fontSize: 11 }}
+            tick={{ fontSize: 11, fill: chartColors.axisTick }}
+            stroke={chartColors.grid}
             label={{
               value: xLabel,
               fontSize: 11,
-              fill: '#6b7280',
+              fill: chartColors.axisLabel,
               position: 'insideBottom',
               offset: -4,
             }}
           />
-          <YAxis tick={{ fontSize: 11 }} domain={yDomain(yMetric, panel.medianGrid, metric)} />
+          <YAxis tick={{ fontSize: 11, fill: chartColors.axisTick }} stroke={chartColors.grid} domain={yDomain(yMetric, panel.medianGrid, metric)} />
           <Tooltip
             content={
               <OutcomesTooltip
@@ -193,15 +214,18 @@ export default function OutcomesPanel({
                 valueLabelKey={valueLabelKey}
               />
             }
+            contentStyle={{ backgroundColor: chartColors.tooltipBg, color: chartColors.tooltipText, border: `1px solid ${chartColors.tooltipBorder}` }}
+            labelStyle={{ color: chartColors.tooltipText }}
+            itemStyle={{ color: chartColors.tooltipText }}
           />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
+          <Legend wrapperStyle={{ fontSize: 12, color: chartColors.legend }} />
 
           {!isCrossMode && layers.spreadBand && (
             <Area
               data={iqrData}
               dataKey="iqrHigh"
               baseLine={iqrBaseLine}
-              fill={color}
+              fill={seriesColor}
               fillOpacity={SERIES_STYLES.iqr.fillOpacity}
               stroke={SERIES_STYLES.iqr.stroke}
               isAnimationActive={false}
@@ -239,7 +263,7 @@ export default function OutcomesPanel({
           {!isCrossMode && layers.scatter && (
             <Scatter
               data={panel.scatterPoints}
-              fill={color}
+              fill={seriesColor}
               fillOpacity={SERIES_STYLES.scatter.fillOpacity}
               isAnimationActive={false}
               // Suppress legend chip — scatter points are an aggregate overlay.
@@ -252,7 +276,7 @@ export default function OutcomesPanel({
               data={panel.medianGrid}
               dataKey="y"
               type="linear"
-              stroke={color}
+              stroke={seriesColor}
               strokeWidth={SERIES_STYLES.median.strokeWidth}
               dot={false}
               isAnimationActive={false}

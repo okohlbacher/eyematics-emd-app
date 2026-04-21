@@ -179,10 +179,10 @@ export default function AdminPage() {
   // --- Early return AFTER all hooks ---
   if (!user || user.role !== 'admin') {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center max-w-md">
-          <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 text-lg">{t('adminOnlyHint')}</p>
+      <div className="flex items-center justify-center min-h-[60vh] dark:bg-gray-900">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 text-center max-w-md">
+          <Shield className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-300 text-lg">{t('adminOnlyHint')}</p>
         </div>
       </div>
     );
@@ -264,16 +264,16 @@ export default function AdminPage() {
   );
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-8 space-y-6 dark:bg-gray-900 min-h-screen">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('adminTitle')}</h1>
-        <p className="text-gray-500 mt-1">{t('adminSubtitle')}</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('adminTitle')}</h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">{t('adminSubtitle')}</p>
       </div>
 
       {/* Generated password banner */}
       {generatedPassword && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 flex items-start gap-3">
           <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium text-green-800">{t('userCreatedSuccess')}</p>
@@ -298,7 +298,7 @@ export default function AdminPage() {
       )}
 
       {/* Add User Section */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
         {!showForm ? (
           <button
             onClick={() => setShowForm(true)}
@@ -309,56 +309,56 @@ export default function AdminPage() {
           </button>
         ) : (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
               <UserPlus className="w-5 h-5" />
               {t('adminAddUser')}
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('loginUsername')}
                 </label>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('adminFirstName')}
                 </label>
                 <input
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('adminLastName')}
                 </label>
                 <input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('adminRole')}
                 </label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value as UserRole)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="researcher">{t('roleResearcher')}</option>
                   <option value="admin">{t('roleAdmin')}</option>
@@ -372,7 +372,7 @@ export default function AdminPage() {
 
             {/* N10.02: Multi-center assignment */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('adminAssignCenters')}
               </label>
               <div className="flex flex-wrap gap-2">
@@ -419,10 +419,10 @@ export default function AdminPage() {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">{t('adminUsers')}</h2>
-          <span className="text-sm text-gray-500">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('adminUsers')}</h2>
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             {loading ? '…' : filteredUsers.length === users.length
               ? `${users.length} ${t('adminUsersCount')}`
               : `${filteredUsers.length} ${t('auditFilteredOf')} ${users.length}`}
@@ -438,7 +438,7 @@ export default function AdminPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('adminSearchPlaceholder')}
-              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div className="flex items-center gap-1.5">
@@ -446,7 +446,7 @@ export default function AdminPage() {
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">{t('adminFilterAllRoles')}</option>
               <option value="admin">{t('roleAdmin')}</option>
@@ -463,7 +463,7 @@ export default function AdminPage() {
               data-testid="admin-center-filter"
               value={centerFilter}
               onChange={(e) => setCenterFilter(e.target.value)}
-              className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">{t('adminFilterAllCenters')}</option>
               {centerOptions.map((c) => (
@@ -476,7 +476,7 @@ export default function AdminPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 text-left text-gray-500">
+              <tr className="border-b border-gray-200 dark:border-gray-700 text-left text-gray-500 dark:text-gray-400">
                 <SortHeader field="username" label={t('loginUsername')} />
                 <th className="pb-3 font-medium">{t('adminFullName')}</th>
                 <SortHeader field="role" label={t('adminRole')} />
@@ -503,24 +503,24 @@ export default function AdminPage() {
                 </tr>
               ) : (
                 filteredUsers.map((u) => (
-                  <tr key={u.username} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 font-medium text-gray-900">{u.username}</td>
-                    <td className="py-3 text-gray-600">
+                  <tr key={u.username} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="py-3 font-medium text-gray-900 dark:text-gray-100">{u.username}</td>
+                    <td className="py-3 text-gray-600 dark:text-gray-300">
                       {u.firstName || u.lastName
                         ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim()
                         : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="py-3">
-                      <span className="inline-flex items-center gap-1.5 text-gray-700">
+                      <span className="inline-flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
                         {getRoleIcon(u.role)}
                         {getRoleLabel(u.role, t)}
                       </span>
                     </td>
-                    <td className="py-3 text-gray-600">
+                    <td className="py-3 text-gray-600 dark:text-gray-300">
                       {u.centers && u.centers.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {u.centers.map((c) => (
-                            <span key={c} className="inline-block px-1.5 py-0.5 bg-gray-100 rounded text-xs font-medium">
+                            <span key={c} className="inline-block px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 rounded text-xs font-medium">
                               {centerLabels[c] ?? c}
                             </span>
                           ))}
@@ -529,10 +529,10 @@ export default function AdminPage() {
                         <span className="text-gray-300">—</span>
                       )}
                     </td>
-                    <td className="py-3 text-gray-600">
+                    <td className="py-3 text-gray-600 dark:text-gray-300">
                       {new Date(u.createdAt).toLocaleDateString(dateFmt)}
                     </td>
-                    <td className="py-3 text-gray-600">
+                    <td className="py-3 text-gray-600 dark:text-gray-300">
                       {u.lastLogin
                         ? new Date(u.lastLogin).toLocaleString(dateFmt, {
                             dateStyle: 'short',
