@@ -90,21 +90,28 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - ✓ Per-metric CSV export with metric-slug filename (METRIC-05) — v1.6 (Phase 13)
 - ✓ 60 metrics* i18n keys (DE+EN) with automated completeness test (METRIC-06) — v1.6 (Phase 13)
 
-### Active (v1.7 candidates)
+### Validated in v1.7
 
-- [ ] Dark-mode WCAG contrast for outcomes palette — VQA-02 deferred; no dark-mode infrastructure exists yet
+- [x] Cross-cohort comparison: overlay up to 4 saved cohorts on trajectory charts (XCOHORT-01..04, VIS-04) — v1.7 (Phase 16)
+- [x] Dark-mode WCAG contrast for outcomes palette (VQA-02) — v1.7 (Phase 17)
+- [x] Security quick wins + per-user TOTP 2FA (SEC-14..15) — v1.7 (Phases 14–15)
+- [x] Full-review security hardening: C1–C5, H1–H7, M1–M8, L1–L10 resolved (v1.7-full-review)
+
+### Active (v1.8 candidates)
+
 - [ ] metricSelector integration tests — `describe.skip` placeholder; needs full router context
-- [ ] Cross-cohort comparison on a single chart (XCOHORT-01)
-- [ ] Real Keycloak OIDC redirect flow (KEYCLK-01) — needs real Keycloak instance
+- [ ] Real Keycloak OIDC redirect flow (KEYCLK-01) — blocked at initAuth until the redirect flow ships (M7)
+- [ ] JWT refresh flow — 10-min hard cap still forces re-login (M6 deferred)
+- [ ] AuditPage state machine (useReducer) refactor (L4 deferred)
 
 ## Current State
 
-**In Progress:** Milestone v1.7 — Security, Performance & Cross-Cohort (2026-04-21)
-- Phase 16 complete: Cross-cohort comparison — overlay up to 4 saved cohorts on trajectory charts (XCOHORT-01..04, VIS-04)
-  - `COHORT_PALETTES` (4 WCAG 3:1+ colors), `CohortCompareDrawer`, `OutcomesPanel` multi-series, `OutcomesView` end-to-end wiring
-  - `?cohorts=` deep-link URL, per-patient lines subordinated in both modes
-  - 4 human UAT items pending (visual quality checks)
-- Phases 14–15 complete: Security quick wins + TOTP 2FA
+**Shipped:** Milestone v1.7 — Security, Performance & Cross-Cohort (2026-04-21)
+- Phase 14: Security quick wins
+- Phase 15: Per-user TOTP 2FA with recovery codes
+- Phase 16: Cross-cohort comparison (4-cohort overlay, `?cohorts=` deep-link)
+- Phase 17: Dark-mode palette + UAT
+- v1.7-full-review security pass: all Critical/High/Medium/Low findings resolved (see `.planning/reviews/v1.7-full-review/SUMMARY.md`)
 
 **Previously Shipped:** Milestone v1.6 — Outcomes Polish & Scale (2026-04-17)
 - Visual/UX QA closed: WCAG palette, IQR guard, tooltip format, empty states, admin filter, stable row keys
@@ -115,11 +122,11 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 **Archive:** [`.planning/milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md), [`.planning/milestones/v1.6-REQUIREMENTS.md`](milestones/v1.6-REQUIREMENTS.md)
 
-## Next Milestone Goals (v1.7 candidates)
+## Next Milestone Goals (v1.8 — TBD)
 
-- **Cross-cohort comparison** on a single chart (XCOHORT-01/02)
-- **Real Keycloak OIDC redirect flow** (KEYCLK-01 — needs real Keycloak instance)
-- **Dark-mode contrast** for outcomes charts (VQA-02 deferred from v1.6)
+- **Real Keycloak OIDC redirect flow** (KEYCLK-01 — blocked by M7 at initAuth)
+- **JWT refresh flow** so 10-min sessions don't force re-login (M6 deferred from v1.7)
+- **AuditPage useReducer refactor** (L4 deferred from v1.7)
 
 ## Historical Milestone Goals (archived)
 
@@ -228,4 +235,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 after Phase 16 complete — Cross-Cohort Comparison shipped. Milestone v1.7 in progress.*
+*Last updated: 2026-04-21 after v1.7 closed (Phases 14–17 + full-review security pass). v1.8 scope TBD.*
