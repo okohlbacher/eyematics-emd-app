@@ -1,9 +1,9 @@
 ---
 status: complete
 phase: 17-audit-log-upgrade-dark-mode
-source: [17-01-SUMMARY.md, 17-02-SUMMARY.md, 17-03-SUMMARY.md, 17-04-SUMMARY.md]
+source: [17-01-SUMMARY.md, 17-02-SUMMARY.md, 17-03-SUMMARY.md, 17-04-SUMMARY.md, 17-05-SUMMARY.md]
 started: 2026-04-21T00:00:00Z
-updated: 2026-04-21T00:00:00Z
+updated: 2026-04-21T19:10:00Z
 ---
 
 ## Current Test
@@ -14,9 +14,8 @@ updated: 2026-04-21T00:00:00Z
 
 ### 1. Theme Toggle in Sidebar
 expected: A theme toggle is visible in the sidebar footer. Clicking it cycles through light / dark / system modes. When dark is selected the entire UI shifts to a dark background. Reloading the page keeps the selected theme (preference saved in localStorage under "emd-theme").
-result: issue
-reported: "The toggle switch changes, but the overall view of the dashboard remains unchanged when changing themes."
-severity: major
+result: pass
+note: Initially failed — fixed in 17-05 (@custom-variant → @variant in index.css). Re-tested and confirmed passing.
 
 ### 2. FOUC Prevention on Dark Reload
 expected: While in dark mode, do a hard reload (Cmd+Shift+R / Ctrl+Shift+R). The page should load immediately in dark colors — no white flash before the dark theme applies.
@@ -46,17 +45,17 @@ reason: Implemented as a "Failures only" checkbox (sends status_gte=400 server-s
 ## Summary
 
 total: 7
-passed: 6
-issues: 1
+passed: 7
+issues: 0
 pending: 0
 skipped: 0
 
 ## Gaps
 
 - truth: "Switching to dark mode applies dark backgrounds and light text across the dashboard"
-  status: failed
+  status: fixed
   reason: "User reported: The toggle switch changes, but the overall view of the dashboard remains unchanged when changing themes."
   severity: major
   test: 1
-  artifacts: [src/pages/LandingPage.tsx, src/components/Layout.tsx]
-  missing: [dark: Tailwind variants on LandingPage and Layout wrapper div]
+  fix: "17-05 — replaced @custom-variant dark with @variant dark in src/index.css"
+  retest: pass
