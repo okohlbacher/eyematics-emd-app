@@ -99,7 +99,14 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 ## Current State
 
-**Shipped:** Milestone v1.6 — Outcomes Polish & Scale (2026-04-17)
+**In Progress:** Milestone v1.7 — Security, Performance & Cross-Cohort (2026-04-21)
+- Phase 16 complete: Cross-cohort comparison — overlay up to 4 saved cohorts on trajectory charts (XCOHORT-01..04, VIS-04)
+  - `COHORT_PALETTES` (4 WCAG 3:1+ colors), `CohortCompareDrawer`, `OutcomesPanel` multi-series, `OutcomesView` end-to-end wiring
+  - `?cohorts=` deep-link URL, per-patient lines subordinated in both modes
+  - 4 human UAT items pending (visual quality checks)
+- Phases 14–15 complete: Security quick wins + TOTP 2FA
+
+**Previously Shipped:** Milestone v1.6 — Outcomes Polish & Scale (2026-04-17)
 - Visual/UX QA closed: WCAG palette, IQR guard, tooltip format, empty states, admin filter, stable row keys
 - Audit beacon PII hardened: cohort ID → HMAC-SHA256 hash in POST body (CRREV-01)
 - Server-side outcomes pre-aggregation at >1000-patient threshold (AGG-01..05)
@@ -221,4 +228,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-17 after v1.6 milestone — Outcomes Polish & Scale shipped. 4 phases, 19 plans, 429/429 tests passing.*
+*Last updated: 2026-04-21 after Phase 16 complete — Cross-Cohort Comparison shipped. Milestone v1.7 in progress.*
