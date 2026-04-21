@@ -109,7 +109,7 @@ export default function DocQualityPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
+      <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3" />
         <span>Loading...</span>
       </div>
@@ -121,14 +121,14 @@ export default function DocQualityPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
             <BarChart3 className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {t('docQualityTitle')}
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               {t('docQualitySubtitle')}
             </p>
           </div>
@@ -139,8 +139,8 @@ export default function DocQualityPage() {
             onClick={() => setShowFilters((v) => !v)}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
               showFilters
-                ? 'bg-blue-50 border-blue-300 text-blue-700'
-                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 text-blue-700'
+                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
             }`}
           >
             <Filter className="w-4 h-4" />
@@ -148,7 +148,7 @@ export default function DocQualityPage() {
           </button>
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
           >
             <Download className="w-4 h-4" />
             {t('docQualityExport')}
@@ -195,8 +195,8 @@ export default function DocQualityPage() {
 
       {/* Overview bar chart */}
       {selectedCenter === 'all' && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
             <BarChart3 className="w-4 h-4 text-blue-500" />
             {t('docQualityAllCenters')}
           </h2>
