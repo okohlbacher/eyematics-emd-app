@@ -214,3 +214,76 @@ describe('auditApi', () => {
     });
   });
 });
+
+describe('Phase 17 audit API params', () => {
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'auditapi-p17-test-'));
+    initAuditDb(tmpDir);
+    _resetHashCohortId();
+    initHashCohortId({ audit: { cohortHashSecret: 'test-cohort-hash-secret-32-chars-min-xxx' } });
+    // Seed entries covering auth, data, admin, outcomes categories + needle body
+    const entries = [
+      { path: '/api/auth/login', method: 'POST', status: 200, body: null, query: null, user: 'admin' },
+      { path: '/api/auth/login', method: 'POST', status: 401, body: '{"err":"bad"}', query: null, user: 'bob' },
+      { path: '/api/auth/users/alice', method: 'DELETE', status: 204, body: null, query: null, user: 'admin' },
+      { path: '/api/data/bundle', method: 'GET', status: 200, body: null, query: '?center=abc123', user: 'researcher' },
+      { path: '/api/settings', method: 'GET', status: 200, body: null, query: null, user: 'admin' },
+      { path: '/api/outcomes/aggregate', method: 'POST', status: 200, body: '{"needle":"found"}', query: null, user: 'researcher' },
+      { path: '/api/audit/events/view-open', method: 'POST', status: 204, body: null, query: null, user: 'researcher' },
+    ];
+    for (const e of entries) {
+      logAuditEntry({ id: crypto.randomUUID(), timestamp: new Date().toISOString(), duration_ms: 10, ...e });
+    }
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('action_category=auth returns only auth rows', async () => {
+    const app = createApp('admin');
+    const res = await request(app).get('/api/audit?action_category=auth');
+    expect(res.status).toBe(200);
+    for (const entry of res.body.entries) {
+      expect(entry.path.startsWith('/api/auth/')).toBe(true);
+    }
+  });
+
+  it('action_category=invalid does not cause 500', async () => {
+    const app = createApp('admin');
+    const res = await request(app).get('/api/audit?action_category=invalid');
+    expect(res.status).not.toBe(500);
+  });
+
+  it('status_gte=400 returns only rows with status>=400', async () => {
+    const app = createApp('admin');
+    const res = await request(app).get('/api/audit?status_gte=400');
+    expect(res.status).toBe(200);
+    for (const entry of res.body.entries) {
+      expect(entry.status).toBeGreaterThanOrEqual(400);
+    }
+  });
+
+  it('status_gte=notanumber does not cause 500', async () => {
+    const app = createApp('admin');
+    const res = await request(app).get('/api/audit?status_gte=notanumber');
+    expect(res.status).not.toBe(500);
+  });
+
+  it('body_search=needle returns rows containing needle', async () => {
+    const app = createApp('admin');
+    const res = await request(app).get('/api/audit?body_search=needle');
+    expect(res.status).toBe(200);
+    const paths = res.body.entries.map((e: { path: string }) => e.path);
+    expect(paths).toContain('/api/outcomes/aggregate');
+  });
+
+  it('non-admin auto-scope preserved with new filter params', async () => {
+    const app = createApp('researcher', 'researcher');
+    const res = await request(app).get('/api/audit?action_category=auth');
+    expect(res.status).toBe(200);
+    for (const entry of res.body.entries) {
+      expect(entry.user).toBe('researcher');
+    }
+  });
+});
