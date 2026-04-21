@@ -93,10 +93,10 @@ export default function QualityCaseDetail({
   return (
     <div className="space-y-4">
       {/* Case info */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
-            <h3 className="font-semibold text-gray-900">{selectedCase.pseudonym}</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-white">{selectedCase.pseudonym}</h3>
             {isExcluded && (
               <span className="px-2 py-0.5 bg-red-50 text-red-600 rounded text-xs font-medium flex items-center gap-1">
                 <Ban className="w-3 h-3" /> {t('excludedCase')}
@@ -142,11 +142,11 @@ export default function QualityCaseDetail({
         </div>
         <div className="grid grid-cols-5 gap-4 text-sm">
           <div>
-            <p className="text-gray-500">{t('age')}</p>
+            <p className="text-gray-500 dark:text-gray-400">{t('age')}</p>
             <p className="font-medium">{getAge(selectedCase.birthDate)} J.</p>
           </div>
           <div>
-            <p className="text-gray-500">{t('diagnosis')}</p>
+            <p className="text-gray-500 dark:text-gray-400">{t('diagnosis')}</p>
             <p className="font-medium">
               {selectedCase.conditions
                 .map((c) => getDiagnosisLabel(c.code.coding[0]?.code ?? '', locale))
@@ -154,15 +154,15 @@ export default function QualityCaseDetail({
             </p>
           </div>
           <div>
-            <p className="text-gray-500">{t('totalMeasurements')}</p>
+            <p className="text-gray-500 dark:text-gray-400">{t('totalMeasurements')}</p>
             <p className="font-medium">{selectedCase.observations.length}</p>
           </div>
           <div>
-            <p className="text-gray-500">{t('center')}</p>
+            <p className="text-gray-500 dark:text-gray-400">{t('center')}</p>
             <p className="font-medium">{selectedCase.centerName}</p>
           </div>
           <div>
-            <p className="text-gray-500">{t('therapyDiscontinuation')}</p>
+            <p className="text-gray-500 dark:text-gray-400">{t('therapyDiscontinuation')}</p>
             <p className="font-medium">
               {therapyStatus?.status === 'breaker' ? (
                 <span className="text-red-600">
@@ -191,11 +191,11 @@ export default function QualityCaseDetail({
             {anomalies.map((a, i) => (
               <div
                 key={i}
-                className="flex items-center justify-between p-2 bg-white rounded-lg text-sm"
+                className="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded-lg text-sm"
               >
                 <div>
                   <span className="font-medium">{a.parameter}</span>
-                  <span className="text-gray-500 ml-2">{a.value}</span>
+                  <span className="text-gray-500 dark:text-gray-400 ml-2">{a.value}</span>
                   <span className="text-amber-600 ml-2 text-xs">({a.reason})</span>
                 </div>
                 <button
@@ -211,25 +211,25 @@ export default function QualityCaseDetail({
       )}
 
       {/* Observations table */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h3 className="font-semibold text-gray-900 mb-3">{t('valuesToReview')}</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        <h3 className="font-semibold text-gray-900 dark:text-white mb-3">{t('valuesToReview')}</h3>
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">{t('parameter')}</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">{t('date')}</th>
-              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">{t('value')}</th>
-              <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">{t('action')}</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{t('parameter')}</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{t('date')}</th>
+              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">{t('value')}</th>
+              <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">{t('action')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {selectedCase.observations.map((obs) => {
               const paramKey = `${obs.code.coding[0]?.display} (${obs.effectiveDateTime?.substring(0, 10)})`;
               const flag = caseFlags.find((f) => f.parameter === paramKey);
               return (
-                <tr key={obs.id} className="hover:bg-gray-50">
+                <tr key={obs.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td className="px-3 py-2">{obs.code.coding[0]?.display}</td>
-                  <td className="px-3 py-2 text-gray-500">{obs.effectiveDateTime?.substring(0, 10)}</td>
+                  <td className="px-3 py-2 text-gray-500 dark:text-gray-400">{obs.effectiveDateTime?.substring(0, 10)}</td>
                   <td className="px-3 py-2 text-right font-mono">
                     {obs.valueQuantity?.value} {obs.valueQuantity?.unit}
                   </td>
@@ -249,7 +249,7 @@ export default function QualityCaseDetail({
                     ) : (
                       <button
                         onClick={() => onOpenFlagDialog(paramKey, `${obs.valueQuantity?.value}`)}
-                        className="text-gray-400 hover:text-red-500"
+                        className="text-gray-400 dark:text-gray-500 hover:text-red-500"
                         title={t('reportError')}
                       >
                         <Flag className="w-3.5 h-3.5" />
@@ -265,19 +265,19 @@ export default function QualityCaseDetail({
 
       {/* Existing flags */}
       {caseFlags.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="font-semibold text-gray-900 mb-3">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
             {t('reviewResults')} ({caseFlags.length})
           </h3>
           <div className="space-y-2">
             {caseFlags.map((f, i) => (
               <div
                 key={i}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm"
+                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm"
               >
                 <div>
-                  <p className="font-medium">{f.parameter}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="font-medium dark:text-white">{f.parameter}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {f.errorType} — {t('reportedBy')} {f.flaggedBy},{' '}
                     {new Date(f.flaggedAt).toLocaleDateString(dateFmt)}
                   </p>
@@ -287,7 +287,7 @@ export default function QualityCaseDetail({
                   onChange={(e) =>
                     onUpdateFlagStatus(f.caseId, f.parameter, e.target.value as QualityFlag['status'])
                   }
-                  className="text-xs border rounded px-2 py-1"
+                  className="text-xs border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 >
                   <option value="open">{t('statusOpen')}</option>
                   <option value="acknowledged">{t('statusAcknowledged')}</option>
