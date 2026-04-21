@@ -52,15 +52,64 @@ Living retrospective across milestones. Each milestone gets a section. Cross-mil
 
 ---
 
+## Milestone: v1.7 — Security, Performance & Cross-Cohort
+
+**Shipped:** 2026-04-21
+**Phases:** 4 (14–17) | **Plans:** 16
+
+### What Was Built
+
+- Phase 14: JWT algorithm pin (HS256), cohort hash secret auto-generation, forced password change on default credential, O(N+M) case extraction, FHIR bundle cache warming at startup, ARIA labels on all Recharts trajectory containers
+- Phase 15: Per-user TOTP 2FA with QR enrollment, RFC 6238 ±1-window tolerance, one-time recovery codes, admin reset path, static OTP retained as pre-enrollment fallback
+- Phase 16: Cross-cohort comparison — 1–4 cohort overlay on one `ComposedChart`, `?cohorts=` deep-link, COHORT_PALETTES (4-color WCAG 3:1+), VIS-04 spaghetti-plot hierarchy
+- Phase 17: Audit log multi-dim filters (user, category, date range, body search, failures), Light/Dark/System ThemeContext, DARK_EYE_COLORS with automated 4.5:1 contrast test, Tailwind v4 `@variant dark` class-based strategy, FOUC prevention
+- v1.7-full-review security pass: all C1–C5, H1–H7, M1–M8, L1–L10 findings resolved
+
+### What Worked
+
+- **Pre-flight full-review sweep**: Running a security-focused review in parallel with feature phases caught issues at seam boundaries (auth middleware × audit × forced-change) that a per-phase review would have missed
+- **Backward-compat static OTP during TOTP rollout**: Keeping the static OTP as a pre-enrollment fallback meant zero user-visible breakage while enrollment capacity ramped
+- **Automated contrast assertion for dark palette**: The VIS-03 test codifies the WCAG 4.5:1 requirement; future palette tweaks cannot silently regress it
+- **Tailwind v4 migration caught at UAT**: The `@custom-variant` → `@variant` fix (17-05) was scoped as its own plan rather than retrofitted into 17-02, keeping the diff legible
+
+### What Was Inefficient
+
+- **Forced password change scope creep**: SEC-03 touched both backend middleware and frontend routing; the plan underestimated the frontend route-guard complexity and required an additional integration pass
+- **Dark-mode sweep (17-04) touched many files**: A single plan to add `dark:` classes across all pages produced a wide diff that was hard to review piecemeal; next time, split by route/section
+- **COHORT_PALETTES color choice iteration**: Initial 4-color selection failed one of the WCAG ratios on a secondary color; caught by VIS-03 test but cost a palette round-trip
+- **Phase 18 (Keycloak) kept on roadmap despite being blocked**: Should have been explicitly moved to "deferred" at plan time rather than carried as "not started" through the milestone
+
+### Patterns Established
+
+- **`useTheme()` hook for chart internals**: Recharts color values come from the theme hook, never from Tailwind class strings — makes light/dark switching deterministic
+- **Contrast test as palette contract**: Any new chart palette module ships with an accompanying WCAG-ratio test or it doesn't merge
+- **Pre-enrollment fallback for auth rollouts**: New auth mechanisms should ship alongside their predecessor and retire the old path only after all users have migrated
+- **URL params as first-class state**: Cross-cohort mode is fully driven by `?cohorts=`; reload/share restores exact view — continues the `?metric=` pattern from v1.6
+
+### Key Lessons
+
+1. Security hardening at milestone close (v1.7-full-review) caught more than a dozen latent issues across layers — consider making this a standing milestone gate rather than one-off
+2. JWT algorithm pinning must be reviewed at every `jwt.verify()` site, not just the primary middleware — defense in depth only works when it's truly everywhere
+3. Dark mode is not just CSS — it requires a theme-aware data layer (palette hooks, explicit color values in charts) and must be planned as an architectural change
+4. Deferred items should be explicitly labeled and moved off the active roadmap at planning time — carrying "blocked" items as active work pollutes progress tracking
+
+### Cost Observations
+
+- Model mix: primarily claude-sonnet-4-6 with claude-opus-4-7 for the full-review security pass
+- Sessions: Multiple sessions over 4 days (2026-04-17 → 2026-04-21)
+- Notable: Running the full-review in parallel with Phase 17 execution meant fixes could land alongside feature work rather than queuing up behind it
+
+---
+
 ## Cross-Milestone Trends
 
-| Metric | v1.5 | v1.6 |
-|--------|------|------|
-| Tests at close | 313 | 429 |
-| Test files | 27 | 47 |
-| Phases | 3 | 4 |
-| Plans | ~12 | 19 |
-| Timeline | multi-day | 1 day (2026-04-16→17) |
-| Parallel execution | No | Yes (wave-based worktrees) |
+| Metric | v1.5 | v1.6 | v1.7 |
+|--------|------|------|------|
+| Tests at close | 313 | 429 | (tracked per-phase) |
+| Phases | 3 | 4 | 4 |
+| Plans | ~12 | 19 | 16 |
+| Timeline | multi-day | 1 day | 4 days |
+| Parallel execution | No | Yes (wave-based worktrees) | Yes + parallel full-review |
+| Security review | No | No | Yes (v1.7-full-review, C/H/M/L) |
 
-**Trend:** Test coverage growing proportionally to features. Parallel wave execution cut the wall-clock time for Phase 13 significantly vs sequential execution.
+**Trend:** Parallel wave execution retained from v1.6. v1.7 added a parallel security review track that ran alongside feature phases rather than gating at milestone close — this should become a standing pattern. Milestone timelines lengthening (1 → 4 days) reflect security scope and UAT gates, not slower execution.
