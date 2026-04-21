@@ -16,6 +16,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { QUALITY_ROLES, useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import FeedbackButton from './FeedbackButton';
+import { ThemeToggle } from './ThemeToggle';
 
 export default function Layout() {
   const { user, logout, inactivityWarning } = useAuth();
@@ -95,6 +96,7 @@ export default function Layout() {
             <Globe className="w-3.5 h-3.5" />
             {locale === 'de' ? 'English' : 'Deutsch'}
           </button>
+          <ThemeToggle />
         </div>
 
         <div className="p-4 border-t border-slate-700">

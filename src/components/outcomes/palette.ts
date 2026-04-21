@@ -24,8 +24,8 @@ export const EYE_COLORS = {
 export type EyeKey = keyof typeof EYE_COLORS;
 
 export const SERIES_STYLES = {
-  median: { strokeWidth: 4 },
-  perPatient: { strokeWidth: 1.5, opacityDense: 0.22, opacitySparse: 0.12, color: '#9ca3af' },
+  median: { strokeWidth: 3 },
+  perPatient: { strokeWidth: 1.5, opacityDense: 0.6, opacitySparse: 0.3 },
   scatter: { fillOpacity: 0.7 },
   iqr: { fillOpacity: 0.15, stroke: 'none' as const },
 } as const;
@@ -33,23 +33,9 @@ export const SERIES_STYLES = {
 export const PANEL_BACKGROUND = '#ffffff';
 
 /**
- * Phase 16 / D-06 / XCOHORT-02: categorical palette for cross-cohort overlays.
- * 4 colors, distinct from EYE_COLORS (blue/red/violet family),
- * each >= 3.0:1 contrast vs #ffffff (WCAG 2.1 SC 1.4.11 graphical threshold).
- * Verified ratios: emerald-700 5.48:1, amber-700 5.02:1, cyan-700 5.36:1, fuchsia-700 6.32:1.
- */
-export const COHORT_PALETTES = [
-  '#047857', // emerald-700
-  '#b45309', // amber-700
-  '#0e7490', // cyan-700
-  '#a21caf', // fuchsia-700
-] as const satisfies readonly string[];
-
-/**
- * Dark-mode chart palette (D-07).
+ * Dark-mode chart palette (Phase 17 / D-07).
  * WCAG canonical dark background: #111827 (Tailwind gray-900).
  * OD/OS/OD+OS must pass AA 4.5:1 for text/small elements (VIS-03).
- * Cohort palette entries must pass 3.0:1 (graphical threshold).
  *
  * Contrast ratios against #111827:
  *   OD     #93c5fd (tailwind blue-300)   ≈ 7.8:1
@@ -62,6 +48,11 @@ export const DARK_EYE_COLORS: { OD: string; OS: string; 'OD+OS': string } = {
   'OD+OS': '#c4b5fd', // violet-300 — ≈ 8.2:1 vs #111827
 };
 
+/**
+ * Dark-mode cross-cohort categorical palette.
+ * Each entry >= 3.0:1 (graphical threshold) against #111827.
+ * Contrast ratios: emerald-300 ≈ 7.4:1, amber-300 ≈ 11.2:1, cyan-300 ≈ 8.3:1, fuchsia-300 ≈ 7.1:1.
+ */
 export const DARK_COHORT_PALETTES: readonly string[] = [
   '#6ee7b7', // emerald-300
   '#fcd34d', // amber-300

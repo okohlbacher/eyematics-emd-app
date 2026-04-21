@@ -60,3 +60,11 @@ export function useTheme(): ThemeContextType {
   if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
   return ctx;
 }
+
+/** Variant that returns light-mode defaults when called outside a ThemeProvider.
+ *  Used in components that are rendered in tests without the full provider tree. */
+export function useThemeSafe(): ThemeContextType {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) return { theme: 'light', setTheme: () => {}, effectiveTheme: 'light' };
+  return ctx;
+}

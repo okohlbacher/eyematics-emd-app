@@ -6,15 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>emd-app</title>
     <script>
-      (function() {
-        try {
-          var t = localStorage.getItem('emd-theme');
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          if (t === 'dark' || (t === 'system' && prefersDark)) {
-            document.documentElement.classList.add('dark');
-          }
-        } catch (e) { /* localStorage unavailable — default to light */ }
-      })();
+      /* Phase 17 — FOUC prevention: apply dark class before first paint */
+      try {
+        var t = localStorage.getItem('emd-theme');
+        if (t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) { /* ignore */ }
     </script>
   </head>
   <body>

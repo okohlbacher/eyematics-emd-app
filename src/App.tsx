@@ -6,6 +6,7 @@ import Layout from './components/Layout';
 import { AuthProvider, QUALITY_ROLES, useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { ThemeProvider } from './context/ThemeContext';
 import AdminPage from './pages/AdminPage';
 import AnalysisPage from './pages/AnalysisPage';
 import AuditPage from './pages/AuditPage';
@@ -67,14 +68,16 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <ErrorBoundary>
-            <AppRoutes />
-          </ErrorBoundary>
-        </AuthProvider>
-      </BrowserRouter>
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <ErrorBoundary>
+              <AppRoutes />
+            </ErrorBoundary>
+          </AuthProvider>
+        </BrowserRouter>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }
