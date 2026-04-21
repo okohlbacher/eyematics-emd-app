@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Security, Performance & Cross-Cohort
 status: planning
-stopped_at: Phase 17 context gathered
-last_updated: "2026-04-21T15:11:46.897Z"
+stopped_at: Phase 17 complete — advancing to Phase 18
+last_updated: "2026-04-21T19:12:00.000Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 5
-  completed_phases: 3
-  total_plans: 10
-  completed_plans: 11
-  percent: 100
+  completed_phases: 4
+  total_plans: 15
+  completed_plans: 16
+  percent: 80
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Every user sees only authorized data, with tamper-proof audit trail — while `/outcomes` stays fast, visually polished, and useful beyond visus.
-**Current focus:** Phase 17 — Audit Log Upgrade & Dark Mode
+**Current focus:** Phase 18 — Keycloak OIDC Redirect
 
 ## Current Position
 
-Phase: 17
+Phase: 18
 Plan: Not started
-Status: Ready to plan
+Status: Ready to discuss
 Last activity: 2026-04-21
 
 ## Milestones Shipped
@@ -46,7 +46,7 @@ Last activity: 2026-04-21
 | 14 | Security Quick Wins & Performance | 3/3 | Complete | 2026-04-17 |
 | 15 | TOTP 2FA | 4/4 | Complete | 2026-04-21 |
 | 16 | Cross-Cohort Comparison | 4/4 | Complete | 2026-04-21 |
-| 17 | Audit Log Upgrade & Dark Mode | 0/TBD | Not started | — |
+| 17 | Audit Log Upgrade & Dark Mode | 5/5 | Complete | 2026-04-21 |
 | 18 | Keycloak OIDC Redirect | 0/TBD | Not started | — |
 
 ## Accumulated Context
@@ -67,6 +67,6 @@ Last activity: 2026-04-21
 
 ## Session Continuity
 
-Last session: 2026-04-21T15:11:46.895Z
-Stopped at: Phase 17 context gathered
-Resume file: .planning/phases/17-audit-log-upgrade-dark-mode/17-CONTEXT.md
+Last session: 2026-04-21T19:12:00.000Z
+Stopped at: Phase 17 complete — advancing to Phase 18
+Resume file: .planning/phases/18-keycloak-oidc-redirect/18-CONTEXT.md
