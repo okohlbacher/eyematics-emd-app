@@ -39,6 +39,17 @@ export const auditApiRouter = Router();
  * where total is the full row count matching the filters (without LIMIT/OFFSET),
  * enabling correct pagination in the UI.
  */
+// H6 / F-06: ISO 8601 validation for time-range filters. Accepts the
+// broad ISO-8601 shapes the audit page emits (`2026-04-21`,
+// `2026-04-21T10:15:30Z`, with optional fractional seconds and TZ).
+// Anything else is rejected at the boundary so SQLite never does a
+// surprise text comparison on junk input.
+const ISO_8601_REGEX = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/;
+// H6 / F-06: body_search hardening — bound length and reject LIKE wildcards
+// rather than escape them, so admins cannot accidentally trigger full-table
+// scans with `%...%` patterns.
+const BODY_SEARCH_MAX_LEN = 128;
+
 auditApiRouter.get('/', (req: Request, res: Response): void => {
   const filters: AuditFilters = {};
 
@@ -46,8 +57,21 @@ auditApiRouter.get('/', (req: Request, res: Response): void => {
   if (typeof req.query.user === 'string') filters.user = req.query.user;
   if (typeof req.query.method === 'string') filters.method = req.query.method;
   if (typeof req.query.path === 'string') filters.path = req.query.path;
-  if (typeof req.query.fromTime === 'string') filters.fromTime = req.query.fromTime;
-  if (typeof req.query.toTime === 'string') filters.toTime = req.query.toTime;
+
+  if (typeof req.query.fromTime === 'string') {
+    if (!ISO_8601_REGEX.test(req.query.fromTime)) {
+      res.status(400).json({ error: 'fromTime must be an ISO 8601 timestamp' });
+      return;
+    }
+    filters.fromTime = req.query.fromTime;
+  }
+  if (typeof req.query.toTime === 'string') {
+    if (!ISO_8601_REGEX.test(req.query.toTime)) {
+      res.status(400).json({ error: 'toTime must be an ISO 8601 timestamp' });
+      return;
+    }
+    filters.toTime = req.query.toTime;
+  }
 
   // Phase 17: new filter params with enum + NaN validation (T-17-01, T-17-02, T-17-04)
   const VALID_CATEGORIES = ['auth', 'data', 'admin', 'outcomes'] as const;
@@ -60,13 +84,28 @@ auditApiRouter.get('/', (req: Request, res: Response): void => {
 
   const rawBodySearch = req.query.body_search;
   if (typeof rawBodySearch === 'string' && rawBodySearch.length > 0) {
+    // H6: gate body_search to admins only — non-admin rows are auto-scoped to
+    // their own user anyway, so their own context is already visible in the UI.
+    if (req.auth?.role !== 'admin') {
+      res.status(403).json({ error: 'body_search is restricted to administrators' });
+      return;
+    }
+    if (rawBodySearch.length > BODY_SEARCH_MAX_LEN) {
+      res.status(400).json({ error: `body_search must be ≤ ${BODY_SEARCH_MAX_LEN} characters` });
+      return;
+    }
+    if (/[%_]/.test(rawBodySearch)) {
+      res.status(400).json({ error: 'body_search cannot contain % or _ wildcards' });
+      return;
+    }
     filters.body_search = rawBodySearch;
   }
 
   const rawStatusGte = req.query.status_gte;
   if (typeof rawStatusGte === 'string' && rawStatusGte.length > 0) {
     const parsed = Number(rawStatusGte);
-    if (!Number.isNaN(parsed) && Number.isFinite(parsed)) {
+    // H6: HTTP status codes are 100–599; anything outside is a client error.
+    if (!Number.isNaN(parsed) && Number.isFinite(parsed) && parsed >= 100 && parsed <= 599) {
       filters.status_gte = parsed;
     }
   }

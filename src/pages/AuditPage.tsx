@@ -213,12 +213,15 @@ export default function AuditPage() {
           <input type="date" value={filterTo} onChange={e => setFilterTo(e.target.value)}
             className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 max-w-[140px] focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
-        <div className="flex flex-col flex-1 min-w-[160px]">
-          <label className="text-xs font-medium text-gray-500 uppercase mb-1 dark:text-gray-400">{t('auditFilterCohortHash')}</label>
-          <input type="search" value={filterSearch} onChange={e => setFilterSearch(e.target.value)}
-            placeholder={t('auditFilterCohortHash')}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
+        {isAdmin && (
+          <div className="flex flex-col flex-1 min-w-[160px]">
+            <label className="text-xs font-medium text-gray-500 uppercase mb-1 dark:text-gray-400">{t('auditFilterCohortHash')}</label>
+            <input type="search" value={filterSearch} onChange={e => setFilterSearch(e.target.value)}
+              placeholder={t('auditFilterCohortHash')}
+              maxLength={128}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+        )}
         <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
           <input type="checkbox" checked={filterFailures} onChange={e => setFilterFailures(e.target.checked)} />
           {t('auditFilterFailuresOnly')}

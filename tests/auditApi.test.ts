@@ -287,3 +287,87 @@ describe('Phase 17 audit API params', () => {
     }
   });
 });
+
+describe('Phase 17 audit API — H6 input validation', () => {
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'auditapi-h6-test-'));
+    initAuditDb(tmpDir);
+    _resetHashCohortId();
+    initHashCohortId({ audit: { cohortHashSecret: 'x'.repeat(64) } });
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('rejects fromTime that is not ISO 8601 with 400', async () => {
+    const app = createApp('admin');
+    const res = await request(app).get('/api/audit?fromTime=not-a-date');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/fromTime/);
+  });
+
+  it('rejects toTime that is not ISO 8601 with 400', async () => {
+    const app = createApp('admin');
+    const res = await request(app).get('/api/audit?toTime=garbage');
+    expect(res.status).toBe(400);
+  });
+
+  it('accepts date-only ISO 8601 for fromTime/toTime', async () => {
+    const app = createApp('admin');
+    const res = await request(app).get('/api/audit?fromTime=2026-01-01&toTime=2026-12-31');
+    expect(res.status).toBe(200);
+  });
+
+  it('accepts full ISO 8601 with timezone for fromTime', async () => {
+    const app = createApp('admin');
+    const res = await request(app).get('/api/audit?fromTime=2026-04-21T10:15:30Z');
+    expect(res.status).toBe(200);
+  });
+
+  it('rejects body_search for non-admin with 403', async () => {
+    const app = createApp('researcher', 'researcher');
+    const res = await request(app).get('/api/audit?body_search=secret');
+    expect(res.status).toBe(403);
+  });
+
+  it('rejects body_search longer than 128 chars with 400', async () => {
+    const app = createApp('admin');
+    const long = 'a'.repeat(129);
+    const res = await request(app).get(`/api/audit?body_search=${long}`);
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects body_search containing % wildcard with 400', async () => {
+    const app = createApp('admin');
+    const res = await request(app).get('/api/audit?body_search=%25secret%25');
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects body_search containing _ wildcard with 400', async () => {
+    const app = createApp('admin');
+    const res = await request(app).get('/api/audit?body_search=foo_bar');
+    expect(res.status).toBe(400);
+  });
+
+  it('accepts well-formed body_search from admin', async () => {
+    const app = createApp('admin');
+    const res = await request(app).get('/api/audit?body_search=needle');
+    expect(res.status).toBe(200);
+  });
+
+  it('ignores status_gte outside [100, 599]', async () => {
+    const app = createApp('admin');
+    // status_gte=0 would match everything — ignored, so total matches unfiltered total
+    const unbounded = await request(app).get('/api/audit');
+    const outOfRange = await request(app).get('/api/audit?status_gte=0');
+    expect(outOfRange.status).toBe(200);
+    expect(outOfRange.body.total).toBe(unbounded.body.total);
+  });
+
+  it('accepts status_gte within [100, 599]', async () => {
+    const app = createApp('admin');
+    const res = await request(app).get('/api/audit?status_gte=400');
+    expect(res.status).toBe(200);
+  });
+});
