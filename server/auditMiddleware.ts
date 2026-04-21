@@ -36,6 +36,8 @@ const REDACT_PATHS = new Set([
   '/api/auth/login',
   '/api/auth/verify',
   '/api/auth/users',           // POST /api/auth/users — response contains generatedPassword
+  '/api/auth/totp/confirm',    // SEC-15: body contains OTP
+  '/api/auth/totp/disable',    // SEC-15: body contains OTP / recovery code
 ]);
 
 /**

@@ -1,9 +1,10 @@
-import { CheckCircle, Download, Loader2, RotateCcw, Save, Server, Settings as SettingsIcon, ShieldCheck,XCircle } from 'lucide-react';
+import { CheckCircle, Download, KeyRound, Loader2, RotateCcw, Save, Server, Settings as SettingsIcon, ShieldCheck,XCircle } from 'lucide-react';
 import { MessageSquarePlus } from 'lucide-react';
 import { useEffect,useState } from 'react';
 
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import { authFetch } from '../services/authHeaders';
 import {
   type DataSourceType,
   testBlazeConnection,
@@ -30,6 +31,14 @@ export default function SettingsPage() {
   const [savedBanner, setSavedBanner] = useState(false);
   const [validationError, setValidationError] = useState(false);
 
+  // Per-user TOTP state (SEC-15)
+  const [totpEnabled, setTotpEnabled] = useState(false);
+  const [totpQr, setTotpQr] = useState<string | null>(null);
+  const [totpRecovery, setTotpRecovery] = useState<string[] | null>(null);
+  const [totpOtp, setTotpOtp] = useState('');
+  const [totpBusy, setTotpBusy] = useState(false);
+  const [totpError, setTotpError] = useState('');
+
   // Data source state
   const [dataSourceType, setDataSourceType] = useState<DataSourceType>('local');
   const [blazeUrl, setBlazeUrl] = useState('http://localhost:8080/fhir');
@@ -48,7 +57,63 @@ export default function SettingsPage() {
       setDataSourceType(s.dataSource.type);
       setBlazeUrl(s.dataSource.blazeUrl);
     });
+    authFetch('/api/auth/totp/status')
+      .then((r) => r.ok ? r.json() as Promise<{ totpEnabled: boolean }> : null)
+      .then((s) => { if (s) setTotpEnabled(Boolean(s.totpEnabled)); })
+      .catch(() => {});
   }, []);
+
+  const handleTotpEnroll = async () => {
+    setTotpBusy(true); setTotpError('');
+    try {
+      const r = await authFetch('/api/auth/totp/enroll', { method: 'POST' });
+      if (!r.ok) { setTotpError(t('totpErrorGeneric')); return; }
+      const body = await r.json() as { qrDataUrl: string; recoveryCodes: string[] };
+      setTotpQr(body.qrDataUrl);
+      setTotpRecovery(body.recoveryCodes);
+      setTotpOtp('');
+    } finally {
+      setTotpBusy(false);
+    }
+  };
+
+  const handleTotpConfirm = async () => {
+    if (!/^\d{6}$/.test(totpOtp.trim())) { setTotpError(t('totpErrorInvalidOtp')); return; }
+    setTotpBusy(true); setTotpError('');
+    try {
+      const r = await authFetch('/api/auth/totp/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp: totpOtp.trim() }),
+      });
+      if (!r.ok) { setTotpError(t('totpErrorInvalidOtp')); return; }
+      setTotpEnabled(true);
+      setTotpQr(null);
+      setTotpOtp('');
+      showSaved();
+    } finally {
+      setTotpBusy(false);
+    }
+  };
+
+  const handleTotpDisable = async () => {
+    if (!totpOtp.trim()) { setTotpError(t('totpErrorNeedOtp')); return; }
+    setTotpBusy(true); setTotpError('');
+    try {
+      const r = await authFetch('/api/auth/totp/disable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp: totpOtp.trim() }),
+      });
+      if (!r.ok) { setTotpError(t('totpErrorInvalidOtp')); return; }
+      setTotpEnabled(false);
+      setTotpOtp('');
+      setTotpRecovery(null);
+      showSaved();
+    } finally {
+      setTotpBusy(false);
+    }
+  };
 
   const validate = (interrupter: number, breaker: number): boolean => {
     return interrupter > 0 && breaker > 0 && interrupter < breaker;
@@ -201,6 +266,81 @@ export default function SettingsPage() {
           <p className="text-xs text-amber-600 font-medium">
             {t('settings2faWarning')}
           </p>
+        )}
+      </div>
+
+      {/* Per-user TOTP Authenticator (SEC-15 / Phase 15) */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <KeyRound className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          {t('totpTitle')}
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {totpEnabled ? t('totpStatusActive') : t('totpStatusInactive')}
+        </p>
+        {totpError && (
+          <p className="text-sm text-red-600 font-medium">{totpError}</p>
+        )}
+
+        {!totpEnabled && !totpQr && (
+          <button
+            onClick={() => { void handleTotpEnroll(); }}
+            disabled={totpBusy}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            <KeyRound className="w-4 h-4" />
+            {t('totpEnroll')}
+          </button>
+        )}
+
+        {totpQr && (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-700 dark:text-gray-200">{t('totpScanHint')}</p>
+            <img src={totpQr} alt="TOTP QR" className="w-48 h-48 border border-gray-200 dark:border-gray-700 rounded-lg" />
+            {totpRecovery && (
+              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-2">{t('totpRecoveryTitle')}</p>
+                <ul className="grid grid-cols-2 gap-1 font-mono text-sm text-amber-900 dark:text-amber-200">
+                  {totpRecovery.map((c) => (<li key={c}>{c}</li>))}
+                </ul>
+                <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">{t('totpRecoveryWarning')}</p>
+              </div>
+            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              <input
+                value={totpOtp}
+                onChange={(e) => setTotpOtp(e.target.value)}
+                placeholder="123456"
+                maxLength={6}
+                className="w-32 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm font-mono text-center tracking-widest"
+              />
+              <button
+                onClick={() => { void handleTotpConfirm(); }}
+                disabled={totpBusy}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {t('totpConfirm')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {totpEnabled && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <input
+              value={totpOtp}
+              onChange={(e) => setTotpOtp(e.target.value)}
+              placeholder={t('totpDisablePlaceholder')}
+              className="w-48 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm font-mono tracking-widest"
+            />
+            <button
+              onClick={() => { void handleTotpDisable(); }}
+              disabled={totpBusy}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600/50 disabled:opacity-50"
+            >
+              {t('totpDisable')}
+            </button>
+          </div>
         )}
       </div>
 

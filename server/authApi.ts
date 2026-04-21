@@ -12,6 +12,8 @@ import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
+import { authenticator } from 'otplib';
+import QRCode from 'qrcode';
 
 import type { AuthPayload } from './authMiddleware.js';
 import { getValidCenterIds } from './constants.js';
@@ -144,7 +146,9 @@ authApiRouter.post('/login', async (req: Request, res: Response): Promise<void> 
 
   const { twoFactorEnabled } = getAuthConfig();
 
-  if (twoFactorEnabled) {
+  // Per-user TOTP overrides the global twoFactorEnabled toggle — if this user has
+  // confirmed TOTP enrollment, always require the OTP step (SEC-15 / Phase 15).
+  if (twoFactorEnabled || user.totpEnabled) {
     // Return short-lived challenge token for OTP step
     const challengeToken = signChallengeToken(user.username);
     res.json({ challengeToken });
@@ -167,7 +171,7 @@ authApiRouter.post('/login', async (req: Request, res: Response): Promise<void> 
  * OTP compared against fixed code from settings.yaml (no otplib).
  * OTP attempts share the same lockout counter as password attempts (T-02-06).
  */
-authApiRouter.post('/verify', (req: Request, res: Response): void => {
+authApiRouter.post('/verify', async (req: Request, res: Response): Promise<void> => {
   const { challengeToken, otp } = req.body as { challengeToken?: string; otp?: string };
 
   if (typeof challengeToken !== 'string' || typeof otp !== 'string' || !challengeToken || !otp) {
@@ -199,9 +203,44 @@ authApiRouter.post('/verify', (req: Request, res: Response): void => {
     return;
   }
 
-  const { otpCode } = getAuthConfig();
+  // Load user up-front so we can route between per-user TOTP and shared otpCode
+  const users = loadUsers();
+  const user = users.find((u) => u.username.toLowerCase() === key);
+  if (!user) {
+    res.status(401).json({ error: 'User not found' });
+    return;
+  }
 
-  if (otp !== otpCode) {
+  const otpInput = otp.trim();
+  let otpValid = false;
+  let recoveryCodeConsumed = false;
+
+  if (user.totpEnabled && user.totpSecret) {
+    // Per-user TOTP path (SEC-15). Accept 6-digit TOTP or a recovery code.
+    const digits = otpInput.replace(/\s+/g, '');
+    if (/^\d{6}$/.test(digits)) {
+      try {
+        otpValid = authenticator.check(digits, user.totpSecret);
+      } catch {
+        otpValid = false;
+      }
+    } else if (digits.length >= 10 && Array.isArray(user.recoveryCodeHashes)) {
+      // Recovery-code path: bcrypt-compare against stored hashes; burn on match.
+      for (const h of user.recoveryCodeHashes) {
+        if (await bcrypt.compare(digits, h)) {
+          otpValid = true;
+          recoveryCodeConsumed = true;
+          break;
+        }
+      }
+    }
+  } else {
+    // Legacy shared-otpCode path (pre-enrollment users)
+    const { otpCode } = getAuthConfig();
+    otpValid = otpInput === otpCode;
+  }
+
+  if (!otpValid) {
     const newState = limiter().recordFailure(key);
     if (limiter().isLocked(newState)) {
       const retryAfterMs = newState.lockedUntil - Date.now();
@@ -212,15 +251,25 @@ authApiRouter.post('/verify', (req: Request, res: Response): void => {
     return;
   }
 
-  // OTP valid — load user and issue full session JWT
+  // OTP valid — reset attempts and (if needed) burn the recovery code atomically
   limiter().resetAttempts(key);
 
-  const users = loadUsers();
-  const user = users.find((u) => u.username.toLowerCase() === key);
-
-  if (!user) {
-    res.status(401).json({ error: 'User not found' });
-    return;
+  if (recoveryCodeConsumed) {
+    try {
+      await modifyUsers((all) => all.map((r) => {
+        if (r.username !== user.username) return r;
+        const remaining: string[] = [];
+        let burned = false;
+        for (const h of r.recoveryCodeHashes ?? []) {
+          if (!burned && bcrypt.compareSync(otpInput, h)) {
+            burned = true;
+            continue;
+          }
+          remaining.push(h);
+        }
+        return { ...r, recoveryCodeHashes: remaining };
+      }));
+    } catch { /* best-effort */ }
   }
 
   const token = signSessionToken(user.username, user.role, user.centers);
@@ -492,4 +541,167 @@ authApiRouter.put('/users/:username/password', async (req: Request, res: Respons
   // Cache-Control: no-store to prevent caching one-time password (review suggestion)
   res.setHeader('Cache-Control', 'no-store');
   res.json({ generatedPassword });
+});
+
+// ---------------------------------------------------------------------------
+// Per-user TOTP (SEC-15, Phase 15): enroll / confirm / disable / admin-reset
+// ---------------------------------------------------------------------------
+
+const TOTP_ISSUER = 'EyeMatics EMD';
+const RECOVERY_CODE_COUNT = 10;
+
+function generateRecoveryCode(): string {
+  // 10 chars base32-ish: user-typable, ~50 bits entropy
+  return crypto.randomBytes(8).toString('base64url').slice(0, 10).toUpperCase();
+}
+
+/**
+ * POST /api/auth/totp/enroll
+ * Starts (or restarts) TOTP enrollment for the authenticated user. Generates
+ * a new secret, otpauth URL, QR data URL, and 10 one-time recovery codes.
+ * Secret is stored immediately but totpEnabled stays false until /confirm.
+ */
+authApiRouter.post('/totp/enroll', async (req: Request, res: Response): Promise<void> => {
+  if (!req.auth) { res.status(401).json({ error: 'Authentication required' }); return; }
+  const username = req.auth.preferred_username;
+
+  const secret = authenticator.generateSecret();
+  const otpauth = authenticator.keyuri(username, TOTP_ISSUER, secret);
+  const qrDataUrl = await QRCode.toDataURL(otpauth);
+
+  const plaintextCodes: string[] = [];
+  const hashedCodes: string[] = [];
+  for (let i = 0; i < RECOVERY_CODE_COUNT; i++) {
+    const code = generateRecoveryCode();
+    plaintextCodes.push(code);
+    hashedCodes.push(await bcrypt.hash(code, 10));
+  }
+
+  try {
+    await modifyUsers((users) => users.map((u) => {
+      if (u.username.toLowerCase() !== username.toLowerCase()) return u;
+      return { ...u, totpSecret: secret, totpEnabled: false, recoveryCodeHashes: hashedCodes };
+    }));
+  } catch {
+    res.status(500).json({ error: 'Failed to persist TOTP enrollment' });
+    return;
+  }
+
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ otpauth, qrDataUrl, recoveryCodes: plaintextCodes });
+});
+
+/**
+ * POST /api/auth/totp/confirm  { otp }
+ * Verifies the first 6-digit code against the pending secret and flips
+ * totpEnabled=true. Required before TOTP is enforced at login.
+ */
+authApiRouter.post('/totp/confirm', async (req: Request, res: Response): Promise<void> => {
+  if (!req.auth) { res.status(401).json({ error: 'Authentication required' }); return; }
+  const { otp } = req.body as { otp?: string };
+  if (typeof otp !== 'string' || !/^\d{6}$/.test(otp.trim())) {
+    res.status(400).json({ error: 'otp must be a 6-digit code' });
+    return;
+  }
+  const username = req.auth.preferred_username;
+  const user = loadUsers().find((u) => u.username.toLowerCase() === username.toLowerCase());
+  if (!user || !user.totpSecret) {
+    res.status(409).json({ error: 'No pending TOTP enrollment. Call /totp/enroll first.' });
+    return;
+  }
+  if (!authenticator.check(otp.trim(), user.totpSecret)) {
+    res.status(401).json({ error: 'Invalid OTP' });
+    return;
+  }
+  try {
+    await modifyUsers((users) => users.map((u) =>
+      u.username.toLowerCase() === username.toLowerCase() ? { ...u, totpEnabled: true } : u,
+    ));
+  } catch {
+    res.status(500).json({ error: 'Failed to enable TOTP' });
+    return;
+  }
+  res.json({ totpEnabled: true });
+});
+
+/**
+ * POST /api/auth/totp/disable  { otp }
+ * Self-disable TOTP. Requires a current valid OTP (or recovery code) to prove possession.
+ */
+authApiRouter.post('/totp/disable', async (req: Request, res: Response): Promise<void> => {
+  if (!req.auth) { res.status(401).json({ error: 'Authentication required' }); return; }
+  const { otp } = req.body as { otp?: string };
+  if (typeof otp !== 'string' || !otp.trim()) {
+    res.status(400).json({ error: 'otp is required' });
+    return;
+  }
+  const username = req.auth.preferred_username;
+  const user = loadUsers().find((u) => u.username.toLowerCase() === username.toLowerCase());
+  if (!user || !user.totpEnabled || !user.totpSecret) {
+    res.status(409).json({ error: 'TOTP is not enabled for this user' });
+    return;
+  }
+  const input = otp.trim();
+  let ok = /^\d{6}$/.test(input) ? authenticator.check(input, user.totpSecret) : false;
+  if (!ok && Array.isArray(user.recoveryCodeHashes)) {
+    for (const h of user.recoveryCodeHashes) {
+      if (await bcrypt.compare(input, h)) { ok = true; break; }
+    }
+  }
+  if (!ok) { res.status(401).json({ error: 'Invalid OTP' }); return; }
+  try {
+    await modifyUsers((users) => users.map((u) => {
+      if (u.username.toLowerCase() !== username.toLowerCase()) return u;
+      const { totpSecret: _s, totpEnabled: _e, recoveryCodeHashes: _c, ...rest } = u;
+      return rest as UserRecord;
+    }));
+  } catch {
+    res.status(500).json({ error: 'Failed to disable TOTP' });
+    return;
+  }
+  res.json({ totpEnabled: false });
+});
+
+/**
+ * GET /api/auth/totp/status
+ * Returns the authenticated user's TOTP state for the SettingsPage UI.
+ */
+authApiRouter.get('/totp/status', (req: Request, res: Response): void => {
+  if (!req.auth) { res.status(401).json({ error: 'Authentication required' }); return; }
+  const user = loadUsers().find(
+    (u) => u.username.toLowerCase() === req.auth!.preferred_username.toLowerCase(),
+  );
+  res.json({
+    totpEnabled: Boolean(user?.totpEnabled),
+    recoveryCodesRemaining: user?.recoveryCodeHashes?.length ?? 0,
+  });
+});
+
+/**
+ * POST /api/auth/users/:username/totp/reset
+ * Admin-only TOTP reset — clears per-user TOTP state so the user can re-enroll.
+ */
+authApiRouter.post('/users/:username/totp/reset', async (req: Request, res: Response): Promise<void> => {
+  if (!req.auth || req.auth.role !== 'admin') {
+    res.status(403).json({ error: 'Admin access required' });
+    return;
+  }
+  const target = String(req.params.username ?? '');
+  try {
+    await modifyUsers((users) => {
+      const idx = users.findIndex((u) => u.username.toLowerCase() === target.toLowerCase());
+      if (idx === -1) throw new Error('USER_NOT_FOUND');
+      const u = users[idx];
+      const { totpSecret: _s, totpEnabled: _e, recoveryCodeHashes: _c, ...rest } = u;
+      users[idx] = rest as UserRecord;
+      return users;
+    });
+  } catch (err) {
+    if (err instanceof Error && err.message === 'USER_NOT_FOUND') {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    throw err;
+  }
+  res.json({ totpEnabled: false });
 });

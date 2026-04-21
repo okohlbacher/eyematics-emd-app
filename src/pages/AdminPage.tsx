@@ -1,4 +1,4 @@
-import { ArrowUpDown, Building2, CheckCircle, Database, Filter, Microscope, Pencil, Search, Shield, ShieldCheck, Stethoscope, Trash2, UserPlus, X } from 'lucide-react';
+import { ArrowUpDown, Building2, CheckCircle, Database, Filter, KeyRound, Microscope, Pencil, Search, Shield, ShieldCheck, Stethoscope, Trash2, UserPlus, X } from 'lucide-react';
 import { useCallback,useEffect, useMemo, useState } from 'react';
 
 import type { UserRole } from '../context/AuthContext';
@@ -254,6 +254,20 @@ export default function AdminPage() {
       }
     } catch (err) {
       console.error('[AdminPage] Failed to delete user:', err);
+    }
+  };
+
+  const handleResetTotp = async (targetUsername: string) => {
+    if (!confirm(t('adminResetTotpConfirm').replace('{0}', targetUsername))) return;
+    try {
+      const resp = await authFetch(`/api/auth/users/${encodeURIComponent(targetUsername)}/totp/reset`, {
+        method: 'POST',
+      });
+      if (resp.ok) {
+        await loadUsers();
+      }
+    } catch (err) {
+      console.error('[AdminPage] Failed to reset TOTP:', err);
     }
   };
 
@@ -663,6 +677,13 @@ export default function AdminPage() {
                             title={t('edit')}
                           >
                             <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => void handleResetTotp(u.username)}
+                            className="text-gray-400 hover:text-amber-600"
+                            title={t('adminResetTotp')}
+                          >
+                            <KeyRound className="w-4 h-4" />
                           </button>
                           {u.username === user.username ? (
                             <span

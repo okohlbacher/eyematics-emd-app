@@ -26,6 +26,12 @@ export interface UserRecord {
   lastName?: string;
   createdAt: string;
   lastLogin?: string;
+  /** Per-user TOTP secret (base32). Present after enrollment begins; ignored until totpEnabled=true. */
+  totpSecret?: string;
+  /** True once user confirms first valid OTP. Login then requires per-user TOTP (not shared otpCode). */
+  totpEnabled?: boolean;
+  /** Bcrypt hashes of one-time recovery codes. Each is burned on use. */
+  recoveryCodeHashes?: string[];
 }
 
 interface AuthConfig {
