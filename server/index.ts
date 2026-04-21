@@ -284,4 +284,16 @@ app.listen(PORT, HOST, () => {
   console.log(`[server] EMD app running at http://${HOST}:${PORT}`);
   console.log(`[server] FHIR proxy target: ${blazeTarget} (at /api/fhir-proxy)`);
   console.log(`[server] Data directory: ${DATA_DIR}`);
+
+  // H5 / F-06: warm the FHIR bundle cache at startup so the first write-path
+  // request (e.g. PUT /api/data/quality-flags) can resolve case → center
+  // without a cold-cache 403 "case not accessible" false negative.
+  //
+  // Fire-and-forget; on failure log and carry on — the first real /api/fhir
+  // request will retry. Server readiness does NOT depend on the cache.
+  import('./fhirApi.js').then(({ getCachedBundles }) =>
+    getCachedBundles()
+      .then((b) => console.log(`[server] FHIR bundle cache warmed: ${b.length} bundles`))
+      .catch((err) => console.warn('[server] FHIR bundle cache warm failed (lazy retry on first request):', err instanceof Error ? err.message : err)),
+  );
 });
