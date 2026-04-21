@@ -678,6 +678,13 @@ const translations = {
   outcomesEmptyAllEyesFilteredBody: { de: 'Passen Sie die OD/OS- oder Layer-Filter an, um Daten zu sehen.', en: 'Adjust the OD/OS or layer toggles to see data.' },
   outcomesPanelEmpty: { de: 'Keine Messwerte für dieses Auge', en: 'No measurements for this eye' },
   outcomesError: { de: 'Berechnung fehlgeschlagen. Bitte erneut versuchen.', en: 'Computation failed. Please try again.' },
+  outcomesCompareDrawerTitle: { de: 'Kohorten vergleichen', en: 'Compare Cohorts' },
+  outcomesCompareDrawerHint: { de: 'Bis zu 4 Kohorten auswählen', en: 'Select up to 4 cohorts' },
+  outcomesComparePrimaryLabel: { de: 'Basis-Kohorte (fest)', en: 'Primary cohort (locked)' },
+  outcomesCompareOpenDrawer: { de: 'Kohorten vergleichen', en: 'Compare cohorts' },
+  outcomesCrossMode: { de: '{count} Kohorten verglichen', en: '{count} cohorts compared' },
+  outcomesCompareReset: { de: 'Einzelne Kohorte anzeigen', en: 'Reset to single cohort' },
+  outcomesComparePerPatientSuppressed: { de: 'Einzelkurven sind im Vergleichsmodus ausgeblendet.', en: 'Per-patient lines are suppressed in comparison mode.' },
 
   // ---- Phase 13: Metric Selector (METRIC-04 / D-01) ----
   metricsVisus: { de: 'Visus', en: 'Visus' },
