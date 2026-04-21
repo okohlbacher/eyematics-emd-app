@@ -19,14 +19,14 @@ function Card({ testid, icon: Icon, label, value, hint }: CardProps) {
   return (
     <div
       data-testid={testid}
-      className="bg-white rounded-xl border border-gray-200 p-5"
+      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
     >
-      <div className="flex items-center gap-2 text-xs text-gray-500">
-        <Icon aria-hidden="true" className="w-4 h-4 text-gray-400" />
+      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <Icon aria-hidden="true" className="w-4 h-4 text-gray-400 dark:text-gray-500" />
         <span>{label}</span>
       </div>
-      <div className="mt-2 text-3xl font-semibold text-blue-600">{value}</div>
-      {hint && <div className="mt-1 text-xs text-gray-500">{hint}</div>}
+      <div className="mt-2 text-3xl font-semibold text-blue-600 dark:text-blue-400">{value}</div>
+      {hint && <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">{hint}</div>}
     </div>
   );
 }
