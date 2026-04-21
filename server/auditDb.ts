@@ -38,6 +38,9 @@ export interface AuditFilters {
   path?: string;
   fromTime?: string;
   toTime?: string;
+  action_category?: 'auth' | 'data' | 'admin' | 'outcomes';
+  body_search?: string;
+  status_gte?: number;
   limit?: number;
   offset?: number;
 }
@@ -255,6 +258,30 @@ function buildWhereClause(
   if (filters.toTime !== undefined) {
     conditions.push('timestamp <= @filterToTime');
     params['filterToTime'] = filters.toTime;
+  }
+  if (filters.action_category !== undefined) {
+    switch (filters.action_category) {
+      case 'auth':
+        conditions.push("(path LIKE '/api/auth/%' AND path NOT LIKE '/api/auth/users/%')");
+        break;
+      case 'data':
+        conditions.push("path LIKE '/api/data/%'");
+        break;
+      case 'admin':
+        conditions.push("(path LIKE '/api/auth/users/%' OR path = '/api/settings')");
+        break;
+      case 'outcomes':
+        conditions.push("(path LIKE '/api/outcomes/%' OR path = '/api/audit/events/view-open')");
+        break;
+    }
+  }
+  if (filters.body_search !== undefined) {
+    conditions.push('(body LIKE @filterBodySearch OR query LIKE @filterBodySearch)');
+    params['filterBodySearch'] = `%${filters.body_search}%`;
+  }
+  if (filters.status_gte !== undefined) {
+    conditions.push('status >= @filterStatusGte');
+    params['filterStatusGte'] = filters.status_gte;
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
