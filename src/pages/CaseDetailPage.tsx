@@ -84,7 +84,7 @@ export default function CaseDetailPage() {
   if (!patientCase) {
     return (
       <div className="p-8">
-        <p className="text-gray-500">{t('caseNotFound')}</p>
+        <p className="text-gray-500 dark:text-gray-400">{t('caseNotFound')}</p>
         <button onClick={() => navigate(-1)} className="mt-4 text-blue-600 hover:underline">
           {t('back')}
         </button>
@@ -96,7 +96,7 @@ export default function CaseDetailPage() {
     <div className="p-8">
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4"
+        className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 mb-4"
       >
         <ArrowLeft className="w-4 h-4" /> {t('back')}
       </button>
@@ -140,24 +140,24 @@ export default function CaseDetailPage() {
           />
         </div>
 
-        <div className="col-span-4 bg-white rounded-xl border border-gray-200 p-5 overflow-y-auto" style={{ maxHeight: 380 }}>
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="col-span-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 overflow-y-auto" style={{ maxHeight: 380 }}>
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <Syringe className="w-4 h-4" />
             {t('intravitreal')} ({injections.length})
           </h3>
           {injections.length === 0 ? (
-            <p className="text-sm text-gray-400">{t('noInjections')}</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">{t('noInjections')}</p>
           ) : (
             <div className="space-y-2">
               {injections.map((inj, i) => (
-                <div key={inj.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg text-sm">
+                <div key={inj.id} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm">
                   <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
                     {i + 1}
                   </span>
                   <span className="whitespace-nowrap">
                     {inj.performedDateTime ? new Date(inj.performedDateTime).toLocaleDateString(dateFmt) : '\u2014'}
                   </span>
-                  <span className="text-gray-400 truncate">{t('intravitralInjection')}</span>
+                  <span className="text-gray-400 dark:text-gray-500 truncate">{t('intravitralInjection')}</span>
                   {inj.bodySite?.[0] && (
                     <span className="text-xs px-1 py-0.5 bg-indigo-50 text-indigo-600 rounded ml-auto flex-shrink-0">
                       {inj.bodySite[0].coding?.[0]?.code === SNOMED_EYE_RIGHT ? 'OD' : 'OS'}
@@ -172,8 +172,8 @@ export default function CaseDetailPage() {
 
       {/* Relative change from baseline (N05.27) */}
       {baselineData.length > 1 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             {baselineData[baselineData.length - 1]?.visusChange !== undefined &&
             baselineData[baselineData.length - 1].visusChange! >= 0 ? (
               <TrendingUp className="w-4 h-4 text-green-600" />
