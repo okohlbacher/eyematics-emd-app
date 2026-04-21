@@ -34,8 +34,8 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 ### Phases
 
 - [x] **Phase 14: Security Quick Wins & Performance** — JWT algorithm pin, cohort hash secret auto-generation, forced password change on default credential, FHIR bundle cache warming, O(N+M) patient case extraction, ARIA chart labels (completed 2026-04-17)
-- [ ] **Phase 15: TOTP 2FA** — Per-user TOTP enrollment with QR code, ±1 window tolerance, recovery codes
-- [ ] **Phase 16: Cross-Cohort Comparison** — Overlay up to 4 saved cohorts on a single trajectory chart, spaghetti-plot visual hierarchy
+- [x] **Phase 15: TOTP 2FA** — Per-user TOTP enrollment with QR code, ±1 window tolerance, recovery codes (completed 2026-04-21)
+- [x] **Phase 16: Cross-Cohort Comparison** — Overlay up to 4 saved cohorts on a single trajectory chart, spaghetti-plot visual hierarchy (completed 2026-04-21)
 - [ ] **Phase 17: Audit Log Upgrade & Dark Mode** — Filterable audit controls, dark-mode infrastructure and WCAG-compliant chart palette
 - [ ] **Phase 18: Keycloak OIDC Redirect** — Authorization-code + PKCE redirect flow, server-mediated callback, local JWT issuance
 
@@ -72,10 +72,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 15-01-PLAN.md — Scaffolding: install otplib+qrcode, extend UserRecord, expand authMiddleware/auditMiddleware, create Wave 0 test stubs
-- [ ] 15-02-PLAN.md — Backend: /login TOTP gate + /totp/enroll + /totp/confirm + /verify TOTP&recovery + admin DELETE /users/:username/totp
-- [ ] 15-03-PLAN.md — Frontend enrollment: TotpEnrollPage + RecoveryCodesPanel + AuthContext state + App.tsx gate + LoginPage OTP length + 21 i18n keys
-- [ ] 15-04-PLAN.md — AdminPage Reset 2FA button + human end-to-end checkpoint
+- [x] 15-01-PLAN.md — Scaffolding: install otplib+qrcode, extend UserRecord, expand authMiddleware/auditMiddleware, create Wave 0 test stubs
+- [x] 15-02-PLAN.md — Backend: /login TOTP gate + /totp/enroll + /totp/confirm + /verify TOTP&recovery + admin DELETE /users/:username/totp
+- [x] 15-03-PLAN.md — Frontend enrollment: TotpEnrollPage + RecoveryCodesPanel + AuthContext state + App.tsx gate + LoginPage OTP length + 21 i18n keys
+- [x] 15-04-PLAN.md — AdminPage Reset 2FA button + human end-to-end checkpoint
 
 #### Phase 16: Cross-Cohort Comparison
 **Goal**: A researcher can overlay up to 4 saved cohorts on a single trajectory chart to compare outcome trends side by side; individual patient curves are visually subordinate to cohort medians
@@ -87,8 +87,13 @@ Plans:
   3. The chart legend shows each cohort's display name and patient count in the format `Cohort A (N=42 patients)`
   4. The URL updates to `?cohorts=id1,id2,...` and loading that URL restores the same cross-cohort selection without user interaction
   5. In single-cohort mode, individual patient curves are rendered at reduced opacity and desaturated color; the median line is overplotted with increased stroke weight and full saturation
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 4 plans
+
+Plans:
+- [x] 16-01-PLAN.md — Wave 0 scaffold + palette.ts COHORT_PALETTES + i18n keys (7 keys) + contrast test stubs
+- [x] 16-02-PLAN.md — OutcomesPanel cohortSeries prop + isCrossMode guards + VIS-04 per-patient desaturation
+- [x] 16-03-PLAN.md — CohortCompareDrawer slide-over component + cohort selector + max-4 enforcement
+- [x] 16-04-PLAN.md — OutcomesView URL deep-link (?cohorts=) + aggregation + settings drawer suppression
 
 #### Phase 17: Audit Log Upgrade & Dark Mode
 **Goal**: Administrators can filter and search the audit log by multiple dimensions; all users can switch between light, dark, and system color themes with WCAG-compliant chart colors in both modes
@@ -119,11 +124,11 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 14. Security Quick Wins & Performance | v1.7 | 3/3 | Complete   | 2026-04-17 |
-| 15. TOTP 2FA | v1.7 | 0/4 | Planned | - |
-| 16. Cross-Cohort Comparison | v1.7 | 0/TBD | Not started | - |
+| 15. TOTP 2FA | v1.7 | 4/4 | Complete | 2026-04-21 |
+| 16. Cross-Cohort Comparison | v1.7 | 4/4 | Complete | 2026-04-21 |
 | 17. Audit Log Upgrade & Dark Mode | v1.7 | 0/TBD | Not started | - |
 | 18. Keycloak OIDC Redirect | v1.7 | 0/TBD | Not started | - |
 
 ---
 
-*Last updated: 2026-04-17 — Phase 15 planned (4 plans, 4 waves). Phase 14 complete. Continues from v1.6 (Phases 10–13).*
+*Last updated: 2026-04-21 — Phase 16 complete. Phases 14–16 done (3/5). Phases 17–18 remaining. Continues from v1.6 (Phases 10–13).*
