@@ -363,6 +363,7 @@ const translations = {
   settingsInterrupterHint: { de: 'Patienten mit einer Behandlungspause > t Tage werden als Unterbrecher gekennzeichnet.', en: 'Patients with a treatment gap > t days are marked as interrupters.' },
   settingsBreakerHint: { de: 'Patienten mit einer Behandlungspause > t\' Tage werden als Abbrecher gekennzeichnet.', en: 'Patients with a treatment gap > t\' days are marked as breakers.' },
   settingsSaved: { de: 'Einstellungen gespeichert', en: 'Settings saved' },
+  settingsSaveError: { de: 'Einstellungen konnten nicht gespeichert werden', en: 'Failed to save settings' },
   settingsReset: { de: 'Auf Standardwerte zurücksetzen', en: 'Reset to defaults' },
   settingsValidationError: { de: 'Unterbrecher-Schwellenwert muss kleiner als Abbrecher-Schwellenwert sein.', en: 'Interrupter threshold must be less than breaker threshold.' },
   settingsDataSource: { de: 'Datenquelle', en: 'Data Source' },
