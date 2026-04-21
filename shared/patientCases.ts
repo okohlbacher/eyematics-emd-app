@@ -43,6 +43,24 @@ function resourcesOfType<T>(bundles: BundleLike[], type: string): T[] {
   );
 }
 
+/**
+ * M3: Index resources by subject.reference once instead of calling
+ * array.filter() per-patient per-resource-type. Previously O(N patients · M
+ * resources); now O(N + M) with a Map lookup per patient. On a 7-center
+ * bundle (~10k observations) this cuts extraction from ~seconds to ms.
+ */
+function groupBySubject<T extends { subject: { reference?: string } }>(resources: T[]): Map<string, T[]> {
+  const byRef = new Map<string, T[]>();
+  for (const r of resources) {
+    const ref = r.subject.reference;
+    if (!ref) continue;
+    const existing = byRef.get(ref);
+    if (existing) existing.push(r);
+    else byRef.set(ref, [r]);
+  }
+  return byRef;
+}
+
 export function extractPatientCases(bundles: BundleLike[]): PatientCase[] {
   const patients = resourcesOfType<Patient>(bundles, 'Patient');
   const conditions = resourcesOfType<Condition>(bundles, 'Condition');
@@ -52,9 +70,16 @@ export function extractPatientCases(bundles: BundleLike[]): PatientCase[] {
   const medications = resourcesOfType<MedicationStatement>(bundles, 'MedicationStatement');
   const orgs = resourcesOfType<Organization>(bundles, 'Organization');
 
+  const conditionsByRef = groupBySubject(conditions);
+  const observationsByRef = groupBySubject(observations);
+  const proceduresByRef = groupBySubject(procedures);
+  const imagingByRef = groupBySubject(imaging);
+  const medicationsByRef = groupBySubject(medications);
+  const orgById = new Map(orgs.map((o) => [o.id, o]));
+
   return patients.map((pat) => {
     const ref = `Patient/${pat.id}`;
-    const org = orgs.find((o) => o.id === pat.meta?.source);
+    const org = pat.meta?.source ? orgById.get(pat.meta.source) : undefined;
     return {
       id: pat.id,
       pseudonym:
@@ -63,11 +88,11 @@ export function extractPatientCases(bundles: BundleLike[]): PatientCase[] {
       birthDate: pat.birthDate ?? '',
       centerId: pat.meta?.source ?? '',
       centerName: org?.name ?? pat.meta?.source ?? '',
-      conditions: conditions.filter((c) => c.subject.reference === ref),
-      observations: observations.filter((o) => o.subject.reference === ref),
-      procedures: procedures.filter((p) => p.subject.reference === ref),
-      imagingStudies: imaging.filter((i) => i.subject.reference === ref),
-      medications: medications.filter((m) => m.subject.reference === ref),
+      conditions: conditionsByRef.get(ref) ?? [],
+      observations: observationsByRef.get(ref) ?? [],
+      procedures: proceduresByRef.get(ref) ?? [],
+      imagingStudies: imagingByRef.get(ref) ?? [],
+      medications: medicationsByRef.get(ref) ?? [],
     };
   });
 }
