@@ -61,10 +61,28 @@
 
 ## Requirement → Phase Traceability
 
-| REQ-ID | Phase (TBD by roadmapper) |
-|--------|---------------------------|
-| MSEL-01..06 | — |
-| AUDIT-01..04 | — |
-| SESSION-01..09, 12, 13 | — |
+| REQ-ID | Phase | Status |
+|--------|-------|--------|
+| MSEL-01 | Phase 18 | Pending |
+| MSEL-02 | Phase 18 | Pending |
+| MSEL-03 | Phase 18 | Pending |
+| MSEL-04 | Phase 18 | Pending |
+| MSEL-05 | Phase 18 | Pending |
+| MSEL-06 | Phase 18 | Pending |
+| AUDIT-01 | Phase 19 | Pending |
+| AUDIT-02 | Phase 19 | Pending |
+| AUDIT-03 | Phase 19 | Pending |
+| AUDIT-04 | Phase 19 | Pending |
+| SESSION-01 | Phase 20 | Pending |
+| SESSION-02 | Phase 20 | Pending |
+| SESSION-03 | Phase 20 | Pending |
+| SESSION-04 | Phase 20 | Pending |
+| SESSION-05 | Phase 20 | Pending |
+| SESSION-06 | Phase 20 | Pending |
+| SESSION-07 | Phase 20 | Pending |
+| SESSION-08 | Phase 20 | Pending |
+| SESSION-09 | Phase 20 | Pending |
+| SESSION-12 | Phase 20 | Pending |
+| SESSION-13 | Phase 20 | Pending |
 
-*Traceability filled in by the roadmapper.*
+**Coverage:** 21/21 v1.8 requirements mapped. SESSION-10, SESSION-11, and KEYCLK-01 remain explicitly out of scope.
