@@ -143,6 +143,37 @@ Beim ersten Start werden 7 Standardbenutzer angelegt (in `data/users.json`). All
 | `diz_manager`   | DIZ Data Manager    | UKMZ                                      |
 | `klinikleitung` | Klinikleitung       | Alle                                      |
 
+> **Hinweis:** Die Standardanmeldedaten sind öffentlich dokumentiert und identisch in jedem frischen Deployment. Ändern Sie alle sieben Passwörter vor dem produktiven Einsatz (Administration → Benutzer → Passwort setzen). Das Repository enthält **keine** `data/users.json`; diese Datei wird beim ersten Serverstart aus `server/index.ts` erzeugt und anschließend durch `initAuth._migrateUsersJson` mit bcrypt-Hashes für `changeme2025!` versehen.
+
+## Zurücksetzen auf Werkseinstellungen
+
+Ein sauberer Reset auf den Zustand eines frischen Deployments (alle Benutzerkonten, Audit-Log, Daten-DB und Secrets werden neu erzeugt):
+
+```bash
+# Server stoppen
+kill $(lsof -ti:3000)
+
+# Laufzeit-State entfernen (alle Dateien sind gitignored)
+rm -f data/users.json \
+      data/audit.db data/audit.db-shm data/audit.db-wal \
+      data/data.db  data/data.db-shm  data/data.db-wal \
+      data/jwt-secret.txt \
+      data/cohort-hash-secret.txt
+
+# Server neu starten — Seed + Migration + Secret-Erzeugung laufen automatisch
+npm start
+```
+
+Nach dem Neustart:
+
+- `data/users.json` enthält 7 Standardbenutzer mit bcrypt-Hashes für `changeme2025!`
+- Neues JWT-Secret (0600, 32 Byte zufällig) in `data/jwt-secret.txt`
+- Neues Cohort-Hash-Secret in `data/cohort-hash-secret.txt`
+- Leere Audit- und Daten-SQLite-Datenbanken
+- 2FA standardmäßig deaktiviert (siehe `config/settings.yaml: twoFactorEnabled: false`)
+
+`data/centers.json` (im Repo eingecheckt) bleibt unberührt — der Site-Roster wird nicht zurückgesetzt.
+
 ## Architektur
 
 ```

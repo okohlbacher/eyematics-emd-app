@@ -38,3 +38,10 @@ data/*.db
 data/*.db-shm
 data/*.db-wal
 data/users.json
+
+# Runtime feedback captures (keep feedback/.gitkeep)
+feedback/issue-*.json
+
+# Local planning scratch
+.planning/.next-call-count
+.planning/reviews/
