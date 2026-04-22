@@ -14,7 +14,7 @@
  * without needing to import from the mocked module (which would create TDZ
  * issues when the helper is loaded via vi.hoisted()).
  *
- * NOTE: Do NOT add `// @vitest-environment jsdom` here — this is not a test file.
+ * NOTE: Do NOT add the jsdom docblock here — this is not a test file.
  */
 import { vi } from 'vitest';
 import { render } from '@testing-library/react';
