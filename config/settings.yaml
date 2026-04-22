@@ -2,15 +2,5 @@ twoFactorEnabled: false
 therapyInterrupterDays: 120
 therapyBreakerDays: 365
 dataSource:
-  type: blaze
+  type: local
   blazeUrl: http://localhost:8080/fhir
-provider: local
-maxLoginAttempts: 5
-otpCode: '123456'
-audit:
-  # cohortHashSecret is auto-generated at data/cohort-hash-secret.txt on first
-  # launch (mode 0600). Do NOT re-introduce it here — the known-default denylist
-  # in hashCohortId.ts will refuse any placeholder value.
-outcomes:
-  serverAggregationThresholdPatients: 1000
-  aggregateCacheTtlMs: 1800000

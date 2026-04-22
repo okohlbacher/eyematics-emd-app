@@ -97,32 +97,40 @@ async function persistSettings(settings: AppSettings): Promise<void> {
 
 /**
  * Update a subset of settings. Persists to server-side settings.yaml.
- * On server rejection, reloads settings to resync client cache.
+ * On server rejection, reloads the cache from the server AND rethrows so
+ * callers can surface the error — otherwise UI state (radios, toggles)
+ * silently diverges from server state.
  */
 export async function updateSettings(patch: DeepPartial<AppSettings>): Promise<AppSettings> {
+  const previous = _cached;
   _cached = merge(_cached ?? DEFAULTS, patch);
   try {
     await persistSettings(_cached);
+    return _cached;
   } catch (err) {
     console.error('[settingsService] Persist failed, reloading from server:', err);
+    _cached = previous;
     await loadSettings();
+    throw err;
   }
-  return _cached!;
 }
 
 /**
  * Reset all settings to defaults and persist.
- * On server rejection, reloads settings to resync client cache.
+ * On server rejection, reloads settings to resync client cache and rethrows.
  */
 export async function resetSettings(): Promise<AppSettings> {
+  const previous = _cached;
   _cached = { ...DEFAULTS };
   try {
     await persistSettings(_cached);
+    return _cached;
   } catch (err) {
     console.error('[settingsService] Persist failed, reloading from server:', err);
+    _cached = previous;
     await loadSettings();
+    throw err;
   }
-  return _cached!;
 }
 
 /**

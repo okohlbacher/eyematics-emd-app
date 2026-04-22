@@ -180,20 +180,37 @@ export default function SettingsPage() {
     setValidationError(false);
   };
 
-  const handleTwoFactorToggle = () => {
+  const handleTwoFactorToggle = async () => {
     const next = !twoFactorEnabled;
     setTwoFactorEnabled(next);
-    updateSettings({ twoFactorEnabled: next });
-    showSaved();
+    setSaveError(null);
+    try {
+      await updateSettings({ twoFactorEnabled: next });
+      showSaved();
+    } catch (err) {
+      setTwoFactorEnabled(!next);
+      setSaveError(err instanceof Error ? err.message : t('settingsSaveError'));
+    }
   };
 
-  const handleDataSourceTypeChange = (type: DataSourceType) => {
+  const handleDataSourceTypeChange = async (type: DataSourceType) => {
+    const previousType = dataSourceType;
     setDataSourceType(type);
     setConnectionStatus('idle');
     setConnectionDetail('');
-    updateSettings({ dataSource: { type, blazeUrl: type === 'blaze' ? blazeUrl : '' } });
-    invalidateBundleCache();
-    reloadData();
+    setSaveError(null);
+    try {
+      // Keep blazeUrl regardless of type — the server's validator requires a
+      // non-empty blazeUrl (settingsApi.ts:71) even when type='local', and
+      // emptying it would make persist fail silently and revert the toggle.
+      await updateSettings({ dataSource: { type, blazeUrl } });
+      invalidateBundleCache();
+      reloadData();
+      showSaved();
+    } catch (err) {
+      setDataSourceType(previousType);
+      setSaveError(err instanceof Error ? err.message : t('settingsSaveError'));
+    }
   };
 
   const handleBlazeUrlChange = (url: string) => {
@@ -202,10 +219,17 @@ export default function SettingsPage() {
     setConnectionDetail('');
   };
 
-  const handleBlazeUrlCommit = () => {
-    updateSettings({ dataSource: { type: 'blaze', blazeUrl } });
-    invalidateBundleCache();
-    reloadData();
+  const handleBlazeUrlCommit = async () => {
+    if (!blazeUrl.trim()) return;
+    setSaveError(null);
+    try {
+      await updateSettings({ dataSource: { type: 'blaze', blazeUrl } });
+      invalidateBundleCache();
+      reloadData();
+      showSaved();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : t('settingsSaveError'));
+    }
   };
 
   const handleTestConnection = async () => {
