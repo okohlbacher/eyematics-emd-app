@@ -1,13 +1,18 @@
 /**
  * Shared test helper for OutcomesView integration tests.
  *
- * This module exports:
- *  - vi.mock factory functions for 7 modules (consumed as the second argument
- *    to vi.mock() calls IN THE TEST FILE — vi.mock hoisting only applies to
- *    the test file being compiled, not imported helpers).
- *  - Shared mock fn references (loadSettingsMock, postAggregateMock, fetchSpy).
- *  - Stub builders (buildCase, buildCases).
- *  - renderOutcomesView(url, options) factory.
+ * Exports:
+ *  - vi.mock factory functions for 7 modules
+ *  - Shared mock fn references (loadSettingsMock, postAggregateMock, fetchSpy,
+ *    useDataMock, useLanguageMock, applyFiltersMock, computeCohortTrajectoryMock)
+ *  - Stub builders (buildCase, buildCases)
+ *  - renderOutcomesView(url, options) factory
+ *
+ * Design: all mock fn instances are defined at module level here. The factory
+ * functions returned by e.g. dataContextFactory() return the SAME mock fn
+ * instances, so renderOutcomesView can call .mockReturnValue on them directly
+ * without needing to import from the mocked module (which would create TDZ
+ * issues when the helper is loaded via vi.hoisted()).
  *
  * NOTE: Do NOT add `// @vitest-environment jsdom` here — this is not a test file.
  */
@@ -15,29 +20,51 @@ import { vi } from 'vitest';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-
-import OutcomesView from '../../src/components/outcomes/OutcomesView';
-import { useData } from '../../src/context/DataContext';
-import { useLanguage } from '../../src/context/LanguageContext';
-import { applyFilters } from '../../src/services/fhirLoader';
-import { computeCohortTrajectory } from '../../src/utils/cohortTrajectory';
 import type { PatientCase, SavedSearch } from '../../src/types/fhir';
 
 // ---------------------------------------------------------------------------
-// Shared mock fn references — imported by test files after vi.mock declarations
+// Shared mock fn references — defined at module level; returned by factory fns
 // ---------------------------------------------------------------------------
 
 export const loadSettingsMock = vi.fn();
 export const postAggregateMock = vi.fn();
 export const fetchSpy = vi.fn(() => Promise.resolve(new Response(null, { status: 204 })));
 
+// Context hook mock instances — shared between factory return values and renderOutcomesView
+const useDataMock = vi.fn();
+const useLanguageMock = vi.fn();
+const applyFiltersMock = vi.fn((cases: unknown[]) => cases);
+const getObservationsByCodeMock = vi.fn(() => []);
+const computeCohortTrajectoryMock = vi.fn(() => ({
+  od: {
+    patients: [],
+    scatterPoints: [],
+    medianGrid: [{ x: 0, y: 0.1, p25: 0.05, p75: 0.15, n: 1 }],
+    summary: { patientCount: 1, measurementCount: 1, excludedCount: 0 },
+  },
+  os: {
+    patients: [],
+    scatterPoints: [],
+    medianGrid: [{ x: 0, y: 0.1, p25: 0.05, p75: 0.15, n: 1 }],
+    summary: { patientCount: 1, measurementCount: 1, excludedCount: 0 },
+  },
+  combined: {
+    patients: [],
+    scatterPoints: [],
+    medianGrid: [{ x: 0, y: 0.1, p25: 0.05, p75: 0.15, n: 1 }],
+    summary: { patientCount: 1, measurementCount: 1, excludedCount: 0 },
+  },
+}));
+
 // ---------------------------------------------------------------------------
 // vi.mock factory functions — passed as second arg to vi.mock() in the test file
+// (vi.mock calls must live in the test file; Vitest only hoists them from the
+// file being compiled, not from imported helpers).
 // ---------------------------------------------------------------------------
 
 /**
  * Factory for `../src/services/settingsService`.
- * Partial mock: preserves real exports, overrides loadSettings to delegate to loadSettingsMock.
+ * Partial mock: preserves real exports, overrides loadSettings.
  */
 export const settingsServiceFactory = async (importOriginal: <T = unknown>() => Promise<T>) => {
   const actual = await importOriginal<typeof import('../../src/services/settingsService')>();
@@ -53,64 +80,46 @@ export const outcomesAggregateFactory = () => ({
 
 /**
  * Factory for `../src/context/DataContext`.
+ * Returns the module-level useDataMock so renderOutcomesView can set it directly.
  */
 export const dataContextFactory = () => ({
-  useData: vi.fn(),
+  useData: useDataMock,
 });
 
 /**
  * Factory for `../src/context/LanguageContext`.
  */
 export const languageContextFactory = () => ({
-  useLanguage: vi.fn(),
+  useLanguage: useLanguageMock,
 });
 
 /**
  * Factory for `../src/services/fhirLoader`.
  */
 export const fhirLoaderFactory = () => ({
-  applyFilters: vi.fn((cases: unknown[]) => cases),
+  applyFilters: applyFiltersMock,
   LOINC_VISUS: '79880-1',
   SNOMED_IVI: '36189003',
   SNOMED_EYE_LEFT: '362502000',
   SNOMED_EYE_RIGHT: '362503005',
-  getObservationsByCode: vi.fn(() => []),
+  getObservationsByCode: getObservationsByCodeMock,
 });
 
 /**
  * Factory for `../src/utils/cohortTrajectory`.
- * Partial mock: preserves real exports (defaultScatterOn, type aliases), overrides computeCohortTrajectory.
+ * Partial mock: preserves real exports, overrides computeCohortTrajectory.
  */
 export const cohortTrajectoryFactory = async (importOriginal: <T = unknown>() => Promise<T>) => {
   const real = await importOriginal<typeof import('../../src/utils/cohortTrajectory')>();
   return {
     ...real,
-    computeCohortTrajectory: vi.fn(() => ({
-      od: {
-        patients: [],
-        scatterPoints: [],
-        medianGrid: [{ x: 0, y: 0.1, p25: 0.05, p75: 0.15, n: 1 }],
-        summary: { patientCount: 1, measurementCount: 1, excludedCount: 0 },
-      },
-      os: {
-        patients: [],
-        scatterPoints: [],
-        medianGrid: [{ x: 0, y: 0.1, p25: 0.05, p75: 0.15, n: 1 }],
-        summary: { patientCount: 1, measurementCount: 1, excludedCount: 0 },
-      },
-      combined: {
-        patients: [],
-        scatterPoints: [],
-        medianGrid: [{ x: 0, y: 0.1, p25: 0.05, p75: 0.15, n: 1 }],
-        summary: { patientCount: 1, measurementCount: 1, excludedCount: 0 },
-      },
-    })),
+    computeCohortTrajectory: computeCohortTrajectoryMock,
   };
 };
 
 /**
  * Factory for `recharts`.
- * Partial mock: preserves real exports, stubs ResizeObserver-dependent components to avoid jsdom issues.
+ * Partial mock: stubs ResizeObserver-dependent components to avoid jsdom issues.
  */
 export const rechartsFactory = async (importOriginal: <T = unknown>() => Promise<T>) => {
   const real = await importOriginal<typeof import('recharts')>();
@@ -198,21 +207,22 @@ export interface RenderOutcomesViewOptions {
 /**
  * Renders OutcomesView inside a MemoryRouter at `url` with mocked context hooks.
  *
- * Assumes the test file has already declared vi.mock() calls referencing the factory
- * functions exported from this helper, so that useData, useLanguage, applyFilters,
- * computeCohortTrajectory are all vi.fn() instances at this point.
+ * The test file must have registered vi.mock() calls using the factory functions
+ * exported from this helper before calling renderOutcomesView. Since the factory
+ * functions above return the module-level mock fn instances (useDataMock etc.),
+ * renderOutcomesView can configure them directly without going through the mocked
+ * module imports (which would have TDZ issues).
  *
  * Default mock state (D-01):
  *  - activeCases: buildCases(5)
  *  - savedSearches: [{ id: 'test-cohort', name: 'Test Cohort', ... }]
  *  - locale: 'en'
- *  - settings: twoFactorEnabled=false, therapyInterrupterDays=120, therapyBreakerDays=365,
- *              dataSource={type:'local',blazeUrl:''}, outcomes threshold=1000, cacheTtl=1800000
+ *  - settings: twoFactorEnabled=false, therapyInterrupterDays=120, etc.
  */
-export function renderOutcomesView(
+export async function renderOutcomesView(
   url: string,
   options: RenderOutcomesViewOptions = {},
-): ReturnType<typeof render> {
+): Promise<ReturnType<typeof render>> {
   const activeCases = options.activeCases ?? buildCases(5);
   const savedSearches: SavedSearch[] = options.savedSearches ?? [
     { id: 'test-cohort', name: 'Test Cohort', createdAt: '2024-01-01T00:00:00Z', filters: {} },
@@ -233,10 +243,10 @@ export function renderOutcomesView(
     postAggregateMock.mockImplementation(options.postAggregate);
   }
 
-  // Configure hook mocks. At this point, useData / useLanguage / applyFilters are
-  // already vi.fn() instances because the test file's vi.mock() calls resolved before
-  // this function is called (vi.mock is hoisted to top of the test file).
-  (useData as ReturnType<typeof vi.fn>).mockReturnValue({
+  // Configure hook mocks directly using the module-level vi.fn() instances.
+  // These are the SAME instances returned by the factory functions, so they
+  // are already installed as the mock module's exports.
+  useDataMock.mockReturnValue({
     activeCases,
     savedSearches,
     centers: [],
@@ -251,21 +261,23 @@ export function renderOutcomesView(
     cases: [],
   });
 
-  (useLanguage as ReturnType<typeof vi.fn>).mockReturnValue({
+  useLanguageMock.mockReturnValue({
     locale,
     setLocale: vi.fn(),
     t: (k: string) => k,
   });
 
-  (applyFilters as ReturnType<typeof vi.fn>).mockImplementation(
-    (cases: PatientCase[]) => cases,
-  );
+  applyFiltersMock.mockImplementation((cases: PatientCase[]) => cases);
 
   if (options.cohortTrajectoryResult !== undefined) {
-    (computeCohortTrajectory as ReturnType<typeof vi.fn>).mockReturnValue(
-      options.cohortTrajectoryResult,
-    );
+    computeCohortTrajectoryMock.mockReturnValue(options.cohortTrajectoryResult);
   }
+
+  // Dynamic import ensures OutcomesView is loaded AFTER vi.mock() calls have been
+  // registered (which happens when the test file sets up its module mocks). At call
+  // time the mock registry is active, so OutcomesView's transitive imports resolve
+  // to the mocked versions (useData → vi.fn(), loadSettings → loadSettingsMock, etc.).
+  const { default: OutcomesView } = await import('../../src/components/outcomes/OutcomesView');
 
   return render(
     <MemoryRouter initialEntries={[url]}>
