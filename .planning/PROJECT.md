@@ -122,11 +122,16 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 **Archive:** [`.planning/milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md), [`.planning/milestones/v1.6-REQUIREMENTS.md`](milestones/v1.6-REQUIREMENTS.md)
 
-## Next Milestone Goals (v1.8 — TBD)
+## Current Milestone: v1.8 Session Resilience & Test/Code Polish
 
-- **Real Keycloak OIDC redirect flow** (KEYCLK-01 — blocked by M7 at initAuth)
-- **JWT refresh flow** so 10-min sessions don't force re-login (M6 deferred from v1.7)
-- **AuditPage useReducer refactor** (L4 deferred from v1.7)
+**Goal:** Remove the 10-min re-login friction and pay down targeted v1.7 tech debt (AuditPage refactor, metricSelector test coverage).
+
+**Target features:**
+- JWT refresh flow — sliding/refresh token so active users aren't forced to re-login every 10 min (M6 deferred from v1.7)
+- AuditPage useReducer refactor — replace ad-hoc useState with reducer-driven state machine (L4 deferred from v1.7)
+- metricSelector integration tests — unskip `describe.skip` placeholder with full router context
+
+**Explicitly not in scope:** Real Keycloak OIDC redirect flow (KEYCLK-01) — still blocked on real Keycloak instance.
 
 ## Historical Milestone Goals (archived)
 
@@ -235,4 +240,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 after v1.7 closed (Phases 14–17 + full-review security pass). v1.8 scope TBD.*
+*Last updated: 2026-04-22 — v1.8 milestone defined (Session Resilience & Test/Code Polish).*
