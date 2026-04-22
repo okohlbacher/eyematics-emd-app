@@ -61,10 +61,6 @@ const translations = {
   loginPasswordPlaceholder: { de: 'Passwort', en: 'Password' },
   loginContinue: { de: 'Weiter', en: 'Continue' },
   loginSubmit: { de: 'Anmelden', en: 'Log in' },
-  loginDemoHint: {
-    de: 'Demo: admin/admin oder forscher1/changeme2025!',
-    en: 'Demo: admin/admin or forscher1/changeme2025!',
-  },
   login2faTitle: {
     de: 'Zwei-Faktor-Authentisierung: Bitte geben Sie den OTP-Code ein.',
     en: 'Two-factor authentication: Please enter the OTP code.',
