@@ -1,34 +1,34 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.8
-milestone_name: TBD
-status: planning
-stopped_at: v1.7 closed — defining v1.8
-last_updated: "2026-04-21T19:20:00.000Z"
-last_activity: 2026-04-21
+milestone_name: — Session Resilience & Test/Code Polish
+status: completed
+stopped_at: Phase 18 context gathered
+last_updated: "2026-04-22T19:43:12.131Z"
+last_activity: 2026-04-22 — v1.8 roadmap created
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-21)
+See: .planning/PROJECT.md (updated 2026-04-22)
 
-**Core value:** Every user sees only authorized data, with tamper-proof audit trail — while `/outcomes` stays fast, visually polished, and useful beyond visus.
-**Current focus:** Defining v1.8 milestone scope
+**Core value:** Every user sees only authorized data, with tamper-proof audit trail — while maintaining the zero-friction local development experience.
+**Current focus:** v1.8 — Session Resilience & Test/Code Polish (roadmap complete, awaiting phase planning)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 18 — metricSelector Test Harness Unblock (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-04-21
+Status: Roadmap complete; awaiting `/gsd-plan-phase 18`
+Last activity: 2026-04-22 — v1.8 roadmap created
+Progress: [░░░] 0/3 phases complete
 
 ## Milestones Shipped
 
@@ -40,15 +40,38 @@ Last activity: 2026-04-21
 | v1.6 | Outcomes Polish & Scale | 10–13 | 2026-04-17 |
 | v1.7 | Security, Performance & Cross-Cohort | 14–17 | 2026-04-21 |
 
-## v1.8 Carry-Over Candidates
+## v1.8 Scope
 
-- **KEYCLK-01** — Real Keycloak OIDC redirect flow (deferred Phase 18)
-- **M6** — JWT refresh flow (10-min session hard cap)
-- **L4** — AuditPage useReducer refactor
-- metricSelector integration tests (requires full router context)
+**Phases (18–20):**
+
+- Phase 18 — metricSelector Test Harness Unblock (MSEL-01..06)
+- Phase 19 — AuditPage State Machine Refactor (AUDIT-01..04)
+- Phase 20 — JWT Refresh Flow & Session Resilience (SESSION-01..09, 12, 13)
+
+**Not in scope:** KEYCLK-01 (Keycloak OIDC redirect), SESSION-10 (force sign-out everywhere), SESSION-11 (stateful refresh-sessions table with OAuth2 rotation).
+
+## Accumulated Context
+
+### Decisions (locked at roadmap time)
+
+- Phase ordering: 18 → 19 → 20. Hard dependency: SESSION-13 extends `describeAction`, which Phase 19 relocates into `auditFormatters.ts`. metricSelector chosen first as independent, lowest-risk warm-up.
+- Refresh storage: httpOnly `Secure` `SameSite=Strict` cookie scoped to `/api/auth/refresh` (Pitfalls-recommended security posture; adds `cookie-parser` — the single permitted new dep this milestone).
+- Session caps: default 8h refresh TTL / 12h absolute, configurable via `settings.yaml` keys `auth.refreshTokenTtlMs` / `auth.refreshAbsoluteCapMs` (never env vars — see Key Decisions in PROJECT.md).
+- Characterization tests for AuditPage land BEFORE the reducer swap (AUDIT-02); any post-refactor behavior diff is a regression.
+- All `jwt.verify()` call sites route through `server/jwtUtil.ts` with HS256 hard pin; ESLint `no-restricted-imports` enforces.
+
+### Todos
+
+- `/gsd-plan-phase 18` — first planning action for v1.8
+- At Phase 20 planning: confirm `data/users.json` migration path for `tokenVersion` / `passwordChangedAt` / `totpChangedAt`
+- At Phase 20 planning: verify refresh events are added to both `REDACT_PATHS` and `SKIP_AUDIT_PATHS` in `auditMiddleware.ts`
+
+### Blockers
+
+- None
 
 ## Session Continuity
 
-Last session: 2026-04-21
-Stopped at: v1.7 archived — defining v1.8 scope
-Next step: `/gsd-new-milestone` to begin v1.8 questioning → research → requirements → roadmap
+Last session: 2026-04-22T19:43:12.128Z
+Stopped at: Phase 18 context gathered
+Next step: `/gsd-plan-phase 18`
