@@ -49,20 +49,37 @@ export default function SettingsPage() {
   const [issueCount, setIssueCount] = useState(0);
 
   useEffect(() => {
-    // Load issue count from server
-    getIssueCount().then(setIssueCount).catch(() => {});
-    // Load settings from YAML + localStorage on mount
-    loadSettings().then((s) => {
-      setTwoFactorEnabled(s.twoFactorEnabled);
-      setInterrupterDays(s.therapyInterrupterDays);
-      setBreakerDays(s.therapyBreakerDays);
-      setDataSourceType(s.dataSource.type);
-      setBlazeUrl(s.dataSource.blazeUrl);
-    });
-    authFetch('/api/auth/totp/status')
-      .then((r) => r.ok ? r.json() as Promise<{ totpEnabled: boolean }> : null)
-      .then((s) => { if (s) setTotpEnabled(Boolean(s.totpEnabled)); })
-      .catch(() => {});
+    let cancelled = false;
+    (async () => {
+      // Load issue count from server (fire-and-forget tolerated failure)
+      try {
+        const n = await getIssueCount();
+        if (!cancelled) setIssueCount(n);
+      } catch {
+        /* ignore */
+      }
+      // Load settings from YAML + localStorage on mount
+      try {
+        const s = await loadSettings();
+        if (cancelled) return;
+        setTwoFactorEnabled(s.twoFactorEnabled);
+        setInterrupterDays(s.therapyInterrupterDays);
+        setBreakerDays(s.therapyBreakerDays);
+        setDataSourceType(s.dataSource.type);
+        setBlazeUrl(s.dataSource.blazeUrl);
+      } catch {
+        /* ignore — keep defaults */
+      }
+      // Load current per-user TOTP enrollment status
+      try {
+        const r = await authFetch('/api/auth/totp/status');
+        const s = r.ok ? ((await r.json()) as { totpEnabled: boolean }) : null;
+        if (!cancelled && s) setTotpEnabled(Boolean(s.totpEnabled));
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const handleTotpEnroll = async () => {
