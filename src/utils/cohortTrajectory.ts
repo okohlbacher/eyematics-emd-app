@@ -6,5 +6,4 @@
 // byte-identical output — deletion would break the parity test contract.
 // Per D-06 / D-15 this is a stable public import surface; canonical source is
 // shared/cohortTrajectory.ts and is imported from below.
-// Canonical source: shared/cohortTrajectory.ts
 export * from '../../shared/cohortTrajectory';

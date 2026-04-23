@@ -47,10 +47,6 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | null>(null);
 
-// ---------------------------------------------------------------------------
-// Server API helpers
-// ---------------------------------------------------------------------------
-
 async function fetchJson<T>(url: string): Promise<T> {
   const resp = await authFetch(url);
   if (!resp.ok) throw new Error(`${url}: ${resp.status}`);
@@ -93,7 +89,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [excludedCases, setExcludedCases] = useState<string[]>([]);
   const [reviewedCases, setReviewedCases] = useState<string[]>([]);
 
-  // Load FHIR bundles + per-user data from server
   const fetchData = useCallback(() => {
     setLoading(true);
     setError(null);

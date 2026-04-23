@@ -76,7 +76,6 @@ export default function AdminPage() {
   const [editRole, setEditRole] = useState<UserRole>('researcher');
   const [editCenters, setEditCenters] = useState<string[]>([]);
 
-  // Search, filter, sort state
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [centerFilter, setCenterFilter] = useState<string>('all');
@@ -143,7 +142,6 @@ export default function AdminPage() {
   const filteredUsers = useMemo(() => {
     let result = [...users];
 
-    // Search filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -154,7 +152,6 @@ export default function AdminPage() {
       );
     }
 
-    // Role filter
     if (roleFilter !== 'all') {
       result = result.filter((u) => u.role === roleFilter);
     }
@@ -164,7 +161,6 @@ export default function AdminPage() {
       result = result.filter((u) => Array.isArray(u.centers) && u.centers.includes(centerFilter));
     }
 
-    // Sort
     result.sort((a, b) => {
       let cmp = 0;
       switch (sortField) {

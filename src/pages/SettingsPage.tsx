@@ -41,7 +41,6 @@ export default function SettingsPage() {
   const [totpBusy, setTotpBusy] = useState(false);
   const [totpError, setTotpError] = useState('');
 
-  // Data source state
   const [dataSourceType, setDataSourceType] = useState<DataSourceType>('local');
   const [blazeUrl, setBlazeUrl] = useState('http://localhost:8080/fhir');
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('idle');
@@ -58,7 +57,6 @@ export default function SettingsPage() {
       } catch {
         /* ignore */
       }
-      // Load settings from YAML + localStorage on mount
       try {
         const s = await loadSettings();
         if (cancelled) return;
@@ -70,7 +68,6 @@ export default function SettingsPage() {
       } catch {
         /* ignore — keep defaults */
       }
-      // Load current per-user TOTP enrollment status
       try {
         const r = await authFetch('/api/auth/totp/status');
         const s = r.ok ? ((await r.json()) as { totpEnabled: boolean }) : null;

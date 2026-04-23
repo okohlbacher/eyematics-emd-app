@@ -101,7 +101,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const warningRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Fetch display name from /api/auth/users/me when user changes
   useEffect(() => {
     if (!user || !token) {
       setDisplayName('');

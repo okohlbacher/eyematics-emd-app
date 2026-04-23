@@ -399,10 +399,6 @@ export default function OutcomesView() {
     setCompareOpen(false);
   };
 
-  // ---------------------------------------------------------------------------
-  // Render helpers
-  // ---------------------------------------------------------------------------
-
   const renderTabStrip = () => (
     <nav
       role="tablist"

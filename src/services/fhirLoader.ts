@@ -15,12 +15,10 @@ import { getDataSourceConfig, loadBundlesFromSource } from './dataSource';
 // DataContext and services depend on. Callers that only need the pure helpers
 // can import from shared/ directly; callers that also need the loader logic
 // continue to import from here.
-// Canonical sources: shared/fhirCodes.ts, shared/fhirQueries.ts, shared/patientCases.ts
 export * from '../../shared/fhirCodes';
 export { getObservationsByCode, getLatestObservation } from '../../shared/fhirQueries';
 export { extractPatientCases, applyFilters, getAge } from '../../shared/patientCases';
 
-// Internal references for getDiagnosisLabel, getDiagnosisFullText.
 import {
   SNOMED_AMD,
   SNOMED_DR,
