@@ -1,0 +1,16 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "server/index.ts",
+    "src/main.tsx",
+    "scripts/generate-all-bundles.ts",
+    "scripts/check-skipped-tests.mjs",
+    "tests/**/*.test.{ts,tsx}"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "server/**/*.ts",
+    "shared/**/*.ts"
+  ],
+  "ignoreExportsUsedInFile": true
+}

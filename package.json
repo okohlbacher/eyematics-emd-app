@@ -14,7 +14,8 @@
     "generate-bundles": "node --import tsx scripts/generate-all-bundles.ts",
     "test": "vitest run",
     "test:check-skips": "node scripts/check-skipped-tests.mjs",
-    "test:ci": "npm run test:check-skips && npm test"
+    "test:ci": "npm run test:check-skips && npm test",
+    "knip": "knip"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
@@ -60,6 +61,7 @@
     "eslint-plugin-simple-import-sort": "^13.0.0",
     "globals": "^17.4.0",
     "jsdom": "^29.0.2",
+    "knip": "^6.6.2",
     "supertest": "^7.2.2",
     "tsx": "^4.21.0",
     "typescript": "~6.0.2",
