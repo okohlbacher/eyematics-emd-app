@@ -230,3 +230,101 @@ describe('SKIP_AUDIT_PATHS — handler-written rows (Phase 11 / D-10 / T-11-01)'
     expect(loggedEntries).toHaveLength(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 20 / D-19: Status-conditional audit skip + REDACT_PATHS for refresh/logout
+// ---------------------------------------------------------------------------
+describe('Phase 20 status-conditional skip — /api/auth/refresh', () => {
+  it('skips successful (200) /api/auth/refresh — high-volume background event', () => {
+    const req = mockReq({
+      originalUrl: '/api/auth/refresh',
+      method: 'POST',
+      body: {},
+    });
+    const res = mockRes();
+    (res as unknown as { statusCode: number }).statusCode = 200;
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries).toHaveLength(0);
+  });
+
+  it('audits failed (401) /api/auth/refresh — security-relevant', () => {
+    const req = mockReq({
+      originalUrl: '/api/auth/refresh',
+      method: 'POST',
+      body: {},
+    });
+    const res = mockRes();
+    (res as unknown as { statusCode: number }).statusCode = 401;
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries).toHaveLength(1);
+    expect(loggedEntries[0].path).toBe('/api/auth/refresh');
+    expect(loggedEntries[0].method).toBe('POST');
+  });
+
+  it('audits failed (403) /api/auth/refresh — CSRF mismatch path', () => {
+    const req = mockReq({
+      originalUrl: '/api/auth/refresh',
+      method: 'POST',
+      body: {},
+    });
+    const res = mockRes();
+    (res as unknown as { statusCode: number }).statusCode = 403;
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries).toHaveLength(1);
+    expect(loggedEntries[0].path).toBe('/api/auth/refresh');
+  });
+
+  it('always audits POST /api/auth/logout (200)', () => {
+    const req = mockReq({
+      originalUrl: '/api/auth/logout',
+      method: 'POST',
+      body: {},
+    });
+    const res = mockRes();
+    (res as unknown as { statusCode: number }).statusCode = 200;
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries).toHaveLength(1);
+    expect(loggedEntries[0].path).toBe('/api/auth/logout');
+    expect(loggedEntries[0].method).toBe('POST');
+  });
+
+  it('redacts /api/auth/refresh body (CSRF-shaped fields not persisted raw)', () => {
+    // refresh body in practice is empty / CSRF-only. Send a body containing a
+    // password-shaped field — REDACT_PATHS membership must redact it.
+    const req = mockReq({
+      originalUrl: '/api/auth/refresh',
+      method: 'POST',
+      body: { password: 'should-be-redacted-on-refresh' },
+    });
+    const res = mockRes();
+    (res as unknown as { statusCode: number }).statusCode = 401; // failure → audited
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries).toHaveLength(1);
+    const stored = loggedEntries[0].body!;
+    expect(stored).not.toContain('should-be-redacted-on-refresh');
+    const parsed = JSON.parse(stored);
+    expect(parsed.password).toBe('[REDACTED]');
+  });
+
+  it('redacts /api/auth/logout body (defense in depth)', () => {
+    const req = mockReq({
+      originalUrl: '/api/auth/logout',
+      method: 'POST',
+      body: { password: 'should-be-redacted-on-logout' },
+    });
+    const res = mockRes();
+    (res as unknown as { statusCode: number }).statusCode = 200;
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries).toHaveLength(1);
+    const stored = loggedEntries[0].body!;
+    expect(stored).not.toContain('should-be-redacted-on-logout');
+    const parsed = JSON.parse(stored);
+    expect(parsed.password).toBe('[REDACTED]');
+  });
+});
