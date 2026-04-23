@@ -1,5 +1,20 @@
 # EMD Backend Redesign
 
+## Current Milestone: v1.9 — Codebase Consistency & Test/Tech-Debt Polish
+
+**Goal:** Raise internal quality — eliminate code duplication, enforce consistency across the codebase, green the test suite, automate deferred UAT items, and modernize deps/lint.
+
+**Target themes:**
+- Codebase consistency audit: sweep for duplicated utilities, divergent patterns, inconsistent naming, stale abstractions; refactor to single-source-of-truth
+- Documentation consistency: `.planning/`, `README.md`, inline docs audited for accuracy & conciseness
+- Test-suite green: fix 3 pre-existing failures (outcomesPanelCrt ×2 visus absolute y-domain; OutcomesPage ×1 audit beacon POST)
+- Session UAT → automated: convert Phase 20's 5 human-verification items into automated tests
+- Dependency + lint cleanup: npm audit, non-breaking upgrades, tighter ESLint rules, dead-code removal
+
+**Explicitly out of scope:** KEYCLK-01, SESSION-10/11, Playwright E2E (MSEL-04 gap stays deferred), new product features.
+
+**Starting phase number:** 21 (continues v1.8's Phase 20)
+
 ## What This Is
 
 A production-readiness overhaul of the EyeMatics Clinical Demonstrator (EMD), a React/TypeScript clinical research dashboard for ophthalmological IVOM treatment data. The redesign adds a standalone Express backend, optional Keycloak OIDC authentication (with local credential fallback), server-side audit logging, center-based data restriction, and migrates all persistent state from localStorage to server-side JSON file storage.
@@ -253,4 +268,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-23 after v1.8 closed (Phases 18–20 + post-UAT polish). Next milestone scope TBD.*
+*Last updated: 2026-04-23 — v1.9 started (Codebase Consistency & Test/Tech-Debt Polish).*
