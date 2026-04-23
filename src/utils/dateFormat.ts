@@ -14,8 +14,3 @@ export function getDateLocale(locale: AppLocale): string {
 export function formatDate(date: string | Date, locale: AppLocale): string {
   return new Date(date).toLocaleDateString(getDateLocale(locale));
 }
-
-/** Format a date string or Date to a localized date+time string. */
-export function formatDateTime(date: string | Date, locale: AppLocale): string {
-  return new Date(date).toLocaleString(getDateLocale(locale));
-}
