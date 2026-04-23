@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: — Session Resilience & Test/Code Polish
 status: executing
-stopped_at: Phase 19 context gathered
-last_updated: "2026-04-23T06:13:32.020Z"
-last_activity: 2026-04-23 -- Phase 19 planning complete
+stopped_at: Phase 19, Plan 01 complete
+last_updated: "2026-04-23T08:22:00.000Z"
+last_activity: 2026-04-23 -- Phase 19 Plan 01 executed (characterization tests)
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
-  percent: 25
+  completed_plans: 2
+  percent: 50
 ---
 
 # Project State
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-22)
 
 **Core value:** Every user sees only authorized data, with tamper-proof audit trail — while maintaining the zero-friction local development experience.
-**Current focus:** v1.8 — Session Resilience & Test/Code Polish (roadmap complete, awaiting phase planning)
+**Current focus:** Phase 19 — AuditPage State Machine Refactor
 
 ## Current Position
 
-Phase: 19
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-04-23 -- Phase 19 planning complete
-Progress: [░░░] 0/3 phases complete
+Phase: 19 — EXECUTING
+Plan: 2 of 2 (Plan 01 complete — characterization tests; Plan 02 pending — useReducer refactor)
+Status: Plan 19-01 committed at f2dfe93; ready for Plan 19-02
+Last activity: 2026-04-23 -- Phase 19 Plan 01 executed (characterization tests)
+Progress: [█░░] 0/3 phases complete (2/4 plans complete across milestone)
 
 ## Milestones Shipped
 
@@ -58,7 +58,10 @@ Progress: [░░░] 0/3 phases complete
 - Phase ordering: 18 → 19 → 20. Hard dependency: SESSION-13 extends `describeAction`, which Phase 19 relocates into `auditFormatters.ts`. metricSelector chosen first as independent, lowest-risk warm-up.
 - Refresh storage: httpOnly `Secure` `SameSite=Strict` cookie scoped to `/api/auth/refresh` (Pitfalls-recommended security posture; adds `cookie-parser` — the single permitted new dep this milestone).
 - Session caps: default 8h refresh TTL / 12h absolute, configurable via `settings.yaml` keys `auth.refreshTokenTtlMs` / `auth.refreshAbsoluteCapMs` (never env vars — see Key Decisions in PROJECT.md).
-- Characterization tests for AuditPage land BEFORE the reducer swap (AUDIT-02); any post-refactor behavior diff is a regression.
+- Characterization tests for AuditPage land BEFORE the reducer swap (AUDIT-02); any post-refactor behavior diff is a regression. [DONE — f2dfe93]
+- URLSearchParams encodes colons in ISO timestamps (%3A); test assertions must use decodeURIComponent() for toTime=YYYY-MM-DDTHH:MM:SS assertions.
+- Codebase has no jest-dom setup — RTL assertions use queryByText().not.toBeNull() / .toBeNull() (Vitest/Chai native).
+- utils/download must be vi.mocked in AuditPage RTL tests to prevent jsdom URL.createObjectURL() errors.
 - All `jwt.verify()` call sites route through `server/jwtUtil.ts` with HS256 hard pin; ESLint `no-restricted-imports` enforces.
 
 ### Todos
@@ -73,6 +76,6 @@ Progress: [░░░] 0/3 phases complete
 
 ## Session Continuity
 
-Last session: 2026-04-23T05:57:51.914Z
-Stopped at: Phase 19 context gathered
-Next step: `/gsd-plan-phase 18`
+Last session: 2026-04-23T08:22:00.000Z
+Stopped at: Phase 19 Plan 01 complete — characterization tests committed (f2dfe93)
+Next step: Execute Plan 19-02 (useReducer refactor — `auditPageState.ts`, `auditFormatters.ts`, `useAuditData.ts`, slim AuditPage.tsx, `auditPageReducer.test.ts`)
