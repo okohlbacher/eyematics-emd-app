@@ -159,11 +159,6 @@ export function startPurgeInterval(): void {
   _purgeTimer = setInterval(purgeOldEntries, 24 * 60 * 60 * 1000);
 }
 
-/** Exported for test teardown only — stops the purge interval. */
-export function stopPurgeInterval(): void {
-  if (_purgeTimer !== null) { clearInterval(_purgeTimer); _purgeTimer = null; }
-}
-
 // ---------------------------------------------------------------------------
 // 5. queryAudit
 // ---------------------------------------------------------------------------
