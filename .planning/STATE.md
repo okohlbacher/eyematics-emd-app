@@ -4,7 +4,7 @@ milestone: v1.8
 milestone_name: — Session Resilience & Test/Code Polish
 status: Phase 20 shipped; human UAT 5/5 passed
 stopped_at: Phase 19 Plan 02 complete — useReducer refactor committed (96ac771)
-last_updated: "2026-04-23T12:21:21.119Z"
+last_updated: "2026-04-23T12:32:02.679Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 3

@@ -11,8 +11,20 @@
 | v1.5 | Site Roster Correction & Cohort Analytics | 2026-04-15 | 7–9 | [`milestones/v1.5-ROADMAP.md`](milestones/v1.5-ROADMAP.md) |
 | v1.6 | Outcomes Polish & Scale | 2026-04-17 | 10–13 | [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md) |
 | v1.7 | Security, Performance & Cross-Cohort | 2026-04-21 | 14–17 | [`milestones/v1.7-ROADMAP.md`](milestones/v1.7-ROADMAP.md) |
+| v1.8 | Session Resilience & Test/Code Polish | 2026-04-23 | 18–20 | [`milestones/v1.8-ROADMAP.md`](milestones/v1.8-ROADMAP.md) |
 
 > Note: v1.2–v1.4 shipped between v1.1 and v1.5 but were not tracked in GSD artifacts; git history is authoritative for those releases.
+
+<details>
+<summary>✅ v1.8 Session Resilience & Test/Code Polish (Phases 18–20) — SHIPPED 2026-04-23</summary>
+
+- [x] **Phase 18: metricSelector Test Harness Unblock** — Unskip 5 placeholder metricSelector tests + shared `renderOutcomesView` helper (MSEL-01..06) — completed 2026-04-23
+- [x] **Phase 19: AuditPage State Machine Refactor** — useReducer-driven AuditPage with characterization tests landed first (AUDIT-01..04) — completed 2026-04-23
+- [x] **Phase 20: JWT Refresh Flow & Session Resilience** — Access/refresh token split, silent `authFetch` refresh, BroadcastChannel cross-tab coordination, credential-mutation invalidation (SESSION-01..09, 12, 13) — completed 2026-04-23
+
+Full phase details: [`milestones/v1.8-ROADMAP.md`](milestones/v1.8-ROADMAP.md)
+
+</details>
 
 <details>
 <summary>✅ v1.7 Security, Performance & Cross-Cohort (Phases 14–17) — SHIPPED 2026-04-21</summary>
@@ -40,100 +52,10 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ---
 
-## Active Milestone: v1.8 — Session Resilience & Test/Code Polish
+## Next Milestone
 
-**Goal:** Remove the 10-min re-login friction and pay down targeted v1.7 tech debt (AuditPage refactor, metricSelector test coverage).
-**Granularity:** standard (derived from scope)
-**Coverage:** 21/21 v1.8 requirements mapped
-**Starting phase number:** 18 (continues v1.7's Phase 17)
-
-### Phases
-
-- [x] **Phase 18: metricSelector Test Harness Unblock** — Unskip the 5 placeholder metricSelector tests and extract a shared OutcomesView render helper (completed 2026-04-23)
-- [x] **Phase 19: AuditPage State Machine Refactor** — Migrate AuditPage to a useReducer-driven state machine with characterization tests landing first (completed 2026-04-23)
-- [x] **Phase 20: JWT Refresh Flow & Session Resilience** — Ship access/refresh token split, silent refresh in authFetch, cross-tab coordination, credential-mutation invalidation, and audit/i18n wiring (completed 2026-04-23)
-
-### Phase Details
-
-#### Phase 18: metricSelector Test Harness Unblock
-**Goal**: Developers can rely on automated coverage for the metric selector's deep-link, fallback, and keyboard-navigation behavior
-**Depends on**: Nothing (independent, lowest-risk lead-off)
-**Requirements**: MSEL-01, MSEL-02, MSEL-03, MSEL-04, MSEL-05, MSEL-06
-**Success Criteria** (what must be TRUE):
-  1. All 5 previously `describe.skip` cases in `tests/metricSelector.test.tsx` are active and passing in CI
-  2. A `?metric=X` URL renders the matching tab selected, and clicking a different tab updates the URL (round-trip verified)
-  3. Unknown metric slugs (e.g. `?metric=bogus`) render the default metric without runtime errors
-  4. Browser back/forward navigation through MemoryRouter restores the previous metric selection, and keyboard arrow-key tab cycling is regression-tested
-  5. Both `OutcomesViewRouting.test.tsx` and `metricSelector.test.tsx` consume a single shared `tests/helpers/renderOutcomesView.tsx` factory (7 `vi.mock` blocks + MemoryRouter)
-**Plans**: TBD
-
-#### Phase 19: AuditPage State Machine Refactor
-**Goal**: AuditPage state is driven by a reducer-based state machine with behavior byte-identical to v1.7 and verifiable via pure unit tests
-**Depends on**: Phase 18 (independent at the code level, but sequenced before Phase 20 to avoid `describeAction` merge conflict in AuditPage.tsx)
-**Requirements**: AUDIT-01, AUDIT-02, AUDIT-03, AUDIT-04
-**Success Criteria** (what must be TRUE):
-  1. Admin viewing the audit log sees byte-identical behavior to v1.7: 6-dim filter, 300ms debounce, cancel-on-unmount, admin-gated controls, 4 render states, CSV/JSON export
-  2. Characterization tests capturing the pre-refactor AuditPage behavior are committed BEFORE the reducer swap (separate commit) and remain green after
-  3. AuditPage is split into `src/pages/audit/auditPageState.ts` (reducer + selectors), `auditFormatters.ts` (describeAction, describeDetail, isRelevantEntry, statusBadgeClass), and `useAuditData.ts` (hook wrapping reducer + debounced fetch); `AuditPage.tsx` is pure render
-  4. `tests/auditPageReducer.test.ts` exercises all 5 discriminated-union action paths (`FILTER_SET`, `FILTERS_RESET`, `FETCH_START`, `FETCH_SUCCESS`, `FETCH_ERROR`) plus the `requestEpoch` stale-response guard
-**Plans**: 2 plans
-- [x] 19-01-characterization-PLAN.md — Land characterization tests against unrefactored AuditPage.tsx (test-only commit)
-- [x] 19-02-refactor-PLAN.md — Migrate AuditPage to useReducer state machine; add reducer test; characterization stays green
-**UI hint**: yes
-
-#### Phase 20: JWT Refresh Flow & Session Resilience
-**Goal**: Active users stay logged in beyond the 10-min access-token boundary without any session-expiry UX, while absolute session caps and credential-mutation invalidation preserve v1.7's security posture
-**Depends on**: Phase 19 (SESSION-13 extends the `describeAction` mapping that Phase 19 relocates to `auditFormatters.ts`)
-**Requirements**: SESSION-01, SESSION-02, SESSION-03, SESSION-04, SESSION-05, SESSION-06, SESSION-07, SESSION-08, SESSION-09, SESSION-12, SESSION-13
-**Success Criteria** (what must be TRUE):
-  1. An active user working across the 10-min access-token boundary continues making API calls with no re-login prompt; `authFetch` silently refreshes on 401 and retries the original request once (single-flight lock, retry guard prevents loops)
-  2. The 10-min idle auto-logout still fires when the user is idle, and an absolute session cap (configurable `auth.refreshTokenTtlMs` / `auth.refreshAbsoluteCapMs`, defaults 8h / 12h) forces re-auth after the cap regardless of activity
-  3. After an admin resets a user's password or TOTP, or the user changes their own password/TOTP, any outstanding refresh token for that user is rejected on next use (`tokenVersion` / `passwordChangedAt` / `totpChangedAt` bumped in `data/users.json`)
-  4. Refresh tokens are delivered as httpOnly `Secure` `SameSite=Strict` cookies scoped to `/api/auth/refresh` with CSRF protection; access tokens remain Bearer-in-memory; `POST /api/auth/logout` clears both server-side refresh state (cookie + tokenVersion bump) and the client invalidates both tokens
-  5. Multiple open tabs coordinate via `BroadcastChannel('emd-auth')` so only one refresh fires at a time (5-second server grace window); successful refreshes are excluded from `audit.db` via `SKIP_AUDIT_PATHS` while failed refreshes and logout events are still audited with new DE+EN `audit_action_refresh` / `audit_action_logout` i18n keys
-  6. All `jwt.verify()` call sites route through `server/jwtUtil.ts` with hard-pinned `algorithms: ['HS256']`; ESLint `no-restricted-imports` forbids direct `jsonwebtoken` verify imports elsewhere
-**Plans**: 4 plans
-- [x] 20-01-PLAN.md — Server core: jwtUtil + cookie-parser + /api/auth/refresh + /logout extension + lazy users.json migration + auth settings namespace (Wave 1)
-- [x] 20-02-PLAN.md — ESLint no-restricted-imports + migrate jwt.* call sites + tokenVersion bumps in 4 credential-mutation endpoints (Wave 2)
-- [x] 20-03-PLAN.md — Audit middleware status-conditional skip + REDACT_PATHS + audit_action_refresh i18n + describeAction extension (Wave 2)
-- [x] 20-04-PLAN.md — Client authFetch single-flight refresh + retry guard + BroadcastChannel + AuthContext.logout wiring (Wave 3)
-
-### Progress
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 18. metricSelector Test Harness Unblock | 2/2 | Complete    | 2026-04-23 |
-| 19. AuditPage State Machine Refactor | 2/2 | Complete    | 2026-04-23 |
-| 20. JWT Refresh Flow & Session Resilience | 4/4 | Complete   | 2026-04-23 |
-
-### Coverage Map
-
-| Requirement | Phase |
-|-------------|-------|
-| MSEL-01 | Phase 18 |
-| MSEL-02 | Phase 18 |
-| MSEL-03 | Phase 18 |
-| MSEL-04 | Phase 18 |
-| MSEL-05 | Phase 18 |
-| MSEL-06 | Phase 18 |
-| AUDIT-01 | Phase 19 |
-| AUDIT-02 | Phase 19 |
-| AUDIT-03 | Phase 19 |
-| AUDIT-04 | Phase 19 |
-| SESSION-01 | Phase 20 |
-| SESSION-02 | Phase 20 |
-| SESSION-03 | Phase 20 |
-| SESSION-04 | Phase 20 |
-| SESSION-05 | Phase 20 |
-| SESSION-06 | Phase 20 |
-| SESSION-07 | Phase 20 |
-| SESSION-08 | Phase 20 |
-| SESSION-09 | Phase 20 |
-| SESSION-12 | Phase 20 |
-| SESSION-13 | Phase 20 |
-
-**Coverage:** 21/21 v1.8 requirements mapped. SESSION-10, SESSION-11, and KEYCLK-01 are explicitly out of scope per REQUIREMENTS.md.
+v1.8 shipped 2026-04-23. Next milestone to be defined via `/gsd-new-milestone`.
 
 ---
 
-*Last updated: 2026-04-22 — v1.8 roadmap created (Phases 18–20).*
+*Last updated: 2026-04-23 — v1.8 archived.*

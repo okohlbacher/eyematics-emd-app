@@ -1,5 +1,22 @@
 # Milestones
 
+## v1.8 Session Resilience & Test/Code Polish (Shipped: 2026-04-23)
+
+**Phases completed:** 3 phases, 8 plans, 11 tasks
+
+**Key accomplishments:**
+
+- Shared test helper `tests/helpers/renderOutcomesView.tsx` extracted from OutcomesViewRouting.test.tsx; 7 existing tests migrated to consume the helper with zero behaviour change; 14-symbol export surface in place for Plan 02 consumption.
+- 5 previously-skipped metric-selector tests unskipped + migrated onto shared helper; 4 new keyboard navigation tests added (MSEL-05); duplicate .ts file deleted; all 9 tests green
+- One-liner:
+- One-liner:
+- 1. [Rule 1 — Test Bug] Within-second iat collision in rotation test
+- Migrated call sites:
+- Files:
+- TDD RED → GREEN.
+
+---
+
 ## v1.7 Security, Performance & Cross-Cohort (Shipped: 2026-04-21)
 
 **Phases completed:** 4 phases (14–17), 16 plans
@@ -13,6 +30,7 @@
 - **Audit log + dark mode (Phase 17):** Multi-dimension audit filters (user, category, date range, body search, failures-only); ThemeContext/ThemeToggle; DARK_EYE_COLORS WCAG 4.5:1; FOUC prevention; `@variant dark` Tailwind v4 class-based dark mode
 
 **Deferred to future milestone:**
+
 - Phase 18 (Keycloak OIDC Redirect, KEYCLK-01) — requires real Keycloak instance; infrastructure prepared in Phase 6 (v1.0)
 
 ---
@@ -32,6 +50,7 @@
 - **New outcome metrics (Phase 13):** CRT trajectory (LOINC LP267955-5, µm units), treatment-interval histogram (6 fixed bins, median annotation), responder classification (configurable ETDRS threshold, ±180-day year-1 window), metric selector tab strip with `?metric=` deep-link, per-metric CSV export, 60 metrics* i18n keys (DE+EN) with completeness test
 
 **Known gaps (accepted):**
+
 - VQA-02 dark-mode contrast: deferred — no dark-mode infrastructure in codebase
 - metricSelector integration tests: `describe.skip` — require full router context; accepted for now
 

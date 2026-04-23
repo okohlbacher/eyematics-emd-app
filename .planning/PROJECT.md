@@ -97,16 +97,33 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] Security quick wins + per-user TOTP 2FA (SEC-14..15) — v1.7 (Phases 14–15)
 - [x] Full-review security hardening: C1–C5, H1–H7, M1–M8, L1–L10 resolved (v1.7-full-review)
 
-### Active (v1.8 candidates)
+### Validated in v1.8
 
-- [ ] metricSelector integration tests — `describe.skip` placeholder; needs full router context
+- [x] metricSelector test harness unblocked: 5 skipped cases unskipped + shared `renderOutcomesView` helper + MSEL-05 keyboard tests (MSEL-01..06) — v1.8 (Phase 18)
+- [x] AuditPage useReducer state machine refactor with characterization tests landed first (AUDIT-01..04) — v1.8 (Phase 19)
+- [x] JWT refresh flow with silent `authFetch` refresh, BroadcastChannel cross-tab coordination, credential-mutation invalidation (SESSION-01..09, 12, 13) — v1.8 (Phase 20)
+- [x] Post-UAT polish: LoginPage password toggle, Münster (UKMS) restored as 8th site, doc-quality COHORT_PALETTES, scrollable diagnosis legend — v1.8
+
+### Active (next-milestone candidates)
+
 - [ ] Real Keycloak OIDC redirect flow (KEYCLK-01) — blocked at initAuth until the redirect flow ships (M7)
-- [ ] JWT refresh flow — 10-min hard cap still forces re-login (M6 deferred)
-- [ ] AuditPage state machine (useReducer) refactor (L4 deferred)
+- [ ] SESSION-10: admin-triggered force sign-out everywhere
+- [ ] SESSION-11: stateful refresh-sessions table with OAuth2-style rotation
+- [ ] UI surface for `auth.refreshTokenTtlMs` / `auth.refreshAbsoluteCapMs`
+- [ ] Refresh-token signing-key rotation
+- [ ] Per-device session listing + revocation UI
 
 ## Current State
 
-**Shipped:** Milestone v1.7 — Security, Performance & Cross-Cohort (2026-04-21)
+**Shipped:** Milestone v1.8 — Session Resilience & Test/Code Polish (2026-04-23)
+- Phase 18: metricSelector test harness unblock + shared render helper
+- Phase 19: AuditPage useReducer state machine refactor (characterization-first)
+- Phase 20: JWT access/refresh token split, silent refresh, BroadcastChannel, credential-mutation invalidation
+- Post-UAT polish: 8-site roster (Münster restored), doc-quality palette, diagnosis legend
+
+**Archive:** [`.planning/milestones/v1.8-ROADMAP.md`](milestones/v1.8-ROADMAP.md)
+
+**Previously Shipped:** Milestone v1.7 — Security, Performance & Cross-Cohort (2026-04-21)
 - Phase 14: Security quick wins
 - Phase 15: Per-user TOTP 2FA with recovery codes
 - Phase 16: Cross-cohort comparison (4-cohort overlay, `?cohorts=` deep-link)
@@ -122,11 +139,12 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 **Archive:** [`.planning/milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md), [`.planning/milestones/v1.6-REQUIREMENTS.md`](milestones/v1.6-REQUIREMENTS.md)
 
-## Next Milestone Goals (v1.8 — TBD)
+## Next Milestone Goals (TBD)
 
 - **Real Keycloak OIDC redirect flow** (KEYCLK-01 — blocked by M7 at initAuth)
-- **JWT refresh flow** so 10-min sessions don't force re-login (M6 deferred from v1.7)
-- **AuditPage useReducer refactor** (L4 deferred from v1.7)
+- **SESSION-10 / SESSION-11**: admin-triggered global sign-out + stateful refresh-sessions table
+- **Per-device session listing / revocation UI**
+- **Refresh-token signing-key rotation**
 
 ## Historical Milestone Goals (archived)
 
@@ -235,4 +253,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 after v1.7 closed (Phases 14–17 + full-review security pass). v1.8 scope TBD.*
+*Last updated: 2026-04-23 after v1.8 closed (Phases 18–20 + post-UAT polish). Next milestone scope TBD.*
