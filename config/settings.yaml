@@ -4,6 +4,9 @@ therapyBreakerDays: 365
 dataSource:
   type: local
   blazeUrl: http://localhost:8080/fhir
+outcomes:
+  serverAggregationThresholdPatients: 1000
+  aggregateCacheTtlMs: 1800000
 # Phase 20 / D-23 — refresh-token configuration. YAML-only in v1.8 (no UI).
 auth:
   refreshTokenTtlMs: 28800000      # 8h rolling refresh-token lifetime
