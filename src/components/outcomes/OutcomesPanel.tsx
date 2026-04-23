@@ -1,3 +1,7 @@
+// retained: live React component (not a re-export shim). Listed as a
+// Phase 22 shim candidate by 22-RESEARCH but per D-15 (reality check) it is
+// not a dedup target — this file holds chart rendering logic. No action
+// required beyond this disposition comment.
 import {
   Area,
   CartesianGrid,
