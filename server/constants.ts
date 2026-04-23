@@ -58,6 +58,7 @@ const DEFAULT_CENTERS: CenterConfig[] = [
   { id: 'org-ukd',  shorthand: 'UKD',  name: 'Universitätsklinikum Dresden',    file: 'center-dresden.json' },
   { id: 'org-ukg',  shorthand: 'UKG',  name: 'Universitätsklinikum Greifswald', file: 'center-greifswald.json' },
   { id: 'org-ukl',  shorthand: 'UKL',  name: 'Universitätsklinikum Leipzig',    file: 'center-leipzig.json' },
+  { id: 'org-ukm',  shorthand: 'UKM',  name: 'Universitätsklinikum Münster',    file: 'center-muenster.json' },
   { id: 'org-ukmz', shorthand: 'UKMZ', name: 'Universitätsmedizin Mainz',       file: 'center-mainz.json' },
   { id: 'org-ukt',  shorthand: 'UKT',  name: 'Universitätsklinikum Tübingen',   file: 'center-tuebingen.json' },
 ];

@@ -81,8 +81,9 @@ describe('constants — center configuration', () => {
 
     initCenters('/data');
     const centers = getCenters();
-    expect(centers.length).toBe(7); // 7 default centers
+    expect(centers.length).toBe(8); // 8 default centers
     expect(centers.map(c => c.id)).toContain('org-uka');
+    expect(centers.map(c => c.id)).toContain('org-ukm');
     expect(centers.map(c => c.id)).toContain('org-ukmz');
   });
 
@@ -92,7 +93,7 @@ describe('constants — center configuration', () => {
 
     initCenters('/data');
     const centers = getCenters();
-    expect(centers.length).toBe(7);
+    expect(centers.length).toBe(8);
   });
 });
 

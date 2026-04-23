@@ -362,10 +362,11 @@ describe('EMDREQ-ANL: Analysis', () => {
         'org-ukd':  'UKD',
         'org-ukg':  'UKG',
         'org-ukl':  'UKL',
+        'org-ukm':  'UKM',
         'org-ukmz': 'UKMZ',
         'org-ukt':  'UKT',
       };
-      expect(Object.keys(shorthands)).toHaveLength(7);
+      expect(Object.keys(shorthands)).toHaveLength(8);
       expect(shorthands['org-uka']).toBe('UKA');
     });
   });
@@ -420,7 +421,7 @@ describe('EMDREQ-PROT: Audit Protocol', () => {
 
 describe('v1.1: Center-based data restriction', () => {
   it('center IDs use org-* format consistently', () => {
-    const validIds = ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukmz', 'org-ukt'];
+    const validIds = ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukmz', 'org-ukt'];
     for (const id of validIds) {
       expect(id).toMatch(/^org-[a-z]+$/);
     }

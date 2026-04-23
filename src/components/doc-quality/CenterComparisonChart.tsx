@@ -2,7 +2,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Legend,
   ResponsiveContainer,
   Tooltip,
@@ -11,8 +10,8 @@ import {
 } from 'recharts';
 
 import { useLanguage } from '../../context/LanguageContext';
-import type { CenterMetrics } from '../../utils/qualityMetrics';
-import { scoreColor } from '../../utils/qualityMetrics';
+import type { CenterMetrics, QualityCategory } from '../../utils/qualityMetrics';
+import { QUALITY_CATEGORY_COLORS } from '../../utils/qualityMetrics';
 import { CustomTooltip } from './CustomTooltip';
 
 // ---------------------------------------------------------------------------
@@ -70,20 +69,20 @@ export function CenterComparisonChart({
         />
         <Tooltip content={<CustomTooltip />} />
         <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
-        {([
-          t('docQualityCompleteness'),
-          t('docQualityDataCompleteness'),
-          t('docQualityPlausibility'),
-          t('docQualityOverall'),
-        ] as const).map((key) => (
-          <Bar key={key} dataKey={key} radius={[4, 4, 0, 0]}>
-            {chartData.map((entry) => (
-              <Cell
-                key={entry.name}
-                fill={scoreColor(entry[key] as number)}
-              />
-            ))}
-          </Bar>
+        {(
+          [
+            ['completeness', t('docQualityCompleteness')],
+            ['dataCompleteness', t('docQualityDataCompleteness')],
+            ['plausibility', t('docQualityPlausibility')],
+            ['overall', t('docQualityOverall')],
+          ] as ReadonlyArray<readonly [QualityCategory, string]>
+        ).map(([category, label]) => (
+          <Bar
+            key={category}
+            dataKey={label}
+            radius={[4, 4, 0, 0]}
+            fill={QUALITY_CATEGORY_COLORS[category]}
+          />
         ))}
       </BarChart>
     </ResponsiveContainer>

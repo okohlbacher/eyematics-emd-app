@@ -17,7 +17,7 @@ import {
   LOINC_VISUS,
 } from '../../services/fhirLoader';
 import type { CenterMetrics } from '../../utils/qualityMetrics';
-import { scoreColor } from '../../utils/qualityMetrics';
+import { QUALITY_CATEGORY_COLORS } from '../../utils/qualityMetrics';
 import { CustomTooltip } from './CustomTooltip';
 import { MetricCard } from './MetricCard';
 
@@ -129,22 +129,22 @@ export function CenterDetailPanel({ metrics, onBack }: CenterDetailPanelProps) {
             <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
             <Bar
               dataKey={t('docQualityCompleteness')}
-              fill={scoreColor(metrics.completeness)}
+              fill={QUALITY_CATEGORY_COLORS.completeness}
               radius={[4, 4, 0, 0]}
             />
             <Bar
               dataKey={t('docQualityDataCompleteness')}
-              fill={scoreColor(metrics.dataCompleteness)}
+              fill={QUALITY_CATEGORY_COLORS.dataCompleteness}
               radius={[4, 4, 0, 0]}
             />
             <Bar
               dataKey={t('docQualityPlausibility')}
-              fill={scoreColor(metrics.plausibility)}
+              fill={QUALITY_CATEGORY_COLORS.plausibility}
               radius={[4, 4, 0, 0]}
             />
             <Bar
               dataKey={t('docQualityOverall')}
-              fill={scoreColor(metrics.overall)}
+              fill={QUALITY_CATEGORY_COLORS.overall}
               radius={[4, 4, 0, 0]}
             />
           </BarChart>

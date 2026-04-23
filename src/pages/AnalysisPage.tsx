@@ -110,9 +110,10 @@ export default function AnalysisPage() {
     });
     return Array.from(map, ([name, { count, code }]) => ({
       name,
+      code,
       value: count,
       fullText: getDiagnosisFullText(code, locale),
-    }));
+    })).sort((a, b) => b.value - a.value);
   }, [cohort, locale]);
 
   const visusTrend = useMemo(() => {
@@ -241,37 +242,63 @@ export default function AnalysisPage() {
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
             {t('diagnosisDistribution')}
           </h3>
-          <p className="text-xs text-gray-400 mb-2">{t('diagnosisHoverHint')}</p>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={diagDist}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={90}
-                stroke="none"
-                label={({ name, value }) => `${name}: ${value}`}
-              >
-                {diagDist.map((_, i) => (
-                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null;
-                  const d = payload[0].payload as { name: string; value: number; fullText: string };
-                  return (
-                    <div className="bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm">
-                      <p className="font-semibold text-gray-900">{d.fullText}</p>
-                      <p className="text-gray-500">{t('cases')}: {d.value}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">{t('diagnosisHoverHint')}</p>
+          <div className="flex gap-3 items-stretch">
+            <div className="flex-1 min-w-0">
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={diagDist}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={90}
+                    stroke="none"
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {diagDist.map((_, i) => (
+                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const d = payload[0].payload as { name: string; value: number; fullText: string };
+                      return (
+                        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg px-3 py-2 text-sm">
+                          <p className="font-semibold text-gray-900 dark:text-gray-100">{d.fullText}</p>
+                          <p className="text-gray-500 dark:text-gray-400">{t('cases')}: {d.value}</p>
+                        </div>
+                      );
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <ul
+              aria-label={t('diagnosisLegendAriaLabel')}
+              className="w-48 shrink-0 max-h-[250px] overflow-y-auto pr-1 text-xs space-y-1.5"
+            >
+              {diagDist.map((d, i) => (
+                <li key={d.name} className="flex items-start gap-2">
+                  <span
+                    className="mt-1 w-2.5 h-2.5 shrink-0 rounded-sm"
+                    style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-gray-800 dark:text-gray-200">
+                      {d.name} <span className="text-gray-400 dark:text-gray-500">({d.value})</span>
                     </div>
-                  );
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+                    <div className="text-gray-500 dark:text-gray-400 leading-snug">
+                      {d.fullText}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         {/* Temporal visus trend */}

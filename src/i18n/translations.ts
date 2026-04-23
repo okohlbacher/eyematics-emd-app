@@ -59,6 +59,8 @@ const translations = {
   loginPassword: { de: 'Passwort', en: 'Password' },
   loginUsernamePlaceholder: { de: 'Benutzername', en: 'Username' },
   loginPasswordPlaceholder: { de: 'Passwort', en: 'Password' },
+  loginShowPassword: { de: 'Passwort anzeigen', en: 'Show password' },
+  loginHidePassword: { de: 'Passwort verbergen', en: 'Hide password' },
   loginContinue: { de: 'Weiter', en: 'Continue' },
   loginSubmit: { de: 'Anmelden', en: 'Log in' },
   login2faTitle: {
@@ -179,6 +181,7 @@ const translations = {
   centerDistribution: { de: 'Verteilung über Zentren', en: 'Distribution across Centers' },
   diagnosisDistribution: { de: 'Diagnoseverteilung', en: 'Diagnosis Distribution' },
   diagnosisHoverHint: { de: 'Fahren Sie mit der Maus über die Kuchenstücke, um die vollständige Diagnose anzuzeigen.', en: 'Hover over the pie segments to see the full diagnosis name.' },
+  diagnosisLegendAriaLabel: { de: 'Diagnoselegende mit Abkürzungen und vollständigen Namen', en: 'Diagnosis legend with abbreviations and full names' },
   visusTrend: {
     de: 'Visus im zeitlichen Verlauf (Mittelwert)',
     en: 'Visual Acuity over Time (Mean)',

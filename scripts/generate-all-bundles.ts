@@ -7,8 +7,8 @@
  *
  * The two curated reference bundles — center-aachen.json and center-tuebingen.json —
  * are deliberately NOT in the SITES list (mitigates threat T-07-04: Tampering of
- * kept bundles). Plan 07-03 deletes the legacy center-bonn / center-muenchen /
- * center-muenster files.
+ * kept bundles). Plan 07-03 deleted the legacy center-bonn / center-muenchen
+ * files. center-muenster was re-added per post-v1.8 roster feedback.
  *
  * Invoked via `npm run generate-bundles`.
  */
@@ -35,6 +35,7 @@ const SITES: SiteSpec[] = [
   { centerId: 'org-ukg',  shorthand: 'UKG',  name: 'Universitätsklinikum Greifswald', city: 'Greifswald', state: 'MV', file: 'center-greifswald.json', seed: 70107, patients: 45 },
   { centerId: 'org-ukl',  shorthand: 'UKL',  name: 'Universitätsklinikum Leipzig',    city: 'Leipzig',    state: 'SN', file: 'center-leipzig.json',    seed: 70112, patients: 45 },
   { centerId: 'org-ukmz', shorthand: 'UKMZ', name: 'Universitätsmedizin Mainz',       city: 'Mainz',      state: 'RP', file: 'center-mainz.json',      seed: 70113, patients: 45 },
+  { centerId: 'org-ukm',  shorthand: 'UKM',  name: 'Universitätsklinikum Münster',    city: 'Münster',    state: 'NRW', file: 'center-muenster.json',  seed: 70114, patients: 45 },
 ];
 
 const OUT_DIR = path.resolve(process.cwd(), 'public', 'data');
