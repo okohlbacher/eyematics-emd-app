@@ -99,15 +99,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setError(null);
     invalidateBundleCache();
 
-    Promise.all([
-      loadCenterShorthands().catch((err) => { console.warn('[DataProvider] Center shorthands unavailable, using fallbacks:', err); }),
-      loadAllBundles(),
-      fetchJson<{ qualityFlags: QualityFlag[] }>('/api/data/quality-flags').catch(() => ({ qualityFlags: [] })),
-      fetchJson<{ savedSearches: SavedSearch[] }>('/api/data/saved-searches').catch(() => ({ savedSearches: [] })),
-      fetchJson<{ excludedCases: string[] }>('/api/data/excluded-cases').catch(() => ({ excludedCases: [] })),
-      fetchJson<{ reviewedCases: string[] }>('/api/data/reviewed-cases').catch(() => ({ reviewedCases: [] })),
-    ])
-      .then(([, b, qf, ss, ec, rc]) => {
+    void (async () => {
+      try {
+        const [, b, qf, ss, ec, rc] = await Promise.all([
+          loadCenterShorthands().catch((err) => {
+            console.warn('[DataProvider] Center shorthands unavailable, using fallbacks:', err);
+          }),
+          loadAllBundles(),
+          fetchJson<{ qualityFlags: QualityFlag[] }>('/api/data/quality-flags').catch(() => ({ qualityFlags: [] })),
+          fetchJson<{ savedSearches: SavedSearch[] }>('/api/data/saved-searches').catch(() => ({ savedSearches: [] })),
+          fetchJson<{ excludedCases: string[] }>('/api/data/excluded-cases').catch(() => ({ excludedCases: [] })),
+          fetchJson<{ reviewedCases: string[] }>('/api/data/reviewed-cases').catch(() => ({ reviewedCases: [] })),
+        ]);
         setBundles(b);
         setCenters(extractCenters(b));
         setCases(extractPatientCases(b));
@@ -116,12 +119,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setExcludedCases(ec.excludedCases);
         setReviewedCases(rc.reviewedCases);
         setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error('[DataProvider] Failed to load data:', err);
         setError(err instanceof Error ? err.message : String(err));
         setLoading(false);
-      });
+      }
+    })();
   }, []);
 
   useEffect(() => {
