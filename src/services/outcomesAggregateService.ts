@@ -4,6 +4,11 @@
  * Routes cohorts larger than settings.outcomes.serverAggregationThresholdPatients
  * to the server endpoint. On non-OK responses the caller catches + falls back to
  * client-side computeCohortTrajectory.
+ *
+ * retained: live client wrapper (not a re-export shim). Listed as a Phase 22
+ * shim candidate by 22-RESEARCH but per D-15 it is not a dedup target — this
+ * file holds the browser-only `authFetch` + body serialization logic for the
+ * POST /api/outcomes/aggregate endpoint.
  */
 import { authFetch } from './authHeaders';
 import type {
