@@ -604,22 +604,22 @@ Phase scope is test code + two one-line source edits. ASVS / STRIDE coverage for
 
 **Note:** All three assumptions are about mechanism, not contract. None carry compliance/security risk; all are verifiable at plan-execution time with a 30-second experiment.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **UAT-AUTO-01 — formalize via new test or re-label existing?**
    - What we know: `Test 1` of `tests/authFetchRefresh.test.ts` already asserts the exact contract (401 → refresh → retry → 200).
    - What's unclear: does "automate" mean add a NEW test, or is tagging the existing one sufficient?
-   - Recommendation: Plan 21-02 adds a comment `// UAT-AUTO-01: replaces Phase 20 UAT item 1` to Test 1, plus **one new integration-level it()** that mounts a component issuing an authenticated request to prove the wrapper works end-to-end. Both satisfy the requirement; the new one proves the automation scales beyond the unit.
+   - RESOLVED: Plan 21-02 Task 3 adopts both — tag existing Test 1 with `// UAT-AUTO-01` and add a new integration-level `it()` in `tests/authFetchRefreshSuite.test.ts`.
 
 2. **UAT-AUTO-03 — unit level or server integration?**
    - What we know: `SKIP_AUDIT_IF_STATUS` is a server-side constant. Full integration requires spinning up the Express app and tailing `audit.db`.
    - What's unclear: is a unit-level assertion on the constant + a pure-function audit-middleware test sufficient?
-   - Recommendation: Yes — the CONTEXT "likely unit-level on authFetch path since full server integration may be impractical in vitest" confirms. Export `SKIP_AUDIT_IF_STATUS`, write a 3-line unit test, add one `tests/auditMiddleware.test.ts` case that drives the middleware with a fake `/api/auth/refresh` req/res and asserts `auditDb.insert` not called for 200 / called for 401.
+   - RESOLVED: Unit-level. Plan 21-02 Task 2 exports `SKIP_AUDIT_IF_STATUS`; Plan 21-02 Task 3 asserts against the exported constant and drives the middleware with fake `/api/auth/refresh` req/res (200 → no insert; 401 → insert).
 
 3. **Grep gate vs AST parser for TEST-04**
    - What we know: Grep is cheap and correct for current usage (zero `.skip` found).
    - What's unclear: could grep miss weird constructs like `it['skip']('...')` or a user-aliased `const skip = it.skip`?
-   - Recommendation: Accept the grep limitation per D-11 (explicit handoff to Phase 23 ESLint rule). Document the known evasions in the script's header comment.
+   - RESOLVED: Grep per D-11. Plan 21-01 Task 3 creates `scripts/check-skipped-tests.mjs` with known-evasion comment header; ESLint rule handoff to Phase 23 (DEPS-02).
 
 ## Sources
 
