@@ -84,7 +84,8 @@ const SKIP_AUDIT_PATHS = new Set([
  * (401/403) are NOT skipped, satisfying the "audit success silently, surface failures
  * loudly" stance from CONTEXT D-19 / RESEARCH Pitfall 5.
  */
-const SKIP_AUDIT_IF_STATUS: Record<string, Set<number>> = {
+// Exported for v1.9 Phase 21 UAT-AUTO-03 unit assertion (audit-silence contract regression guard per D-09 minimal-scoped source fix).
+export const SKIP_AUDIT_IF_STATUS: Record<string, Set<number>> = {
   '/api/auth/refresh': new Set([200]),
 };
 
