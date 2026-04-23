@@ -51,7 +51,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 - [x] **Phase 18: metricSelector Test Harness Unblock** — Unskip the 5 placeholder metricSelector tests and extract a shared OutcomesView render helper (completed 2026-04-23)
 - [x] **Phase 19: AuditPage State Machine Refactor** — Migrate AuditPage to a useReducer-driven state machine with characterization tests landing first (completed 2026-04-23)
-- [ ] **Phase 20: JWT Refresh Flow & Session Resilience** — Ship access/refresh token split, silent refresh in authFetch, cross-tab coordination, credential-mutation invalidation, and audit/i18n wiring
+- [x] **Phase 20: JWT Refresh Flow & Session Resilience** — Ship access/refresh token split, silent refresh in authFetch, cross-tab coordination, credential-mutation invalidation, and audit/i18n wiring (completed 2026-04-23)
 
 ### Phase Details
 
@@ -95,8 +95,8 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 **Plans**: 4 plans
 - [x] 20-01-PLAN.md — Server core: jwtUtil + cookie-parser + /api/auth/refresh + /logout extension + lazy users.json migration + auth settings namespace (Wave 1)
 - [x] 20-02-PLAN.md — ESLint no-restricted-imports + migrate jwt.* call sites + tokenVersion bumps in 4 credential-mutation endpoints (Wave 2)
-- [ ] 20-03-PLAN.md — Audit middleware status-conditional skip + REDACT_PATHS + audit_action_refresh i18n + describeAction extension (Wave 2)
-- [ ] 20-04-PLAN.md — Client authFetch single-flight refresh + retry guard + BroadcastChannel + AuthContext.logout wiring (Wave 3)
+- [x] 20-03-PLAN.md — Audit middleware status-conditional skip + REDACT_PATHS + audit_action_refresh i18n + describeAction extension (Wave 2)
+- [x] 20-04-PLAN.md — Client authFetch single-flight refresh + retry guard + BroadcastChannel + AuthContext.logout wiring (Wave 3)
 
 ### Progress
 
@@ -104,7 +104,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 |-------|----------------|--------|-----------|
 | 18. metricSelector Test Harness Unblock | 1/2 | Complete    | 2026-04-23 |
 | 19. AuditPage State Machine Refactor | 2/2 | Complete    | 2026-04-23 |
-| 20. JWT Refresh Flow & Session Resilience | 2/4 | In Progress|  |
+| 20. JWT Refresh Flow & Session Resilience | 4/4 | Complete   | 2026-04-23 |
 
 ### Coverage Map
 
