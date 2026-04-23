@@ -6,12 +6,25 @@ A web-based dashboard for analysing ophthalmological research data from IVOM tre
 
 **Prerequisites:** Node.js ≥ 20, npm ≥ 10
 
+### Development (two ports)
+
 ```bash
 npm install
-npm run dev
+npm start &        # Express API on :3000 (localhost only)
+npm run dev        # Vite dev server on :5173 with HMR, proxies /api -> :3000
 ```
 
 Open **http://localhost:5173** — log in with `admin` / `changeme2025!` (2FA is off by default; OTP `123456` when enabled).
+
+### Production (single port)
+
+```bash
+npm run build      # produces dist/
+# add `server: { serveFrontend: true }` to config/settings.yaml
+npm start          # Express serves UI + API on http://localhost:3000
+```
+
+For LAN access in production, set `server.host: '0.0.0.0'` in `config/settings.yaml`. By default the server binds to `127.0.0.1` (localhost only) for safety.
 
 > See the full credential table and login flow in [docs/Benutzerhandbuch.md](docs/Benutzerhandbuch.md) §2.
 

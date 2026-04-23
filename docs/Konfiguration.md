@@ -29,8 +29,9 @@ Alle Änderungen, die über die Settings-Seite im UI vorgenommen werden, werden 
 
 server:
   port: 3000                 # HTTP-Port des Servers
-  host: '0.0.0.0'           # Bind-Adresse des Servers
+  host: '127.0.0.1'         # Bind-Adresse (127.0.0.1 = nur localhost; 0.0.0.0 = LAN)
   dataDir: './data'          # Verzeichnis fuer Datendateien
+  serveFrontend: true        # Liefert das gebaute UI aus dist/ (Produktion: true)
 
 audit:
   retentionDays: 90          # Aufbewahrungsdauer fuer Audit-Log in Tagen
@@ -56,8 +57,9 @@ dataSource:
 | Parameter | Typ | Default | Beschreibung |
 |-----------|-----|---------|--------------|
 | `server.port` | `number` | `3000` | HTTP-Port des Servers |
-| `server.host` | `string` | `"0.0.0.0"` | Bind-Adresse des Servers |
+| `server.host` | `string` | `"127.0.0.1"` | Bind-Adresse. `"127.0.0.1"` = nur localhost (Standard, sicher). Für LAN-Zugriff in Produktion auf `"0.0.0.0"` setzen. |
 | `server.dataDir` | `string` | `"./data"` | Verzeichnis fuer Datendateien (users.json, audit.db, etc.) |
+| `server.serveFrontend` | `boolean` | `false` | Liefert das gebaute Frontend aus `dist/` aus. **Produktion: `true`** (Express bedient UI + API auf einem Port). **Entwicklung: `false`** (Vite-Dev-Server auf Port 5173 liefert die UI mit HMR; Express ist nur API). |
 | `audit.retentionDays` | `number` | `90` | Aufbewahrungsdauer fuer Audit-Log-Eintraege in Tagen |
 | `provider` | `"local"` \| `"keycloak"` | `"local"` | Authentifizierungsmethode. `local`: bcrypt + JWT (HS256). `keycloak`: RS256 via JWKS. |
 | `twoFactorEnabled` | `boolean` | `false` | Aktiviert/deaktiviert den OTP-Schritt beim Login. Standardmäßig deaktiviert. |
