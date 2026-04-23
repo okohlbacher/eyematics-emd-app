@@ -50,7 +50,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 ### Phases
 
 - [x] **Phase 18: metricSelector Test Harness Unblock** — Unskip the 5 placeholder metricSelector tests and extract a shared OutcomesView render helper (completed 2026-04-23)
-- [ ] **Phase 19: AuditPage State Machine Refactor** — Migrate AuditPage to a useReducer-driven state machine with characterization tests landing first
+- [x] **Phase 19: AuditPage State Machine Refactor** — Migrate AuditPage to a useReducer-driven state machine with characterization tests landing first (completed 2026-04-23)
 - [ ] **Phase 20: JWT Refresh Flow & Session Resilience** — Ship access/refresh token split, silent refresh in authFetch, cross-tab coordination, credential-mutation invalidation, and audit/i18n wiring
 
 ### Phase Details
@@ -77,8 +77,8 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
   3. AuditPage is split into `src/pages/audit/auditPageState.ts` (reducer + selectors), `auditFormatters.ts` (describeAction, describeDetail, isRelevantEntry, statusBadgeClass), and `useAuditData.ts` (hook wrapping reducer + debounced fetch); `AuditPage.tsx` is pure render
   4. `tests/auditPageReducer.test.ts` exercises all 5 discriminated-union action paths (`FILTER_SET`, `FILTERS_RESET`, `FETCH_START`, `FETCH_SUCCESS`, `FETCH_ERROR`) plus the `requestEpoch` stale-response guard
 **Plans**: 2 plans
-- [ ] 19-01-characterization-PLAN.md — Land characterization tests against unrefactored AuditPage.tsx (test-only commit)
-- [ ] 19-02-refactor-PLAN.md — Migrate AuditPage to useReducer state machine; add reducer test; characterization stays green
+- [x] 19-01-characterization-PLAN.md — Land characterization tests against unrefactored AuditPage.tsx (test-only commit)
+- [x] 19-02-refactor-PLAN.md — Migrate AuditPage to useReducer state machine; add reducer test; characterization stays green
 **UI hint**: yes
 
 #### Phase 20: JWT Refresh Flow & Session Resilience
@@ -92,15 +92,19 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
   4. Refresh tokens are delivered as httpOnly `Secure` `SameSite=Strict` cookies scoped to `/api/auth/refresh` with CSRF protection; access tokens remain Bearer-in-memory; `POST /api/auth/logout` clears both server-side refresh state (cookie + tokenVersion bump) and the client invalidates both tokens
   5. Multiple open tabs coordinate via `BroadcastChannel('emd-auth')` so only one refresh fires at a time (5-second server grace window); successful refreshes are excluded from `audit.db` via `SKIP_AUDIT_PATHS` while failed refreshes and logout events are still audited with new DE+EN `audit_action_refresh` / `audit_action_logout` i18n keys
   6. All `jwt.verify()` call sites route through `server/jwtUtil.ts` with hard-pinned `algorithms: ['HS256']`; ESLint `no-restricted-imports` forbids direct `jsonwebtoken` verify imports elsewhere
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 20-01-PLAN.md — Server core: jwtUtil + cookie-parser + /api/auth/refresh + /logout extension + lazy users.json migration + auth settings namespace (Wave 1)
+- [ ] 20-02-PLAN.md — ESLint no-restricted-imports + migrate jwt.* call sites + tokenVersion bumps in 4 credential-mutation endpoints (Wave 2)
+- [ ] 20-03-PLAN.md — Audit middleware status-conditional skip + REDACT_PATHS + audit_action_refresh i18n + describeAction extension (Wave 2)
+- [ ] 20-04-PLAN.md — Client authFetch single-flight refresh + retry guard + BroadcastChannel + AuthContext.logout wiring (Wave 3)
 
 ### Progress
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 18. metricSelector Test Harness Unblock | 1/2 | Complete    | 2026-04-23 |
-| 19. AuditPage State Machine Refactor | 0/2 | Not started | - |
-| 20. JWT Refresh Flow & Session Resilience | 0/0 | Not started | - |
+| 19. AuditPage State Machine Refactor | 2/2 | Complete    | 2026-04-23 |
+| 20. JWT Refresh Flow & Session Resilience | 0/4 | Not started | - |
 
 ### Coverage Map
 
