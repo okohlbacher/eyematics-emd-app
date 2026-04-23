@@ -69,27 +69,27 @@
 
 | REQ-ID | Description | Phase |
 |--------|-------------|-------|
-| CONSIST-01 | Duplication audit + dedup | TBD |
-| CONSIST-02 | Naming/pattern consistency | TBD |
-| CONSIST-03 | Dead-code removal | TBD |
-| CONSIST-04 | Type consistency | TBD |
-| DOCS-01 | `.planning/` docs audit | TBD |
-| DOCS-02 | README + inline doc audit | TBD |
-| DOCS-03 | Inline comment audit | TBD |
-| TEST-01 | outcomesPanelCrt visus abs y-domain [0,2] | TBD |
-| TEST-02 | outcomesPanelCrt backward-compat default | TBD |
-| TEST-03 | OutcomesPage audit beacon POST (Phase 11) | TBD |
-| TEST-04 | Zero skipped tests (except documented platform-impossible) | TBD |
-| UAT-AUTO-01 | Silent refresh smoke | TBD |
-| UAT-AUTO-02 | BroadcastChannel multi-tab | TBD |
-| UAT-AUTO-03 | Audit DB silence on refresh | TBD |
-| UAT-AUTO-04 | Idle-logout timer | TBD |
-| UAT-AUTO-05 | Absolute-cap re-auth | TBD |
-| DEPS-01 | npm audit + non-breaking upgrades | TBD |
-| DEPS-02 | ESLint rule tightening | TBD |
-| DEPS-03 | `package.json` scripts audit | TBD |
+| CONSIST-01 | Duplication audit + dedup | Phase 22 |
+| CONSIST-02 | Naming/pattern consistency | Phase 22 |
+| CONSIST-03 | Dead-code removal | Phase 22 |
+| CONSIST-04 | Type consistency | Phase 22 |
+| DOCS-01 | `.planning/` docs audit | Phase 22 |
+| DOCS-02 | README + inline doc audit | Phase 22 |
+| DOCS-03 | Inline comment audit | Phase 22 |
+| TEST-01 | outcomesPanelCrt visus abs y-domain [0,2] | Phase 21 |
+| TEST-02 | outcomesPanelCrt backward-compat default | Phase 21 |
+| TEST-03 | OutcomesPage audit beacon POST (Phase 11) | Phase 21 |
+| TEST-04 | Zero skipped tests (except documented platform-impossible) | Phase 21 |
+| UAT-AUTO-01 | Silent refresh smoke | Phase 21 |
+| UAT-AUTO-02 | BroadcastChannel multi-tab | Phase 21 |
+| UAT-AUTO-03 | Audit DB silence on refresh | Phase 21 |
+| UAT-AUTO-04 | Idle-logout timer | Phase 21 |
+| UAT-AUTO-05 | Absolute-cap re-auth | Phase 21 |
+| DEPS-01 | npm audit + non-breaking upgrades | Phase 23 |
+| DEPS-02 | ESLint rule tightening | Phase 23 |
+| DEPS-03 | `package.json` scripts audit | Phase 23 |
 
-**Coverage:** 19 requirements mapped to themes; phase assignment TBD at roadmapping.
+**Coverage:** 19/19 requirements mapped. Phase 21: TEST-01..04 + UAT-AUTO-01..05 (9). Phase 22: CONSIST-01..04 + DOCS-01..03 (7). Phase 23: DEPS-01..03 (3).
 
 ---
 

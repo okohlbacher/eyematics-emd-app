@@ -52,10 +52,104 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ---
 
-## Next Milestone
+## Active Milestone: v1.9 — Codebase Consistency & Test/Tech-Debt Polish
 
-v1.8 shipped 2026-04-23. Next milestone to be defined via `/gsd-new-milestone`.
+<!--
+Phase split review: The proposed 21 → 22 → 23 linear sequence is sound.
+- Phase 21 leads because greening the test suite (TEST-01..04) and landing the
+  5 UAT→automated session tests (UAT-AUTO-01..05) gives Phase 22's refactors a
+  trustworthy safety net before any dedup/pattern churn lands.
+- Phase 22 precedes Phase 23 so the lint tightening and dead-code pruning in
+  Phase 23 apply to the already-deduped, pattern-aligned codebase rather than
+  to code that is about to move.
+- No material concerns with the split. All three phases are non-UI (internal
+  quality work); UI hint is `no` throughout.
+-->
+
+**Goal:** Raise internal quality — eliminate code duplication, enforce consistency across the codebase, green the test suite, automate the 5 deferred Phase 20 UAT items, and modernize deps/lint — without shipping any user-visible product changes.
+**Granularity:** standard (derived from scope)
+**Coverage:** 19/19 v1.9 requirements mapped
+**Starting phase number:** 21 (continues v1.8's Phase 20)
+
+### Phases
+
+- [ ] **Phase 21: Test & UAT Polish** — Green the 3 pre-existing failing tests, enforce zero-skipped-tests policy, and convert the 5 Phase 20 human-verification items into automated tests
+- [ ] **Phase 22: Codebase & Docs Consistency** — Dedupe utilities across `src/`/`server/`/`shared/`, align naming/error/async patterns, narrow types, remove dead code, and reconcile `.planning/` + README + inline docs
+- [ ] **Phase 23: Dependency & Lint Cleanup** — `npm audit` clean at moderate threshold, non-breaking dep upgrades, tighter ESLint rule set, and a normalized `package.json` scripts block
+
+### Phase Details
+
+#### Phase 21: Test & UAT Polish
+**Goal**: The full test suite is green in CI with zero skipped tests (except documented platform-impossible cases), and the 5 deferred Phase 20 session-resilience UAT items run as automated tests
+**Depends on**: Nothing (lead-off; establishes the safety net every later phase refactors against)
+**Requirements**: TEST-01, TEST-02, TEST-03, TEST-04, UAT-AUTO-01, UAT-AUTO-02, UAT-AUTO-03, UAT-AUTO-04, UAT-AUTO-05
+**Success Criteria** (what must be TRUE):
+  1. `tests/outcomesPanelCrt.test.tsx` "visus absolute mode: y-domain is [0, 2]" and "backward compat: no metric prop defaults to visus absolute [0, 2]" both pass; the v1.6 Phase 13 regression root cause is identified in the commit message (source vs test fix)
+  2. `tests/OutcomesPage.test.tsx` "fires audit beacon POST with JSON body, keepalive, and no cohort id in URL (Phase 11)" passes; the beacon path continues to match the Phase 11 contract (cohort id only in hashed POST body, never in URL)
+  3. `npm test` exits 0 with zero skipped tests, except cases carrying a `SKIP_REASON` comment that cites the MSEL-04 browser-back/forward precedent; a lint or CI check enforces the SKIP_REASON policy
+  4. Five new automated tests replace the Phase 20 UAT items: silent refresh (authFetch 401→refresh→retry once, single-flight), BroadcastChannel multi-tab lock (`BroadcastChannel('emd-auth')`), audit silence on 200-refresh via `SKIP_AUDIT_PATHS` (with failed refreshes and logouts still audited), idle-logout timer still fires at 10 min, and `auth.refreshAbsoluteCapMs` forces re-auth after the cap regardless of activity
+  5. The Phase 20 `10-HUMAN-UAT.md`-style manual checklist items corresponding to UAT-AUTO-01..05 are removed or marked "automated by v1.9 Phase 21" with links to the replacement tests
+**Plans**: TBD
+**UI hint**: no
+
+#### Phase 22: Codebase & Docs Consistency
+**Goal**: `src/`, `server/`, and `shared/` have single-source-of-truth utilities with one canonical pattern per concern (naming, error handling, async), no dead code, tightened types, and `.planning/` + README + inline docs match the shipped codebase
+**Depends on**: Phase 21 (needs green test suite + UAT automation as the refactor safety net)
+**Requirements**: CONSIST-01, CONSIST-02, CONSIST-03, CONSIST-04, DOCS-01, DOCS-02, DOCS-03
+**Success Criteria** (what must be TRUE):
+  1. A duplication audit report across `src/`, `server/`, and `shared/` identifies every near-duplicate helper; each duplication is resolved by moving to the correct module (usually `shared/`) and deleting obsoleted copies; the full test suite stays green after each dedup commit
+  2. One canonical pattern is documented and applied per concern: naming (camelCase for TS identifiers, snake_case only where FHIR/HTTP demands it), error handling (throw vs Result), and async style (async/await, no mixed `.then` chains in new code); violations in touched files are corrected
+  3. `ts-prune` (or equivalent) reports zero unused exports; commented-out code and stale feature-flag branches are removed or carry a one-line "retained because X" justification; broad `any`/`unknown` types are narrowed in files whose shape is inferable, and duplicated type definitions are consolidated into `shared/` or the nearest shared module
+  4. `.planning/PROJECT.md`, `.planning/ROADMAP.md`, `.planning/MILESTONES.md`, and archived milestone ROADMAPs use consistent terminology (sites vs centers, patients vs cases, etc.) with a one-page glossary; every intra-`.planning/` link resolves
+  5. `README.md`, `CLAUDE.md`, and inline code comments are audited: setup instructions match current `package.json` scripts, stale instructions removed, "what" comments deleted in favor of "why" comments, and JSDoc style is consistent where JSDoc is used
+**Plans**: TBD
+**UI hint**: no
+
+#### Phase 23: Dependency & Lint Cleanup
+**Goal**: `npm audit` is clean at the `moderate` threshold, non-breaking dep upgrades are applied, the ESLint rule set is tightened (with all violations fixed or suppressed with a reason), and `package.json` scripts are normalized and each verified to run
+**Depends on**: Phase 22 (lint tightening and unused-code detection apply to the post-refactor, post-dedup code surface)
+**Requirements**: DEPS-01, DEPS-02, DEPS-03
+**Success Criteria** (what must be TRUE):
+  1. `npm audit --audit-level=moderate` exits 0; all patch/minor upgrades are applied; any deferred major-version upgrades are captured in `DEFERRED-UPGRADES.md` with a one-line blocker note each
+  2. ESLint configuration enables `@typescript-eslint/no-unused-vars` (strict), `prefer-const`, `no-var`, and any project-appropriate rules agreed during planning; `npm run lint` exits 0 — remaining violations are either fixed or carry a per-line `// eslint-disable-next-line <rule> -- <reason>` with a concrete justification
+  3. `package.json` scripts: unused scripts removed, naming normalized around the `dev` / `build` / `test` / `lint` pattern, each script verified to run successfully in a clean checkout; CI references are updated to match renamed scripts
+**Plans**: TBD
+**UI hint**: no
+
+### Progress
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 21. Test & UAT Polish | 0/TBD | Not started | — |
+| 22. Codebase & Docs Consistency | 0/TBD | Not started | — |
+| 23. Dependency & Lint Cleanup | 0/TBD | Not started | — |
+
+### Coverage Map
+
+| Requirement | Phase |
+|-------------|-------|
+| TEST-01 | Phase 21 |
+| TEST-02 | Phase 21 |
+| TEST-03 | Phase 21 |
+| TEST-04 | Phase 21 |
+| UAT-AUTO-01 | Phase 21 |
+| UAT-AUTO-02 | Phase 21 |
+| UAT-AUTO-03 | Phase 21 |
+| UAT-AUTO-04 | Phase 21 |
+| UAT-AUTO-05 | Phase 21 |
+| CONSIST-01 | Phase 22 |
+| CONSIST-02 | Phase 22 |
+| CONSIST-03 | Phase 22 |
+| CONSIST-04 | Phase 22 |
+| DOCS-01 | Phase 22 |
+| DOCS-02 | Phase 22 |
+| DOCS-03 | Phase 22 |
+| DEPS-01 | Phase 23 |
+| DEPS-02 | Phase 23 |
+| DEPS-03 | Phase 23 |
+
+**Coverage:** 19/19 v1.9 requirements mapped. KEYCLK-01, SESSION-10, SESSION-11, and the Playwright E2E harness (MSEL-04 gap) are explicitly out of scope per REQUIREMENTS.md.
 
 ---
 
-*Last updated: 2026-04-23 — v1.8 archived.*
+*Last updated: 2026-04-23 — v1.9 roadmap created (Phases 21–23); v1.8 archived.*
