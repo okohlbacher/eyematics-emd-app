@@ -319,9 +319,13 @@ app.listen(PORT, HOST, () => {
   //
   // Fire-and-forget; on failure log and carry on — the first real /api/fhir
   // request will retry. Server readiness does NOT depend on the cache.
-  import('./fhirApi.js').then(({ getCachedBundles }) =>
-    getCachedBundles()
-      .then((b) => console.log(`[server] FHIR bundle cache warmed: ${b.length} bundles`))
-      .catch((err) => console.warn('[server] FHIR bundle cache warm failed (lazy retry on first request):', err instanceof Error ? err.message : err)),
-  );
+  void (async () => {
+    try {
+      const { getCachedBundles } = await import('./fhirApi.js');
+      const b = await getCachedBundles();
+      console.log(`[server] FHIR bundle cache warmed: ${b.length} bundles`);
+    } catch (err) {
+      console.warn('[server] FHIR bundle cache warm failed (lazy retry on first request):', err instanceof Error ? err.message : err);
+    }
+  })();
 });
