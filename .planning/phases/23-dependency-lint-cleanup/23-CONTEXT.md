@@ -48,6 +48,15 @@ Out of scope: behavior changes, UI work, new features, major framework upgrades 
 - **D-15:** Safety net: `npm run test:ci` (608/608) + `npm run build` must pass after every commit in this phase. One failing commit blocks the phase.
 - **D-16:** After each upgrade commit, run `npm run build` explicitly — Vite/rolldown resolve some dynamic imports at build time that tests don't catch (Phase 22 Pitfall 3 continues to apply).
 
+### Post-research resolutions (auto-selected defaults, 23-RESEARCH.md §Open Questions)
+- **D-17:** `no-explicit-any` is already active via `tseslint.configs.recommended` (484 of 819 errors). Disable it project-wide in `eslint.config.js` with a single rule override (`'@typescript-eslint/no-explicit-any': 'off'`) and log the backlog in `DEFERRED-LINT.md` with a revisit trigger. Rationale: fixing 484 `any` occurrences is a separate large phase (out of scope per D-07 "no aggressive rules").
+- **D-18:** `eqeqeq` mode: `'smart'` (allows `== null` null/undefined check idiom). Rationale: `'always'` forces manual rewrites without safety gain.
+- **D-19:** 74 `react-refresh/only-export-components` violations — planner inspects the first 10 files; if the dominant pattern is context-file-like (hooks + providers), extend the existing `src/context/**` override block to matching directories; if truly mixed exports, split files. Commit one pattern fix at a time.
+- **D-20:** Create `DEFERRED-LINT.md` at repo root (sibling to `DEFERRED-UPGRADES.md`). Format: one H2 per rule with "Current violations count", "Rule", "Why deferred", "Revisit trigger".
+
+### Audit strategy refinement
+- **D-21:** Prefer `package.json#overrides` (pin `follow-redirects@^1.16.0`) over `npm audit fix`. `npm audit fix` may apply unintended bumps beyond the target advisory; an explicit `overrides` entry is deterministic and reviewable.
+
 ### Claude's Discretion
 - Exact order of upgrade commits (alphabetical, dependency-group, or risk-ordered) — Claude picks whatever keeps diffs reviewable.
 - Whether to batch patch-only bumps (e.g., 3 packages moving 0.0.1) into a single commit vs one-per-package — Claude judges based on coupling (React hooks plugin + react-refresh are coupled, e.g.).
