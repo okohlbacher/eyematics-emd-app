@@ -73,7 +73,7 @@ Phase split review: The proposed 21 → 22 → 23 linear sequence is sound.
 
 ### Phases
 
-- [ ] **Phase 21: Test & UAT Polish** — Green the 3 pre-existing failing tests, enforce zero-skipped-tests policy, and convert the 5 Phase 20 human-verification items into automated tests
+- [x] **Phase 21: Test & UAT Polish** — Green the 3 pre-existing failing tests, enforce zero-skipped-tests policy, and convert the 5 Phase 20 human-verification items into automated tests (completed 2026-04-23)
 - [ ] **Phase 22: Codebase & Docs Consistency** — Dedupe utilities across `src/`/`server/`/`shared/`, align naming/error/async patterns, narrow types, remove dead code, and reconcile `.planning/` + README + inline docs
 - [ ] **Phase 23: Dependency & Lint Cleanup** — `npm audit` clean at moderate threshold, non-breaking dep upgrades, tighter ESLint rule set, and a normalized `package.json` scripts block
 
@@ -89,11 +89,11 @@ Phase split review: The proposed 21 → 22 → 23 linear sequence is sound.
   3. `npm test` exits 0 with zero skipped tests, except cases carrying a `SKIP_REASON` comment that cites the MSEL-04 browser-back/forward precedent; a lint or CI check enforces the SKIP_REASON policy
   4. Five new automated tests replace the Phase 20 UAT items: silent refresh (authFetch 401→refresh→retry once, single-flight), BroadcastChannel multi-tab lock (`BroadcastChannel('emd-auth')`), audit silence on 200-refresh via `SKIP_AUDIT_PATHS` (with failed refreshes and logouts still audited), idle-logout timer still fires at 10 min, and `auth.refreshAbsoluteCapMs` forces re-auth after the cap regardless of activity
   5. The Phase 20 `10-HUMAN-UAT.md`-style manual checklist items corresponding to UAT-AUTO-01..05 are removed or marked "automated by v1.9 Phase 21" with links to the replacement tests
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 Plans:
-- [ ] 21-01-fix-failing-tests-PLAN.md — Fix 3 failing tests (outcomesPanelCrt ×2, OutcomesPage beacon) + zero-skip CI gate (TEST-01..04)
-- [ ] 21-02-authfetch-refresh-suite-PLAN.md — Global BroadcastChannel shim + UAT-AUTO-01/02/03 automation (silent refresh, multi-tab, audit silence)
-- [ ] 21-03-session-timers-PLAN.md — UAT-AUTO-04 idle-logout + UAT-AUTO-05 absolute-cap (fake-timer tests)
+- [x] 21-01-fix-failing-tests-PLAN.md — Fix 3 failing tests (outcomesPanelCrt ×2, OutcomesPage beacon) + zero-skip CI gate (TEST-01..04)
+- [x] 21-02-authfetch-refresh-suite-PLAN.md — Global BroadcastChannel shim + UAT-AUTO-01/02/03 automation (silent refresh, multi-tab, audit silence)
+- [x] 21-03-session-timers-PLAN.md — UAT-AUTO-04 idle-logout + UAT-AUTO-05 absolute-cap (fake-timer tests)
 **UI hint**: no
 
 #### Phase 22: Codebase & Docs Consistency
@@ -124,7 +124,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 21. Test & UAT Polish | 0/3 | Not started | — |
+| 21. Test & UAT Polish | 3/3 | Complete    | 2026-04-23 |
 | 22. Codebase & Docs Consistency | 0/TBD | Not started | — |
 | 23. Dependency & Lint Cleanup | 0/TBD | Not started | — |
 
