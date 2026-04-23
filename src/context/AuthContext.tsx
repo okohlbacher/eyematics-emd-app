@@ -1,5 +1,6 @@
 import { createContext, type ReactNode,useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
+import { broadcastLogout, serverLogout } from '../services/authHeaders';
 import { invalidateBundleCache } from '../services/fhirLoader';
 
 /**
@@ -138,6 +139,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const performLogout = useCallback((auto = false) => {
     void auto; // auto-logout logged server-side via audit middleware
+    // Phase 20 / D-15: notify server to clear refresh + CSRF cookies and bump tokenVersion.
+    // serverLogout() swallows network errors so a failure never traps the user in a
+    // half-logged-in state. Fire-and-forget — local state is cleared synchronously below.
+    void serverLogout();
+    // SESSION-05: notify sibling tabs to clear their session and redirect to /login.
+    broadcastLogout();
     setUser(null);
     setToken(null);
     setInactivityWarning(false);

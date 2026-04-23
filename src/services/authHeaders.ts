@@ -60,6 +60,33 @@ export function broadcastLogout(): void {
 }
 
 /**
+ * Server-side logout: notify the server to clear the refresh + CSRF cookies and bump
+ * the user's tokenVersion (invalidates all outstanding refresh tokens for this user).
+ *
+ * Network or non-OK responses are SWALLOWED: the caller MUST proceed to clear local
+ * state regardless. A failed network request must never trap the user in a half-logged-in
+ * state (T-20-28 mitigation).
+ *
+ * Extracted from AuthContext.logout so it can be unit-tested without mounting an
+ * AuthProvider RTL harness.
+ */
+export async function serverLogout(): Promise<void> {
+  try {
+    const csrf = getCsrfFromCookie();
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        ...getAuthHeaders(),
+        'X-CSRF-Token': csrf,
+      },
+    });
+  } catch {
+    // Intentional swallow — see contract above.
+  }
+}
+
+/**
  * Single-flight refresh. Concurrent 401 callers `await` the same in-flight promise so
  * only one POST /api/auth/refresh is sent per tab even under refresh storms.
  *

@@ -237,3 +237,53 @@ describe('authFetch silent refresh', () => {
     expect(fetchMock.mock.calls.find(([u]) => u === '/api/auth/refresh')).toBeUndefined();
   });
 });
+
+describe('AuthContext.logout integration (via extracted serverLogout helper)', () => {
+  it('serverLogout posts to /api/auth/logout with X-CSRF-Token from cookie + Bearer header', async () => {
+    setCookie('emd-csrf=test-csrf-value');
+    sessionStorage.setItem('emd-token', 'access-token');
+    const fetchMock = vi.fn().mockResolvedValue(mockResp({ status: 200, body: { ok: true } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { serverLogout } = await loadModule();
+    await serverLogout();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('/api/auth/logout');
+    expect((init as RequestInit).method).toBe('POST');
+    expect((init as RequestInit).credentials).toBe('include');
+    const headers = (init as RequestInit).headers as Record<string, string>;
+    expect(headers['X-CSRF-Token']).toBe('test-csrf-value');
+    expect(headers.Authorization).toBe('Bearer access-token');
+  });
+
+  it('serverLogout swallows network errors (does not throw — caller must continue clearing local state)', async () => {
+    sessionStorage.setItem('emd-token', 'tok');
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('boom')));
+    const { serverLogout } = await loadModule();
+    await expect(serverLogout()).resolves.toBeUndefined();
+  });
+
+  it('serverLogout swallows non-OK responses (e.g., 500) so caller can fall through to clear local state', async () => {
+    sessionStorage.setItem('emd-token', 'tok');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(mockResp({ status: 500 })));
+    const { serverLogout } = await loadModule();
+    await expect(serverLogout()).resolves.toBeUndefined();
+  });
+
+  it('broadcastLogout fires {type:logout} on the emd-auth BroadcastChannel', async () => {
+    const { broadcastLogout } = await loadModule();
+    broadcastLogout();
+    const bc = MockBC.instances[0];
+    expect(bc.postMessage).toHaveBeenCalledWith({ type: 'logout' });
+  });
+
+  it('AuthContext source preserves INACTIVITY_TIMEOUT = 10 * 60 * 1000 (D-25 idle-timer regression guard)', async () => {
+    // This is a static-content assertion — it reads the AuthContext.tsx source to ensure
+    // the v1.7 idle-logout contract was not accidentally modified by Plan 20-04.
+    const fs = await import('node:fs');
+    const src = fs.readFileSync('src/context/AuthContext.tsx', 'utf-8');
+    expect(src).toMatch(/INACTIVITY_TIMEOUT\s*=\s*10\s*\*\s*60\s*\*\s*1000/);
+  });
+});
