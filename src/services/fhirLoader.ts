@@ -8,7 +8,13 @@ import type {
 import { authFetch } from './authHeaders';
 import { getDataSourceConfig, loadBundlesFromSource } from './dataSource';
 
-// Re-export shared pure constants + FHIR query helpers for backward compatibility.
+// retained: live module (loadAllBundles, extractCenters, loadCenterShorthands,
+// getDiagnosisLabel, getDiagnosisFullText, etc.) that also re-exports a stable
+// public surface for pure helpers from shared/. Not a pure shim per D-15 — the
+// re-exports are colocated with the live browser-only loader logic that
+// DataContext and services depend on. Callers that only need the pure helpers
+// can import from shared/ directly; callers that also need the loader logic
+// continue to import from here.
 // Canonical sources: shared/fhirCodes.ts, shared/fhirQueries.ts, shared/patientCases.ts
 export * from '../../shared/fhirCodes';
 export { getObservationsByCode, getLatestObservation } from '../../shared/fhirQueries';
