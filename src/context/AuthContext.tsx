@@ -17,12 +17,6 @@ export type UserRole =
   | 'data_manager'
   | 'clinic_lead';
 
-/** Roles that have admin-level access (user management, audit) */
-export const ADMIN_ROLES: UserRole[] = ['admin'];
-
-/** Roles that can view clinical data */
-export const CLINICAL_ROLES: UserRole[] = ['researcher', 'epidemiologist', 'clinician', 'data_manager', 'clinic_lead'];
-
 /** Roles that can view documentation quality benchmarking */
 export const QUALITY_ROLES: UserRole[] = ['admin', 'clinic_lead', 'data_manager'];
 
@@ -30,16 +24,6 @@ export interface User {
   username: string;
   role: UserRole;
   centers: string[];
-}
-
-export interface ManagedUser {
-  username: string;
-  firstName?: string;
-  lastName?: string;
-  role: UserRole;
-  centers?: string[];
-  createdAt: string;
-  lastLogin?: string;
 }
 
 type LoginResult =
