@@ -67,8 +67,18 @@ After every atomic dedup/pattern/rename commit, `npm run test:ci` must exit 0 wi
 
 ## Specifics
 
-- **"sites" vs "centers":** User's domain vocabulary — glossary must pick one and propagate. (Decide during planning or defer to user.)
-- **"patients" vs "cases":** Same — glossary decides.
+### Post-research resolutions
+
+- **D-11 CLAUDE.md:** Create a minimal `CLAUDE.md` at repo root as part of Plan 22-03. Contents: test commands (`npm run test:ci`), build/dev scripts, naming convention pointer (camelCase + D-05 exceptions), error-handling pointer (throw-only per D-03), and a link to `.planning/` entry points. Size budget: ≤60 lines.
+- **D-12 Terminology — sites vs centers:** Normalize to **"sites"** in prose across `.planning/` and code comments. Wire/DB/column names containing "center"/"centers" stay exempt under D-05 (these are external wire contracts). The `GLOSSARY.md` entry reads: "sites — canonical domain term for participating clinical research locations. The wire/DB form may be 'center' (legacy external naming); do not rename wire payloads."
+- **D-13 Terminology — patients vs cases:** NOT synonyms per research (A4). Patient = clinical subject; case = app-level record of a patient encounter/episode. GLOSSARY.md disambiguates both; no bulk renames.
+- **D-14 Tooling:** `npm install --save-dev knip` is the single Wave 0 step (runs as first task of 22-02). `jscpd` invoked via `npx` for a one-shot duplication signal at the start of 22-01 (not committed to devDependencies — Phase 23 decides on CI gates).
+- **D-15 Dedup scope reality check:** Research identified net CONSIST-01 work as shim-inlining of 7 Phase 12 backward-compat shim files (e.g., `src/utils/cohortTrajectory.ts`). hashCohortId, FHIR query builders, authFetch, and validation helpers are NOT duplicated. Plan 22-01 scope reflects this — do not manufacture duplication that isn't there.
+- **D-16 Result-type migration:** RESEARCH confirmed 0 Result-type occurrences. D-03 migration work is skipped — a one-line "Result-type audit: 0 occurrences, D-03 satisfied retroactively" note in 22-01 SUMMARY suffices.
+- **D-17 Naming pass:** RESEARCH confirmed existing snake_case matches are all D-05-exempt (wire/DB/enum). CONSIST-02 naming work is a confirmation pass (grep evidence in SUMMARY), not a rewrite pass.
+
+### General
+
 - **Commit granularity within a plan:** One commit per dedup target (merged function + all call sites in one commit) so any single merge can be reverted independently. Multiple dedups per commit break this invariant — avoid.
 
 ## Deferred Ideas
