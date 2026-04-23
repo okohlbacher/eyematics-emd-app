@@ -43,6 +43,40 @@
   --color-indigo-ink: oklch(0.40 0.12 260);
 }
 
+/* Dark theme — class-based override of design tokens.
+   ThemeContext toggles `.dark` on <html>; these rules retint the entire app. */
+.dark {
+  --color-canvas: oklch(0.18 0.012 255);
+  --color-surface: oklch(0.22 0.012 255);
+  --color-surface-2: oklch(0.26 0.012 255);
+  --color-line: oklch(0.32 0.014 255);
+  --color-line-2: oklch(0.38 0.014 255);
+
+  --color-ink: oklch(0.95 0.005 90);
+  --color-ink-2: oklch(0.78 0.008 90);
+  --color-ink-3: oklch(0.60 0.010 90);
+
+  --color-teal: oklch(0.72 0.12 195);
+  --color-teal-soft: oklch(0.30 0.06 195);
+  --color-teal-ink: oklch(0.85 0.10 195);
+
+  --color-sage: oklch(0.78 0.10 145);
+  --color-sage-soft: oklch(0.30 0.05 145);
+  --color-sage-ink: oklch(0.85 0.09 145);
+
+  --color-coral: oklch(0.72 0.16 25);
+  --color-coral-soft: oklch(0.32 0.07 25);
+  --color-coral-ink: oklch(0.85 0.13 25);
+
+  --color-amber: oklch(0.80 0.14 75);
+  --color-amber-soft: oklch(0.32 0.06 75);
+  --color-amber-ink: oklch(0.85 0.11 75);
+
+  --color-indigo: oklch(0.70 0.13 260);
+  --color-indigo-soft: oklch(0.30 0.06 260);
+  --color-indigo-ink: oklch(0.85 0.11 260);
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);

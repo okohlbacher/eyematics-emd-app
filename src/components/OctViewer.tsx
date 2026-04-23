@@ -11,6 +11,7 @@ import { useState } from 'react';
 
 import { useLanguage } from '../context/LanguageContext';
 import { getDateLocale } from '../utils/dateFormat';
+import AuthImg from './AuthImg';
 
 interface OctImage {
   title: string;
@@ -71,18 +72,11 @@ export default function OctViewer({ images, crt, controlledIdx, onSelectIdx }: O
         </div>
       )}
       <div className="overflow-auto" style={{ maxHeight: fullscreen ? '70vh' : '400px' }}>
-        <img
+        <AuthImg
           src={img.path}
           alt={img.title}
           className="w-full transition-transform duration-200"
           style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center' }}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            // L-05: use transparent 1x1 GIF placeholder to avoid infinite error loop
-            target.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-            target.alt = t('octImageUnavailable');
-            target.className = 'w-full h-48 bg-gray-800 flex items-center justify-center';
-          }}
         />
       </div>
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
@@ -161,7 +155,7 @@ export default function OctViewer({ images, crt, controlledIdx, onSelectIdx }: O
                   : 'border-transparent hover:border-gray-300'
               }`}
             >
-              <img
+              <AuthImg
                 src={img.path}
                 alt={img.title}
                 className="w-20 h-14 object-cover"

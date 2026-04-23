@@ -1,4 +1,4 @@
-import { ArrowUpDown, Building2, CheckCircle, Database, Filter, KeyRound, Microscope, Pencil, Search, Shield, ShieldCheck, Stethoscope, Trash2, UserPlus, X } from 'lucide-react';
+import { ArrowUpDown, Building2, CheckCircle, Database, Filter, Key, KeyRound, Microscope, Pencil, Search, Shield, ShieldCheck, Stethoscope, Trash2, UserPlus, X } from 'lucide-react';
 import { useCallback,useEffect, useMemo, useState } from 'react';
 
 import type { UserRole } from '../context/AuthContext';
@@ -257,6 +257,27 @@ export default function AdminPage() {
       }
     } catch (err) {
       console.error('[AdminPage] Failed to delete user:', err);
+    }
+  };
+
+  const handleResetPassword = async (targetUsername: string) => {
+    if (!confirm(t('adminResetPasswordConfirm').replace('{0}', targetUsername))) return;
+    setActionError(null);
+    try {
+      const resp = await authFetch(`/api/auth/users/${encodeURIComponent(targetUsername)}/password`, {
+        method: 'PUT',
+      });
+      if (resp.ok) {
+        const data = await resp.json() as { generatedPassword: string };
+        setGeneratedPassword(data.generatedPassword);
+        await loadUsers();
+      } else {
+        const err = await resp.json() as { error: string };
+        setActionError(err.error ?? 'Failed to reset password');
+      }
+    } catch (err) {
+      console.error('[AdminPage] Failed to reset password:', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to reset password');
     }
   };
 
@@ -694,6 +715,13 @@ export default function AdminPage() {
                             title={t('edit')}
                           >
                             <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => void handleResetPassword(u.username)}
+                            className="text-gray-400 hover:text-blue-600"
+                            title={t('adminResetPassword')}
+                          >
+                            <Key className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => void handleResetTotp(u.username)}

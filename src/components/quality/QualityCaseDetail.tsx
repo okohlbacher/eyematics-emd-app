@@ -5,8 +5,11 @@ import {
   CheckCircle2,
   Circle,
   Flag,
+  Image as ImageIcon,
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+
+import OctViewer from '../OctViewer';
 
 import {
   CRITICAL_CRT_THRESHOLD,
@@ -53,6 +56,23 @@ export default function QualityCaseDetail({
   onUpdateFlagStatus,
 }: QualityCaseDetailProps) {
   const { locale, t } = useLanguage();
+  const [activeTab, setActiveTab] = useState<'values' | 'oct'>('values');
+
+  // Derive OCT images the same way useCaseData does on the patient detail page,
+  // stripping any leading directory segment from the FHIR instance title.
+  const octImages = useMemo(
+    () =>
+      (selectedCase.imagingStudies ?? []).flatMap((study) =>
+        (study.series ?? []).flatMap((s) =>
+          (s.instance ?? []).map((inst) => ({
+            title: study.description ?? 'OCT',
+            date: study.started?.substring(0, 10) ?? '',
+            path: `/api/fhir/images/${(inst.title ?? '').replace(/^.*\//, '')}`,
+          })),
+        ),
+      ),
+    [selectedCase],
+  );
 
   // Anomalies including missing data (N03.05, EMDREQ-QUAL-004)
   const anomalies = useMemo(() => {
@@ -210,9 +230,38 @@ export default function QualityCaseDetail({
         </div>
       )}
 
-      {/* Observations table */}
+      {/* Tabs: Values to Review / OCT */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-3">{t('valuesToReview')}</h3>
+        <div className="flex items-center gap-1 border-b border-gray-200 dark:border-gray-700 mb-4">
+          <button
+            onClick={() => setActiveTab('values')}
+            className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeTab === 'values'
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+            }`}
+          >
+            {t('valuesToReview')}
+          </button>
+          <button
+            onClick={() => setActiveTab('oct')}
+            className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px flex items-center gap-1.5 transition-colors ${
+              activeTab === 'oct'
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+            }`}
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+            {t('octTitle')}
+            {octImages.length > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-[10px] rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                {octImages.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {activeTab === 'values' ? (
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
@@ -261,6 +310,9 @@ export default function QualityCaseDetail({
             })}
           </tbody>
         </table>
+        ) : (
+          <OctViewer images={octImages} />
+        )}
       </div>
 
       {/* Existing flags */}

@@ -7,6 +7,7 @@ import { AuthProvider, QUALITY_ROLES, useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
+import AccountPage from './pages/AccountPage';
 import AdminPage from './pages/AdminPage';
 import AnalysisPage from './pages/AnalysisPage';
 import AuditPage from './pages/AuditPage';
@@ -56,6 +57,7 @@ function AppRoutes() {
         <Route path="/analysis" element={<AnalysisPage />} />
         <Route path="/case/:caseId" element={<CaseDetailPage />} />
         <Route path="/quality" element={<QualityPage />} />
+        <Route path="/account" element={<AccountPage />} />
         <Route path="/doc-quality" element={<QualityRoute><DocQualityPage /></QualityRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
         <Route path="/audit" element={<AdminRoute><AuditPage /></AdminRoute>} />

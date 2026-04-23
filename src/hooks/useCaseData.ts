@@ -216,7 +216,7 @@ export function useCaseData(
           (s.instance ?? []).map((inst) => ({
             title: study.description ?? 'OCT',
             date: study.started?.substring(0, 10) ?? '',
-            path: `/api/fhir/images/${inst.title ?? ''}`,
+            path: `/api/fhir/images/${(inst.title ?? '').replace(/^.*\//, '')}`,
           })),
         ),
       ),

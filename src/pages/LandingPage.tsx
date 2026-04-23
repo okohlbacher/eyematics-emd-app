@@ -10,7 +10,7 @@ import {
   Users,
 } from 'lucide-react';
 
-import { Badge, Button, SectionHead, Sparkline, Tile } from '../components/primitives';
+import { Badge, Button, SectionHead, Tile } from '../components/primitives';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -53,12 +53,6 @@ export default function LandingPage() {
     0,
   );
 
-  // Synthetic sparklines — derive from monthly aggregates when available.
-  const trend = (end: number) =>
-    [end * 0.6, end * 0.7, end * 0.78, end * 0.85, end * 0.92, end * 0.97, end].map((v) =>
-      Math.round(v),
-    );
-
   const tonePairs = {
     teal: { bg: 'var(--color-teal-soft)', fg: 'var(--color-teal)' },
     sage: { bg: 'var(--color-sage-soft)', fg: 'var(--color-sage)' },
@@ -70,7 +64,6 @@ export default function LandingPage() {
   const stats: Array<{
     label: string;
     value: string | number;
-    spark: number[];
     tone: Tone;
     icon: typeof Building2;
     sub: string;
@@ -78,7 +71,6 @@ export default function LandingPage() {
     {
       label: t('connectedCenters'),
       value: centers.length,
-      spark: trend(centers.length),
       tone: 'teal',
       icon: Building2,
       sub: `${centers.length} ${t('online')}`,
@@ -86,7 +78,6 @@ export default function LandingPage() {
     {
       label: t('pseudonymizedCases'),
       value: totalPatients,
-      spark: trend(totalPatients),
       tone: 'sage',
       icon: Users,
       sub: t('fhirBundles'),
@@ -94,7 +85,6 @@ export default function LandingPage() {
     {
       label: t('totalMeasurements'),
       value: totalObservations.toLocaleString(locale),
-      spark: trend(totalObservations),
       tone: 'indigo',
       icon: Activity,
       sub: t('loincObservations'),
@@ -102,7 +92,6 @@ export default function LandingPage() {
     {
       label: t('octImages'),
       value: totalOctImages.toLocaleString(locale),
-      spark: trend(totalOctImages),
       tone: 'amber',
       icon: ScanEye,
       sub: t('acrossModalities'),
@@ -147,14 +136,11 @@ export default function LandingPage() {
           const pair = tonePairs[s.tone];
           return (
             <Tile key={s.label} className="p-[18px_18px_14px]">
-              <div className="flex justify-between items-start">
-                <div
-                  className="w-8 h-8 rounded-lg grid place-items-center"
-                  style={{ background: pair.bg }}
-                >
-                  <Icon className="w-4 h-4" style={{ color: pair.fg }} />
-                </div>
-                <Sparkline data={s.spark} color={pair.fg} width={72} height={24} />
+              <div
+                className="w-8 h-8 rounded-lg grid place-items-center"
+                style={{ background: pair.bg }}
+              >
+                <Icon className="w-4 h-4" style={{ color: pair.fg }} />
               </div>
               <div className="text-[32px] font-semibold tracking-[-0.03em] text-[var(--color-ink)] mt-3.5 font-data">
                 {s.value}
@@ -188,13 +174,12 @@ export default function LandingPage() {
             {centers.map((center, i) => {
               const shorthand = getCenterShorthand(center.id, center.name);
               const accent = CENTRE_ACCENTS[shorthand] ?? 'var(--color-teal)';
-              const spark = trend(center.patientCount);
               return (
                 <div
                   key={center.id}
                   className="grid items-center gap-3.5 px-5 py-3.5 cursor-pointer hover:bg-[var(--color-surface-2)] transition-colors"
                   style={{
-                    gridTemplateColumns: '36px 1fr 90px 110px 110px 16px',
+                    gridTemplateColumns: '36px 1fr 90px 110px 16px',
                     borderBottom:
                       i < centers.length - 1 ? '1px solid var(--color-line)' : 'none',
                   }}
@@ -221,7 +206,6 @@ export default function LandingPage() {
                       {center.patientCount}
                     </div>
                   </div>
-                  <Sparkline data={spark} color={accent} width={90} height={22} />
                   <div className="text-[11px] text-[var(--color-ink-3)] flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {center.lastUpdated

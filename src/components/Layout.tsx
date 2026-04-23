@@ -7,7 +7,6 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { QUALITY_ROLES, useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import FeedbackButton from './FeedbackButton';
-import { BrandMark } from './primitives';
 import { ThemeToggle } from './ThemeToggle';
 
 export default function Layout() {
@@ -76,7 +75,7 @@ export default function Layout() {
       <aside className="shrink-0 bg-[var(--color-surface)] border-r border-[var(--color-line)] flex flex-col" style={{ width: 232 }}>
         {/* Brand */}
         <div className="px-4 py-4 flex items-center gap-3 border-b border-[var(--color-line)]">
-          <BrandMark size={26} />
+          <img src="/eyematics-logo.png" alt="EyeMatics" width={26} height={26} className="rounded" />
           <div>
             <div className="text-[14px] font-bold leading-none tracking-[-0.01em] text-[var(--color-ink)]">EyeMatics</div>
             <div className="text-[10px] tracking-[0.1em] uppercase text-[var(--color-ink-3)] mt-1">
@@ -117,18 +116,24 @@ export default function Layout() {
           <ThemeToggle />
 
           <div className="mt-2 flex items-center gap-2.5 px-2 py-1.5">
-            <div
-              className="w-7 h-7 rounded-full grid place-items-center text-[11px] font-bold"
-              style={{ background: 'var(--color-teal-soft)', color: 'var(--color-teal-ink)' }}
+            <button
+              onClick={() => navigate('/account')}
+              className="flex items-center gap-2.5 flex-1 min-w-0 text-left rounded-md -mx-1 px-1 py-1 hover:bg-[var(--color-surface-2)] transition-colors"
+              title={t('accountTitle')}
             >
-              {initials || 'NA'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[12px] font-semibold text-[var(--color-ink)] truncate">
-                {user?.username}
+              <div
+                className="w-7 h-7 rounded-full grid place-items-center text-[11px] font-bold shrink-0"
+                style={{ background: 'var(--color-teal-soft)', color: 'var(--color-teal-ink)' }}
+              >
+                {initials || 'NA'}
               </div>
-              <div className="text-[10px] text-[var(--color-ink-3)] capitalize">{user?.role}</div>
-            </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[12px] font-semibold text-[var(--color-ink)] truncate">
+                  {user?.username}
+                </div>
+                <div className="text-[10px] text-[var(--color-ink-3)] capitalize">{user?.role}</div>
+              </div>
+            </button>
             <button
               onClick={() => { logout(); navigate('/login'); }}
               className="p-1.5 text-[var(--color-ink-3)] hover:text-[var(--color-ink)] transition-colors"
