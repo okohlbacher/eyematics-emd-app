@@ -8,11 +8,11 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  computeContrastRatio,
   DARK_COHORT_PALETTES,
   DARK_EYE_COLORS,
   EYE_COLORS,
   PANEL_BACKGROUND,
-  computeContrastRatio,
   relativeLuminance,
 } from '../src/components/outcomes/palette';
 

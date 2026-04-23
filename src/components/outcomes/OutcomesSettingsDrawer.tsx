@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+
 import type { AxisMode, YMetric } from '../../utils/cohortTrajectory';
 
 type MetricType = 'visus' | 'crt' | 'interval' | 'responder';

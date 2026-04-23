@@ -13,7 +13,7 @@
  *   4. Same (pseudonym, eye, date) tuple rendered twice → distinct keys via
  *      `|#N` counter, and React logs no duplicate-key warning.
  */
-import { describe, expect, it, vi, afterEach, beforeEach } from 'vitest';
+import { afterEach, beforeEach,describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // download.ts mock — the component imports it at module load.
@@ -23,10 +23,11 @@ vi.mock('../src/utils/download', () => ({
   datedFilename: (p: string, e: string) => `${p}-2026-04-16.${e}`,
 }));
 
-import { render, cleanup } from '@testing-library/react';
+import { cleanup,render } from '@testing-library/react';
+
 import OutcomesDataPreview from '../src/components/outcomes/OutcomesDataPreview';
-import type { PatientCase } from '../src/types/fhir';
 import type { TranslationKey } from '../src/i18n/translations';
+import type { PatientCase } from '../src/types/fhir';
 import type { TrajectoryResult } from '../src/utils/cohortTrajectory';
 
 afterEach(cleanup);

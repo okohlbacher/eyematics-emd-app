@@ -9,8 +9,6 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import OctViewer from '../OctViewer';
-
 import {
   CRITICAL_CRT_THRESHOLD,
   CRITICAL_VISUS_THRESHOLD,
@@ -26,6 +24,7 @@ import {
   SNOMED_IVI,
 } from '../../services/fhirLoader';
 import type { PatientCase, QualityFlag } from '../../types/fhir';
+import OctViewer from '../OctViewer';
 import type { TherapyStatusEntry } from './QualityCaseList';
 
 export interface QualityCaseDetailProps {

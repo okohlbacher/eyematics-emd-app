@@ -11,10 +11,11 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
-import type { FhirBundle } from '../src/types/fhir';
 import { extractCenters, extractPatientCases } from '../src/services/fhirLoader';
+import type { FhirBundle } from '../src/types/fhir';
 
 const CASES = [
   { file: 'center-chemnitz.json',   orgId: 'org-ukc'  },

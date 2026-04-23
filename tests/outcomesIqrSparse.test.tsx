@@ -6,8 +6,8 @@
  *   2. DOM   — OutcomesPanel must not render <path> elements with empty `d` attr
  *              (the symptom of a 0-height IQR band).
  */
-import { describe, expect, it, vi, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { cleanup,render } from '@testing-library/react';
+import { afterEach,describe, expect, it, vi } from 'vitest';
 
 // Deterministic Recharts mock (same pattern as tests/OutcomesPage.test.tsx).
 // Emit <path d="M0,0 L10,10"> so the DOM has a non-empty `d` to assert on.
@@ -38,12 +38,12 @@ vi.mock('recharts', async (importOriginal) => {
 });
 
 import OutcomesPanel from '../src/components/outcomes/OutcomesPanel';
+import { LOINC_VISUS, SNOMED_EYE_RIGHT } from '../src/services/fhirLoader';
+import type { PatientCase } from '../src/types/fhir';
 import {
   computeCohortTrajectory,
   type PanelResult,
 } from '../src/utils/cohortTrajectory';
-import type { PatientCase } from '../src/types/fhir';
-import { LOINC_VISUS, SNOMED_EYE_RIGHT } from '../src/services/fhirLoader';
 
 afterEach(() => cleanup());
 

@@ -8,8 +8,8 @@
  * bodies live in tests/helpers/renderOutcomesView.tsx; factories are loaded via
  * vi.hoisted() so they are available at vi.mock hoist time (before static imports).
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Hoist factory functions — must be available before vi.mock calls execute.

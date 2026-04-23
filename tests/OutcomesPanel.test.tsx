@@ -58,8 +58,9 @@ vi.mock('recharts', async (importOriginal) => {
 });
 
 import { cleanup, render, screen } from '@testing-library/react';
-import OutcomesPanel from '../src/components/outcomes/OutcomesPanel';
+
 import type { CohortSeriesEntry } from '../src/components/outcomes/OutcomesPanel';
+import OutcomesPanel from '../src/components/outcomes/OutcomesPanel';
 import type { PanelResult } from '../src/utils/cohortTrajectory';
 
 // ---------------------------------------------------------------------------

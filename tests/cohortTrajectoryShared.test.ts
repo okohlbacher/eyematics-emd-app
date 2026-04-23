@@ -7,9 +7,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { computeCohortTrajectory as computeShared } from '../shared/cohortTrajectory';
-import { computeCohortTrajectory as computeLegacy } from '../src/utils/cohortTrajectory';
-import type { PatientCase } from '../shared/types/fhir';
 import { LOINC_VISUS, SNOMED_EYE_RIGHT } from '../shared/fhirCodes';
+import type { PatientCase } from '../shared/types/fhir';
+import { computeCohortTrajectory as computeLegacy } from '../src/utils/cohortTrajectory';
 
 function makePatient(pseudonym: string, decimals: number[], datesFromBase: number[]): PatientCase {
   const base = new Date('2024-01-01T00:00:00Z').getTime();

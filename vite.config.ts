@@ -1,7 +1,8 @@
+import { readFileSync } from 'node:fs'
+
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
-import { readFileSync } from 'node:fs'
 
 // API endpoints are served by the Express backend at :3000 in dev
 // (proxied below) and by the same Express process in production.

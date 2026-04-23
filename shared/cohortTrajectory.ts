@@ -10,7 +10,6 @@
  * All functions are pure — no Date.now(), no Math.random(), no I/O.
  */
 
-import { getObservationsByCode } from './fhirQueries';
 import {
   LOINC_CRT,
   LOINC_VISUS,
@@ -20,6 +19,7 @@ import {
   SNOMED_EYE_RIGHT_ALT,
   SNOMED_IVI,
 } from './fhirCodes';
+import { getObservationsByCode } from './fhirQueries';
 import type { Observation, PatientCase, Procedure } from './types/fhir';
 
 // ---------------------------------------------------------------------------

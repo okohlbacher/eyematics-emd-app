@@ -4,9 +4,9 @@
  */
 
 import express from 'express';
+import yaml from 'js-yaml';
 import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
-import yaml from 'js-yaml';
 
 // Mock dependencies
 vi.mock('../server/fhirApi.js', () => ({ invalidateFhirCache: vi.fn() }));

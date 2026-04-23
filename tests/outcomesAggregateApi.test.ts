@@ -30,9 +30,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { initAuditDb } from '../server/auditDb';
 import { addSavedSearch, initDataDb } from '../server/dataDb';
 import { _resetForTesting as _resetHashCohortId, initHashCohortId } from '../server/hashCohortId';
-import type { PatientCase } from '../shared/types/fhir';
-import { LOINC_CRT, LOINC_VISUS, SNOMED_EYE_LEFT, SNOMED_EYE_RIGHT } from '../shared/fhirCodes';
-
 // @ts-expect-error — server/outcomesAggregateApi.ts is created in parallel by Plan 12-02
 import { outcomesAggregateRouter } from '../server/outcomesAggregateApi';
 // @ts-expect-error — server/outcomesAggregateCache.ts is created in parallel by Plan 12-02
@@ -40,6 +37,8 @@ import {
   _resetForTesting as resetCache,
   initOutcomesAggregateCache,
 } from '../server/outcomesAggregateCache';
+import { LOINC_CRT, LOINC_VISUS, SNOMED_EYE_LEFT, SNOMED_EYE_RIGHT } from '../shared/fhirCodes';
+import type { PatientCase } from '../shared/types/fhir';
 
 // ---------------------------------------------------------------------------
 // Mock the case-loading seam used by the handler: getCachedBundles comes from

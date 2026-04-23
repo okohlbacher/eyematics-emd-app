@@ -12,9 +12,9 @@
  * Threshold conversion: thresholdLogmar = thresholdLetters * 0.02
  * (5 ETDRS letters = 0.1 logMAR = 1 ETDRS line)
  */
-import { LOINC_VISUS, SNOMED_EYE_RIGHT, SNOMED_EYE_LEFT } from './fhirCodes';
 import { decimalToLogmar } from './cohortTrajectory';
-import type { PatientCase, Observation } from './types/fhir';
+import { LOINC_VISUS, SNOMED_EYE_LEFT,SNOMED_EYE_RIGHT } from './fhirCodes';
+import type { Observation,PatientCase } from './types/fhir';
 
 export type ResponderEye = 'od' | 'os' | 'combined';
 

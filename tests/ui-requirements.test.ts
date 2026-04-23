@@ -8,13 +8,13 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
+import { createRateLimiter } from '../server/rateLimiting';
 import {
   CRITICAL_CRT_THRESHOLD,
   CRITICAL_VISUS_THRESHOLD,
   VISUS_JUMP_THRESHOLD,
 } from '../src/config/clinicalThresholds';
 import { CHART_COLORS } from '../src/config/clinicalThresholds';
-import { createRateLimiter } from '../server/rateLimiting';
 
 // ============================================================================
 // EMDREQ-USM: User Management

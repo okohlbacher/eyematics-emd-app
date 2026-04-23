@@ -8,21 +8,22 @@
  * {0} replacement and decodeURIComponent), and all 5 statusBadgeClass ranges.
  */
 import { describe, expect, it } from 'vitest';
-import {
-  auditReducer,
-  initialState,
-  initialFilters,
-  selectDistinctUsers,
-  selectFilteredEntries,
-  type AuditState,
-  type ServerAuditEntry,
-} from '../src/pages/audit/auditPageState';
+
 import {
   describeAction,
   describeDetail,
   statusBadgeClass,
   type TranslationFn,
 } from '../src/pages/audit/auditFormatters';
+import {
+  auditReducer,
+  type AuditState,
+  initialFilters,
+  initialState,
+  selectDistinctUsers,
+  selectFilteredEntries,
+  type ServerAuditEntry,
+} from '../src/pages/audit/auditPageState';
 
 // ---------------------------------------------------------------------------
 // Helpers

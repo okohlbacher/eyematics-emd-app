@@ -21,8 +21,8 @@
  * renderOutcomesView options.settings field rather than configuring loadSettingsMock
  * directly.
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Hoist factory functions — must be available before vi.mock calls execute.
@@ -68,14 +68,14 @@ vi.mock('recharts', rechartsFactory);
 // Imports from shared helper (after vi.mock blocks)
 // ---------------------------------------------------------------------------
 
+import type { SavedSearch } from '../src/types/fhir';
 import {
+  buildCases,
+  fetchSpy,
   loadSettingsMock,
   postAggregateMock,
-  fetchSpy,
-  buildCases,
   renderOutcomesView,
 } from './helpers/renderOutcomesView';
-import type { SavedSearch } from '../src/types/fhir';
 
 // ---------------------------------------------------------------------------
 // fetch spy — keeps audit beacon from causing issues

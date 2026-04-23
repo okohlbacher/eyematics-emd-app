@@ -15,8 +15,8 @@
  * - Assertions use `.not.toBeNull()` / `.toBeNull()` (Vitest/Chai native) rather than
  *   jest-dom's `toBeInTheDocument` — this codebase has no jest-dom setup file.
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------- Mocks (MUST appear before SUT import) ----------
 
@@ -44,10 +44,10 @@ vi.mock('../src/utils/download', () => ({
 }));
 
 // ---------- SUT imports (after mocks) ----------
-import AuditPage from '../src/pages/AuditPage';
-import { authFetch } from '../src/services/authHeaders';
 import { useAuth } from '../src/context/AuthContext';
 import { useLanguage } from '../src/context/LanguageContext';
+import AuditPage from '../src/pages/AuditPage';
+import { authFetch } from '../src/services/authHeaders';
 
 // ---------- Fixture data ----------
 

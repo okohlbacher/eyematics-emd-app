@@ -21,12 +21,12 @@ import {
   YAxis,
 } from 'recharts';
 
-import type { PatientCase } from '../../types/fhir';
-import type { TranslationKey } from '../../i18n/translations';
 import { computeCohortTrajectory } from '../../../shared/cohortTrajectory';
 import {
   classifyResponders,
 } from '../../../shared/responderMetric';
+import type { TranslationKey } from '../../i18n/translations';
+import type { PatientCase } from '../../types/fhir';
 
 interface Props {
   cases: PatientCase[];

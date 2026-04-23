@@ -3,9 +3,9 @@
  * VQA-05 / D-07 / D-08: OutcomesEmptyState third variant ('all-eyes-filtered')
  * with DE + EN localization verified verbatim.
  */
-import { describe, expect, it, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { cleanup,render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { afterEach,describe, expect, it } from 'vitest';
 
 import OutcomesEmptyState from '../src/components/outcomes/OutcomesEmptyState';
 import type { TranslationKey } from '../src/i18n/translations';

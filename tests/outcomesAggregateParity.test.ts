@@ -37,16 +37,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { initAuditDb } from '../server/auditDb';
 import { addSavedSearch, initDataDb } from '../server/dataDb';
 import { _resetForTesting as _resetHashCohortId, initHashCohortId } from '../server/hashCohortId';
-import {
-  computeCohortTrajectory,
-  type AxisMode,
-  type Eye,
-  type YMetric,
-} from '../shared/cohortTrajectory';
-import { LOINC_VISUS, SNOMED_EYE_LEFT, SNOMED_EYE_RIGHT, SNOMED_IVI } from '../shared/fhirCodes';
-import { shapeOutcomesResponse } from '../shared/outcomesProjection';
-import type { PatientCase } from '../shared/types/fhir';
-
 // @ts-expect-error — server/outcomesAggregateApi.ts is created in parallel by Plan 12-02
 import { outcomesAggregateRouter } from '../server/outcomesAggregateApi';
 // @ts-expect-error — server/outcomesAggregateCache.ts is created in parallel by Plan 12-02
@@ -54,6 +44,15 @@ import {
   _resetForTesting as resetCache,
   initOutcomesAggregateCache,
 } from '../server/outcomesAggregateCache';
+import {
+  type AxisMode,
+  computeCohortTrajectory,
+  type Eye,
+  type YMetric,
+} from '../shared/cohortTrajectory';
+import { LOINC_VISUS, SNOMED_EYE_LEFT, SNOMED_EYE_RIGHT, SNOMED_IVI } from '../shared/fhirCodes';
+import { shapeOutcomesResponse } from '../shared/outcomesProjection';
+import type { PatientCase } from '../shared/types/fhir';
 
 // ---------------------------------------------------------------------------
 // Mulberry32 PRNG — deterministic seed → patient cases.

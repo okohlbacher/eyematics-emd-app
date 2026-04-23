@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { useEffect } from 'react';
+
 import type { SavedSearch } from '../../types/fhir';
 
 export interface CohortCompareDrawerProps {

@@ -2,8 +2,8 @@
 /**
  * VQA-04 / D-05 / D-06: OutcomesTooltip field order + per-patient suppression.
  */
-import { describe, expect, it, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { cleanup,render } from '@testing-library/react';
+import { afterEach,describe, expect, it } from 'vitest';
 
 import OutcomesTooltip from '../src/components/outcomes/OutcomesTooltip';
 

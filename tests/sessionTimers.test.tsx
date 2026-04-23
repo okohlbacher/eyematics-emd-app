@@ -13,8 +13,8 @@
  * INACTIVITY_TIMEOUT is imported from AuthContext (Task 1 export) — no magic number.
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, render } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthProvider, INACTIVITY_TIMEOUT, useAuth } from '../src/context/AuthContext';
 

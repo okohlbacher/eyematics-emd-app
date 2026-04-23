@@ -119,7 +119,7 @@ export function initAuth(dataDir: string, settings: Record<string, unknown>): vo
       '[initAuth] provider=keycloak is not yet supported: the OIDC redirect flow has not shipped. ' +
       'Set auth.provider=local in settings.yaml until the redirect flow is available.',
     );
-    // eslint-disable-next-line no-unreachable
+     
     const kc = (settings.keycloak ?? {}) as Record<string, unknown>;
     if (typeof kc.issuer !== 'string' || !kc.issuer) {
       throw new Error('[initAuth] keycloak.issuer is required when provider=keycloak');

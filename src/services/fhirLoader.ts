@@ -16,8 +16,8 @@ import { getDataSourceConfig, loadBundlesFromSource } from './dataSource';
 // can import from shared/ directly; callers that also need the loader logic
 // continue to import from here.
 export * from '../../shared/fhirCodes';
-export { getObservationsByCode, getLatestObservation } from '../../shared/fhirQueries';
-export { extractPatientCases, applyFilters, getAge } from '../../shared/patientCases';
+export { getLatestObservation,getObservationsByCode } from '../../shared/fhirQueries';
+export { applyFilters, extractPatientCases, getAge } from '../../shared/patientCases';
 
 import {
   SNOMED_AMD,

@@ -22,10 +22,10 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 
 import { authFetch } from '../../services/authHeaders';
 import {
-  auditReducer,
-  initialState,
   type AuditAction,
+  auditReducer,
   type AuditState,
+  initialState,
   type ServerAuditEntry,
 } from './auditPageState';
 

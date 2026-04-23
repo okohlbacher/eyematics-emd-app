@@ -5,9 +5,9 @@
  * This test is the roster-change canary — if data/centers.json changes, UPDATE THIS
  * TEST IN THE SAME PR (the exact label list is locked here intentionally).
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------- Mocks ----------
 vi.mock('../src/services/authHeaders', () => ({
@@ -23,10 +23,10 @@ vi.mock('../src/context/LanguageContext', () => ({
   useLanguage: vi.fn(),
 }));
 
-import AdminPage from '../src/pages/AdminPage';
-import { authFetch } from '../src/services/authHeaders';
 import { useAuth } from '../src/context/AuthContext';
 import { useLanguage } from '../src/context/LanguageContext';
+import AdminPage from '../src/pages/AdminPage';
+import { authFetch } from '../src/services/authHeaders';
 
 const ROSTER = [
   { id: 'org-uka',  shorthand: 'UKA' },

@@ -12,8 +12,8 @@
  * Uses the hidden `data-testid="outcomes-panel-ydomain"` div added to OutcomesPanel
  * to read the computed domain without parsing SVG axis ticks.
  */
-import { describe, expect, it, vi, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { cleanup,render } from '@testing-library/react';
+import { afterEach,describe, expect, it, vi } from 'vitest';
 
 // Deterministic Recharts mock — same pattern as outcomesIqrSparse.test.tsx
 vi.mock('recharts', async (importOriginal) => {

@@ -1,5 +1,6 @@
 /** Phase 13 / METRIC-03 — classifyResponders buckets at threshold boundary (logMAR sign convention). */
-import { describe, it, expect } from 'vitest';
+import { describe, expect,it } from 'vitest';
+
 import { classifyResponders } from '../shared/responderMetric';
 import type { PatientCase } from '../shared/types/fhir';
 

@@ -15,6 +15,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+
 import { useThemeSafe } from '../../context/ThemeContext';
 import type { AxisMode, GridPoint, PanelResult, YMetric } from '../../utils/cohortTrajectory';
 import OutcomesTooltip from './OutcomesTooltip';

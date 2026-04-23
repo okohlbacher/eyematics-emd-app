@@ -8,8 +8,8 @@
  * and gaps from both eyes are pooled. This avoids spurious 0-day cross-eye gaps
  * when a patient has same-day OD and OS injections.
  */
-import { SNOMED_IVI } from './fhirCodes';
 import { eyeOf, percentile } from './cohortTrajectory';
+import { SNOMED_IVI } from './fhirCodes';
 import type { PatientCase } from './types/fhir';
 
 export type IntervalEye = 'od' | 'os' | 'combined';

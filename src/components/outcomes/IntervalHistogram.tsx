@@ -17,12 +17,12 @@ import {
   YAxis,
 } from 'recharts';
 
-import type { PatientCase } from '../../types/fhir';
-import type { TranslationKey } from '../../i18n/translations';
 import {
   computeIntervalDistribution,
   type IntervalEye,
 } from '../../../shared/intervalMetric';
+import type { TranslationKey } from '../../i18n/translations';
+import type { PatientCase } from '../../types/fhir';
 import { EYE_COLORS } from './palette';
 
 interface Props {

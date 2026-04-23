@@ -12,6 +12,7 @@
  */
 import { ChevronRight, Download } from 'lucide-react';
 
+import type { TranslationKey } from '../../i18n/translations';
 import { LOINC_CRT, LOINC_VISUS, SNOMED_IVI } from '../../services/fhirLoader';
 import type { PatientCase } from '../../types/fhir';
 import {
@@ -21,7 +22,6 @@ import {
   type TrajectoryResult,
 } from '../../utils/cohortTrajectory';
 import { datedFilename, downloadCsv } from '../../utils/download';
-import type { TranslationKey } from '../../i18n/translations';
 
 // ---------------------------------------------------------------------------
 // Types

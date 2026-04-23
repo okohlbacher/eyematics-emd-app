@@ -4,7 +4,7 @@
  * Tests 8-12 (panels, cards, tooltip, drawer) land in 09-02.
  * Tests 13-17 (data preview, CSV) land in 09-03.
  */
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach,beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // download.ts mock — used by tests 15-17 (CSV export assertions).
@@ -17,8 +17,9 @@ vi.mock('../src/utils/download', () => ({
   downloadCsv: (...args: unknown[]) => downloadCsvSpy(...args),
   datedFilename: (p: string, e: string) => datedFilenameSpy(p, e),
 }));
-import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+
 import OutcomesView from '../src/components/outcomes/OutcomesView';
 
 // ---------------------------------------------------------------------------
@@ -114,9 +115,9 @@ vi.mock('recharts', async (importOriginal) => {
 import { useData } from '../src/context/DataContext';
 import { useLanguage } from '../src/context/LanguageContext';
 import { applyFilters } from '../src/services/fhirLoader';
-import { computeCohortTrajectory } from '../src/utils/cohortTrajectory';
-import type { TrajectoryResult } from '../src/utils/cohortTrajectory';
 import type { PatientCase, SavedSearch } from '../src/types/fhir';
+import type { TrajectoryResult } from '../src/utils/cohortTrajectory';
+import { computeCohortTrajectory } from '../src/utils/cohortTrajectory';
 
 // ---------------------------------------------------------------------------
 // Test helpers

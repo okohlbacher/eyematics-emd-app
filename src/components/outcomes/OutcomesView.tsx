@@ -9,16 +9,17 @@
  *
  * Phase 13 / METRIC-04: inline metric tab strip (?metric= URL param).
  */
+import { GitCompare,Settings } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Settings, GitCompare } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
+import { computeCrtTrajectory } from '../../../shared/cohortTrajectory';
 import { useData } from '../../context/DataContext';
 import { useLanguage } from '../../context/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import { authFetch } from '../../services/authHeaders';
 import { applyFilters } from '../../services/fhirLoader';
-import { postAggregate, type AggregateResponse } from '../../services/outcomesAggregateService';
+import { type AggregateResponse,postAggregate } from '../../services/outcomesAggregateService';
 import { loadSettings } from '../../services/settingsService';
 import type { CohortFilter } from '../../types/fhir';
 import {
@@ -30,17 +31,16 @@ import {
   type TrajectoryResult,
   type YMetric,
 } from '../../utils/cohortTrajectory';
-import { computeCrtTrajectory } from '../../../shared/cohortTrajectory';
+import CohortCompareDrawer from './CohortCompareDrawer';
+import IntervalHistogram from './IntervalHistogram';
 import OutcomesDataPreview from './OutcomesDataPreview';
 import OutcomesEmptyState from './OutcomesEmptyState';
-import IntervalHistogram from './IntervalHistogram';
+import type { CohortSeriesEntry } from './OutcomesPanel';
 import OutcomesPanel from './OutcomesPanel';
-import ResponderView from './ResponderView';
 import OutcomesSettingsDrawer from './OutcomesSettingsDrawer';
 import OutcomesSummaryCards from './OutcomesSummaryCards';
-import CohortCompareDrawer from './CohortCompareDrawer';
-import type { CohortSeriesEntry } from './OutcomesPanel';
-import { EYE_COLORS, COHORT_PALETTES } from './palette';
+import { COHORT_PALETTES,EYE_COLORS } from './palette';
+import ResponderView from './ResponderView';
 
 // ---------------------------------------------------------------------------
 // Metric types + constants (METRIC-04)
@@ -278,7 +278,7 @@ export default function OutcomesView() {
     })();
 
     return () => { cancelled = true; };
-  }, [activeMetric, routeServerSide, cohortId, axisMode, yMetric, gridPoints, spreadMode, layers.perPatient, layers.scatter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeMetric, routeServerSide, cohortId, axisMode, yMetric, gridPoints, spreadMode, layers.perPatient, layers.scatter]);  
 
   /** Project server AggregateResponse back to the PanelResult shape the panels consume. */
   function panelFromServer(r: AggregateResponse): PanelResult {

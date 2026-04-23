@@ -9,6 +9,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import type { QualityFlagRow, SavedSearchRow } from '../server/dataDb';
 import {
   addSavedSearch,
   getExcludedCases,
@@ -21,7 +22,6 @@ import {
   setQualityFlags,
   setReviewedCases,
 } from '../server/dataDb';
-import type { QualityFlagRow, SavedSearchRow } from '../server/dataDb';
 
 let tmpDir: string;
 

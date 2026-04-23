@@ -16,10 +16,11 @@
  *
  * NOTE: Do NOT add the jsdom docblock here — this is not a test file.
  */
-import { vi } from 'vitest';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { vi } from 'vitest';
+
 import type { PatientCase, SavedSearch } from '../../src/types/fhir';
 
 // ---------------------------------------------------------------------------

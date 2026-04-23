@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 /** Phase 13 / METRIC-03 — ResponderView component tests. */
-import { describe, it, expect, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { cleanup,render, screen } from '@testing-library/react';
+import { afterEach,describe, expect, it } from 'vitest';
+
 import ResponderView from '../src/components/outcomes/ResponderView';
-import type { PatientCase } from '../src/types/fhir';
 import type { TranslationKey } from '../src/i18n/translations';
 import { translations } from '../src/i18n/translations';
+import type { PatientCase } from '../src/types/fhir';
 
 afterEach(() => cleanup());
 

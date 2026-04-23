@@ -10,7 +10,6 @@
  * file holds the browser-only `authFetch` + body serialization logic for the
  * POST /api/outcomes/aggregate endpoint.
  */
-import { authFetch } from './authHeaders';
 import type {
   AxisMode,
   Eye,
@@ -19,6 +18,7 @@ import type {
   SpreadMode,
   YMetric,
 } from '../utils/cohortTrajectory';
+import { authFetch } from './authHeaders';
 
 export interface AggregateRequest {
   cohortId: string;

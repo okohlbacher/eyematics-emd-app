@@ -8,6 +8,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  SNOMED_EYE_LEFT,
+  SNOMED_EYE_RIGHT,
+} from '../src/services/fhirLoader';
+import {
   buildGrid,
   computeCohortTrajectory,
   decimalToLogmar,
@@ -18,10 +22,6 @@ import {
   percentile,
   treatmentIndexAt,
 } from '../src/utils/cohortTrajectory';
-import {
-  SNOMED_EYE_LEFT,
-  SNOMED_EYE_RIGHT,
-} from '../src/services/fhirLoader';
 
 // ---------------------------------------------------------------------------
 // Helper: build minimal Procedure fixture for treatmentIndexAt tests

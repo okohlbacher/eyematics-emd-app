@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { auditApiRouter } from '../server/auditApi';
 import { initAuditDb, logAuditEntry, queryAudit } from '../server/auditDb';
-import { initHashCohortId, _resetForTesting as _resetHashCohortId } from '../server/hashCohortId';
+import { _resetForTesting as _resetHashCohortId,initHashCohortId } from '../server/hashCohortId';
 
 let tmpDir: string;
 

@@ -1,4 +1,5 @@
 import { Activity, Eye as EyeIcon, Users } from 'lucide-react';
+
 import type { TrajectoryResult } from '../../utils/cohortTrajectory';
 
 interface Props {

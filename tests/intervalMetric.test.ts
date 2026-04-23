@@ -1,5 +1,6 @@
 /** Phase 13 / METRIC-02 — computeIntervalDistribution buckets injection gaps. */
-import { describe, it, expect } from 'vitest';
+import { describe, expect,it } from 'vitest';
+
 import { computeIntervalDistribution } from '../shared/intervalMetric';
 import type { PatientCase } from '../shared/types/fhir';
 

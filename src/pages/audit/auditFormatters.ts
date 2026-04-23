@@ -2,8 +2,8 @@
  * Phase 19 / AUDIT-03: Pure formatter helpers — moved VERBATIM from AuditPage.tsx lines 21-85.
  * No logic changes. Phase 20 SESSION-13 will extend `describeAction` from this location.
  */
-import type { ServerAuditEntry } from './auditPageState';
 import type { TranslationKey } from '../../i18n/translations';
+import type { ServerAuditEntry } from './auditPageState';
 
 // ---------------------------------------------------------------------------
 // Map raw (method, path) to a semantic audit_action_* translation key.

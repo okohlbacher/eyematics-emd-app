@@ -1,5 +1,6 @@
 /** Phase 13 / METRIC-01 — computeCrtTrajectory parity with visus and CRT-specific branches. */
-import { describe, it, expect } from 'vitest';
+import { describe, expect,it } from 'vitest';
+
 import { computeCrtTrajectory } from '../shared/cohortTrajectory';
 import type { PatientCase } from '../shared/types/fhir';
 
