@@ -17,6 +17,11 @@
  *   6. Writes one audit_log row with hashed cohortId + payloadBytes + cacheHit
  *      (D-16) — NEVER a raw cohortId field. SKIP_AUDIT_PATHS in
  *      auditMiddleware ensures no double-write.
+ *
+ * retained: live Express router. Listed as a Phase 22 shim candidate by
+ * 22-RESEARCH; confirmed per D-15 this is NOT a dedup target — file holds
+ * the POST /api/outcomes/aggregate handler plus body validation + audit
+ * writes. No action required beyond this disposition comment.
  */
 
 import crypto from 'node:crypto';
