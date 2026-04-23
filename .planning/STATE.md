@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: — Session Resilience & Test/Code Polish
-status: executing
-stopped_at: Phase 20 complete — human UAT 5/5 passed (6dc2be8)
-last_updated: "2026-04-23T10:30:00.000Z"
-last_activity: 2026-04-23 -- Phase 20 complete (human UAT passed)
+status: Phase 20 shipped; human UAT 5/5 passed
+stopped_at: Phase 19 Plan 02 complete — useReducer refactor committed (96ac771)
+last_updated: "2026-04-23T12:21:21.119Z"
+last_activity: 2026-04-23
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 7
-  percent: 88
+  completed_plans: 8
+  percent: 100
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-22)
 
 ## Current Position
 
-Phase: 20 (JWT Refresh Flow & Session Resilience) — COMPLETE
-Plan: 4 of 4 (all complete)
+Phase: 19
+Plan: Not started
 Status: Phase 20 shipped; human UAT 5/5 passed
-Last activity: 2026-04-23 -- Phase 20 complete (human UAT passed)
+Last activity: 2026-04-23
 Progress: [████░] 2/3 phases complete (7/8 plans complete across milestone)
 
 ## Milestones Shipped

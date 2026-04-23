@@ -102,7 +102,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 18. metricSelector Test Harness Unblock | 1/2 | Complete    | 2026-04-23 |
+| 18. metricSelector Test Harness Unblock | 2/2 | Complete    | 2026-04-23 |
 | 19. AuditPage State Machine Refactor | 2/2 | Complete    | 2026-04-23 |
 | 20. JWT Refresh Flow & Session Resilience | 4/4 | Complete   | 2026-04-23 |
 
