@@ -49,7 +49,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ### Phases
 
-- [ ] **Phase 18: metricSelector Test Harness Unblock** — Unskip the 5 placeholder metricSelector tests and extract a shared OutcomesView render helper
+- [x] **Phase 18: metricSelector Test Harness Unblock** — Unskip the 5 placeholder metricSelector tests and extract a shared OutcomesView render helper (completed 2026-04-23)
 - [ ] **Phase 19: AuditPage State Machine Refactor** — Migrate AuditPage to a useReducer-driven state machine with characterization tests landing first
 - [ ] **Phase 20: JWT Refresh Flow & Session Resilience** — Ship access/refresh token split, silent refresh in authFetch, cross-tab coordination, credential-mutation invalidation, and audit/i18n wiring
 
@@ -96,7 +96,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 18. metricSelector Test Harness Unblock | 0/0 | Not started | - |
+| 18. metricSelector Test Harness Unblock | 1/2 | Complete    | 2026-04-23 |
 | 19. AuditPage State Machine Refactor | 0/0 | Not started | - |
 | 20. JWT Refresh Flow & Session Resilience | 0/0 | Not started | - |
 
