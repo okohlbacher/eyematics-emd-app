@@ -17,7 +17,6 @@
  * only at `npm test` time, not at tsc-check time. The `// @ts-expect-error` directives
  * make the test FILE type-check cleanly in this worktree (RED phase).
  */
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';

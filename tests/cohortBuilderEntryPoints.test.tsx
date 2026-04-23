@@ -45,23 +45,6 @@ function SpyLocation({ onMatch }: { onMatch: (loc: ReturnType<typeof useLocation
   return <div data-testid="outcomes-page" />;
 }
 
-/** Minimal PatientCase stub for tests that need filteredCases > 0 */
-function makeCase(id: string): PatientCase {
-  return {
-    id,
-    pseudonym: `TEST-${id}`,
-    gender: 'female',
-    birthDate: '1970-01-01',
-    centerId: 'org-uka',
-    centerName: 'UKA',
-    conditions: [],
-    observations: [],
-    procedures: [],
-    medications: [],
-    encounters: [],
-  } as unknown as PatientCase;
-}
-
 function makeSearch(id: string, name: string): SavedSearch {
   return {
     id,

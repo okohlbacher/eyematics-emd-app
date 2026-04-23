@@ -2,7 +2,7 @@
  * T-03: Tests for rateLimiting.ts — lockout, backoff cap, cleanup.
  */
 
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { createRateLimiter } from '../server/rateLimiting';
 

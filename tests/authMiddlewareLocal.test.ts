@@ -6,7 +6,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 // Mock initAuth to provide a known JWT secret
 const TEST_SECRET = 'test-secret-for-auth-middleware';

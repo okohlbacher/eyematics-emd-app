@@ -2,21 +2,13 @@
  * T-05: Tests for issueApi.ts — issue creation, listing, export.
  */
 
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-
 import express from 'express';
 import request from 'supertest';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-
-// Redirect FEEDBACK_DIR to a temp directory
-let tmpFeedbackDir: string;
+import { describe, expect, it } from 'vitest';
 
 // We need to patch the FEEDBACK_DIR constant. Since it's a module-level const,
 // we'll test the Router directly with a custom feedback dir by writing test
 // files into the expected location.
-
 import { issueApiRouter } from '../server/issueApi';
 
 function createApp(role: string) {

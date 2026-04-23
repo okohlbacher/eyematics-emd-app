@@ -27,7 +27,7 @@
 
 import fs from 'node:fs';
 
-import { addDays, mulberry32, seededPick, seededRandInt } from './prng.js';
+import { addDays, mulberry32, seededRandInt } from './prng.js';
 
 // ---------------------------------------------------------------------------
 // Public types
