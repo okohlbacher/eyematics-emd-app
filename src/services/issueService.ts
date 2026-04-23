@@ -33,16 +33,6 @@ export async function addIssue(
 }
 
 /**
- * Fetch all issues from the server (without screenshot data).
- */
-export async function getIssues(): Promise<ReportedIssue[]> {
-  const resp = await authFetch('/api/issues');
-  if (!resp.ok) return [];
-  const data = await resp.json() as { issues: ReportedIssue[] };
-  return data.issues;
-}
-
-/**
  * Fetch the issue count from the server.
  */
 // F-28: use total field from server instead of fetching all issues
