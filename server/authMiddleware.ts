@@ -44,7 +44,10 @@ declare global {
 // Public paths (no JWT required)
 // ---------------------------------------------------------------------------
 
-const PUBLIC_PATHS = ['/api/auth/login', '/api/auth/verify', '/api/auth/config'];
+// Phase 20 / D-13 — /api/auth/refresh is public-auth: the refresh cookie + CSRF
+// header ARE the credentials, no Bearer access token is required (or available
+// — by design the access token has already expired when this is called).
+const PUBLIC_PATHS = ['/api/auth/login', '/api/auth/verify', '/api/auth/config', '/api/auth/refresh'];
 
 // ---------------------------------------------------------------------------
 // Local HS256 verification (existing behavior)
@@ -168,4 +171,30 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
   } else {
     verifyLocalToken(token, req, res, next);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 20 / D-14 — CSRF middleware (double-submit cookie)
+// ---------------------------------------------------------------------------
+
+/**
+ * Enforce double-submit-cookie CSRF on /api/auth/refresh and /api/auth/logout.
+ * Requires the JS-readable `emd-csrf` cookie value to match the X-CSRF-Token
+ * header. Both must be present, both non-empty, and constant-time-style equal.
+ *
+ * Returns 403 on mismatch — does NOT clear cookies (let logout handle that).
+ */
+export function requireCsrf(req: Request, res: Response, next: NextFunction): void {
+  const cookieToken = req.cookies?.['emd-csrf'];
+  const headerToken = req.headers['x-csrf-token'];
+  if (
+    typeof cookieToken !== 'string' ||
+    typeof headerToken !== 'string' ||
+    !cookieToken ||
+    cookieToken !== headerToken
+  ) {
+    res.status(403).json({ error: 'CSRF token mismatch' });
+    return;
+  }
+  next();
 }

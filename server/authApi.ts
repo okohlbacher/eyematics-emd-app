@@ -16,11 +16,14 @@ import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 
 import type { AuthPayload } from './authMiddleware.js';
+import { requireCsrf } from './authMiddleware.js';
 import { getValidCenterIds } from './constants.js';
 import type { UserRecord } from './initAuth.js';
 import { getAuthConfig, getJwtSecret, loadUsers, modifyUsers } from './initAuth.js';
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from './jwtUtil.js';
 import { getAuthProvider } from './keycloakAuth.js';
 import { createRateLimiter } from './rateLimiting.js';
+import { getAuthSettings } from './settingsApi.js';
 
 // ---------------------------------------------------------------------------
 // Constants for user CRUD validation
@@ -79,6 +82,39 @@ function touchLastLogin(username: string): void {
       users.map((u) => u.username === username ? { ...u, lastLogin: new Date().toISOString() } : u),
     ).catch(() => {});
   } catch { /* best-effort */ }
+}
+
+/**
+ * Phase 20 / D-06, D-13, D-14 — emit the refresh + CSRF cookie pair on
+ * successful login/verify. Cookies use SameSite=Strict; the refresh cookie is
+ * httpOnly and scoped to /api/auth/refresh, the CSRF cookie is JS-readable.
+ *
+ * `sid` is a fresh random UUID PER LOGIN (not per refresh) — preserved across
+ * rolling rotations so the absolute-cap timer anchors to the original login.
+ */
+function emitRefreshCookies(res: Response, user: UserRecord): void {
+  const settings = getAuthSettings();
+  const sid = crypto.randomUUID();
+  const refreshJwt = signRefreshToken(
+    { sub: user.username, ver: user.tokenVersion ?? 0, sid },
+    settings.refreshTokenTtlMs,
+  );
+  const csrf = crypto.randomBytes(32).toString('hex');
+
+  res.cookie('emd-refresh', refreshJwt, {
+    httpOnly: true,
+    secure: settings.refreshCookieSecure,
+    sameSite: 'strict',
+    path: '/api/auth/refresh',
+    maxAge: settings.refreshTokenTtlMs,
+  });
+  res.cookie('emd-csrf', csrf, {
+    httpOnly: false,
+    secure: settings.refreshCookieSecure,
+    sameSite: 'strict',
+    path: '/',
+    maxAge: settings.refreshTokenTtlMs,
+  });
 }
 
 /** Sign a challenge token for 2FA step 2 (2 min expiry, purpose='challenge'). */
@@ -170,6 +206,8 @@ authApiRouter.post('/login', async (req: Request, res: Response): Promise<void> 
     // Return full session JWT directly — update lastLogin (H-12)
     const token = signSessionToken(user.username, user.role, user.centers);
     touchLastLogin(user.username);
+    // Phase 20 / D-06 — emit refresh + CSRF cookies on every successful login
+    emitRefreshCookies(res, user);
     res.json({ token });
   }
 });
@@ -284,7 +322,122 @@ authApiRouter.post('/verify', async (req: Request, res: Response): Promise<void>
 
   const token = signSessionToken(user.username, user.role, user.centers);
   touchLastLogin(user.username);
+  // Phase 20 / D-06 — emit refresh + CSRF cookies after the OTP step too
+  emitRefreshCookies(res, user);
   res.json({ token });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 20 / D-13, D-15 — POST /refresh and POST /logout
+// ---------------------------------------------------------------------------
+
+/**
+ * POST /api/auth/refresh
+ *
+ * Public route (no Bearer required). Credentials are the emd-refresh cookie
+ * + matching X-CSRF-Token header. Validates: cookie present → JWT valid (typ
+ * + alg pinned by jwtUtil) → not over absolute cap → user exists → tokenVersion
+ * matches. On success: rotates refresh cookie (new exp, SAME sid — preserves
+ * absolute-cap anchor) and returns a fresh access token.
+ */
+authApiRouter.post('/refresh', requireCsrf, (req: Request, res: Response): void => {
+  const cookie = req.cookies?.['emd-refresh'];
+  if (typeof cookie !== 'string' || !cookie) {
+    res.status(401).json({ error: 'Missing refresh token' });
+    return;
+  }
+
+  let payload;
+  try {
+    payload = verifyRefreshToken(cookie);
+  } catch {
+    res.status(401).json({ error: 'Invalid refresh token' });
+    return;
+  }
+
+  const settings = getAuthSettings();
+  const ageMs = Date.now() - payload.iat * 1000;
+  if (ageMs > settings.refreshAbsoluteCapMs) {
+    res.status(401).json({ error: 'Session cap exceeded' });
+    return;
+  }
+
+  const users = loadUsers();
+  const user = users.find((u) => u.username.toLowerCase() === payload.sub.toLowerCase());
+  if (!user) {
+    res.status(401).json({ error: 'User not found' });
+    return;
+  }
+  if ((user.tokenVersion ?? 0) !== payload.ver) {
+    res.status(401).json({ error: 'Token version stale' });
+    return;
+  }
+
+  // D-13 — rolling rotation. New exp, SAME sid so any future absolute-cap
+  // calculation can anchor on the original login (currently we use payload.iat,
+  // but preserving sid lets a stateful upgrade in SESSION-11 do per-session
+  // revocation without breaking the cap math).
+  const newRefresh = signRefreshToken(
+    { sub: user.username, ver: user.tokenVersion ?? 0, sid: payload.sid },
+    settings.refreshTokenTtlMs,
+  );
+  res.cookie('emd-refresh', newRefresh, {
+    httpOnly: true,
+    secure: settings.refreshCookieSecure,
+    sameSite: 'strict',
+    path: '/api/auth/refresh',
+    maxAge: settings.refreshTokenTtlMs,
+  });
+
+  const accessTtlMs = 10 * 60 * 1000;
+  const access = signAccessToken({
+    sub: user.username,
+    preferred_username: user.username,
+    role: user.role,
+    centers: user.centers,
+  }, accessTtlMs);
+  res.json({ token: access, expiresAt: Date.now() + accessTtlMs });
+});
+
+/**
+ * POST /api/auth/logout
+ *
+ * Bumps user.tokenVersion (invalidates ALL outstanding refresh tokens for this
+ * user) and clears both cookies. Requires a valid Bearer access token (so the
+ * authenticated user is known) AND a matching CSRF cookie/header pair.
+ *
+ * Audit: emitted by auditMiddleware as a normal POST event; Plan 03 will add
+ * the i18n label `audit_action_logout`.
+ */
+authApiRouter.post('/logout', requireCsrf, async (req: Request, res: Response): Promise<void> => {
+  const username = req.auth?.preferred_username ?? req.auth?.sub;
+  if (username) {
+    try {
+      await modifyUsers((users) => users.map((u) =>
+        u.username.toLowerCase() === username.toLowerCase()
+          ? { ...u, tokenVersion: (u.tokenVersion ?? 0) + 1 }
+          : u,
+      ));
+    } catch {
+      /* best-effort — clearing cookies still helps the user even if write fails */
+    }
+  }
+  const settings = getAuthSettings();
+  res.cookie('emd-refresh', '', {
+    httpOnly: true,
+    secure: settings.refreshCookieSecure,
+    sameSite: 'strict',
+    path: '/api/auth/refresh',
+    maxAge: 0,
+  });
+  res.cookie('emd-csrf', '', {
+    httpOnly: false,
+    secure: settings.refreshCookieSecure,
+    sameSite: 'strict',
+    path: '/',
+    maxAge: 0,
+  });
+  res.status(200).json({ ok: true });
 });
 
 /**

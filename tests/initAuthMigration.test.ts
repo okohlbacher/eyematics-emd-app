@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { _migrateRemovedCenters, _migrateSessionFields } from '../server/initAuth';
+
 import type { UserRecord } from '../server/initAuth';
+import { _migrateRemovedCenters, _migrateSessionFields } from '../server/initAuth';
 
 describe('_migrateRemovedCenters — strip org-ukb/org-lmu/org-ukm, fallback to org-uka', () => {
   it('strips removed IDs while keeping valid ones', () => {
