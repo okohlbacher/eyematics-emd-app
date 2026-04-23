@@ -21,8 +21,6 @@ export const EYE_COLORS = {
   'OD+OS': '#6d28d9',
 } as const;
 
-export type EyeKey = keyof typeof EYE_COLORS;
-
 export const SERIES_STYLES = {
   median: { strokeWidth: 4 },
   perPatient: { strokeWidth: 1.5, opacityDense: 0.22, opacitySparse: 0.12, color: '#9ca3af' },
