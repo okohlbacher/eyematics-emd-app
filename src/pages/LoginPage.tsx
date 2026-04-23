@@ -20,12 +20,18 @@ export default function LoginPage() {
   const { locale, setLocale, t } = useLanguage();
 
   useEffect(() => {
-    fetch('/api/auth/config')
-      .then((r) => r.json() as Promise<{ twoFactorEnabled: boolean; provider?: string }>)
-      .then((cfg) => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch('/api/auth/config');
+        const cfg = (await r.json()) as { twoFactorEnabled: boolean; provider?: string };
+        if (cancelled) return;
         setProvider(cfg.provider === 'keycloak' ? 'keycloak' : 'local');
-      })
-      .catch(() => {/* default local on error */});
+      } catch {
+        /* default local on error */
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const handleCredentials = async (e: React.FormEvent) => {
