@@ -76,7 +76,9 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
   2. Characterization tests capturing the pre-refactor AuditPage behavior are committed BEFORE the reducer swap (separate commit) and remain green after
   3. AuditPage is split into `src/pages/audit/auditPageState.ts` (reducer + selectors), `auditFormatters.ts` (describeAction, describeDetail, isRelevantEntry, statusBadgeClass), and `useAuditData.ts` (hook wrapping reducer + debounced fetch); `AuditPage.tsx` is pure render
   4. `tests/auditPageReducer.test.ts` exercises all 5 discriminated-union action paths (`FILTER_SET`, `FILTERS_RESET`, `FETCH_START`, `FETCH_SUCCESS`, `FETCH_ERROR`) plus the `requestEpoch` stale-response guard
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 19-01-characterization-PLAN.md — Land characterization tests against unrefactored AuditPage.tsx (test-only commit)
+- [ ] 19-02-refactor-PLAN.md — Migrate AuditPage to useReducer state machine; add reducer test; characterization stays green
 **UI hint**: yes
 
 #### Phase 20: JWT Refresh Flow & Session Resilience
@@ -97,7 +99,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 18. metricSelector Test Harness Unblock | 1/2 | Complete    | 2026-04-23 |
-| 19. AuditPage State Machine Refactor | 0/0 | Not started | - |
+| 19. AuditPage State Machine Refactor | 0/2 | Not started | - |
 | 20. JWT Refresh Flow & Session Resilience | 0/0 | Not started | - |
 
 ### Coverage Map
