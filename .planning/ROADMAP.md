@@ -94,7 +94,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
   6. All `jwt.verify()` call sites route through `server/jwtUtil.ts` with hard-pinned `algorithms: ['HS256']`; ESLint `no-restricted-imports` forbids direct `jsonwebtoken` verify imports elsewhere
 **Plans**: 4 plans
 - [x] 20-01-PLAN.md — Server core: jwtUtil + cookie-parser + /api/auth/refresh + /logout extension + lazy users.json migration + auth settings namespace (Wave 1)
-- [ ] 20-02-PLAN.md — ESLint no-restricted-imports + migrate jwt.* call sites + tokenVersion bumps in 4 credential-mutation endpoints (Wave 2)
+- [x] 20-02-PLAN.md — ESLint no-restricted-imports + migrate jwt.* call sites + tokenVersion bumps in 4 credential-mutation endpoints (Wave 2)
 - [ ] 20-03-PLAN.md — Audit middleware status-conditional skip + REDACT_PATHS + audit_action_refresh i18n + describeAction extension (Wave 2)
 - [ ] 20-04-PLAN.md — Client authFetch single-flight refresh + retry guard + BroadcastChannel + AuthContext.logout wiring (Wave 3)
 
@@ -104,7 +104,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 |-------|----------------|--------|-----------|
 | 18. metricSelector Test Harness Unblock | 1/2 | Complete    | 2026-04-23 |
 | 19. AuditPage State Machine Refactor | 2/2 | Complete    | 2026-04-23 |
-| 20. JWT Refresh Flow & Session Resilience | 1/4 | In Progress|  |
+| 20. JWT Refresh Flow & Session Resilience | 2/4 | In Progress|  |
 
 ### Coverage Map
 
