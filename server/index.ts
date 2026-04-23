@@ -73,7 +73,7 @@ try {
 
 const serverSection = (settings.server ?? {}) as Record<string, unknown>;
 const PORT: number = typeof serverSection.port === 'number' ? serverSection.port : 3000;
-const HOST: string = typeof serverSection.host === 'string' ? serverSection.host : '0.0.0.0';
+const HOST: string = typeof serverSection.host === 'string' ? serverSection.host : '127.0.0.1';
 const dataDir: string = typeof serverSection.dataDir === 'string' ? serverSection.dataDir : './data';
 
 const dataSource = (settings.dataSource ?? {}) as Record<string, unknown>;
@@ -271,14 +271,32 @@ app.use('/api', (_req: Request, res: Response) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-// Static file serving (built Vite output)
-app.use(express.static(path.resolve(process.cwd(), 'dist')));
+// Static file serving — production only.
+// Vite owns the frontend on :5173 in dev and proxies `/api` here. Serving a
+// stale `dist/` from a prior build would expose a second, out-of-date UI on
+// this port. Opt in explicitly via `server.serveFrontend: true` in settings.yaml
+// for production deployments where this Express process serves both UI and API.
+const DIST_INDEX = path.resolve(process.cwd(), 'dist', 'index.html');
+const SERVE_FRONTEND: boolean =
+  serverSection.serveFrontend === true && fs.existsSync(DIST_INDEX);
 
-// SPA fallback — all unmatched GET routes return index.html
-// Express 5 uses path-to-regexp v8+ which requires named parameters
-app.get('/{*path}', (_req: Request, res: Response) => {
-  res.sendFile(path.resolve(process.cwd(), 'dist', 'index.html'));
-});
+if (SERVE_FRONTEND) {
+  app.use(express.static(path.resolve(process.cwd(), 'dist')));
+
+  // SPA fallback — all unmatched GET routes return index.html
+  // Express 5 uses path-to-regexp v8+ which requires named parameters
+  app.get('/{*path}', (_req: Request, res: Response) => {
+    res.sendFile(DIST_INDEX);
+  });
+} else {
+  app.get('/{*path}', (_req: Request, res: Response) => {
+    res.status(404).type('text/plain').send(
+      'No built frontend found at dist/index.html.\n' +
+      'Dev mode: open the Vite dev server at http://localhost:5173.\n' +
+      'Production: run `npm run build` first, then `npm start`.\n',
+    );
+  });
+}
 
 // ---------------------------------------------------------------------------
 // 8. Start server
@@ -286,6 +304,7 @@ app.get('/{*path}', (_req: Request, res: Response) => {
 
 app.listen(PORT, HOST, () => {
   console.log(`[server] EMD app running at http://${HOST}:${PORT}`);
+  console.log(`[server] Frontend: ${SERVE_FRONTEND ? 'serving dist/ (production mode)' : 'API only — use Vite at http://localhost:5173 for the UI'}`);
   console.log(`[server] FHIR proxy target: ${blazeTarget} (at /api/fhir-proxy)`);
   console.log(`[server] Data directory: ${DATA_DIR}`);
 

@@ -18,15 +18,18 @@ export default defineConfig({
   },
   plugins: [react(), tailwindcss()],
   server: {
+    host: 'localhost',
     proxy: {
       // Proxy FHIR requests to avoid CORS issues during development
       '/fhir': {
-        target: 'http://localhost:8080',
+        target: 'http://127.0.0.1:8080',
         changeOrigin: true,
       },
-      // Proxy API requests to the Express backend during development
+      // Proxy API requests to the Express backend during development.
+      // Use 127.0.0.1 (not 'localhost') so this matches Express's IPv4 bind
+      // and avoids IPv6 (::1) resolution failures on macOS.
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://127.0.0.1:3000',
         changeOrigin: true,
       },
     },
