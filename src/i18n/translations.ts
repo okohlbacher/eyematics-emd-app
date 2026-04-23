@@ -790,6 +790,32 @@ const translations = {
   auditFilterCohortHash: { de: 'Kohorten-Hash suchen\u2026', en: 'Search cohort hash\u2026' },
   auditFilterFailuresOnly: { de: 'Nur Fehler', en: 'Failures only' },
   auditEmptyFiltered: { de: 'Keine Audit-Eintr\u00e4ge entsprechen Ihren Filtern.', en: 'No audit entries match your filters.' },
+
+  // Sidebar navigation groups (Claude Design refresh)
+  navGroupResearch: { de: 'Forschung', en: 'Research' },
+  navGroupAdmin: { de: 'Verwaltung', en: 'Admin' },
+
+  // Landing page (Claude Design refresh)
+  online: { de: 'online', en: 'online' },
+  fhirBundles: { de: 'FHIR-Bundles', en: 'FHIR bundles' },
+  loincObservations: { de: 'LOINC-Beobachtungen', en: 'LOINC observations' },
+  acrossModalities: { de: 'modalit\u00e4ten\u00fcbergreifend', en: 'across modalities' },
+  export: { de: 'Export', en: 'Export' },
+  allLive: { de: 'Alle aktiv', en: 'All live' },
+  jumpBackIn: { de: 'Weitermachen', en: 'Jump back in' },
+  case: { de: 'Fall', en: 'Case' },
+  attentionNeeded: { de: 'Aufmerksamkeit erforderlich', en: 'Attention needed' },
+  attentionTherapyBreakers: { de: 'Therapie-Abbrecher', en: 'Therapy breakers' },
+  attentionTherapyBreakersSub: {
+    de: 'F\u00e4lle mit L\u00fccke > 365 Tagen pr\u00fcfen',
+    en: 'Review cases with gap > 365 days',
+  },
+  attentionImplausibleCrt: { de: 'Unplausible CRT-Werte', en: 'Implausible CRT readings' },
+  attentionImplausibleCrtSub: {
+    de: 'F\u00fcr Qualit\u00e4tspr\u00fcfung markiert',
+    en: 'Flagged for quality review',
+  },
+  review: { de: 'Pr\u00fcfen', en: 'Review' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

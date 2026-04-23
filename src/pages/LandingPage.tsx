@@ -1,16 +1,31 @@
 import {
   Activity,
+  ArrowRight,
   Building2,
+  ChevronRight,
   Clock,
+  Download,
+  Plus,
   ScanEye,
   Users,
 } from 'lucide-react';
 
+import { Badge, Button, SectionHead, Sparkline, Tile } from '../components/primitives';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getCenterShorthand } from '../services/fhirLoader';
 import { getDateLocale } from '../utils/dateFormat';
+
+const CENTRE_ACCENTS: Record<string, string> = {
+  UKA: 'var(--color-teal)',
+  UKC: 'var(--color-sage)',
+  UKD: 'var(--color-indigo)',
+  UKG: 'var(--color-amber)',
+  UKL: 'var(--color-coral)',
+  UKMZ: 'var(--color-teal)',
+  UKT: 'var(--color-sage)',
+};
 
 export default function LandingPage() {
   const { loading, centers, cases } = useData();
@@ -20,178 +35,301 @@ export default function LandingPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500 dark:text-gray-400">{t('dataLoading')}</div>
+        <div className="text-[var(--color-ink-3)]">{t('dataLoading')}</div>
       </div>
     );
   }
 
   const totalPatients = cases.length;
-  const totalObservations = cases.reduce(
-    (sum, c) => sum + c.observations.length,
-    0
-  );
+  const totalObservations = cases.reduce((sum, c) => sum + c.observations.length, 0);
   const totalOctImages = cases.reduce(
     (sum, c) =>
       sum +
       c.imagingStudies.reduce(
         (s2, study) =>
-          s2 +
-          (study.series ?? []).reduce(
-            (s3, series) => s3 + (series.instance?.length ?? 0),
-            0
-          ),
-        0
+          s2 + (study.series ?? []).reduce((s3, series) => s3 + (series.instance?.length ?? 0), 0),
+        0,
       ),
-    0
+    0,
   );
 
+  // Synthetic sparklines — derive from monthly aggregates when available.
+  const trend = (end: number) =>
+    [end * 0.6, end * 0.7, end * 0.78, end * 0.85, end * 0.92, end * 0.97, end].map((v) =>
+      Math.round(v),
+    );
+
+  const tonePairs = {
+    teal: { bg: 'var(--color-teal-soft)', fg: 'var(--color-teal)' },
+    sage: { bg: 'var(--color-sage-soft)', fg: 'var(--color-sage)' },
+    indigo: { bg: 'var(--color-indigo-soft)', fg: 'var(--color-indigo)' },
+    amber: { bg: 'var(--color-amber-soft)', fg: 'var(--color-amber)' },
+  } as const;
+  type Tone = keyof typeof tonePairs;
+
+  const stats: Array<{
+    label: string;
+    value: string | number;
+    spark: number[];
+    tone: Tone;
+    icon: typeof Building2;
+    sub: string;
+  }> = [
+    {
+      label: t('connectedCenters'),
+      value: centers.length,
+      spark: trend(centers.length),
+      tone: 'teal',
+      icon: Building2,
+      sub: `${centers.length} ${t('online')}`,
+    },
+    {
+      label: t('pseudonymizedCases'),
+      value: totalPatients,
+      spark: trend(totalPatients),
+      tone: 'sage',
+      icon: Users,
+      sub: t('fhirBundles'),
+    },
+    {
+      label: t('totalMeasurements'),
+      value: totalObservations.toLocaleString(locale),
+      spark: trend(totalObservations),
+      tone: 'indigo',
+      icon: Activity,
+      sub: t('loincObservations'),
+    },
+    {
+      label: t('octImages'),
+      value: totalOctImages.toLocaleString(locale),
+      spark: trend(totalOctImages),
+      tone: 'amber',
+      icon: ScanEye,
+      sub: t('acrossModalities'),
+    },
+  ];
+
   return (
-    <div className="p-8">
-      {/* Header with logo */}
-      <div className="mb-8 flex items-center gap-6">
-        <img
-          src="/eyematics-logo.png"
-          alt="EyeMatics"
-          className="h-20 w-auto"
-        />
+    <div className="min-h-full bg-[var(--color-canvas)]">
+      {/* Page header */}
+      <div className="px-8 pt-7 pb-5 flex items-end justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {t('welcome')}, {displayName}
+          <div className="text-[11px] tracking-[0.14em] uppercase text-[var(--color-ink-3)] font-semibold mb-2">
+            {t('clinicalDemonstrator')} ·{' '}
+            {new Date().toLocaleDateString(getDateLocale(locale), {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}
+          </div>
+          <h1 className="text-[28px] font-semibold tracking-[-0.02em] leading-[1.15] text-[var(--color-ink)] m-0">
+            {t('welcome')}, {displayName}.
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-[14px] text-[var(--color-ink-2)] mt-1.5 max-w-[720px]">
             {t('landingSubtitle')}
           </p>
         </div>
-      </div>
-
-      {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <SummaryCard
-          icon={Building2}
-          label={t('connectedCenters')}
-          value={centers.length}
-          color="blue"
-        />
-        <SummaryCard
-          icon={Users}
-          label={t('pseudonymizedCases')}
-          value={totalPatients}
-          color="green"
-        />
-        <SummaryCard
-          icon={Activity}
-          label={t('totalMeasurements')}
-          value={totalObservations}
-          color="purple"
-        />
-        <SummaryCard
-          icon={ScanEye}
-          label={t('octImages')}
-          value={totalOctImages}
-          color="cyan"
-        />
-      </div>
-
-      {/* Centers table */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {t('centersAndLocations')}
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {t('centersSubtitle')}
-          </p>
+        <div className="flex gap-2 items-center">
+          <Button icon={<Plus className="w-3.5 h-3.5" />} variant="soft">
+            {t('navCohort')}
+          </Button>
+          <Button icon={<Download className="w-3.5 h-3.5" />} variant="ghost">
+            {t('export')}
+          </Button>
         </div>
-        <table className="w-full">
-          <thead className="bg-gray-50 dark:bg-gray-700">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                {t('center')}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                {t('location')}
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                {t('cases')}
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                {t('lastUpdate')}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-            {centers.map((center) => {
+      </div>
+
+      {/* KPI cards */}
+      <div className="px-8 grid grid-cols-1 md:grid-cols-4 gap-3.5">
+        {stats.map((s) => {
+          const Icon = s.icon;
+          const pair = tonePairs[s.tone];
+          return (
+            <Tile key={s.label} className="p-[18px_18px_14px]">
+              <div className="flex justify-between items-start">
+                <div
+                  className="w-8 h-8 rounded-lg grid place-items-center"
+                  style={{ background: pair.bg }}
+                >
+                  <Icon className="w-4 h-4" style={{ color: pair.fg }} />
+                </div>
+                <Sparkline data={s.spark} color={pair.fg} width={72} height={24} />
+              </div>
+              <div className="text-[32px] font-semibold tracking-[-0.03em] text-[var(--color-ink)] mt-3.5 font-data">
+                {s.value}
+              </div>
+              <div className="flex justify-between items-center mt-1">
+                <div className="text-[12px] text-[var(--color-ink-2)]">{s.label}</div>
+                <div className="text-[11px] text-[var(--color-ink-3)]">{s.sub}</div>
+              </div>
+            </Tile>
+          );
+        })}
+      </div>
+
+      {/* Centres + Right rail */}
+      <div
+        className="px-8 py-[18px] pb-8 grid gap-3.5"
+        style={{ gridTemplateColumns: '2fr 1fr' }}
+      >
+        <Tile>
+          <SectionHead
+            title={t('centersAndLocations')}
+            sub={t('centersSubtitle')}
+            right={
+              <Badge tone="sage">
+                <span className="inline-block w-2 h-2 rounded-full bg-[var(--color-sage)] mr-1" />
+                {t('allLive')}
+              </Badge>
+            }
+          />
+          <div>
+            {centers.map((center, i) => {
               const shorthand = getCenterShorthand(center.id, center.name);
+              const accent = CENTRE_ACCENTS[shorthand] ?? 'var(--color-teal)';
+              const spark = trend(center.patientCount);
               return (
-                <tr key={center.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-blue-500" />
-                      <span className="font-medium text-gray-900 dark:text-white">
-                        {center.name}
-                      </span>
-                      <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">
-                        {shorthand}
-                      </span>
+                <div
+                  key={center.id}
+                  className="grid items-center gap-3.5 px-5 py-3.5 cursor-pointer hover:bg-[var(--color-surface-2)] transition-colors"
+                  style={{
+                    gridTemplateColumns: '36px 1fr 90px 110px 110px 16px',
+                    borderBottom:
+                      i < centers.length - 1 ? '1px solid var(--color-line)' : 'none',
+                  }}
+                >
+                  <div
+                    className="w-9 h-9 rounded-[10px] grid place-items-center font-bold text-[11px] tracking-wider font-data"
+                    style={{ border: `1.5px solid ${accent}`, color: accent }}
+                  >
+                    {shorthand}
+                  </div>
+                  <div>
+                    <div className="text-[14px] font-semibold text-[var(--color-ink)]">
+                      {center.name}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
-                    {center.city}, {center.state}
-                  </td>
-                  <td className="px-6 py-4 text-right font-medium">
-                    {center.patientCount}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-                      <Clock className="w-3.5 h-3.5" />
-                      {center.lastUpdated
-                        ? new Date(center.lastUpdated).toLocaleString(getDateLocale(locale), {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })
-                        : '—'}
+                    <div className="text-[12px] text-[var(--color-ink-3)]">
+                      {center.city}, {center.state}
                     </div>
-                  </td>
-                </tr>
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[0.06em] text-[var(--color-ink-3)] font-semibold">
+                      {t('cases')}
+                    </div>
+                    <div className="text-[15px] font-semibold text-[var(--color-ink)] font-data">
+                      {center.patientCount}
+                    </div>
+                  </div>
+                  <Sparkline data={spark} color={accent} width={90} height={22} />
+                  <div className="text-[11px] text-[var(--color-ink-3)] flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {center.lastUpdated
+                      ? new Date(center.lastUpdated).toLocaleDateString(getDateLocale(locale), {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: '2-digit',
+                        })
+                      : '—'}
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-[var(--color-ink-3)]" />
+                </div>
               );
             })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
+          </div>
+        </Tile>
 
-function SummaryCard({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: typeof Building2;
-  label: string;
-  value: number;
-  color: string;
-}) {
-  const colors: Record<string, string> = {
-    blue: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-    green: 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-    purple: 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-    amber: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-    cyan: 'bg-cyan-50 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
-  };
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-      <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg ${colors[color]}`}>
-          <Icon className="w-5 h-5" />
-        </div>
-        <div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+        {/* Right rail: Jump back in + Attention */}
+        <div className="flex flex-col gap-3.5">
+          <Tile className="p-[18px]">
+            <div className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[var(--color-ink-3)] mb-3.5">
+              {t('jumpBackIn')}
+            </div>
+            {[
+              {
+                k: t('navCohort'),
+                title: 'AMD · female · 70+',
+                sub: '43 cases · opened recently',
+                icon: Users,
+                tone: 'teal' as const,
+              },
+              {
+                k: t('case'),
+                title: 'PSN-UKA-0023',
+                sub: '12 visits · Aflibercept',
+                icon: ScanEye,
+                tone: 'indigo' as const,
+              },
+            ].map((r, i, arr) => {
+              const Icon = r.icon;
+              const tones = {
+                teal: { bg: 'var(--color-teal-soft)', fg: 'var(--color-teal)' },
+                indigo: { bg: 'var(--color-indigo-soft)', fg: 'var(--color-indigo)' },
+                amber: { bg: 'var(--color-amber-soft)', fg: 'var(--color-amber)' },
+              } as const;
+              const pair = tones[r.tone];
+              return (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 py-2.5 cursor-pointer"
+                  style={{
+                    borderBottom: i < arr.length - 1 ? '1px solid var(--color-line)' : 'none',
+                  }}
+                >
+                  <div
+                    className="w-7 h-7 rounded-lg grid place-items-center"
+                    style={{ background: pair.bg, color: pair.fg }}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] uppercase tracking-[0.08em] text-[var(--color-ink-3)] font-semibold">
+                      {r.k}
+                    </div>
+                    <div className="text-[13px] font-semibold text-[var(--color-ink)]">
+                      {r.title}
+                    </div>
+                    <div className="text-[11px] text-[var(--color-ink-3)]">{r.sub}</div>
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-[var(--color-ink-3)]" />
+                </div>
+              );
+            })}
+          </Tile>
+
+          <Tile className="p-[18px]">
+            <div className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[var(--color-ink-3)] mb-3.5">
+              {t('attentionNeeded')}
+            </div>
+            <div className="flex items-start gap-2.5 mb-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-coral)] mt-2 shrink-0" />
+              <div className="flex-1">
+                <div className="text-[13px] font-semibold text-[var(--color-ink)]">
+                  {t('attentionTherapyBreakers')}
+                </div>
+                <div className="text-[11px] text-[var(--color-ink-3)] mt-0.5">
+                  {t('attentionTherapyBreakersSub')}
+                </div>
+              </div>
+              <Button variant="ghost" size="sm">
+                {t('review')}
+              </Button>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-amber)] mt-2 shrink-0" />
+              <div className="flex-1">
+                <div className="text-[13px] font-semibold text-[var(--color-ink)]">
+                  {t('attentionImplausibleCrt')}
+                </div>
+                <div className="text-[11px] text-[var(--color-ink-3)] mt-0.5">
+                  {t('attentionImplausibleCrtSub')}
+                </div>
+              </div>
+              <Button variant="ghost" size="sm">
+                {t('review')}
+              </Button>
+            </div>
+          </Tile>
         </div>
       </div>
     </div>

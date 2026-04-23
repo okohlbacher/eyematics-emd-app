@@ -1,9 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 /* Phase 17 — enable class-based dark mode (Tailwind v4 CSS-first config) */
 @variant dark (&:where(.dark, .dark *));
 
+@theme {
+  /* Typography */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Warm-neutral surfaces (replaces cool slate/gray-50 base) */
+  --color-canvas: oklch(0.985 0.003 85);
+  --color-surface: oklch(1 0 0);
+  --color-surface-2: oklch(0.975 0.004 90);
+  --color-line: oklch(0.92 0.006 90);
+  --color-line-2: oklch(0.88 0.008 90);
+
+  /* Ink scale */
+  --color-ink: oklch(0.22 0.015 255);
+  --color-ink-2: oklch(0.42 0.012 255);
+  --color-ink-3: oklch(0.62 0.010 255);
+
+  /* Accent — teal (primary), sage (positive), coral (critical), amber (warn), indigo (data) */
+  --color-teal: oklch(0.55 0.12 195);
+  --color-teal-soft: oklch(0.94 0.04 195);
+  --color-teal-ink: oklch(0.32 0.08 200);
+
+  --color-sage: oklch(0.68 0.10 145);
+  --color-sage-soft: oklch(0.95 0.04 145);
+  --color-sage-ink: oklch(0.35 0.08 145);
+
+  --color-coral: oklch(0.62 0.16 25);
+  --color-coral-soft: oklch(0.95 0.04 25);
+  --color-coral-ink: oklch(0.42 0.14 25);
+
+  --color-amber: oklch(0.72 0.14 75);
+  --color-amber-soft: oklch(0.95 0.04 75);
+  --color-amber-ink: oklch(0.42 0.12 75);
+
+  --color-indigo: oklch(0.52 0.12 260);
+  --color-indigo-soft: oklch(0.94 0.04 260);
+  --color-indigo-ink: oklch(0.40 0.12 260);
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* Subtle scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-line-2);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background: oklch(0.8 0.01 90); background-clip: content-box; }
+
+/* Monospace for data cells */
+.font-data { font-family: var(--font-mono); font-feature-settings: 'tnum'; }
