@@ -89,7 +89,11 @@ Phase split review: The proposed 21 → 22 → 23 linear sequence is sound.
   3. `npm test` exits 0 with zero skipped tests, except cases carrying a `SKIP_REASON` comment that cites the MSEL-04 browser-back/forward precedent; a lint or CI check enforces the SKIP_REASON policy
   4. Five new automated tests replace the Phase 20 UAT items: silent refresh (authFetch 401→refresh→retry once, single-flight), BroadcastChannel multi-tab lock (`BroadcastChannel('emd-auth')`), audit silence on 200-refresh via `SKIP_AUDIT_PATHS` (with failed refreshes and logouts still audited), idle-logout timer still fires at 10 min, and `auth.refreshAbsoluteCapMs` forces re-auth after the cap regardless of activity
   5. The Phase 20 `10-HUMAN-UAT.md`-style manual checklist items corresponding to UAT-AUTO-01..05 are removed or marked "automated by v1.9 Phase 21" with links to the replacement tests
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 21-01-fix-failing-tests-PLAN.md — Fix 3 failing tests (outcomesPanelCrt ×2, OutcomesPage beacon) + zero-skip CI gate (TEST-01..04)
+- [ ] 21-02-authfetch-refresh-suite-PLAN.md — Global BroadcastChannel shim + UAT-AUTO-01/02/03 automation (silent refresh, multi-tab, audit silence)
+- [ ] 21-03-session-timers-PLAN.md — UAT-AUTO-04 idle-logout + UAT-AUTO-05 absolute-cap (fake-timer tests)
 **UI hint**: no
 
 #### Phase 22: Codebase & Docs Consistency
@@ -120,7 +124,7 @@ Phase split review: The proposed 21 → 22 → 23 linear sequence is sound.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 21. Test & UAT Polish | 0/TBD | Not started | — |
+| 21. Test & UAT Polish | 0/3 | Not started | — |
 | 22. Codebase & Docs Consistency | 0/TBD | Not started | — |
 | 23. Dependency & Lint Cleanup | 0/TBD | Not started | — |
 
