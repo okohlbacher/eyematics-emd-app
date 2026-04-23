@@ -27,7 +27,6 @@ class MockBC {
   addEventListener = (_type: string, fn: (e: MessageEvent) => void) => { this.listeners.push(fn); };
   removeEventListener = vi.fn();
   close = vi.fn();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(_name: string) { MockBC.instances.push(this); }
   static reset() { MockBC.instances = []; }
   /** Simulate receipt of a message from a sibling tab. */
