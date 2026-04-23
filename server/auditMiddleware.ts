@@ -39,6 +39,8 @@ const REDACT_PATHS = new Set([
   '/api/auth/totp/confirm',    // SEC-15: body contains OTP
   '/api/auth/totp/disable',    // SEC-15: body contains OTP / recovery code
   '/api/settings',             // H4 / F-11: YAML body carries cohortHashSecret, otpCode
+  '/api/auth/refresh',         // Phase 20 / D-22: body is CSRF-only / empty by design
+  '/api/auth/logout',          // Phase 20 / D-22: defense in depth
 ]);
 
 /**
@@ -66,6 +68,25 @@ const SKIP_AUDIT_PATHS = new Set([
   '/api/audit/events/view-open',  // Phase 11: handler writes row with hashed cohortId
   '/api/outcomes/aggregate',      // Phase 12 / D-17 / T-12-04: handler writes row with hashed cohortId + payloadBytes
 ]);
+
+/**
+ * Phase 20 / D-19: Status-conditional audit skip.
+ *
+ * Maps urlPath → set of statusCodes for which the audit row should be SKIPPED.
+ * Use ONLY for high-volume background events whose successful path would
+ * dominate the audit log. Failed paths still produce rows for security visibility.
+ *
+ * Differs from SKIP_AUDIT_PATHS (unconditional skip — used by handlers that
+ * write their own audit row, e.g. Phase 11 view-open beacon).
+ *
+ * Threat model anchor: T-20-19 (DoS via audit log flooded by ~80 refreshes/user/12h)
+ * and T-20-21 (Repudiation: failed refresh attack invisible in audit log) — failures
+ * (401/403) are NOT skipped, satisfying the "audit success silently, surface failures
+ * loudly" stance from CONTEXT D-19 / RESEARCH Pitfall 5.
+ */
+const SKIP_AUDIT_IF_STATUS: Record<string, Set<number>> = {
+  '/api/auth/refresh': new Set([200]),
+};
 
 /**
  * Field names that must never appear in plaintext in the audit database.
@@ -153,6 +174,10 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
     // Phase 11 / D-10 / T-11-01: skip paths whose handlers write their own audit row.
     // This check MUST precede body capture so the raw body is never read/serialised here.
     if (SKIP_AUDIT_PATHS.has(urlPath)) return;
+
+    // Phase 20 / D-19: status-conditional skip — successful refresh is silenced
+    // (high-volume background event); failures still recorded for security visibility.
+    if (SKIP_AUDIT_IF_STATUS[urlPath]?.has(res.statusCode)) return;
 
     const duration = Date.now() - startMs;
     // req.auth is populated by authMiddleware for authenticated requests;
