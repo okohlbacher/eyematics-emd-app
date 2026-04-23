@@ -74,7 +74,7 @@ Phase split review: The proposed 21 → 22 → 23 linear sequence is sound.
 ### Phases
 
 - [x] **Phase 21: Test & UAT Polish** — Green the 3 pre-existing failing tests, enforce zero-skipped-tests policy, and convert the 5 Phase 20 human-verification items into automated tests (completed 2026-04-23)
-- [ ] **Phase 22: Codebase & Docs Consistency** — Dedupe utilities across `src/`/`server/`/`shared/`, align naming/error/async patterns, narrow types, remove dead code, and reconcile `.planning/` + README + inline docs
+- [x] **Phase 22: Codebase & Docs Consistency** — Dedupe utilities across `src/`/`server/`/`shared/`, align naming/error/async patterns, narrow types, remove dead code, and reconcile `.planning/` + README + inline docs (completed 2026-04-23)
 - [ ] **Phase 23: Dependency & Lint Cleanup** — `npm audit` clean at moderate threshold, non-breaking dep upgrades, tighter ESLint rule set, and a normalized `package.json` scripts block
 
 ### Phase Details
@@ -125,7 +125,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 21. Test & UAT Polish | 3/3 | Complete    | 2026-04-23 |
-| 22. Codebase & Docs Consistency | 2/3 | In Progress|  |
+| 22. Codebase & Docs Consistency | 3/3 | Complete    | 2026-04-23 |
 | 23. Dependency & Lint Cleanup | 0/TBD | Not started | — |
 
 ### Coverage Map
