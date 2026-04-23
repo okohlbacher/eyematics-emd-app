@@ -173,6 +173,7 @@ export default function OutcomesView() {
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },
       keepalive: true,
+      credentials: 'include', // Phase 20 cookie-auth contract (TEST-03, v1.9 Phase 21)
     }).catch(() => {
       /* beacon is fire-and-forget (D-03) */
     });
