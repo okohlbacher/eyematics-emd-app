@@ -431,6 +431,7 @@ const translations = {
   // Audit action labels (translated for display)
   audit_action_login: { de: 'Anmeldung', en: 'Login' },
   audit_action_logout: { de: 'Abmeldung', en: 'Logout' },
+  audit_action_refresh: { de: 'Token erneuert', en: 'Token refreshed' },
   audit_action_auto_logout: { de: 'Auto-Abmeldung', en: 'Auto Logout' },
   audit_action_view_landing: { de: 'Startseite', en: 'Landing Page' },
   audit_action_view_cohort: { de: 'Kohortenbildung', en: 'Cohort Builder' },

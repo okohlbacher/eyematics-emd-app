@@ -14,9 +14,11 @@ import type { TranslationKey } from '../../i18n/translations';
 export type TranslationFn = (key: TranslationKey) => string;
 
 export function describeAction(method: string, path: string, t: TranslationFn): string {
-  // Auth actions
+  // Auth actions (Phase 20 SESSION-13: refresh + logout)
   if (method === 'POST' && path === '/api/auth/login') return t('audit_action_login');
   if (method === 'POST' && path === '/api/auth/verify') return t('audit_action_login');
+  if (method === 'POST' && path === '/api/auth/refresh') return t('audit_action_refresh');
+  if (method === 'POST' && path === '/api/auth/logout') return t('audit_action_logout');
   if (method === 'POST' && path === '/api/auth/users') return t('audit_action_create_user');
   if (method === 'DELETE' && path.startsWith('/api/auth/users/')) return t('audit_action_delete_user');
   // Settings
