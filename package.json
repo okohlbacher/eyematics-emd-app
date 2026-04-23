@@ -12,7 +12,9 @@
     "preview": "vite preview",
     "start": "node --import tsx server/index.ts",
     "generate-bundles": "node --import tsx scripts/generate-all-bundles.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:check-skips": "node scripts/check-skipped-tests.mjs",
+    "test:ci": "npm run test:check-skips && npm test"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
