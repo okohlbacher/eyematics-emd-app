@@ -11,9 +11,9 @@ Living retrospective across milestones. Each milestone gets a section. Cross-mil
 
 ### What Was Built
 
-- Phase 10 (Visual/UX QA): WCAG-verified palette module, IQR band guard, tooltip format + suppression, all-eyes-filtered empty state, admin center filter with roster-change canary, stable composite row keys
+- Phase 10 (Visual/UX QA): WCAG-verified palette module, IQR band guard, tooltip format + suppression, all-eyes-filtered empty state, admin site filter with roster-change canary, stable composite row keys
 - Phase 11 (PII hardening): HMAC-SHA256 cohort ID hashing, POST beacon with keepalive, hashCohortId utility reused across phases
-- Phase 12 (Server aggregation): `POST /api/outcomes/aggregate` with JWT-center filtering, user-scoped TTL cache, byte-parity with client path, `shared/` module extraction, >1000-patient auto-routing
+- Phase 12 (Server aggregation): `POST /api/outcomes/aggregate` with JWT-site filtering, user-scoped TTL cache, byte-parity with client path, `shared/` module extraction, >1000-patient auto-routing
 - Phase 13 (New metrics): CRT trajectory (LOINC LP267955-5), treatment-interval histogram (6 bins), responder classification (configurable ETDRS threshold), metric selector with `?metric=` deep-link, per-metric CSV export, 60 metrics* i18n keys with automated completeness test
 
 ### What Worked

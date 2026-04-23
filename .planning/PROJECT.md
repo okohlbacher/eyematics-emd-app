@@ -17,7 +17,7 @@
 
 ## What This Is
 
-A production-readiness overhaul of the EyeMatics Clinical Demonstrator (EMD), a React/TypeScript clinical research dashboard for ophthalmological IVOM treatment data. The redesign adds a standalone Express backend, optional Keycloak OIDC authentication (with local credential fallback), server-side audit logging, center-based data restriction, and migrates all persistent state from localStorage to server-side JSON file storage.
+A production-readiness overhaul of the EyeMatics Clinical Demonstrator (EMD), a React/TypeScript clinical research dashboard for ophthalmological IVOM treatment data. The redesign adds a standalone Express backend, optional Keycloak OIDC authentication (with local credential fallback), server-side audit logging, site-based data restriction, and migrates all persistent state from localStorage to server-side JSON file storage.
 
 ## Core Value
 
@@ -33,8 +33,8 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] Cohort building with multi-criteria filtering
 - [x] Case detail view with clinical parameters, charts, OCT images
 - [x] Data quality review with error flagging and therapy discontinuation detection
-- [x] Documentation quality benchmarking across centers
-- [x] User management with 6 roles and multi-center assignment
+- [x] Documentation quality benchmarking across sites
+- [x] User management with 6 roles and multi-site assignment
 - [x] Full German/English i18n
 - [x] Issue reporting with screenshot capture
 
@@ -49,7 +49,7 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] FHIR proxy for production (http-proxy-middleware) — v1.0 (Phase 1)
 - [x] Server-side user management CRUD via API — v1.0 (Phase 4)
 - [x] Server-side storage for quality flags, saved searches, excluded/reviewed cases — v1.0 (Phase 4)
-- [x] Center-based data restriction (users see only their assigned centers' data) — v1.0 (Phase 5)
+- [x] Site-based data restriction (users see only their assigned sites' data) — v1.0 (Phase 5)
 - [x] Keycloak integration preparation (middleware, config, documentation) — v1.0 (Phase 6)
 - [x] API design that allows future migration from JSON files to a database — v1.0 (Phase 4)
 
@@ -58,14 +58,14 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] Frontend AuthContext wired to server JWT auth (no client-side credentials) — v1.1
 - [x] Frontend DataContext wired to server /api/data/* endpoints (no localStorage) — v1.1
 - [x] Frontend AuditPage wired to server /api/audit (immutable, no clear button) — v1.1
-- [x] Frontend AdminPage wired to server /api/auth/users CRUD (org-* center IDs) — v1.1
-- [x] Frontend fhirLoader wired to /api/fhir/bundles (center-filtered server-side) — v1.1
+- [x] Frontend AdminPage wired to server /api/auth/users CRUD (org-* site IDs) — v1.1
+- [x] Frontend fhirLoader wired to /api/fhir/bundles (site-filtered server-side) — v1.1
 - [x] Settings.yaml moved out of webroot to config/ — v1.1
 - [x] FHIR data files blocked from static serving in production — v1.1
 - [x] FHIR proxy moved under auth (/api/fhir-proxy) — v1.1
-- [x] Centers configurable via data/centers.json — v1.1
+- [x] Sites configurable via data/centers.json — v1.1
 - [x] Consolidated auth headers (single getAuthHeaders utility) — v1.1
-- [x] Center validation on excluded/reviewed cases endpoints — v1.1
+- [x] Site validation on excluded/reviewed cases endpoints — v1.1
 - [x] Client-side audit removed (server auditMiddleware handles all logging) — v1.1
 
 ### Validated in v1.5
@@ -92,10 +92,10 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - ✓ IQR band n<2 guard at math + DOM layers; no 0-height artifacts — v1.6 (Phase 10)
 - ✓ Outcomes tooltip field order, units, and per-patient suppression (D-05/D-06) — v1.6 (Phase 10)
 - ✓ All-eyes-filtered empty-state variant (DE+EN); outcomes i18n grows to 73 keys — v1.6 (Phase 10)
-- ✓ Admin center filter locked to 7-site roster with roster-change canary test (VQA-01) — v1.6 (Phase 10)
+- ✓ Admin site filter locked to 7-site roster with roster-change canary test (VQA-01) — v1.6 (Phase 10)
 - ✓ Stable OutcomesDataPreview row keys: composite `${pseudo}|${eye}|${date}` (CRREV-02) — v1.6 (Phase 10)
 - ✓ Cohort ID removed from audit beacon URL; HMAC-SHA256 hash in POST body (CRREV-01) — v1.6 (Phase 11)
-- ✓ `POST /api/outcomes/aggregate` — JWT-center-filtered, cached, byte-identical to client (AGG-01..05) — v1.6 (Phase 12)
+- ✓ `POST /api/outcomes/aggregate` — JWT-site-filtered, cached, byte-identical to client (AGG-01..05) — v1.6 (Phase 12)
 - ✓ Auto-route to server aggregation above 1000-patient threshold (AGG-03) — v1.6 (Phase 12)
 - ✓ Shared `shared/` module extracted from `src/` with backward-compat shims (AGG-02 precondition) — v1.6 (Phase 12)
 - ✓ CRT trajectory metric with LOINC LP267955-5, µm units, server routing (METRIC-01) — v1.6 (Phase 13)
@@ -178,7 +178,7 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 **Goal:** Correct the site roster to the 7 real EyeMatics sites with matching synthetic data, and add cohort-level outcome analysis.
 
 **Target features:**
-- Site roster correction from 5 to 7 centers (remove Bonn/München/Münster; add Chemnitz, Dresden, Greifswald, Leipzig, Mainz)
+- Site roster correction from 5 to 7 sites (remove Bonn/München/Münster; add Chemnitz, Dresden, Greifswald, Leipzig, Mainz)
 - Reproducible synthetic FHIR bundle generator for new sites (40–50 patients each)
 - Cohort Outcome Trajectories — longitudinal visus delta/absolute over time or treatment index, OD/OS, with median + IQR + per-patient curves
 
@@ -198,8 +198,8 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - **Server**: Express 5 production server (server/index.ts) + Vite dev plugins for backward compat
 - **Auth flow**: Server-side bcrypt + JWT (HS256), 2FA with fixed OTP, rate limiting with exponential backoff
 - **Audit**: Server-side SQLite (data/audit.db), auto-logged by middleware, immutable from client, configurable retention; cohort IDs hashed via HMAC-SHA256 (v1.6)
-- **User centers**: Server-enforced center filtering on all data endpoints (Phase 5)
-- **FHIR data**: 7 centers (Aachen, Chemnitz, Dresden, Greifswald, Leipzig, Mainz, Tübingen) with deterministic synthetic data (Mulberry32 PRNG)
+- **User sites**: Server-enforced site filtering on all data endpoints (Phase 5)
+- **FHIR data**: 7 sites (Aachen, Chemnitz, Dresden, Greifswald, Leipzig, Mainz, Tübingen) with deterministic synthetic data (Mulberry32 PRNG)
 - **Outcomes**: 4 metrics (Visus, CRT, Treatment-Interval, Responder) with server-side pre-aggregation at >1000-patient threshold; metric selector with `?metric=` deep-link
 - **Test surface**: 429 tests passing across 47 files (v1.6 close)
 - **Requirements docs**: Lastenheft (RE-EM-LH) and Pflichtenheft (EMDREQ-*) define the formal requirements
