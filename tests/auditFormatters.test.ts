@@ -11,7 +11,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { translations, type TranslationKey } from '../src/i18n/translations';
+import { type TranslationKey,translations } from '../src/i18n/translations';
 import { describeAction } from '../src/pages/audit/auditFormatters';
 
 const enT = (key: TranslationKey): string => translations[key].en;
