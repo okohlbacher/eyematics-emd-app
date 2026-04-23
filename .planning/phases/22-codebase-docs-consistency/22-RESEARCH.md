@@ -512,27 +512,23 @@ useEffect(() => {
 | A6 | `jscpd` is appropriate as a one-shot audit tool but NOT as a CI gate (matches deferred decision) | §Standard Stack | If wrong and user wants it as a gate: Phase 23 scope. No Phase 22 impact. |
 | A7 | `Promise.all` / `Promise.race` remain allowed (D-04 explicit) and fire-and-forget `.then` beacons can remain or convert to void-IIFE at planner's discretion | §Canonical Async Style | If wrong and user wants strict conversion: small extra scope in 22-01 for fire-and-forget sites (1–2 files). |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **CLAUDE.md: create or drop from scope?**
+1. **CLAUDE.md: create or drop from scope?** — RESOLVED: D-11 (create minimal CLAUDE.md ≤60 lines in Plan 22-03)
    - What we know: D-08 lists it; file doesn't exist at repo root.
-   - What's unclear: intent — user may have meant `.planning/PROJECT.md`, or may want a new `CLAUDE.md` authored.
-   - Recommendation: surface in 22-03 plan; default to creating a minimal `CLAUDE.md` pointing to `.planning/PROJECT.md` unless user says otherwise.
+   - Resolution: D-11 locks creation of a minimal root `CLAUDE.md` (test commands, build/dev scripts, naming/error pointers, link to `.planning/`).
 
-2. **sites vs centers — single term or dual with glossary note?**
+2. **sites vs centers — single term or dual with glossary note?** — RESOLVED: D-12 (normalize "sites" in prose; keep wire/DB "centers" exempt under D-05)
    - What we know: both used ~equally; `centers` dominates code/wire; `sites` dominates domain prose.
-   - What's unclear: user preference.
-   - Recommendation: GLOSSARY.md documents both with scope; do NOT rename in bulk.
+   - Resolution: D-12 normalizes prose to "sites" across `.planning/` + comments; wire/DB "center(s)" stays verbatim; GLOSSARY.md disambiguates.
 
-3. **Which shim files are still load-bearing?**
+3. **Which shim files are still load-bearing?** — RESOLVED: D-15 (per-shim audit in Plan 22-01 before deletion; D-10 safety net enforces)
    - What we know: 7 shim files identified.
-   - What's unclear: which have external (script, test, dynamic-import) consumers.
-   - Recommendation: 22-01 plan includes a per-shim audit step (grep + build) before deletion.
+   - Resolution: D-15 constrains CONSIST-01 scope to per-file audit+inline pass (grep callers, inline, run `npm run test:ci`).
 
-4. **jscpd one-shot: run it or skip?**
+4. **jscpd one-shot: run it or skip?** — RESOLVED: D-14 (run via `npx` at start of 22-01 as one-shot signal; not a CI gate)
    - What we know: codebase is small (106 TS files); manual review may suffice.
-   - What's unclear: cost/benefit on this scale.
-   - Recommendation: run once at the start of 22-01 for signal; don't block if output is noisy.
+   - Resolution: D-14 invokes `jscpd` via `npx` once; non-blocking if noisy; not added to devDependencies.
 
 ## Environment Availability
 
