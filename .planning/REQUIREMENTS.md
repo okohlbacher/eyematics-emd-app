@@ -60,7 +60,7 @@
 ### Dependency & Lint Cleanup (DEPS-*)
 
 - [x] **DEPS-01** — `npm audit` clean at `moderate` threshold; non-breaking dep upgrades (patch + minor) applied. Breaking major upgrades documented in a DEFERRED-UPGRADES.md if any blockers.
-- [ ] **DEPS-02** — ESLint rule tightening: enable `no-unused-vars`/`@typescript-eslint/no-unused-vars` strict, `prefer-const`, `no-var`, and any project-appropriate rules. Fix violations (or add per-line eslint-disable with reason).
+- [x] **DEPS-02** — ESLint rule tightening: enable `no-unused-vars`/`@typescript-eslint/no-unused-vars` strict, `prefer-const`, `no-var`, and any project-appropriate rules. Fix violations (or add per-line eslint-disable with reason).
 - [ ] **DEPS-03** — `package.json` scripts audit: remove unused scripts, normalize naming (dev, build, test, lint pattern), ensure each script works.
 
 ---

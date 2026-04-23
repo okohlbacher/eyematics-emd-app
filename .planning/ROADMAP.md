@@ -126,7 +126,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 21. Test & UAT Polish | 3/3 | Complete    | 2026-04-23 |
 | 22. Codebase & Docs Consistency | 3/3 | Complete    | 2026-04-23 |
-| 23. Dependency & Lint Cleanup | 1/3 | In Progress|  |
+| 23. Dependency & Lint Cleanup | 2/3 | In Progress|  |
 
 ### Coverage Map
 
