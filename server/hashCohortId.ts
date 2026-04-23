@@ -16,6 +16,11 @@
  *   - T-11-02: deterministic HMAC with persisted secret; no per-process salt, no time input
  *   - T-11-03: missing/short secret throws at startup (fail-fast)
  *   - T-11-05: secret never logged; no console output references the secret value
+ *
+ * retained: server-only live module (settings init + HMAC compute). Listed
+ * as a Phase 22 shim candidate by 22-RESEARCH; confirmed per D-15 that this
+ * is NOT a dedup target — HMAC secret never crosses to browser. Module-local
+ * `_secret` state is required. No action required beyond this disposition.
  */
 
 import crypto from 'node:crypto';
