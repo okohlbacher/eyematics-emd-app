@@ -61,7 +61,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+// Exported for v1.9 Phase 21 UAT-AUTO-04 test-hook (constant import, not magic number).
+export const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 const WARNING_BEFORE = 60 * 1000; // warn 1 minute before
 
 /**
