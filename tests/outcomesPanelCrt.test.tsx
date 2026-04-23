@@ -4,8 +4,9 @@
  *
  * Asserts that:
  *   1. metric='crt' + yMetric='absolute' → y-domain [0, 800]
- *   2. metric='visus' (default) + yMetric='absolute' → y-domain [0, 2]
- *   3. metric='crt' + yMetric='delta' → data-driven symmetric domain (not [0, 2])
+ *   2. metric='visus' (default) + yMetric='absolute' → y-domain [0, 1]
+ *      (logMAR 0–1.0 per admin Apr-17, v1.6 commit 668bfaf — source is authoritative)
+ *   3. metric='crt' + yMetric='delta' → data-driven symmetric domain (not the absolute range)
  *   4. No metric prop (backward compat) → identical to metric='visus'
  *
  * Uses the hidden `data-testid="outcomes-panel-ydomain"` div added to OutcomesPanel
@@ -100,7 +101,8 @@ describe('OutcomesPanel — CRT y-domain branching', () => {
     expect(marker!.getAttribute('data-metric')).toBe('crt');
   });
 
-  it('visus absolute mode: y-domain is [0, 2] (data-min="0" data-max="2")', () => {
+  // Phase 13 Plan 02 guard, updated v1.9 Phase 21: source emits [0, 1] per admin Apr-17 (commit 668bfaf)
+  it('visus absolute mode: y-domain is [0, 1] (data-min="0" data-max="1")', () => {
     const { container } = render(
       <OutcomesPanel
         panel={makePanel({ patientCount: 2, medianGrid: [{ x: 0, y: 0.5, p25: 0.4, p75: 0.6, n: 2 }] })}
@@ -118,10 +120,11 @@ describe('OutcomesPanel — CRT y-domain branching', () => {
     const marker = container.querySelector('[data-testid="outcomes-panel-ydomain"]');
     expect(marker, 'y-domain marker div not found').not.toBeNull();
     expect(marker!.getAttribute('data-min')).toBe('0');
-    expect(marker!.getAttribute('data-max')).toBe('2');
+    expect(marker!.getAttribute('data-max')).toBe('1');
   });
 
-  it('backward compat: no metric prop defaults to visus absolute [0, 2]', () => {
+  // Phase 13 Plan 02 guard, updated v1.9 Phase 21: source emits [0, 1] per admin Apr-17 (commit 668bfaf)
+  it('backward compat: no metric prop defaults to visus absolute [0, 1]', () => {
     const { container } = render(
       <OutcomesPanel
         panel={makePanel({ patientCount: 2, medianGrid: [{ x: 0, y: 0.5, p25: 0.4, p75: 0.6, n: 2 }] })}
@@ -139,7 +142,7 @@ describe('OutcomesPanel — CRT y-domain branching', () => {
     const marker = container.querySelector('[data-testid="outcomes-panel-ydomain"]');
     expect(marker, 'y-domain marker div not found').not.toBeNull();
     expect(marker!.getAttribute('data-min')).toBe('0');
-    expect(marker!.getAttribute('data-max')).toBe('2');
+    expect(marker!.getAttribute('data-max')).toBe('1');
   });
 
   it('CRT delta mode: y-domain is symmetric data-driven (not [0, 800])', () => {
