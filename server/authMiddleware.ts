@@ -11,10 +11,10 @@
  */
 
 import type { NextFunction,Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
 
-import { getJwtSecret } from './initAuth.js';
+import { verifyAccessToken } from './jwtUtil.js';
 import { getAuthProvider, getJwksClient } from './keycloakAuth.js';
+import { decodeKeycloakHeader, verifyKeycloakToken as verifyKeycloakJwt } from './keycloakJwt.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -56,17 +56,32 @@ const PUBLIC_PATHS = ['/api/auth/login', '/api/auth/verify', '/api/auth/config',
 /**
  * Verify a local HS256 JWT and populate req.auth.
  * Rejects challenge-purpose tokens (T-02-02).
+ *
+ * Plan 20-02 / D-04 — verification routes through jwtUtil.verifyAccessToken so
+ * the algorithm pin and typ:'access' enforcement live in one place. Challenge
+ * tokens carry typ:'challenge' and are now rejected by verifyAccessToken's typ
+ * check before we even read `purpose` — the purpose-string check below is kept
+ * as defence-in-depth for legacy tokens issued before the typ rollout.
  */
 function verifyLocalToken(token: string, req: Request, res: Response, next: NextFunction): void {
   try {
-    const payload = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] }) as AuthPayload;
+    const payload = verifyAccessToken(token) as unknown as AuthPayload;
     if (payload.purpose === 'challenge') {
       res.status(401).json({ error: 'Challenge tokens cannot be used for authentication' });
       return;
     }
     req.auth = payload;
     next();
-  } catch {
+  } catch (err) {
+    // verifyAccessToken throws 'wrong_token_type' for typ != 'access' (i.e.
+    // refresh or challenge tokens that escaped their cookie/slot). Surface a
+    // distinct error so the existing "Challenge tokens cannot be used" test
+    // still passes when fed a typ:'challenge' token.
+    const msg = err instanceof Error ? err.message : '';
+    if (msg === 'wrong_token_type') {
+      res.status(401).json({ error: 'Challenge tokens cannot be used for authentication' });
+      return;
+    }
     res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
@@ -94,16 +109,16 @@ async function verifyKeycloakToken(token: string, req: Request, res: Response, n
   }
 
   try {
-    const decoded = jwt.decode(token, { complete: true });
-    if (!decoded || typeof decoded === 'string' || !decoded.header.kid) {
+    // Plan 20-02 / D-04 — header decode + RS256 verify routed through
+    // server/keycloakJwt.ts so this file does NOT import jsonwebtoken directly.
+    const decoded = decodeKeycloakHeader(token);
+    if (!decoded || !decoded.header.kid) {
       res.status(401).json({ error: 'Token missing key ID (kid)' });
       return;
     }
 
     const signingKey = await client.getSigningKey(decoded.header.kid);
-    const raw = jwt.verify(token, signingKey.getPublicKey(), {
-      algorithms: ['RS256'],
-    }) as Record<string, unknown>;
+    const raw = verifyKeycloakJwt(token, signingKey.getPublicKey());
 
     // Reject challenge-purpose tokens (T-02-02)
     if (raw.purpose === 'challenge') {

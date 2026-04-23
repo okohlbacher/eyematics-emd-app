@@ -31,7 +31,10 @@ function createApp() {
 }
 
 function signToken(payload: Record<string, unknown>, options?: jwt.SignOptions): string {
-  return jwt.sign(payload, TEST_SECRET, { algorithm: 'HS256', expiresIn: '10m', ...options });
+  // Plan 20-02 — verifyAccessToken enforces typ:'access' so test fixtures
+  // must carry the claim (real tokens get it via signAccessToken).
+  const withTyp = { typ: 'access', ...payload };
+  return jwt.sign(withTyp, TEST_SECRET, { algorithm: 'HS256', expiresIn: '10m', ...options });
 }
 
 describe('authMiddleware (local HS256)', () => {

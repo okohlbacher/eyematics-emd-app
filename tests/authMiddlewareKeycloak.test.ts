@@ -63,9 +63,11 @@ function makeMockRes() {
   return res as unknown as import('express').Response & { _statusCode: number; _body: unknown };
 }
 
-// Helper: sign a local HS256 token
+// Helper: sign a local HS256 token. Plan 20-02 — verifyAccessToken enforces
+// typ:'access', so test fixtures must include the claim (real tokens get it
+// via signAccessToken).
 function signLocal(payload: object, opts: jwt.SignOptions = {}) {
-  return jwt.sign(payload, LOCAL_SECRET, { algorithm: 'HS256', expiresIn: '10m', ...opts });
+  return jwt.sign({ typ: 'access', ...payload }, LOCAL_SECRET, { algorithm: 'HS256', expiresIn: '10m', ...opts });
 }
 
 // Helper: sign a Keycloak RS256 token with kid header

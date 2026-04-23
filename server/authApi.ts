@@ -11,16 +11,20 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import { Router } from 'express';
-import jwt from 'jsonwebtoken';
 import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 
-import type { AuthPayload } from './authMiddleware.js';
 import { requireCsrf } from './authMiddleware.js';
 import { getValidCenterIds } from './constants.js';
 import type { UserRecord } from './initAuth.js';
-import { getAuthConfig, getJwtSecret, loadUsers, modifyUsers } from './initAuth.js';
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from './jwtUtil.js';
+import { getAuthConfig, loadUsers, modifyUsers } from './initAuth.js';
+import {
+  signAccessToken,
+  signChallengeToken as signChallengeTokenUtil,
+  signRefreshToken,
+  verifyChallengeToken,
+  verifyRefreshToken,
+} from './jwtUtil.js';
 import { getAuthProvider } from './keycloakAuth.js';
 import { createRateLimiter } from './rateLimiting.js';
 import { getAuthSettings } from './settingsApi.js';
@@ -61,13 +65,12 @@ function limiter() {
 
 /** Sign a full session JWT (10 min expiry per D-05). */
 function signSessionToken(username: string, role: string, centers: string[]): string {
-  const payload: Omit<AuthPayload, 'iat' | 'exp'> = {
-    sub: username,
-    preferred_username: username,
-    role,
-    centers,
-  };
-  return jwt.sign(payload, getJwtSecret(), { algorithm: 'HS256', expiresIn: '10m' });
+  // Plan 20-02 / D-04 — route through jwtUtil so the typ:'access' claim is
+  // applied consistently and HS256 stays pinned in one place.
+  return signAccessToken(
+    { sub: username, preferred_username: username, role, centers },
+    10 * 60 * 1000,
+  );
 }
 
 /**
@@ -119,11 +122,10 @@ function emitRefreshCookies(res: Response, user: UserRecord): void {
 
 /** Sign a challenge token for 2FA step 2 (2 min expiry, purpose='challenge'). */
 function signChallengeToken(username: string): string {
-  return jwt.sign(
-    { sub: username, purpose: 'challenge' },
-    getJwtSecret(),
-    { algorithm: 'HS256', expiresIn: '2m' },
-  );
+  // Plan 20-02 / D-04 — route through jwtUtil. The typ:'challenge' claim added
+  // by signChallengeTokenUtil makes verifyAccessToken / verifyRefreshToken
+  // physically reject this token if a caller mis-routes it.
+  return signChallengeTokenUtil({ sub: username, purpose: 'challenge' }, 2 * 60 * 1000);
 }
 
 // ---------------------------------------------------------------------------
@@ -227,10 +229,12 @@ authApiRouter.post('/verify', async (req: Request, res: Response): Promise<void>
     return;
   }
 
-  // Verify challenge token
+  // Verify challenge token (Plan 20-02 / D-04 — via jwtUtil; typ:'challenge'
+  // is enforced inside verifyChallengeToken, so a stolen access/refresh token
+  // smuggled into the challengeToken slot is rejected before purpose check).
   let sub: string;
   try {
-    const payload = jwt.verify(challengeToken, getJwtSecret(), { algorithms: ['HS256'] }) as { sub: string; purpose?: string };
+    const payload = verifyChallengeToken(challengeToken);
     if (payload.purpose !== 'challenge') {
       res.status(401).json({ error: 'Invalid challenge token' });
       return;

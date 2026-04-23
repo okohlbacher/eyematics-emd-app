@@ -43,4 +43,21 @@ export default defineConfig([
       'react-hooks/set-state-in-effect': 'off',
     },
   },
+  // Phase 20 / D-04, T-20-13: jsonwebtoken must only be imported by the
+  // centralized JWT modules. Direct verify imports elsewhere risk
+  // algorithm-confusion CVEs (CVE-2022-23529). Tests are exempt because
+  // tests/jwtUtil.test.ts and friends legitimately construct fixture tokens
+  // with raw jwt.sign for negative-path coverage.
+  {
+    files: ['**/*.{ts,tsx}'],
+    ignores: ['server/jwtUtil.ts', 'server/keycloakJwt.ts', 'tests/**/*.test.ts', 'tests/**/*.test.tsx'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [{
+          name: 'jsonwebtoken',
+          message: 'Import sign/verify helpers from server/jwtUtil.js (HS256) or server/keycloakJwt.js (RS256) instead. Direct jsonwebtoken use risks algorithm-confusion CVEs.',
+        }],
+      }],
+    },
+  },
 ])

@@ -102,3 +102,48 @@ export function verifyRefreshToken(token: string): RefreshPayload {
   }
   return payload;
 }
+
+// ---------------------------------------------------------------------------
+// Plan 20-02 — challenge tokens (intermediate password→TOTP bridge)
+//
+// These are NOT access or refresh tokens. They are short-lived (default 2 min)
+// proof-of-password tokens emitted by /login when 2FA is required, then
+// consumed by /verify after the user supplies their OTP. They get their own
+// `typ: 'challenge'` so verifyAccessToken / verifyRefreshToken cross-reject
+// them and a stolen challenge cannot be replayed against a protected endpoint.
+// ---------------------------------------------------------------------------
+
+export interface ChallengePayload {
+  sub: string;
+  purpose: 'challenge';
+  typ: 'challenge';
+  iat: number;
+  exp: number;
+}
+
+/**
+ * Sign a challenge JWT for the password→TOTP bridge.
+ * @param p Challenge claims (excluding typ/iat/exp).
+ * @param ttlMs Time-to-live in MILLISECONDS (see signAccessToken note).
+ */
+export function signChallengeToken(
+  p: Omit<ChallengePayload, 'typ' | 'iat' | 'exp'>,
+  ttlMs: number,
+): string {
+  return jwt.sign(
+    { ...p, typ: 'challenge' as const },
+    getJwtSecret(),
+    { algorithm: 'HS256', expiresIn: Math.floor(ttlMs / 1000) },
+  );
+}
+
+/**
+ * Verify a challenge JWT. Throws on bad signature, wrong algorithm, or wrong typ.
+ */
+export function verifyChallengeToken(token: string): ChallengePayload {
+  const payload = jwt.verify(token, getJwtSecret(), { algorithms: ALGS }) as ChallengePayload;
+  if (payload.typ !== 'challenge') {
+    throw new Error('wrong_token_type');
+  }
+  return payload;
+}
