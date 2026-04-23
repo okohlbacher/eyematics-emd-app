@@ -494,19 +494,19 @@ it('happy path: valid refresh cookie + matching CSRF returns new access token', 
 | A5 | `BroadcastChannel('emd-auth')` between two tabs of `http://localhost:5173` and `http://localhost:5173` (same origin) will deliver messages in both directions reliably. | Pattern 3 | LOW — same-origin requirement satisfied; MDN documents this as the standard same-origin cross-context channel. |
 | A6 | `crypto.randomBytes(32).toString('hex')` is a sufficient CSRF token (256-bit entropy, hex = 64 chars). | Code Examples | LOW — OWASP cheat sheet calls for ≥128-bit entropy; we exceed by 2x. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should the access token be ROTATED on refresh, or only the refresh token?**
+1. **Should the access token be ROTATED on refresh, or only the refresh token?** — RESOLVED: rotate both per D-13.
    - What we know: D-13 says fresh access token AND fresh refresh token on every `/api/auth/refresh` call.
    - What's unclear: Nothing — D-13 is explicit. Confirmed unambiguously.
    - Recommendation: Implement as D-13 specifies. Listed here only because reviewers may flag "why rotate access if it's already short-lived?" — answer: simpler client (always swap both) and supports future TTL adjustments.
 
-2. **What `audit_action` is recorded for a FAILED refresh?**
+2. **What `audit_action` is recorded for a FAILED refresh?** — RESOLVED: reuse `audit_action_refresh` key, distinguish success vs failure via the existing `status` column.
    - What we know: D-19 says failed refreshes ARE audited via existing error paths. CONTEXT does NOT add a `audit_action_refresh_failed` key.
    - What's unclear: Without a refresh-specific failed-path action key, the entry will display as the generic `audit_action_unknown` in the audit page table.
    - Recommendation: Plan should add a single `audit_action_refresh` key (already locked) and use it for BOTH success-handler-written rows (if option (a) of Pitfall 5 is taken) and middleware-captured 401s. Distinguish via the `status` column already in the audit row. No new i18n keys needed.
 
-3. **Does the existing `INACTIVITY_TIMEOUT` (10 min, `AuthContext.tsx:63`) need to know about refresh, or is it fully orthogonal?**
+3. **Does the existing `INACTIVITY_TIMEOUT` (10 min, `AuthContext.tsx:63`) need to know about refresh, or is it fully orthogonal?** — RESOLVED: orthogonal. BroadcastChannel `refresh-success` does NOT reset per-tab idle timer; preserves v1.7 idle-logout contract.
    - What we know: D-25 says idle timer UNCHANGED. Refresh extends only the access-token boundary, not the idle countdown.
    - What's unclear: When a sibling tab refreshes via BroadcastChannel and adopts a new access token, should THIS tab reset its idle timer? Per D-25 spirit: NO (idle = no user input in THIS tab). But ergonomically, if user is active in tab B and tab A is idle, tab A should still log out at 10min — as designed.
    - Recommendation: Confirm and document: BroadcastChannel `refresh-success` does NOT reset the per-tab idle timer. This preserves the v1.7 idle-logout contract.
