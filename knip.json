@@ -12,5 +12,11 @@
     "server/**/*.ts",
     "shared/**/*.ts"
   ],
-  "ignoreExportsUsedInFile": true
+  "ignoreExportsUsedInFile": true,
+  "ignoreDependencies": [
+    "tailwindcss"
+  ],
+  "ignore": [
+    "server/types.d.ts"
+  ]
 }
