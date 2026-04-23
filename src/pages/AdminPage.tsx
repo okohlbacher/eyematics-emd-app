@@ -110,15 +110,21 @@ export default function AdminPage() {
 
   // F-20: Load center options from server instead of hardcoding
   useEffect(() => {
-    authFetch('/api/fhir/centers')
-      .then((r) => r.ok ? r.json() as Promise<{ centers: Array<{ id: string; shorthand: string }> }> : null)
-      .then((data) => {
-        if (data?.centers) {
-          setCenterOptions(data.centers.map((c) => ({ id: c.id, label: c.shorthand })));
-          setCenterLabels(Object.fromEntries(data.centers.map((c) => [c.id, c.shorthand])));
-        }
-      })
-      .catch(() => {});
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await authFetch('/api/fhir/centers');
+        const data = r.ok
+          ? ((await r.json()) as { centers: Array<{ id: string; shorthand: string }> })
+          : null;
+        if (cancelled || !data?.centers) return;
+        setCenterOptions(data.centers.map((c) => ({ id: c.id, label: c.shorthand })));
+        setCenterLabels(Object.fromEntries(data.centers.map((c) => [c.id, c.shorthand])));
+      } catch {
+        /* swallow — admin page retains hardcoded fallback labels */
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
