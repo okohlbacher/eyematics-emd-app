@@ -27,6 +27,7 @@ import type { Socket } from 'node:net';
 import path from 'node:path';
 
 import compression from 'compression';
+import cookieParser from 'cookie-parser';
 import type { NextFunction,Request, Response } from 'express';
 import express from 'express';
 import helmet from 'helmet';
@@ -190,6 +191,10 @@ app.use(helmet({
   },
   crossOriginEmbedderPolicy: false, // allow loading FHIR data
 }));
+
+// Phase 20 / D-03: required for /api/auth/refresh emd-refresh cookie + emd-csrf double-submit.
+// MUST be mounted before auditMiddleware + authMiddleware so downstream handlers see req.cookies.
+app.use(cookieParser());
 
 // Body parsers — MUST be before auditMiddleware so req.body is populated for body capture
 // express.json() is scoped (NOT global) — issueApiHandler and settingsApiHandler use readBody()

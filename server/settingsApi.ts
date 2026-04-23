@@ -84,7 +84,58 @@ function validateSettingsSchema(parsed: unknown): string | null {
       }
     }
   }
+  // Phase 20 / D-23, D-24 — optional auth namespace (refresh-token configuration)
+  if (obj.auth !== undefined) {
+    if (obj.auth === null || typeof obj.auth !== 'object') return 'auth must be an object';
+    const auth = obj.auth as Record<string, unknown>;
+    const ttl = auth.refreshTokenTtlMs;
+    const cap = auth.refreshAbsoluteCapMs;
+    if (ttl !== undefined && (typeof ttl !== 'number' || !Number.isInteger(ttl) || ttl <= 0)) {
+      return 'auth.refreshTokenTtlMs must be a positive integer';
+    }
+    if (cap !== undefined && (typeof cap !== 'number' || !Number.isInteger(cap) || cap <= 0)) {
+      return 'auth.refreshAbsoluteCapMs must be a positive integer';
+    }
+    if (typeof ttl === 'number' && typeof cap === 'number' && ttl > cap) {
+      return 'auth.refreshTokenTtlMs must be <= auth.refreshAbsoluteCapMs';
+    }
+    if (auth.refreshCookieSecure !== undefined && typeof auth.refreshCookieSecure !== 'boolean') {
+      return 'auth.refreshCookieSecure must be a boolean';
+    }
+  }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Phase 20 / D-23 — auth settings reader for refresh endpoint
+// ---------------------------------------------------------------------------
+
+export interface AuthSettings {
+  refreshTokenTtlMs: number;
+  refreshAbsoluteCapMs: number;
+  refreshCookieSecure: boolean;
+}
+
+const AUTH_DEFAULTS: AuthSettings = {
+  refreshTokenTtlMs: 28_800_000,   // 8h
+  refreshAbsoluteCapMs: 43_200_000, // 12h
+  refreshCookieSecure: true,
+};
+
+/**
+ * Reads `auth.*` from settings.yaml at call time (NOT boot-cached) so an
+ * operator edit + reload picks up new values without restarting the server.
+ * Returns AUTH_DEFAULTS for any missing field, including when settings.yaml
+ * is unreadable.
+ */
+export function getAuthSettings(): AuthSettings {
+  try {
+    const raw = fs.readFileSync(SETTINGS_FILE, 'utf-8');
+    const parsed = yaml.load(raw) as { auth?: Partial<AuthSettings> } | null;
+    return { ...AUTH_DEFAULTS, ...(parsed?.auth ?? {}) };
+  } catch {
+    return AUTH_DEFAULTS;
+  }
 }
 
 function parseAndValidateYaml(body: string): { parsed: unknown; error?: string } {

@@ -4,3 +4,8 @@ therapyBreakerDays: 365
 dataSource:
   type: local
   blazeUrl: http://localhost:8080/fhir
+# Phase 20 / D-23 — refresh-token configuration. YAML-only in v1.8 (no UI).
+auth:
+  refreshTokenTtlMs: 28800000      # 8h rolling refresh-token lifetime
+  refreshAbsoluteCapMs: 43200000   # 12h hard cap from initial login
+  refreshCookieSecure: true        # set to false ONLY for local-dev http

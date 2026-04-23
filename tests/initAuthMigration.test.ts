@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { _migrateRemovedCenters } from '../server/initAuth';
+import { _migrateRemovedCenters, _migrateSessionFields } from '../server/initAuth';
 import type { UserRecord } from '../server/initAuth';
 
 describe('_migrateRemovedCenters — strip org-ukb/org-lmu/org-ukm, fallback to org-uka', () => {
@@ -37,5 +37,61 @@ describe('_migrateRemovedCenters — strip org-ukb/org-lmu/org-ukm, fallback to 
     ];
     const { changed } = _migrateRemovedCenters(users);
     expect(changed).toBe(false);
+  });
+});
+
+describe('Phase 20 session field migration — _migrateSessionFields', () => {
+  it('adds tokenVersion=0 + passwordChangedAt + totpChangedAt from createdAt for missing fields', () => {
+    const users: UserRecord[] = [
+      { username: 'u1', role: 'researcher', centers: ['org-uka'], createdAt: '2025-01-15T00:00:00Z' },
+    ];
+    const { users: out, changed } = _migrateSessionFields(users);
+    expect(changed).toBe(true);
+    expect(out[0].tokenVersion).toBe(0);
+    expect(out[0].passwordChangedAt).toBe('2025-01-15T00:00:00Z');
+    expect(out[0].totpChangedAt).toBe('2025-01-15T00:00:00Z');
+  });
+
+  it('falls back to "now" when createdAt is absent', () => {
+    const NOW = '2026-04-23T10:00:00Z';
+    // Simulate a user record with no createdAt — TS-cast since the type requires it
+    // but real-world legacy fixtures may be missing the field.
+    const users = [
+      { username: 'legacy', role: 'researcher', centers: ['org-uka'] } as unknown as UserRecord,
+    ];
+    const { users: out } = _migrateSessionFields(users, NOW);
+    expect(out[0].passwordChangedAt).toBe(NOW);
+    expect(out[0].totpChangedAt).toBe(NOW);
+  });
+
+  it('is idempotent: re-running on migrated users returns changed=false and identical data', () => {
+    const users: UserRecord[] = [
+      {
+        username: 'u1', role: 'researcher', centers: ['org-uka'],
+        createdAt: '2025-01-15T00:00:00Z',
+        tokenVersion: 3,
+        passwordChangedAt: '2025-06-01T00:00:00Z',
+        totpChangedAt: '2025-06-15T00:00:00Z',
+      },
+    ];
+    const { users: out, changed } = _migrateSessionFields(users);
+    expect(changed).toBe(false);
+    expect(out[0].tokenVersion).toBe(3);
+    expect(out[0].passwordChangedAt).toBe('2025-06-01T00:00:00Z');
+    expect(out[0].totpChangedAt).toBe('2025-06-15T00:00:00Z');
+  });
+
+  it('preserves existing tokenVersion when only timestamps are missing', () => {
+    const users: UserRecord[] = [
+      {
+        username: 'u1', role: 'researcher', centers: ['org-uka'],
+        createdAt: '2025-01-15T00:00:00Z',
+        tokenVersion: 5,
+      },
+    ];
+    const { users: out, changed } = _migrateSessionFields(users);
+    expect(changed).toBe(true);
+    expect(out[0].tokenVersion).toBe(5);
+    expect(out[0].passwordChangedAt).toBe('2025-01-15T00:00:00Z');
   });
 });

@@ -32,6 +32,17 @@ export interface UserRecord {
   totpEnabled?: boolean;
   /** Bcrypt hashes of one-time recovery codes. Each is burned on use. */
   recoveryCodeHashes?: string[];
+  /**
+   * Phase 20 / D-16 — monotonically increasing counter. Bumped on
+   * logout, password change, TOTP change, admin password reset, admin TOTP reset.
+   * Refresh tokens carry this value in `payload.ver`; on /api/auth/refresh, a
+   * mismatch invalidates the token (logout-everywhere semantics for THIS user).
+   */
+  tokenVersion?: number;
+  /** Phase 20 / D-16 — ISO timestamp of the last password mutation. */
+  passwordChangedAt?: string;
+  /** Phase 20 / D-16 — ISO timestamp of the last TOTP mutation (enroll/disable/reset). */
+  totpChangedAt?: string;
 }
 
 interface AuthConfig {
@@ -326,6 +337,42 @@ export function _migrateRemovedCenters(
 }
 
 /**
+ * Phase 20 / D-16, D-17 — Add session-resilience fields to user records.
+ * Pure helper, exported for testing. Idempotent: re-running on already-migrated
+ * users yields `changed=false` and identical output.
+ *
+ * Defaults:
+ * - `tokenVersion: 0`
+ * - `passwordChangedAt`: `user.createdAt` if present, else `now`
+ * - `totpChangedAt`:     `user.createdAt` if present, else `now`
+ */
+export function _migrateSessionFields(
+  users: UserRecord[],
+  now: string = new Date().toISOString(),
+): { users: UserRecord[]; changed: boolean } {
+  let changed = false;
+  const migrated = users.map((u) => {
+    const next: UserRecord = { ...u };
+    let userChanged = false;
+    if (typeof next.tokenVersion !== 'number') {
+      next.tokenVersion = 0;
+      userChanged = true;
+    }
+    if (typeof next.passwordChangedAt !== 'string') {
+      next.passwordChangedAt = next.createdAt ?? now;
+      userChanged = true;
+    }
+    if (typeof next.totpChangedAt !== 'string') {
+      next.totpChangedAt = next.createdAt ?? now;
+      userChanged = true;
+    }
+    if (userChanged) changed = true;
+    return next;
+  });
+  return { users: migrated, changed };
+}
+
+/**
  * Migrate users.json: add passwordHash for any user missing it,
  * and convert center IDs from shorthand to org-* format.
  * Uses bcrypt with 12 rounds and the default password 'changeme2025!'.
@@ -369,6 +416,15 @@ function _migrateUsersJson(filePath: string): void {
     needsWrite = true;
     workingUsers = withoutRemoved;
     console.log('[initAuth] Migrated users.json: stripped removed center IDs (org-ukb/org-lmu/org-ukm)');
+  }
+
+  // Phase 20 / D-17 — add tokenVersion / passwordChangedAt / totpChangedAt for
+  // refresh-token invalidation. Idempotent (no-op once fields are present).
+  const { users: withSessionFields, changed: sessionChanged } = _migrateSessionFields(workingUsers);
+  if (sessionChanged) {
+    needsWrite = true;
+    workingUsers = withSessionFields;
+    console.log('[initAuth] Migrated users.json: added tokenVersion / *ChangedAt for Phase 20');
   }
 
   if (needsWrite) {
