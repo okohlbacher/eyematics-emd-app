@@ -123,19 +123,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setDisplayName('');
       return;
     }
-    fetch('/api/auth/users/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.ok ? r.json() as Promise<{ user?: { firstName?: string; lastName?: string; username: string } }> : null)
-      .then((data) => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch('/api/auth/users/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = r.ok
+          ? ((await r.json()) as { user?: { firstName?: string; lastName?: string; username: string } })
+          : null;
+        if (cancelled) return;
         const u = data?.user;
         if (u?.firstName || u?.lastName) {
           setDisplayName([u.firstName, u.lastName].filter(Boolean).join(' '));
         } else {
           setDisplayName(user.username);
         }
-      })
-      .catch(() => setDisplayName(user.username));
+      } catch {
+        if (!cancelled) setDisplayName(user.username);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [user, token]);
 
   const performLogout = useCallback((auto = false) => {
