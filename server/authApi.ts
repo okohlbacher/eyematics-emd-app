@@ -666,6 +666,70 @@ authApiRouter.put('/users/:username', async (req: Request, res: Response): Promi
 });
 
 /**
+ * PUT /api/auth/users/me/password
+ *
+ * Plan 20-02 / D-18 (SESSION-03) — self password change. Verifies the current
+ * password (proof-of-possession) before accepting the new one, then bumps
+ * tokenVersion + passwordChangedAt atomically with the new hash so any
+ * outstanding refresh cookie is invalidated on next /refresh.
+ *
+ * MUST be registered BEFORE the `/users/:username/password` route so the
+ * literal `/me/` path wins over the parameterized match (Express matches in
+ * registration order).
+ *
+ * Body: { currentPassword: string, newPassword: string }
+ * - 400 on missing fields or newPassword shorter than 8 chars
+ * - 401 on bad currentPassword
+ * - 200 on success
+ */
+authApiRouter.put('/users/me/password', async (req: Request, res: Response): Promise<void> => {
+  if (!req.auth) { res.status(401).json({ error: 'Authentication required' }); return; }
+  const { currentPassword, newPassword } = req.body as { currentPassword?: string; newPassword?: string };
+
+  if (typeof currentPassword !== 'string' || typeof newPassword !== 'string' || !currentPassword || !newPassword) {
+    res.status(400).json({ error: 'currentPassword and newPassword are required' });
+    return;
+  }
+  if (newPassword.length < 8) {
+    res.status(400).json({ error: 'newPassword must be at least 8 characters' });
+    return;
+  }
+
+  const username = req.auth.preferred_username;
+  const user = loadUsers().find((u) => u.username.toLowerCase() === username.toLowerCase());
+  if (!user || !user.passwordHash) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  const ok = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!ok) {
+    res.status(401).json({ error: 'Current password is incorrect' });
+    return;
+  }
+
+  const newHash = await bcrypt.hash(newPassword, 12);
+  const nowIso = new Date().toISOString();
+  try {
+    await modifyUsers((users) => {
+      const u = users.find((x) => x.username.toLowerCase() === username.toLowerCase());
+      if (!u) throw new Error('USER_NOT_FOUND');
+      u.passwordHash = newHash;
+      u.tokenVersion = (u.tokenVersion ?? 0) + 1;
+      u.passwordChangedAt = nowIso;
+      return users;
+    });
+  } catch (err) {
+    if (err instanceof Error && err.message === 'USER_NOT_FOUND') {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    throw err;
+  }
+  res.json({ ok: true });
+});
+
+/**
  * PUT /api/auth/users/:username/password
  *
  * Reset a user's password (USER-11, D-03). Admin only.
@@ -685,11 +749,16 @@ authApiRouter.put('/users/:username/password', async (req: Request, res: Respons
   const newHash = await bcrypt.hash(generatedPassword, 12);
 
   // F-11: atomic read-modify-write under lock prevents TOCTOU race
+  // Plan 20-02 / D-18: bump tokenVersion + passwordChangedAt in the SAME write
+  // so outstanding refresh tokens for this user are invalidated atomically.
+  const nowIso = new Date().toISOString();
   try {
     await modifyUsers((users) => {
       const user = users.find((u) => u.username.toLowerCase() === target.toLowerCase());
       if (!user) throw new Error('USER_NOT_FOUND');
       user.passwordHash = newHash;
+      user.tokenVersion = (user.tokenVersion ?? 0) + 1;
+      user.passwordChangedAt = nowIso;
       return users;
     });
   } catch (err) {
@@ -775,9 +844,14 @@ authApiRouter.post('/totp/confirm', async (req: Request, res: Response): Promise
     res.status(401).json({ error: 'Invalid OTP' });
     return;
   }
+  // Plan 20-02 / D-18: bump tokenVersion + totpChangedAt atomically with the
+  // totpEnabled flip so outstanding refresh cookies are invalidated.
+  const nowIso = new Date().toISOString();
   try {
     await modifyUsers((users) => users.map((u) =>
-      u.username.toLowerCase() === username.toLowerCase() ? { ...u, totpEnabled: true } : u,
+      u.username.toLowerCase() === username.toLowerCase()
+        ? { ...u, totpEnabled: true, tokenVersion: (u.tokenVersion ?? 0) + 1, totpChangedAt: nowIso }
+        : u,
     ));
   } catch {
     res.status(500).json({ error: 'Failed to enable TOTP' });
@@ -811,11 +885,18 @@ authApiRouter.post('/totp/disable', async (req: Request, res: Response): Promise
     }
   }
   if (!ok) { res.status(401).json({ error: 'Invalid OTP' }); return; }
+  // Plan 20-02 / D-18: bump tokenVersion + totpChangedAt atomically with the
+  // TOTP-state strip so outstanding refresh cookies are invalidated.
+  const nowIso = new Date().toISOString();
   try {
     await modifyUsers((users) => users.map((u) => {
       if (u.username.toLowerCase() !== username.toLowerCase()) return u;
       const { totpSecret: _s, totpEnabled: _e, recoveryCodeHashes: _c, ...rest } = u;
-      return rest as UserRecord;
+      return {
+        ...(rest as UserRecord),
+        tokenVersion: (u.tokenVersion ?? 0) + 1,
+        totpChangedAt: nowIso,
+      };
     }));
   } catch {
     res.status(500).json({ error: 'Failed to disable TOTP' });
@@ -849,13 +930,20 @@ authApiRouter.post('/users/:username/totp/reset', async (req: Request, res: Resp
     return;
   }
   const target = String(req.params.username ?? '');
+  // Plan 20-02 / D-18: bump tokenVersion + totpChangedAt atomically with the
+  // admin reset so outstanding refresh cookies for the target are invalidated.
+  const nowIso = new Date().toISOString();
   try {
     await modifyUsers((users) => {
       const idx = users.findIndex((u) => u.username.toLowerCase() === target.toLowerCase());
       if (idx === -1) throw new Error('USER_NOT_FOUND');
       const u = users[idx];
       const { totpSecret: _s, totpEnabled: _e, recoveryCodeHashes: _c, ...rest } = u;
-      users[idx] = rest as UserRecord;
+      users[idx] = {
+        ...(rest as UserRecord),
+        tokenVersion: (u.tokenVersion ?? 0) + 1,
+        totpChangedAt: nowIso,
+      };
       return users;
     });
   } catch (err) {
