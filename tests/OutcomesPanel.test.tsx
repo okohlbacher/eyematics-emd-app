@@ -18,13 +18,13 @@ vi.mock('recharts', async (importOriginal) => {
   const real = await importOriginal<typeof import('recharts')>();
   return {
     ...real,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     ResponsiveContainer: ({ children }: { children: any }) => (
       <div data-testid="recharts-responsive-container">
         <svg>{children}</svg>
       </div>
     ),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     ComposedChart: ({ children }: { children: any }) => (
       <g data-testid="recharts-composed-chart">{children}</g>
     ),
@@ -34,7 +34,7 @@ vi.mock('recharts', async (importOriginal) => {
     Tooltip: () => null,
     Legend: () => null,
     ReferenceLine: () => null,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     Area: ({ fill, stroke, legendType }: any) => (
       <g
         data-testid="recharts-area"
@@ -43,7 +43,7 @@ vi.mock('recharts', async (importOriginal) => {
         data-legend-type={legendType}
       />
     ),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     Line: ({ stroke, strokeWidth, name, legendType }: any) => (
       <g
         data-testid="recharts-line"

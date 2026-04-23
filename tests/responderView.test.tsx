@@ -11,7 +11,7 @@ import type { PatientCase } from '../src/types/fhir';
 afterEach(() => cleanup());
 
 const t = (key: TranslationKey) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const entry = (translations as any)[key];
   return entry?.en ?? key;
 };

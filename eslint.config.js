@@ -37,6 +37,11 @@ export default defineConfig([
       'prefer-const': 'error',
       'no-var': 'error',
       'eqeqeq': ['error', 'smart'], // D-18: 'smart' permits `== null` idiom
+      // Phase 23 / D-17: `no-explicit-any` is inherited from
+      // tseslint.configs.recommended but D-07 prohibits adding aggressive
+      // rules. 526 existing violations; disabled project-wide per D-17.
+      // Backlog tracked in DEFERRED-LINT.md (repo root).
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
   // Context files legitimately export hooks + providers together

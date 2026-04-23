@@ -90,13 +90,13 @@ vi.mock('recharts', async (importOriginal) => {
   const real = await importOriginal<typeof import('recharts')>();
   return {
     ...real,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     ResponsiveContainer: ({ children }: { children: any }) => (
       <div data-testid="recharts-responsive-container">
         <svg>{children}</svg>
       </div>
     ),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     ComposedChart: ({ children }: { children: any }) => (
       <g data-testid="recharts-composed-chart">{children}</g>
     ),

@@ -16,7 +16,7 @@ afterEach(() => cleanup());
 // Keeps the test independent of LanguageContext and guarantees we check the real strings.
 async function makeT(locale: 'de' | 'en'): Promise<(k: TranslationKey) => string> {
   const mod = await import('../src/i18n/translations');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const table = (mod as any).translations ?? (mod as any).default;
   return (k: TranslationKey) => {
     const entry = table[k];
@@ -76,7 +76,7 @@ describe('OutcomesEmptyState — all-eyes-filtered variant (D-07 / D-08)', () =>
 describe('VQA-05 translations — D-08 strings exist verbatim', () => {
   it('outcomesEmptyAllEyesFilteredTitle has the D-08 DE + EN strings', async () => {
     const mod = await import('../src/i18n/translations');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const table = (mod as any).translations ?? (mod as any).default;
     expect(table.outcomesEmptyAllEyesFilteredTitle).toBeDefined();
     expect(table.outcomesEmptyAllEyesFilteredTitle.en).toBe('No eyes match the current filters.');
@@ -85,7 +85,7 @@ describe('VQA-05 translations — D-08 strings exist verbatim', () => {
 
   it('outcomesEmptyAllEyesFilteredBody has the D-08 DE + EN strings', async () => {
     const mod = await import('../src/i18n/translations');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const table = (mod as any).translations ?? (mod as any).default;
     expect(table.outcomesEmptyAllEyesFilteredBody).toBeDefined();
     expect(table.outcomesEmptyAllEyesFilteredBody.en).toBe('Adjust the OD/OS or layer toggles to see data.');

@@ -78,13 +78,13 @@ const tStub = (k: string) => {
 beforeEach(() => {
   vi.mocked(useAuth).mockReturnValue({
     user: { username: 'admin', role: 'admin' },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
   } as any);
   vi.mocked(useLanguage).mockReturnValue({
     t: tStub,
     locale: 'en',
     setLocale: () => {},
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
   } as any);
 
   vi.mocked(authFetch).mockImplementation(async (input: RequestInfo | URL) => {
