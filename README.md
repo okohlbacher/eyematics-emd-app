@@ -1,6 +1,6 @@
 # EyeMatics Clinical Demonstrator (EMD)
 
-A web-based dashboard for analysing ophthalmological research data from IVOM treatments across multiple university hospital centres. Built as a prototype demonstrator for the EyeMatics research consortium.
+A web-based dashboard for analysing ophthalmological research data from IVOM treatments across multiple university hospital sites. Built as a prototype demonstrator for the EyeMatics research consortium.
 
 ## Quick Start
 
@@ -30,14 +30,18 @@ For LAN access in production, set `server.host: '0.0.0.0'` in `config/settings.y
 
 ## Available Scripts
 
-| Command           | Description                          |
-|-------------------|--------------------------------------|
-| `npm run dev`     | Start the Vite development server    |
-| `npm run build`   | Type-check with TypeScript and build |
-| `npm run preview` | Serve the production build locally   |
-| `npm run lint`    | Run ESLint                           |
-| `npm start`       | Start production Express server      |
-| `npm test`        | Run test suite (221 tests)           |
+| Command                    | Description                                              |
+|----------------------------|----------------------------------------------------------|
+| `npm run dev`              | Start the Vite development server                        |
+| `npm run build`            | Type-check with TypeScript and build                     |
+| `npm run preview`          | Serve the production build locally                       |
+| `npm run lint`             | Run ESLint                                               |
+| `npm start`                | Start production Express server                          |
+| `npm test`                 | Run full Vitest suite                                    |
+| `npm run test:ci`          | CI gate: skipped-test guard + full suite (608/608)       |
+| `npm run test:check-skips` | Fail if any test is skipped without an allow-list entry  |
+| `npm run knip`             | Dead-code / unused-export scan (config: `knip.json`)     |
+| `npm run generate-bundles` | Regenerate synthetic FHIR bundles for configured sites   |
 
 ## Project Structure
 
@@ -69,11 +73,11 @@ The application works with HL7 FHIR R4 bundles containing Patient, Condition, Ob
 
 ## Key Features
 
-- **Cohort Builder** — filter by diagnosis, gender, age, visus, CRT, centre; save/reload searches
+- **Cohort Builder** — filter by diagnosis, gender, age, visus, CRT, site; save/reload searches
 - **Cohort Analysis** — distribution charts, temporal trends, scatter plots
 - **Case Detail View** — visus/CRT dual-axis chart, baseline change, IOP, refraction, injections, medications, OCT viewer, anamnesis, findings, adverse events
 - **Data Quality Review** — anomaly detection, error flagging, therapy discontinuation tracking, CSV export
-- **Documentation Quality** — centre-level benchmarking (completeness, plausibility, overall score)
+- **Documentation Quality** — site-level benchmarking (completeness, plausibility, overall score)
 - **Audit Trail** — timestamped log of all user actions with filtering and CSV export
 - **Issue Reporting** — per-page feedback with automatic screenshot capture and server-side storage
 - **i18n** — full German/English bilingual support
@@ -127,7 +131,7 @@ dataSource:
 
 > Full dependency list and vulnerability scan: [BOM.md](BOM.md).
 
-## Centres (Test Data)
+## Sites (Test Data)
 
 | Shorthand | Full Name                         | Patients (approx.) | Source   |
 |-----------|-----------------------------------|--------------------|----------|
@@ -136,10 +140,11 @@ dataSource:
 | UKD       | Universitätsklinikum Dresden      | 45                 | generated|
 | UKG       | Universitätsklinikum Greifswald   | 45                 | generated|
 | UKL       | Universitätsklinikum Leipzig      | 45                 | generated|
+| UKM       | Universitätsklinikum Münster      | 45                 | generated|
 | UKMZ      | Universitätsmedizin Mainz         | 45                 | generated|
 | UKT       | Universitätsklinikum Tübingen     | 30                 | curated  |
 
-> Synthetic bundles for the five generated sites are produced by `npm run generate-bundles` (deterministic seeded output; see `scripts/generate-center-bundle.ts`).
+> Synthetic bundles for the six generated sites are produced by `npm run generate-bundles` (deterministic seeded output; see `scripts/generate-center-bundle.ts`).
 
 ## Documentation
 
