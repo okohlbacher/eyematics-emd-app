@@ -33,6 +33,10 @@ export default defineConfig([
         varsIgnorePattern: '^_',
         destructuredArrayIgnorePattern: '^_',
       }],
+      // Phase 23 / D-07 additions:
+      'prefer-const': 'error',
+      'no-var': 'error',
+      'eqeqeq': ['error', 'smart'], // D-18: 'smart' permits `== null` idiom
     },
   },
   // Context files legitimately export hooks + providers together
