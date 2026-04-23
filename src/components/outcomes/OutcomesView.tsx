@@ -125,10 +125,18 @@ export default function OutcomesView() {
   const [thresholdLetters, setThresholdLetters] = useState<number>(5);
 
   useEffect(() => {
-    loadSettings().then((s) => {
-      const t = s.outcomes?.serverAggregationThresholdPatients;
-      if (typeof t === 'number' && Number.isFinite(t) && t > 0) setThreshold(t);
-    }).catch(() => { /* keep default */ });
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await loadSettings();
+        if (cancelled) return;
+        const t = s.outcomes?.serverAggregationThresholdPatients;
+        if (typeof t === 'number' && Number.isFinite(t) && t > 0) setThreshold(t);
+      } catch {
+        /* keep default */
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   // Cohort resolution (OUTCOME-01 / D-03)
@@ -168,15 +176,19 @@ export default function OutcomesView() {
         // Malformed filter param — drop from the beacon payload.
       }
     }
-    authFetch('/api/audit/events/view-open', {
-      method: 'POST',
-      body: JSON.stringify(body),
-      headers: { 'Content-Type': 'application/json' },
-      keepalive: true,
-      credentials: 'include', // Phase 20 cookie-auth contract (TEST-03, v1.9 Phase 21)
-    }).catch(() => {
-      /* beacon is fire-and-forget (D-03) */
-    });
+    void (async () => {
+      try {
+        await authFetch('/api/audit/events/view-open', {
+          method: 'POST',
+          body: JSON.stringify(body),
+          headers: { 'Content-Type': 'application/json' },
+          keepalive: true,
+          credentials: 'include', // Phase 20 cookie-auth contract (TEST-03, v1.9 Phase 21)
+        });
+      } catch {
+        /* beacon is fire-and-forget (D-03) */
+      }
+    })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Phase 12 / AGG-03 / D-13 — size-based routing to server endpoint.
@@ -243,24 +255,27 @@ export default function OutcomesView() {
       metric: activeMetric as 'visus' | 'crt',
     };
 
-    Promise.all([
-      postAggregate({ ...shared, eye: 'od' }),
-      postAggregate({ ...shared, eye: 'os' }),
-      postAggregate({ ...shared, eye: 'combined' }),
-    ]).then(([od, os, combined]) => {
-      if (cancelled) return;
-      setServerAggregate({
-        od: panelFromServer(od),
-        os: panelFromServer(os),
-        combined: panelFromServer(combined),
-      });
-    }).catch((err) => {
-      if (cancelled) return;
-      console.warn('[OutcomesView] Server aggregate failed — falling back to client compute', err);
-      setServerAggregate(null);
-    }).finally(() => {
-      if (!cancelled) setServerLoading(false);
-    });
+    (async () => {
+      try {
+        const [od, os, combined] = await Promise.all([
+          postAggregate({ ...shared, eye: 'od' }),
+          postAggregate({ ...shared, eye: 'os' }),
+          postAggregate({ ...shared, eye: 'combined' }),
+        ]);
+        if (cancelled) return;
+        setServerAggregate({
+          od: panelFromServer(od),
+          os: panelFromServer(os),
+          combined: panelFromServer(combined),
+        });
+      } catch (err) {
+        if (cancelled) return;
+        console.warn('[OutcomesView] Server aggregate failed — falling back to client compute', err);
+        setServerAggregate(null);
+      } finally {
+        if (!cancelled) setServerLoading(false);
+      }
+    })();
 
     return () => { cancelled = true; };
   }, [activeMetric, routeServerSide, cohortId, axisMode, yMetric, gridPoints, spreadMode, layers.perPatient, layers.scatter]); // eslint-disable-line react-hooks/exhaustive-deps
