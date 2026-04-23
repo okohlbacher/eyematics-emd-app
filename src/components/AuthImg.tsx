@@ -21,7 +21,9 @@ export default function AuthImg({ src, fallbackSrc, alt, onError, ...rest }: Aut
   useEffect(() => {
     let cancelled = false;
     let createdUrl: string | null = null;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset-on-src-change; migrating to `key={src}` is a parent-side architectural change (see Phase 23 SUMMARY / DEFERRED-LINT.md)
     setFailed(false);
+     
     setBlobUrl(null);
 
     (async () => {

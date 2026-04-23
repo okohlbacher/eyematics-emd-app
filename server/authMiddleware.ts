@@ -32,7 +32,7 @@ export interface AuthPayload {
 
 // F-17: Single declaration — all server files import authMiddleware transitively
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+  // eslint-disable-next-line @typescript-eslint/no-namespace -- Express type augmentation requires a namespace declaration (only supported form)
   namespace Express {
     interface Request {
       auth?: AuthPayload;

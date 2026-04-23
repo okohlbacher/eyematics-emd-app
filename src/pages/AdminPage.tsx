@@ -48,6 +48,32 @@ function getRoleIcon(role: UserRole) {
 type SortField = 'username' | 'role' | 'center' | 'createdAt' | 'lastLogin';
 type SortDir = 'asc' | 'desc';
 
+/** Column header with sort-toggle click handler. Hoisted to module scope so
+ * React treats it as a stable component (react-hooks/static-components). */
+function SortHeader({
+  field,
+  label,
+  sortField,
+  onSort,
+}: {
+  field: SortField;
+  label: string;
+  sortField: SortField;
+  onSort: (f: SortField) => void;
+}) {
+  return (
+    <th
+      className="pb-3 font-medium cursor-pointer select-none hover:text-gray-900 transition-colors"
+      onClick={() => onSort(field)}
+    >
+      <span className="inline-flex items-center gap-1">
+        {label}
+        <ArrowUpDown className={`w-3 h-3 ${sortField === field ? 'text-blue-600' : 'text-gray-300'}`} />
+      </span>
+    </th>
+  );
+}
+
 export default function AdminPage() {
   const { user } = useAuth();
   const { locale, t } = useLanguage();
@@ -128,6 +154,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (user?.role === 'admin') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- role-gated fetch that drives admin user table; setState happens inside loadUsers (useCallback). Refactor to useQuery is out of scope for Phase 23.
       void loadUsers();
     }
   }, [loadUsers, user?.role]);
@@ -336,18 +363,6 @@ export default function AdminPage() {
   const toggleEditCenter = (c: string) => {
     setEditCenters((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]);
   };
-
-  const SortHeader = ({ field, label }: { field: SortField; label: string }) => (
-    <th
-      className="pb-3 font-medium cursor-pointer select-none hover:text-gray-900 transition-colors"
-      onClick={() => handleSort(field)}
-    >
-      <span className="inline-flex items-center gap-1">
-        {label}
-        <ArrowUpDown className={`w-3 h-3 ${sortField === field ? 'text-blue-600' : 'text-gray-300'}`} />
-      </span>
-    </th>
-  );
 
   return (
     <div className="p-8 space-y-6 dark:bg-gray-900 min-h-screen">
@@ -576,12 +591,12 @@ export default function AdminPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 text-left text-gray-500 dark:text-gray-400">
-                <SortHeader field="username" label={t('loginUsername')} />
+                <SortHeader field="username" label={t('loginUsername')} sortField={sortField} onSort={handleSort} />
                 <th className="pb-3 font-medium">{t('adminFullName')}</th>
-                <SortHeader field="role" label={t('adminRole')} />
-                <SortHeader field="center" label={t('adminAssignedCenters')} />
-                <SortHeader field="createdAt" label={t('adminCreated')} />
-                <SortHeader field="lastLogin" label={t('adminLastLogin')} />
+                <SortHeader field="role" label={t('adminRole')} sortField={sortField} onSort={handleSort} />
+                <SortHeader field="center" label={t('adminAssignedCenters')} sortField={sortField} onSort={handleSort} />
+                <SortHeader field="createdAt" label={t('adminCreated')} sortField={sortField} onSort={handleSort} />
+                <SortHeader field="lastLogin" label={t('adminLastLogin')} sortField={sortField} onSort={handleSort} />
                 <th className="pb-3 font-medium" />
               </tr>
             </thead>

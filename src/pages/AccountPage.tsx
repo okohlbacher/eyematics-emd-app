@@ -45,6 +45,7 @@ export default function AccountPage() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-time fetch that drives UI; setState happens inside loadStatus (useCallback). Refactor to useQuery/Suspense is out of scope for Phase 23.
   useEffect(() => { void loadStatus(); }, [loadStatus]);
 
   // Auto-clear success banners after 30s for safety (do not display new password forever).

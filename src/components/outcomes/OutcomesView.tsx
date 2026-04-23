@@ -159,6 +159,7 @@ export default function OutcomesView() {
   // D-37 default-scatter-off once cohort size known
   useEffect(() => {
     if (cohort && !defaultScatterOn(cohort.cases.length)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- derive-from-cohort-size on cohort change; cohort is async-loaded so lifting to useMemo would require parent reshuffle. Deferred.
       setLayers((L) => ({ ...L, scatter: false }));
     }
   }, [cohort]);
@@ -189,7 +190,7 @@ export default function OutcomesView() {
         /* beacon is fire-and-forget (D-03) */
       }
     })();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- audit beacon fires once on mount; intentionally empty deps (Phase 11 CRREV-01)
 
   // Phase 12 / AGG-03 / D-13 — size-based routing to server endpoint.
   // Phase 16 / Pitfall 6: bypass server routing in cross-cohort mode.
@@ -231,13 +232,29 @@ export default function OutcomesView() {
     handleMetricChange(next);
   };
 
+  /** Project server AggregateResponse back to the PanelResult shape the panels consume. */
+  function panelFromServer(r: AggregateResponse): PanelResult {
+    return {
+      patients: r.perPatient ?? [],
+      scatterPoints: r.scatter ?? [],
+      medianGrid: r.median,
+      summary: {
+        patientCount: r.meta.patientCount,
+        excludedCount: r.meta.excludedCount,
+        measurementCount: r.meta.measurementCount,
+      },
+    };
+  }
+
   // Phase 13: server routing effect — gated on activeMetric (only visus + crt route).
   useEffect(() => {
     if (activeMetric !== 'visus' && activeMetric !== 'crt') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clearing server cache when metric switches away; required to avoid stale data. Refactor to derived state is Phase 23 deferred.
       setServerAggregate(null);
       return;
     }
     if (!routeServerSide || !cohortId) {
+       
       setServerAggregate(null);
       return;
     }
@@ -278,21 +295,7 @@ export default function OutcomesView() {
     })();
 
     return () => { cancelled = true; };
-  }, [activeMetric, routeServerSide, cohortId, axisMode, yMetric, gridPoints, spreadMode, layers.perPatient, layers.scatter]);  
-
-  /** Project server AggregateResponse back to the PanelResult shape the panels consume. */
-  function panelFromServer(r: AggregateResponse): PanelResult {
-    return {
-      patients: r.perPatient ?? [],
-      scatterPoints: r.scatter ?? [],
-      medianGrid: r.median,
-      summary: {
-        patientCount: r.meta.patientCount,
-        excludedCount: r.meta.excludedCount,
-        measurementCount: r.meta.measurementCount,
-      },
-    };
-  }
+  }, [activeMetric, routeServerSide, cohortId, axisMode, yMetric, gridPoints, spreadMode, layers.perPatient, layers.scatter]);
 
   // D-26: single memoized aggregate keyed on all 5 inputs — feeds BOTH cards AND panels.
   // Hoisted above early-return guards to satisfy Rules of Hooks (WR-01).
