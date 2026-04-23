@@ -74,6 +74,7 @@ afterEach(() => {
 });
 
 describe('authFetch silent refresh', () => {
+  // UAT-AUTO-01 is ALSO covered in tests/authFetchRefreshSuite.test.ts — this file retains unit-level coverage per RESEARCH Open Question 1.
   it('Test 1 — silently refreshes on 401 and retries original request once', async () => {
     sessionStorage.setItem('emd-token', 'old-token');
     const fetchMock = vi.fn()
