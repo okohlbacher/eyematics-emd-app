@@ -2,6 +2,8 @@
 
 A web-based dashboard for analysing ophthalmological research data from IVOM treatments across multiple university hospital sites. Built as a prototype demonstrator for the EyeMatics research consortium.
 
+> ⚠️ **Research & development use only.** EMD is a research prototype and is **not** a medical device. It must not be used for clinical decision-making, diagnosis, treatment, or any patient-care purpose. All data shipped with the project is synthetic.
+
 ## Quick Start
 
 Clone the repo, install dependencies, then run the API and the UI in **two separate shells**.
