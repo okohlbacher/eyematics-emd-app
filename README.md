@@ -4,17 +4,41 @@ A web-based dashboard for analysing ophthalmological research data from IVOM tre
 
 ## Quick Start
 
+Clone the repo, install dependencies, then run the API and the UI in **two separate shells**.
+
+**Prerequisites:** Node.js ≥ 20, npm ≥ 10
+
+**Shell 1 — API:**
+```bash
+git clone https://github.com/okohlbacher/eyematics-emd-app.git emd-app
+cd emd-app
+npm install
+npm start
+```
+
+**Shell 2 — UI:**
+```bash
+cd emd-app
+npm run dev
+```
+
+Open **http://localhost:5173** and log in with `admin` / `changeme2025!`.
+
+---
+
+## Development & Production
+
 **Prerequisites:** Node.js ≥ 20, npm ≥ 10
 
 ### Development (two ports)
 
 ```bash
 npm install
-npm start &        # Express API on :3000 (localhost only)
-npm run dev        # Vite dev server on :5173 with HMR, proxies /api -> :3000
+npm start &
+npm run dev
 ```
 
-Open **http://localhost:5173** — log in with `admin` / `changeme2025!` (2FA is off by default; OTP `123456` when enabled).
+API on `:3000` (localhost only), Vite dev server on `:5173` with HMR proxying `/api` → `:3000`. Log in with `admin` / `changeme2025!` (2FA off by default; OTP `123456` when enabled).
 
 ### Production (single port)
 
