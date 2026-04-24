@@ -1,0 +1,37 @@
+theme: jekyll-theme-cayman
+title: EyeMatics Clinical Demonstrator
+description: Web dashboard for analysing ophthalmological research data across multi-site IVOM treatments
+show_downloads: false
+
+include:
+  - README.md
+
+exclude:
+  - node_modules
+  - src
+  - server
+  - shared
+  - scripts
+  - tests
+  - public
+  - dist
+  - data
+  - config
+  - docs
+  - .planning
+  - .claude
+  - .github
+  - eslint.config.js
+  - knip.json
+  - package.json
+  - package-lock.json
+  - tsconfig.json
+  - tsconfig.node.json
+  - vite.config.ts
+  - vitest.config.ts
+  - postcss.config.js
+  - tailwind.config.ts
+  - index.html
+  - CLAUDE.md
+  - DEFERRED-UPGRADES.md
+  - DEFERRED-LINT.md
