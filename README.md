@@ -22,7 +22,12 @@ cd emd-app
 npm run dev
 ```
 
-Open **http://localhost:5173** and log in with `admin` / `changeme2025!`.
+Open **http://localhost:5173** and log in. All seeded users share the default password `changeme2025!`:
+
+| Username     | Role       | Password        |
+|--------------|------------|-----------------|
+| `admin`      | admin      | `changeme2025!` |
+| `forscher1`  | researcher | `changeme2025!` |
 
 ---
 
