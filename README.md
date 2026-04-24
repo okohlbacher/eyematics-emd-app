@@ -60,6 +60,26 @@ For LAN access in production, set `server.host: '0.0.0.0'` in `config/settings.y
 
 > See the full credential table and login flow in [docs/Benutzerhandbuch.md](docs/Benutzerhandbuch.md) §2.
 
+## Reporting Feedback
+
+Any authenticated user can submit feedback via the in-app **"Report issue"** dialog (sidebar → message-square icon). Each submission — including page context, user/role, timestamp, description, and an optional screenshot — is stored server-side as a JSON file in the `feedback/` directory at the project root:
+
+```
+feedback/
+  issue-2026-04-24T07-12-33-441Z_3f8a9b12.json
+  issue-2026-04-24T08-47-02-118Z_a1b3c5d7.json
+  ...
+```
+
+**Sending collected feedback to the developers:**
+
+1. Log in as `admin` → open **Settings** → scroll to **"Feedback Export"** → click **Download**. This produces a single `emd-issues-<date>.json` file containing every issue with screenshots inlined (base64).
+2. Alternatively, zip the whole `feedback/` directory directly from the server host:
+   ```bash
+   zip -r emd-feedback-$(date +%Y-%m-%d).zip feedback/
+   ```
+3. Send the resulting `.json` or `.zip` to the development team (email attachment or shared drive). No personal patient data is included — all patient-facing data in EMD is synthetic.
+
 ## Available Scripts
 
 | Command                    | Description                                              |
