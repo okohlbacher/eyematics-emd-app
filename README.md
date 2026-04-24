@@ -2,8 +2,6 @@
 
 A web-based dashboard for analysing ophthalmological research data from IVOM treatments across multiple university hospital sites. Built as a prototype demonstrator for the EyeMatics research consortium.
 
-> 🤝 **Co-development note.** The design, data model, and feature scope are based on requirements developed by the [EyeMatics consortium](https://www.medizininformatik-initiative.de/en/use-case-eyematics-treatment-eye-diseases-interoperable-medical-informatics) — an ophthalmology use case within Germany's Medical Informatics Initiative, jointly run by the university hospitals of Aachen, Greifswald, Münster, and Tübingen. See also [HiGHmed · EyeMatics](https://www.highmed.org/en/eyematics).
-
 > ⚠️ **Research & development use only.** EMD is a research prototype and is **not** a medical device. It must not be used for clinical decision-making, diagnosis, treatment, or any patient-care purpose. All data shipped with the project is synthetic.
 
 ## Quick Start
@@ -219,7 +217,7 @@ OCT images from the OCTID — Optical Coherence Tomography Image Retinal Databas
 
 ## Co-Development
 
-This project was co-developed with [Claude](https://claude.ai) (Anthropic), an AI assistant used for code generation, architecture design, and documentation.
+The design, data model, and feature scope are based on requirements developed by the [EyeMatics consortium](https://www.medizininformatik-initiative.de/en/use-case-eyematics-treatment-eye-diseases-interoperable-medical-informatics) — an ophthalmology use case within Germany's Medical Informatics Initiative, jointly run by the university hospitals of Aachen, Greifswald, Münster, and Tübingen. This project was co-developed with [Claude](https://claude.ai) (Anthropic), an AI assistant used for code generation, architecture design, and documentation.
 
 ## License
 
