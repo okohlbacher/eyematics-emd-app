@@ -8,17 +8,18 @@ Clone the repo, install dependencies, then run the API and the UI in **two separ
 
 **Prerequisites:** Node.js ≥ 20, npm ≥ 10
 
-**Shell 1 — API:**
+**Shell 1 — clone & start the API:**
 ```bash
+mkdir -p ~/eyematics && cd ~/eyematics
 git clone https://github.com/okohlbacher/eyematics-emd-app.git emd-app
 cd emd-app
 npm install
 npm start
 ```
 
-**Shell 2 — UI:**
+**Shell 2 — start the UI:**
 ```bash
-cd emd-app
+cd ~/eyematics/emd-app
 npm run dev
 ```
 
