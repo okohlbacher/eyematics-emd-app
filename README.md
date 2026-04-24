@@ -88,6 +88,7 @@ feedback/
 | `npm run build`            | Type-check with TypeScript and build                     |
 | `npm run preview`          | Serve the production build locally                       |
 | `npm run lint`             | Run ESLint                                               |
+| `npm run lint:fix`         | Run ESLint with `--fix` (autofix where possible)         |
 | `npm start`                | Start production Express server                          |
 | `npm test`                 | Run full Vitest suite                                    |
 | `npm run test:ci`          | CI gate: skipped-test guard + full suite (608/608)       |

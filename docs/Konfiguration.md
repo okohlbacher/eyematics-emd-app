@@ -20,6 +20,8 @@ Alle Änderungen, die über die Settings-Seite im UI vorgenommen werden, werden 
 
 ## Konfigurationsparameter
 
+> **Hinweis — Minimalkonfiguration vs. Vollbeispiel.** Die ausgelieferte `config/settings.yaml` enthält nur die Schlüssel, die vom UI gesetzt werden (z. B. `twoFactorEnabled`, `therapyInterrupterDays`, `therapyBreakerDays`, `dataSource`, `outcomes`, `auth`). Alle anderen unten aufgeführten Schlüssel (`server.*`, `audit.*`, `provider`, `maxLoginAttempts`, `otpCode`, `keycloak.*`) werden vom Server mit sicheren Defaults gefüllt, wenn sie in der Datei fehlen. Das folgende Beispiel zeigt **alle** verfügbaren Schlüssel — nicht alle müssen explizit gesetzt werden.
+
 ### Vollständiges Beispiel
 
 ```yaml
