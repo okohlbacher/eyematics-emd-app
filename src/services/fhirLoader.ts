@@ -79,13 +79,12 @@ export function extractCenters(bundles: FhirBundle[]): CenterInfo[] {
  * Falls back to built-in defaults until the API response arrives.
  */
 let _centerShorthands: Record<string, string> = {
-  'org-uka':  'UKA',
-  'org-ukc':  'UKC',
-  'org-ukd':  'UKD',
-  'org-ukg':  'UKG',
-  'org-ukl':  'UKL',
-  'org-ukmz': 'UKMZ',
-  'org-ukt':  'UKT',
+  'org-uka': 'UKA',
+  'org-ukc': 'UKC',
+  'org-ukg': 'UKG',
+  'org-ukl': 'UKL',
+  'org-ukm': 'UKM',
+  'org-ukt': 'UKT',
 };
 
 /** Load center shorthands from server. Called once at app startup. */

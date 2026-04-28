@@ -302,15 +302,17 @@ export function _migrateCenterIds(users: UserRecord[]): { users: UserRecord[]; c
 }
 
 /**
- * Set of removed center IDs (v1.0/v1.1 roster).
+ * Set of removed center IDs (historical roster cleanup).
  * v1.5 roster correction removed Bonn (org-ukb) and München (org-lmu).
  * Münster (org-ukm) was also removed in v1.5 but re-added post-v1.8 per roster feedback.
+ * Phase 24 / FB-01 removed Dresden (org-ukd) and Mainz (org-ukmz) — sites
+ * declined to participate.
  * Users holding only removed centers are reassigned to ['org-uka'] (default fallback)
  * so they remain functional after the roster switch.
  *
  * Exported indirectly via _migrateRemovedCenters for testing.
  */
-const REMOVED_CENTER_IDS = new Set<string>(['org-ukb', 'org-lmu']);
+const REMOVED_CENTER_IDS = new Set<string>(['org-ukb', 'org-lmu', 'org-ukd', 'org-ukmz']);
 
 /**
  * Strip removed-roster center IDs from each user's centers array.
@@ -417,7 +419,7 @@ function _migrateUsersJson(filePath: string): void {
   if (removedChanged) {
     needsWrite = true;
     workingUsers = withoutRemoved;
-    console.log('[initAuth] Migrated users.json: stripped removed center IDs (org-ukb/org-lmu)');
+    console.log('[initAuth] Migrated users.json: stripped removed center IDs (org-ukb/org-lmu/org-ukd/org-ukmz)');
   }
 
   // Phase 20 / D-17 — add tokenVersion / passwordChangedAt / totpChangedAt for

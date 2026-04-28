@@ -15,7 +15,7 @@ vi.mock('node:fs', () => ({
 }));
 
 vi.mock('../server/constants.js', () => ({
-  getValidCenterIds: () => new Set(['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukmz', 'org-ukt']),
+  getValidCenterIds: () => new Set(['org-uka', 'org-ukc', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukt']),
   getFallbackCenterFiles: () => ['center-aachen.json'],
   BLAZE_RESOURCE_TYPES: [],
   SETTINGS_FILE: 'config/settings.yaml',
@@ -27,12 +27,12 @@ describe('isBypass — center filtering bypass logic (H1 / F-05)', () => {
   it('admin always bypasses regardless of centers', () => {
     expect(isBypass('admin', [])).toBe(true);
     expect(isBypass('admin', ['org-uka'])).toBe(true);
-    expect(isBypass('admin', ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukmz', 'org-ukt'])).toBe(true);
+    expect(isBypass('admin', ['org-uka', 'org-ukc', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukt'])).toBe(true);
   });
 
   it('non-admin never bypasses, even with all valid centers (superset heuristic removed)', () => {
-    expect(isBypass('researcher', ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukmz', 'org-ukt'])).toBe(false);
-    expect(isBypass('clinic_lead', ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukmz', 'org-ukt'])).toBe(false);
+    expect(isBypass('researcher', ['org-uka', 'org-ukc', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukt'])).toBe(false);
+    expect(isBypass('clinic_lead', ['org-uka', 'org-ukc', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukt'])).toBe(false);
   });
 
   it('non-admin with fewer centers does not bypass', () => {

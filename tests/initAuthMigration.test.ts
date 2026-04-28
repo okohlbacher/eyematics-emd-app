@@ -42,7 +42,7 @@ describe('_migrateRemovedCenters — strip org-ukb/org-lmu, fallback to org-uka'
 
   it('returns changed=false for already-clean users', () => {
     const users: UserRecord[] = [
-      { username: 'admin', role: 'admin', centers: ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukmz', 'org-ukt'], createdAt: '2025-01-01T00:00:00Z' },
+      { username: 'admin', role: 'admin', centers: ['org-uka', 'org-ukc', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukt'], createdAt: '2025-01-01T00:00:00Z' },
       { username: 'forscher1', role: 'researcher', centers: ['org-uka'], createdAt: '2025-01-15T00:00:00Z' },
     ];
     const { changed } = _migrateRemovedCenters(users);

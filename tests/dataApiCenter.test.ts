@@ -49,11 +49,11 @@ vi.mock('../server/dataDb.js', () => ({
 // Mock fhirApi — control the case-to-center index
 // ---------------------------------------------------------------------------
 
-// Case index: case-uka-001 belongs to org-uka, case-ukc-001 belongs to org-ukc, case-ukd-001 belongs to org-ukd
+// Case index: case-uka-001 belongs to org-uka, case-ukc-001 belongs to org-ukc, case-ukm-001 belongs to org-ukm
 const mockCaseIndex = new Map<string, string>([
   ['case-uka-001', 'org-uka'],
   ['case-ukc-001', 'org-ukc'],
-  ['case-ukd-001', 'org-ukd'],
+  ['case-ukm-001', 'org-ukm'],
 ]);
 
 vi.mock('../server/fhirApi.js', () => ({
@@ -166,7 +166,7 @@ describe('dataApi — center validation for write operations', () => {
   // Test 3: PUT /quality-flags by admin with any caseId — succeeds (bypass)
   it('Test 3: PUT /quality-flags by admin bypasses center validation', async () => {
     const app = buildApp();
-    const token = makeToken('admin', 'admin', ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukmz', 'org-ukt']);
+    const token = makeToken('admin', 'admin', ['org-uka', 'org-ukc', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukt']);
 
     const res = await request(app)
       .put('/data/quality-flags')

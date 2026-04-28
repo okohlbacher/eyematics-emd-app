@@ -19,10 +19,9 @@ import type { FhirBundle } from '../src/types/fhir';
 
 const CASES = [
   { file: 'center-chemnitz.json',   orgId: 'org-ukc'  },
-  { file: 'center-dresden.json',    orgId: 'org-ukd'  },
   { file: 'center-greifswald.json', orgId: 'org-ukg'  },
   { file: 'center-leipzig.json',    orgId: 'org-ukl'  },
-  { file: 'center-mainz.json',      orgId: 'org-ukmz' },
+  { file: 'center-muenster.json',   orgId: 'org-ukm'  },
 ] as const;
 
 describe('Generated bundles — load path smoke test (DATA-GEN-06)', () => {

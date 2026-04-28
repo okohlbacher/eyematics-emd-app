@@ -81,10 +81,10 @@ describe('constants — center configuration', () => {
 
     initCenters('/data');
     const centers = getCenters();
-    expect(centers.length).toBe(8); // 8 default centers
+    expect(centers.length).toBe(6); // 6 default centers (Phase 24 / FB-01: UKD + UKMZ removed)
     expect(centers.map(c => c.id)).toContain('org-uka');
     expect(centers.map(c => c.id)).toContain('org-ukm');
-    expect(centers.map(c => c.id)).toContain('org-ukmz');
+    expect(centers.map(c => c.id)).toContain('org-ukt');
   });
 
   it('falls back to defaults on malformed JSON', () => {
@@ -93,7 +93,7 @@ describe('constants — center configuration', () => {
 
     initCenters('/data');
     const centers = getCenters();
-    expect(centers.length).toBe(8);
+    expect(centers.length).toBe(6);
   });
 });
 

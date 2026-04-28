@@ -249,19 +249,19 @@ describe('fhirApi — filtering and bypass logic', () => {
   it('Test 3: isBypass() returns true for role=admin regardless of centers', () => {
     expect(isBypass('admin', [])).toBe(true);
     expect(isBypass('admin', ['org-uka'])).toBe(true);
-    expect(isBypass('admin', ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukmz', 'org-ukt'])).toBe(true);
+    expect(isBypass('admin', ['org-uka', 'org-ukc', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukt'])).toBe(true);
   });
 
   // Test 4 (H1/F-05 fix): non-admin never bypasses, even with all 7 org-* centers
-  it('Test 4: isBypass() returns false for non-admin even with all 7 org-* centers (H1 / F-05)', () => {
-    const allCenters = ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukmz', 'org-ukt'];
+  it('Test 4: isBypass() returns false for non-admin even with all 6 org-* centers (H1 / F-05)', () => {
+    const allCenters = ['org-uka', 'org-ukc', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukt'];
     expect(isBypass('researcher', allCenters)).toBe(false);
     expect(isBypass('clinic_lead', allCenters)).toBe(false);
   });
 
   // Test 5: isBypass() returns false for non-admin with any other center combination
   it('Test 5: isBypass() returns false for non-admin with fewer than all centers', () => {
-    expect(isBypass('researcher', ['org-uka', 'org-ukc', 'org-ukd'])).toBe(false);
+    expect(isBypass('researcher', ['org-uka', 'org-ukc', 'org-ukg'])).toBe(false);
     expect(isBypass('clinician', ['org-uka'])).toBe(false);
     expect(isBypass('epidemiologist', [])).toBe(false);
   });
@@ -299,20 +299,20 @@ describe('fhirApi — filtering and bypass logic', () => {
       { username: 'test1', role: 'researcher', centers: ['UKA', 'UKC'], createdAt: '2025-01-01T00:00:00Z' },
       // test2: already-migrated unknown IDs pass through unchanged — plan 07-03 strips 'org-ukb' via _migrateRemovedCenters
       { username: 'test2', role: 'admin', centers: ['org-uka', 'org-ukb'], createdAt: '2025-01-01T00:00:00Z' },
-      { username: 'test3', role: 'clinician', centers: ['UKD', 'UKT', 'UKG'], createdAt: '2025-01-01T00:00:00Z' },
+      { username: 'test3', role: 'clinician', centers: ['UKM', 'UKT', 'UKG'], createdAt: '2025-01-01T00:00:00Z' },
     ];
     const result = _migrateCenterIds(users as Parameters<typeof _migrateCenterIds>[0]);
     expect(result.changed).toBe(true);
     expect(result.users[0].centers).toEqual(['org-uka', 'org-ukc']);
     // Already-migrated values are unchanged (pass-through of legacy org-ukb documented for plan 07-03)
     expect(result.users[1].centers).toEqual(['org-uka', 'org-ukb']);
-    expect(result.users[2].centers).toEqual(['org-ukd', 'org-ukt', 'org-ukg']);
+    expect(result.users[2].centers).toEqual(['org-ukm', 'org-ukt', 'org-ukg']);
   });
 
   it('Test 8b: _migrateCenterIds returns changed=false when no migration needed', async () => {
     const { _migrateCenterIds } = await import('../server/initAuth.js');
     const users = [
-      { username: 'admin', role: 'admin', centers: ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukmz', 'org-ukt'], createdAt: '2025-01-01T00:00:00Z' },
+      { username: 'admin', role: 'admin', centers: ['org-uka', 'org-ukc', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukt'], createdAt: '2025-01-01T00:00:00Z' },
     ];
     const result = _migrateCenterIds(users as Parameters<typeof _migrateCenterIds>[0]);
     expect(result.changed).toBe(false);

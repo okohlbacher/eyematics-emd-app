@@ -102,13 +102,13 @@ const USERS_FILE = path.join(DATA_DIR, 'users.json');
 
 if (!fs.existsSync(USERS_FILE)) {
   const defaultUsers = [
-    { username: 'admin',         firstName: 'System',     lastName: 'Administrator',  role: 'admin',         centers: ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukmz', 'org-ukt'], createdAt: '2025-01-01T00:00:00Z' },
+    { username: 'admin',         firstName: 'System',     lastName: 'Administrator',  role: 'admin',         centers: ['org-uka', 'org-ukc', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukt'], createdAt: '2025-01-01T00:00:00Z' },
     { username: 'forscher1',     firstName: 'Anna',       lastName: 'Müller',         role: 'researcher',    centers: ['org-uka'],   createdAt: '2025-01-15T00:00:00Z' },
     { username: 'forscher2',     firstName: 'Thomas',     lastName: 'Weber',          role: 'researcher',    centers: ['org-ukc'],   createdAt: '2025-02-01T00:00:00Z' },
-    { username: 'epidemiologe',  firstName: 'Julia',      lastName: 'Schmidt',        role: 'epidemiologist',centers: ['org-uka', 'org-ukc', 'org-ukd'], createdAt: '2025-03-01T00:00:00Z' },
+    { username: 'epidemiologe',  firstName: 'Julia',      lastName: 'Schmidt',        role: 'epidemiologist',centers: ['org-uka', 'org-ukc', 'org-ukg'], createdAt: '2025-03-01T00:00:00Z' },
     { username: 'kliniker',      firstName: 'Markus',     lastName: 'Fischer',        role: 'clinician',     centers: ['org-ukt'],   createdAt: '2025-03-15T00:00:00Z' },
-    { username: 'diz_manager',   firstName: 'Sabine',     lastName: 'Braun',          role: 'data_manager',  centers: ['org-ukmz'],  createdAt: '2025-04-01T00:00:00Z' },
-    { username: 'klinikleitung', firstName: 'Prof. Klaus',lastName: 'Hoffmann',       role: 'clinic_lead',   centers: ['org-uka', 'org-ukc', 'org-ukd', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukmz', 'org-ukt'], createdAt: '2025-04-15T00:00:00Z' },
+    { username: 'diz_manager',   firstName: 'Sabine',     lastName: 'Braun',          role: 'data_manager',  centers: ['org-ukm'],   createdAt: '2025-04-01T00:00:00Z' },
+    { username: 'klinikleitung', firstName: 'Prof. Klaus',lastName: 'Hoffmann',       role: 'clinic_lead',   centers: ['org-uka', 'org-ukc', 'org-ukg', 'org-ukl', 'org-ukm', 'org-ukt'], createdAt: '2025-04-15T00:00:00Z' },
   ];
   fs.writeFileSync(USERS_FILE, JSON.stringify(defaultUsers, null, 2), 'utf-8');
   console.log(`[server] Seeded users.json with ${defaultUsers.length} default users`);
