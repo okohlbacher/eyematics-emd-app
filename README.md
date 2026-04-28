@@ -91,7 +91,7 @@ feedback/
 | `npm run lint:fix`         | Run ESLint with `--fix` (autofix where possible)         |
 | `npm start`                | Start production Express server                          |
 | `npm test`                 | Run full Vitest suite                                    |
-| `npm run test:ci`          | CI gate: skipped-test guard + full suite (608/608)       |
+| `npm run test:ci`          | CI gate: skipped-test guard + full suite (619/619)       |
 | `npm run test:check-skips` | Fail if any test is skipped without an allow-list entry  |
 | `npm run knip`             | Dead-code / unused-export scan (config: `knip.json`)     |
 | `npm run generate-bundles` | Regenerate synthetic FHIR bundles for configured sites   |

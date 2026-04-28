@@ -312,6 +312,11 @@ export function _migrateCenterIds(users: UserRecord[]): { users: UserRecord[]; c
  *
  * Exported indirectly via _migrateRemovedCenters for testing.
  */
+// Migration-only fallback: existing deployments may have users assigned to removed
+// centres. After stripping, users with an empty centres list are reassigned to
+// ['org-uka']. This is INTENTIONALLY different from the fresh-seed defaults in
+// `server/index.ts` (which assign role-appropriate centres) — the migration path
+// only sees orphaned records, not freshly-created ones (FB-01 / Phase 24).
 const REMOVED_CENTER_IDS = new Set<string>(['org-ukb', 'org-lmu', 'org-ukd', 'org-ukmz']);
 
 /**

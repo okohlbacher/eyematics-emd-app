@@ -1,6 +1,6 @@
 # Bill of Materials (BOM) — EyeMatics Clinical Demonstrator
 
-Generated: 2026-04-24 (v1.9.1)
+Generated: 2026-04-28 (v1.9.3)
 
 ## Direct Dependencies (Production)
 
@@ -106,8 +106,8 @@ All licenses are permissive and compatible with MIT-licensed projects. No copyle
 
 ```
 $ npm run test:ci
- Test Files  57 passed (57)
-      Tests  608 passed (608)
+ Test Files  59 passed (59)
+      Tests  619 passed (619)
 ```
 
 ## Deferred Upgrades
@@ -124,6 +124,8 @@ See [DEFERRED-UPGRADES.md](DEFERRED-UPGRADES.md) for revisit triggers.
 
 ## Changes since v1.4
 
+- **v1.9.3 (2026-04-28)** — Phase 24 production feedback fixes (FB-01..04): no dependency changes. Site roster reduced 8 → 6 (UKD/UKMZ removed); 12 new regression tests added (608 → 619 baseline).
+- **v1.9.2 (2026-04-24)** — Documentation consistency fixes (BOM refresh, lint:fix script, Konfiguration clarifier): no dependency changes.
 - **v1.9.1 (2026-04-24)** — Phase 23 dependency & lint cleanup:
   - `follow-redirects` pinned via `package.json#overrides` to resolve GHSA-r4q5-vmmm-2653 (0 audit vulnerabilities).
   - Minor/patch bumps: `@tailwindcss/vite`, `tailwindcss`, `typescript`, `vitest`, `vite`, `eslint-plugin-react-hooks`, `globals`, `lucide-react`, `react-router-dom`, `better-sqlite3`, `typescript-eslint`.
