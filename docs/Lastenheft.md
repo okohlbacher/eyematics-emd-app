@@ -517,4 +517,6 @@ bereitgestellt (29 ophthalmologische Fachbegriffe).*
 
 ---
 
-**Anmerkung v1.5 (Rosterkorrektur):** Der Software-Demonstrator EMD wird ab v1.5 auf die sieben realen EyeMatics-Standorte beschränkt: UKA (Aachen), UKC (Chemnitz), UKD (Dresden), UKG (Greifswald), UKL (Leipzig), UKMZ (Mainz), UKT (Tübingen). Frühere Demo-Standorte (UKB Bonn, LMU München, UKM Münster) sind entfernt; historische Lastenheft-Passagen bleiben als Projektdokumentation unverändert.
+**Anmerkung v1.5 (Rosterkorrektur):** Der Software-Demonstrator EMD wurde ab v1.5 auf die sieben realen EyeMatics-Standorte beschränkt: UKA (Aachen), UKC (Chemnitz), UKD (Dresden), UKG (Greifswald), UKL (Leipzig), UKMZ (Mainz), UKT (Tübingen). Frühere Demo-Standorte (UKB Bonn, LMU München, UKM Münster) sind entfernt; historische Lastenheft-Passagen bleiben als Projektdokumentation unverändert.
+
+**Anmerkung Phase 24 (FB-01):** UKM (Münster) wurde post-v1.8 wieder in das Roster aufgenommen; UKD (Dresden) und UKMZ (Mainz) wurden in Phase 24 auf Wunsch der Standorte entfernt. Aktuelles Roster: UKA, UKC, UKG, UKL, UKM, UKT (6 Standorte). Maßgeblich ist `data/centers.json`.

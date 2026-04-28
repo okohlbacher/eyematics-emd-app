@@ -354,7 +354,7 @@ Navigieren Sie über die Seitenleiste zu **Administration** (nur für Administra
    - **Benutzername** (eindeutig, Groß-/Kleinschreibung wird nicht unterschieden)
    - **Vorname, Nachname** (optional, wird als Anzeigename verwendet)
    - **Rolle**: IT-Administrator, Forscher/in, Epidemiolog/in, Kliniker/in, DIZ Data Manager, Klinikleitung
-   - **Zugeordnete Zentren** (Mehrfachauswahl: UKA, UKC, UKD, UKG, UKL, UKMZ, UKT)
+   - **Zugeordnete Zentren** (Mehrfachauswahl: UKA, UKC, UKG, UKL, UKM, UKT)
 3. Klicken Sie auf **Speichern**.
 4. Ein **sicheres Passwort** (16 Zeichen, ~96 Bit Entropie) wird vom Server automatisch generiert und in einem grünen Banner einmalig angezeigt.
 

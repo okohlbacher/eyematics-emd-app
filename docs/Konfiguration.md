@@ -78,13 +78,12 @@ Die Liste der verfügbaren Zentren ist in `data/centers.json` konfigurierbar:
 
 ```json
 [
-  { "id": "org-uka",  "shorthand": "UKA",  "name": "Universitätsklinikum Aachen",     "file": "center-aachen.json" },
-  { "id": "org-ukc",  "shorthand": "UKC",  "name": "Universitätsklinikum Chemnitz",   "file": "center-chemnitz.json" },
-  { "id": "org-ukd",  "shorthand": "UKD",  "name": "Universitätsklinikum Dresden",    "file": "center-dresden.json" },
-  { "id": "org-ukg",  "shorthand": "UKG",  "name": "Universitätsklinikum Greifswald", "file": "center-greifswald.json" },
-  { "id": "org-ukl",  "shorthand": "UKL",  "name": "Universitätsklinikum Leipzig",    "file": "center-leipzig.json" },
-  { "id": "org-ukmz", "shorthand": "UKMZ", "name": "Universitätsmedizin Mainz",       "file": "center-mainz.json" },
-  { "id": "org-ukt",  "shorthand": "UKT",  "name": "Universitätsklinikum Tübingen",   "file": "center-tuebingen.json" }
+  { "id": "org-uka", "shorthand": "UKA", "name": "Universitätsklinikum Aachen",     "file": "center-aachen.json" },
+  { "id": "org-ukc", "shorthand": "UKC", "name": "Universitätsklinikum Chemnitz",   "file": "center-chemnitz.json" },
+  { "id": "org-ukg", "shorthand": "UKG", "name": "Universitätsklinikum Greifswald", "file": "center-greifswald.json" },
+  { "id": "org-ukl", "shorthand": "UKL", "name": "Universitätsklinikum Leipzig",    "file": "center-leipzig.json" },
+  { "id": "org-ukm", "shorthand": "UKM", "name": "Universitätsklinikum Münster",    "file": "center-muenster.json" },
+  { "id": "org-ukt", "shorthand": "UKT", "name": "Universitätsklinikum Tübingen",   "file": "center-tuebingen.json" }
 ]
 ```
 
@@ -139,12 +138,12 @@ Beim ersten Start werden 7 Standardbenutzer angelegt (in `data/users.json`). All
 
 | Benutzername    | Rolle               | Zentren                                   |
 |-----------------|---------------------|-------------------------------------------|
-| `admin`         | IT-Administrator    | Alle (UKA, UKC, UKD, UKG, UKL, UKMZ, UKT) |
+| `admin`         | IT-Administrator    | Alle (UKA, UKC, UKG, UKL, UKM, UKT)       |
 | `forscher1`     | Forscher/in         | UKA                                       |
 | `forscher2`     | Forscher/in         | UKC                                       |
-| `epidemiologe`  | Epidemiolog/in      | UKA, UKC, UKD                             |
+| `epidemiologe`  | Epidemiolog/in      | UKA, UKC, UKG                             |
 | `kliniker`      | Kliniker/in         | UKT                                       |
-| `diz_manager`   | DIZ Data Manager    | UKMZ                                      |
+| `diz_manager`   | DIZ Data Manager    | UKM                                       |
 | `klinikleitung` | Klinikleitung       | Alle                                      |
 
 > **Hinweis:** Die Standardanmeldedaten sind öffentlich dokumentiert und identisch in jedem frischen Deployment. Ändern Sie alle sieben Passwörter vor dem produktiven Einsatz (Administration → Benutzer → Passwort setzen). Das Repository enthält **keine** `data/users.json`; diese Datei wird beim ersten Serverstart aus `server/index.ts` erzeugt und anschließend durch `initAuth._migrateUsersJson` mit bcrypt-Hashes für `changeme2025!` versehen.

@@ -190,14 +190,12 @@ dataSource:
 |-----------|-----------------------------------|--------------------|----------|
 | UKA       | Universitätsklinikum Aachen       | 35                 | curated  |
 | UKC       | Universitätsklinikum Chemnitz     | 45                 | generated|
-| UKD       | Universitätsklinikum Dresden      | 45                 | generated|
 | UKG       | Universitätsklinikum Greifswald   | 45                 | generated|
 | UKL       | Universitätsklinikum Leipzig      | 45                 | generated|
 | UKM       | Universitätsklinikum Münster      | 45                 | generated|
-| UKMZ      | Universitätsmedizin Mainz         | 45                 | generated|
 | UKT       | Universitätsklinikum Tübingen     | 30                 | curated  |
 
-> Synthetic bundles for the six generated sites are produced by `npm run generate-bundles` (deterministic seeded output; see `scripts/generate-center-bundle.ts`).
+> Synthetic bundles for the four generated sites are produced by `npm run generate-bundles` (deterministic seeded output; see `scripts/generate-center-bundle.ts`).
 
 ## Documentation
 
