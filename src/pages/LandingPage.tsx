@@ -20,10 +20,9 @@ import { getDateLocale } from '../utils/dateFormat';
 const CENTRE_ACCENTS: Record<string, string> = {
   UKA: 'var(--color-teal)',
   UKC: 'var(--color-sage)',
-  UKD: 'var(--color-indigo)',
   UKG: 'var(--color-amber)',
   UKL: 'var(--color-coral)',
-  UKMZ: 'var(--color-teal)',
+  UKM: 'var(--color-indigo)',
   UKT: 'var(--color-sage)',
 };
 
