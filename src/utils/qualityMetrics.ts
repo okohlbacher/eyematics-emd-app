@@ -1,4 +1,3 @@
-import { COHORT_PALETTES } from '../components/outcomes/palette';
 import {
   getObservationsByCode,
   LOINC_CRT,
@@ -17,12 +16,15 @@ export type QualityCategory =
   | 'plausibility'
   | 'overall';
 
-// Distinguishable, colour-blind-safe palette shared with cohort charts (WCAG >= 3:1 vs white).
+// Muted page-established palette (D-12..D-15): reuses the same CSS-var tokens
+// already in use across the DocQuality / Landing pages. Tokens are dark-mode
+// aware (see src/index.css), so light/dark contrast inherits automatically.
+// Hues span teal / sage / indigo / amber → perceptually distinct families.
 export const QUALITY_CATEGORY_COLORS: Record<QualityCategory, string> = {
-  completeness: COHORT_PALETTES[0],     // emerald-700
-  dataCompleteness: COHORT_PALETTES[1], // amber-700
-  plausibility: COHORT_PALETTES[2],     // cyan-700
-  overall: COHORT_PALETTES[3],          // fuchsia-700
+  completeness: 'var(--color-teal)',
+  dataCompleteness: 'var(--color-sage)',
+  plausibility: 'var(--color-indigo)',
+  overall: 'var(--color-amber)',
 };
 
 // ---------------------------------------------------------------------------
