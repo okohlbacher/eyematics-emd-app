@@ -153,3 +153,45 @@ describe('LandingPage Attention panel — Review buttons (FB-02)', () => {
     expect(header).not.toBeNull();
   });
 });
+
+describe('LandingPage Jump Back In panel — empty state (FB-03)', () => {
+  it('renders the empty-state copy when no recent-activity state exists', () => {
+    setupMocks('admin');
+    renderLanding(() => undefined);
+
+    const emptyCopy = translate('jumpBackInEmpty', 'en');
+    expect(screen.queryByText(emptyCopy)).not.toBeNull();
+  });
+
+  it('renders the Jump Back In header (panel still present)', () => {
+    setupMocks('admin');
+    renderLanding(() => undefined);
+
+    const header = screen.queryByText(translate('jumpBackIn', 'en'));
+    expect(header).not.toBeNull();
+  });
+
+  it('contains no dead Jump Back In rows (no cursor-pointer + ArrowRight pattern)', () => {
+    setupMocks('admin');
+    const { container } = renderLanding(() => undefined);
+
+    // The previous bug: rows with class 'cursor-pointer' and no onClick.
+    // The empty-state replacement uses data-testid="jump-back-in-empty"
+    // and carries no cursor-pointer / no click handler.
+    const empty = container.querySelector('[data-testid="jump-back-in-empty"]');
+    expect(empty).not.toBeNull();
+    // Empty state element must not advertise pointer-cursor (D-10).
+    expect(empty?.className.includes('cursor-pointer')).toBe(false);
+    // And must carry no inline onclick (D-08/D-10: no silent click handlers).
+    expect((empty as HTMLElement | null)?.onclick ?? null).toBeNull();
+  });
+
+  it('does not render the legacy placeholder strings', () => {
+    setupMocks('admin');
+    renderLanding(() => undefined);
+
+    // Legacy hard-coded copy must be gone.
+    expect(screen.queryByText(/AMD · female · 70\+/)).toBeNull();
+    expect(screen.queryByText(/PSN-UKA-0023/)).toBeNull();
+  });
+});
