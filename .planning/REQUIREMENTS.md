@@ -63,7 +63,7 @@
 - [x] **DEPS-02** — ESLint rule tightening: enable `no-unused-vars`/`@typescript-eslint/no-unused-vars` strict, `prefer-const`, `no-var`, and any project-appropriate rules. Fix violations (or add per-line eslint-disable with reason).
 - [x] **DEPS-03** — `package.json` scripts audit: remove unused scripts, normalize naming (dev, build, test, lint pattern), ensure each script works.
 
-### Production Feedback Fixes (FB-*) — v1.10
+### Production Feedback Fixes (FB-*) — v1.9.3
 
 Source: in-app feedback submitted by `admin` on 2026-04-27 (4 issues).
 

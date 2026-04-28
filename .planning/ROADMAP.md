@@ -53,7 +53,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ---
 
-## Active Milestone: v1.10 — Production Feedback Fixes
+## Active Patch Release: v1.9.3 — Production Feedback Fixes
 
 **Goal:** Address user feedback collected after the v1.9 ship — remove non-participating sites from the data set, fix two non-functional Home-page panels, and align the Documentation Quality bar-chart palette with the rest of the app.
 **Granularity:** small (single-phase, scope-bounded by collected feedback)
@@ -75,7 +75,12 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
   2. **FB-02** — Every "Review" button in the Home-page "Attention needed" panel either navigates to a real route OR the dead button is removed; no dangling click handlers
   3. **FB-03** — "Jump Back In" panel arrows route to the prior cohort/case OR show an explicit empty state when no history exists; click handlers no longer silently swallow events
   4. **FB-04** — Documentation Quality bar chart uses the project's muted chart palette (consistent with other charts on the page); series remain visually distinguishable; no contrast regression
-**Plans:** TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 24-01-site-roster-cleanup-PLAN.md — Remove UKD + UKMZ from data, bundles, scripts, tests, docs (FB-01, Wave 1)
+- [ ] 24-02-attention-panel-PLAN.md — Wire or remove Review buttons in Home Attention needed panel (FB-02, Wave 2)
+- [ ] 24-03-jump-back-in-panel-PLAN.md — Wire Jump Back In rows or surface explicit empty state (FB-03, Wave 3)
+- [ ] 24-04-docquality-palette-PLAN.md — Re-skin DocQuality bars with muted page tokens (FB-04, Wave 2)
 **UI hint**: yes (FB-02, FB-03, FB-04 touch user-visible UI)
 
 ---
@@ -184,4 +189,4 @@ Plans:
 
 ---
 
-*Last updated: 2026-04-28 — v1.10 milestone opened (Phase 24, FB-01..04); v1.9 marked shipped.*
+*Last updated: 2026-04-28 — v1.9.3 patch release opened (Phase 24, FB-01..04); v1.9 marked shipped.*
