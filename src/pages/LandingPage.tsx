@@ -9,9 +9,10 @@ import {
   ScanEye,
   Users,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import { Badge, Button, SectionHead, Tile } from '../components/primitives';
-import { useAuth } from '../context/AuthContext';
+import { QUALITY_ROLES, useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getCenterShorthand } from '../services/fhirLoader';
@@ -28,8 +29,10 @@ const CENTRE_ACCENTS: Record<string, string> = {
 
 export default function LandingPage() {
   const { loading, centers, cases } = useData();
-  const { displayName } = useAuth();
+  const { displayName, user } = useAuth();
   const { locale, t } = useLanguage();
+  const navigate = useNavigate();
+  const canSeeDocQuality = user ? QUALITY_ROLES.includes(user.role) : false;
 
   if (loading) {
     return (
@@ -294,7 +297,7 @@ export default function LandingPage() {
                   {t('attentionTherapyBreakersSub')}
                 </div>
               </div>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/cohort')}>
                 {t('review')}
               </Button>
             </div>
@@ -308,9 +311,11 @@ export default function LandingPage() {
                   {t('attentionImplausibleCrtSub')}
                 </div>
               </div>
-              <Button variant="ghost" size="sm">
-                {t('review')}
-              </Button>
+              {canSeeDocQuality && (
+                <Button variant="ghost" size="sm" onClick={() => navigate('/doc-quality')}>
+                  {t('review')}
+                </Button>
+              )}
             </div>
           </Tile>
         </div>
