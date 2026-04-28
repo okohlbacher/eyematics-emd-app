@@ -1,6 +1,5 @@
 import {
   Activity,
-  ArrowRight,
   Building2,
   ChevronRight,
   Clock,
@@ -231,56 +230,19 @@ export default function LandingPage() {
             <div className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[var(--color-ink-3)] mb-3.5">
               {t('jumpBackIn')}
             </div>
-            {[
-              {
-                k: t('navCohort'),
-                title: 'AMD · female · 70+',
-                sub: '43 cases · opened recently',
-                icon: Users,
-                tone: 'teal' as const,
-              },
-              {
-                k: t('case'),
-                title: 'PSN-UKA-0023',
-                sub: '12 visits · Aflibercept',
-                icon: ScanEye,
-                tone: 'indigo' as const,
-              },
-            ].map((r, i, arr) => {
-              const Icon = r.icon;
-              const tones = {
-                teal: { bg: 'var(--color-teal-soft)', fg: 'var(--color-teal)' },
-                indigo: { bg: 'var(--color-indigo-soft)', fg: 'var(--color-indigo)' },
-                amber: { bg: 'var(--color-amber-soft)', fg: 'var(--color-amber)' },
-              } as const;
-              const pair = tones[r.tone];
-              return (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 py-2.5 cursor-pointer"
-                  style={{
-                    borderBottom: i < arr.length - 1 ? '1px solid var(--color-line)' : 'none',
-                  }}
-                >
-                  <div
-                    className="w-7 h-7 rounded-lg grid place-items-center"
-                    style={{ background: pair.bg, color: pair.fg }}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[10px] uppercase tracking-[0.08em] text-[var(--color-ink-3)] font-semibold">
-                      {r.k}
-                    </div>
-                    <div className="text-[13px] font-semibold text-[var(--color-ink)]">
-                      {r.title}
-                    </div>
-                    <div className="text-[11px] text-[var(--color-ink-3)]">{r.sub}</div>
-                  </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-[var(--color-ink-3)]" />
-                </div>
-              );
-            })}
+            {/*
+             * FB-03 / D-09..D-11: no recent-activity state has ever been wired
+             * up in app context, so the previous placeholder rows with dead
+             * arrow buttons are replaced by an explicit empty state. When real
+             * history tracking lands, render rows here with a navigate(...)
+             * onClick rather than re-introducing silent click handlers.
+             */}
+            <div
+              data-testid="jump-back-in-empty"
+              className="py-3 text-center text-[12px] text-[var(--color-ink-3)]"
+            >
+              {t('jumpBackInEmpty')}
+            </div>
           </Tile>
 
           <Tile className="p-[18px]">

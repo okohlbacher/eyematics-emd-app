@@ -838,6 +838,10 @@ const translations = {
   export: { de: 'Export', en: 'Export' },
   allLive: { de: 'Alle aktiv', en: 'All live' },
   jumpBackIn: { de: 'Weitermachen', en: 'Jump back in' },
+  jumpBackInEmpty: {
+    de: 'Noch keine kürzlichen Aktivitäten',
+    en: 'No recent activity yet',
+  },
   case: { de: 'Fall', en: 'Case' },
   attentionNeeded: { de: 'Aufmerksamkeit erforderlich', en: 'Attention needed' },
   attentionTherapyBreakers: { de: 'Therapie-Abbrecher', en: 'Therapy breakers' },
