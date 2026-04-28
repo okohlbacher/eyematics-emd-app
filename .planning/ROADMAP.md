@@ -75,12 +75,12 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
   2. **FB-02** — Every "Review" button in the Home-page "Attention needed" panel either navigates to a real route OR the dead button is removed; no dangling click handlers
   3. **FB-03** — "Jump Back In" panel arrows route to the prior cohort/case OR show an explicit empty state when no history exists; click handlers no longer silently swallow events
   4. **FB-04** — Documentation Quality bar chart uses the project's muted chart palette (consistent with other charts on the page); series remain visually distinguishable; no contrast regression
-**Plans:** 4 plans
+**Plans:** 2/4 plans executed
 Plans:
-- [ ] 24-01-site-roster-cleanup-PLAN.md — Remove UKD + UKMZ from data, bundles, scripts, tests, docs (FB-01, Wave 1)
+- [x] 24-01-site-roster-cleanup-PLAN.md — Remove UKD + UKMZ from data, bundles, scripts, tests, docs (FB-01, Wave 1)
 - [ ] 24-02-attention-panel-PLAN.md — Wire or remove Review buttons in Home Attention needed panel (FB-02, Wave 2)
 - [ ] 24-03-jump-back-in-panel-PLAN.md — Wire Jump Back In rows or surface explicit empty state (FB-03, Wave 3)
-- [ ] 24-04-docquality-palette-PLAN.md — Re-skin DocQuality bars with muted page tokens (FB-04, Wave 2)
+- [x] 24-04-docquality-palette-PLAN.md — Re-skin DocQuality bars with muted page tokens (FB-04, Wave 2)
 **UI hint**: yes (FB-02, FB-03, FB-04 touch user-visible UI)
 
 ---

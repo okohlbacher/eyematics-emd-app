@@ -70,7 +70,7 @@ Source: in-app feedback submitted by `admin` on 2026-04-27 (4 issues).
 - [ ] **FB-01** — Remove non-participating sites **UKD (Dresden)** and **UKMZ (Mainz)** from `data/centers.json`, the seeded site list, and any synthetic FHIR bundles. README site table reduces from 8 → 6 entries.
 - [ ] **FB-02** — Home-page "Attention needed" panel: every "Review" button must route to a real destination OR the dead button is removed. No dangling click handlers.
 - [ ] **FB-03** — Home-page "Jump Back In" panel: arrow buttons must route to the prior cohort/case OR surface an explicit empty state when no history exists. Click handlers must not silently swallow events.
-- [ ] **FB-04** — Documentation Quality page: bar-chart colour palette must match the project's muted chart tokens used elsewhere on the page. Series remain visually distinguishable; no contrast regression.
+- [x] **FB-04** — Documentation Quality page: bar-chart colour palette must match the project's muted chart tokens used elsewhere on the page. Series remain visually distinguishable; no contrast regression.
 
 ---
 
