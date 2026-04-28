@@ -63,6 +63,15 @@
 - [x] **DEPS-02** — ESLint rule tightening: enable `no-unused-vars`/`@typescript-eslint/no-unused-vars` strict, `prefer-const`, `no-var`, and any project-appropriate rules. Fix violations (or add per-line eslint-disable with reason).
 - [x] **DEPS-03** — `package.json` scripts audit: remove unused scripts, normalize naming (dev, build, test, lint pattern), ensure each script works.
 
+### Production Feedback Fixes (FB-*) — v1.10
+
+Source: in-app feedback submitted by `admin` on 2026-04-27 (4 issues).
+
+- [ ] **FB-01** — Remove non-participating sites **UKD (Dresden)** and **UKMZ (Mainz)** from `data/centers.json`, the seeded site list, and any synthetic FHIR bundles. README site table reduces from 8 → 6 entries.
+- [ ] **FB-02** — Home-page "Attention needed" panel: every "Review" button must route to a real destination OR the dead button is removed. No dangling click handlers.
+- [ ] **FB-03** — Home-page "Jump Back In" panel: arrow buttons must route to the prior cohort/case OR surface an explicit empty state when no history exists. Click handlers must not silently swallow events.
+- [ ] **FB-04** — Documentation Quality page: bar-chart colour palette must match the project's muted chart tokens used elsewhere on the page. Series remain visually distinguishable; no contrast regression.
+
 ---
 
 ## Traceability
@@ -88,8 +97,12 @@
 | DEPS-01 | npm audit + non-breaking upgrades | Phase 23 |
 | DEPS-02 | ESLint rule tightening | Phase 23 |
 | DEPS-03 | `package.json` scripts audit | Phase 23 |
+| FB-01 | Remove UKD + UKMZ from site roster | Phase 24 |
+| FB-02 | Home "Attention needed" panel buttons | Phase 24 |
+| FB-03 | Home "Jump Back In" panel arrows | Phase 24 |
+| FB-04 | DocQuality bar-chart palette alignment | Phase 24 |
 
-**Coverage:** 19/19 requirements mapped. Phase 21: TEST-01..04 + UAT-AUTO-01..05 (9). Phase 22: CONSIST-01..04 + DOCS-01..03 (7). Phase 23: DEPS-01..03 (3).
+**Coverage:** 23/23 requirements mapped. Phase 21: TEST-01..04 + UAT-AUTO-01..05 (9). Phase 22: CONSIST-01..04 + DOCS-01..03 (7). Phase 23: DEPS-01..03 (3). Phase 24: FB-01..04 (4).
 
 ---
 

@@ -12,6 +12,7 @@
 | v1.6 | Outcomes Polish & Scale | 2026-04-17 | 10–13 | [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md) |
 | v1.7 | Security, Performance & Cross-Cohort | 2026-04-21 | 14–17 | [`milestones/v1.7-ROADMAP.md`](milestones/v1.7-ROADMAP.md) |
 | v1.8 | Session Resilience & Test/Code Polish | 2026-04-23 | 18–20 | [`milestones/v1.8-ROADMAP.md`](milestones/v1.8-ROADMAP.md) |
+| v1.9 | Codebase Consistency & Test/Tech-Debt Polish | 2026-04-23 | 21–23 | (in-tree, see below) |
 
 > Note: v1.2–v1.4 shipped between v1.1 and v1.5 but were not tracked in GSD artifacts; git history is authoritative for those releases.
 
@@ -52,7 +53,34 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ---
 
-## Active Milestone: v1.9 — Codebase Consistency & Test/Tech-Debt Polish
+## Active Milestone: v1.10 — Production Feedback Fixes
+
+**Goal:** Address user feedback collected after the v1.9 ship — remove non-participating sites from the data set, fix two non-functional Home-page panels, and align the Documentation Quality bar-chart palette with the rest of the app.
+**Granularity:** small (single-phase, scope-bounded by collected feedback)
+**Coverage:** 4/4 feedback requirements mapped
+**Starting phase number:** 24
+
+### Phases
+
+- [ ] **Phase 24: Production Feedback Fixes** — Remove UKD/UKMZ from site roster, repair Home "Attention needed" + "Jump Back In" panels, and apply muted palette to DocQuality bars (FB-01..FB-04)
+
+### Phase Details
+
+#### Phase 24: Production Feedback Fixes
+**Goal**: All four issues reported via the in-app feedback channel on 2026-04-27 are resolved without regressions; site roster reduced to participating institutions; Home-page panel buttons either route correctly or are removed; DocQuality chart colours match the muted palette tokens used elsewhere
+**Depends on**: v1.9 milestone shipped (current production)
+**Requirements**: FB-01, FB-02, FB-03, FB-04
+**Success Criteria** (what must be TRUE):
+  1. **FB-01** — `data/centers.json` no longer lists UKD (Dresden) or UKMZ (Mainz); generated FHIR bundles for those sites are removed; README site table updated; `npm run test:ci` (608/608 baseline) and `npm run build` still green
+  2. **FB-02** — Every "Review" button in the Home-page "Attention needed" panel either navigates to a real route OR the dead button is removed; no dangling click handlers
+  3. **FB-03** — "Jump Back In" panel arrows route to the prior cohort/case OR show an explicit empty state when no history exists; click handlers no longer silently swallow events
+  4. **FB-04** — Documentation Quality bar chart uses the project's muted chart palette (consistent with other charts on the page); series remain visually distinguishable; no contrast regression
+**Plans:** TBD
+**UI hint**: yes (FB-02, FB-03, FB-04 touch user-visible UI)
+
+---
+
+## Shipped Milestone: v1.9 — Codebase Consistency & Test/Tech-Debt Polish
 
 <!--
 Phase split review: The proposed 21 → 22 → 23 linear sequence is sound.
@@ -156,4 +184,4 @@ Plans:
 
 ---
 
-*Last updated: 2026-04-23 — v1.9 roadmap created (Phases 21–23); v1.8 archived.*
+*Last updated: 2026-04-28 — v1.10 milestone opened (Phase 24, FB-01..04); v1.9 marked shipped.*
