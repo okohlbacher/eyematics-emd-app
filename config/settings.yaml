@@ -12,3 +12,9 @@ auth:
   refreshTokenTtlMs: 28800000      # 8h rolling refresh-token lifetime
   refreshAbsoluteCapMs: 43200000   # 12h hard cap from initial login
   refreshCookieSecure: true        # set to false ONLY for local-dev http
+# Phase 25 / D-16, D-17 — terminology resolver. Code-defaulted; omit to keep
+# offline behavior. Set enabled: true + a real serverUrl to opt in.
+# terminology:
+#   enabled: false                                          # default OFF — preserves offline behavior
+#   serverUrl: 'https://r4.ontoserver.csiro.au/fhir'        # placeholder default; real server set per-deployment
+#   cacheTtlMs: 86400000                                    # 24h
