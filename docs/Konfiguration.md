@@ -20,7 +20,7 @@ Alle Änderungen, die über die Settings-Seite im UI vorgenommen werden, werden 
 
 ## Konfigurationsparameter
 
-> **Hinweis — Minimalkonfiguration vs. Vollbeispiel.** Die ausgelieferte `config/settings.yaml` enthält nur die Schlüssel, die vom UI gesetzt werden (z. B. `twoFactorEnabled`, `therapyInterrupterDays`, `therapyBreakerDays`, `dataSource`, `outcomes`, `auth`). Alle anderen unten aufgeführten Schlüssel (`server.*`, `audit.*`, `provider`, `maxLoginAttempts`, `otpCode`, `keycloak.*`) werden vom Server mit sicheren Defaults gefüllt, wenn sie in der Datei fehlen. Das folgende Beispiel zeigt **alle** verfügbaren Schlüssel — nicht alle müssen explizit gesetzt werden.
+> **Hinweis — Minimalkonfiguration vs. Vollbeispiel.** Die ausgelieferte `config/settings.yaml` enthält nur die Schlüssel, die vom UI gesetzt werden (z. B. `twoFactorEnabled`, `therapyInterrupterDays`, `therapyBreakerDays`, `dataSource`, `outcomes`, `auth`). Alle anderen unten aufgeführten Schlüssel (`server.*`, `audit.*`, `provider`, `maxLoginAttempts`, `otpCode`, `keycloak.*`, `terminology.*`) werden vom Server mit sicheren Defaults gefüllt, wenn sie in der Datei fehlen. Das folgende Beispiel zeigt **alle** verfügbaren Schlüssel — nicht alle müssen explizit gesetzt werden.
 
 ### Vollständiges Beispiel
 
@@ -52,6 +52,11 @@ therapyBreakerDays: 365      # Therapie-Abbrecher (t')
 dataSource:
   type: local                # 'local' oder 'blaze'
   blazeUrl: http://localhost:8080/fhir
+
+terminology:
+  enabled: false                                          # Standard OFF — bewahrt Offline-Verhalten
+  serverUrl: 'https://r4.ontoserver.csiro.au/fhir'        # Platzhalter — pro Deployment ersetzen
+  cacheTtlMs: 86400000                                    # 24 h
 ```
 
 ### Parameter im Detail
@@ -71,6 +76,27 @@ dataSource:
 | `therapyBreakerDays` | `number` | `365` | Zeitkriterium t' in Tagen für Therapie-Abbrecher. |
 | `dataSource.type` | `"local"` \| `"blaze"` | `"local"` | Art der Datenquelle. `local`: JSON-Dateien aus `public/data/`. `blaze`: Blaze FHIR Server. |
 | `dataSource.blazeUrl` | `string` | `http://localhost:8080/fhir` | URL des Blaze FHIR Servers. Zugriff über Server-Proxy (`/api/fhir-proxy`). |
+| `terminology.enabled` | `boolean` | `false` | Aktiviert den Terminologie-Resolver-Server-Proxy. Standard `false` (Offline-Betrieb mit eingebauter Seed-Map). |
+| `terminology.serverUrl` | `string` | `https://r4.ontoserver.csiro.au/fhir` | FHIR-Endpunkt mit `$lookup`-Unterstützung. Produktiv durch nationalen oder institutionellen Server ersetzen. |
+| `terminology.cacheTtlMs` | `number` | `86400000` | Server-seitige LRU-Cache-Lebensdauer in Millisekunden (24 h). Max. 10 000 Einträge, prozesslokal. |
+
+## Terminologie-Server (`terminology`)
+
+Der Terminologie-Resolver löst Diagnose-Anzeigetexte (z. B. SNOMED-CT, ICD-10-GM) in einer dreistufigen Strategie auf: lokaler In-Memory-Cache (L1) → Server-Proxy `POST /api/terminology/lookup` (L2) → eingebaute Seed-Map (L3). Standardmäßig ist der Resolver **deaktiviert** (`terminology.enabled: false`); der Client fällt dann auf die Seed-Map zurück und erhält für unbekannte Codes den Roh-Code als Anzeigewert. Das bewahrt das vollständige Offline-Verhalten — bestehende Deployments verhalten sich nach dem Upgrade unverändert, bis sie sich aktiv für einen externen Server entscheiden.
+
+> **Minimal vs. voll.** Wenn der `terminology:`-Block in `settings.yaml` fehlt, gelten die Code-Defaults (`enabled: false`, `cacheTtlMs: 86400000`, `serverUrl` leer): der Endpoint antwortet mit `503` und der Client nutzt nur Cache und Seed. Wer einen eigenen Terminologie-Server anbinden möchte, setzt `enabled: true` und einen passenden `serverUrl`.
+
+### `terminology.enabled`
+
+Standard `false`. Wenn `true`, leitet `POST /api/terminology/lookup` Anfragen an `terminology.serverUrl` weiter. Wenn `false` (oder wenn `serverUrl` nicht gesetzt ist), antwortet der Endpoint mit `503 Service Unavailable` (`{"error":"terminology lookup disabled"}`); der Client interpretiert `503` als Signal, auf die eingebaute Seed-Map zurückzufallen.
+
+### `terminology.serverUrl`
+
+FHIR-Endpunkt mit `$lookup`-Unterstützung (z. B. `…/CodeSystem/$lookup`). Standardplatzhalter ist `https://r4.ontoserver.csiro.au/fhir` — der öffentliche Ontoserver des CSIRO mit anonymem SNOMED-CT-Lookup. Produktive Deployments ersetzen diesen Wert durch einen nationalen oder institutionellen Terminologie-Server. Der Server-Proxy enthält eine SSRF-Sperre (Ablehnung privater/loopback/link-local IP-Adressen, D-10) und akzeptiert ausschließlich Antworten vom Origin der konfigurierten `serverUrl`.
+
+### `terminology.cacheTtlMs`
+
+Server-seitiger LRU-Cache (`Map`-basiert, einfügereihenfolge-evicting), maximal 10 000 Einträge, prozesslokal (kein Redis). Standard `86400000` (24 h). Der Cache wird beim Server-Neustart geleert; einzelne Lookups werden **nicht** im Audit-Log protokolliert (D-15: hohes Volumen, geringer Signalwert).
 
 ## Zentrenkonfiguration (data/centers.json)
 
