@@ -49,6 +49,7 @@ import { issueApiRouter } from './issueApi.js';
 import { outcomesAggregateRouter } from './outcomesAggregateApi.js';
 import { initOutcomesAggregateCache } from './outcomesAggregateCache.js';
 import { configureSettingsApi, settingsApiRouter } from './settingsApi.js';
+import { terminologyRouter } from './terminologyApi.js';
 
 // ---------------------------------------------------------------------------
 // 1. Read settings.yaml at startup (fail fast)
@@ -241,6 +242,12 @@ app.use('/api/data', dataApiRouter);
 // FHIR API routes — center-filtered bundle loading (CENTER-01, CENTER-02)
 // Mounted with express.json() for consistency; GET /bundles does not use body but pattern is future-proof
 app.use('/api/fhir', express.json({ limit: '1mb' }), fhirApiRouter);
+
+// Phase 25 / D-02 / D-14 — Terminology proxy (POST /api/terminology/lookup).
+// JWT-protected via the global authMiddleware mounted on /api above. Body
+// parser is scoped here (mirrors fhirApiRouter mount pattern) so the request
+// JSON is parsed for the router handler.
+app.use('/api/terminology', express.json({ limit: '16kb' }), terminologyRouter);
 
 // Block unauthenticated access to FHIR data files served via express.static
 // The files live in public/data/ for Vite dev convenience, but must not be
