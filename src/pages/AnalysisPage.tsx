@@ -32,12 +32,11 @@ import {
   applyFilters,
   getAge,
   getCenterShorthand,
-  getDiagnosisFullText,
-  getDiagnosisLabel,
   getObservationsByCode,
   LOINC_CRT,
   LOINC_VISUS,
 } from '../services/fhirLoader';
+import { getCachedDisplay, getCachedFullText } from '../services/terminology';
 import type { CohortFilter } from '../types/fhir';
 import { computeCrtDistribution } from '../utils/distributionBins';
 
@@ -98,21 +97,22 @@ export default function AnalysisPage() {
   }, [cohort]);
 
   const diagDist = useMemo(() => {
-    const map = new Map<string, { count: number; code: string }>();
+    const map = new Map<string, { count: number; code: string; system: string | undefined }>();
     cohort.forEach((c) => {
       c.conditions.forEach((cond) => {
+        const system = cond.code.coding[0]?.system;
         const code = cond.code.coding[0]?.code ?? '';
-        const label = getDiagnosisLabel(code, locale);
-        const entry = map.get(label) ?? { count: 0, code };
+        const label = getCachedDisplay(system, code, locale);
+        const entry = map.get(label) ?? { count: 0, code, system };
         entry.count++;
         map.set(label, entry);
       });
     });
-    return Array.from(map, ([name, { count, code }]) => ({
+    return Array.from(map, ([name, { count, code, system }]) => ({
       name,
       code,
       value: count,
-      fullText: getDiagnosisFullText(code, locale),
+      fullText: getCachedFullText(system, code, locale),
     })).sort((a, b) => b.value - a.value);
   }, [cohort, locale]);
 
