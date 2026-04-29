@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { pickCoding } from '../../../shared/fhirQueries';
 import {
   CRITICAL_CRT_THRESHOLD,
   CRITICAL_VISUS_THRESHOLD,
@@ -17,12 +18,12 @@ import {
 import { useLanguage } from '../../context/LanguageContext';
 import {
   getAge,
-  getDiagnosisLabel,
   getObservationsByCode,
   LOINC_CRT,
   LOINC_VISUS,
   SNOMED_IVI,
 } from '../../services/fhirLoader';
+import { getCachedDisplay } from '../../services/terminology';
 import type { PatientCase, QualityFlag } from '../../types/fhir';
 import OctViewer from '../OctViewer';
 import type { TherapyStatusEntry } from './QualityCaseList';
@@ -168,7 +169,10 @@ export default function QualityCaseDetail({
             <p className="text-gray-500 dark:text-gray-400">{t('diagnosis')}</p>
             <p className="font-medium">
               {selectedCase.conditions
-                .map((c) => getDiagnosisLabel(c.code.coding[0]?.code ?? '', locale))
+                .map((c) => {
+                  const { system, code } = pickCoding(c);
+                  return getCachedDisplay(system, code, locale);
+                })
                 .join(', ')}
             </p>
           </div>
