@@ -21,19 +21,33 @@ import { useLanguage } from '../context/LanguageContext';
 import {
   applyFilters,
   getAge,
-  getDiagnosisFullText,
-  getDiagnosisLabel,
   getLatestObservation,
   LOINC_CRT,
   LOINC_VISUS,
   SNOMED_AMD,
   SNOMED_DR,
 } from '../services/fhirLoader';
+import { getCachedDisplay, useDiagnosisDisplay } from '../services/terminology';
 import type { CohortFilter, SavedSearch } from '../types/fhir';
 import { formatDate } from '../utils/dateFormat';
 import { datedFilename,downloadCsv, downloadJson } from '../utils/download';
 
 type SortField = 'date' | 'name';
+
+/**
+ * Per-code diagnosis chip rendered with the terminology resolver hook (Phase 25 D-19).
+ * Extracted so `useDiagnosisDisplay` lives at the top of a component.
+ * `system` is undefined here — this map iterates raw codes pulled from
+ * `cond.code.coding.map((cd) => cd.code)`, which loses system context (D-05 sentinel path).
+ */
+function DiagnosisCodeChip({ code, locale, prefix }: { code: string; locale: string; prefix: string }) {
+  const { label, fullText } = useDiagnosisDisplay(code, undefined, locale);
+  return (
+    <span title={fullText} className="cursor-help border-b border-dotted border-gray-400 dark:border-gray-500">
+      {prefix}{label}
+    </span>
+  );
+}
 
 export default function CohortBuilderPage() {
   const { activeCases, centers, savedSearches, addSavedSearch, removeSavedSearch } =
@@ -100,7 +114,7 @@ export default function CohortBuilderPage() {
         c.pseudonym,
         c.gender,
         String(getAge(c.birthDate)),
-        diagCodes.map((code) => getDiagnosisLabel(code, locale)).join('; '),
+        diagCodes.map((code) => getCachedDisplay(undefined, code, locale)).join('; '),
         latestVisus?.valueQuantity?.value?.toFixed(2) ?? '',
         String(latestCrt?.valueQuantity?.value ?? ''),
         c.centerName,
@@ -632,9 +646,7 @@ export default function CohortBuilderPage() {
                           </td>
                           <td className="px-4 py-3 text-sm">
                             {diagCodes.map((code, i) => (
-                              <span key={code} title={getDiagnosisFullText(code, locale)} className="cursor-help border-b border-dotted border-gray-400 dark:border-gray-500">
-                                {i > 0 ? ', ' : ''}{getDiagnosisLabel(code, locale)}
-                              </span>
+                              <DiagnosisCodeChip key={code} code={code} locale={locale} prefix={i > 0 ? ', ' : ''} />
                             ))}
                           </td>
                           <td className="px-4 py-3 text-sm text-right font-mono">
