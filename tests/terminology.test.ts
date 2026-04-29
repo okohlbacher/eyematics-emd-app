@@ -3,19 +3,42 @@
  * browser-side terminology resolver module (`src/services/terminology.ts`).
  *
  * This file grows over 3 atomic commits in plan 25-01:
- *   - Task 1 (this commit): collectCodings shape + _seedMap byte-identical strings
- *   - Task 2: getCachedDisplay seed/miss + resolveDisplay 200/503 paths
+ *   - Task 1: collectCodings shape + _seedMap byte-identical strings
+ *   - Task 2 (this commit): getCachedDisplay seed/miss + resolveDisplay 200/503 paths
  *   - Task 3: useDiagnosisDisplay hook (RTL renderHook test)
  */
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { _seedMap, collectCodings } from '../src/services/terminology';
+import {
+  _resetForTests,
+  _seedMap,
+  collectCodings,
+  getCachedDisplay,
+  resolveDisplay,
+} from '../src/services/terminology';
 import { terminologyFixture } from './fixtures/terminologyBundle';
 
 const SYSTEM_SNOMED = 'http://snomed.info/sct';
 const SYSTEM_ICD10_GM = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm';
 
+function mockFetch(handler: (url: string, init?: RequestInit) => Response | Promise<Response>): ReturnType<typeof vi.fn> {
+  const fn = vi.fn(async (input: unknown, init?: RequestInit) => {
+    const url = typeof input === 'string' ? input : String(input);
+    return await handler(url, init);
+  });
+  globalThis.fetch = fn as unknown as typeof fetch;
+  return fn;
+}
+
+function flushMicrotasks(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 describe('terminology — collectCodings + seedMap', () => {
+  beforeEach(() => {
+    _resetForTests();
+  });
+
   it('collectCodings returns a Map covering Condition/Observation/Procedure codings only', () => {
     const result = collectCodings([terminologyFixture]);
 
@@ -41,5 +64,73 @@ describe('terminology — collectCodings + seedMap', () => {
     expect(amd!.label.en).toBe('AMD');
     expect(amd!.fullText.de).toBe('Altersbedingte Makuladegeneration (267718000)');
     expect(amd!.fullText.en).toBe('Age-related macular degeneration (267718000)');
+  });
+});
+
+describe('terminology — getCachedDisplay + resolveDisplay', () => {
+  let originalFetch: typeof fetch;
+
+  beforeEach(() => {
+    _resetForTests();
+    originalFetch = globalThis.fetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    vi.restoreAllMocks();
+  });
+
+  it('Test A — sync seed hit returns label without firing fetch', () => {
+    const fn = mockFetch(() => new Response('', { status: 200 }));
+
+    const result = getCachedDisplay(SYSTEM_SNOMED, '267718000', 'de');
+    expect(result).toBe('AMD');
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it('Test B — sync miss returns raw code and fires a single fire-and-forget fetch', async () => {
+    const fn = mockFetch(() => new Response(JSON.stringify({}), { status: 503 }));
+
+    const first = getCachedDisplay(undefined, 'X.unknown', 'de');
+    expect(first).toBe('X.unknown');
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(fn.mock.calls[0]?.[0]).toBe('/api/terminology/lookup');
+
+    // Second sync call before fetch resolves must NOT fire a second fetch
+    const second = getCachedDisplay(undefined, 'X.unknown', 'de');
+    expect(second).toBe('X.unknown');
+    expect(fn).toHaveBeenCalledTimes(1);
+
+    // Let the in-flight resolveDisplay settle so it doesn't leak into other tests
+    await flushMicrotasks();
+    await flushMicrotasks();
+
+    // After 503 + no seed, L1 holds the raw code so further calls don't refetch
+    const third = getCachedDisplay(undefined, 'X.unknown', 'de');
+    expect(third).toBe('X.unknown');
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it('Test C — resolveDisplay 200 populates L1 and suppresses subsequent fetches', async () => {
+    const fn = mockFetch(() => new Response(JSON.stringify({ display: 'Custom Display' }), { status: 200 }));
+
+    const display = await resolveDisplay({ system: 'urn:test', code: '42', locale: 'de' });
+    expect(display).toBe('Custom Display');
+    expect(fn).toHaveBeenCalledTimes(1);
+
+    const cached = getCachedDisplay('urn:test', '42', 'de');
+    expect(cached).toBe('Custom Display');
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it('Test D — resolveDisplay 503 falls through to seed', async () => {
+    mockFetch(() => new Response('', { status: 503 }));
+
+    const result = await resolveDisplay({
+      system: SYSTEM_SNOMED,
+      code: '267718000',
+      locale: 'de',
+    });
+    expect(result).toBe('AMD');
   });
 });

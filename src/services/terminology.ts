@@ -2,14 +2,10 @@
  * Browser-side terminology resolver module (Phase 25, plan 25-01).
  *
  * Replaces the hardcoded `getDiagnosisLabel` / `getDiagnosisFullText` switch
- * statements in `fhirLoader.ts` with a 3-tier strategy (full implementation
- * lands across 3 atomic commits in this plan):
- *
- *   1. (this commit, Task 1) `_seedMap` + `collectCodings` — well-known
- *      seed data and bundle-walking helper. Pure / I/O-free.
- *   2. (next commit, Task 2) `resolveDisplay` + `getCachedDisplay` — async
- *      lookup against `/api/terminology/lookup` plus the sync wrapper.
- *   3. (final commit, Task 3) `useDiagnosisDisplay` React hook + safety net.
+ * statements in `fhirLoader.ts` with a 3-tier strategy:
+ *   1. L1 in-memory cache
+ *   2. Server-proxied FHIR `$lookup` (added in plan 25-02)
+ *   3. Well-known seed map (`_seedMap`)
  *
  * Module-only landing — no caller is wired in this plan (D-26 wave 1).
  * Callers migrate in plan 25-03; settings + docs in plan 25-04.
@@ -125,6 +121,34 @@ export const _seedMap: Map<string, SeedEntry> = new Map([
   }],
 ]);
 
+// --- Module-private cache state (D-04, D-05) ---
+
+const _l1Cache: Map<string, string> = new Map();
+const _l1FullTextCache: Map<string, string> = new Map();
+const _pendingLookups: Set<string> = new Set();
+
+function cacheKey(system: string | undefined, code: string, locale: string): string {
+  return `${system ?? '_'}|${code}|${locale}`;
+}
+
+function seedKey(system: string | undefined, code: string): string {
+  return `${system ?? '_'}|${code}`;
+}
+
+function pickLocale(value: { de: string; en: string }, locale: string): string {
+  return locale === 'en' ? value.en : value.de;
+}
+
+/**
+ * Reset module state. Test-only helper (D-04 underscore prefix).
+ * Vitest calls this in `beforeEach` to keep tests independent.
+ */
+export function _resetForTests(): void {
+  _l1Cache.clear();
+  _l1FullTextCache.clear();
+  _pendingLookups.clear();
+}
+
 /**
  * Walk the supplied bundles and return a `Map<system, Set<code>>` covering
  * every distinct (system, code) pair seen on `Condition`, `Observation`, or
@@ -155,4 +179,111 @@ export function collectCodings(bundles: FhirBundle[]): Map<string, Set<string>> 
   }
 
   return result;
+}
+
+/**
+ * Sync display lookup (D-04, D-06, D-09). Order:
+ *   1. L1 cache
+ *   2. _seedMap → label
+ *   3. fallthrough → raw code AND fire-and-forget async lookup
+ *
+ * MUST NOT block render. Safe to call from any render path.
+ */
+export function getCachedDisplay(
+  system: string | undefined,
+  code: string,
+  locale: string
+): string {
+  const key = cacheKey(system, code, locale);
+  const cached = _l1Cache.get(key);
+  if (cached !== undefined) return cached;
+
+  const seed = _seedMap.get(seedKey(system, code));
+  if (seed) {
+    return pickLocale(seed.label, locale);
+  }
+
+  // Fire-and-forget async lookup — dedupe via _pendingLookups
+  if (!_pendingLookups.has(key)) {
+    void resolveDisplay({ system, code, locale }).catch(() => {
+      // Errors swallowed in fire-and-forget path; surfaced via resolveDisplay
+      // for explicit awaiters.
+    });
+  }
+  return code;
+}
+
+interface LookupResponse {
+  display?: string;
+}
+
+/**
+ * Async display lookup (D-04, D-12, D-13). Order:
+ *   1. L1 cache
+ *   2. POST /api/terminology/lookup → on 200, cache + return display
+ *   3. on 503 / non-2xx → seed fallback; if seed hits, cache seed.label and return
+ *   4. else → cache the raw code (suppress repeat fetches per D-09 note) and return
+ *
+ * Throw-only error policy (CLAUDE.md D-03): network errors are swallowed here
+ * (fall through to seed/raw-code) so callers can render something deterministic.
+ * The fire-and-forget path in `getCachedDisplay` further swallows any leak.
+ */
+export async function resolveDisplay(args: {
+  system: string | undefined;
+  code: string;
+  locale: string;
+}): Promise<string> {
+  const { system, code, locale } = args;
+  const key = cacheKey(system, code, locale);
+
+  const cached = _l1Cache.get(key);
+  if (cached !== undefined) return cached;
+
+  _pendingLookups.add(key);
+  try {
+    let display: string | null = null;
+    try {
+      const resp = await fetch('/api/terminology/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system, code, locale }),
+        credentials: 'include',
+      });
+      if (resp.ok) {
+        const data = (await resp.json()) as LookupResponse;
+        if (data && typeof data.display === 'string' && data.display.length > 0) {
+          display = data.display;
+        }
+      }
+      // Non-OK (incl. 503): fall through to seed
+    } catch {
+      // Network failure — fall through to seed
+    }
+
+    if (display !== null) {
+      _l1Cache.set(key, display);
+      if (!_l1FullTextCache.has(key)) {
+        _l1FullTextCache.set(key, display);
+      }
+      return display;
+    }
+
+    const seed = _seedMap.get(seedKey(system, code));
+    if (seed) {
+      const label = pickLocale(seed.label, locale);
+      const fullText = pickLocale(seed.fullText, locale);
+      _l1Cache.set(key, label);
+      _l1FullTextCache.set(key, fullText);
+      return label;
+    }
+
+    // Genuinely unknown code — cache raw to suppress repeat fetches (D-09 note)
+    _l1Cache.set(key, code);
+    if (!_l1FullTextCache.has(key)) {
+      _l1FullTextCache.set(key, code);
+    }
+    return code;
+  } finally {
+    _pendingLookups.delete(key);
+  }
 }
