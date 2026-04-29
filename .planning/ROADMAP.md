@@ -53,7 +53,35 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ---
 
-## Active Patch Release: v1.9.3 — Production Feedback Fixes
+## Active Patch Release: v1.9.4 — Terminology Resolver Refactor
+
+**Goal:** Factor diagnosis display-name resolution out of `src/services/fhirLoader.ts` into a dedicated terminology service. Build a code/system dictionary from loaded bundles, lazily resolve display names via a configurable FHIR terminology server (with offline fallback), and update all 5 call sites.
+**Granularity:** small (single-phase architecture refactor + server-proxy stub)
+**Coverage:** 5/5 TERM-* requirements mapped
+**Starting phase number:** 25
+
+### Phases
+
+- [ ] **Phase 25: Terminology Resolver** — New `src/services/terminology.ts`, server-side proxy `POST /api/terminology/lookup`, settings keys, useDiagnosisDisplay hook, remove hardcoded maps from fhirLoader (TERM-01..TERM-05)
+
+### Phase Details
+
+#### Phase 25: Terminology Resolver
+**Goal**: Hardcoded `getDiagnosisLabel` / `getDiagnosisFullText` are removed from `fhirLoader.ts`; a new terminology service builds a global `(system → codes)` dictionary from loaded bundles and lazily resolves display names with a 3-tier strategy (in-memory cache → server-proxied FHIR `$lookup` → well-known fallback seed). The 5 caller files use the new sync helper or React hook. Tests cover seed-fallback, cache hit, and async resolution.
+**Depends on**: Phase 24 (v1.9.3 ship)
+**Requirements**: TERM-01, TERM-02, TERM-03, TERM-04, TERM-05
+**Success Criteria** (what must be TRUE):
+  1. **TERM-01** — `src/services/terminology.ts` exports `collectCodings(bundles)`, `resolveDisplay({ system, code, locale })`, `getCachedDisplay(system, code, locale)`, and `useDiagnosisDisplay(code, system?, locale)`. The well-known seed (current AMD/DR/ICD entries) lives in this module, not in `fhirLoader.ts`.
+  2. **TERM-02** — `getDiagnosisLabel` and `getDiagnosisFullText` are removed from `src/services/fhirLoader.ts`. The 5 caller files (`CohortBuilderPage`, `AnalysisPage`, `QualityPage`, `QualityCaseDetail`, `PatientHeader`) compile and pass tests against the new API.
+  3. **TERM-03** — Server-side proxy endpoint `POST /api/terminology/lookup` exists at `server/terminologyApi.ts`. SSRF-safe origin whitelist (matches Blaze-proxy pattern). LRU cache with TTL. Returns `{ display, system, code }` from the configured FHIR `$lookup` endpoint. Disabled by default (`terminology.enabled: false`); when disabled, returns 503 and clients fall through to seed.
+  4. **TERM-04** — New `config/settings.yaml` keys: `terminology.enabled`, `terminology.serverUrl`, `terminology.cacheTtlMs`. Documented in `docs/Konfiguration.md`. Defaults preserve current offline behavior.
+  5. **TERM-05** — Tests cover: (a) `collectCodings` builds expected dictionary from a fixture bundle, (b) `getCachedDisplay` returns seed value sync without firing fetch when seed hits, (c) async `resolveDisplay` populates L1 and React hook re-renders, (d) server proxy 503 when disabled, (e) `npm run test:ci` baseline grows to ~624 with 5 new test cases.
+**Plans:** TBD
+**UI hint**: no (no user-visible UI change; purely architectural)
+
+---
+
+## Shipped Patch Release: v1.9.3 — Production Feedback Fixes
 
 **Goal:** Address user feedback collected after the v1.9 ship — remove non-participating sites from the data set, fix two non-functional Home-page panels, and align the Documentation Quality bar-chart palette with the rest of the app.
 **Granularity:** small (single-phase, scope-bounded by collected feedback)
