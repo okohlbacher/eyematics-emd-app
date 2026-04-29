@@ -76,9 +76,9 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
   3. **TERM-03** — Server-side proxy endpoint `POST /api/terminology/lookup` exists at `server/terminologyApi.ts`. SSRF-safe origin whitelist (matches Blaze-proxy pattern). LRU cache with TTL. Returns `{ display, system, code }` from the configured FHIR `$lookup` endpoint. Disabled by default (`terminology.enabled: false`); when disabled, returns 503 and clients fall through to seed.
   4. **TERM-04** — New `config/settings.yaml` keys: `terminology.enabled`, `terminology.serverUrl`, `terminology.cacheTtlMs`. Documented in `docs/Konfiguration.md`. Defaults preserve current offline behavior.
   5. **TERM-05** — Tests cover: (a) `collectCodings` builds expected dictionary from a fixture bundle, (b) `getCachedDisplay` returns seed value sync without firing fetch when seed hits, (c) async `resolveDisplay` populates L1 and React hook re-renders, (d) server proxy 503 when disabled, (e) `npm run test:ci` baseline grows to ~624 with 5 new test cases.
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 Plans:
-- [ ] 25-01-terminology-module-PLAN.md — Create src/services/terminology.ts with collectCodings, resolveDisplay, getCachedDisplay, useDiagnosisDisplay, _seedMap (TERM-01, TERM-05 partial; Wave 1)
+- [x] 25-01-terminology-module-PLAN.md — Create src/services/terminology.ts with collectCodings, resolveDisplay, getCachedDisplay, useDiagnosisDisplay, _seedMap (TERM-01, TERM-05 partial; Wave 1)
 - [x] 25-02-terminology-server-proxy-PLAN.md — Add POST /api/terminology/lookup with SSRF guard + LRU cache + 503-when-disabled (TERM-03, TERM-05 partial; Wave 2, parallel-safe with 25-01)
 - [ ] 25-03-caller-migration-PLAN.md — Migrate 5 callers (CohortBuilder, Analysis, Quality, QualityCaseDetail, PatientHeader) to new module; remove getDiagnosisLabel/FullText from fhirLoader (TERM-02; Wave 3)
 - [ ] 25-04-settings-and-docs-PLAN.md — Add terminology.* settings keys + German docs in Konfiguration.md (TERM-04; Wave 4)

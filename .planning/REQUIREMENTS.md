@@ -76,7 +76,7 @@ Source: in-app feedback submitted by `admin` on 2026-04-27 (4 issues).
 
 Source: post-v1.9.3 architecture review (FHIR mapping deep-dive 2026-04-28).
 
-- [ ] **TERM-01** — New `src/services/terminology.ts` module hosts `collectCodings(bundles)`, `resolveDisplay({ system, code, locale })`, `getCachedDisplay(system, code, locale)`, and `useDiagnosisDisplay(code, system?, locale)`. Well-known seed (AMD/DR/ICD) lives here, not in `fhirLoader.ts`.
+- [x] **TERM-01** — New `src/services/terminology.ts` module hosts `collectCodings(bundles)`, `resolveDisplay({ system, code, locale })`, `getCachedDisplay(system, code, locale)`, and `useDiagnosisDisplay(code, system?, locale)`. Well-known seed (AMD/DR/ICD) lives here, not in `fhirLoader.ts`.
 - [ ] **TERM-02** — `getDiagnosisLabel` + `getDiagnosisFullText` removed from `src/services/fhirLoader.ts`. The 5 callers (CohortBuilderPage, AnalysisPage, QualityPage, QualityCaseDetail, PatientHeader) updated to the new API.
 - [x] **TERM-03** — Server-side proxy `POST /api/terminology/lookup` at `server/terminologyApi.ts`: SSRF-safe origin whitelist, LRU cache with TTL, FHIR `$lookup` translation. Disabled by default; clients fall through to seed when 503.
 - [ ] **TERM-04** — `config/settings.yaml` gains `terminology.enabled`, `terminology.serverUrl`, `terminology.cacheTtlMs`. Documented in `docs/Konfiguration.md`. Defaults preserve current offline behavior.
