@@ -3,6 +3,7 @@ import { Ban, CheckCircle2, Circle, Clock, Download } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { pickCoding } from '../../shared/fhirQueries';
 import QualityCaseDetail from '../components/quality/QualityCaseDetail';
 import QualityCaseList from '../components/quality/QualityCaseList';
 import QualityFlagDialog from '../components/quality/QualityFlagDialog';
@@ -12,10 +13,10 @@ import { useLanguage } from '../context/LanguageContext';
 import {
   getAge,
   getCenterShorthand,
-  getDiagnosisLabel,
   SNOMED_IVI,
 } from '../services/fhirLoader';
 import { getSettings } from '../services/settingsService';
+import { getCachedDisplay } from '../services/terminology';
 import type { PatientCase, QualityFlag, QualityStatus } from '../types/fhir';
 import { getDateLocale } from '../utils/dateFormat';
 import { datedFilename, downloadCsv } from '../utils/download';
@@ -180,7 +181,10 @@ export default function QualityPage() {
         c.pseudonym,
         getCenterShorthand(c.centerId, c.centerName),
         String(getAge(c.birthDate)),
-        (c.conditions ?? []).map((cond) => getDiagnosisLabel(cond.code?.coding?.[0]?.code ?? '', locale)).join('; '),
+        (c.conditions ?? []).map((cond) => {
+          const { system, code } = pickCoding(cond);
+          return getCachedDisplay(system, code, locale);
+        }).join('; '),
         statusLabel,
         therapyLabel,
         excludedCases.includes(c.id) ? '✓' : '',
