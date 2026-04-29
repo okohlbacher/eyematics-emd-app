@@ -1,12 +1,18 @@
+// @vitest-environment jsdom
 /**
  * Phase 25 / Plan 25-01 / TERM-01, TERM-05: Unit tests for the new
  * browser-side terminology resolver module (`src/services/terminology.ts`).
  *
- * This file grows over 3 atomic commits in plan 25-01:
- *   - Task 1: collectCodings shape + _seedMap byte-identical strings
- *   - Task 2 (this commit): getCachedDisplay seed/miss + resolveDisplay 200/503 paths
- *   - Task 3: useDiagnosisDisplay hook (RTL renderHook test)
+ * Covers (D-21):
+ *   - collectCodings shape over a fixture bundle
+ *   - _seedMap byte-identical strings (regression guard for migration)
+ *   - getCachedDisplay seed hit (no fetch fired)
+ *   - getCachedDisplay miss → raw code + fire-and-forget fetch
+ *   - resolveDisplay 200 path populates L1
+ *   - resolveDisplay 503 path → seed fallback
+ *   - useDiagnosisDisplay re-renders when L1 fills
  */
+import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -15,6 +21,7 @@ import {
   collectCodings,
   getCachedDisplay,
   resolveDisplay,
+  useDiagnosisDisplay,
 } from '../src/services/terminology';
 import { terminologyFixture } from './fixtures/terminologyBundle';
 
@@ -26,6 +33,7 @@ function mockFetch(handler: (url: string, init?: RequestInit) => Response | Prom
     const url = typeof input === 'string' ? input : String(input);
     return await handler(url, init);
   });
+  // Cast to satisfy fetch type
   globalThis.fetch = fn as unknown as typeof fetch;
   return fn;
 }
@@ -132,5 +140,37 @@ describe('terminology — getCachedDisplay + resolveDisplay', () => {
       locale: 'de',
     });
     expect(result).toBe('AMD');
+  });
+});
+
+describe('terminology — useDiagnosisDisplay hook', () => {
+  let originalFetch: typeof fetch;
+
+  beforeEach(() => {
+    _resetForTests();
+    originalFetch = globalThis.fetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    vi.restoreAllMocks();
+  });
+
+  it('Test E — re-renders with resolved value when L1 fills', async () => {
+    mockFetch(() => new Response(JSON.stringify({ display: 'Resolved' }), { status: 200 }));
+
+    const { result } = renderHook(() => useDiagnosisDisplay('XYZ', 'urn:test', 'de'));
+
+    // Initial render: raw code, isResolving true
+    expect(result.current.label).toBe('XYZ');
+    expect(result.current.isResolving).toBe(true);
+
+    await act(async () => {
+      await flushMicrotasks();
+      await flushMicrotasks();
+    });
+
+    expect(result.current.label).toBe('Resolved');
+    expect(result.current.isResolving).toBe(false);
   });
 });

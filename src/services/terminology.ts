@@ -13,6 +13,8 @@
  * See `.planning/phases/25-terminology-resolver/25-CONTEXT.md` decisions
  * D-01..D-09 for the binding contract.
  */
+import { useEffect, useReducer } from 'react';
+
 import { SNOMED_AMD, SNOMED_DR } from '../../shared/fhirCodes';
 import type { FhirBundle } from '../types/fhir';
 
@@ -29,12 +31,7 @@ interface SeedEntry {
  *
  * Strings are byte-identical to the existing `getDiagnosisLabel` /
  * `getDiagnosisFullText` outputs in `fhirLoader.ts:112-170` to avoid
- * spurious diff in screenshot/snapshot tests during the 25-03 caller
- * migration.
- *
- * Note: legacy `getDiagnosisFullText` covers 10 cases (2 SNOMED + 8
- * ICD-10-GM); plan-text says "9" but the byte-identical migration
- * requires all 10 — see plan SUMMARY for the deviation note.
+ * spurious diff in screenshot/snapshot tests during migration.
  *
  * Exported with `_` prefix per D-04 — test-only access surface.
  */
@@ -126,6 +123,7 @@ export const _seedMap: Map<string, SeedEntry> = new Map([
 const _l1Cache: Map<string, string> = new Map();
 const _l1FullTextCache: Map<string, string> = new Map();
 const _pendingLookups: Set<string> = new Set();
+const _listeners: Set<() => void> = new Set();
 
 function cacheKey(system: string | undefined, code: string, locale: string): string {
   return `${system ?? '_'}|${code}|${locale}`;
@@ -139,6 +137,12 @@ function pickLocale(value: { de: string; en: string }, locale: string): string {
   return locale === 'en' ? value.en : value.de;
 }
 
+function _notifyAll(): void {
+  for (const fn of _listeners) {
+    fn();
+  }
+}
+
 /**
  * Reset module state. Test-only helper (D-04 underscore prefix).
  * Vitest calls this in `beforeEach` to keep tests independent.
@@ -147,6 +151,7 @@ export function _resetForTests(): void {
   _l1Cache.clear();
   _l1FullTextCache.clear();
   _pendingLookups.clear();
+  _listeners.clear();
 }
 
 /**
@@ -213,6 +218,31 @@ export function getCachedDisplay(
   return code;
 }
 
+/**
+ * Sync fullText lookup — sibling of `getCachedDisplay` for tooltip contexts.
+ * Mirrors the same 3-tier strategy but reads `entry.fullText[locale]` on
+ * seed hits.
+ */
+export function getCachedFullText(
+  system: string | undefined,
+  code: string,
+  locale: string
+): string {
+  const key = cacheKey(system, code, locale);
+  const cached = _l1FullTextCache.get(key);
+  if (cached !== undefined) return cached;
+
+  const seed = _seedMap.get(seedKey(system, code));
+  if (seed) {
+    return pickLocale(seed.fullText, locale);
+  }
+
+  if (!_pendingLookups.has(key)) {
+    void resolveDisplay({ system, code, locale }).catch(() => {});
+  }
+  return code;
+}
+
 interface LookupResponse {
   display?: string;
 }
@@ -224,9 +254,8 @@ interface LookupResponse {
  *   3. on 503 / non-2xx → seed fallback; if seed hits, cache seed.label and return
  *   4. else → cache the raw code (suppress repeat fetches per D-09 note) and return
  *
- * Throw-only error policy (CLAUDE.md D-03): network errors are swallowed here
- * (fall through to seed/raw-code) so callers can render something deterministic.
- * The fire-and-forget path in `getCachedDisplay` further swallows any leak.
+ * Throw-only error policy (CLAUDE.md D-03): network errors propagate so callers
+ * can decide. The fire-and-forget path in `getCachedDisplay` swallows them.
  */
 export async function resolveDisplay(args: {
   system: string | undefined;
@@ -262,9 +291,12 @@ export async function resolveDisplay(args: {
 
     if (display !== null) {
       _l1Cache.set(key, display);
+      // Mirror display into fullText cache slot if no fullText cached yet —
+      // server lookup returns a single display string; tooltip will show same.
       if (!_l1FullTextCache.has(key)) {
         _l1FullTextCache.set(key, display);
       }
+      _notifyAll();
       return display;
     }
 
@@ -274,6 +306,7 @@ export async function resolveDisplay(args: {
       const fullText = pickLocale(seed.fullText, locale);
       _l1Cache.set(key, label);
       _l1FullTextCache.set(key, fullText);
+      _notifyAll();
       return label;
     }
 
@@ -282,8 +315,34 @@ export async function resolveDisplay(args: {
     if (!_l1FullTextCache.has(key)) {
       _l1FullTextCache.set(key, code);
     }
+    _notifyAll();
     return code;
   } finally {
     _pendingLookups.delete(key);
   }
+}
+
+/**
+ * React hook (D-04). Returns `{ label, fullText, isResolving }` and
+ * re-renders any consumer when L1 fills (cache writes from anywhere
+ * in the app trigger updates).
+ */
+export function useDiagnosisDisplay(
+  code: string,
+  system: string | undefined,
+  locale: string
+): { label: string; fullText: string; isResolving: boolean } {
+  const [, force] = useReducer((x: number) => x + 1, 0);
+
+  useEffect(() => {
+    _listeners.add(force);
+    return () => {
+      _listeners.delete(force);
+    };
+  }, []);
+
+  const label = getCachedDisplay(system, code, locale);
+  const fullText = getCachedFullText(system, code, locale);
+  const isResolving = _pendingLookups.has(cacheKey(system, code, locale));
+  return { label, fullText, isResolving };
 }
