@@ -34,3 +34,17 @@ export function getObservationsByCode(
         new Date(b.effectiveDateTime ?? 0).getTime()
     );
 }
+
+/**
+ * Extract the first coding's `(system, code)` from a Condition-like resource.
+ * Returns `code` as empty string when missing (matches existing caller fallback
+ * pattern `cond.code.coding[0]?.code ?? ''`). Used by terminology resolver
+ * callers (Phase 25 D-20) — pulled into shared/ once the pattern crossed the
+ * 2× threshold (4 distinct call-sites).
+ */
+export function pickCoding(
+  cond: { code?: { coding?: Array<{ system?: string; code?: string }> } }
+): { system: string | undefined; code: string } {
+  const c = cond.code?.coding?.[0];
+  return { system: c?.system, code: c?.code ?? '' };
+}

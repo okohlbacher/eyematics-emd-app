@@ -12,8 +12,10 @@ import {
 } from 'lucide-react';
 import React from 'react';
 
+import { pickCoding } from '../../../shared/fhirQueries';
 import type { TranslationKey } from '../../i18n/translations';
-import { getAge, getDiagnosisFullText, getDiagnosisLabel, SNOMED_EYE_RIGHT } from '../../services/fhirLoader';
+import { getAge, SNOMED_EYE_RIGHT } from '../../services/fhirLoader';
+import { useDiagnosisDisplay } from '../../services/terminology';
 import type { Condition } from '../../types/fhir';
 
 interface TimelineEvent {
@@ -48,6 +50,45 @@ export interface PatientHeaderProps {
   highlightDate: string | null;
   onHighlightDate: (date: string | null) => void;
   onOctTimelineClick: (octIdx: number) => void;
+}
+
+/**
+ * Single diagnosis "pill" rendered with the terminology resolver hook (Phase 25 D-19).
+ * Extracted from `.map(...)` so `useDiagnosisDisplay` can satisfy React's
+ * rules-of-hooks (one hook call per pill = one component instance per pill).
+ */
+function DiagnosisPill({
+  cond,
+  locale,
+  t,
+  dateFmt,
+}: {
+  cond: Condition;
+  locale: string;
+  t: (key: TranslationKey) => string;
+  dateFmt: string;
+}) {
+  const { system, code } = pickCoding(cond);
+  const { label, fullText } = useDiagnosisDisplay(code, system, locale);
+  return (
+    <span
+      className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm flex items-center gap-1.5 cursor-help"
+      title={fullText}
+    >
+      {label}
+      {cond.bodySite?.[0] && (
+        <span className="text-purple-400 text-xs">
+          ({cond.bodySite[0].coding?.[0]?.code === SNOMED_EYE_RIGHT ? 'OD' : 'OS'})
+        </span>
+      )}
+      {cond.onsetDateTime && (
+        <span className="text-purple-400">
+          {t('since')}{' '}
+          {new Date(cond.onsetDateTime).toLocaleDateString(dateFmt)}
+        </span>
+      )}
+    </span>
+  );
 }
 
 export default function PatientHeader({
@@ -129,24 +170,13 @@ export default function PatientHeader({
       {/* Diagnoses + Treatment indication */}
       <div className="mt-4 flex flex-wrap gap-2">
         {primaryDiagnoses.map((cond) => (
-          <span
+          <DiagnosisPill
             key={cond.id}
-            className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm flex items-center gap-1.5 cursor-help"
-            title={getDiagnosisFullText(cond.code.coding[0]?.code ?? '', locale)}
-          >
-            {getDiagnosisLabel(cond.code.coding[0]?.code ?? '', locale)}
-            {cond.bodySite?.[0] && (
-              <span className="text-purple-400 text-xs">
-                ({cond.bodySite[0].coding?.[0]?.code === SNOMED_EYE_RIGHT ? 'OD' : 'OS'})
-              </span>
-            )}
-            {cond.onsetDateTime && (
-              <span className="text-purple-400">
-                {t('since')}{' '}
-                {new Date(cond.onsetDateTime).toLocaleDateString(dateFmt)}
-              </span>
-            )}
-          </span>
+            cond={cond}
+            locale={locale}
+            t={t}
+            dateFmt={dateFmt}
+          />
         ))}
         {treatmentIndication && (
           <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-sm flex items-center gap-1.5">
