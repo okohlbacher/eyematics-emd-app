@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.9.4
 milestone_name: — Terminology Resolver Refactor
 status: executing
-stopped_at: Completed 25-01-terminology-module-PLAN.md — Phase 25 wave 1 done
-last_updated: "2026-04-29T19:52:17.063Z"
+stopped_at: Completed 25-03-caller-migration-PLAN.md
+last_updated: "2026-04-29T20:04:07.364Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
-  percent: 50
+  completed_plans: 3
+  percent: 75
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-23)
 ## Current Position
 
 Phase: 24 (feedback-fixes) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-04-29
 
@@ -75,6 +75,6 @@ Last activity: 2026-04-29
 
 ## Session Continuity
 
-Last session: 2026-04-29T19:52:17.060Z
-Stopped at: Completed 25-01-terminology-module-PLAN.md — Phase 25 wave 1 done
+Last session: 2026-04-29T20:04:07.361Z
+Stopped at: Completed 25-03-caller-migration-PLAN.md
 Next step: Define REQUIREMENTS.md, then create ROADMAP.md
