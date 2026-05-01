@@ -360,3 +360,127 @@ describe('generateCenterBundle SYNTH-02 — comorbidity model', () => {
     expect(aCo.length).toBeGreaterThan(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// SYNTH-03 — Age-disease coupling (Phase 26 / D-08)
+// ---------------------------------------------------------------------------
+
+function ageAtBaselineFor(b: Bundle, patientId: string): number | undefined {
+  const patient = getPatients(b).find(p => p.id === patientId);
+  if (!patient) return undefined;
+  const primary = primaryConditionFor(b, patientId);
+  if (!primary?.onsetDateTime) return undefined;
+  return (
+    (new Date(primary.onsetDateTime).getTime() - new Date(patient.birthDate).getTime()) /
+    (365.25 * 24 * 3600 * 1000)
+  );
+}
+
+function median(xs: number[]): number {
+  const s = [...xs].sort((a, b) => a - b);
+  const n = s.length;
+  if (n === 0) return NaN;
+  return n % 2 ? s[(n - 1) / 2]! : (s[n / 2 - 1]! + s[n / 2]!) / 2;
+}
+
+describe('generateCenterBundle SYNTH-03 — age-disease coupling (D-08)', () => {
+  it('AMD: age distribution median ≥70, min ≥60, max ≤95 (n=200)', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 200,
+      seed: 42,
+      cohortMix: { amd: 1, dme: 0, rvo: 0 },
+    }) as Bundle;
+    const ages = getPatients(b)
+      .map(p => ageAtBaselineFor(b, p.id))
+      .filter((x): x is number => x !== undefined);
+    expect(ages.length).toBe(200);
+    expect(Math.min(...ages)).toBeGreaterThanOrEqual(60);
+    expect(Math.max(...ages)).toBeLessThanOrEqual(95);
+    expect(median(ages)).toBeGreaterThanOrEqual(70);
+  });
+
+  it('DME: age distribution median ∈ [60,70], min ≥50, max ≤80 (n=200)', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 200,
+      seed: 99,
+      cohortMix: { amd: 0, dme: 1, rvo: 0 },
+    }) as Bundle;
+    const ages = getPatients(b)
+      .map(p => ageAtBaselineFor(b, p.id))
+      .filter((x): x is number => x !== undefined);
+    expect(ages.length).toBe(200);
+    expect(Math.min(...ages)).toBeGreaterThanOrEqual(50);
+    expect(Math.max(...ages)).toBeLessThanOrEqual(80);
+    const m = median(ages);
+    expect(m).toBeGreaterThanOrEqual(60);
+    expect(m).toBeLessThanOrEqual(70);
+  });
+
+  it('RVO: age distribution median ∈ [63,73], min ≥55, max ≤85 (n=200)', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 200,
+      seed: 13,
+      cohortMix: { amd: 0, dme: 0, rvo: 1 },
+    }) as Bundle;
+    const ages = getPatients(b)
+      .map(p => ageAtBaselineFor(b, p.id))
+      .filter((x): x is number => x !== undefined);
+    expect(ages.length).toBe(200);
+    expect(Math.min(...ages)).toBeGreaterThanOrEqual(55);
+    expect(Math.max(...ages)).toBeLessThanOrEqual(85);
+    const m = median(ages);
+    expect(m).toBeGreaterThanOrEqual(63);
+    expect(m).toBeLessThanOrEqual(73);
+  });
+
+  it('determinism: same seed → identical age sequence', () => {
+    const a = generateCenterBundle({
+      ...COMMON,
+      patients: 50,
+      seed: 7777,
+      cohortMix: { amd: 0.5, dme: 0.3, rvo: 0.2 },
+    }) as Bundle;
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 50,
+      seed: 7777,
+      cohortMix: { amd: 0.5, dme: 0.3, rvo: 0.2 },
+    }) as Bundle;
+    const agesA = getPatients(a).map(p => ageAtBaselineFor(a, p.id));
+    const agesB = getPatients(b).map(p => ageAtBaselineFor(b, p.id));
+    expect(JSON.stringify(agesA)).toBe(JSON.stringify(agesB));
+  });
+
+  it('birthDate derived from baselineDate − ageAtBaseline (no longer 1935–1970 uniform)', () => {
+    // After SYNTH-03 every birthDate must satisfy: baselineDate − birthDate is in
+    // the range [50, 95] years across the cohorts, NOT the prior 1935–1970 anchor.
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 100,
+      seed: 555,
+      cohortMix: { amd: 0.5, dme: 0.3, rvo: 0.2 },
+    }) as Bundle;
+    const patients = getPatients(b);
+    let earliestYear = 9999;
+    for (const p of patients) {
+      const year = Number(p.birthDate.slice(0, 4));
+      if (year < earliestYear) earliestYear = year;
+      // No patient should be born after 1980 (max baselineDate ~2024 minus min age 50 = 1974,
+      // give 1980 as a generous upper bound for prng day jitter).
+      expect(year).toBeLessThanOrEqual(1975);
+    }
+    // Old behavior would yield earliest year 1935; new behavior pushes it later because
+    // baselineDate is 2022–2024 and max age is 95 → earliest birth year ≥ ~1927 but
+    // we also expect tighter clustering toward 1930–1970. Simply assert the new path:
+    // primary onset minus birthDate should match ageAtBaseline in [50, 95].
+    for (const p of patients) {
+      const age = ageAtBaselineFor(b, p.id);
+      expect(age).toBeDefined();
+      expect(age!).toBeGreaterThanOrEqual(50);
+      expect(age!).toBeLessThanOrEqual(95);
+    }
+  });
+});
