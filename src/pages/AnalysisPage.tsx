@@ -352,8 +352,8 @@ export default function AnalysisPage() {
           <ResponsiveContainer width="100%" height={280}>
             <ScatterChart>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="age" name={t('age')} unit=" J." />
-              <YAxis dataKey="visus" name={t('visus')} domain={[0, 1]} />
+              <XAxis type="number" dataKey="age" name={t('age')} unit=" J." domain={['dataMin', 'dataMax']} />
+              <YAxis type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} />
               <Tooltip cursor={{ strokeDasharray: '3 3' }} />
               <Scatter data={ageVisusScatter} fill="#f59e0b" />
             </ScatterChart>
