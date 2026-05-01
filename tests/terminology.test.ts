@@ -60,11 +60,10 @@ describe('terminology — collectCodings + seedMap', () => {
     expect(result.get('_')).toEqual(new Set(['NOSYS']));
   });
 
-  it('_seedMap holds 10 entries and SNOMED AMD strings are byte-identical to legacy fhirLoader output', () => {
-    // Plan text says "9" but legacy getDiagnosisFullText covers 10 cases:
-    // 2 SNOMED (AMD, DR) + 8 ICD-10-GM (E11.9, E10.9, H40.1, H25.1, H33.0, I10, E78.0, I25.1).
-    // Migration must be byte-identical (D-08), so the seed has 10 entries — plan-text deviation.
-    expect(_seedMap.size).toBe(10);
+  it('_seedMap holds 15 entries and SNOMED AMD strings are byte-identical to legacy fhirLoader output', () => {
+    // Phase 25: 10 entries (2 SNOMED + 8 ICD-10-GM).
+    // Phase 26 SYNTH-01: +5 entries (SNOMED 312903003, 362098006; ICD-10-GM E11, H43.1, T85.8).
+    expect(_seedMap.size).toBe(15);
 
     const amd = _seedMap.get(`${SYSTEM_SNOMED}|267718000`);
     expect(amd).toBeDefined();
@@ -72,6 +71,59 @@ describe('terminology — collectCodings + seedMap', () => {
     expect(amd!.label.en).toBe('AMD');
     expect(amd!.fullText.de).toBe('Altersbedingte Makuladegeneration (267718000)');
     expect(amd!.fullText.en).toBe('Age-related macular degeneration (267718000)');
+  });
+});
+
+describe('Phase 26 SYNTH-01 seed extension', () => {
+  beforeEach(() => {
+    _resetForTests();
+  });
+
+  it('SNOMED 312903003 — DME (label + fullText, de + en)', () => {
+    const entry = _seedMap.get(`${SYSTEM_SNOMED}|312903003`);
+    expect(entry).toBeDefined();
+    expect(entry!.label.de).toBe('Diabetisches Makulaödem (DMÖ)');
+    expect(entry!.label.en).toBe('Diabetic macular edema');
+    expect(entry!.fullText.de).toBe('Diabetisches Makulaödem (312903003)');
+    expect(entry!.fullText.en).toBe('Diabetic macular edema (312903003)');
+  });
+
+  it('SNOMED 362098006 — RVO (label + fullText, de + en)', () => {
+    const entry = _seedMap.get(`${SYSTEM_SNOMED}|362098006`);
+    expect(entry).toBeDefined();
+    expect(entry!.label.de).toBe('Retinaler Venenverschluss (RVV)');
+    expect(entry!.label.en).toBe('Retinal vein occlusion');
+    expect(entry!.fullText.de).toBe('Retinaler Venenverschluss (362098006)');
+    expect(entry!.fullText.en).toBe('Retinal vein occlusion (362098006)');
+  });
+
+  it('ICD-10-GM E11 — T2DM parent code (distinct from E11.9)', () => {
+    const entry = _seedMap.get(`${SYSTEM_ICD10_GM}|E11`);
+    expect(entry).toBeDefined();
+    expect(entry!.label.de).toBe('E11');
+    expect(entry!.label.en).toBe('E11');
+    expect(entry!.fullText.de).toBe('Diabetes mellitus Typ 2 (E11)');
+    expect(entry!.fullText.en).toBe('Type 2 diabetes mellitus (E11)');
+    // Regression guard: E11.9 still distinct
+    expect(_seedMap.get(`${SYSTEM_ICD10_GM}|E11.9`)).toBeDefined();
+  });
+
+  it('ICD-10-GM H43.1 — Vitreous hemorrhage', () => {
+    const entry = _seedMap.get(`${SYSTEM_ICD10_GM}|H43.1`);
+    expect(entry).toBeDefined();
+    expect(entry!.label.de).toBe('H43.1');
+    expect(entry!.label.en).toBe('H43.1');
+    expect(entry!.fullText.de).toBe('Glaskörperblutung (H43.1)');
+    expect(entry!.fullText.en).toBe('Vitreous hemorrhage (H43.1)');
+  });
+
+  it('ICD-10-GM T85.8 — Other complication of internal prosthetic devices', () => {
+    const entry = _seedMap.get(`${SYSTEM_ICD10_GM}|T85.8`);
+    expect(entry).toBeDefined();
+    expect(entry!.label.de).toBe('T85.8');
+    expect(entry!.label.en).toBe('T85.8');
+    expect(entry!.fullText.de).toBe('Sonstige Komplikation durch Implantate (T85.8)');
+    expect(entry!.fullText.en).toBe('Other complication of internal prosthetic devices (T85.8)');
   });
 });
 
