@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { generateCenterBundle, type CohortMix } from '../scripts/generate-center-bundle';
+import { type CohortMix,generateCenterBundle } from '../scripts/generate-center-bundle';
 
 const COMMON = {
   centerId: 'org-test',
@@ -101,7 +101,10 @@ describe('generateCenterBundle (DATA-GEN-01..04)', () => {
     }
   });
 
-  it('every Patient has between 1 and 20 Procedures (SNOMED 36189003) in ascending performedDateTime order', () => {
+  it('every Patient has between 1 and 44 Procedures (SNOMED 36189003); ascending dates per eye', () => {
+    // Phase 26 SYNTH-03: per-cohort IVI bounds (max AMD=22) × bilateral support
+    // (up to 2 eyes) → 1..44 procedures per patient. Per-eye dates remain
+    // monotonic; combined sequence may interleave when bilateral.
     const b = generateCenterBundle({ ...COMMON, seed: 7 }) as Bundle;
     const patients = b.entry.filter(e => e.resource.resourceType === 'Patient');
     const procs = b.entry.filter(e => e.resource.resourceType === 'Procedure');
@@ -109,15 +112,21 @@ describe('generateCenterBundle (DATA-GEN-01..04)', () => {
       const ref = `Patient/${p.resource.id}`;
       const ivoms = procs
         .filter(pr => (pr.resource as { subject: { reference: string } }).subject.reference === ref)
-        .map(pr => pr.resource as { code: { coding: Array<{ code: string }> }; performedDateTime?: string });
+        .map(pr => pr.resource as {
+          id: string;
+          code: { coding: Array<{ code: string }> };
+          performedDateTime?: string;
+        });
       expect(ivoms.length).toBeGreaterThanOrEqual(1);
-      expect(ivoms.length).toBeLessThanOrEqual(20);
+      expect(ivoms.length).toBeLessThanOrEqual(44);
       for (const iv of ivoms) {
         expect(iv.code.coding.some(c => c.code === '36189003')).toBe(true);
       }
-      const dates = ivoms.map(iv => iv.performedDateTime!).filter(Boolean);
-      const sorted = [...dates].sort();
-      expect(dates).toEqual(sorted);
+      // Dates per eye-stream must be ascending. Split by id suffix '-bilat'.
+      const primary = ivoms.filter(iv => !/-bilat-/.test(iv.id)).map(iv => iv.performedDateTime!).filter(Boolean);
+      const second = ivoms.filter(iv => /-bilat-/.test(iv.id)).map(iv => iv.performedDateTime!).filter(Boolean);
+      expect(primary).toEqual([...primary].sort());
+      expect(second).toEqual([...second].sort());
     }
   });
 
@@ -134,7 +143,11 @@ describe('generateCenterBundle (DATA-GEN-01..04)', () => {
       const codes = patientMeds.flatMap(m =>
         (m.resource as { medicationCodeableConcept?: { coding: Array<{ code: string }> } }).medicationCodeableConcept?.coding.map(c => c.code) ?? [],
       );
-      expect(codes.some(c => c === 'S01LA05' || c === 'L01XC07')).toBe(true);
+      // Phase 26 SYNTH-03 D-09: drug mix expanded — Faricimab (S01LA09) for DME,
+      // Dexamethasone (S01BA01) for RVO, in addition to the prior two.
+      expect(
+        codes.some(c => c === 'S01LA05' || c === 'L01XC07' || c === 'S01LA09' || c === 'S01BA01'),
+      ).toBe(true);
     }
   });
 
@@ -726,7 +739,8 @@ describe('generateCenterBundle SYNTH-03 — template differentiation (D-09)', ()
     for (const p of patients) {
       const procs = getProceduresFor(b, p.id);
       expect(procs.length).toBeGreaterThanOrEqual(1);
-      expect(procs.length).toBeLessThanOrEqual(22);
+      // AMD: 1–22 per eye × ≤2 eyes (bilateral 30%) → ≤44.
+      expect(procs.length).toBeLessThanOrEqual(44);
       // First CRT obs (baseline) must be in [280, 500].
       const obs = getObservationsFor(b, p.id);
       const crt = obs
@@ -768,7 +782,8 @@ describe('generateCenterBundle SYNTH-03 — template differentiation (D-09)', ()
     for (const p of patients) {
       const procs = getProceduresFor(b, p.id);
       expect(procs.length).toBeGreaterThanOrEqual(1);
-      expect(procs.length).toBeLessThanOrEqual(12);
+      // DME: 1–12 per eye × ≤2 eyes (bilateral 60%) → ≤24.
+      expect(procs.length).toBeLessThanOrEqual(24);
       const obs = getObservationsFor(b, p.id);
       const crt = obs
         .filter(o => o.code.coding.some(c => c.code === 'LP267955-5'))
@@ -807,7 +822,8 @@ describe('generateCenterBundle SYNTH-03 — template differentiation (D-09)', ()
     for (const p of patients) {
       const procs = getProceduresFor(b, p.id);
       expect(procs.length).toBeGreaterThanOrEqual(1);
-      expect(procs.length).toBeLessThanOrEqual(8);
+      // RVO: 1–8 per eye × ≤2 eyes (bilateral 5%) → ≤16.
+      expect(procs.length).toBeLessThanOrEqual(16);
       const obs = getObservationsFor(b, p.id);
       const crt = obs
         .filter(o => o.code.coding.some(c => c.code === 'LP267955-5'))

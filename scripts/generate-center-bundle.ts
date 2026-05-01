@@ -7,7 +7,10 @@
  * the same `seed` always yields byte-identical JSON.
  *
  * Resource types covered: Organization, Patient, Condition,
- * Observation (visus / CRT / IOP), Procedure (IVOM), MedicationStatement.
+ * Observation (visus / CRT / IOP / HbA1c — DME only),
+ * Procedure (IVOM), MedicationStatement.
+ * Drug mix per cohort (D-09): Aflibercept + Bevacizumab everywhere;
+ * Faricimab in DME; Dexamethasone (intravitreal implant) in RVO.
  * NO ImagingStudy is emitted — the OCT jpeg asset library only contains
  * images for the kept curated sites (Aachen, Tübingen). Adding ImagingStudy
  * references for synthetic sites would create broken links in the case
@@ -176,6 +179,67 @@ const IVOM_CODE = { system: SNOMED, code: '36189003', display: 'Intravitreal inj
 
 const AFLIBERCEPT = { system: ATC, code: 'S01LA05', display: 'Aflibercept' };
 const BEVACIZUMAB = { system: ATC, code: 'L01XC07', display: 'Bevacizumab' };
+// Phase 26 / SYNTH-03 / D-09 — additional anti-VEGF agents in the drug mix.
+// Faricimab: ATC S01LA09 (anti-VEGF/Ang2 bispecific).
+// Dexamethasone intravitreal implant: defaulting to ATC S01BA01 (ophthalmic
+// dexamethasone) to keep the existing ATC-only pattern; SNOMED 424425001 is
+// the alternative coding for the Ozurdex implant but introduces a coding-
+// system mix. Documented in D-09.
+const FARICIMAB = { system: ATC, code: 'S01LA09', display: 'Faricimab' };
+const DEXAMETHASONE = { system: ATC, code: 'S01BA01', display: 'Dexamethasone (intravitreal implant)' };
+
+// Phase 26 / SYNTH-03 / D-09 — per-cohort template constants.
+// `drugs` is a CDF: pick first entry where rand() ≤ p.
+type DrugCdfEntry = { p: number; drug: { system: string; code: string; display: string } };
+interface CohortTemplate {
+  ivi: readonly [number, number];
+  crtBase: readonly [number, number];
+  drugs: readonly DrugCdfEntry[];
+  bilateralProb: number;
+  visusBase: readonly [number, number];
+}
+const TEMPLATES: Record<'amd' | 'dme' | 'rvo', CohortTemplate> = {
+  amd: {
+    ivi: [1, 22],
+    crtBase: [280, 500],
+    drugs: [
+      { p: 0.80, drug: AFLIBERCEPT },
+      { p: 1.00, drug: BEVACIZUMAB },
+    ],
+    bilateralProb: 0.30,
+    visusBase: [0.05, 0.45],
+  },
+  dme: {
+    ivi: [1, 12],
+    crtBase: [350, 600],
+    drugs: [
+      { p: 0.60, drug: AFLIBERCEPT },
+      { p: 0.95, drug: BEVACIZUMAB },
+      { p: 1.00, drug: FARICIMAB },
+    ],
+    bilateralProb: 0.60,
+    visusBase: [0.10, 0.50],
+  },
+  rvo: {
+    ivi: [1, 8],
+    crtBase: [350, 650],
+    drugs: [
+      { p: 0.70, drug: AFLIBERCEPT },
+      { p: 0.90, drug: BEVACIZUMAB },
+      { p: 1.00, drug: DEXAMETHASONE },
+    ],
+    bilateralProb: 0.05,
+    visusBase: [0.05, 0.35],
+  },
+} as const;
+
+function pickDrugFromCdf(cdf: readonly DrugCdfEntry[], rand: () => number): DrugCdfEntry['drug'] {
+  const r = rand();
+  for (const entry of cdf) {
+    if (r <= entry.p) return entry.drug;
+  }
+  return cdf[cdf.length - 1]!.drug;
+}
 
 const BCVA_METHOD = { system: SNOMED, code: '252886007', display: 'Best corrected visual acuity' };
 
@@ -322,25 +386,9 @@ export function generateCenterBundle(input: GenerateCenterBundleInput): unknown 
       },
     });
 
-    // Eye of interest
-    const eye = rand() < 0.5 ? EYE_RIGHT : EYE_LEFT;
-
-    // Condition
-    conditionEntries.push({
-      resource: {
-        resourceType: 'Condition',
-        id: `cond-${sh}-${patNum}`,
-        subject: { reference: ref },
-        code: {
-          coding: [{ system: SNOMED, code: cohort.code, display: cohort.display }],
-        },
-        clinicalStatus: { coding: [{ code: 'active' }] },
-        onsetDateTime: baselineDate,
-        bodySite: [{ coding: [eye] }],
-      },
-    });
-
     // Phase 26 / SYNTH-02 — Disease-conditional comorbidity emission (D-04, D-05).
+    // Comorbidities are systemic (no bodySite) and emitted ONCE per patient,
+    // independent of bilateral status.
     const ageAtBaseline = Math.floor(
       (new Date(baselineDate).getTime() - new Date(birthDate).getTime()) /
         (365.25 * 24 * 3600 * 1000),
@@ -363,59 +411,130 @@ export function generateCenterBundle(input: GenerateCenterBundleInput): unknown 
       });
     });
 
-    // IVOM count
-    const ivomCount = seededRandInt(rand, 1, 20);
+    // Phase 26 / SYNTH-03 / D-09 — Eye selection + bilateral support.
+    const tmpl = TEMPLATES[cohortKey];
+    const primaryEye = rand() < 0.5 ? EYE_RIGHT : EYE_LEFT;
+    const secondEye = primaryEye === EYE_RIGHT ? EYE_LEFT : EYE_RIGHT;
+    const isBilateral = rand() < tmpl.bilateralProb;
 
-    // Build per-visit dates: visit 0 = baseline, visit k = baseline + cumulative offsets
+    // Per-cohort IVI count (D-09 ranges).
+    const ivomCount = seededRandInt(rand, tmpl.ivi[0], tmpl.ivi[1]);
+
+    // Visit timeline (shared across eyes — bilateral patients receive synchronous
+    // ophthalmology visits; that's a deliberate simplification per D-10).
     const visitDates: string[] = [baselineDate];
-    let cursor = new Date(baselineDate);
-    for (let k = 1; k <= ivomCount; k++) {
-      cursor = new Date(cursor);
-      cursor.setUTCDate(cursor.getUTCDate() + seededRandInt(rand, 28, 60));
-      visitDates.push(cursor.toISOString().slice(0, 10));
+    {
+      let cursor = new Date(baselineDate);
+      for (let k = 1; k <= ivomCount; k++) {
+        cursor = new Date(cursor);
+        cursor.setUTCDate(cursor.getUTCDate() + seededRandInt(rand, 28, 60));
+        visitDates.push(cursor.toISOString().slice(0, 10));
+      }
     }
 
-    // Visus observations: baseline + one per IVOM (so visitDates.length total)
-    let visus = 0.05 + rand() * 0.4; // start somewhere between 0.05 and 0.45
-    for (let k = 0; k < visitDates.length; k++) {
-      // Trend slowly upward with noise, clamp to [0.05, 1.0]
-      visus = Math.min(1.0, Math.max(0.05, visus + (rand() - 0.4) * 0.05));
-      const value = Math.round(visus * 100) / 100;
-      const obsId = `obs-${sh}-${patNum}-vis-${k + 1}`;
-      const observation: Record<string, unknown> = {
-        resourceType: 'Observation',
-        id: obsId,
-        status: 'final',
-        subject: { reference: ref },
-        code: { coding: [VISUS_CODE] },
-        effectiveDateTime: visitDates[k],
-        valueQuantity: { value, unit: 'decimal' },
-        bodySite: { coding: [eye] },
-        method: { coding: [BCVA_METHOD] },
-      };
-      observationEntries.push({ resource: observation });
-    }
-
-    // CRT observations: baseline + every 3rd visit, trending DOWN with noise, clamped [200, 600]
-    let crt = 350 + Math.floor(rand() * 200);
-    for (let k = 0; k < visitDates.length; k += 3) {
-      crt = Math.min(600, Math.max(200, crt + Math.floor((rand() - 0.7) * 30)));
-      const obsId = `obs-${sh}-${patNum}-crt-${Math.floor(k / 3) + 1}`;
-      observationEntries.push({
+    // Per-eye emitter — encapsulates Condition + visus/CRT obs + procedures.
+    // `eyeSuffix` distinguishes second-eye resource ids (`-bilat`).
+    const emitEye = (
+      eyeCoding: typeof primaryEye,
+      eyeSuffix: '' | '-bilat',
+    ): void => {
+      const condId = eyeSuffix ? `cond-${sh}-${patNum}-bilat` : `cond-${sh}-${patNum}`;
+      conditionEntries.push({
         resource: {
-          resourceType: 'Observation',
-          id: obsId,
-          status: 'final',
+          resourceType: 'Condition',
+          id: condId,
           subject: { reference: ref },
-          code: { coding: [CRT_CODE] },
-          effectiveDateTime: visitDates[k],
-          valueQuantity: { value: crt, unit: 'µm' },
-          bodySite: { coding: [eye] },
+          code: {
+            coding: [{ system: SNOMED, code: cohort.code, display: cohort.display }],
+          },
+          clinicalStatus: { coding: [{ code: 'active' }] },
+          onsetDateTime: baselineDate,
+          bodySite: [{ coding: [eyeCoding] }],
         },
       });
-    }
 
-    // IOP observations: baseline + every 4th visit
+      // Visus baseline per template; asymmetric independent draw per eye.
+      let visus = tmpl.visusBase[0] + rand() * (tmpl.visusBase[1] - tmpl.visusBase[0]);
+      for (let k = 0; k < visitDates.length; k++) {
+        visus = Math.min(1.0, Math.max(0.05, visus + (rand() - 0.4) * 0.05));
+        // Round, but ensure baseline (k=0) stays inside the configured base range
+        // so test assertions that read baseline as `visusBase` hold.
+        let value: number;
+        if (k === 0) {
+          const clampedBase = Math.min(tmpl.visusBase[1], Math.max(tmpl.visusBase[0], visus));
+          value = Math.round(clampedBase * 100) / 100;
+          visus = value;
+        } else {
+          value = Math.round(visus * 100) / 100;
+        }
+        const obsId = `obs-${sh}-${patNum}${eyeSuffix}-vis-${k + 1}`;
+        observationEntries.push({
+          resource: {
+            resourceType: 'Observation',
+            id: obsId,
+            status: 'final',
+            subject: { reference: ref },
+            code: { coding: [VISUS_CODE] },
+            effectiveDateTime: visitDates[k],
+            valueQuantity: { value, unit: 'decimal' },
+            bodySite: { coding: [eyeCoding] },
+            method: { coding: [BCVA_METHOD] },
+          },
+        });
+      }
+
+      // CRT baseline per template; trend down with noise, clamped to [200, 700]
+      // (upper bound widened to accommodate RVO 350–650 base).
+      let crt = tmpl.crtBase[0] + Math.floor(rand() * (tmpl.crtBase[1] - tmpl.crtBase[0] + 1));
+      for (let k = 0; k < visitDates.length; k += 3) {
+        let value: number;
+        if (k === 0) {
+          // Hold baseline inside cohort range.
+          value = Math.min(tmpl.crtBase[1], Math.max(tmpl.crtBase[0], crt));
+          crt = value;
+        } else {
+          crt = Math.min(700, Math.max(200, crt + Math.floor((rand() - 0.7) * 30)));
+          value = crt;
+        }
+        const obsId = `obs-${sh}-${patNum}${eyeSuffix}-crt-${Math.floor(k / 3) + 1}`;
+        observationEntries.push({
+          resource: {
+            resourceType: 'Observation',
+            id: obsId,
+            status: 'final',
+            subject: { reference: ref },
+            code: { coding: [CRT_CODE] },
+            effectiveDateTime: visitDates[k],
+            valueQuantity: { value, unit: 'µm' },
+            bodySite: { coding: [eyeCoding] },
+          },
+        });
+      }
+
+      // Procedures: one per IVOM visit (k=1..ivomCount).
+      for (let k = 1; k <= ivomCount; k++) {
+        const procId = eyeSuffix
+          ? `proc-${sh}-${patNum}-bilat-${String(k).padStart(2, '0')}`
+          : `proc-${sh}-${patNum}-${String(k).padStart(2, '0')}`;
+        procedureEntries.push({
+          resource: {
+            resourceType: 'Procedure',
+            id: procId,
+            status: 'completed',
+            subject: { reference: ref },
+            code: { coding: [IVOM_CODE] },
+            performedDateTime: visitDates[k],
+            bodySite: [{ coding: [eyeCoding] }],
+            reasonCode: [{ coding: [{ system: SNOMED, code: cohort.code, display: cohort.display }] }],
+          },
+        });
+      }
+    };
+
+    emitEye(primaryEye, '');
+    if (isBilateral) emitEye(secondEye, '-bilat');
+
+    // IOP observations: baseline + every 4th visit. Patient-level (no bodySite).
     for (let k = 0; k < visitDates.length; k += 4) {
       const iop = seededRandInt(rand, 10, 28);
       const obsId = `obs-${sh}-${patNum}-iop-${Math.floor(k / 4) + 1}`;
@@ -443,24 +562,8 @@ export function generateCenterBundle(input: GenerateCenterBundleInput): unknown 
       for (const e of hba1cEntries) observationEntries.push(e);
     }
 
-    // Procedures: one per IVOM (skipping baseline). performedDateTime in ascending order.
-    for (let k = 1; k <= ivomCount; k++) {
-      procedureEntries.push({
-        resource: {
-          resourceType: 'Procedure',
-          id: `proc-${sh}-${patNum}-${String(k).padStart(2, '0')}`,
-          status: 'completed',
-          subject: { reference: ref },
-          code: { coding: [IVOM_CODE] },
-          performedDateTime: visitDates[k],
-          bodySite: [{ coding: [eye] }],
-          reasonCode: [{ coding: [{ system: SNOMED, code: cohort.code, display: cohort.display }] }],
-        },
-      });
-    }
-
-    // MedicationStatement: 80% Aflibercept, 20% Bevacizumab.
-    const drug = rand() < 0.8 ? AFLIBERCEPT : BEVACIZUMAB;
+    // MedicationStatement: per-cohort drug mix (D-09 CDF).
+    const drug = pickDrugFromCdf(tmpl.drugs, rand);
     medicationEntries.push({
       resource: {
         resourceType: 'MedicationStatement',
