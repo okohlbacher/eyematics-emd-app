@@ -54,6 +54,48 @@ export interface GenerateCenterBundleInput {
 const MAX_PATIENTS = 500;
 
 // ---------------------------------------------------------------------------
+// Phase 26 / SYNTH-03 / D-08 — Truncated-normal sampling helpers.
+// All randomness flows through `rand` (Mulberry32) — Box-Muller transform
+// uses two rand() draws per Gaussian sample. Rejection-sampling outside
+// [lo, hi]; on >50 rejections, clamp to nearest bound (defensive).
+// ---------------------------------------------------------------------------
+
+function truncNormal(rand: () => number, mean: number, sd: number, lo: number, hi: number): number {
+  for (let i = 0; i < 50; i++) {
+    // Box-Muller: two uniform → one standard normal.
+    const u1 = Math.max(rand(), 1e-12); // avoid log(0)
+    const u2 = rand();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    const x = mean + sd * z;
+    if (x >= lo && x <= hi) return x;
+  }
+  // Defensive clamp after retry budget. We re-derive one final sample and clamp.
+  const u1 = Math.max(rand(), 1e-12);
+  const u2 = rand();
+  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  const x = mean + sd * z;
+  return Math.min(hi, Math.max(lo, x));
+}
+
+/**
+ * Phase 26 / SYNTH-03 / D-08 — Age sampling per primary disease.
+ * - amd: truncNormal(75, 8, 60, 95)  — Pham 2024 AOK PLUS prevalence shape
+ * - dme: truncNormal(65, 8, 50, 80)
+ * - rvo: truncNormal(68, 10, 55, 85)
+ * Returns floored integer years.
+ */
+function sampleAge(primary: 'amd' | 'dme' | 'rvo', rand: () => number): number {
+  switch (primary) {
+    case 'amd':
+      return Math.floor(truncNormal(rand, 75, 8, 60, 95));
+    case 'dme':
+      return Math.floor(truncNormal(rand, 65, 8, 50, 80));
+    case 'rvo':
+      return Math.floor(truncNormal(rand, 68, 10, 55, 85));
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Code dictionaries (FHIR coding constants)
 // ---------------------------------------------------------------------------
 
@@ -182,9 +224,27 @@ export function generateCenterBundle(input: GenerateCenterBundleInput): unknown 
     const pseudo = `EM-${shorthand}-${patNum}`;
     const ref = `Patient/${patId}`;
 
-    // Demographics
-    const birthOffset = seededRandInt(rand, 0, 36 * 365); // ~1935 → ~1970
-    const birthDate = addDays('1935-01-01', birthOffset);
+    // Phase 26 SYNTH-03: rand() call order intentionally changed; bundles
+    // regenerated atomically in plan 26-04. Cohort + baselineDate now come
+    // BEFORE demographics so birthDate can be derived from sampled age.
+
+    // Cohort selection
+    const r = rand();
+    let cohortKey: 'amd' | 'dme' | 'rvo';
+    if (r < cohortMix.amd) cohortKey = 'amd';
+    else if (r < cohortMix.amd + cohortMix.dme) cohortKey = 'dme';
+    else cohortKey = 'rvo';
+    const cohort = COHORT_CODES[cohortKey];
+
+    // Baseline date
+    const baselineOffset = seededRandInt(rand, 0, 880); // 2022-01-01 → ~2024-06-01
+    const baselineDate = addDays('2022-01-01', baselineOffset);
+
+    // Demographics — age-disease coupled (D-08).
+    const sampledAge = sampleAge(cohortKey, rand);
+    const dayJitter = seededRandInt(rand, 0, 364);
+    // Use 365.25-day years to keep computed age ≥ sampledAge after Date arithmetic.
+    const birthDate = addDays(baselineDate, -Math.round(sampledAge * 365.25) - dayJitter);
     const gender = rand() < 0.55 ? 'female' : 'male';
 
     patientEntries.push({
@@ -198,20 +258,8 @@ export function generateCenterBundle(input: GenerateCenterBundleInput): unknown 
       },
     });
 
-    // Cohort selection
-    const r = rand();
-    let cohortKey: 'amd' | 'dme' | 'rvo';
-    if (r < cohortMix.amd) cohortKey = 'amd';
-    else if (r < cohortMix.amd + cohortMix.dme) cohortKey = 'dme';
-    else cohortKey = 'rvo';
-    const cohort = COHORT_CODES[cohortKey];
-
     // Eye of interest
     const eye = rand() < 0.5 ? EYE_RIGHT : EYE_LEFT;
-
-    // Baseline date
-    const baselineOffset = seededRandInt(rand, 0, 880); // 2022-01-01 → ~2024-06-01
-    const baselineDate = addDays('2022-01-01', baselineOffset);
 
     // Condition
     conditionEntries.push({
