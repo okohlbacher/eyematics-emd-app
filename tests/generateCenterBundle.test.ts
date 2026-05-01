@@ -484,3 +484,175 @@ describe('generateCenterBundle SYNTH-03 — age-disease coupling (D-08)', () => 
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// SYNTH-03 — HbA1c emission for DME patients (Phase 26 / D-07)
+// ---------------------------------------------------------------------------
+
+interface ObservationResource {
+  resourceType: 'Observation';
+  id: string;
+  status: string;
+  subject: { reference: string };
+  code: { coding: Array<{ system?: string; code: string; display?: string }> };
+  effectiveDateTime: string;
+  valueQuantity?: { value: number; unit?: string; code?: string; system?: string };
+  bodySite?: unknown;
+}
+
+function getObservationsFor(b: Bundle, patientId: string): ObservationResource[] {
+  return b.entry
+    .filter(e => e.resource.resourceType === 'Observation')
+    .map(e => e.resource as unknown as ObservationResource)
+    .filter(o => o.subject.reference === `Patient/${patientId}`);
+}
+
+function hba1cObservations(obs: ObservationResource[]): ObservationResource[] {
+  return obs.filter(o => o.code.coding.some(c => c.code === '4548-4'));
+}
+
+describe('generateCenterBundle SYNTH-03 — HbA1c emission (D-07)', () => {
+  it('DME: every patient has 2–5 HbA1c (LOINC 4548-4) Observations', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 50,
+      seed: 42,
+      cohortMix: { amd: 0, dme: 1, rvo: 0 },
+    }) as Bundle;
+    const patients = getPatients(b);
+    expect(patients.length).toBe(50);
+    for (const p of patients) {
+      const hba1c = hba1cObservations(getObservationsFor(b, p.id));
+      expect(hba1c.length).toBeGreaterThanOrEqual(2);
+      expect(hba1c.length).toBeLessThanOrEqual(5);
+    }
+  });
+
+  it('DME: HbA1c first value ∈ [7.5, 10.5]; step ≤1.5%; clamped [5.0, 13.0]; cohort drift skews negative', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 100,
+      seed: 4242,
+      cohortMix: { amd: 0, dme: 1, rvo: 0 },
+    }) as Bundle;
+    const patients = getPatients(b);
+    const trends: number[] = [];
+    for (const p of patients) {
+      const hba1c = hba1cObservations(getObservationsFor(b, p.id))
+        .slice()
+        .sort((a, b) => a.effectiveDateTime.localeCompare(b.effectiveDateTime));
+      expect(hba1c.length).toBeGreaterThanOrEqual(2);
+      const first = hba1c[0]!.valueQuantity!.value;
+      expect(first).toBeGreaterThanOrEqual(7.5);
+      expect(first).toBeLessThanOrEqual(10.5);
+      let prev = first;
+      for (let i = 1; i < hba1c.length; i++) {
+        const v = hba1c[i]!.valueQuantity!.value;
+        expect(Math.abs(v - prev)).toBeLessThanOrEqual(1.5 + 1e-9);
+        expect(v).toBeGreaterThanOrEqual(5.0 - 1e-9);
+        expect(v).toBeLessThanOrEqual(13.0 + 1e-9);
+        prev = v;
+      }
+      trends.push(hba1c[hba1c.length - 1]!.valueQuantity!.value - first);
+    }
+    const meanTrend = trends.reduce((a, x) => a + x, 0) / trends.length;
+    // Drift toward 7%: average trend across cohort should be negative.
+    expect(meanTrend).toBeLessThan(0);
+  });
+
+  it('DME: HbA1c valueQuantity uses unit/code "%" and UCUM system', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 30,
+      seed: 11,
+      cohortMix: { amd: 0, dme: 1, rvo: 0 },
+    }) as Bundle;
+    const patients = getPatients(b);
+    let checked = 0;
+    for (const p of patients) {
+      const hba1c = hba1cObservations(getObservationsFor(b, p.id));
+      for (const o of hba1c) {
+        expect(o.valueQuantity?.unit).toBe('%');
+        expect(o.valueQuantity?.code).toBe('%');
+        expect(o.valueQuantity?.system).toBe('http://unitsofmeasure.org');
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+
+  it('DME: HbA1c effectiveDateTime falls within [baselineDate, finalVisitDate]', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 30,
+      seed: 17,
+      cohortMix: { amd: 0, dme: 1, rvo: 0 },
+    }) as Bundle;
+    const patients = getPatients(b);
+    for (const p of patients) {
+      const primary = primaryConditionFor(b, p.id);
+      const baseline = primary?.onsetDateTime;
+      expect(baseline).toBeDefined();
+      // final visit = max performedDateTime of any Procedure for this patient
+      const procs = b.entry
+        .filter(e => e.resource.resourceType === 'Procedure')
+        .map(e => e.resource as { subject: { reference: string }; performedDateTime?: string })
+        .filter(pr => pr.subject.reference === `Patient/${p.id}`)
+        .map(pr => pr.performedDateTime!)
+        .filter(Boolean)
+        .sort();
+      const finalVisit = procs[procs.length - 1] ?? baseline!;
+      const hba1c = hba1cObservations(getObservationsFor(b, p.id));
+      for (const o of hba1c) {
+        expect(o.effectiveDateTime >= baseline!).toBe(true);
+        expect(o.effectiveDateTime <= finalVisit).toBe(true);
+      }
+    }
+  });
+
+  it('AMD and RVO patients have ZERO HbA1c Observations', () => {
+    const bAmd = generateCenterBundle({
+      ...COMMON,
+      patients: 50,
+      seed: 1,
+      cohortMix: { amd: 1, dme: 0, rvo: 0 },
+    }) as Bundle;
+    const bRvo = generateCenterBundle({
+      ...COMMON,
+      patients: 50,
+      seed: 2,
+      cohortMix: { amd: 0, dme: 0, rvo: 1 },
+    }) as Bundle;
+    for (const p of getPatients(bAmd)) {
+      expect(hba1cObservations(getObservationsFor(bAmd, p.id)).length).toBe(0);
+    }
+    for (const p of getPatients(bRvo)) {
+      expect(hba1cObservations(getObservationsFor(bRvo, p.id)).length).toBe(0);
+    }
+  });
+
+  it('determinism: same seed → identical HbA1c emission', () => {
+    const a = generateCenterBundle({
+      ...COMMON,
+      patients: 30,
+      seed: 9999,
+      cohortMix: { amd: 0, dme: 1, rvo: 0 },
+    }) as Bundle;
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 30,
+      seed: 9999,
+      cohortMix: { amd: 0, dme: 1, rvo: 0 },
+    }) as Bundle;
+    const aHba = a.entry.filter(e => {
+      const r = e.resource as unknown as ObservationResource;
+      return r.resourceType === 'Observation' && r.code.coding.some(c => c.code === '4548-4');
+    });
+    const bHba = b.entry.filter(e => {
+      const r = e.resource as unknown as ObservationResource;
+      return r.resourceType === 'Observation' && r.code.coding.some(c => c.code === '4548-4');
+    });
+    expect(JSON.stringify(aHba)).toBe(JSON.stringify(bHba));
+    expect(aHba.length).toBeGreaterThan(0);
+  });
+});
