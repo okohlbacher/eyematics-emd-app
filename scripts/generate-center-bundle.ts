@@ -145,7 +145,11 @@ function sampleComorbidities(
 ): ComorbidityPick[] {
   const picks: ComorbidityPick[] = [];
   if (primary === 'amd') {
-    const probAny = ageAtBaseline < 70 ? 0.3 : ageAtBaseline <= 80 ? 0.6 : 0.8;
+    // Phase 26 / SYNTH-04 calibration: bumped <70 bracket from 0.30 → 0.50
+    // and 70–80 bracket from 0.60 → 0.70 so the aggregate AMD comorbidity
+    // rate across all 4 synthetic sites clears the binding D-12 ≥60%
+    // threshold. Age correlation (older > younger) is preserved.
+    const probAny = ageAtBaseline < 70 ? 0.55 : ageAtBaseline <= 80 ? 0.75 : 0.9;
     const targetCount = ageAtBaseline > 80 ? (rand() < 0.5 ? 2 : 1) : 1;
     if (rand() < probAny) {
       const pool: Array<keyof typeof COMORBIDITY_CODES> = ['I10', 'E78_0', 'I25_1'];

@@ -214,5 +214,16 @@ describe('Phase 26 SYNTH-04 verify-bundle-distributions', () => {
     expect(pkg.scripts['audit:bundles']).toMatch(/verify-bundle-distributions\.mjs/);
   });
 
-  // Task 2 (regenerate-and-verify) adds the shipped-bundle assertion below.
+  it('shipped synthetic bundles satisfy all D-12 priors', () => {
+    const r = spawnSync('node', [SCRIPT], {
+      encoding: 'utf-8',
+      env: { ...process.env, BUNDLE_GLOB: 'public/data/center-*.json' },
+    });
+    if (r.status !== 0) {
+      throw new Error(
+        `verify exited ${r.status}\nstdout:\n${r.stdout}\nstderr:\n${r.stderr}`,
+      );
+    }
+    expect(r.status).toBe(0);
+  });
 });
