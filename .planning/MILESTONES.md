@@ -1,5 +1,22 @@
 # Milestones
 
+## v1.9.5 Synthetic Data Realism (Shipped: 2026-05-01)
+
+**Phases completed:** 1 phase (26), 4 plans
+**Timeline:** 2026-04-30 → 2026-05-01
+**Tests:** 642 → 682 (+40 new tests)
+
+**Key accomplishments:**
+
+- **Terminology seed extended (SYNTH-01):** `_seedMap` grows from 10 to 15 entries (5 new: SNOMED 312903003 DME, 362098006 RVO; ICD-10-GM E11, H43.1, T85.8). `audit-bundle-codes.mjs` CI gate + drift-guard test enforce 0 unresolvable codes at every `test:ci` run.
+- **Disease-conditional comorbidity model (SYNTH-02):** `sampleComorbidities` helper emits age-correlated comorbidities — AMD 65% ≥ 60% threshold, DME 100% diabetes + ≥40% hypertension, RVO 50% I10. All Conditions use BfArM ICD-10-GM system URL.
+- **HbA1c + age coupling + template differentiation (SYNTH-03):** `emitHbA1c` (2–5 LOINC 4548-4 obs per DME case, random-walk drift), `sampleAge` (truncated-normal per cohort: AMD N(75,8), DME N(65,8), RVO N(68,10)), `TEMPLATES` constant (IVI/CRT/drug CDF/laterality per cohort). Faricimab (S01LA09) and Dexamethasone (S01BA01) added.
+- **Bundle regeneration + CI verification (SYNTH-04):** 4 synthetic site bundles (Chemnitz, Leipzig, Greifswald, Münster) regenerated atomically. `verify-bundle-distributions.mjs` asserts all priors (AMD median age 74, DME diabetes 100%, AMD comorbidity 65%, DME HbA1c 100%). Wired into `test:ci`. 682/682 tests pass.
+
+**Archive:** [milestones/v1.9.5-ROADMAP.md](milestones/v1.9.5-ROADMAP.md) · [milestones/v1.9.5-REQUIREMENTS.md](milestones/v1.9.5-REQUIREMENTS.md) · [milestones/v1.9.5-MILESTONE-AUDIT.md](milestones/v1.9.5-MILESTONE-AUDIT.md)
+
+---
+
 ## v1.8 Session Resilience & Test/Code Polish (Shipped: 2026-04-23)
 
 **Phases completed:** 3 phases, 8 plans, 11 tasks

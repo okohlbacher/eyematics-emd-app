@@ -4,6 +4,43 @@ Living retrospective across milestones. Each milestone gets a section. Cross-mil
 
 ---
 
+## Milestone: v1.9.5 — Synthetic Data Realism
+
+**Shipped:** 2026-05-01
+**Phases:** 1 (Phase 26) | **Plans:** 4 | **Timeline:** 2026-04-30 → 2026-05-01
+
+### What Was Built
+
+- Phase 26-01 (seed extension): 5 missing diagnosis codes added to `_seedMap`; `audit-bundle-codes.mjs` CI gate + drift-guard test enforce 0 unresolvable codes at every test:ci run
+- Phase 26-02 (comorbidity model): `sampleComorbidities` helper with age-correlated probability tables; AMD 65% comorbidity rate, DME 100% diabetes, RVO 50% hypertension; BfArM ICD-10-GM Conditions with active clinicalStatus
+- Phase 26-03 (HbA1c + templates): `emitHbA1c` random-walk (LOINC 4548-4), `sampleAge` truncated-normal per cohort, `TEMPLATES` constant differentiating IVI/CRT/drugs/laterality; Faricimab and Dexamethasone added
+- Phase 26-04 (regenerate + verify): 4 bundles regenerated atomically; `verify-bundle-distributions.mjs` asserts all priors; chained into `test:ci`; 682/682 tests green
+
+### What Worked
+
+- **Wave sequencing:** 26-01 → 26-02 → 26-03 → 26-04 was the right dependency order — each plan produced independently verifiable artifacts before the next wave built on them. The audit gate (26-01) stayed stable while the generator evolved (26-02/03), then regeneration (26-04) closed the loop.
+- **Two-layer verification design:** Unit test for AMD comorbidity rate used ≥45% (isolated, pre-age-coupling) while verifier enforced ≥60% against shipped bundles. This prevented the impossible requirement of testing a property that depends on a future plan's contribution.
+- **`BUNDLE_GLOB` env override pattern:** Reusing the pattern from 26-01 in both the audit script and verify script made both testable without touching production data — unit tests inject fixtures, CI checks real bundles.
+- **Atomic bundle commit (D-11):** All 4 synthetic JSONs in a single `chore` commit prevented any half-updated state from being visible to CI.
+- **ESM .mjs for CI scripts:** No transpilation step, fast startup, dependency-free — the right choice for gate scripts that run in every `test:ci` invocation.
+
+### What Was Inefficient
+
+- **AMD ≥60% comorbidity target split across two plans:** The threshold couldn't be asserted in 26-02 isolation (uniform birthdates produce only ~50%); it required 26-03 age coupling first. This is a correct design, but the plan text stated ≥60% as the 26-02 requirement — creating apparent non-compliance that required a documented deviation. Future plans should distinguish "will be verified by end of wave" from "must be independently verifiable in this plan."
+
+### Patterns Established
+
+- **Drift-guard test pattern:** `EXPECTED_SEED_KEYS` hand-mirrors `_seedMap` keys; a test reads the script source as text and asserts every key appears verbatim — catches divergence at CI without dynamic imports.
+- **Distribution verifier pattern:** Dependency-free `.mjs`, reads bundles via `BUNDLE_GLOB` env override, exits 1 with diagnostic on failure — reusable pattern for any future statistical constraint on synthetic data.
+- **Whitelist split (WHITELIST_SYSTEMS / WHITELIST_KEYS):** Blanket-whitelist LOINC + ATC (non-diagnostic systems); require specific keys for SNOMED (both diagnostic and non-diagnostic codes coexist in that namespace).
+
+### Key Lessons
+
+- Clinical realism requirements (comorbidity rates, HbA1c distributions, age bounds) often have interdependencies that span multiple plans — scope the assertability of each requirement to the plan that actually delivers the necessary upstream dependencies.
+- Epidemiological priors (Pham 2024, KORA, AugUR) give concrete quantitative targets that can be directly encoded as test assertions — anchoring synthetic data to published literature pays off in verifiable, meaningful test gates rather than arbitrary thresholds.
+
+---
+
 ## Milestone: v1.6 — Outcomes Polish & Scale
 
 **Shipped:** 2026-04-17

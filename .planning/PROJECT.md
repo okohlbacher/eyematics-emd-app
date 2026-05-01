@@ -119,6 +119,18 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] JWT refresh flow with silent `authFetch` refresh, BroadcastChannel cross-tab coordination, credential-mutation invalidation (SESSION-01..09, 12, 13) — v1.8 (Phase 20)
 - [x] Post-UAT polish: LoginPage password toggle, Münster (UKMS) restored as 8th site, doc-quality COHORT_PALETTES, scrollable diagnosis legend — v1.8
 
+### Validated in v1.9 / v1.9.x patch series
+
+- [x] Full test suite green (zero skipped, UAT-AUTO-01..05 automated), codebase consistency sweep, dep + lint cleanup — v1.9 (Phases 21–23)
+- [x] UKD + UKMZ removed from site roster; site count reduced from 8 to 6 participating sites (FB-01) — v1.9.3 (Phase 24-01)
+- [x] DocQuality bar-chart palette aligned to muted chart tokens (FB-04) — v1.9.3 (Phase 24-04)
+- [x] Terminology service `src/services/terminology.ts`: `collectCodings`, `resolveDisplay`, `getCachedDisplay`, `useDiagnosisDisplay`; well-known seed; 5 callers migrated (TERM-01..03, TERM-05) — v1.9.4 (Phase 25)
+- [x] Server-side terminology proxy `POST /api/terminology/lookup`: SSRF-safe whitelist, LRU cache, 503-when-disabled (TERM-03) — v1.9.4 (Phase 25-02)
+- [x] Terminology seed extended with 5 missing diagnosis codes; `audit-bundle-codes.mjs` CI gate; 0 unresolvable codes (SYNTH-01) — v1.9.5 (Phase 26-01)
+- [x] Disease-conditional comorbidity model: AMD 65% ≥ 60%, DME 100% diabetes + ≥40% hypertension (SYNTH-02) — v1.9.5 (Phase 26-02)
+- [x] HbA1c for DME + age-disease coupling (truncated-normal per cohort) + AMD/DME/RVO template differentiation + Faricimab/Dexamethasone (SYNTH-03) — v1.9.5 (Phase 26-03)
+- [x] 4 synthetic bundles regenerated atomically; verify-bundle-distributions.mjs wired into test:ci; 682/682 tests green (SYNTH-04) — v1.9.5 (Phase 26-04)
+
 ### Active (next-milestone candidates)
 
 - [ ] Real Keycloak OIDC redirect flow (KEYCLK-01) — blocked at initAuth until the redirect flow ships (M7)
@@ -127,12 +139,16 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [ ] UI surface for `auth.refreshTokenTtlMs` / `auth.refreshAbsoluteCapMs`
 - [ ] Refresh-token signing-key rotation
 - [ ] Per-device session listing + revocation UI
+- [ ] Home "Attention needed" panel Review buttons (FB-02) — deferred from v1.9.3
+- [ ] Home "Jump Back In" panel routing (FB-03) — deferred from v1.9.3
+- [ ] Terminology settings + Konfiguration.md docs (TERM-04) — deferred from v1.9.4
 
 ## Current State
 
 **Shipped:** Milestone v1.9.5 — Synthetic Data Realism (2026-05-01)
 - Phase 26 complete: terminology seed extended (5 codes), disease-conditional comorbidities, HbA1c + age-disease coupling, AMD/DME/RVO template differentiation, 4 synthetic bundles regenerated, verify-bundle-distributions.mjs wired into test:ci
 - All SYNTH-01..04 requirements verified; 682 tests green; audit:bundles exits 0
+- **Archive:** [`.planning/milestones/v1.9.5-ROADMAP.md`](milestones/v1.9.5-ROADMAP.md) · [`.planning/milestones/v1.9.5-REQUIREMENTS.md`](milestones/v1.9.5-REQUIREMENTS.md)
 
 **Shipped:** Milestone v1.8 — Session Resilience & Test/Code Polish (2026-04-23)
 - Phase 18: metricSelector test harness unblock + shared render helper
@@ -164,6 +180,8 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - **SESSION-10 / SESSION-11**: admin-triggered global sign-out + stateful refresh-sessions table
 - **Per-device session listing / revocation UI**
 - **Refresh-token signing-key rotation**
+- **Home panel UX fixes** — "Attention needed" Review buttons + "Jump Back In" routing (FB-02, FB-03; deferred from v1.9.3)
+- **Terminology settings + docs** — `terminology.*` settings.yaml keys + `docs/Konfiguration.md` (TERM-04; deferred from v1.9.4)
 
 ## Historical Milestone Goals (archived)
 
@@ -198,14 +216,15 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 ## Context
 
-- **Codebase (v1.6):** ~250 source files, React/TypeScript SPA + Express 5 server + `shared/` pure-TS module
+- **Codebase (v1.9.5):** React/TypeScript SPA + Express 5 server + `shared/` pure-TS module
 - **Server**: Express 5 production server (server/index.ts) + Vite dev plugins for backward compat
-- **Auth flow**: Server-side bcrypt + JWT (HS256), 2FA with fixed OTP, rate limiting with exponential backoff
+- **Auth flow**: Server-side bcrypt + JWT (HS256), TOTP 2FA (per-user enrollment), silent refresh via httpOnly cookie + BroadcastChannel, rate limiting with exponential backoff
 - **Audit**: Server-side SQLite (data/audit.db), auto-logged by middleware, immutable from client, configurable retention; cohort IDs hashed via HMAC-SHA256 (v1.6)
-- **User sites**: Server-enforced site filtering on all data endpoints (Phase 5)
-- **FHIR data**: 7 sites (Aachen, Chemnitz, Dresden, Greifswald, Leipzig, Mainz, Tübingen) with deterministic synthetic data (Mulberry32 PRNG)
-- **Outcomes**: 4 metrics (Visus, CRT, Treatment-Interval, Responder) with server-side pre-aggregation at >1000-patient threshold; metric selector with `?metric=` deep-link
-- **Test surface**: 429 tests passing across 47 files (v1.6 close)
+- **User sites**: Server-enforced site filtering on all data endpoints; 6 participating sites (Aachen, Chemnitz, Greifswald, Leipzig, Münster, Tübingen) — UKD + UKMZ removed v1.9.3
+- **FHIR data**: 4 synthetic sites with deterministic synthetic data (Mulberry32 PRNG) + comorbidities + HbA1c + age-disease coupling + AMD/DME/RVO template differentiation (v1.9.5); 2 reference sites (Aachen, Tübingen)
+- **Terminology**: `src/services/terminology.ts` — 15-entry `_seedMap`, `collectCodings`, `resolveDisplay`, `useDiagnosisDisplay`; server-side proxy disabled by default; CI drift-guard enforces 0 unresolvable codes
+- **Outcomes**: 4 metrics (Visus, CRT, Treatment-Interval, Responder) with server-side pre-aggregation at >1000-patient threshold; metric selector with `?metric=` deep-link; cross-cohort overlay (up to 4)
+- **Test surface**: 682 tests passing across ~65 test files (v1.9.5 close)
 - **Requirements docs**: Lastenheft (RE-EM-LH) and Pflichtenheft (EMDREQ-*) define the formal requirements
 
 ### DSF Integration Architecture (Multi-Site)
@@ -253,6 +272,10 @@ The EMD operates within a four-zone architecture at each site:
 | Server aggregation at >1000-patient threshold (v1.6) | Configurable via settings.yaml (default 1000). Below threshold: client path. Above: POST /api/outcomes/aggregate. Both paths converge on identical grid points. | ✓ Validated — byte-parity test proves identity |
 | Cohort ID hashed in audit events (v1.6) | HMAC-SHA256 truncated to 16 hex chars. Secret in settings.yaml. hashCohortId reused by aggregation audit event. URL stays clean (no querystring PII). | ✓ Validated — closes CRREV-01 / IN-01 |
 | Per-metric CSV flatteners in OutcomesDataPreview (v1.6) | Each metric has its own flattenXxxRows() helper in the component file (locked-decision-3 pattern from Phase 8). No shared utility to avoid coupling. | ✓ Validated — consistent with locked decision |
+| EXPECTED_SEED_KEYS hand-mirrored in audit script (v1.9.5) | ESM .mjs cannot import .ts without a loader; hand-mirror is fast and caught by drift-guard test at every CI run | ✓ Validated — drift-guard test in tests/audit-bundle-codes.test.ts catches key divergence immediately |
+| Whitelist split: WHITELIST_SYSTEMS vs WHITELIST_KEYS (v1.9.5) | LOINC + ATC blanket-whitelisted (non-diagnostic); SNOMED requires specific allow-list entries (also used for diagnostics like AMD) | ✓ Validated — correct categorization; no false positives in audit:bundles |
+| AMD ≥60% comorbidity assertable at bundle level only (v1.9.5) | Unit test uses ≥45% (pre-age-coupling); verifier enforces ≥60% against shipped bundles (with age coupling active). Two-layer design. | ✓ Validated — verifier confirms 65% in shipped bundles; unit test remains valid for isolated testing |
+| Atomic 4-bundle commit (D-11, v1.9.5) | Prevents partial-regeneration hazard where one bundle encodes new model while others don't; all 4 JSONs committed together | ✓ Validated — commit 5bdd89a contains all 4 synthetic JSONs atomically |
 
 ## Evolution
 
@@ -272,4 +295,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-01 — v1.9.5 complete (Synthetic Data Realism, Phase 26).*
+*Last updated: 2026-05-01 — after v1.9.5 milestone completion (Synthetic Data Realism, Phase 26).*
