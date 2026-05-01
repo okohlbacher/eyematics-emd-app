@@ -168,6 +168,9 @@ const EYE_LEFT = { system: SNOMED, code: '362502000', display: 'Left eye' };
 const VISUS_CODE = { system: LOINC, code: '79880-1', display: 'Visual acuity' };
 const CRT_CODE = { system: LOINC, code: 'LP267955-5', display: 'Central retinal thickness' };
 const IOP_CODE = { system: LOINC, code: '56844-4', display: 'Intraocular pressure' };
+// Phase 26 / SYNTH-03 / D-07 — HbA1c (LOINC 4548-4) for DME patients.
+const HBA1C_CODE = { system: LOINC, code: '4548-4', display: 'Hemoglobin A1c/Hemoglobin.total' };
+const UCUM = 'http://unitsofmeasure.org';
 
 const IVOM_CODE = { system: SNOMED, code: '36189003', display: 'Intravitreal injection' };
 
@@ -175,6 +178,67 @@ const AFLIBERCEPT = { system: ATC, code: 'S01LA05', display: 'Aflibercept' };
 const BEVACIZUMAB = { system: ATC, code: 'L01XC07', display: 'Bevacizumab' };
 
 const BCVA_METHOD = { system: SNOMED, code: '252886007', display: 'Best corrected visual acuity' };
+
+/**
+ * Phase 26 / SYNTH-03 / D-07 — HbA1c emission for DME patients.
+ *
+ * Emits 2–5 Observations per patient (LOINC 4548-4):
+ *   - First value sampled in [7.5, 10.5]
+ *   - Subsequent values: prev + (rand() − 0.6) * 1.5  (drift toward ~7%)
+ *     clamped to [5.0, 13.0]; step magnitude clipped to ±1.5
+ *   - Rounded to 1 decimal place
+ *   - effectiveDateTime drawn from `visitDates` (distinct ascending indices)
+ *   - valueQuantity carries unit/code "%" + UCUM system per D-07
+ */
+function emitHbA1c(args: {
+  ref: string;
+  patIdSuffix: string; // e.g. `<sh>-<patNum>`
+  visitDates: string[];
+  rand: () => number;
+}): unknown[] {
+  const { ref, patIdSuffix, visitDates, rand } = args;
+  if (visitDates.length === 0) return [];
+  const target = seededRandInt(rand, 2, 5);
+  const readingCount = Math.min(target, visitDates.length);
+
+  // Pick `readingCount` distinct visit indices, then sort ascending so dates
+  // appear in chronological order.
+  const indices = new Set<number>();
+  let guard = 0;
+  while (indices.size < readingCount && guard < 200) {
+    indices.add(Math.floor(rand() * visitDates.length));
+    guard++;
+  }
+  const sortedIdx = [...indices].sort((a, b) => a - b);
+
+  const out: unknown[] = [];
+  let prev = 7.5 + rand() * 3.0; // [7.5, 10.5]
+  for (let k = 0; k < sortedIdx.length; k++) {
+    let value: number;
+    if (k === 0) {
+      value = prev;
+    } else {
+      let step = (rand() - 0.6) * 1.5;
+      if (step > 1.5) step = 1.5;
+      if (step < -1.5) step = -1.5;
+      value = Math.min(13.0, Math.max(5.0, prev + step));
+    }
+    const rounded = Math.round(value * 10) / 10;
+    prev = rounded;
+    out.push({
+      resource: {
+        resourceType: 'Observation',
+        id: `obs-${patIdSuffix}-hba1c-${k + 1}`,
+        status: 'final',
+        subject: { reference: ref },
+        code: { coding: [HBA1C_CODE] },
+        effectiveDateTime: visitDates[sortedIdx[k]!],
+        valueQuantity: { value: rounded, unit: '%', code: '%', system: UCUM },
+      },
+    });
+  }
+  return out;
+}
 
 // ---------------------------------------------------------------------------
 // Library entry point
@@ -366,6 +430,17 @@ export function generateCenterBundle(input: GenerateCenterBundleInput): unknown 
           valueQuantity: { value: iop, unit: 'mmHg' },
         },
       });
+    }
+
+    // Phase 26 / SYNTH-03 / D-07 — HbA1c emission for DME patients only.
+    if (cohortKey === 'dme') {
+      const hba1cEntries = emitHbA1c({
+        ref,
+        patIdSuffix: `${sh}-${patNum}`,
+        visitDates,
+        rand,
+      });
+      for (const e of hba1cEntries) observationEntries.push(e);
     }
 
     // Procedures: one per IVOM (skipping baseline). performedDateTime in ascending order.
