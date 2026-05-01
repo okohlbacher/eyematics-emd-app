@@ -60,12 +60,65 @@ const MAX_PATIENTS = 500;
 const SNOMED = 'http://snomed.info/sct';
 const LOINC = 'http://loinc.org';
 const ATC = 'http://www.whocc.no/atc';
+// Phase 26 / SYNTH-02 / D-05: BfArM ICD-10-GM system URL for comorbidities.
+const ICD10_GM = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm';
 
 const COHORT_CODES = {
   amd: { code: '267718000', display: 'Age-related macular degeneration' },
   dme: { code: '312903003', display: 'Diabetic macular edema' },
   rvo: { code: '362098006', display: 'Retinal vein occlusion' },
 } as const;
+
+// Phase 26 / SYNTH-02 / D-04: Comorbidity ICD-10-GM dictionary.
+// NOTE: D-04 mentions DR (E11/E10 primary) AND DME both getting diabetes.
+// This generator only emits AMD/DME/RVO cohorts (no 'dr' key — see COHORT_CODES);
+// DR-style E11-as-primary cases exist only in the curated Aachen/Tübingen
+// reference bundles (D-06 — NOT regenerated here). DME→diabetes rule below
+// is the only diabetes-comorbidity path in synthetic bundles.
+const COMORBIDITY_CODES = {
+  I10: { system: ICD10_GM, code: 'I10', display: 'Essential hypertension' },
+  E78_0: { system: ICD10_GM, code: 'E78.0', display: 'Hypercholesterolemia' },
+  I25_1: { system: ICD10_GM, code: 'I25.1', display: 'Coronary artery disease' },
+  E11_9: { system: ICD10_GM, code: 'E11.9', display: 'Type 2 diabetes mellitus' },
+  E10_9: { system: ICD10_GM, code: 'E10.9', display: 'Type 1 diabetes mellitus' },
+} as const;
+const NON_OPHTHALMIC = { code: 'non-ophthalmic', display: 'Non-ophthalmic' };
+
+interface ComorbidityPick {
+  codeKey: keyof typeof COMORBIDITY_CODES;
+}
+
+/**
+ * Phase 26 / SYNTH-02 — Disease-conditional comorbidity sampling.
+ * Deterministic: all randomness flows through `rand` (Mulberry32).
+ * Probability table from D-04 (AOK PLUS / Pham 2024 calibration).
+ */
+function sampleComorbidities(
+  primary: 'amd' | 'dme' | 'rvo',
+  ageAtBaseline: number,
+  rand: () => number,
+): ComorbidityPick[] {
+  const picks: ComorbidityPick[] = [];
+  if (primary === 'amd') {
+    const probAny = ageAtBaseline < 70 ? 0.3 : ageAtBaseline <= 80 ? 0.6 : 0.8;
+    const targetCount = ageAtBaseline > 80 ? (rand() < 0.5 ? 2 : 1) : 1;
+    if (rand() < probAny) {
+      const pool: Array<keyof typeof COMORBIDITY_CODES> = ['I10', 'E78_0', 'I25_1'];
+      const chosen = new Set<keyof typeof COMORBIDITY_CODES>();
+      while (chosen.size < targetCount && chosen.size < pool.length) {
+        chosen.add(pool[Math.floor(rand() * pool.length)]!);
+      }
+      for (const k of chosen) picks.push({ codeKey: k });
+    }
+  } else if (primary === 'dme') {
+    picks.push({ codeKey: rand() < 0.8 ? 'E11_9' : 'E10_9' });
+    if (rand() < 0.4) picks.push({ codeKey: 'I10' });
+  } else if (primary === 'rvo') {
+    if (rand() < 0.5) picks.push({ codeKey: 'I10' });
+    if (rand() < 0.3) picks.push({ codeKey: 'E78_0' });
+  }
+  return picks;
+}
 
 const EYE_RIGHT = { system: SNOMED, code: '362503005', display: 'Right eye' };
 const EYE_LEFT = { system: SNOMED, code: '362502000', display: 'Left eye' };
@@ -173,6 +226,29 @@ export function generateCenterBundle(input: GenerateCenterBundleInput): unknown 
         onsetDateTime: baselineDate,
         bodySite: [{ coding: [eye] }],
       },
+    });
+
+    // Phase 26 / SYNTH-02 — Disease-conditional comorbidity emission (D-04, D-05).
+    const ageAtBaseline = Math.floor(
+      (new Date(baselineDate).getTime() - new Date(birthDate).getTime()) /
+        (365.25 * 24 * 3600 * 1000),
+    );
+    const comorbidityPicks = sampleComorbidities(cohortKey, ageAtBaseline, rand);
+    comorbidityPicks.forEach((pick, idx) => {
+      const yearsBefore = seededRandInt(rand, 1, 10);
+      const onsetDate = addDays(baselineDate, -yearsBefore * 365);
+      const c = COMORBIDITY_CODES[pick.codeKey];
+      conditionEntries.push({
+        resource: {
+          resourceType: 'Condition',
+          id: `cond-${sh}-${patNum}-como-${idx + 1}`,
+          subject: { reference: ref },
+          code: { coding: [{ system: c.system, code: c.code, display: c.display }] },
+          clinicalStatus: { coding: [{ code: 'active' }] },
+          onsetDateTime: onsetDate,
+          category: [{ coding: [NON_OPHTHALMIC] }],
+        },
+      });
     });
 
     // IVOM count
