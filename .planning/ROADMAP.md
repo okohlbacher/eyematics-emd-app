@@ -63,7 +63,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ### Phases
 
-- [ ] **Phase 26: Synthetic Data Realism** — Seed extension + comorbidity model + HbA1c/age-disease coupling + bundle regeneration (SYNTH-01..04)
+- [x] **Phase 26: Synthetic Data Realism** — Seed extension + comorbidity model + HbA1c/age-disease coupling + bundle regeneration (SYNTH-01..04) (completed 2026-05-01)
 
 ### Phase Details
 
@@ -76,12 +76,12 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
   2. **SYNTH-02** — `scripts/generate-center-bundle.ts` emits ≥1 comorbidity for ≥60% of synthetic AMD patients (sampled from {`I10`, `E78.0`, `I25.1`}, age-correlated) and ≥1 diabetes Condition (`E10.9` or `E11.9`) for 100% of DR/DME patients plus ≥40% with `I10` comorbidity.
   3. **SYNTH-03** — DR/DME patients receive 2–5 HbA1c (LOINC `4548-4`) observations per case, baseline 6.5–10.5%, with serial values reflecting plausible glycemic-control trajectories (no >2% swing between consecutive visits unless flagged). AMD birthdate sampling restricts onset age ≥60. AMD/DME/RVO use distinct observation/treatment templates (DME has elevated CRT + HbA1c + smaller IVI count; RVO has unilateral preference + lower IVI count).
   4. **SYNTH-04** — `npm run generate-bundles` regenerates the 4 synthetic site bundles (Chemnitz, Leipzig, Greifswald, Münster). Quick-check script verifies aggregate distributions: AMD age median ≥70, DR comorbidity rate 100%, AMD comorbidity rate ≥60%, HbA1c emission ≥2 per DR/DME case. Test suite stays green at ≥640 (allow ±5 churn for tests that touch site counts or sample fixtures).
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 Plans:
 - [x] 26-01-seed-extension-and-audit-PLAN.md — Extend _seedMap with 5 missing diagnosis codes + add audit-bundle-codes script + npm run audit:bundles gate (SYNTH-01, Wave 1)
 - [x] 26-02-comorbidity-model-PLAN.md — Add sampleComorbidities helper + emit disease-conditional comorbidity Conditions per D-04 thresholds (SYNTH-02, Wave 2)
 - [x] 26-03-hba1c-and-template-differentiation-PLAN.md — HbA1c emission for DME + age-disease coupling + AMD/DME/RVO template differentiation + Faricimab/Dexamethasone (SYNTH-03, Wave 2 sequential after 26-02)
-- [ ] 26-04-regenerate-and-verify-PLAN.md — Regenerate 4 synthetic bundles atomically + verify-bundle-distributions script + chain into test:ci (SYNTH-04, Wave 3)
+- [x] 26-04-regenerate-and-verify-PLAN.md — Regenerate 4 synthetic bundles atomically + verify-bundle-distributions script + chain into test:ci (SYNTH-04, Wave 3)
 **UI hint**: no (no user-visible UI change; data layer only)
 
 ---
