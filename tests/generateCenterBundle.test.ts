@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { generateCenterBundle } from '../scripts/generate-center-bundle';
+import { generateCenterBundle, type CohortMix } from '../scripts/generate-center-bundle';
 
 const COMMON = {
   centerId: 'org-test',
@@ -654,5 +654,267 @@ describe('generateCenterBundle SYNTH-03 — HbA1c emission (D-07)', () => {
     });
     expect(JSON.stringify(aHba)).toBe(JSON.stringify(bHba));
     expect(aHba.length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// SYNTH-03 — Template differentiation + Faricimab/Dexamethasone (D-09)
+// ---------------------------------------------------------------------------
+
+interface ProcedureResource {
+  resourceType: 'Procedure';
+  subject: { reference: string };
+  bodySite?: Array<{ coding: Array<{ code: string }> }>;
+  performedDateTime?: string;
+}
+
+interface MedicationStatementResource {
+  resourceType: 'MedicationStatement';
+  subject: { reference: string };
+  medicationCodeableConcept: { coding: Array<{ system?: string; code: string }> };
+}
+
+function getProceduresFor(b: Bundle, patientId: string): ProcedureResource[] {
+  return b.entry
+    .filter(e => e.resource.resourceType === 'Procedure')
+    .map(e => e.resource as unknown as ProcedureResource)
+    .filter(p => p.subject.reference === `Patient/${patientId}`);
+}
+
+function getMedsFor(b: Bundle, patientId: string): MedicationStatementResource[] {
+  return b.entry
+    .filter(e => e.resource.resourceType === 'MedicationStatement')
+    .map(e => e.resource as unknown as MedicationStatementResource)
+    .filter(m => m.subject.reference === `Patient/${patientId}`);
+}
+
+function eyesFor(b: Bundle, patientId: string): Set<string> {
+  // Distinct bodySite eye codes appearing on Conditions or Observations
+  const eyes = new Set<string>();
+  for (const e of b.entry) {
+    const r = e.resource as {
+      resourceType: string;
+      subject?: { reference: string };
+      bodySite?: unknown;
+    };
+    if (!r.subject || r.subject.reference !== `Patient/${patientId}`) continue;
+    const bs = r.bodySite as
+      | Array<{ coding: Array<{ code: string }> }>
+      | { coding: Array<{ code: string }> }
+      | undefined;
+    if (!bs) continue;
+    if (Array.isArray(bs)) {
+      for (const b1 of bs) for (const c of b1.coding) if (c.code === '362502000' || c.code === '362503005') eyes.add(c.code);
+    } else if ('coding' in bs) {
+      for (const c of bs.coding) if (c.code === '362502000' || c.code === '362503005') eyes.add(c.code);
+    }
+  }
+  return eyes;
+}
+
+describe('generateCenterBundle SYNTH-03 — template differentiation (D-09)', () => {
+  it('AMD: IVI ∈ [1,22], CRT base ∈ [280,500], visus base ∈ [0.05,0.45], drug mix Aflib~80% / Bev~20%', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 200,
+      seed: 42,
+      cohortMix: { amd: 1, dme: 0, rvo: 0 },
+    }) as Bundle;
+    const patients = getPatients(b);
+    let aflib = 0;
+    let bev = 0;
+    for (const p of patients) {
+      const procs = getProceduresFor(b, p.id);
+      expect(procs.length).toBeGreaterThanOrEqual(1);
+      expect(procs.length).toBeLessThanOrEqual(22);
+      // First CRT obs (baseline) must be in [280, 500].
+      const obs = getObservationsFor(b, p.id);
+      const crt = obs
+        .filter(o => o.code.coding.some(c => c.code === 'LP267955-5'))
+        .sort((a, b) => a.effectiveDateTime.localeCompare(b.effectiveDateTime));
+      expect(crt.length).toBeGreaterThan(0);
+      expect(crt[0]!.valueQuantity!.value).toBeGreaterThanOrEqual(280);
+      expect(crt[0]!.valueQuantity!.value).toBeLessThanOrEqual(500);
+      // Visus baseline
+      const visus = obs
+        .filter(o => o.code.coding.some(c => c.code === '79880-1'))
+        .sort((a, b) => a.effectiveDateTime.localeCompare(b.effectiveDateTime));
+      expect(visus[0]!.valueQuantity!.value).toBeGreaterThanOrEqual(0.05);
+      expect(visus[0]!.valueQuantity!.value).toBeLessThanOrEqual(0.45);
+      // Drug pick (primary eye)
+      const meds = getMedsFor(b, p.id);
+      const codes = meds.flatMap(m => m.medicationCodeableConcept.coding.map(c => c.code));
+      if (codes.includes('S01LA05')) aflib++;
+      if (codes.includes('L01XC07')) bev++;
+    }
+    // ±10% slack
+    expect(aflib / patients.length).toBeGreaterThanOrEqual(0.7);
+    expect(aflib / patients.length).toBeLessThanOrEqual(0.9);
+    expect(bev / patients.length).toBeGreaterThanOrEqual(0.1);
+    expect(bev / patients.length).toBeLessThanOrEqual(0.3);
+  });
+
+  it('DME: IVI ∈ [1,12], CRT base ∈ [350,600], visus ∈ [0.10,0.50], drug mix Aflib~60%/Bev~35%/Faricimab~5%', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 200,
+      seed: 4242,
+      cohortMix: { amd: 0, dme: 1, rvo: 0 },
+    }) as Bundle;
+    const patients = getPatients(b);
+    let aflib = 0;
+    let bev = 0;
+    let faric = 0;
+    for (const p of patients) {
+      const procs = getProceduresFor(b, p.id);
+      expect(procs.length).toBeGreaterThanOrEqual(1);
+      expect(procs.length).toBeLessThanOrEqual(12);
+      const obs = getObservationsFor(b, p.id);
+      const crt = obs
+        .filter(o => o.code.coding.some(c => c.code === 'LP267955-5'))
+        .sort((a, b) => a.effectiveDateTime.localeCompare(b.effectiveDateTime));
+      expect(crt[0]!.valueQuantity!.value).toBeGreaterThanOrEqual(350);
+      expect(crt[0]!.valueQuantity!.value).toBeLessThanOrEqual(600);
+      const visus = obs
+        .filter(o => o.code.coding.some(c => c.code === '79880-1'))
+        .sort((a, b) => a.effectiveDateTime.localeCompare(b.effectiveDateTime));
+      expect(visus[0]!.valueQuantity!.value).toBeGreaterThanOrEqual(0.10);
+      expect(visus[0]!.valueQuantity!.value).toBeLessThanOrEqual(0.50);
+      const codes = getMedsFor(b, p.id).flatMap(m => m.medicationCodeableConcept.coding.map(c => c.code));
+      if (codes.includes('S01LA05')) aflib++;
+      if (codes.includes('L01XC07')) bev++;
+      if (codes.includes('S01LA09')) faric++;
+    }
+    expect(aflib / patients.length).toBeGreaterThanOrEqual(0.50);
+    expect(aflib / patients.length).toBeLessThanOrEqual(0.70);
+    expect(bev / patients.length).toBeGreaterThanOrEqual(0.25);
+    expect(bev / patients.length).toBeLessThanOrEqual(0.45);
+    // Faricimab is rare (~5%); just assert presence
+    expect(faric).toBeGreaterThanOrEqual(1);
+  });
+
+  it('RVO: IVI ∈ [1,8], CRT base ∈ [350,650], visus ∈ [0.05,0.35], drug mix Aflib~70%/Bev~20%/Dex~10%', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 200,
+      seed: 1313,
+      cohortMix: { amd: 0, dme: 0, rvo: 1 },
+    }) as Bundle;
+    const patients = getPatients(b);
+    let aflib = 0;
+    let bev = 0;
+    let dex = 0;
+    for (const p of patients) {
+      const procs = getProceduresFor(b, p.id);
+      expect(procs.length).toBeGreaterThanOrEqual(1);
+      expect(procs.length).toBeLessThanOrEqual(8);
+      const obs = getObservationsFor(b, p.id);
+      const crt = obs
+        .filter(o => o.code.coding.some(c => c.code === 'LP267955-5'))
+        .sort((a, b) => a.effectiveDateTime.localeCompare(b.effectiveDateTime));
+      expect(crt[0]!.valueQuantity!.value).toBeGreaterThanOrEqual(350);
+      expect(crt[0]!.valueQuantity!.value).toBeLessThanOrEqual(650);
+      const visus = obs
+        .filter(o => o.code.coding.some(c => c.code === '79880-1'))
+        .sort((a, b) => a.effectiveDateTime.localeCompare(b.effectiveDateTime));
+      expect(visus[0]!.valueQuantity!.value).toBeGreaterThanOrEqual(0.05);
+      expect(visus[0]!.valueQuantity!.value).toBeLessThanOrEqual(0.35);
+      const codes = getMedsFor(b, p.id).flatMap(m => m.medicationCodeableConcept.coding.map(c => c.code));
+      if (codes.includes('S01LA05')) aflib++;
+      if (codes.includes('L01XC07')) bev++;
+      if (codes.includes('S01BA01')) dex++;
+    }
+    expect(aflib / patients.length).toBeGreaterThanOrEqual(0.60);
+    expect(aflib / patients.length).toBeLessThanOrEqual(0.80);
+    expect(bev / patients.length).toBeGreaterThanOrEqual(0.10);
+    expect(bev / patients.length).toBeLessThanOrEqual(0.30);
+    expect(dex).toBeGreaterThanOrEqual(1);
+  });
+
+  it('Faricimab uses ATC S01LA09; Dexamethasone uses ATC S01BA01', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 200,
+      seed: 31415,
+      cohortMix: { amd: 0.0, dme: 0.5, rvo: 0.5 },
+    }) as Bundle;
+    const allMeds = b.entry
+      .filter(e => e.resource.resourceType === 'MedicationStatement')
+      .map(e => e.resource as unknown as MedicationStatementResource);
+    const fari = allMeds.filter(m => m.medicationCodeableConcept.coding.some(c => c.code === 'S01LA09'));
+    const dex = allMeds.filter(m => m.medicationCodeableConcept.coding.some(c => c.code === 'S01BA01'));
+    expect(fari.length).toBeGreaterThan(0);
+    expect(dex.length).toBeGreaterThan(0);
+    for (const m of fari) {
+      expect(m.medicationCodeableConcept.coding[0]!.system).toBe('http://www.whocc.no/atc');
+    }
+    for (const m of dex) {
+      expect(m.medicationCodeableConcept.coding[0]!.system).toBe('http://www.whocc.no/atc');
+    }
+  });
+
+  it('Bilateral support: AMD ~30%, DME ~60%, RVO ~5% have TWO eyes worth of resources', () => {
+    const cases = [
+      { mix: { amd: 1, dme: 0, rvo: 0 } as CohortMix, target: 0.30 },
+      { mix: { amd: 0, dme: 1, rvo: 0 } as CohortMix, target: 0.60 },
+      { mix: { amd: 0, dme: 0, rvo: 1 } as CohortMix, target: 0.05 },
+    ];
+    for (const { mix, target } of cases) {
+      const b = generateCenterBundle({
+        ...COMMON,
+        patients: 200,
+        seed: 27182,
+        cohortMix: mix,
+      }) as Bundle;
+      const patients = getPatients(b);
+      const bilateralCount = patients.filter(p => eyesFor(b, p.id).size === 2).length;
+      const ratio = bilateralCount / patients.length;
+      // ±10% absolute slack
+      expect(ratio).toBeGreaterThanOrEqual(Math.max(0, target - 0.10));
+      expect(ratio).toBeLessThanOrEqual(target + 0.10);
+    }
+  });
+
+  it('Bilateral patient: distinct ids for second-eye resources (cond-*-bilat)', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 100,
+      seed: 27182,
+      cohortMix: { amd: 0, dme: 1, rvo: 0 },
+    }) as Bundle;
+    const conds = b.entry
+      .filter(e => e.resource.resourceType === 'Condition')
+      .map(e => e.resource as unknown as ConditionResource);
+    const bilatConds = conds.filter(c => /cond-.*-bilat$/.test(c.id));
+    expect(bilatConds.length).toBeGreaterThan(0);
+  });
+
+  it('Unilateral patient: exactly one eye-side bodySite across resources', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 200,
+      seed: 99999,
+      cohortMix: { amd: 0, dme: 0, rvo: 1 },
+    }) as Bundle;
+    const patients = getPatients(b);
+    const unilateral = patients.filter(p => eyesFor(b, p.id).size === 1);
+    // RVO bilateral rate is ~5% so most should be unilateral
+    expect(unilateral.length).toBeGreaterThan(patients.length * 0.7);
+  });
+
+  it('determinism: same seed → identical full bundle (templates D-09)', () => {
+    const a = generateCenterBundle({
+      ...COMMON,
+      patients: 50,
+      seed: 5555,
+      cohortMix: { amd: 0.5, dme: 0.3, rvo: 0.2 },
+    });
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 50,
+      seed: 5555,
+      cohortMix: { amd: 0.5, dme: 0.3, rvo: 0.2 },
+    });
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   });
 });
