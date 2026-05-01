@@ -130,6 +130,10 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 ## Current State
 
+**Shipped:** Milestone v1.9.5 — Synthetic Data Realism (2026-05-01)
+- Phase 26 complete: terminology seed extended (5 codes), disease-conditional comorbidities, HbA1c + age-disease coupling, AMD/DME/RVO template differentiation, 4 synthetic bundles regenerated, verify-bundle-distributions.mjs wired into test:ci
+- All SYNTH-01..04 requirements verified; 682 tests green; audit:bundles exits 0
+
 **Shipped:** Milestone v1.8 — Session Resilience & Test/Code Polish (2026-04-23)
 - Phase 18: metricSelector test harness unblock + shared render helper
 - Phase 19: AuditPage useReducer state machine refactor (characterization-first)
@@ -268,4 +272,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-23 — v1.9 started (Codebase Consistency & Test/Tech-Debt Polish).*
+*Last updated: 2026-05-01 — v1.9.5 complete (Synthetic Data Realism, Phase 26).*
