@@ -53,7 +53,35 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ---
 
-## Active Patch Release: v1.9.4 — Terminology Resolver Refactor
+## Active Patch Release: v1.9.5 — Synthetic Data Realism
+
+**Goal:** Close the terminology coverage gap (5 codes) and bring synthetic FHIR bundles into rough alignment with published German AMD/DR epidemiology — disease-conditional comorbidities, HbA1c for diabetics, age-disease coupling, and differentiated AMD/DME/RVO templates.
+**Granularity:** small (single-phase data + script + seed)
+**Coverage:** 4/4 SYNTH-* requirements mapped
+**Starting phase number:** 26
+**Public anchors:** AOK PLUS claims study (Pham 2024), KORA, AugUR, Gutenberg Health Study, AAO IRIS Registry, DRCR Retina Network manuscripts.
+
+### Phases
+
+- [ ] **Phase 26: Synthetic Data Realism** — Seed extension + comorbidity model + HbA1c/age-disease coupling + bundle regeneration (SYNTH-01..04)
+
+### Phase Details
+
+#### Phase 26: Synthetic Data Realism
+**Goal**: All `(system, code)` pairs present in shipped FHIR bundles resolve via the terminology seed (or the configured terminology server). Synthetic bundles encode disease-conditional comorbidities, HbA1c readings for diabetic patients, age-restricted AMD onset, and differentiated AMD/DME/RVO templates — distributions are consistent with published German AMD prevalence (Pham 2024, AOK PLUS) and DR HbA1c norms.
+**Depends on**: Phase 25 (v1.9.4 — terminology service module)
+**Requirements**: SYNTH-01, SYNTH-02, SYNTH-03, SYNTH-04
+**Success Criteria** (what must be TRUE):
+  1. **SYNTH-01** — `_seedMap` in `src/services/terminology.ts` covers SNOMED `312903003` (DME), SNOMED `362098006` (RVO), ICD-10-GM `E11` (T2DM, no subcode), `H43.1` (vitreous hemorrhage), `T85.8` (post-injection IOP elevation) with German+English labels and full text. Audit script (added in this phase or run inline) confirms zero unresolvable codes in `public/data/center-*.json`.
+  2. **SYNTH-02** — `scripts/generate-center-bundle.ts` emits ≥1 comorbidity for ≥60% of synthetic AMD patients (sampled from {`I10`, `E78.0`, `I25.1`}, age-correlated) and ≥1 diabetes Condition (`E10.9` or `E11.9`) for 100% of DR/DME patients plus ≥40% with `I10` comorbidity.
+  3. **SYNTH-03** — DR/DME patients receive 2–5 HbA1c (LOINC `4548-4`) observations per case, baseline 6.5–10.5%, with serial values reflecting plausible glycemic-control trajectories (no >2% swing between consecutive visits unless flagged). AMD birthdate sampling restricts onset age ≥60. AMD/DME/RVO use distinct observation/treatment templates (DME has elevated CRT + HbA1c + smaller IVI count; RVO has unilateral preference + lower IVI count).
+  4. **SYNTH-04** — `npm run generate-bundles` regenerates the 4 synthetic site bundles (Chemnitz, Leipzig, Greifswald, Münster). Quick-check script verifies aggregate distributions: AMD age median ≥70, DR comorbidity rate 100%, AMD comorbidity rate ≥60%, HbA1c emission ≥2 per DR/DME case. Test suite stays green at ≥640 (allow ±5 churn for tests that touch site counts or sample fixtures).
+**Plans:** TBD
+**UI hint**: no (no user-visible UI change; data layer only)
+
+---
+
+## Shipped Patch Release: v1.9.4 — Terminology Resolver Refactor
 
 **Goal:** Factor diagnosis display-name resolution out of `src/services/fhirLoader.ts` into a dedicated terminology service. Build a code/system dictionary from loaded bundles, lazily resolve display names via a configurable FHIR terminology server (with offline fallback), and update all 5 call sites.
 **Granularity:** small (single-phase architecture refactor + server-proxy stub)

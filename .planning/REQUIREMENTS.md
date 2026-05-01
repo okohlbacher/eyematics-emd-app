@@ -82,6 +82,15 @@ Source: post-v1.9.3 architecture review (FHIR mapping deep-dive 2026-04-28).
 - [ ] **TERM-04** — `config/settings.yaml` gains `terminology.enabled`, `terminology.serverUrl`, `terminology.cacheTtlMs`. Documented in `docs/Konfiguration.md`. Defaults preserve current offline behavior.
 - [x] **TERM-05** — Tests cover code-collection from a fixture bundle, sync seed-cache hit, async resolution + React hook re-render, server-proxy 503-when-disabled. Test:ci baseline grows from 619 to ~624.
 
+### Synthetic Data Realism (SYNTH-*) — v1.9.5
+
+Source: post-v1.9.4 audit of bundle coverage against terminology seed + clinical realism review (2026-04-30).
+
+- [ ] **SYNTH-01** — `_seedMap` in `src/services/terminology.ts` covers all 5 currently-unresolvable diagnoses present in `public/data/center-*.json`: SNOMED `312903003` (DME, 51 cases), SNOMED `362098006` (RVO, 24 cases), ICD-10-GM `E11` (T2DM unspecified, 21 cases), `H43.1` (vitreous hemorrhage, 2 cases), `T85.8` (post-injection IOP elevation, 3 cases). Audit script reports 0 unresolvable.
+- [ ] **SYNTH-02** — `scripts/generate-center-bundle.ts` emits disease-conditional comorbidities: ≥60% AMD patients gain ≥1 of {`I10`, `E78.0`, `I25.1`} (age-correlated); 100% DR/DME patients have a diabetes Condition (`E10.9` or `E11.9`); ≥40% DR/DME patients also have `I10`.
+- [ ] **SYNTH-03** — DR/DME synthetic patients receive 2–5 HbA1c (LOINC `4548-4`) observations per case (baseline 6.5–10.5 %, plausible glycemic-control trajectories). AMD onset restricted to age ≥60. AMD/DME/RVO templates differentiated (CRT levels, IVI count distribution, laterality preference).
+- [ ] **SYNTH-04** — `npm run generate-bundles` regenerates 4 synthetic site bundles. Quick-check script confirms aggregate priors (AMD median age ≥70, DR comorbidity rate 100%, AMD comorbidity rate ≥60%, HbA1c emission rate per DR/DME case ≥2). `npm run test:ci` stays green ≥640 (±5 churn allowance).
+
 ---
 
 ## Traceability
@@ -116,8 +125,12 @@ Source: post-v1.9.3 architecture review (FHIR mapping deep-dive 2026-04-28).
 | TERM-03 | Server-side terminology proxy | Phase 25 |
 | TERM-04 | Settings + docs for terminology server | Phase 25 |
 | TERM-05 | Test coverage for terminology resolver | Phase 25 |
+| SYNTH-01 | Terminology seed extension (5 missing codes) | Phase 26 |
+| SYNTH-02 | Disease-conditional comorbidity model | Phase 26 |
+| SYNTH-03 | HbA1c + age-disease coupling + AMD/DME/RVO differentiation | Phase 26 |
+| SYNTH-04 | Bundle regeneration + distribution-prior verification | Phase 26 |
 
-**Coverage:** 28/28 requirements mapped. Phase 21: TEST-01..04 + UAT-AUTO-01..05 (9). Phase 22: CONSIST-01..04 + DOCS-01..03 (7). Phase 23: DEPS-01..03 (3). Phase 24: FB-01..04 (4). Phase 25: TERM-01..05 (5).
+**Coverage:** 32/32 requirements mapped. Phase 21: TEST-01..04 + UAT-AUTO-01..05 (9). Phase 22: CONSIST-01..04 + DOCS-01..03 (7). Phase 23: DEPS-01..03 (3). Phase 24: FB-01..04 (4). Phase 25: TERM-01..05 (5). Phase 26: SYNTH-01..04 (4).
 
 ---
 
