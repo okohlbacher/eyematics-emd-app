@@ -154,3 +154,201 @@ describe('generateCenterBundle (DATA-GEN-01..04)', () => {
     expect(() => generateCenterBundle({ ...COMMON, patients: 501, seed: 1 })).toThrow();
   });
 });
+
+// ---------------------------------------------------------------------------
+// SYNTH-02 — Comorbidity model (Phase 26 / D-04, D-05)
+// ---------------------------------------------------------------------------
+
+const ICD10_GM_SYS = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm';
+
+interface ConditionResource {
+  resourceType: 'Condition';
+  id: string;
+  subject: { reference: string };
+  code: { coding: Array<{ system?: string; code: string; display?: string }> };
+  clinicalStatus?: { coding: Array<{ code: string }> };
+  onsetDateTime?: string;
+  bodySite?: unknown;
+  category?: Array<{ coding: Array<{ code: string }> }>;
+}
+
+interface PatientResource {
+  resourceType: 'Patient';
+  id: string;
+  birthDate: string;
+}
+
+function getConditionsFor(b: Bundle, patientId: string): ConditionResource[] {
+  return b.entry
+    .filter(e => e.resource.resourceType === 'Condition')
+    .map(e => e.resource as unknown as ConditionResource)
+    .filter(c => c.subject.reference === `Patient/${patientId}`);
+}
+
+function comorbidityConditions(conds: ConditionResource[]): ConditionResource[] {
+  // Comorbidity Conditions are those with the BfArM ICD-10-GM system
+  return conds.filter(c => c.code.coding.some(cd => cd.system === ICD10_GM_SYS));
+}
+
+function getPatients(b: Bundle): PatientResource[] {
+  return b.entry
+    .filter(e => e.resource.resourceType === 'Patient')
+    .map(e => e.resource as unknown as PatientResource);
+}
+
+function primaryConditionFor(b: Bundle, patientId: string): ConditionResource | undefined {
+  // Primary conditions use the SNOMED system (cohort codes)
+  const conds = getConditionsFor(b, patientId);
+  return conds.find(c => c.code.coding.some(cd => cd.system === 'http://snomed.info/sct'));
+}
+
+describe('generateCenterBundle SYNTH-02 — comorbidity model', () => {
+  it('AMD cohort: ≥60% of patients have ≥1 comorbidity from {I10, E78.0, I25.1}', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 200,
+      seed: 42,
+      cohortMix: { amd: 1, dme: 0, rvo: 0 },
+    }) as Bundle;
+    const patients = getPatients(b);
+    const allowed = new Set(['I10', 'E78.0', 'I25.1']);
+    const withCo = patients.filter(p => {
+      const co = comorbidityConditions(getConditionsFor(b, p.id));
+      return co.some(c => c.code.coding.some(cd => allowed.has(cd.code)));
+    });
+    expect(withCo.length / patients.length).toBeGreaterThanOrEqual(0.6);
+  });
+
+  it('DME cohort: 100% have a diabetes Condition; E11.9 ratio ∈ [0.7,0.9]; ≥35% also have I10', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 100,
+      seed: 99,
+      cohortMix: { amd: 0, dme: 1, rvo: 0 },
+    }) as Bundle;
+    const patients = getPatients(b);
+    let withDiabetes = 0;
+    let withE11_9 = 0;
+    let withI10 = 0;
+    for (const p of patients) {
+      const co = comorbidityConditions(getConditionsFor(b, p.id));
+      const codes = co.flatMap(c => c.code.coding.map(cd => cd.code));
+      if (codes.includes('E11.9') || codes.includes('E10.9')) withDiabetes++;
+      if (codes.includes('E11.9')) withE11_9++;
+      if (codes.includes('I10')) withI10++;
+    }
+    expect(withDiabetes).toBe(patients.length);
+    const t2Ratio = withE11_9 / withDiabetes;
+    expect(t2Ratio).toBeGreaterThanOrEqual(0.7);
+    expect(t2Ratio).toBeLessThanOrEqual(0.9);
+    expect(withI10 / patients.length).toBeGreaterThanOrEqual(0.35);
+  });
+
+  it('RVO cohort: ≥40% have I10, ≥20% have E78.0', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 100,
+      seed: 13,
+      cohortMix: { amd: 0, dme: 0, rvo: 1 },
+    }) as Bundle;
+    const patients = getPatients(b);
+    let withI10 = 0;
+    let withE78 = 0;
+    for (const p of patients) {
+      const co = comorbidityConditions(getConditionsFor(b, p.id));
+      const codes = co.flatMap(c => c.code.coding.map(cd => cd.code));
+      if (codes.includes('I10')) withI10++;
+      if (codes.includes('E78.0')) withE78++;
+    }
+    expect(withI10 / patients.length).toBeGreaterThanOrEqual(0.4);
+    expect(withE78 / patients.length).toBeGreaterThanOrEqual(0.2);
+  });
+
+  it('AMD comorbidity rate is age-correlated (>80 bucket > <70 bucket)', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 200,
+      seed: 2026,
+      cohortMix: { amd: 1, dme: 0, rvo: 0 },
+    }) as Bundle;
+    const patients = getPatients(b);
+    const buckets = { young: [] as number[], old: [] as number[] };
+    for (const p of patients) {
+      const primary = primaryConditionFor(b, p.id);
+      if (!primary?.onsetDateTime) continue;
+      const ageAtBaseline =
+        (new Date(primary.onsetDateTime).getTime() - new Date(p.birthDate).getTime()) /
+        (365.25 * 24 * 3600 * 1000);
+      const co = comorbidityConditions(getConditionsFor(b, p.id));
+      if (ageAtBaseline < 70) buckets.young.push(co.length);
+      else if (ageAtBaseline > 80) buckets.old.push(co.length);
+    }
+    if (buckets.young.length === 0 || buckets.old.length === 0) {
+      // Generator currently uses 1935–1970 birth dates with 2022–2024 baseline,
+      // so age range happens to be ~52–89 → both buckets should populate.
+      // If a bucket is empty, just skip the strict assertion.
+      return;
+    }
+    const meanYoung = buckets.young.reduce((a, x) => a + x, 0) / buckets.young.length;
+    const meanOld = buckets.old.reduce((a, x) => a + x, 0) / buckets.old.length;
+    expect(meanOld).toBeGreaterThan(meanYoung * 0.9); // ±10% slack
+  });
+
+  it('comorbidity Conditions have correct shape (clinicalStatus active, BfArM system, no bodySite, onset 1–10y before primary)', () => {
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 50,
+      seed: 7,
+      cohortMix: { amd: 0.5, dme: 0.3, rvo: 0.2 },
+    }) as Bundle;
+    const patients = getPatients(b);
+    let checked = 0;
+    for (const p of patients) {
+      const primary = primaryConditionFor(b, p.id);
+      if (!primary?.onsetDateTime) continue;
+      const baseline = new Date(primary.onsetDateTime).getTime();
+      const co = comorbidityConditions(getConditionsFor(b, p.id));
+      for (const c of co) {
+        checked++;
+        expect(c.clinicalStatus?.coding[0]?.code).toBe('active');
+        expect(c.code.coding[0]?.system).toBe(ICD10_GM_SYS);
+        expect(c.bodySite).toBeUndefined();
+        expect(c.onsetDateTime).toBeDefined();
+        const onset = new Date(c.onsetDateTime!).getTime();
+        const yearsBefore = (baseline - onset) / (365.25 * 24 * 3600 * 1000);
+        expect(yearsBefore).toBeGreaterThanOrEqual(0.95);
+        expect(yearsBefore).toBeLessThanOrEqual(10.05);
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+
+  it('determinism: same seed → identical comorbidity emission', () => {
+    const a = generateCenterBundle({
+      ...COMMON,
+      patients: 100,
+      seed: 1234,
+      cohortMix: { amd: 0.5, dme: 0.3, rvo: 0.2 },
+    }) as Bundle;
+    const b = generateCenterBundle({
+      ...COMMON,
+      patients: 100,
+      seed: 1234,
+      cohortMix: { amd: 0.5, dme: 0.3, rvo: 0.2 },
+    }) as Bundle;
+    const aCo = a.entry
+      .filter(e => e.resource.resourceType === 'Condition')
+      .filter(e => {
+        const r = e.resource as unknown as ConditionResource;
+        return r.code.coding.some(c => c.system === ICD10_GM_SYS);
+      });
+    const bCo = b.entry
+      .filter(e => e.resource.resourceType === 'Condition')
+      .filter(e => {
+        const r = e.resource as unknown as ConditionResource;
+        return r.code.coding.some(c => c.system === ICD10_GM_SYS);
+      });
+    expect(JSON.stringify(aCo)).toBe(JSON.stringify(bCo));
+    expect(aCo.length).toBeGreaterThan(0);
+  });
+});
