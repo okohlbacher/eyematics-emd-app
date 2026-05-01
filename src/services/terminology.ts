@@ -116,6 +116,47 @@ export const _seedMap: Map<string, SeedEntry> = new Map([
       en: 'Coronary artery disease (I25.1)',
     },
   }],
+  // Phase 26 SYNTH-01 — coverage extension (D-01, D-02)
+  // SNOMED CT — Diabetic macular edema (DME)
+  [`${SYSTEM_SNOMED}|312903003`, {
+    label: { de: 'Diabetisches Makulaödem (DMÖ)', en: 'Diabetic macular edema' },
+    fullText: {
+      de: 'Diabetisches Makulaödem (312903003)',
+      en: 'Diabetic macular edema (312903003)',
+    },
+  }],
+  // SNOMED CT — Retinal vein occlusion (RVO)
+  [`${SYSTEM_SNOMED}|362098006`, {
+    label: { de: 'Retinaler Venenverschluss (RVV)', en: 'Retinal vein occlusion' },
+    fullText: {
+      de: 'Retinaler Venenverschluss (362098006)',
+      en: 'Retinal vein occlusion (362098006)',
+    },
+  }],
+  // ICD-10-GM — Diabetes mellitus type 2 (parent code, distinct from E11.9)
+  [`${SYSTEM_ICD10_GM}|E11`, {
+    label: { de: 'E11', en: 'E11' },
+    fullText: {
+      de: 'Diabetes mellitus Typ 2 (E11)',
+      en: 'Type 2 diabetes mellitus (E11)',
+    },
+  }],
+  // ICD-10-GM — Vitreous hemorrhage
+  [`${SYSTEM_ICD10_GM}|H43.1`, {
+    label: { de: 'H43.1', en: 'H43.1' },
+    fullText: {
+      de: 'Glaskörperblutung (H43.1)',
+      en: 'Vitreous hemorrhage (H43.1)',
+    },
+  }],
+  // ICD-10-GM — Other complication of internal prosthetic devices
+  [`${SYSTEM_ICD10_GM}|T85.8`, {
+    label: { de: 'T85.8', en: 'T85.8' },
+    fullText: {
+      de: 'Sonstige Komplikation durch Implantate (T85.8)',
+      en: 'Other complication of internal prosthetic devices (T85.8)',
+    },
+  }],
 ]);
 
 // --- Module-private cache state (D-04, D-05) ---
