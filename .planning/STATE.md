@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.9.5
-milestone_name: Synthetic Data Realism
-status: shipped
+milestone: v1.10
+milestone_name: Session Hardening & UX Closure
+status: planning
 last_updated: "2026-05-01T00:00:00.000Z"
 last_activity: 2026-05-01
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -20,13 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-01)
 
 **Core value:** Every user sees only authorized data, with tamper-proof audit trail — while maintaining the zero-friction local development experience.
-**Current focus:** Milestone v1.9.5 shipped — planning next milestone.
+**Current focus:** Milestone v1.10 — Session Hardening & UX Closure (defining requirements).
 
 ## Current Position
 
-Phase: 26 (complete)
-Status: Milestone v1.9.5 shipped
-Last activity: 2026-05-01
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-05-01 — Milestone v1.10 started
 
 ## Milestones Shipped
 
@@ -58,18 +59,8 @@ Last activity: 2026-05-01
 
 ### Open Items (carry to next milestone)
 
-- FB-02: Home "Attention needed" panel — Review buttons not wired (Phase 24-02 not executed)
-- FB-03: Home "Jump Back In" panel — arrows not wired (Phase 24-03 not executed)
-- TERM-04: Terminology settings.yaml keys + Konfiguration.md docs (Phase 25-04 not executed)
-- KEYCLK-01: Real Keycloak OIDC redirect flow (blocked by M7)
-- SESSION-10/11: Admin-triggered force sign-out, stateful refresh-sessions table
+- KEYCLK-01: Real Keycloak OIDC redirect flow (blocked by M7) — pushed to backlog
 
 ### Blockers
 
 - None
-
-## Session Continuity
-
-Last session: 2026-05-01
-Stopped at: v1.9.5 milestone archived
-Next step: `/gsd-new-milestone` to plan next milestone

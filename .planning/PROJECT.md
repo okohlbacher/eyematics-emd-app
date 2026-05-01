@@ -1,19 +1,22 @@
 # EMD Backend Redesign
 
-## Current Milestone: v1.9 — Codebase Consistency & Test/Tech-Debt Polish
+## Current Milestone: v1.10 — Session Hardening & UX Closure
 
-**Goal:** Raise internal quality — eliminate code duplication, enforce consistency across the codebase, green the test suite, automate deferred UAT items, and modernize deps/lint.
+**Goal:** Close all long-deferred session management, home panel UX, and terminology documentation items.
 
-**Target themes:**
-- Codebase consistency audit: sweep for duplicated utilities, divergent patterns, inconsistent naming, stale abstractions; refactor to single-source-of-truth
-- Documentation consistency: `.planning/`, `README.md`, inline docs audited for accuracy & conciseness
-- Test-suite green: fix 3 pre-existing failures (outcomesPanelCrt ×2 visus absolute y-domain; OutcomesPage ×1 audit beacon POST)
-- Session UAT → automated: convert Phase 20's 5 human-verification items into automated tests
-- Dependency + lint cleanup: npm audit, non-breaking upgrades, tighter ESLint rules, dead-code removal
+**Target features:**
+- SESSION-10: admin-triggered force sign-out everywhere
+- SESSION-11: stateful refresh-sessions table with OAuth2-style rotation
+- UI surface for auth TTL settings (`auth.refreshTokenTtlMs` / `auth.refreshAbsoluteCapMs`)
+- Refresh-token signing-key rotation
+- Per-device session listing + revocation UI
+- Home "Attention needed" Review buttons wired (FB-02)
+- Home "Jump Back In" panel routing (FB-03)
+- Terminology settings.yaml keys + Konfiguration.md docs (TERM-04)
 
-**Explicitly out of scope:** KEYCLK-01, SESSION-10/11, Playwright E2E (MSEL-04 gap stays deferred), new product features.
+**Explicitly out of scope:** KEYCLK-01 (Keycloak OIDC redirect — needs live Keycloak instance; pushed to backlog).
 
-**Starting phase number:** 21 (continues v1.8's Phase 20)
+**Starting phase number:** 27 (continues v1.9.5's Phase 26)
 
 ## What This Is
 
@@ -131,9 +134,8 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] HbA1c for DME + age-disease coupling (truncated-normal per cohort) + AMD/DME/RVO template differentiation + Faricimab/Dexamethasone (SYNTH-03) — v1.9.5 (Phase 26-03)
 - [x] 4 synthetic bundles regenerated atomically; verify-bundle-distributions.mjs wired into test:ci; 682/682 tests green (SYNTH-04) — v1.9.5 (Phase 26-04)
 
-### Active (next-milestone candidates)
+### Active (v1.10)
 
-- [ ] Real Keycloak OIDC redirect flow (KEYCLK-01) — blocked at initAuth until the redirect flow ships (M7)
 - [ ] SESSION-10: admin-triggered force sign-out everywhere
 - [ ] SESSION-11: stateful refresh-sessions table with OAuth2-style rotation
 - [ ] UI surface for `auth.refreshTokenTtlMs` / `auth.refreshAbsoluteCapMs`
@@ -174,14 +176,9 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 **Archive:** [`.planning/milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md), [`.planning/milestones/v1.6-REQUIREMENTS.md`](milestones/v1.6-REQUIREMENTS.md)
 
-## Next Milestone Goals (TBD)
+## Next Milestone Goals
 
-- **Real Keycloak OIDC redirect flow** (KEYCLK-01 — blocked by M7 at initAuth)
-- **SESSION-10 / SESSION-11**: admin-triggered global sign-out + stateful refresh-sessions table
-- **Per-device session listing / revocation UI**
-- **Refresh-token signing-key rotation**
-- **Home panel UX fixes** — "Attention needed" Review buttons + "Jump Back In" routing (FB-02, FB-03; deferred from v1.9.3)
-- **Terminology settings + docs** — `terminology.*` settings.yaml keys + `docs/Konfiguration.md` (TERM-04; deferred from v1.9.4)
+→ See Current Milestone: v1.10 — Session Hardening & UX Closure (above)
 
 ## Historical Milestone Goals (archived)
 
@@ -208,7 +205,7 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 ### Out of Scope
 
-- Full Keycloak OIDC redirect flow — prepared but not implemented (complexity, needs real Keycloak instance)
+- Full Keycloak OIDC redirect flow (KEYCLK-01) — pushed to backlog; needs live Keycloak instance to test
 - Database storage — JSON files for v1, API designed for future DB swap
 - Parameter-level exclusion from analysis — only case-level exclusion exists
 - Sub-cohort comparison — not in current codebase, not part of this redesign
@@ -295,4 +292,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-01 — after v1.9.5 milestone completion (Synthetic Data Realism, Phase 26).*
+*Last updated: 2026-05-01 — milestone v1.10 started (Session Hardening & UX Closure).*
