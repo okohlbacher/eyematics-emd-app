@@ -6,7 +6,7 @@ status: planning
 last_updated: "2026-05-01T00:00:00.000Z"
 last_activity: 2026-05-01
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,14 +20,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-01)
 
 **Core value:** Every user sees only authorized data, with tamper-proof audit trail — while maintaining the zero-friction local development experience.
-**Current focus:** Milestone v1.10 — Session Hardening & UX Closure (defining requirements).
+**Current focus:** Milestone v1.10 — Session Hardening & UX Closure (roadmap defined, ready to plan Phase 27).
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 27 (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-01 — Milestone v1.10 started
+Status: Roadmap defined — ready for `/gsd-plan-phase 27`
+Last activity: 2026-05-01 — Roadmap created (Phases 27–30)
+
+```
+Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (0/4 phases)
+```
 
 ## Milestones Shipped
 
@@ -56,6 +60,7 @@ Last activity: 2026-05-01 — Milestone v1.10 started
 - Terminology: `_seedMap` has 15 entries; `EXPECTED_SEED_KEYS` in audit script mirrors it; drift-guard test enforces symmetry.
 - Reference bundles (Aachen, Tübingen) are curated and must NOT be regenerated (D-06).
 - Synthetic bundles (Chemnitz, Leipzig, Greifswald, Münster) must be regenerated atomically (D-11).
+- Phase 27 storage: refresh-sessions table must use the same JSON-file storage pattern as the rest of v1 (no new SQLite tables without revisiting the no-database constraint; SQLite already used for audit log — decision to revisit at plan time).
 
 ### Open Items (carry to next milestone)
 

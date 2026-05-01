@@ -47,23 +47,23 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SESS-01 | TBD | Pending |
-| SESS-02 | TBD | Pending |
-| SESS-03 | TBD | Pending |
-| SESS-04 | TBD | Pending |
-| SESSUI-01 | TBD | Pending |
-| SESSUI-02 | TBD | Pending |
-| SESSUI-03 | TBD | Pending |
-| UX-01 | TBD | Pending |
-| UX-02 | TBD | Pending |
-| TERM-01 | TBD | Pending |
-| TERM-02 | TBD | Pending |
+| SESS-01 | Phase 28 | Pending |
+| SESS-02 | Phase 27 | Pending |
+| SESS-03 | Phase 27 | Pending |
+| SESS-04 | Phase 27 | Pending |
+| SESSUI-01 | Phase 28 | Pending |
+| SESSUI-02 | Phase 28 | Pending |
+| SESSUI-03 | Phase 28 | Pending |
+| UX-01 | Phase 29 | Pending |
+| UX-02 | Phase 29 | Pending |
+| TERM-01 | Phase 30 | Pending |
+| TERM-02 | Phase 30 | Pending |
 
 **Coverage:**
 - v1.10 requirements: 11 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 11 ⚠️
+- Mapped to phases: 11 ✓
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-05-01*
-*Last updated: 2026-05-01 — initial definition*
+*Last updated: 2026-05-01 — traceability filled (Phases 27–30)*
