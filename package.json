@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:check-skips": "node scripts/check-skipped-tests.mjs",
     "test:ci": "npm run test:check-skips && npm test",
-    "audit:bundles": "node scripts/audit-bundle-codes.mjs",
+    "verify:bundles": "node scripts/verify-bundle-distributions.mjs",
+    "audit:bundles": "node scripts/audit-bundle-codes.mjs && node scripts/verify-bundle-distributions.mjs",
     "knip": "knip"
   },
   "dependencies": {
