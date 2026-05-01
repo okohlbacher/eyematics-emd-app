@@ -16,6 +16,7 @@ import {
   LineChart,
   Pie,
   PieChart,
+  ReferenceLine,
   ResponsiveContainer,
   Scatter,
   ScatterChart,
@@ -151,6 +152,13 @@ export default function AnalysisPage() {
       })
       .filter(Boolean) as { age: number; visus: number }[];
   }, [cohort]);
+
+  const medianVisus = useMemo(() => {
+    if (ageVisusScatter.length === 0) return null;
+    const sorted = ageVisusScatter.map((p) => p.visus).sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+  }, [ageVisusScatter]);
 
   const criticalCount = useMemo(() => {
     return cohort.filter((c) => {
@@ -356,6 +364,20 @@ export default function AnalysisPage() {
               <YAxis type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} />
               <Tooltip cursor={{ strokeDasharray: '3 3' }} />
               <Scatter data={ageVisusScatter} fill="#f59e0b" />
+              {medianVisus !== null && (
+                <ReferenceLine
+                  y={medianVisus}
+                  stroke="#dc2626"
+                  strokeDasharray="4 4"
+                  ifOverflow="extendDomain"
+                  label={{
+                    value: `${t('outcomesLayerMedian')}: ${medianVisus.toFixed(2)}`,
+                    position: 'insideTopRight',
+                    fill: '#dc2626',
+                    fontSize: 12,
+                  }}
+                />
+              )}
             </ScatterChart>
           </ResponsiveContainer>
         </div>
