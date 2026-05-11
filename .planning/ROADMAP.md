@@ -88,7 +88,11 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
   2. When a client uses a refresh token, the server issues a new token and immediately marks the previous row as revoked — presenting the old token a second time returns 401
   3. When an admin rotates the signing key, existing sessions continue to refresh until their absolute cap expires, then expire gracefully rather than returning 500 or a crash
   4. All session-table operations are covered by automated tests that assert row state after rotation and reuse attempts
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 27-01-PLAN.md — Wave 0 test scaffolds for SESS-02/03/04 (sessionsDb, sessionRotation, rotateKey)
+- [ ] 27-02-PLAN.md — sessionsDb.ts module (schema, CRUD, cleanup) + index.ts bootstrap [SESS-02]
+- [ ] 27-03-PLAN.md — jti claim + /refresh rotation + family revocation in jwtUtil/authApi [SESS-03]
+- [ ] 27-04-PLAN.md — Dual-key window + POST /api/auth/rotate-key admin endpoint [SESS-04]
 
 ### Phase 28: Admin Session Control UI
 **Goal**: Admins can see every active session for any user and end sessions — individually or all at once — and can adjust session TTL values without touching config files
@@ -125,7 +129,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 27. Stateful Session Backend | 0/? | Not started | - |
+| 27. Stateful Session Backend | 0/4 | Planned | - |
 | 28. Admin Session Control UI | 0/? | Not started | - |
 | 29. Home Panel UX | 0/? | Not started | - |
 | 30. Terminology Configuration Docs | 0/? | Not started | - |
