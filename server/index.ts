@@ -7,6 +7,8 @@
  *   3. initAuth() — load/generate JWT secret, migrate users.json
  *   4. initAuditDb() — open/create SQLite audit database
  *   5. startPurgeInterval() — run initial purge + daily interval
+ *   5a. initSessionsDb() — open/create SQLite sessions database (SESS-02)
+ *   5b. startSessionCleanupInterval() — run initial purge + daily interval
  *   6. Create Express app and mount middleware in correct order:
  *      a. express.json() on /api/auth/* routes (authApiRouter needs it)
  *      b. auditMiddleware — logs all /api/* requests (before auth, captures 401s)
@@ -48,6 +50,7 @@ import { initAuth } from './initAuth.js';
 import { issueApiRouter } from './issueApi.js';
 import { outcomesAggregateRouter } from './outcomesAggregateApi.js';
 import { initOutcomesAggregateCache } from './outcomesAggregateCache.js';
+import { initSessionsDb, startSessionCleanupInterval } from './sessionsDb.js';
 import { configureSettingsApi, settingsApiRouter } from './settingsApi.js';
 import { terminologyRouter } from './terminologyApi.js';
 
@@ -149,6 +152,13 @@ initDataDb(DATA_DIR);
 // ---------------------------------------------------------------------------
 
 startPurgeInterval();
+
+// ---------------------------------------------------------------------------
+// 5a. initSessionsDb + startSessionCleanupInterval (SESS-02)
+// ---------------------------------------------------------------------------
+
+initSessionsDb(DATA_DIR);
+startSessionCleanupInterval();
 
 // ---------------------------------------------------------------------------
 // 6. Derive FHIR proxy target (host only — no path)
