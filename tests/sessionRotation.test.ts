@@ -42,6 +42,7 @@ resetUsers();
 
 vi.mock('../server/initAuth.js', () => ({
   getJwtSecret: () => TEST_SECRET,
+  getJwtSecrets: () => ({ current: TEST_SECRET }),
   getAuthConfig: () => ({ twoFactorEnabled: false, maxLoginAttempts: 5, otpCode: '123456' }),
   loadUsers: () => _users,
   modifyUsers: async (fn: (users: unknown[]) => unknown[]) => {

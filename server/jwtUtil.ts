@@ -21,7 +21,7 @@
 
 import jwt from 'jsonwebtoken';
 
-import { getJwtSecret } from './initAuth.js';
+import { getJwtSecret, getJwtSecrets } from './initAuth.js';
 
 // Single source of truth for accepted algorithms — DO NOT inline `'HS256'` in
 // jwt.verify call sites within this file; always reference ALGS so the pin is
@@ -94,12 +94,34 @@ export function verifyAccessToken(token: string): AccessPayload {
 }
 
 /**
- * Verify a refresh JWT. Throws on bad signature, wrong algorithm, or wrong typ.
+ * Verify a refresh JWT with dual-key fallback (D-09, SESS-04).
+ *
+ * Tries the current key first. On JsonWebTokenError (wrong key — NOT expiry),
+ * falls back to the previous key if one exists. This allows tokens signed
+ * before a key rotation to remain valid during the absolute-cap window.
+ *
  * D-18: pre-Phase-27 tokens lack jti — returns empty-string sentinel so the
  * /refresh handler maps getSession('') → null → family revocation → 401.
  */
 export function verifyRefreshToken(token: string): RefreshPayload {
-  const payload = jwt.verify(token, getJwtSecret(), { algorithms: ALGS }) as RefreshPayload;
+  const { current, prev } = getJwtSecrets();
+  let rawPayload: unknown;
+  try {
+    rawPayload = jwt.verify(token, current, { algorithms: ALGS });
+  } catch (err) {
+    // Pitfall 2: only fall through on wrong-key (JsonWebTokenError), NOT on expiry.
+    // TokenExpiredError extends JsonWebTokenError, so check the negative case first.
+    if (
+      err instanceof jwt.JsonWebTokenError &&
+      !(err instanceof jwt.TokenExpiredError) &&
+      prev
+    ) {
+      rawPayload = jwt.verify(token, prev, { algorithms: ALGS });
+    } else {
+      throw err;
+    }
+  }
+  const payload = rawPayload as RefreshPayload;
   if (payload.typ !== 'refresh') {
     throw new Error('wrong_token_type');
   }

@@ -56,8 +56,11 @@ interface AuthConfig {
 // ---------------------------------------------------------------------------
 
 let _jwtSecret: string | null = null;
+let _jwtSecretPrev: string | null = null;   // previous key during dual-key window
 let _authConfig: AuthConfig | null = null;
 let _usersFile: string | null = null;
+let _dataDir: string | null = null;
+let _refreshAbsoluteCapMs: number = 12 * 60 * 60 * 1000; // default 12h
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -72,6 +75,10 @@ let _usersFile: string | null = null;
 export function initAuth(dataDir: string, settings: Record<string, unknown>): void {
   const secretFile = path.join(dataDir, 'jwt-secret.txt');
   _usersFile = path.join(dataDir, 'users.json');
+  _dataDir = dataDir;
+  if (typeof settings.refreshAbsoluteCapMs === 'number') {
+    _refreshAbsoluteCapMs = settings.refreshAbsoluteCapMs;
+  }
 
   // Load or generate JWT secret
   if (fs.existsSync(secretFile)) {
@@ -97,6 +104,17 @@ export function initAuth(dataDir: string, settings: Record<string, unknown>): vo
     _jwtSecret = crypto.randomBytes(32).toString('hex');
     fs.writeFileSync(secretFile, _jwtSecret, { encoding: 'utf-8', mode: 0o600 });
     console.log(`[initAuth] Generated new JWT secret at ${secretFile}`);
+  }
+
+  // Load previous key if dual-key window is active (D-09)
+  const prevSecretFile = path.join(dataDir, 'jwt-secret-prev.txt');
+  if (fs.existsSync(prevSecretFile)) {
+    _jwtSecretPrev = fs.readFileSync(prevSecretFile, 'utf-8').trim() || null;
+    if (_jwtSecretPrev) {
+      console.log('[initAuth] loaded previous JWT secret (dual-key window active)');
+    }
+  } else {
+    _jwtSecretPrev = null;
   }
 
   // Parse auth config from flat settings structure (F-10: consistent with validator)
@@ -143,6 +161,57 @@ export function getJwtSecret(): string {
     throw new Error('[initAuth] getJwtSecret() called before initAuth()');
   }
   return _jwtSecret;
+}
+
+/**
+ * Returns current and (if dual-key window active) previous JWT secrets.
+ * Only verifyRefreshToken uses both keys; access/challenge tokens use getJwtSecret() only (D-12).
+ */
+export function getJwtSecrets(): { current: string; prev?: string } {
+  if (_jwtSecret === null) {
+    throw new Error('[initAuth] getJwtSecrets() called before initAuth()');
+  }
+  return { current: _jwtSecret, prev: _jwtSecretPrev ?? undefined };
+}
+
+/** First 8 hex chars of SHA256(secret) — identifies which key signed a token (D-10). */
+export function computeKeyId(secret: string): string {
+  return crypto.createHash('sha256').update(secret).digest('hex').slice(0, 8);
+}
+
+/**
+ * Atomic key rotation: jwt-secret-next.txt → jwt-secret.txt; old current → jwt-secret-prev.txt.
+ * Returns { rotatedAt, prevKeyExpiresBy } for the admin response.
+ * Throws with code=NEXT_KEY_MISSING if jwt-secret-next.txt does not exist.
+ */
+export function rotateSigningKey(): { rotatedAt: string; prevKeyExpiresBy: string } {
+  if (!_dataDir) throw new Error('[initAuth] rotateSigningKey() called before initAuth()');
+
+  const currentPath = path.join(_dataDir, 'jwt-secret.txt');
+  const nextPath    = path.join(_dataDir, 'jwt-secret-next.txt');
+  const prevPath    = path.join(_dataDir, 'jwt-secret-prev.txt');
+
+  if (!fs.existsSync(nextPath)) {
+    const err = new Error('jwt-secret-next.txt not found in data directory');
+    (err as Error & { code: string }).code = 'NEXT_KEY_MISSING';
+    throw err;
+  }
+
+  if (fs.existsSync(prevPath)) fs.unlinkSync(prevPath);
+
+  fs.renameSync(currentPath, prevPath);
+  fs.renameSync(nextPath, currentPath);
+
+  try { fs.chmodSync(currentPath, 0o600); } catch { /* best effort */ }
+  try { fs.chmodSync(prevPath, 0o600); } catch { /* best effort */ }
+
+  _jwtSecretPrev = fs.readFileSync(prevPath, 'utf-8').trim();
+  _jwtSecret = fs.readFileSync(currentPath, 'utf-8').trim();
+
+  const rotatedAt = new Date().toISOString();
+  const prevKeyExpiresBy = new Date(Date.now() + _refreshAbsoluteCapMs).toISOString();
+  console.log(`[initAuth] signing key rotated at ${rotatedAt}; prev key valid until ${prevKeyExpiresBy}`);
+  return { rotatedAt, prevKeyExpiresBy };
 }
 
 /**

@@ -17,7 +17,7 @@ import QRCode from 'qrcode';
 import { requireCsrf } from './authMiddleware.js';
 import { getValidCenterIds } from './constants.js';
 import type { UserRecord } from './initAuth.js';
-import { getAuthConfig, getJwtSecret, loadUsers, modifyUsers } from './initAuth.js';
+import { getAuthConfig, getJwtSecret, loadUsers, modifyUsers, rotateSigningKey } from './initAuth.js';
 import {
   signAccessToken,
   signChallengeToken as signChallengeTokenUtil,
@@ -986,4 +986,34 @@ authApiRouter.post('/users/:username/totp/reset', async (req: Request, res: Resp
     throw err;
   }
   res.json({ totpEnabled: false });
+});
+
+/**
+ * POST /api/auth/rotate-key
+ *
+ * Admin-only JWT signing-key rotation (SESS-04). Operator must stage the next
+ * key at data/jwt-secret-next.txt before calling this endpoint. On success,
+ * next becomes current and current becomes prev (dual-key window opens).
+ *
+ * NOT in PUBLIC_PATHS — requires a valid admin Bearer token.
+ * Returns { rotatedAt, prevKeyExpiresBy } so the operator knows when the
+ * window closes and existing tokens signed by the prev key expire.
+ */
+authApiRouter.post('/rotate-key', (req: Request, res: Response): void => {
+  if (!req.auth || req.auth.role !== 'admin') {
+    res.status(403).json({ error: 'Admin access required' });
+    return;
+  }
+  try {
+    const result = rotateSigningKey();
+    res.status(200).json(result);
+  } catch (err) {
+    const e = err as Error & { code?: string };
+    if (e.code === 'NEXT_KEY_MISSING') {
+      res.status(400).json({ error: 'jwt-secret-next.txt not found; stage the next key first' });
+      return;
+    }
+    console.error('[authApi] rotate-key failed', err);
+    res.status(500).json({ error: 'Key rotation failed' });
+  }
 });

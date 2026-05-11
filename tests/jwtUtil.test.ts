@@ -13,6 +13,7 @@ const TEST_SECRET = 'test-secret-32-bytes-of-randomness';
 
 vi.mock('../server/initAuth.js', () => ({
   getJwtSecret: () => TEST_SECRET,
+  getJwtSecrets: () => ({ current: TEST_SECRET }),
 }));
 
 import {
