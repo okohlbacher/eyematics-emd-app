@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.10
-milestone_name: — Session Hardening & UX Closure
-status: executing
-last_updated: "2026-05-11T12:49:16.874Z"
-last_activity: 2026-05-11 -- Phase 27 planning complete
+milestone: v1.9.5
+milestone_name: Synthetic Data Realism
+status: shipped
+last_updated: "2026-05-01T00:00:00.000Z"
+last_activity: 2026-05-01
 progress:
-  total_phases: 4
-  completed_phases: 0
+  total_phases: 1
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 0
-  percent: 0
+  completed_plans: 4
+  percent: 100
 ---
 
 # Project State
@@ -20,18 +20,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-01)
 
 **Core value:** Every user sees only authorized data, with tamper-proof audit trail — while maintaining the zero-friction local development experience.
-**Current focus:** Milestone v1.10 — Session Hardening & UX Closure (roadmap defined, ready to plan Phase 27).
+**Current focus:** Milestone v1.9.5 shipped — planning next milestone.
 
 ## Current Position
 
-Phase: 27 (not started)
-Plan: —
-Status: Ready to execute
-Last activity: 2026-05-11 -- Phase 27 planning complete
-
-```
-Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (0/4 phases)
-```
+Phase: 26 (complete)
+Status: Milestone v1.9.5 shipped
+Last activity: 2026-05-01
 
 ## Milestones Shipped
 
@@ -60,12 +55,21 @@ Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (0/4
 - Terminology: `_seedMap` has 15 entries; `EXPECTED_SEED_KEYS` in audit script mirrors it; drift-guard test enforces symmetry.
 - Reference bundles (Aachen, Tübingen) are curated and must NOT be regenerated (D-06).
 - Synthetic bundles (Chemnitz, Leipzig, Greifswald, Münster) must be regenerated atomically (D-11).
-- Phase 27 storage: refresh-sessions table must use the same JSON-file storage pattern as the rest of v1 (no new SQLite tables without revisiting the no-database constraint; SQLite already used for audit log — decision to revisit at plan time).
 
 ### Open Items (carry to next milestone)
 
-- KEYCLK-01: Real Keycloak OIDC redirect flow (blocked by M7) — pushed to backlog
+- FB-02: Home "Attention needed" panel — Review buttons not wired (Phase 24-02 not executed)
+- FB-03: Home "Jump Back In" panel — arrows not wired (Phase 24-03 not executed)
+- TERM-04: Terminology settings.yaml keys + Konfiguration.md docs (Phase 25-04 not executed)
+- KEYCLK-01: Real Keycloak OIDC redirect flow (blocked by M7)
+- SESSION-10/11: Admin-triggered force sign-out, stateful refresh-sessions table
 
 ### Blockers
 
 - None
+
+## Session Continuity
+
+Last session: 2026-05-01
+Stopped at: v1.9.5 milestone archived
+Next step: `/gsd-new-milestone` to plan next milestone

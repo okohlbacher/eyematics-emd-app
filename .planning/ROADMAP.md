@@ -18,7 +18,7 @@
 | v1.9.5 | Synthetic Data Realism | 2026-05-01 | 26 | [`milestones/v1.9.5-ROADMAP.md`](milestones/v1.9.5-ROADMAP.md) |
 
 > Note: v1.2–v1.4 shipped between v1.1 and v1.5 but were not tracked in GSD artifacts; git history is authoritative for those releases.
-> Note: v1.9.3 and v1.9.4 were partially executed; deferred plans (FB-02, FB-03, TERM-04) are folded into v1.10.
+> Note: v1.9.3 and v1.9.4 were partially executed; deferred plans (FB-02, FB-03, TERM-04) are candidates for the next milestone.
 
 <details>
 <summary>✅ v1.9.5 Synthetic Data Realism (Phase 26) — SHIPPED 2026-05-01</summary>
@@ -66,74 +66,19 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ---
 
-## Active Milestone: v1.10 — Session Hardening & UX Closure
+## Open / Deferred Items
 
-**Goal:** Close all long-deferred session management, home panel UX, and terminology documentation items.
+The following plans were opened in the v1.9.x patch series but not completed. They are candidates for the next milestone:
 
-## Phases
+### From v1.9.3 — Production Feedback Fixes (Phase 24)
 
-- [ ] **Phase 27: Stateful Session Backend** — Server-side refresh-sessions table, OAuth2-style token rotation, and signing-key rotation
-- [ ] **Phase 28: Admin Session Control UI** — Force sign-out, per-device session listing + individual revocation, TTL configuration UI
-- [ ] **Phase 29: Home Panel UX** — Wire "Attention needed" Review buttons and "Jump Back In" panel routing
-- [ ] **Phase 30: Terminology Configuration Docs** — Document terminology settings keys in settings.yaml and Konfiguration.md
+- [ ] **24-02: Home "Attention needed" panel** — Wire or remove Review buttons (FB-02)
+- [ ] **24-03: Home "Jump Back In" panel** — Wire arrows or surface explicit empty state (FB-03)
 
-## Phase Details
+### From v1.9.4 — Terminology Resolver (Phase 25)
 
-### Phase 27: Stateful Session Backend
-**Goal**: The server tracks every issued refresh token in a persistent table and invalidates tokens correctly on rotation and key change
-**Depends on**: Nothing (server-side only; builds on existing refresh cookie infrastructure from Phase 20)
-**Requirements**: SESS-02, SESS-03, SESS-04
-**Success Criteria** (what must be TRUE):
-  1. A new `refresh_sessions` table (or JSON equivalent) is created at server startup with one row per issued refresh token, storing user, device fingerprint, issued-at, expires-at, and revoked flag
-  2. When a client uses a refresh token, the server issues a new token and immediately marks the previous row as revoked — presenting the old token a second time returns 401
-  3. When an admin rotates the signing key, existing sessions continue to refresh until their absolute cap expires, then expire gracefully rather than returning 500 or a crash
-  4. All session-table operations are covered by automated tests that assert row state after rotation and reuse attempts
-**Plans**: 4 plans
-- [ ] 27-01-PLAN.md — Wave 0 test scaffolds for SESS-02/03/04 (sessionsDb, sessionRotation, rotateKey)
-- [ ] 27-02-PLAN.md — sessionsDb.ts module (schema, CRUD, cleanup) + index.ts bootstrap [SESS-02]
-- [ ] 27-03-PLAN.md — jti claim + /refresh rotation + family revocation in jwtUtil/authApi [SESS-03]
-- [ ] 27-04-PLAN.md — Dual-key window + POST /api/auth/rotate-key admin endpoint [SESS-04]
-
-### Phase 28: Admin Session Control UI
-**Goal**: Admins can see every active session for any user and end sessions — individually or all at once — and can adjust session TTL values without touching config files
-**Depends on**: Phase 27
-**Requirements**: SESS-01, SESSUI-01, SESSUI-02, SESSUI-03
-**Success Criteria** (what must be TRUE):
-  1. The admin UI lists all active sessions for a selected user, showing device fingerprint, issued-at, last-used, and expires-at columns
-  2. An admin can revoke any individual session from the listing — the revoked session's next API call returns 401 and the frontend redirects to login
-  3. An admin can trigger "sign out everywhere" for a user — all that user's sessions are revoked immediately and their next request returns 401
-  4. An admin can view and save `refreshTokenTtlMs` and `refreshAbsoluteCapMs` values from the admin UI; the values persist to `config/settings.yaml` and take effect on the next issued token
-**Plans**: TBD
-**UI hint**: yes
-
-### Phase 29: Home Panel UX
-**Goal**: Users can act on home-panel alerts and return to recent work with a single click
-**Depends on**: Nothing (independent UI wiring; no new backend required)
-**Requirements**: UX-01, UX-02
-**Success Criteria** (what must be TRUE):
-  1. Each "Review" button in the "Attention needed" panel navigates the user directly to the relevant case or review target — no dead-end buttons or console errors
-  2. Each arrow in the "Jump Back In" panel routes to the last-visited view for that patient/case — navigating to a patient with no prior visit shows an appropriate empty state rather than an error
-**Plans**: TBD
-**UI hint**: yes
-
-### Phase 30: Terminology Configuration Docs
-**Goal**: Any operator can configure the terminology service by reading the shipped settings file and its documentation — no source-code archaeology required
-**Depends on**: Nothing (documentation only)
-**Requirements**: TERM-01, TERM-02
-**Success Criteria** (what must be TRUE):
-  1. `config/settings.yaml` contains a `terminology` block with `enabled`, `serverUrl`, and `cacheTtlMs` keys, each with an inline comment explaining its purpose and default value
-  2. `docs/Konfiguration.md` has a "Terminology Service" section documenting all three keys with valid value examples and the behavior when the service is disabled
-**Plans**: TBD
-
-## Progress Table
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 27. Stateful Session Backend | 0/4 | Planned | - |
-| 28. Admin Session Control UI | 0/? | Not started | - |
-| 29. Home Panel UX | 0/? | Not started | - |
-| 30. Terminology Configuration Docs | 0/? | Not started | - |
+- [ ] **25-04: Terminology settings + docs** — Add `terminology.enabled/serverUrl/cacheTtlMs` to `config/settings.yaml`; document in `docs/Konfiguration.md` (TERM-04)
 
 ---
 
-*Last updated: 2026-05-01 — v1.10 roadmap created (Session Hardening & UX Closure, Phases 27–30).*
+*Last updated: 2026-05-01 — v1.9.5 shipped (Synthetic Data Realism, Phase 26). Next milestone TBD.*
