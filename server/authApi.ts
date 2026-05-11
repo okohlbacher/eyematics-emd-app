@@ -17,7 +17,7 @@ import QRCode from 'qrcode';
 import { requireCsrf } from './authMiddleware.js';
 import { getValidCenterIds } from './constants.js';
 import type { UserRecord } from './initAuth.js';
-import { getAuthConfig, loadUsers, modifyUsers } from './initAuth.js';
+import { getAuthConfig, getJwtSecret, loadUsers, modifyUsers } from './initAuth.js';
 import {
   signAccessToken,
   signChallengeToken as signChallengeTokenUtil,
@@ -27,6 +27,7 @@ import {
 } from './jwtUtil.js';
 import { getAuthProvider } from './keycloakAuth.js';
 import { createRateLimiter } from './rateLimiting.js';
+import { getSession, insertSession, revokeFamily, revokeSession, type SessionRow } from './sessionsDb.js';
 import { getAuthSettings } from './settingsApi.js';
 
 // ---------------------------------------------------------------------------
@@ -43,6 +44,11 @@ function generateSecurePassword(length = 16): string {
   return crypto.randomBytes(Math.ceil(length * 0.75))
     .toString('base64url')
     .slice(0, length);
+}
+
+/** First 8 hex chars of SHA256(current signing key) — identifies which key was used to sign. */
+function currentKeyId(): string {
+  return crypto.createHash('sha256').update(getJwtSecret()).digest('hex').slice(0, 8);
 }
 
 // ---------------------------------------------------------------------------
@@ -89,17 +95,36 @@ function touchLastLogin(username: string): void {
 
 /**
  * Phase 20 / D-06, D-13, D-14 — emit the refresh + CSRF cookie pair on
- * successful login/verify. Cookies use SameSite=Strict; the refresh cookie is
- * httpOnly and scoped to /api/auth/refresh, the CSRF cookie is JS-readable.
+ * successful login/verify/refresh. Cookies use SameSite=Strict; the refresh
+ * cookie is httpOnly and scoped to /api/auth/refresh.
  *
- * `sid` is a fresh random UUID PER LOGIN (not per refresh) — preserved across
- * rolling rotations so the absolute-cap timer anchors to the original login.
+ * Phase 27 / D-07: generates a per-token jti, inserts a sessions row BEFORE
+ * signing the JWT (Pitfall 5 — row must exist before the cookie leaves the
+ * server). Pass `existingSid` on rolling rotation to preserve the session
+ * family for absolute-cap and revocation purposes.
  */
-function emitRefreshCookies(res: Response, user: UserRecord): void {
+function emitRefreshCookies(res: Response, user: UserRecord, existingSid?: string): void {
   const settings = getAuthSettings();
-  const sid = crypto.randomUUID();
+  const effectiveSid = existingSid ?? crypto.randomUUID();
+  const jti = crypto.randomUUID();
+  const nowIso = new Date().toISOString();
+  const expiresAtIso = new Date(Date.now() + settings.refreshTokenTtlMs).toISOString();
+
+  const row: SessionRow = {
+    id: jti,
+    sid: effectiveSid,
+    username: user.username,
+    ver: user.tokenVersion ?? 0,
+    issued_at: nowIso,
+    expires_at: expiresAtIso,
+    last_used_at: nowIso,
+    revoked: 0,
+    key_id: currentKeyId(),
+  };
+  insertSession(row);
+
   const refreshJwt = signRefreshToken(
-    { sub: user.username, ver: user.tokenVersion ?? 0, sid },
+    { sub: user.username, ver: user.tokenVersion ?? 0, sid: effectiveSid, jti },
     settings.refreshTokenTtlMs,
   );
   const csrf = crypto.randomBytes(32).toString('hex');
@@ -345,6 +370,7 @@ authApiRouter.post('/verify', async (req: Request, res: Response): Promise<void>
  * absolute-cap anchor) and returns a fresh access token.
  */
 authApiRouter.post('/refresh', requireCsrf, (req: Request, res: Response): void => {
+  const settings = getAuthSettings();
   const cookie = req.cookies?.['emd-refresh'];
   if (typeof cookie !== 'string' || !cookie) {
     res.status(401).json({ error: 'Missing refresh token' });
@@ -359,9 +385,22 @@ authApiRouter.post('/refresh', requireCsrf, (req: Request, res: Response): void 
     return;
   }
 
-  const settings = getAuthSettings();
-  const ageMs = Date.now() - payload.iat * 1000;
+  // D-06 + D-08: jti lookup FIRST — before tokenVersion check or absolute cap.
+  // Empty jti means pre-Phase-27 token (D-18 sentinel); getSession('') returns
+  // null → same family-revocation path.
+  const existing = getSession(payload.jti);
+  if (!existing || existing.revoked === 1) {
+    revokeFamily(payload.sid);
+    res.clearCookie('emd-refresh', { path: '/api/auth/refresh' });
+    res.status(401).json({ error: 'Refresh token reuse detected' });
+    return;
+  }
+
+  // Absolute cap: server-authoritative issued_at from sessions row (tamper-proof).
+  const ageMs = Date.now() - new Date(existing.issued_at).getTime();
   if (ageMs > settings.refreshAbsoluteCapMs) {
+    revokeSession(payload.jti);
+    res.clearCookie('emd-refresh', { path: '/api/auth/refresh' });
     res.status(401).json({ error: 'Session cap exceeded' });
     return;
   }
@@ -369,29 +408,22 @@ authApiRouter.post('/refresh', requireCsrf, (req: Request, res: Response): void 
   const users = loadUsers();
   const user = users.find((u) => u.username.toLowerCase() === payload.sub.toLowerCase());
   if (!user) {
+    revokeSession(payload.jti);
     res.status(401).json({ error: 'User not found' });
     return;
   }
+
+  // D-19: tokenVersion check remains as second-layer invalidation (explicit logout / password change).
   if ((user.tokenVersion ?? 0) !== payload.ver) {
+    revokeSession(payload.jti);
+    res.clearCookie('emd-refresh', { path: '/api/auth/refresh' });
     res.status(401).json({ error: 'Token version stale' });
     return;
   }
 
-  // D-13 — rolling rotation. New exp, SAME sid so any future absolute-cap
-  // calculation can anchor on the original login (currently we use payload.iat,
-  // but preserving sid lets a stateful upgrade in SESSION-11 do per-session
-  // revocation without breaking the cap math).
-  const newRefresh = signRefreshToken(
-    { sub: user.username, ver: user.tokenVersion ?? 0, sid: payload.sid },
-    settings.refreshTokenTtlMs,
-  );
-  res.cookie('emd-refresh', newRefresh, {
-    httpOnly: true,
-    secure: settings.refreshCookieSecure,
-    sameSite: 'strict',
-    path: '/api/auth/refresh',
-    maxAge: settings.refreshTokenTtlMs,
-  });
+  // Valid — revoke the consumed token and rotate into a new one (same sid, new jti).
+  revokeSession(payload.jti);
+  emitRefreshCookies(res, user, payload.sid);
 
   const accessTtlMs = 10 * 60 * 1000;
   const access = signAccessToken({

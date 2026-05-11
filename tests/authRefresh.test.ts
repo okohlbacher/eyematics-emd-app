@@ -12,13 +12,16 @@
  */
 
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 import bcrypt from 'bcryptjs';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const TEST_SECRET = 'test-secret-for-refresh-tests-32b';
 const TEST_PASSWORD = 'changeme2025!';
@@ -66,6 +69,8 @@ vi.mock('../server/settingsApi.js', () => ({
 
 import { authApiRouter } from '../server/authApi';
 import { authMiddleware } from '../server/authMiddleware';
+import { signRefreshToken } from '../server/jwtUtil';
+import { _closeForTests, initSessionsDb, insertSession } from '../server/sessionsDb';
 
 function createApp() {
   const app = express();
@@ -105,6 +110,18 @@ function parseCookieValue(setCookies: string[], name: string): string {
   const semi = line.indexOf(';');
   return decodeURIComponent(line.slice(eq + 1, semi === -1 ? line.length : semi));
 }
+
+let tmpDir: string;
+
+beforeAll(() => {
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'emd-refresh-test-'));
+  initSessionsDb(tmpDir);
+});
+
+afterAll(() => {
+  _closeForTests();
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+});
 
 beforeEach(() => {
   resetUsers();
@@ -181,27 +198,26 @@ describe('POST /api/auth/refresh — happy path + CSRF + version + cap', () => {
     expect(res.body.error).toMatch(/Token version stale/);
   });
 
-  it('returns 401 "Session cap exceeded" when refresh iat is older than absolute cap', async () => {
+  it('returns 401 "Session cap exceeded" when sessions.issued_at is older than absolute cap', async () => {
     const app = createApp();
-    // Hand-construct a JWT with iat ~13h ago (cap is 12h) but exp far in the
-    // future, so jwt.verify accepts it and our absolute-cap check is what
-    // rejects it. jsonwebtoken sign() rewrites/strips iat too aggressively for
-    // back-dating, so build the segments by hand and HMAC-SHA256 sign them.
-    const oldIat = Math.floor(Date.now() / 1000) - 13 * 3600;
-    const futureExp = Math.floor(Date.now() / 1000) + 3600;
-    const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
-    const body = Buffer.from(JSON.stringify({
-      sub: 'admin', ver: 0, sid: 'fixed-sid', typ: 'refresh', iat: oldIat, exp: futureExp,
-    })).toString('base64url');
-    const sig = crypto
-      .createHmac('sha256', TEST_SECRET)
-      .update(`${header}.${body}`)
-      .digest('base64url');
-    const oldRefresh = `${header}.${body}.${sig}`;
-    // Sanity: decoded payload must still carry our backdated iat
-    const decoded = jwt.decode(oldRefresh) as { iat?: number };
-    expect(decoded.iat).toBe(oldIat);
-    const csrf = 'test-csrf-value';
+    // Phase 27: absolute cap reads from the server-authoritative sessions row (not payload.iat).
+    // Insert a row with issued_at = 13h ago, then sign a JWT with iat = now.
+    // The JWT itself is not expired, but the DB row's issued_at triggers the cap.
+    const oldJti = crypto.randomUUID();
+    const testSid = crypto.randomUUID();
+    insertSession({
+      id: oldJti,
+      sid: testSid,
+      username: 'admin',
+      ver: 0,
+      issued_at: new Date(Date.now() - 13 * 3600 * 1000).toISOString(),
+      expires_at: new Date(Date.now() + 28_800_000).toISOString(),
+      last_used_at: new Date().toISOString(),
+      revoked: 0,
+      key_id: 'test-key',
+    });
+    const oldRefresh = signRefreshToken({ sub: 'admin', ver: 0, sid: testSid, jti: oldJti }, 28_800_000);
+    const csrf = 'test-csrf-cap';
     const res = await request(app)
       .post('/api/auth/refresh')
       .set('Cookie', [`emd-refresh=${oldRefresh}`, `emd-csrf=${csrf}`].join('; '))

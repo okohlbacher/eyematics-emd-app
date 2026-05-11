@@ -42,6 +42,7 @@ export interface RefreshPayload {
   sub: string;
   ver: number;
   sid: string;
+  jti: string;            // per-token id, server-issued (D-07, Phase 27)
   typ: 'refresh';
   iat: number;
   exp: number;
@@ -94,11 +95,16 @@ export function verifyAccessToken(token: string): AccessPayload {
 
 /**
  * Verify a refresh JWT. Throws on bad signature, wrong algorithm, or wrong typ.
+ * D-18: pre-Phase-27 tokens lack jti — returns empty-string sentinel so the
+ * /refresh handler maps getSession('') → null → family revocation → 401.
  */
 export function verifyRefreshToken(token: string): RefreshPayload {
   const payload = jwt.verify(token, getJwtSecret(), { algorithms: ALGS }) as RefreshPayload;
   if (payload.typ !== 'refresh') {
     throw new Error('wrong_token_type');
+  }
+  if (typeof payload.jti !== 'string' || payload.jti.length === 0) {
+    return { ...payload, jti: '' };
   }
   return payload;
 }

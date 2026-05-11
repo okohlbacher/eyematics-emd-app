@@ -11,12 +11,16 @@
  * Test 6 is a regression guard: read-only endpoints must NOT bump tokenVersion.
  */
 
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
 import bcrypt from 'bcryptjs';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import { authenticator } from 'otplib';
 import request from 'supertest';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const TEST_SECRET = 'test-secret-for-cred-mutation-invalidation-32b';
 const TEST_PASSWORD = 'changeme2025!';
@@ -91,6 +95,17 @@ vi.mock('../server/settingsApi.js', () => ({
 
 const { authApiRouter } = await import('../server/authApi.js');
 const { authMiddleware } = await import('../server/authMiddleware.js');
+const { initSessionsDb: _initSessionsDb, _closeForTests: _closeSessionsDb } = await import('../server/sessionsDb.js');
+
+let _tmpDir: string;
+beforeAll(() => {
+  _tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'emd-credmut-test-'));
+  _initSessionsDb(_tmpDir);
+});
+afterAll(() => {
+  _closeSessionsDb();
+  fs.rmSync(_tmpDir, { recursive: true, force: true });
+});
 
 function createApp(): express.Express {
   const app = express();

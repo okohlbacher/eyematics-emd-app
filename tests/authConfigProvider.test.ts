@@ -10,10 +10,14 @@
  * - POST /api/auth/login works normally when provider=local (regression)
  */
 
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
 import bcrypt from 'bcryptjs';
 import express from 'express';
 import request from 'supertest';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Control provider state via module-level variable
@@ -64,6 +68,17 @@ vi.mock('../server/rateLimiting.js', () => ({
 
 import { authApiRouter } from '../server/authApi.js';
 import { getAuthProvider } from '../server/keycloakAuth.js';
+import { _closeForTests, initSessionsDb } from '../server/sessionsDb.js';
+
+let _tmpDir: string;
+beforeAll(() => {
+  _tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'emd-configprovider-test-'));
+  initSessionsDb(_tmpDir);
+});
+afterAll(() => {
+  _closeForTests();
+  fs.rmSync(_tmpDir, { recursive: true, force: true });
+});
 
 function buildApp() {
   const app = express();

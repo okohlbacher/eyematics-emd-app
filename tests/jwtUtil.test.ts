@@ -63,12 +63,13 @@ describe('jwtUtil — algorithm pin + typ enforcement', () => {
     expect(payload.typ).toBe('access');
   });
 
-  it('signRefreshToken → verifyRefreshToken round-trips sub/ver/sid with typ === "refresh"', () => {
-    const token = signRefreshToken({ sub: 'u', ver: 0, sid: 'abc-123' }, 28_800_000);
+  it('signRefreshToken → verifyRefreshToken round-trips sub/ver/sid/jti with typ === "refresh"', () => {
+    const token = signRefreshToken({ sub: 'u', ver: 0, sid: 'abc-123', jti: 'test-jti-xyz' }, 28_800_000);
     const payload = verifyRefreshToken(token);
     expect(payload.sub).toBe('u');
     expect(payload.ver).toBe(0);
     expect(payload.sid).toBe('abc-123');
+    expect(payload.jti).toBe('test-jti-xyz');
     expect(payload.typ).toBe('refresh');
   });
 

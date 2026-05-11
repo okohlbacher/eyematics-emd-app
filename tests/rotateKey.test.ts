@@ -14,11 +14,11 @@
  *   7. /api/auth/rotate-key is NOT in PUBLIC_PATHS (unauthenticated call returns 401)
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import request from 'supertest';
 import bcrypt from 'bcryptjs';
 import cookieParser from 'cookie-parser';
 import express from 'express';
+import _request from 'supertest'; // used by Plan 04 test bodies
+import { beforeEach,describe, expect, it } from 'vitest';
 import { vi } from 'vitest';
 
 const TEST_SECRET = 'test-secret-for-rotate-key-tests-32b';
@@ -75,7 +75,8 @@ vi.mock('../server/settingsApi.js', () => ({
 import { authApiRouter } from '../server/authApi';
 import { authMiddleware } from '../server/authMiddleware';
 
-function createApp() {
+ 
+function _createApp() {
   const app = express();
   app.use(cookieParser());
   app.use('/api/auth', express.json());
