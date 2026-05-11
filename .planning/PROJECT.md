@@ -134,16 +134,19 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 ### Active (next-milestone candidates)
 
 - [ ] Real Keycloak OIDC redirect flow (KEYCLK-01) — blocked at initAuth until the redirect flow ships (M7)
+- [x] SESSION-11: stateful refresh-sessions table with OAuth2-style rotation + family revocation (SESS-02/03) — v1.10 (Phase 27)
+- [x] Refresh-token signing-key rotation + dual-key window (SESS-04) — v1.10 (Phase 27)
 - [ ] SESSION-10: admin-triggered force sign-out everywhere
-- [ ] SESSION-11: stateful refresh-sessions table with OAuth2-style rotation
 - [ ] UI surface for `auth.refreshTokenTtlMs` / `auth.refreshAbsoluteCapMs`
-- [ ] Refresh-token signing-key rotation
 - [ ] Per-device session listing + revocation UI
 - [ ] Home "Attention needed" panel Review buttons (FB-02) — deferred from v1.9.3
 - [ ] Home "Jump Back In" panel routing (FB-03) — deferred from v1.9.3
 - [ ] Terminology settings + Konfiguration.md docs (TERM-04) — deferred from v1.9.4
 
 ## Current State
+
+**In Progress:** Milestone v1.10 — Session Hardening & UX Closure
+- Phase 27 complete (2026-05-11): `server/sessionsDb.ts` (SQLite WAL, jti-keyed rows), jti rotation in /refresh, RFC 6819 family revocation, dual-key signing window, `/api/auth/rotate-key` admin endpoint (SESS-02/03/04); 702/702 tests green
 
 **Shipped:** Milestone v1.9.5 — Synthetic Data Realism (2026-05-01)
 - Phase 26 complete: terminology seed extended (5 codes), disease-conditional comorbidities, HbA1c + age-disease coupling, AMD/DME/RVO template differentiation, 4 synthetic bundles regenerated, verify-bundle-distributions.mjs wired into test:ci
@@ -177,9 +180,9 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 ## Next Milestone Goals (TBD)
 
 - **Real Keycloak OIDC redirect flow** (KEYCLK-01 — blocked by M7 at initAuth)
-- **SESSION-10 / SESSION-11**: admin-triggered global sign-out + stateful refresh-sessions table
-- **Per-device session listing / revocation UI**
-- **Refresh-token signing-key rotation**
+- **SESSION-10**: admin-triggered global sign-out (Phase 28)
+- **Per-device session listing / revocation UI** (Phase 28)
+- **UI surface for session TTL settings** (Phase 28)
 - **Home panel UX fixes** — "Attention needed" Review buttons + "Jump Back In" routing (FB-02, FB-03; deferred from v1.9.3)
 - **Terminology settings + docs** — `terminology.*` settings.yaml keys + `docs/Konfiguration.md` (TERM-04; deferred from v1.9.4)
 

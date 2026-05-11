@@ -72,7 +72,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ## Phases
 
-- [ ] **Phase 27: Stateful Session Backend** — Server-side refresh-sessions table, OAuth2-style token rotation, and signing-key rotation
+- [x] **Phase 27: Stateful Session Backend** — Server-side refresh-sessions table, OAuth2-style token rotation, and signing-key rotation
 - [ ] **Phase 28: Admin Session Control UI** — Force sign-out, per-device session listing + individual revocation, TTL configuration UI
 - [ ] **Phase 29: Home Panel UX** — Wire "Attention needed" Review buttons and "Jump Back In" panel routing
 - [ ] **Phase 30: Terminology Configuration Docs** — Document terminology settings keys in settings.yaml and Konfiguration.md
@@ -90,9 +90,9 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
   4. All session-table operations are covered by automated tests that assert row state after rotation and reuse attempts
 **Plans**: 4 plans
 - [x] 27-01-PLAN.md — Wave 0 test scaffolds for SESS-02/03/04 (sessionsDb, sessionRotation, rotateKey)
-- [ ] 27-02-PLAN.md — sessionsDb.ts module (schema, CRUD, cleanup) + index.ts bootstrap [SESS-02]
-- [ ] 27-03-PLAN.md — jti claim + /refresh rotation + family revocation in jwtUtil/authApi [SESS-03]
-- [ ] 27-04-PLAN.md — Dual-key window + POST /api/auth/rotate-key admin endpoint [SESS-04]
+- [x] 27-02-PLAN.md — sessionsDb.ts module (schema, CRUD, cleanup) + index.ts bootstrap [SESS-02]
+- [x] 27-03-PLAN.md — jti claim + /refresh rotation + family revocation in jwtUtil/authApi [SESS-03]
+- [x] 27-04-PLAN.md — Dual-key window + POST /api/auth/rotate-key admin endpoint [SESS-04]
 
 ### Phase 28: Admin Session Control UI
 **Goal**: Admins can see every active session for any user and end sessions — individually or all at once — and can adjust session TTL values without touching config files
@@ -129,7 +129,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 27. Stateful Session Backend | 1/4 | In Progress|  |
+| 27. Stateful Session Backend | 4/4 | Complete | 2026-05-11 |
 | 28. Admin Session Control UI | 0/? | Not started | - |
 | 29. Home Panel UX | 0/? | Not started | - |
 | 30. Terminology Configuration Docs | 0/? | Not started | - |
