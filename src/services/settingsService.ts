@@ -14,6 +14,10 @@ export interface AppSettings {
     serverAggregationThresholdPatients?: number;
     aggregateCacheTtlMs?: number;
   };
+  auth?: {
+    refreshTokenTtlMs?: number;
+    refreshAbsoluteCapMs?: number;
+  };
 }
 
 const DEFAULTS: AppSettings = {
@@ -27,6 +31,10 @@ const DEFAULTS: AppSettings = {
   outcomes: {
     serverAggregationThresholdPatients: 1000,
     aggregateCacheTtlMs: 1800000,
+  },
+  auth: {
+    refreshTokenTtlMs: 28_800_000,
+    refreshAbsoluteCapMs: 43_200_000,
   },
 };
 

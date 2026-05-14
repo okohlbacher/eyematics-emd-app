@@ -859,6 +859,15 @@ const translations = {
     en: 'Flagged for quality review',
   },
   review: { de: 'Pr\u00fcfen', en: 'Review' },
+
+  // Session TTL settings (Phase 28 / SESSUI-03)
+  settingsSessionTitle: { de: 'Sitzungstoken-G\u00fcltigkeiten', en: 'Session Token Lifetimes' },
+  ttlRefreshHours: { de: 'Refresh-Token-G\u00fcltigkeit (Stunden)', en: 'Refresh Token TTL (hours)' },
+  ttlAbsoluteCapHours: { de: 'Maximale Sitzungsdauer (Stunden)', en: 'Absolute Session Cap (hours)' },
+  ttlRefreshHint: { de: 'Mindestens 1 Stunde. Bestimmt, wie lange ein Refresh-Token g\u00fcltig bleibt.', en: 'Minimum 1 hour. Sets how long a refresh token stays valid before requiring re-login.' },
+  ttlAbsoluteCapHint: { de: 'Muss \u2265 Refresh-TTL sein. Absolute Obergrenze der Sitzungsdauer.', en: 'Must be \u2265 Refresh TTL. Hard upper limit on total session duration.' },
+  ttlValidationRefreshMin: { de: 'Refresh-TTL muss mindestens 1 Stunde betragen.', en: 'Refresh TTL must be at least 1 hour.' },
+  ttlValidationCapMin: { de: 'Absolute Grenze muss \u2265 Refresh-TTL sein.', en: 'Absolute cap must be \u2265 Refresh TTL.' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
