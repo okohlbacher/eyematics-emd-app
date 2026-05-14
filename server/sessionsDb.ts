@@ -46,6 +46,7 @@ let stmtRevoke: Database.Statement | null = null;
 let stmtRevokeFamily: Database.Statement | null = null;
 let stmtRevokeByUsername: Database.Statement | null = null;
 let stmtPurge: Database.Statement | null = null;
+let stmtListActiveByUsername: Database.Statement | null = null;
 
 let _cleanupTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -109,6 +110,13 @@ export function initSessionsDb(dataDir: string): void {
     DELETE FROM refresh_sessions
     WHERE datetime(expires_at) < datetime('now')
        OR (revoked = 1 AND last_used_at IS NOT NULL AND datetime(last_used_at) < datetime('now', '-7 days'))
+  `);
+  stmtListActiveByUsername = db.prepare(`
+    SELECT * FROM refresh_sessions
+    WHERE username = @username
+      AND revoked = 0
+      AND datetime(expires_at) > datetime('now')
+    ORDER BY issued_at DESC
   `);
 
   console.log(`[sessionsDb] Opened sessions database: ${dbPath}`);
@@ -184,7 +192,21 @@ export function revokeByUsername(username: string): number {
 }
 
 // ---------------------------------------------------------------------------
-// 7. purgeExpiredSessions
+// 7. listActiveSessionsByUser
+// ---------------------------------------------------------------------------
+
+/**
+ * Return all active (non-revoked, non-expired) refresh-session rows for a given username.
+ * Ordered by issued_at DESC (most recently issued first).
+ * Used by the admin session management UI (SESSUI-01, D-10).
+ */
+export function listActiveSessionsByUser(username: string): SessionRow[] {
+  requireDb();
+  return stmtListActiveByUsername!.all({ username }) as SessionRow[];
+}
+
+// ---------------------------------------------------------------------------
+// 8. purgeExpiredSessions
 // ---------------------------------------------------------------------------
 
 /**
@@ -201,7 +223,7 @@ export function purgeExpiredSessions(): number {
 }
 
 // ---------------------------------------------------------------------------
-// 8. startSessionCleanupInterval
+// 9. startSessionCleanupInterval
 // ---------------------------------------------------------------------------
 
 /**
@@ -230,5 +252,5 @@ export function startSessionCleanupInterval(): void {
 export function _closeForTests(): void {
   if (_cleanupTimer !== null) { clearInterval(_cleanupTimer); _cleanupTimer = null; }
   if (db) { db.close(); db = null; }
-  stmtInsert = stmtGet = stmtRevoke = stmtRevokeFamily = stmtPurge = null;
+  stmtInsert = stmtGet = stmtRevoke = stmtRevokeFamily = stmtRevokeByUsername = stmtPurge = stmtListActiveByUsername = null;
 }
