@@ -27,7 +27,7 @@ import {
 } from './jwtUtil.js';
 import { getAuthProvider } from './keycloakAuth.js';
 import { createRateLimiter } from './rateLimiting.js';
-import { getSession, insertSession, revokeByUsername, revokeFamily, revokeSession, type SessionRow } from './sessionsDb.js';
+import { getSession, insertSession, listActiveSessionsByUser, revokeByUsername, revokeFamily, revokeSession, type SessionRow } from './sessionsDb.js';
 import { getAuthSettings } from './settingsApi.js';
 
 // ---------------------------------------------------------------------------
@@ -1024,4 +1024,71 @@ authApiRouter.post('/rotate-key', (req: Request, res: Response): void => {
     console.error('[authApi] rotate-key failed', err);
     res.status(500).json({ error: 'Key rotation failed' });
   }
+});
+
+/**
+ * DELETE /api/auth/sessions/:id
+ *
+ * Admin-only. Revokes a single refresh-session by its jti (id).
+ * Returns { revoked: true } on success; 404 if the session id is not found.
+ *
+ * MUST be registered before DELETE /sessions (query-param variant) so that
+ * Express matches :id before treating the path as a missing-username request.
+ * (SESSUI-02, D-11, T-28-01, T-28-03)
+ */
+authApiRouter.delete('/sessions/:id', (req: Request, res: Response): void => {
+  if (!req.auth || req.auth.role !== 'admin') {
+    res.status(403).json({ error: 'Admin access required' });
+    return;
+  }
+  const id = String(req.params.id ?? '');
+  const row = getSession(id);
+  if (!row) {
+    res.status(404).json({ error: 'Session not found' });
+    return;
+  }
+  revokeSession(id);
+  res.json({ revoked: true });
+});
+
+/**
+ * DELETE /api/auth/sessions?username=<u>
+ *
+ * Admin-only. Revokes all active refresh-sessions for the given username (SESS-01).
+ * Returns { revoked: <count> } — the number of rows revoked.
+ * (SESS-01, D-12, T-28-01, T-28-03)
+ */
+authApiRouter.delete('/sessions', (req: Request, res: Response): void => {
+  if (!req.auth || req.auth.role !== 'admin') {
+    res.status(403).json({ error: 'Admin access required' });
+    return;
+  }
+  const username = String(req.query.username ?? '').trim();
+  if (!username) {
+    res.status(400).json({ error: 'username required' });
+    return;
+  }
+  const count = revokeByUsername(username);
+  res.json({ revoked: count });
+});
+
+/**
+ * GET /api/auth/sessions?username=<u>
+ *
+ * Admin-only. Returns active (non-revoked, non-expired) refresh-sessions
+ * for the given username. Used by the admin session management UI.
+ * (SESSUI-01, D-10, T-28-01, T-28-02)
+ */
+authApiRouter.get('/sessions', (req: Request, res: Response): void => {
+  if (!req.auth || req.auth.role !== 'admin') {
+    res.status(403).json({ error: 'Admin access required' });
+    return;
+  }
+  const username = String(req.query.username ?? '').trim();
+  if (!username) {
+    res.status(400).json({ error: 'username required' });
+    return;
+  }
+  const sessions = listActiveSessionsByUser(username);
+  res.json({ sessions });
 });
