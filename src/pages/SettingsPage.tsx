@@ -1,4 +1,4 @@
-import { CheckCircle, Download, KeyRound, Loader2, RotateCcw, Save, Server, Settings as SettingsIcon, ShieldCheck,XCircle } from 'lucide-react';
+import { CheckCircle, Clock, Download, KeyRound, Loader2, RotateCcw, Save, Server, Settings as SettingsIcon, ShieldCheck,XCircle } from 'lucide-react';
 import { MessageSquarePlus } from 'lucide-react';
 import { useEffect,useState } from 'react';
 
@@ -17,6 +17,7 @@ import {
   resetSettings,
   updateSettings,
 } from '../services/settingsService';
+import { hoursToMs, msToHours, validateTtl } from '../services/ttlConversion';
 import { downloadYaml } from '../utils/download';
 
 type ConnectionStatus = 'idle' | 'testing' | 'ok' | 'failed';
@@ -40,6 +41,12 @@ export default function SettingsPage() {
   const [totpOtp, setTotpOtp] = useState('');
   const [totpBusy, setTotpBusy] = useState(false);
   const [totpError, setTotpError] = useState('');
+
+  // Session TTL state (Phase 28 / SESSUI-03)
+  const [refreshTtlHours, setRefreshTtlHours] = useState(8);
+  const [absoluteCapHours, setAbsoluteCapHours] = useState(12);
+  const [ttlValidationError, setTtlValidationError] = useState<'refreshMin' | 'capMin' | null>(null);
+  const [ttlSaving, setTtlSaving] = useState(false);
 
   const [dataSourceType, setDataSourceType] = useState<DataSourceType>('local');
   const [blazeUrl, setBlazeUrl] = useState('http://localhost:8080/fhir');
@@ -65,6 +72,8 @@ export default function SettingsPage() {
         setBreakerDays(s.therapyBreakerDays);
         setDataSourceType(s.dataSource.type);
         setBlazeUrl(s.dataSource.blazeUrl);
+        setRefreshTtlHours(msToHours(s.auth?.refreshTokenTtlMs ?? 28_800_000));
+        setAbsoluteCapHours(msToHours(s.auth?.refreshAbsoluteCapMs ?? 43_200_000));
       } catch {
         /* ignore — keep defaults */
       }
@@ -163,6 +172,27 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSaveTtl = async () => {
+    const result = validateTtl(refreshTtlHours, absoluteCapHours);
+    if (result !== 'ok') { setTtlValidationError(result); return; }
+    setTtlValidationError(null);
+    setTtlSaving(true);
+    try {
+      await updateSettings({
+        auth: {
+          refreshTokenTtlMs: hoursToMs(refreshTtlHours),
+          refreshAbsoluteCapMs: hoursToMs(absoluteCapHours),
+        },
+      });
+      setSavedBanner(true);
+      setSaveError(null);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'error');
+    } finally {
+      setTtlSaving(false);
+    }
+  };
+
   const handleReset = async () => {
     setSaveError(null);
     setSaving(true);
@@ -174,6 +204,8 @@ export default function SettingsPage() {
       setDataSourceType(defaults.dataSource.type);
       setBlazeUrl(defaults.dataSource.blazeUrl);
       setValidationError(false);
+      setRefreshTtlHours(msToHours(defaults.auth?.refreshTokenTtlMs ?? 28_800_000));
+      setAbsoluteCapHours(msToHours(defaults.auth?.refreshAbsoluteCapMs ?? 43_200_000));
       showSaved();
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : t('settingsSaveError'));
@@ -405,6 +437,87 @@ export default function SettingsPage() {
             </button>
           </div>
         )}
+
+        {/* Session Token Lifetimes (Phase 28 / SESSUI-03) */}
+        <hr className="border-gray-100 dark:border-gray-700" />
+        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+          <Clock className="w-4 h-4" />
+          {t('settingsSessionTitle')}
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Refresh Token TTL */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+              {t('ttlRefreshHours')}
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={refreshTtlHours}
+              aria-describedby="ttl-refresh-hint"
+              onChange={(e) => {
+                const parsed = parseInt(e.target.value, 10);
+                const val = isNaN(parsed) ? 0 : parsed;
+                setRefreshTtlHours(val);
+                setTtlValidationError(validateTtl(val, absoluteCapHours) === 'ok' ? null : validateTtl(val, absoluteCapHours));
+              }}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
+                ttlValidationError === 'refreshMin'
+                  ? 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-400'
+                  : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
+              }`}
+            />
+            <p id="ttl-refresh-hint" className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+              {t('ttlRefreshHint')}
+            </p>
+            {ttlValidationError === 'refreshMin' && (
+              <p className="text-xs text-red-500 mt-1" role="alert">
+                {t('ttlValidationRefreshMin')}
+              </p>
+            )}
+          </div>
+          {/* Absolute Cap */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+              {t('ttlAbsoluteCapHours')}
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={absoluteCapHours}
+              aria-describedby="ttl-cap-hint"
+              onChange={(e) => {
+                const parsed = parseInt(e.target.value, 10);
+                const val = isNaN(parsed) ? 0 : parsed;
+                setAbsoluteCapHours(val);
+                setTtlValidationError(validateTtl(refreshTtlHours, val) === 'ok' ? null : validateTtl(refreshTtlHours, val));
+              }}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
+                ttlValidationError === 'capMin'
+                  ? 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-400'
+                  : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
+              }`}
+            />
+            <p id="ttl-cap-hint" className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+              {t('ttlAbsoluteCapHint')}
+            </p>
+            {ttlValidationError === 'capMin' && (
+              <p className="text-xs text-red-500 mt-1" role="alert">
+                {t('ttlValidationCapMin')}
+              </p>
+            )}
+          </div>
+        </div>
+        <div>
+          <button
+            onClick={() => { void handleSaveTtl(); }}
+            disabled={ttlSaving || ttlValidationError !== null}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {ttlSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+            {t('save')}
+          </button>
+        </div>
       </div>
 
       {/* Therapy Discontinuation Thresholds */}

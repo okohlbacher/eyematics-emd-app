@@ -3,6 +3,8 @@
  * Security boundary: otpCode/maxLoginAttempts must never leak to non-admin users.
  */
 
+import fs from 'node:fs';
+
 import express from 'express';
 import yaml from 'js-yaml';
 import request from 'supertest';
@@ -165,6 +167,41 @@ describe('settingsApi', () => {
         .send(settings);
       expect(res.status).toBe(400);
       expect(res.body.error).toContain('dataSource.type');
+    });
+
+    it('persists auth.refreshTokenTtlMs and auth.refreshAbsoluteCapMs (round-trip lock)', async () => {
+      const app = createApp('admin');
+      // Access the mocked writeFileSync via the statically imported fs default
+      const writeSpy = vi.mocked(fs.writeFileSync);
+      writeSpy.mockClear();
+
+      const settingsWithAuth = yaml.dump({
+        twoFactorEnabled: false,
+        therapyInterrupterDays: 120,
+        therapyBreakerDays: 365,
+        dataSource: { type: 'local', blazeUrl: 'http://localhost:8080/fhir' },
+        audit: { cohortHashSecret: 'test-cohort-hash-secret-32-chars-min-xxxx' },
+        auth: {
+          refreshTokenTtlMs: 7200000,
+          refreshAbsoluteCapMs: 14400000,
+        },
+      });
+
+      const putRes = await request(app)
+        .put('/api/settings')
+        .type('text')
+        .send(settingsWithAuth);
+      expect(putRes.status).toBe(200);
+      expect(putRes.body).toEqual({ ok: true });
+
+      // Verify the written YAML preserved auth.* values
+      expect(writeSpy).toHaveBeenCalled();
+      const writtenYaml = writeSpy.mock.calls[0][1] as string;
+      const parsed = yaml.load(writtenYaml) as Record<string, unknown>;
+      expect(parsed).toHaveProperty('auth');
+      const auth = parsed.auth as Record<string, unknown>;
+      expect(auth.refreshTokenTtlMs).toBe(7200000);
+      expect(auth.refreshAbsoluteCapMs).toBe(14400000);
     });
   });
 });
