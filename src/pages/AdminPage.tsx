@@ -1,5 +1,5 @@
-import { ArrowUpDown, Building2, CheckCircle, Database, Filter, Key, KeyRound, Microscope, Pencil, Search, Shield, ShieldCheck, Stethoscope, Trash2, UserPlus, X } from 'lucide-react';
-import { useCallback,useEffect, useMemo, useState } from 'react';
+import { ArrowUpDown, Building2, CheckCircle, ChevronDown, ChevronUp, Database, Filter, Key, KeyRound, Loader2, LogOut, Microscope, Pencil, Search, Shield, ShieldCheck, Stethoscope, Trash2, UserPlus, X } from 'lucide-react';
+import React, { useCallback,useEffect, useMemo, useState } from 'react';
 
 import type { UserRole } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
@@ -18,6 +18,19 @@ interface ServerUser {
   centers: string[];
   createdAt: string;
   lastLogin?: string;
+}
+
+// mirrors server/sessionsDb.ts SessionRow
+interface SessionRow {
+  id: string;
+  sid: string;
+  username: string;
+  ver: number;
+  issued_at: string;
+  expires_at: string;
+  last_used_at: string | null;
+  revoked: number;
+  key_id: string;
 }
 
 /** Map role to translation key */
@@ -110,6 +123,14 @@ export default function AdminPage() {
   const [sortField, setSortField] = useState<SortField>('username');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
+  // Session accordion state (Phase 28 / SESSUI-01, SESSUI-02)
+  const [expandedSessionUser, setExpandedSessionUser] = useState<string | null>(null);
+  const [sessionMap, setSessionMap] = useState<Record<string, SessionRow[]>>({});
+  const [sessionLoading, setSessionLoading] = useState<Record<string, boolean>>({});
+  const [sessionError, setSessionError] = useState<Record<string, string | null>>({});
+  const [signingOutUser, setSigningOutUser] = useState<string | null>(null);
+  const [revokeError, setRevokeError] = useState<Record<string, string | null>>({});
+
   // F-03: Auto-clear generated password after 30 seconds
   useEffect(() => {
     if (!generatedPassword) return;
@@ -132,6 +153,21 @@ export default function AdminPage() {
       setLoadError(err instanceof Error ? err.message : 'Failed to load users');
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const fetchSessions = useCallback(async (uname: string) => {
+    setSessionLoading((p) => ({ ...p, [uname]: true }));
+    setSessionError((p) => ({ ...p, [uname]: null }));
+    try {
+      const resp = await authFetch(`/api/auth/sessions?username=${encodeURIComponent(uname)}`);
+      if (!resp.ok) throw new Error(String(resp.status));
+      const data = (await resp.json()) as { sessions: SessionRow[] };
+      setSessionMap((p) => ({ ...p, [uname]: data.sessions }));
+    } catch (err) {
+      setSessionError((p) => ({ ...p, [uname]: err instanceof Error ? err.message : 'error' }));
+    } finally {
+      setSessionLoading((p) => ({ ...p, [uname]: false }));
     }
   }, []);
 
@@ -372,6 +408,40 @@ export default function AdminPage() {
 
   const toggleEditCenter = (c: string) => {
     setEditCenters((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]);
+  };
+
+  const toggleSessionAccordion = (uname: string) => {
+    if (expandedSessionUser === uname) {
+      setExpandedSessionUser(null);
+    } else {
+      setExpandedSessionUser(uname);
+      void fetchSessions(uname);
+    }
+  };
+
+  const handleRevokeSession = async (uname: string, id: string) => {
+    setRevokeError((p) => ({ ...p, [uname]: null }));
+    try {
+      const resp = await authFetch(`/api/auth/sessions/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (!resp.ok) throw new Error(String(resp.status));
+      await fetchSessions(uname); // re-fetch — D-15
+    } catch {
+      setRevokeError((p) => ({ ...p, [uname]: t('adminRevokeError') }));
+    }
+  };
+
+  const handleSignOutEverywhere = async (uname: string) => {
+    setSigningOutUser(uname);
+    setRevokeError((p) => ({ ...p, [uname]: null }));
+    try {
+      const resp = await authFetch(`/api/auth/sessions?username=${encodeURIComponent(uname)}`, { method: 'DELETE' });
+      if (!resp.ok) throw new Error(String(resp.status));
+      await fetchSessions(uname); // list empties
+    } catch {
+      setRevokeError((p) => ({ ...p, [uname]: t('mutationErrorGeneric') }));
+    } finally {
+      setSigningOutUser(null);
+    }
   };
 
   return (
@@ -618,21 +688,22 @@ export default function AdminPage() {
                 <SortHeader field="center" label={t('adminAssignedCenters')} sortField={sortField} onSort={handleSort} />
                 <SortHeader field="createdAt" label={t('adminCreated')} sortField={sortField} onSort={handleSort} />
                 <SortHeader field="lastLogin" label={t('adminLastLogin')} sortField={sortField} onSort={handleSort} />
+                <th className="pb-3 font-medium">{t('adminSessions')}</th>
                 <th className="pb-3 font-medium" />
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-400">Loading…</td>
+                  <td colSpan={8} className="py-8 text-center text-gray-400">Loading…</td>
                 </tr>
               ) : loadError ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-red-500">{loadError}</td>
+                  <td colSpan={8} className="py-8 text-center text-red-500">{loadError}</td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-400">
+                  <td colSpan={8} className="py-8 text-center text-gray-400">
                     {t('noData')}
                   </td>
                 </tr>
@@ -708,7 +779,8 @@ export default function AdminPage() {
                       </td>
                     </tr>
                   ) : (
-                    <tr key={u.username} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <React.Fragment key={u.username}>
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="py-3 font-medium text-gray-900 dark:text-gray-100">{u.username}</td>
                       <td className="py-3 text-gray-600 dark:text-gray-300">
                         {u.firstName || u.lastName
@@ -744,6 +816,19 @@ export default function AdminPage() {
                               timeStyle: 'short',
                             })
                           : <span className="text-gray-300">—</span>}
+                      </td>
+                      <td className="py-3">
+                        <button
+                          onClick={() => toggleSessionAccordion(u.username)}
+                          className="text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 inline-flex items-center gap-1"
+                          aria-expanded={expandedSessionUser === u.username}
+                          title={t('adminSessions')}
+                        >
+                          {expandedSessionUser === u.username
+                            ? <ChevronUp className="w-4 h-4 text-blue-600" />
+                            : <ChevronDown className="w-4 h-4" />}
+                          {t('adminSessions')}
+                        </button>
                       </td>
                       <td className="py-3 text-right">
                         <div className="inline-flex items-center gap-2">
@@ -787,6 +872,100 @@ export default function AdminPage() {
                         </div>
                       </td>
                     </tr>
+                    {expandedSessionUser === u.username && (
+                      <tr key={`${u.username}-sessions`}>
+                        <td colSpan={8} className="pb-3 bg-indigo-50/30 dark:bg-indigo-900/10">
+                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mt-2 mb-3">
+                            {/* Header row */}
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                <Key className="w-4 h-4" />
+                                {t('adminSessionsTitle')} ({sessionMap[u.username]?.length ?? 0})
+                              </span>
+                              <button
+                                onClick={() => void handleSignOutEverywhere(u.username)}
+                                disabled={signingOutUser === u.username}
+                                aria-busy={signingOutUser === u.username}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 disabled:opacity-50 transition-colors"
+                              >
+                                {signingOutUser === u.username ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                    {t('adminSigningOut')}
+                                  </>
+                                ) : (
+                                  <>
+                                    <LogOut className="w-3 h-3" />
+                                    {t('adminSignOutEverywhere')}
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                            {/* Loading state */}
+                            {sessionLoading[u.username] && (
+                              <div className="flex items-center justify-center gap-2 py-4 text-sm text-gray-400 dark:text-gray-500">
+                                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                                {t('dataLoading')}
+                              </div>
+                            )}
+                            {/* Error state */}
+                            {!sessionLoading[u.username] && sessionError[u.username] && (
+                              <p className="text-sm text-red-500">
+                                {t('adminSessionsLoadError')}
+                                <button
+                                  onClick={() => void fetchSessions(u.username)}
+                                  className="text-red-600 hover:text-red-800 underline ml-1"
+                                >
+                                  {t('retry')}
+                                </button>
+                              </p>
+                            )}
+                            {/* Empty state */}
+                            {!sessionLoading[u.username] && !sessionError[u.username] && sessionMap[u.username]?.length === 0 && (
+                              <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">{t('adminNoActiveSessions')}</p>
+                            )}
+                            {/* Session table */}
+                            {!sessionLoading[u.username] && !sessionError[u.username] && sessionMap[u.username] && sessionMap[u.username].length > 0 && (
+                              <table className="w-full text-sm mt-2">
+                                <thead>
+                                  <tr className="text-left">
+                                    <th scope="col" className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700 pb-2 pr-4">{t('sessionDevice')}</th>
+                                    <th scope="col" className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700 pb-2 pr-4">{t('sessionIssuedAt')}</th>
+                                    <th scope="col" className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700 pb-2 pr-4">{t('sessionLastUsed')}</th>
+                                    <th scope="col" className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700 pb-2 pr-4">{t('sessionExpires')}</th>
+                                    <th scope="col" className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700 pb-2" />
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {sessionMap[u.username].map((s) => (
+                                    <tr key={s.id} className="border-b border-gray-100 dark:border-gray-700/60 last:border-0">
+                                      <td className="font-data text-xs text-gray-600 dark:text-gray-300 py-2 pr-4">Key: {s.key_id.slice(-8)}</td>
+                                      <td className="font-data text-xs text-gray-500 dark:text-gray-400 py-2 pr-4">{new Date(s.issued_at).toLocaleString()}</td>
+                                      <td className="font-data text-xs text-gray-500 dark:text-gray-400 py-2 pr-4">{s.last_used_at ? new Date(s.last_used_at).toLocaleString() : '—'}</td>
+                                      <td className="font-data text-xs text-gray-500 dark:text-gray-400 py-2 pr-4">{new Date(s.expires_at).toLocaleString()}</td>
+                                      <td className="py-2 text-right">
+                                        <button
+                                          onClick={() => void handleRevokeSession(u.username, s.id)}
+                                          aria-label={`${t('adminRevokeSession')} ${s.key_id}`}
+                                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-red-600 hover:text-red-800 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded transition-colors"
+                                        >
+                                          {t('adminRevokeSession')}
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            )}
+                            {/* Revoke error */}
+                            {revokeError[u.username] && (
+                              <p className="text-xs text-red-500 mt-1" role="alert">{revokeError[u.username]}</p>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
                   )
                 ))
               )}
