@@ -146,6 +146,22 @@ describe('GET /api/auth/sessions', () => {
     expect(res.body.sessions[0].id).toBe('alice-active');
   });
 
+  it('does not expose sid/ver/revoked/username in the response (DTO projection)', async () => {
+    insertSession(makeRow({ id: 'alice-dto', username: 'alice' }));
+    const app = createApp('admin');
+    const res = await request(app).get('/api/auth/sessions?username=alice');
+    expect(res.status).toBe(200);
+    const session = res.body.sessions[0];
+    // DTO fields present
+    expect(session).toHaveProperty('id');
+    expect(session).toHaveProperty('issued_at');
+    expect(session).toHaveProperty('key_id');
+    // Internal fields must NOT be present
+    expect(session).not.toHaveProperty('sid');
+    expect(session).not.toHaveProperty('ver');
+    expect(session).not.toHaveProperty('revoked');
+  });
+
   it('returns 403 for non-admin role', async () => {
     const app = createApp('researcher');
     const res = await request(app).get('/api/auth/sessions?username=alice');
@@ -190,6 +206,16 @@ describe('DELETE /api/auth/sessions/:id', () => {
     // Must be 404 (id not found), not 400 (missing username param)
     expect(res.status).toBe(404);
   });
+
+  it('returns 404 when revoking an already-revoked session (idempotent guard)', async () => {
+    insertSession(makeRow({ id: 'jti-already', username: 'alice' }));
+    const app = createApp('admin');
+    // First revoke — succeeds
+    await request(app).delete('/api/auth/sessions/jti-already');
+    // Second revoke — must 404, not return { revoked: true }
+    const res = await request(app).delete('/api/auth/sessions/jti-already');
+    expect(res.status).toBe(404);
+  });
 });
 
 describe('DELETE /api/auth/sessions (by username)', () => {
@@ -214,5 +240,12 @@ describe('DELETE /api/auth/sessions (by username)', () => {
     const app = createApp('admin');
     const res = await request(app).delete('/api/auth/sessions');
     expect(res.status).toBe(400);
+  });
+
+  it('returns { revoked: 0 } for a user with no active sessions', async () => {
+    const app = createApp('admin');
+    const res = await request(app).delete('/api/auth/sessions?username=nobody');
+    expect(res.status).toBe(200);
+    expect(res.body.revoked).toBe(0);
   });
 });

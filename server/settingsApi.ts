@@ -99,6 +99,14 @@ function validateSettingsSchema(parsed: unknown): string | null {
     if (typeof ttl === 'number' && typeof cap === 'number' && ttl > cap) {
       return 'auth.refreshTokenTtlMs must be <= auth.refreshAbsoluteCapMs';
     }
+    // Upper bound: 30 days (mirrors TTL_MAX_HOURS in client ttlConversion.ts)
+    const MAX_TTL_MS = 720 * 3_600_000;
+    if (typeof ttl === 'number' && ttl > MAX_TTL_MS) {
+      return 'auth.refreshTokenTtlMs must not exceed 720 hours (30 days)';
+    }
+    if (typeof cap === 'number' && cap > MAX_TTL_MS) {
+      return 'auth.refreshAbsoluteCapMs must not exceed 720 hours (30 days)';
+    }
     if (auth.refreshCookieSecure !== undefined && typeof auth.refreshCookieSecure !== 'boolean') {
       return 'auth.refreshCookieSecure must be a boolean';
     }

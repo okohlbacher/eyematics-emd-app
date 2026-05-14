@@ -20,16 +20,13 @@ interface ServerUser {
   lastLogin?: string;
 }
 
-// mirrors server/sessionsDb.ts SessionRow
+// DTO returned by GET /api/auth/sessions — projected subset of server/sessionsDb.ts SessionRow.
+// sid/ver/revoked/username are omitted server-side to limit browser-visible session metadata.
 interface SessionRow {
   id: string;
-  sid: string;
-  username: string;
-  ver: number;
   issued_at: string;
   expires_at: string;
   last_used_at: string | null;
-  revoked: number;
   key_id: string;
 }
 

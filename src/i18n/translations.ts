@@ -882,6 +882,7 @@ const translations = {
   ttlAbsoluteCapHint: { de: 'Muss \u2265 Refresh-TTL sein. Absolute Obergrenze der Sitzungsdauer.', en: 'Must be \u2265 Refresh TTL. Hard upper limit on total session duration.' },
   ttlValidationRefreshMin: { de: 'Refresh-TTL muss mindestens 1 Stunde betragen.', en: 'Refresh TTL must be at least 1 hour.' },
   ttlValidationCapMin: { de: 'Absolute Grenze muss \u2265 Refresh-TTL sein.', en: 'Absolute cap must be \u2265 Refresh TTL.' },
+  ttlValidationCapMax: { de: 'Maximale Sitzungsdauer darf 720 Stunden (30 Tage) nicht \u00fcberschreiten.', en: 'Absolute cap must not exceed 720 hours (30 days).' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

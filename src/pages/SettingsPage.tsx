@@ -45,7 +45,7 @@ export default function SettingsPage() {
   // Session TTL state (Phase 28 / SESSUI-03)
   const [refreshTtlHours, setRefreshTtlHours] = useState(8);
   const [absoluteCapHours, setAbsoluteCapHours] = useState(12);
-  const [ttlValidationError, setTtlValidationError] = useState<'refreshMin' | 'capMin' | null>(null);
+  const [ttlValidationError, setTtlValidationError] = useState<'refreshMin' | 'capMin' | 'capMax' | null>(null);
   const [ttlSaving, setTtlSaving] = useState(false);
 
   const [dataSourceType, setDataSourceType] = useState<DataSourceType>('local');
@@ -72,8 +72,13 @@ export default function SettingsPage() {
         setBreakerDays(s.therapyBreakerDays);
         setDataSourceType(s.dataSource.type);
         setBlazeUrl(s.dataSource.blazeUrl);
-        setRefreshTtlHours(msToHours(s.auth?.refreshTokenTtlMs ?? 28_800_000));
-        setAbsoluteCapHours(msToHours(s.auth?.refreshAbsoluteCapMs ?? 43_200_000));
+        const loadedRefresh = msToHours(s.auth?.refreshTokenTtlMs ?? 28_800_000);
+        const loadedCap = msToHours(s.auth?.refreshAbsoluteCapMs ?? 43_200_000);
+        setRefreshTtlHours(loadedRefresh);
+        setAbsoluteCapHours(loadedCap);
+        // validate on load so bad persisted values are flagged immediately (H2)
+        const loadedValidation = validateTtl(loadedRefresh, loadedCap);
+        setTtlValidationError(loadedValidation === 'ok' ? null : loadedValidation);
       } catch {
         /* ignore — keep defaults */
       }
@@ -173,6 +178,7 @@ export default function SettingsPage() {
   };
 
   const handleSaveTtl = async () => {
+    setSaveError(null);
     const result = validateTtl(refreshTtlHours, absoluteCapHours);
     if (result !== 'ok') { setTtlValidationError(result); return; }
     setTtlValidationError(null);
@@ -184,10 +190,10 @@ export default function SettingsPage() {
           refreshAbsoluteCapMs: hoursToMs(absoluteCapHours),
         },
       });
-      setSavedBanner(true);
       setSaveError(null);
+      showSaved();
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'error');
+      setSaveError(err instanceof Error ? err.message : t('settingsSaveError'));
     } finally {
       setTtlSaving(false);
     }
@@ -495,7 +501,7 @@ export default function SettingsPage() {
                 setTtlValidationError(vc === 'ok' ? null : vc);
               }}
               className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
-                ttlValidationError === 'capMin'
+                ttlValidationError === 'capMin' || ttlValidationError === 'capMax'
                   ? 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-400'
                   : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
               }`}
@@ -506,6 +512,11 @@ export default function SettingsPage() {
             {ttlValidationError === 'capMin' && (
               <p className="text-xs text-red-500 mt-1" role="alert">
                 {t('ttlValidationCapMin')}
+              </p>
+            )}
+            {ttlValidationError === 'capMax' && (
+              <p className="text-xs text-red-500 mt-1" role="alert">
+                {t('ttlValidationCapMax')}
               </p>
             )}
           </div>

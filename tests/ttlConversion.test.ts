@@ -71,4 +71,17 @@ describe('validateTtl (D-08)', () => {
   it("returns 'ok' when cap === refresh (boundary)", () => {
     expect(validateTtl(8, 8)).toBe('ok');
   });
+
+  it("returns 'capMin' when cap is not an integer", () => {
+    expect(validateTtl(8, 12.5)).toBe('capMin');
+  });
+
+  it("returns 'capMax' when cap exceeds 720 hours (30 days)", () => {
+    expect(validateTtl(8, 721)).toBe('capMax');
+  });
+
+  it("returns 'capMax' at the boundary: cap === 720 is ok, 721 is not", () => {
+    expect(validateTtl(1, 720)).toBe('ok');
+    expect(validateTtl(1, 721)).toBe('capMax');
+  });
 });

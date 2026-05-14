@@ -1,6 +1,6 @@
 # EMD Feedback Tracking — Formative Analyse (11.05.2026)
 
-> **Dokument-Status:** Aktualisiert (2026-05-14) — alle 26 ACCEPTs committed  
+> **Dokument-Status:** Aktualisiert (2026-05-14) — alle 26 ACCEPTs committed · v1.10 Phases 27+28 shipped  
 > **Quelle:** `formative_analyse_110526.docx` + In-App Feedback `emd-issues-2026-05-14.json`  
 > **Legende:** ✅ ACCEPT (wird umgesetzt) · ❌ REJECT (wird nicht umgesetzt, Begründung) · 💬 COMMENT (Anmerkung / zurückgestellt)
 
@@ -36,7 +36,7 @@
 | USM-001 | Fehlende Fehlermeldung bei Pflichtfeldern | ✅ | **Behoben.** Username-Feld mit Pflichtvalidierung und Inline-Fehlertext. |
 | USM-002 | Deaktivieren geht nicht, nur Löschen | ❌ | **Reject (by design).** Kontoabschalten vs. Löschen ist in den aktuellen Anforderungen nicht spezifiziert. Gelöschte Konten werden im Protokoll korrekt anonymisiert (PROT-001 beachten). Rückmeldung: Anforderung ggf. für nächste Milestone formulieren. |
 | USM-002 | Bearbeiten gibt keine Fehlermeldung und behält alten Wert | ✅ | **Bereits implementiert.** `handleEditSave` setzt `actionError` sowohl auf HTTP-Fehler als auch auf Exceptions; dismissible Banner oben auf der Seite. |
-| USM-008 | Wo konfigurierbar? | 💬 | Aktuell in `config/settings.yaml → auth.maxLoginAttempts`. Phase 28 sieht eine Admin-UI für Session-Einstellungen vor. `maxLoginAttempts` dort mit ergänzen. |
+| USM-008 | Wo konfigurierbar? | 💬 | Aktuell in `config/settings.yaml → auth.maxLoginAttempts`. Phase 28 hat Session-TTL-Konfiguration (refreshTokenTtlMs / refreshAbsoluteCapMs) in die Admin-UI aufgenommen. `maxLoginAttempts` wurde bewusst ausgelassen (Security-Kontrolle, kein Operator-Parameter). Backlog. |
 
 ---
 
@@ -104,7 +104,7 @@
 
 | ID | Finding | Status | Empfehlung |
 |----|---------|--------|------------|
-| QUAL-001 | Prüfung nicht auf Kohorten möglich (nur eigener Filter) | 💬 | **Backlog / Scope.** Kohorten-basierte Qualitätsprüfung ist sinnvoll, aber erheblicher Aufwand. Phase 28+. |
+| QUAL-001 | Prüfung nicht auf Kohorten möglich (nur eigener Filter) | 💬 | **Backlog / Scope.** Kohorten-basierte Qualitätsprüfung ist sinnvoll, aber erheblicher Aufwand. Kein Bestandteil von Phase 28 (Session-UI) oder Phase 29 (Home-Panel). Mittelfristiges Backlog. |
 | QUAL-001 | Zu prüfende Parameter nicht konfigurierbar | ❌ | **Reject (Scope).** Konfigurierbare Prüfparameter sind nicht in EMDREQ spezifiziert. Anforderung für zukünftige Milestone aufnehmen. |
 | QUAL-006 | Qualität der Umsetzung diskutabel | 💬 | Ohne Konkretisierung nicht beurteilbar. Was genau ist unbefriedigend? |
 | QUAL-006 | Fehlerkennung: Anzeige nur weit unten, nicht am Datum | ✅ | **Behoben.** Anomalie-Banner zeigt jetzt einen Status-Chip statt „Fehler melden"-Button, wenn der Parameter bereits geflaggt wurde. Flags sind sowohl in der Wertetabelle als auch im Anomalie-Banner direkt sichtbar. |
@@ -139,10 +139,21 @@
 
 Alle 26 ACCEPT-Items wurden implementiert und committed (2026-05-14).
 
+### v1.10 Milestone Status
+
+| Phase | Inhalt | Status |
+|-------|--------|--------|
+| 27 — Stateful Session Backend | Server-seitige Sitzungstabelle, Token-Rotation, Key-Rotation | ✅ Shipped 2026-05-11 |
+| 28 — Admin Session Control UI | Sitzungsauflistung, Einzel-Revoke, Sign-out-everywhere, TTL-Konfiguration | ✅ Shipped 2026-05-14 |
+| 29 — Home Panel UX | Review-Buttons + Jump-Back-In-Navigation (FB-02, FB-03) | ⏳ Ausstehend |
+| 30 — Terminology Configuration Docs | settings.yaml + Konfiguration.md Terminology-Abschnitt | ⏳ Ausstehend |
+
 ### Offene Backlog-Items (mittelfristig, kein akuter Bug)
 
 | ID | Beschreibung |
 |----|-------------|
+| FB-02 | Home „Attention needed" Review-Buttons → Phase 29 |
+| FB-03 | Home „Jump Back In" Routing → Phase 29 |
 | KOH-003 | Filter-State beim Rücknavigieren erhalten (History-State) |
 | ANL-002 | Intervall-Histogramm auch im Kohorten-Vergleichsmodus |
 | ANL-002 | Visus-Berechnung Aggregiert vs. Trajektorien in UI kenntlich machen |
@@ -152,6 +163,6 @@ Alle 26 ACCEPT-Items wurden implementiert und committed (2026-05-14).
 | QUAL-001 | Kohorten-basierte Qualitätsprüfung |
 | QUAL-004 | Auto-Suggest fehlender Werte (Imputation) |
 | USM-006 | Rate-Limiting-Meldung mit verbleibendem Timeout |
-| USM-008 | `maxLoginAttempts` in Phase-28-Admin-UI |
+| USM-008 | `maxLoginAttempts` Admin-konfigurierbar (bewusst aus Phase 28 ausgelassen) |
 | A-06 | Fehlende Achsenticks (Screenshot für Repro benötigt) |
 | A-09 | Zeitraum-Badge in Grundgesamtheit QualityPage |

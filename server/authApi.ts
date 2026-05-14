@@ -1034,6 +1034,10 @@ authApiRouter.post('/rotate-key', (req: Request, res: Response): void => {
  *
  * MUST be registered before DELETE /sessions (query-param variant) so that
  * Express matches :id before treating the path as a missing-username request.
+ *
+ * No requireCsrf: auth is via Authorization: Bearer header (attached by authFetch),
+ * which a cross-site attacker cannot set — CSRF does not apply to Bearer-only endpoints.
+ * Do NOT move the access token to a cookie without revisiting this.
  * (SESSUI-02, D-11, T-28-01, T-28-03)
  */
 authApiRouter.delete('/sessions/:id', (req: Request, res: Response): void => {
@@ -1043,7 +1047,8 @@ authApiRouter.delete('/sessions/:id', (req: Request, res: Response): void => {
   }
   const id = String(req.params.id ?? '');
   const row = getSession(id);
-  if (!row) {
+  // Treat already-revoked/expired sessions as not-found — prevents misleading { revoked: true }
+  if (!row || row.revoked === 1) {
     res.status(404).json({ error: 'Session not found' });
     return;
   }
@@ -1089,6 +1094,10 @@ authApiRouter.get('/sessions', (req: Request, res: Response): void => {
     res.status(400).json({ error: 'username required' });
     return;
   }
-  const sessions = listActiveSessionsByUser(username);
+  // Project to DTO — omit sid/ver/revoked/username (unnecessary attack surface in browser).
+  const sessions = listActiveSessionsByUser(username).map(
+    ({ id, issued_at, last_used_at, expires_at, key_id }) =>
+      ({ id, issued_at, last_used_at, expires_at, key_id }),
+  );
   res.json({ sessions });
 });
