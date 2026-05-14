@@ -427,6 +427,13 @@ export default function OutcomesView() {
             }
           >
             {t(metricTitleKey(m))}
+            {m === 'responder' && (
+              <span
+                title={`${t('metricsResponderTooltip')}`}
+                className="ml-1 text-gray-400 hover:text-blue-600 cursor-help"
+                aria-label={t('metricsResponderTooltip')}
+              >ℹ</span>
+            )}
           </button>
         );
       })}

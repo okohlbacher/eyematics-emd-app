@@ -130,6 +130,11 @@ export default function DocQualityPage() {
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               {t('docQualitySubtitle')}
+              {timeRange !== 'all' && (
+                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                  {timeRange === '6m' ? t('docQualityLast6Months') : t('docQualityLastYear')}
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -146,6 +151,17 @@ export default function DocQualityPage() {
             <Filter className="w-4 h-4" />
             {t('docQualityTimeRange')}
           </button>
+          {/* Center select — always visible */}
+          <select
+            value={selectedCenter}
+            onChange={(e) => setSelectedCenter(e.target.value)}
+            className="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">{t('docQualityAllCenters')}</option>
+            {centerOptions.map(({ id, label }) => (
+              <option key={id} value={id}>{label}</option>
+            ))}
+          </select>
           <button
             onClick={handleExport}
             className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
@@ -164,6 +180,7 @@ export default function DocQualityPage() {
           selectedCenter={selectedCenter}
           onCenterChange={setSelectedCenter}
           centerOptions={centerOptions}
+          showCenterFilter={false}
         />
       )}
 
@@ -174,21 +191,25 @@ export default function DocQualityPage() {
             label={t('docQualityCompleteness')}
             score={average(centerMetrics, 'completeness')}
             description={t('docQualityCompletenessAvg')}
+            patientCount={centerMetrics.reduce((s, m) => s + m.patientCount, 0)}
           />
           <MetricCard
             label={t('docQualityDataCompleteness')}
             score={average(centerMetrics, 'dataCompleteness')}
             description={t('docQualityDataCompletenessAvg')}
+            patientCount={centerMetrics.reduce((s, m) => s + m.patientCount, 0)}
           />
           <MetricCard
             label={t('docQualityPlausibility')}
             score={average(centerMetrics, 'plausibility')}
             description={t('docQualityPlausibilityAvg')}
+            patientCount={centerMetrics.reduce((s, m) => s + m.patientCount, 0)}
           />
           <MetricCard
             label={t('docQualityOverall')}
             score={average(centerMetrics, 'overall')}
             description={t('docQualityOverallAvg')}
+            patientCount={centerMetrics.reduce((s, m) => s + m.patientCount, 0)}
           />
         </div>
       )}

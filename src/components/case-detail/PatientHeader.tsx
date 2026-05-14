@@ -197,49 +197,63 @@ export default function PatientHeader({
                   <div className="w-6 h-px bg-gray-300 mt-5 flex-shrink-0" />
                 )}
                 <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-1 border border-gray-200 rounded-lg p-2 bg-gray-50 min-w-[40px] justify-center">
-                    {enc.events.map((ev, j) => {
-                      const iconClass = "w-3.5 h-3.5";
-                      let icon: React.ReactNode;
-                      let color: string;
+                  {(() => {
+                    const hasHighlightable = enc.events.some(e => e.type === 'visus' || e.type === 'crt');
+                    return (
+                      <div
+                        role={hasHighlightable ? 'button' : undefined}
+                        tabIndex={hasHighlightable ? 0 : undefined}
+                        onClick={hasHighlightable ? () => onHighlightDate(highlightDate === enc.date ? null : enc.date) : undefined}
+                        onKeyDown={hasHighlightable ? (e) => { if (e.key === 'Enter' || e.key === ' ') onHighlightDate(highlightDate === enc.date ? null : enc.date); } : undefined}
+                        className={`flex items-center gap-1 border rounded-lg p-2 min-w-[40px] justify-center ${
+                          hasHighlightable
+                            ? 'cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors ' + (highlightDate === enc.date ? 'bg-amber-50 border-amber-300' : 'border-gray-200 bg-gray-50')
+                            : 'border-gray-200 bg-gray-50'
+                        }`}
+                      >
+                        {enc.events.map((ev, j) => {
+                          const iconClass = "w-3.5 h-3.5";
+                          let icon: React.ReactNode;
+                          let color: string;
 
-                      switch (ev.type) {
-                        case 'visus':
-                          icon = <Eye className={iconClass} />;
-                          color = 'text-emerald-600';
-                          break;
-                        case 'crt':
-                          icon = <Activity className={iconClass} />;
-                          color = 'text-purple-600';
-                          break;
-                        case 'injection':
-                          icon = <Syringe className={iconClass} />;
-                          color = 'text-blue-600';
-                          break;
-                        case 'oct':
-                          icon = <ScanEye className={iconClass} />;
-                          color = 'text-cyan-600';
-                          break;
-                      }
-
-                      return (
-                        <button
-                          key={j}
-                          title={ev.label}
-                          onClick={
-                            ev.type === 'oct' && ev.octIdx !== undefined
-                              ? () => onOctTimelineClick(ev.octIdx!)
-                              : (ev.type === 'visus' || ev.type === 'crt')
-                                ? () => onHighlightDate(highlightDate === enc.date ? null : enc.date)
-                                : undefined
+                          switch (ev.type) {
+                            case 'visus':
+                              icon = <Eye className={iconClass} />;
+                              color = 'text-emerald-600';
+                              break;
+                            case 'crt':
+                              icon = <Activity className={iconClass} />;
+                              color = 'text-purple-600';
+                              break;
+                            case 'injection':
+                              icon = <Syringe className={iconClass} />;
+                              color = 'text-blue-600';
+                              break;
+                            case 'oct':
+                              icon = <ScanEye className={iconClass} />;
+                              color = 'text-cyan-600';
+                              break;
                           }
-                          className={`${color} ${ev.type === 'oct' || ev.type === 'visus' || ev.type === 'crt' ? 'cursor-pointer hover:scale-125 transition-transform' : 'cursor-default'}`}
-                        >
-                          {icon}
-                        </button>
-                      );
-                    })}
-                  </div>
+
+                          return (
+                            <button
+                              key={j}
+                              title={ev.label}
+                              onClick={
+                                ev.type === 'oct' && ev.octIdx !== undefined
+                                  ? (e) => { e.stopPropagation(); onOctTimelineClick(ev.octIdx!); }
+                                  : undefined
+                              }
+                              className={`${color} ${ev.type === 'oct' ? 'cursor-pointer hover:scale-125 transition-transform' : 'cursor-default'}`}
+                            >
+                              {icon}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+
                   <span className="text-[10px] text-gray-400 mt-1 whitespace-nowrap">
                     {new Date(enc.date).toLocaleDateString(dateFmt, { day: '2-digit', month: '2-digit', year: '2-digit' })}
                   </span>

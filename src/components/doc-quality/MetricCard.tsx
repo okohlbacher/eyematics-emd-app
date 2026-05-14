@@ -1,14 +1,18 @@
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
+import { useLanguage } from '../../context/LanguageContext';
 import { scoreBgClass, scoreColor, scoreIconColor } from '../../utils/qualityMetrics';
 
 export interface MetricCardProps {
   label: string;
   score: number;
   description?: string;
+  patientCount?: number;
+  threshold?: number;
 }
 
-export function MetricCard({ label, score, description }: MetricCardProps) {
+export function MetricCard({ label, score, description, patientCount, threshold = 80 }: MetricCardProps) {
+  const { t } = useLanguage();
   const rounded = Math.round(score);
   return (
     <div className={`rounded-xl border p-4 ${scoreBgClass(score)}`}>
@@ -30,6 +34,11 @@ export function MetricCard({ label, score, description }: MetricCardProps) {
           className="h-full rounded-full transition-all duration-500"
           style={{ width: `${Math.min(rounded, 100)}%`, backgroundColor: scoreColor(score) }}
         />
+      </div>
+      {/* Threshold marker and absolute count */}
+      <div className="mt-1 flex items-center justify-between text-[10px] opacity-60">
+        <span>{t('docQualityThreshold')}: {threshold}%</span>
+        {patientCount !== undefined && <span>{patientCount} {t('docQualityPatients')}</span>}
       </div>
     </div>
   );

@@ -221,12 +221,27 @@ export default function QualityCaseDetail({
                   <span className="text-gray-500 dark:text-gray-400 ml-2">{a.value}</span>
                   <span className="text-amber-600 ml-2 text-xs">({a.reason})</span>
                 </div>
-                <button
-                  onClick={() => onOpenFlagDialog(a.parameter, a.value)}
-                  className="px-2 py-1 text-xs bg-red-50 text-red-600 rounded hover:bg-red-100 flex items-center gap-1"
-                >
-                  <Flag className="w-3 h-3" /> {t('reportError')}
-                </button>
+                {(() => {
+                  const existingFlag = caseFlags.find(f => f.parameter === a.parameter);
+                  if (existingFlag) {
+                    return (
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${
+                        existingFlag.status === 'open' ? 'bg-red-50 text-red-600' :
+                        existingFlag.status === 'acknowledged' ? 'bg-amber-50 text-amber-600' :
+                        'bg-green-50 text-green-600'
+                      }`}>
+                        <CheckCheck className="w-3 h-3" />
+                        {existingFlag.status}
+                      </span>
+                    );
+                  }
+                  return (
+                    <button onClick={() => onOpenFlagDialog(a.parameter, a.value)}
+                      className="px-2 py-1 text-xs bg-red-50 text-red-600 rounded hover:bg-red-100 flex items-center gap-1">
+                      <Flag className="w-3 h-3" /> {t('reportError')}
+                    </button>
+                  );
+                })()}
               </div>
             ))}
           </div>

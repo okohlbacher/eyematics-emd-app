@@ -481,7 +481,7 @@ export default function CohortBuilderPage() {
                   placeholder={t('searchNamePlaceholder')}
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
-                  className="flex-1 px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                  className="flex-1 px-3 py-2 border rounded-lg text-sm text-left text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
                 <button
                   onClick={handleSave}

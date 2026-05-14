@@ -517,6 +517,7 @@ const translations = {
   docQualityExport: { de: 'Bericht exportieren', en: 'Export Report' },
   docQualityCenterDetail: { de: 'Zentrumsdetails', en: 'Center Details' },
   docQualityPatients: { de: 'Patienten', en: 'Patients' },
+  docQualityThreshold: { de: 'Zielwert', en: 'Target' },
   docQualityObservations: { de: 'Beobachtungen', en: 'Observations' },
 
   // Settings: 2FA
@@ -794,6 +795,7 @@ const translations = {
   metricsResponderThresholdHelper: { de: 'Nur für aktive Kohorte, setzt sich bei Reload zurück.', en: 'Session-only; resets on page reload.' },
   metricsResponderNoDataTitle: { de: 'Klassifikation nicht möglich', en: 'Classification not possible' },
   metricsResponderNoDataBody: { de: 'Zu wenig Messungen für eine Responder-Klassifikation.', en: 'Insufficient measurements for responder classification.' },
+  metricsResponderTooltip: { de: 'Responder: Visus-Verbesserung ≥ 5 Buchstaben ETDRS oder CRT-Reduktion ≥ 10 % gegenüber Baseline', en: 'Responder: Visus improvement ≥ 5 ETDRS letters or CRT reduction ≥ 10 % from baseline' },
 
   // ---- Phase 13: CSV Export (METRIC-05 / D-07) ----
   metricsPreviewExportCsvCrt: { de: 'CSV exportieren (CRT)', en: 'Export CSV (CRT)' },

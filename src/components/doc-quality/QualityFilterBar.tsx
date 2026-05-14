@@ -12,6 +12,7 @@ export interface QualityFilterBarProps {
   selectedCenter: string;
   onCenterChange: (centerId: string) => void;
   centerOptions: CenterOption[];
+  showCenterFilter?: boolean;
 }
 
 export function QualityFilterBar({
@@ -20,6 +21,7 @@ export function QualityFilterBar({
   selectedCenter,
   onCenterChange,
   centerOptions,
+  showCenterFilter = true,
 }: QualityFilterBarProps) {
   const { t } = useLanguage();
 
@@ -52,23 +54,25 @@ export function QualityFilterBar({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">
-          {t('center')}:
-        </span>
-        <select
-          value={selectedCenter}
-          onChange={(e) => onCenterChange(e.target.value)}
-          className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="all">{t('docQualityAllCenters')}</option>
-          {centerOptions.map(({ id, label }) => (
-            <option key={id} value={id}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </div>
+      {(showCenterFilter) && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700">
+            {t('center')}:
+          </span>
+          <select
+            value={selectedCenter}
+            onChange={(e) => onCenterChange(e.target.value)}
+            className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">{t('docQualityAllCenters')}</option>
+            {centerOptions.map(({ id, label }) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 }

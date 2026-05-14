@@ -149,22 +149,30 @@ export default function CaseDetailPage() {
             <p className="text-sm text-gray-400 dark:text-gray-500">{t('noInjections')}</p>
           ) : (
             <div className="space-y-2">
-              {injections.map((inj, i) => (
-                <div key={inj.id} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm">
-                  <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                    {i + 1}
-                  </span>
-                  <span className="whitespace-nowrap">
-                    {inj.performedDateTime ? new Date(inj.performedDateTime).toLocaleDateString(dateFmt) : '\u2014'}
-                  </span>
-                  <span className="text-gray-400 dark:text-gray-500 truncate">{t('intravitralInjection')}</span>
-                  {inj.bodySite?.[0] && (
-                    <span className="text-xs px-1 py-0.5 bg-indigo-50 text-indigo-600 rounded ml-auto flex-shrink-0">
-                      {inj.bodySite[0].coding?.[0]?.code === SNOMED_EYE_RIGHT ? 'OD' : 'OS'}
+              {(() => {
+                const primaryDrug = patientCase?.medications?.[0]?.medicationCodeableConcept?.coding?.[0]?.display;
+                return injections.map((inj, i) => (
+                  <div key={inj.id} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm">
+                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                      {i + 1}
                     </span>
-                  )}
-                </div>
-              ))}
+                    <span className="whitespace-nowrap">
+                      {inj.performedDateTime ? new Date(inj.performedDateTime).toLocaleDateString(dateFmt) : '\u2014'}
+                    </span>
+                    <span className="text-gray-400 dark:text-gray-500 truncate">{t('intravitralInjection')}</span>
+                    {inj.bodySite?.[0] && (
+                      <span className="text-xs px-1 py-0.5 bg-indigo-50 text-indigo-600 rounded ml-auto flex-shrink-0">
+                        {inj.bodySite[0].coding?.[0]?.code === SNOMED_EYE_RIGHT ? 'OD' : 'OS'}
+                      </span>
+                    )}
+                    {primaryDrug && (
+                      <span className="text-xs px-1.5 py-0.5 bg-violet-50 text-violet-700 rounded ml-1 flex-shrink-0 truncate max-w-[100px]" title={primaryDrug}>
+                        {primaryDrug}
+                      </span>
+                    )}
+                  </div>
+                ));
+              })()}
             </div>
           )}
         </div>
