@@ -141,4 +141,4 @@ Plans:
 
 ---
 
-*Last updated: 2026-05-01 — v1.10 roadmap created (Session Hardening & UX Closure, Phases 27–30).*
+*Last updated: 2026-05-14 — Phase 28 complete (Admin Session Control UI).*
