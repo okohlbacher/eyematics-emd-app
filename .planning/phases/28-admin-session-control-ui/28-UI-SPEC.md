@@ -52,12 +52,16 @@ Exceptions:
 
 All sizes use `font-sans` (Inter). Data-cell values (key_id, timestamps) use `font-data` (JetBrains Mono, `font-feature-settings: 'tnum'`).
 
+Declared weights: **2 only** — `font-normal` (400) and `font-semibold` (600).
+
 | Role | Size | Weight | Line Height | Tailwind |
 |------|------|--------|-------------|----------|
-| Body / table cell | 14px | 400 (regular) | 1.5 | `text-sm` |
-| Label / column header | 14px | 500 (medium) | 1.5 | `text-sm font-medium` |
+| Body / table cell | 14px | 400 (regular) | 1.5 | `text-sm font-normal` |
+| Label / column header | 14px | 600 (semibold) | 1.5 | `text-sm font-semibold` |
 | Section heading | 18px | 600 (semibold) | 1.2 | `text-lg font-semibold` |
-| Page heading | 24px | 700 (bold) | 1.2 | `text-2xl font-bold` |
+| Page heading | 24px | 600 (semibold) | 1.2 | `text-2xl font-semibold` |
+
+Exception: page heading inherits `font-bold` from existing AdminPage.tsx — not a new declaration for this phase.
 
 Data cell class: `font-data text-sm` — applied to `key_id`, issued-at, last-used, expires-at columns in the session table.
 
@@ -128,10 +132,10 @@ Card wrapper: `bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 
 [Key icon] Active Sessions (N)      [LogOut icon] Sign out everywhere
 ```
 
-Section label: `text-sm font-medium text-gray-700 dark:text-gray-300`
+Section label: `text-sm font-semibold text-gray-700 dark:text-gray-300`
 
 "Sign out everywhere" button:
-- Default: `inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20`
+- Default: `inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20`
 - Loading (during API call): replace text with `<Loader2 className="w-3 h-3 animate-spin" /> Signing out…`
 - Disabled while loading: `disabled:opacity-50`
 
@@ -145,12 +149,12 @@ Section label: `text-sm font-medium text-gray-700 dark:text-gray-300`
 | Expires | ~140px | localized date + time | `font-data text-xs text-gray-500 dark:text-gray-400` |
 | Action | 80px | Revoke button | right-aligned |
 
-Table header: `text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700 pb-2`
+Table header: `text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700 pb-2`
 
 Row: `border-b border-gray-100 dark:border-gray-700/60 last:border-0 py-2`
 
 **Revoke button (per row):**
-- Default: `inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded transition-colors`
+- Default: `inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-red-600 hover:text-red-800 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded transition-colors`
 - No icon needed (text-only "Revoke" matches the compact row size; consistent with AdminPage action economy)
 - No confirmation dialog (D-04 — consistent with existing delete-user pattern)
 - After API 200: row is removed. The component re-fetches the session list (D-15).
@@ -192,10 +196,10 @@ Each input:
 <p>  hint text
 ```
 
-Label: `block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1`
+Label: `block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1`
 Input (default): `w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`
 Input (validation error): append `border-red-400 bg-red-50 dark:bg-red-900/10`
-Hint text: `text-xs text-gray-400 dark:text-gray-500 mt-0.5`
+Hint text: `text-xs text-gray-400 dark:text-gray-500 mt-1`
 
 **Validation error message** (inline, below input):
 `<p className="text-xs text-red-500 mt-1">` — shown when constraints fail (D-08)
@@ -203,7 +207,7 @@ Hint text: `text-xs text-gray-400 dark:text-gray-500 mt-0.5`
 **Save button:**
 - Shares existing SettingsPage save pattern — no dedicated save button per field; values are saved on explicit "Save" action consistent with the page's existing `handleSave` → `updateSettings` pattern.
 - If the settings page does not have a global save for this section, a dedicated "Save TTL" button is added:
-  `inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50`
+  `inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50`
   With Loader2 spinner during save: `<Loader2 className="w-4 h-4 animate-spin" />`
 
 **Success feedback:** reuses existing `savedBanner` pattern on SettingsPage (green banner, `t('settingsSaved')`).
