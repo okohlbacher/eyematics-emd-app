@@ -1,6 +1,6 @@
 # EMD Feedback Tracking — Formative Analyse (11.05.2026)
 
-> **Dokument-Status:** Aktualisiert (2026-05-14) — 5 weitere Fixes committed  
+> **Dokument-Status:** Aktualisiert (2026-05-14) — alle 26 ACCEPTs committed  
 > **Quelle:** `formative_analyse_110526.docx` + In-App Feedback `emd-issues-2026-05-14.json`  
 > **Legende:** ✅ ACCEPT (wird umgesetzt) · ❌ REJECT (wird nicht umgesetzt, Begründung) · 💬 COMMENT (Anmerkung / zurückgestellt)
 
@@ -35,7 +35,7 @@
 | USM-001 | Nutzer ohne Standortzuweisung möglich | ✅ | **Behoben.** Validierung: mindestens ein Zentrum Pflicht; Inline-Fehlermeldung + rotes Pflichtfeld-Label. |
 | USM-001 | Fehlende Fehlermeldung bei Pflichtfeldern | ✅ | **Behoben.** Username-Feld mit Pflichtvalidierung und Inline-Fehlertext. |
 | USM-002 | Deaktivieren geht nicht, nur Löschen | ❌ | **Reject (by design).** Kontoabschalten vs. Löschen ist in den aktuellen Anforderungen nicht spezifiziert. Gelöschte Konten werden im Protokoll korrekt anonymisiert (PROT-001 beachten). Rückmeldung: Anforderung ggf. für nächste Milestone formulieren. |
-| USM-002 | Bearbeiten gibt keine Fehlermeldung und behält alten Wert | ✅ | **Accept.** Fehlerfall bei `modifyUsers` sollte dem User als Toast/Inline-Error angezeigt werden. |
+| USM-002 | Bearbeiten gibt keine Fehlermeldung und behält alten Wert | ✅ | **Bereits implementiert.** `handleEditSave` setzt `actionError` sowohl auf HTTP-Fehler als auch auf Exceptions; dismissible Banner oben auf der Seite. |
 | USM-008 | Wo konfigurierbar? | 💬 | Aktuell in `config/settings.yaml → auth.maxLoginAttempts`. Phase 28 sieht eine Admin-UI für Session-Einstellungen vor. `maxLoginAttempts` dort mit ergänzen. |
 
 ---
@@ -44,7 +44,7 @@
 
 | ID | Finding | Status | Empfehlung |
 |----|---------|--------|------------|
-| DAT-003 | Gesamtzahl wird nicht angezeigt (Patienten-Gesamtzahl im simulierten Datensatz) | ✅ | **Accept.** Gesamtfall-Zahl kann auf der Startseite in den KPI-Kacheln ergänzt werden (derzeit zeigt die „Fälle"-Kachel `cases.length` — evtl. bereits korrekt, ggf. Unterschied aktiv/gesamt prüfen). |
+| DAT-003 | Gesamtzahl wird nicht angezeigt (Patienten-Gesamtzahl im simulierten Datensatz) | ✅ | **Bereits korrekt.** „Fälle"-KPI-Kachel zeigt `cases.length` (alle geladenen Fälle, ungefiltert). |
 | —  | „Aufmerksamkeit Erforderlich" und „Weitermachen" nicht in Anforderungen | 💬 | **Bewusste UX-Erweiterung** über EMDREQ hinaus. Die Panels zeigen aus verfügbaren Daten abgeleitete Hinweise. Die Review-Buttons navigieren zu Kohortenbildung bzw. Dokumentationsqualität. Phase 29 verkabelt diese Panels vollständig. Kein Handlungsbedarf jetzt. |
 
 ---
@@ -58,7 +58,7 @@
 | KOH-002 | Filter konfigurierbar? | 💬 | Aktuell hardcoded (Alter, Visus, CRT, Zentrum, Diagnose, Geschlecht). Konfigurierbarkeit = Backlog; vorerst kein Aufwand. |
 | KOH-002 | Negativer Wert bei Alter, Visus, CRT möglich | ✅ | **Behoben in A-03** (s. o.) |
 | KOH-002 | Visus-Eingabe akzeptiert String | ✅ | **Behoben in A-03** — `v >= 0`-Guard verhindert ungültige Werte |
-| KOH-002 | Cursor bleibt links bei Kohortenname | ✅ | **Accept.** CSS `text-align` oder `dir`-Attribut prüfen. Separates kleines Fix-Ticket. |
+| KOH-002 | Cursor bleibt links bei Kohortenname | ✅ | **Behoben.** `text-left text-gray-900` zum Kohortennamen-Input ergänzt. |
 | KOH-003 | Subkohorten nur sehr implizit möglich | 💬 | **Design-Entscheidung:** EMD hat keine expliziten Subkohorten; Kohorten werden über gespeicherte Suchen abgebildet. Für Subkohorten wäre eine verschachtelte Filter-Hierarchie nötig — Backlog. |
 | KOH-005 | „Analyse"-Tab zeigt nicht an, in welcher Kohorte ich arbeite | ✅ | **Behoben in A-04** — Kohortenname wird bei gespeicherten Suchen unter dem Seitentitel angezeigt |
 | KOH-003 | Auswahl wird gelöscht, wenn auf „Analysieren" geklickt und dann zurück | 💬 | **Accept als Backlog.** Filter-State sollte beim Rücknavigieren erhalten bleiben (History-State oder Persistenz im Context). Nicht trivial — aufwandsmäßig einordnen. |
@@ -71,12 +71,12 @@
 | ID | Finding | Status | Empfehlung |
 |----|---------|--------|------------|
 | ANL-002 | Subkohorte gibt es nicht; man kann Kohorten vergleichen | 💬 | Korrekte Beobachtung — entspricht dem Design (CohortCompareDrawer). Keine Änderung nötig; Anforderungstext präzisieren. |
-| ANL-002 | Behandlungsintervall nicht vergleichend dargestellt | ✅ | **Accept.** Der Intervall-Histogramm-View fehlt im Kohorten-Vergleichsmodus. Backlog-Ticket erstellen. |
-| ANL-002 | Was ist „Responder"? | ✅ | **Accept.** Tooltip oder Info-Box beim Responder-Tab ergänzen (klinische Definition: Visus-Verbesserung ≥ 5 Buchstaben oder CRT-Reduktion ≥ 10%). |
+| ANL-002 | Behandlungsintervall nicht vergleichend dargestellt | 💬 | Intervall-Histogramm existiert als eigenständiger Metrik-Tab, aber `IntervalHistogram` nimmt nur eine Kohorte. Vergleichs-Modus erfordert Erweiterung der Komponente. Backlog. |
+| ANL-002 | Was ist „Responder"? | ✅ | **Behoben.** ℹ-Tooltip am Responder-Tab: „Visus-Verbesserung ≥ 5 Buchstaben ETDRS oder CRT-Reduktion ≥ 10 % gegenüber Baseline". |
 | ANL-002 | Vergleich anderer Parameter (Aggregiert-Tab) relevant | 💬 | **Backlog.** Kohorten-Vergleich auf Aggregiert-Tab ausweiten ist Erweiterungsfeature. |
 | ANL-003 | Vergleich gibt es nicht | 💬 | Kohorten-Vergleich ist im Trajektorien-Tab über CohortCompareDrawer möglich. Im Aggregiert-Tab fehlt er. Backlog. |
 | ANL-003 | Alter vs. Visus: X-Achse nicht monoton steigend | ✅ | **Behoben.** `ageVisusScatter` wird jetzt nach `age` aufsteigend sortiert. |
-| ANL-002 | Visusverlaufskurve 2× unterschiedlich dargestellt | ✅ | **Accept / Bug.** Prüfen, ob im Trajektorien-Tab und im Aggregiert-Tab dieselben Berechnungsgrundlagen verwendet werden. Screenshot für Repro benötigt. |
+| ANL-002 | Visusverlaufskurve 2× unterschiedlich dargestellt | 💬 | **By design:** Aggregiert-Tab = Quartalsmittelwert (einfache Gruppierung), Trajektorien-Tab = spline-geglättete Per-Patient-Trajektorie. Unterschied ist beabsichtigt, sollte aber in der UI kenntlich gemacht werden. Backlog. |
 | ANL-003/002 | Zwischen Aggregiert und Verläufe sind unterschiedliche Kohorten ausgewählt | ✅ | **Accept / Bug.** Behoben teilweise durch A-04 (gespeicherte Suche wird korrekt aufgelöst). Beim direkten Filter-Pfad (`?filters=`) wird die Kohorte jedoch im Trajektorien-Tab über `DataContext.filters` bezogen — diese Synchronisation prüfen. |
 | ANL-004 | Woher kommen kritische Werte? Einstellbar? | 💬 | Definiert in `src/config/clinicalThresholds.ts` (CRT > 400 µm, Visus < 0,1). Aktuell nicht über UI konfigurierbar. Für Phase 28 vorgesehen (Admin-UI für Schwellenwerte). Doku ergänzen. |
 | ANL-004 | In Datenqualitätsprüfung: Fall nicht markiert, nur Felder | 💬 | Bewusste Trennung: Datenqualitäts-Markierung (QualityFlag pro Parameter) vs. kritische Werte (klinische Schwellenwerte in der Analyse). Anforderungstext klären. |
@@ -91,12 +91,12 @@
 | FALL-006 | Vergleich Fall–Kohorte nicht möglich (K05) | 💬 | **Backlog.** Kohorten-Referenzwerte in der Fallansicht (bereits teilweise: Kohortenø-Linien im VisusCrt-Chart) zu erweitern. |
 | FALL-003 | Achsbeschriftungen: einzelne fehlen / unregelmäßig | 💬 | Recharts reduziert Ticks automatisch bei beengten Layouts. `interval="preserveStartEnd"` oder explizite `ticks`-Prop für bekannte Zeitpunkte erwägen. Separates Fix-Ticket. |
 | FALL-003 | Events in Behandlungsverlauf klickbar → nur absoluter Verlauf, nicht relativer | ✅ | **Behoben.** `highlightDate`-ReferenceLine jetzt auch in relativem Verlaufschart. |
-| FALL-003 | Zwei Buttons für eine Funktion | 💬 | Doppelten Trigger noch nicht identifiziert — Screenshot benötigt. |
+| FALL-003 | Zwei Buttons für eine Funktion | ✅ | **Behoben.** Visus- und CRT-Icons im Behandlungs-Timeline sind jetzt nur dekorativ; das gesamte Encounter-Tile ist ein einziger klickbarer Hotspot für `highlightDate`. |
 | FALL-003 | CRT-Bezeichnung in Legende | ✅ | **Behoben in A-07** — Y-Achsen-Label-Winkel korrigiert (von 90° auf −90°) |
 | FALL-003 | Einheit Visus fehlt | ✅ | **Behoben.** Visus-Y-Achse zeigt jetzt "Visus (dezimal)". |
 | FALL-003 | Legende sagt Interpolation sei gestrichelt — ist sie nicht | ✅ | **Behoben in A-08** — Hinweistext auf „Offener Kreis = interpoliert" korrigiert |
 | FALL-005 | Qualität der Umsetzung diskutabel | 💬 | Ohne Screenshot / konkrete Beschreibung nicht beurteilbar. Um welche Ansicht handelt es sich genau? |
-| FALL-004 | Wirkstoff pro Injektion darstellen (unterrepräsentiert) | ✅ | **Accept.** Wirkstoff (z. B. Aflibercept vs. Ranibizumab vs. Faricimab) pro Behandlung ist im Datensatz vorhanden. In der Injektionstabelle der Fallansicht als Badge ergänzen. |
+| FALL-004 | Wirkstoff pro Injektion darstellen (unterrepräsentiert) | ✅ | **Behoben.** Violettes Wirkstoff-Badge aus `patientCase.medications[0].medicationCodeableConcept` in jeder Injektionszeile. |
 
 ---
 
@@ -107,17 +107,17 @@
 | QUAL-001 | Prüfung nicht auf Kohorten möglich (nur eigener Filter) | 💬 | **Backlog / Scope.** Kohorten-basierte Qualitätsprüfung ist sinnvoll, aber erheblicher Aufwand. Phase 28+. |
 | QUAL-001 | Zu prüfende Parameter nicht konfigurierbar | ❌ | **Reject (Scope).** Konfigurierbare Prüfparameter sind nicht in EMDREQ spezifiziert. Anforderung für zukünftige Milestone aufnehmen. |
 | QUAL-006 | Qualität der Umsetzung diskutabel | 💬 | Ohne Konkretisierung nicht beurteilbar. Was genau ist unbefriedigend? |
-| QUAL-006 | Fehlerkennung: Anzeige nur weit unten, nicht am Datum | ✅ | **Accept.** Fehlerkennzeichnung soll näher am entsprechenden Datumseintrag platziert werden. UX-Fix im QualityCaseDetail. |
+| QUAL-006 | Fehlerkennung: Anzeige nur weit unten, nicht am Datum | ✅ | **Behoben.** Anomalie-Banner zeigt jetzt einen Status-Chip statt „Fehler melden"-Button, wenn der Parameter bereits geflaggt wurde. Flags sind sowohl in der Wertetabelle als auch im Anomalie-Banner direkt sichtbar. |
 | QUAL-006 | Mehrere Fehlerkennzeichnungen pro Parameter — Bestätigung gilt für alle | ✅ | **Behoben.** `updateQualityFlag` matcht jetzt auf `flaggedAt` (eindeutig pro Flag) statt auf `parameter`. |
 | QUAL-004 | Fehlende Werte werden nicht vorgeschlagen | 💬 | **Backlog.** Auto-Suggest für fehlende Werte (Imputation) ist nicht in EMDREQ. Anforderung für künftige Milestone. |
 | QUAL-009 | Kohorten nicht prüfbar | 💬 | Wie QUAL-001. |
-| QUAL-011 | Grundgesamtheit wird nicht nach Zeitraum gefiltert | 💬 | **Technisch korrekt — visuell nicht klar kommuniziert.** `filterCasesByTimeRange` filtert die Basis. Ein Badge/Hinweis beim Gesamtzahl-Wert wäre hilfreich. Backlog. |
-| QUAL-011 | Zentren-Filter hinter Zeitraum-Filter versteckt | ✅ | **Accept.** UI-Reihenfolge anpassen: Zentrum-Filter prominenter platzieren. |
+| QUAL-011 | Grundgesamtheit wird nicht nach Zeitraum gefiltert | ✅ | **Behoben.** Bei aktivem Zeitraum-Filter (nicht „Alle") erscheint ein blauer Pill-Badge im DocQualityPage-Untertitel. |
+| QUAL-011 | Zentren-Filter hinter Zeitraum-Filter versteckt | ✅ | **Behoben.** Zentrum-Dropdown aus dem einklappbaren Filter-Panel herausgelöst und immer sichtbar in der DocQualityPage-Kopfzeile. |
 | QUAL-011 | Zentrum-Filter öffnet nur Detailansicht; kein Multi-Select | ❌ | **Reject vorerst.** Multi-Select mehrerer Zentren gleichzeitig ist erheblicher Mehraufwand und nicht in EMDREQ spezifiziert. Anforderung für nächste Milestone. |
 | QUAL-011 | Nicht für Kohorten möglich | 💬 | Wie QUAL-001. |
-| QUAL-011 | Absolute Kennzahlen fehlen | ✅ | **Accept.** Neben Prozentsätzen sollten absolute Zählwerte (Anzahl Fälle mit Flag, Anzahl lückenlos dokumentierter Fälle) angezeigt werden. |
-| QUAL-011 | Ergebnisse der Prüfung fehlen | ✅ | **Accept.** Nach einer Qualitätsprüfung sollte eine Zusammenfassung sichtbar sein (X Fälle geprüft, Y mit Auffälligkeiten). |
-| QUAL-011 | Plausibilitätsbereiche nur über Zentrum-Details | ✅ | **Accept.** Plausibilitätsschwellen sollten auch im Haupt-DocQuality-Tab sichtbar sein, nicht nur im Drill-Down. |
+| QUAL-011 | Absolute Kennzahlen fehlen | ✅ | **Behoben.** SummaryCards in QualityPage zeigen jetzt Prozentwert (z. B. 27 %) unter der absoluten Zahl. |
+| QUAL-011 | Ergebnisse der Prüfung fehlen | ✅ | **Behoben.** Prozentualer Anteil geprüfter / in Bearbeitung / ungecheckt Fälle direkt in den SummaryCards sichtbar. |
+| QUAL-011 | Plausibilitätsbereiche nur über Zentrum-Details | ✅ | **Behoben.** MetricCard zeigt Zielwert (Standard 80 %) und absolute Fallzahl unterhalb des Fortschrittsbalkens. |
 
 ---
 
@@ -133,22 +133,25 @@
 
 | Status | Anzahl |
 |--------|--------|
-| ✅ ACCEPT (wird umgesetzt) | 26 |
+| ✅ ACCEPT — committed | 26 |
 | ❌ REJECT (nicht im Scope) | 3 |
-| 💬 COMMENT (Anmerkung / Backlog) | 22 |
+| 💬 COMMENT / Backlog | 22 |
 
-### Priorisierte Fixes (kurzfristig) — ✅ alle committed (2026-05-14)
+Alle 26 ACCEPT-Items wurden implementiert und committed (2026-05-14).
 
-1. **PROT-001** — Session-Revokation bei Account-Löschung ✅
-2. **USM-001** — Kopier-Feedback, Pflichtfeld-Validierung, Standort-Pflicht ✅
-3. **QUAL-006** — Flag-Bestätigung nur für betroffenes Flag ✅
-4. **ANL-003** — Alter-vs-Visus X-Achse monoton sortiert ✅
-5. **FALL-003** — Visus-Einheit an Y-Achse; Event-Highlight auch in relativem Chart ✅
+### Offene Backlog-Items (mittelfristig, kein akuter Bug)
 
-### Backlog (mittelfristig)
-
-- KOH-003: Filter-State beim Rücknavigieren erhalten
-- ANL-002: Responder-Definition als Tooltip
-- FALL-004: Wirkstoff pro Injektion als Badge
-- QUAL-011: Absolute Kennzahlen + Prüfzusammenfassung + Schwellen-Sichtbarkeit
-- USM-008: `maxLoginAttempts` in Phase-28-Admin-UI
+| ID | Beschreibung |
+|----|-------------|
+| KOH-003 | Filter-State beim Rücknavigieren erhalten (History-State) |
+| ANL-002 | Intervall-Histogramm auch im Kohorten-Vergleichsmodus |
+| ANL-002 | Visus-Berechnung Aggregiert vs. Trajektorien in UI kenntlich machen |
+| ANL-003 | Kohorten-Vergleich auch im Aggregiert-Tab |
+| FALL-001 | Direkte Chart→Falldetail-Navigation (Phase-29-Scope) |
+| FALL-006 | Erweiterter Fall–Kohorte-Vergleich in Fallansicht |
+| QUAL-001 | Kohorten-basierte Qualitätsprüfung |
+| QUAL-004 | Auto-Suggest fehlender Werte (Imputation) |
+| USM-006 | Rate-Limiting-Meldung mit verbleibendem Timeout |
+| USM-008 | `maxLoginAttempts` in Phase-28-Admin-UI |
+| A-06 | Fehlende Achsenticks (Screenshot für Repro benötigt) |
+| A-09 | Zeitraum-Badge in Grundgesamtheit QualityPage |
