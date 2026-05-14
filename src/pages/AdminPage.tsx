@@ -192,7 +192,6 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (user?.role === 'admin') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- role-gated fetch that drives admin user table; setState happens inside loadUsers (useCallback). Refactor to useQuery is out of scope for Phase 23.
       void loadUsers();
     }
   }, [loadUsers, user?.role]);

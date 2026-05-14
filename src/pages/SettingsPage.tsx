@@ -459,7 +459,8 @@ export default function SettingsPage() {
                 const parsed = parseInt(e.target.value, 10);
                 const val = isNaN(parsed) ? 0 : parsed;
                 setRefreshTtlHours(val);
-                setTtlValidationError(validateTtl(val, absoluteCapHours) === 'ok' ? null : validateTtl(val, absoluteCapHours));
+                const vr = validateTtl(val, absoluteCapHours);
+                setTtlValidationError(vr === 'ok' ? null : vr);
               }}
               className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
                 ttlValidationError === 'refreshMin'
@@ -490,7 +491,8 @@ export default function SettingsPage() {
                 const parsed = parseInt(e.target.value, 10);
                 const val = isNaN(parsed) ? 0 : parsed;
                 setAbsoluteCapHours(val);
-                setTtlValidationError(validateTtl(refreshTtlHours, val) === 'ok' ? null : validateTtl(refreshTtlHours, val));
+                const vc = validateTtl(refreshTtlHours, val);
+                setTtlValidationError(vc === 'ok' ? null : vc);
               }}
               className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
                 ttlValidationError === 'capMin'
