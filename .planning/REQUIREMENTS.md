@@ -7,16 +7,16 @@
 
 ### Session Management
 
-- [ ] **SESS-01**: Admin can trigger immediate sign-out of all active sessions for any user
+- [x] **SESS-01**: Admin can trigger immediate sign-out of all active sessions for any user
 - [ ] **SESS-02**: Server maintains a stateful refresh-sessions table (one row per issued refresh token, tracking user, device fingerprint, issued-at, expires-at, revoked flag)
 - [ ] **SESS-03**: Server rotates refresh tokens on every use (OAuth2-style: previous token invalidated immediately on reuse)
 - [ ] **SESS-04**: Admin can rotate the refresh-token signing key; existing sessions gracefully expire rather than hard-crashing
 
 ### Session UI
 
-- [ ] **SESSUI-01**: Admin can view all active sessions per user (device, issued-at, last-used, expires-at)
-- [ ] **SESSUI-02**: Admin can revoke individual sessions from the session listing UI
-- [ ] **SESSUI-03**: Admin can configure session TTL values (`refreshTokenTtlMs`, `refreshAbsoluteCapMs`) from the admin UI (writes to settings.yaml)
+- [x] **SESSUI-01**: Admin can view all active sessions per user (device, issued-at, last-used, expires-at)
+- [x] **SESSUI-02**: Admin can revoke individual sessions from the session listing UI
+- [x] **SESSUI-03**: Admin can configure session TTL values (`refreshTokenTtlMs`, `refreshAbsoluteCapMs`) from the admin UI (writes to settings.yaml)
 
 ### UX Fixes
 
@@ -47,13 +47,13 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SESS-01 | Phase 28 | Pending |
+| SESS-01 | Phase 28 | Complete |
 | SESS-02 | Phase 27 | Pending |
 | SESS-03 | Phase 27 | Pending |
 | SESS-04 | Phase 27 | Pending |
-| SESSUI-01 | Phase 28 | Pending |
-| SESSUI-02 | Phase 28 | Pending |
-| SESSUI-03 | Phase 28 | Pending |
+| SESSUI-01 | Phase 28 | Complete |
+| SESSUI-02 | Phase 28 | Complete |
+| SESSUI-03 | Phase 28 | Complete |
 | UX-01 | Phase 29 | Pending |
 | UX-02 | Phase 29 | Pending |
 | TERM-01 | Phase 30 | Pending |
