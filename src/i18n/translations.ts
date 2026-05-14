@@ -860,6 +860,20 @@ const translations = {
   },
   review: { de: 'Pr\u00fcfen', en: 'Review' },
 
+  // Session management (Phase 28 / SESSUI-01, SESSUI-02)
+  adminSessions: { de: 'Sitzungen', en: 'Sessions' },
+  adminSessionsTitle: { de: 'Aktive Sitzungen', en: 'Active Sessions' },
+  adminSignOutEverywhere: { de: '\u00dcberall abmelden', en: 'Sign out everywhere' },
+  adminSigningOut: { de: 'Abmeldung l\u00e4uft\u2026', en: 'Signing out\u2026' },
+  adminRevokeSession: { de: 'Sitzung beenden', en: 'Revoke' },
+  adminNoActiveSessions: { de: 'Keine aktiven Sitzungen.', en: 'No active sessions.' },
+  adminSessionsLoadError: { de: 'Sitzungen konnten nicht geladen werden.', en: 'Could not load sessions.' },
+  adminRevokeError: { de: 'Sitzung konnte nicht beendet werden.', en: 'Could not revoke session.' },
+  sessionDevice: { de: 'Ger\u00e4t', en: 'Device' },
+  sessionIssuedAt: { de: 'Ausgestellt', en: 'Issued' },
+  sessionLastUsed: { de: 'Zuletzt verwendet', en: 'Last used' },
+  sessionExpires: { de: 'L\u00e4uft ab', en: 'Expires' },
+
   // Session TTL settings (Phase 28 / SESSUI-03)
   settingsSessionTitle: { de: 'Sitzungstoken-G\u00fcltigkeiten', en: 'Session Token Lifetimes' },
   ttlRefreshHours: { de: 'Refresh-Token-G\u00fcltigkeit (Stunden)', en: 'Refresh Token TTL (hours)' },
