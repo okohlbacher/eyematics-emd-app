@@ -73,7 +73,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 ## Phases
 
 - [x] **Phase 27: Stateful Session Backend** — Server-side refresh-sessions table, OAuth2-style token rotation, and signing-key rotation
-- [ ] **Phase 28: Admin Session Control UI** — Force sign-out, per-device session listing + individual revocation, TTL configuration UI
+- [x] **Phase 28: Admin Session Control UI** — Force sign-out, per-device session listing + individual revocation, TTL configuration UI (completed 2026-05-14)
 - [ ] **Phase 29: Home Panel UX** — Wire "Attention needed" Review buttons and "Jump Back In" panel routing
 - [ ] **Phase 30: Terminology Configuration Docs** — Document terminology settings keys in settings.yaml and Konfiguration.md
 
@@ -107,8 +107,8 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 Plans:
 - [x] 28-01-PLAN.md — Wave 0 test scaffolds (sessionRevoke + ttlConversion)
 - [x] 28-02-PLAN.md — Backend: listActiveSessionsByUser + 3 admin session endpoints [SESS-01, SESSUI-01, SESSUI-02]
-- [ ] 28-03-PLAN.md — SettingsPage TTL config form + ttlConversion helpers [SESSUI-03]
-- [ ] 28-04-PLAN.md — AdminPage session accordion UI + i18n [SESS-01, SESSUI-01, SESSUI-02]
+- [x] 28-03-PLAN.md — SettingsPage TTL config form + ttlConversion helpers [SESSUI-03]
+- [x] 28-04-PLAN.md — AdminPage session accordion UI + i18n [SESS-01, SESSUI-01, SESSUI-02]
 **UI hint**: yes
 
 ### Phase 29: Home Panel UX
@@ -135,7 +135,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 27. Stateful Session Backend | 4/4 | Complete | 2026-05-11 |
-| 28. Admin Session Control UI | 2/4 | In Progress|  |
+| 28. Admin Session Control UI | 4/4 | Complete   | 2026-05-14 |
 | 29. Home Panel UX | 0/? | Not started | - |
 | 30. Terminology Configuration Docs | 0/? | Not started | - |
 
