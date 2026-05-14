@@ -39,7 +39,7 @@ export interface QualityCaseDetailProps {
   onExclude: (caseId: string) => void;
   onNavigateToCase: (caseId: string) => void;
   onOpenFlagDialog: (parameter: string, value: string) => void;
-  onUpdateFlagStatus: (caseId: string, parameter: string, status: QualityFlag['status']) => void;
+  onUpdateFlagStatus: (caseId: string, flaggedAt: string, status: QualityFlag['status']) => void;
 }
 
 export default function QualityCaseDetail({
@@ -340,7 +340,7 @@ export default function QualityCaseDetail({
                 <select
                   value={f.status}
                   onChange={(e) =>
-                    onUpdateFlagStatus(f.caseId, f.parameter, e.target.value as QualityFlag['status'])
+                    onUpdateFlagStatus(f.caseId, f.flaggedAt, e.target.value as QualityFlag['status'])
                   }
                   className="text-xs border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 >

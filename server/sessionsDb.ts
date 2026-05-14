@@ -44,6 +44,7 @@ let stmtInsert: Database.Statement | null = null;
 let stmtGet: Database.Statement | null = null;
 let stmtRevoke: Database.Statement | null = null;
 let stmtRevokeFamily: Database.Statement | null = null;
+let stmtRevokeByUsername: Database.Statement | null = null;
 let stmtPurge: Database.Statement | null = null;
 
 let _cleanupTimer: ReturnType<typeof setInterval> | null = null;
@@ -103,6 +104,7 @@ export function initSessionsDb(dataDir: string): void {
   stmtGet = db.prepare(`SELECT * FROM refresh_sessions WHERE id = @id`);
   stmtRevoke = db.prepare(`UPDATE refresh_sessions SET revoked = 1 WHERE id = @id`);
   stmtRevokeFamily = db.prepare(`UPDATE refresh_sessions SET revoked = 1 WHERE sid = @sid`);
+  stmtRevokeByUsername = db.prepare(`UPDATE refresh_sessions SET revoked = 1 WHERE username = @username AND revoked = 0`);
   stmtPurge = db.prepare(`
     DELETE FROM refresh_sessions
     WHERE datetime(expires_at) < datetime('now')
@@ -166,7 +168,23 @@ export function revokeFamily(sid: string): void {
 }
 
 // ---------------------------------------------------------------------------
-// 6. purgeExpiredSessions
+// 6. revokeByUsername
+// ---------------------------------------------------------------------------
+
+/**
+ * Revoke all active refresh-session rows for a given username.
+ * Called when a user account is deleted so that any still-valid tokens
+ * issued to that user cannot be used after deletion (PROT-001).
+ * Returns the number of rows revoked.
+ */
+export function revokeByUsername(username: string): number {
+  requireDb();
+  const info = stmtRevokeByUsername!.run({ username });
+  return info.changes;
+}
+
+// ---------------------------------------------------------------------------
+// 7. purgeExpiredSessions
 // ---------------------------------------------------------------------------
 
 /**
@@ -183,7 +201,7 @@ export function purgeExpiredSessions(): number {
 }
 
 // ---------------------------------------------------------------------------
-// 7. startSessionCleanupInterval
+// 8. startSessionCleanupInterval
 // ---------------------------------------------------------------------------
 
 /**

@@ -338,12 +338,13 @@ export default function CohortBuilderPage() {
                 <input
                   type="number"
                   placeholder="Min"
+                  min={0}
                   value={filters.ageRange?.[0] ?? ''}
                   onChange={(e) =>
                     setFilters({
                       ...filters,
                       ageRange: [
-                        Number(e.target.value) || 0,
+                        Math.max(0, Number(e.target.value) || 0),
                         filters.ageRange?.[1] ?? 120,
                       ],
                     })
@@ -354,13 +355,14 @@ export default function CohortBuilderPage() {
                 <input
                   type="number"
                   placeholder="Max"
+                  min={0}
                   value={filters.ageRange?.[1] ?? ''}
                   onChange={(e) =>
                     setFilters({
                       ...filters,
                       ageRange: [
                         filters.ageRange?.[0] ?? 0,
-                        Number(e.target.value) || 120,
+                        Math.max(0, Number(e.target.value) || 120),
                       ],
                     })
                   }
@@ -388,7 +390,7 @@ export default function CohortBuilderPage() {
                       return;
                     }
                     const v = parseFloat(raw.replace(',', '.'));
-                    if (!isNaN(v)) {
+                    if (!isNaN(v) && v >= 0) {
                       setFilters((f) => ({ ...f, visusRange: [v, f.visusRange?.[1] ?? 2] }));
                     }
                   }}
@@ -408,7 +410,7 @@ export default function CohortBuilderPage() {
                       return;
                     }
                     const v = parseFloat(raw.replace(',', '.'));
-                    if (!isNaN(v)) {
+                    if (!isNaN(v) && v >= 0) {
                       setFilters((f) => ({ ...f, visusRange: [f.visusRange?.[0] ?? 0, v] }));
                     }
                   }}
@@ -426,12 +428,13 @@ export default function CohortBuilderPage() {
                 <input
                   type="number"
                   placeholder="Min"
+                  min={0}
                   value={filters.crtRange?.[0] ?? ''}
                   onChange={(e) =>
                     setFilters({
                       ...filters,
                       crtRange: [
-                        Number(e.target.value) || 0,
+                        Math.max(0, Number(e.target.value) || 0),
                         filters.crtRange?.[1] ?? 800,
                       ],
                     })
@@ -442,13 +445,14 @@ export default function CohortBuilderPage() {
                 <input
                   type="number"
                   placeholder="Max"
+                  min={0}
                   value={filters.crtRange?.[1] ?? ''}
                   onChange={(e) =>
                     setFilters({
                       ...filters,
                       crtRange: [
                         filters.crtRange?.[0] ?? 0,
-                        Number(e.target.value) || 800,
+                        Math.max(0, Number(e.target.value) || 800),
                       ],
                     })
                   }

@@ -93,8 +93,10 @@ export default function AdminPage() {
   const [role, setRole] = useState<UserRole>('researcher');
   const [selectedCenters, setSelectedCenters] = useState<string[]>([]);
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [copyFeedback, setCopyFeedback] = useState(false);
   // L3: inline action-error banner replaces blocking alert() for create/update failures.
   const [actionError, setActionError] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<{ username?: string; centers?: string }>({});
 
   const [editUsername, setEditUsername] = useState<string | null>(null);
   const [editFirstName, setEditFirstName] = useState('');
@@ -241,7 +243,15 @@ export default function AdminPage() {
   };
 
   const handleAdd = async () => {
-    if (!username.trim()) return;
+    // USM-001: validate required fields before submitting
+    const errors: { username?: string; centers?: string } = {};
+    if (!username.trim()) errors.username = t('fieldRequired');
+    if (selectedCenters.length === 0) errors.centers = t('centerRequired');
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
 
     try {
       const resp = await authFetch('/api/auth/users', {
@@ -394,10 +404,18 @@ export default function AdminPage() {
             <p className="text-sm text-green-700 mt-1">
               {t('generatedPasswordLabel')} <code className="bg-green-100 px-2 py-0.5 rounded font-mono text-sm">{generatedPassword}</code>
               <button
-                onClick={() => { void navigator.clipboard.writeText(generatedPassword); }}
+                onClick={() => {
+                  navigator.clipboard.writeText(generatedPassword).then(() => {
+                    setCopyFeedback(true);
+                    setTimeout(() => setCopyFeedback(false), 2000);
+                  }).catch(() => {
+                    // Fallback: select the code element text manually
+                    void navigator.clipboard.writeText(generatedPassword);
+                  });
+                }}
                 className="ml-2 text-xs text-green-600 hover:text-green-800 underline"
               >
-                {t('copy')}
+                {copyFeedback ? t('copied') : t('copy')}
               </button>
             </p>
             <p className="text-xs text-green-600 mt-1">{t('savePasswordHint')}</p>
@@ -431,14 +449,15 @@ export default function AdminPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('loginUsername')}
+                  {t('loginUsername')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => { setUsername(e.target.value); setFormErrors((prev) => ({ ...prev, username: undefined })); }}
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 ${formErrors.username ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                 />
+                {formErrors.username && <p className="text-xs text-red-500 mt-1">{formErrors.username}</p>}
               </div>
 
               <div>
@@ -487,14 +506,14 @@ export default function AdminPage() {
             {/* N10.02: Multi-center assignment */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('adminAssignCenters')}
+                {t('adminAssignCenters')} <span className="text-red-500">*</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {centerOptions.map((c) => (
                   <button
                     key={c.id}
                     type="button"
-                    onClick={() => toggleCenter(c.id)}
+                    onClick={() => { toggleCenter(c.id); setFormErrors((prev) => ({ ...prev, centers: undefined })); }}
                     className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
                       selectedCenters.includes(c.id)
                         ? 'bg-blue-50 border-blue-300 text-blue-700 font-medium'
@@ -505,6 +524,7 @@ export default function AdminPage() {
                   </button>
                 ))}
               </div>
+              {formErrors.centers && <p className="text-xs text-red-500 mt-1">{formErrors.centers}</p>}
             </div>
 
             <div className="flex gap-3">
@@ -522,6 +542,7 @@ export default function AdminPage() {
                   setLastName('');
                   setRole('researcher');
                   setSelectedCenters([]);
+                  setFormErrors({});
                 }}
                 className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200"
               >

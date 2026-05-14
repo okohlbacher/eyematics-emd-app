@@ -121,10 +121,11 @@ export default function LandingPage() {
           </p>
         </div>
         <div className="flex gap-2 items-center">
-          <Button icon={<Plus className="w-3.5 h-3.5" />} variant="soft">
+          <Button icon={<Plus className="w-3.5 h-3.5" />} variant="soft" onClick={() => navigate('/cohort')}>
             {t('navCohort')}
           </Button>
-          <Button icon={<Download className="w-3.5 h-3.5" />} variant="ghost">
+          {/* Export not yet implemented — disabled to avoid silent no-ops */}
+          <Button icon={<Download className="w-3.5 h-3.5" />} variant="ghost" disabled title="Funktion noch nicht verfügbar">
             {t('export')}
           </Button>
         </div>
@@ -178,6 +179,10 @@ export default function LandingPage() {
               return (
                 <div
                   key={center.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate('/doc-quality')}
+                  onKeyDown={(e) => e.key === 'Enter' && navigate('/doc-quality')}
                   className="grid items-center gap-3.5 px-5 py-3.5 cursor-pointer hover:bg-[var(--color-surface-2)] transition-colors"
                   style={{
                     gridTemplateColumns: '36px 1fr 90px 110px 16px',

@@ -269,8 +269,8 @@ export default function QualityPage() {
               onExclude={handleExclude}
               onNavigateToCase={(id) => navigate(`/case/${id}`)}
               onOpenFlagDialog={(parameter, value) => setFlagDialog({ parameter, value })}
-              onUpdateFlagStatus={(caseId, parameter, status) =>
-                updateQualityFlag(caseId, parameter, status as QualityFlag['status'])
+              onUpdateFlagStatus={(caseId, flaggedAt, status) =>
+                updateQualityFlag(caseId, flaggedAt, status as QualityFlag['status'])
               }
             />
           )}

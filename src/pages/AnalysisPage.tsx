@@ -48,7 +48,7 @@ function isAnalysisTab(v: string | null): v is AnalysisTab {
 }
 
 export default function AnalysisPage() {
-  const { activeCases } = useData();
+  const { activeCases, savedSearches } = useData();
   const [searchParams, setSearchParams] = useSearchParams();
   const { locale, t } = useLanguage();
 
@@ -68,7 +68,16 @@ export default function AnalysisPage() {
     [searchParams, setSearchParams],
   );
 
+  // Resolve active cohort: either a saved search (?cohort=<id>) or inline filters (?filters=<json>).
+  const savedSearchId = searchParams.get('cohort');
+  const activeSavedSearch = useMemo(
+    () => (savedSearchId ? (savedSearches.find((s) => s.id === savedSearchId) ?? null) : null),
+    [savedSearchId, savedSearches],
+  );
+
   const filters: CohortFilter = useMemo(() => {
+    // If a saved search is referenced, use its stored filters (KOH-005 / Issue 4 fix).
+    if (activeSavedSearch) return activeSavedSearch.filters;
     const raw = searchParams.get('filters');
     if (!raw) return {};
     // M-04: explicitly pick known CohortFilter keys to prevent prototype pollution
@@ -84,7 +93,7 @@ export default function AnalysisPage() {
       if (Array.isArray(parsed.centers)) safe.centers = parsed.centers.map(String);
       return safe;
     } catch { return {}; }
-  }, [searchParams]);
+  }, [activeSavedSearch, searchParams]);
 
   const cohort = useMemo(() => applyFilters(activeCases, filters), [activeCases, filters]);
 
@@ -144,13 +153,15 @@ export default function AnalysisPage() {
   }, [cohort]);
 
   const ageVisusScatter = useMemo(() => {
+    // ANL-003: sort by age so X-axis is monotonically increasing
     return cohort
       .map((c) => {
         const latest = getObservationsByCode(c.observations, LOINC_VISUS).slice(-1)[0];
         if (!latest?.valueQuantity) return null;
         return { age: getAge(c.birthDate), visus: latest.valueQuantity.value };
       })
-      .filter(Boolean) as { age: number; visus: number }[];
+      .filter(Boolean)
+      .sort((a, b) => a!.age - b!.age) as { age: number; visus: number }[];
   }, [cohort]);
 
   const medianVisus = useMemo(() => {
@@ -192,6 +203,11 @@ export default function AnalysisPage() {
     <div className="p-8 dark:bg-gray-900 min-h-screen">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('analysisTitle')}</h1>
+        {activeSavedSearch && (
+          <p className="text-sm font-medium text-blue-700 dark:text-blue-400 mt-0.5">
+            {activeSavedSearch.name}
+          </p>
+        )}
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           {cohort.length} {t('casesInCohort')}
           {criticalCount > 0 && (

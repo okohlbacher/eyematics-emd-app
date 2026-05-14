@@ -27,7 +27,7 @@ import {
 } from './jwtUtil.js';
 import { getAuthProvider } from './keycloakAuth.js';
 import { createRateLimiter } from './rateLimiting.js';
-import { getSession, insertSession, revokeFamily, revokeSession, type SessionRow } from './sessionsDb.js';
+import { getSession, insertSession, revokeByUsername, revokeFamily, revokeSession, type SessionRow } from './sessionsDb.js';
 import { getAuthSettings } from './settingsApi.js';
 
 // ---------------------------------------------------------------------------
@@ -637,6 +637,14 @@ authApiRouter.delete('/users/:username', async (req: Request, res: Response): Pr
       return;
     }
     throw err;
+  }
+  // PROT-001: revoke all active sessions for the deleted user so their
+  // still-valid JWTs cannot be used after account deletion.
+  // If sessionsDb is not initialised (e.g. Keycloak mode) this is a no-op.
+  try {
+    revokeByUsername(target);
+  } catch {
+    // sessionsDb not initialised — safe to ignore
   }
   res.json({ message: 'User deleted' });
 });

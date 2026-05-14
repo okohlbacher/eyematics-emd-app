@@ -190,6 +190,16 @@ export default function CaseDetailPage() {
               <Tooltip formatter={(v: unknown) => typeof v === 'number' ? `${v}%` : String(v)} />
               <Legend />
               <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
+              {/* FALL-003: synchronise event highlight with absolute chart */}
+              {highlightDate && (
+                <ReferenceLine
+                  x={highlightDate}
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  strokeDasharray="4 2"
+                  label={{ value: new Date(highlightDate).toLocaleDateString(dateFmt), position: 'top', fontSize: 10, fill: '#f59e0b' }}
+                />
+              )}
               <Line type="monotone" dataKey="visusChange" stroke="#10b981" name="Visus %" strokeWidth={2} dot={{ r: 3 }} connectNulls />
               <Line type="monotone" dataKey="crtChange" stroke="#8b5cf6" name="CRT %" strokeWidth={2} dot={{ r: 3 }} connectNulls />
             </LineChart>

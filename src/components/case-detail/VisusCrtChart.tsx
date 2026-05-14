@@ -69,13 +69,13 @@ export default function VisusCrtChart({
             yAxisId="visus"
             domain={[0, 1]}
             tick={{ fontSize: 10 }}
-            label={{ value: 'Visus', angle: -90, position: 'insideLeft', fontSize: 11, fill: '#10b981' }}
+            label={{ value: 'Visus (dezimal)', angle: -90, position: 'insideLeft', fontSize: 11, fill: '#10b981' }}
           />
           <YAxis
             yAxisId="crt"
             orientation="right"
             tick={{ fontSize: 10 }}
-            label={{ value: 'CRT (\u00b5m)', angle: 90, position: 'insideRight', fontSize: 11, fill: '#8b5cf6' }}
+            label={{ value: 'CRT (\u00b5m)', angle: -90, position: 'insideRight', fontSize: 11, fill: '#8b5cf6' }}
           />
           <Tooltip />
           <Legend />

@@ -35,7 +35,7 @@ interface DataContextType {
   removeSavedSearch: (id: string) => void;
   qualityFlags: QualityFlag[];
   addQualityFlag: (f: QualityFlag) => void;
-  updateQualityFlag: (caseId: string, parameter: string, status: QualityFlag['status']) => void;
+  updateQualityFlag: (caseId: string, flaggedAt: string, status: QualityFlag['status']) => void;
   excludedCases: string[];
   toggleExcludeCase: (caseId: string) => void;
   activeCases: PatientCase[];
@@ -162,12 +162,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateQualityFlag = useCallback((
     caseId: string,
-    parameter: string,
+    flaggedAt: string,
     status: QualityFlag['status']
   ) => {
     setQualityFlags((prev) => {
       const next = prev.map((f) =>
-        f.caseId === caseId && f.parameter === parameter
+        f.caseId === caseId && f.flaggedAt === flaggedAt
           ? { ...f, status }
           : f
       );
