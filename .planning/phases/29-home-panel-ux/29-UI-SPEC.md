@@ -1,10 +1,11 @@
 ---
 phase: 29
 slug: home-panel-ux
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-05-21
+reviewed_at: 2026-05-21
 ---
 
 # Phase 29 — UI Design Contract
@@ -42,11 +43,16 @@ Declared values (must be multiples of 4):
 | 2xl | 48px | Major section breaks |
 | 3xl | 64px | Page-level top spacing |
 
-Exceptions:
-- Right-rail tiles use 18px internal padding (`p-[18px]`) — existing convention from LandingPage, carry forward unchanged.
-- Alert dot indicator: 6px diameter (`w-1.5 h-1.5`) — existing convention, carry forward.
-- KPI card padding: `p-[18px_18px_14px]` — existing, do not change.
+Exception:
 - Touch-target minimum 32px height for `Button size="sm"` rows in both panels.
+
+### Component-internal sizing — existing classes, do not touch
+
+These values are pre-existing, component-internal, and are carried forward unchanged. They are NOT part of the spacing scale and do not need to conform to the 4-point grid:
+
+- Right-rail tiles: `p-[18px]` — existing padding convention from LandingPage.
+- Alert dot indicator: `w-1.5 h-1.5` (6px) — decoration/icon sizing, not layout spacing.
+- KPI card padding: `p-[18px_18px_14px]` — existing, do not change.
 
 Source: `src/pages/LandingPage.tsx` existing padding classes.
 
@@ -54,17 +60,19 @@ Source: `src/pages/LandingPage.tsx` existing padding classes.
 
 ## Typography
 
+Four sizes only (reduced from 5 — 12px dropped; overline-style elements use 11px, inline sub-labels use 13px):
+
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
 | Body | 14px | 400 (regular) | 1.5 |
-| Label / sub-label | 12px | 400 (regular) | 1.4 |
+| Sub-label / alert title | 13px | 600 (semibold) | 1.4 |
 | Panel heading (uppercase overline) | 11px | 600 (semibold) | 1.0 |
-| Alert title | 13px | 600 (semibold) | 1.4 |
 | Page heading (h1) | 28px | 600 (semibold) | 1.15 |
 
 Notes:
+- Sub-label and alert title both use 13px; differentiation is by context and weight (alert titles are always semibold in a coloured-dot row; sub-labels in Jump Back In rows are 13px regular `var(--color-ink-3)` — see Interaction Contract).
 - 11px overline labels use `tracking-[0.12em] uppercase` — replicate exactly for the "Jump back in" section heading and "Attention needed" section heading.
-- "Jump Back In" row labels (patient pseudonym + route label): 13px semibold for the primary identifier; 11px regular ink-3 for the secondary descriptor (view name / context).
+- "Jump Back In" row labels: 13px semibold `var(--color-ink)` for the primary identifier (patient pseudonym); 13px regular `var(--color-ink-3)` for the secondary descriptor (view name / context).
 - Data values (case counts, KPI numbers) use `font-data` class (JetBrains Mono with `font-feature-settings: 'tnum'`).
 
 Source: `src/pages/LandingPage.tsx` inline className strings; `src/index.css`.
@@ -133,6 +141,8 @@ Source: CONTEXT.md § Claude's Discretion (record shape captures route + view pa
 
 ## Interaction Contract
 
+**Visual focal point:** The home panel is a two-tile layout. The "Attention needed" tile is the primary call-to-action area — its Review buttons are the only interactive elements a user should notice before scanning "Jump Back In". Ensure the "Attention needed" tile renders above "Jump Back In" in document order and that its Review buttons are the first tab-stops in the panel.
+
 ### Jump Back In panel
 
 **Zero entries (default on first login or after logout):**
@@ -142,8 +152,8 @@ Source: CONTEXT.md § Claude's Discretion (record shape captures route + view pa
 **1–5 entries:**
 - One row per entry, most-recent-first.
 - Row layout (matches center-row pattern): `grid items-center gap-3.5 px-5 py-3` with `gridTemplateColumns: '1fr auto'`.
-- Left: `<div>` with 13px semibold `var(--color-ink)` label (pseudonym) + 11px regular `var(--color-ink-3)` sub-label (view descriptor).
-- Right: `<ChevronRight className="w-3.5 h-3.5 text-[var(--color-ink-3)]" />`.
+- Left: `<div>` with 13px semibold `var(--color-ink)` label (pseudonym) + 13px regular `var(--color-ink-3)` sub-label (view descriptor).
+- Right: `<ChevronRight className="w-3.5 h-3.5 text-[var(--color-ink-3)]" aria-hidden="true" />`.
 - `cursor-pointer hover:bg-[var(--color-surface-2)] transition-colors` on the row div.
 - `role="button"`, `tabIndex={0}`, `onKeyDown` for Enter key — mirror center-row pattern from LandingPage.
 - Row dividers: `border-bottom: 1px solid var(--color-line)` between rows (not after last).
@@ -157,17 +167,17 @@ Source: CONTEXT.md § Claude's Discretion (record shape captures route + view pa
 ### Attention needed panel
 
 **Therapy-breaker Review button:**
-- `<Button variant="ghost" size="sm" onClick={() => navigate('/quality?therapy=breaker')}>` `{t('review')}`
+- `<Button variant="ghost" size="sm" aria-label={t('reviewTherapyBreakers')} onClick={() => navigate('/quality?therapy=breaker')}>` `{t('review')}`
 - Replace existing `navigate('/cohort')` target. No role gate needed — `/quality` is `ProtectedRoute`.
 
 **Implausible CRT Review button:**
-- `<Button variant="ghost" size="sm" onClick={() => navigate('/quality?status=in_progress')}>` `{t('review')}`
+- `<Button variant="ghost" size="sm" aria-label={t('reviewFlaggedCases')} onClick={() => navigate('/quality?status=flagged')}>` `{t('review')}`
 - Replace existing `navigate('/doc-quality')` target.
 - Visibility gate: re-evaluate `canSeeDocQuality` guard — since `/quality` is `ProtectedRoute` (not `QualityRoute`), the button MAY be shown to all authenticated users. Decision: **remove** the `canSeeDocQuality` gate for this button (all roles can reach `/quality`). If the planner determines role restriction should stay, the button must navigate to a route the user can act on — do not silently show a button that routes to a page the role cannot access.
 
 **Query-param contracts on QualityPage:**
 - `?therapy=breaker` → on mount, set `filterTherapy` to `'breaker'` (valid value per `getTherapyStatus` return).
-- `?status=in_progress` → on mount, set `filterStatus` to `'in_progress'` (valid `QualityStatus` value per `caseStatus` map).
+- `?status=flagged` → on mount, set `filterStatus` to `'flagged'` (valid `QualityStatus` value per `caseStatus` map).
 - Use `useSearchParams` pattern from `OutcomesView.tsx:83` — read once on mount, do not re-run on every render.
 - If the param value is not recognized, fall back to `'all'` silently (no error).
 
@@ -181,7 +191,7 @@ Source: CONTEXT.md § Claude's Discretion (record shape captures route + view pa
 - All new clickable rows use `role="button"` + `tabIndex={0}` + `onKeyDown={(e) => e.key === 'Enter' && handler()}` — mirror existing center-row pattern.
 - ChevronRight arrows are decorative: `aria-hidden="true"`.
 - "Jump Back In" section heading retains `text-[11px] font-semibold tracking-[0.12em] uppercase text-[var(--color-ink-3)]` — no heading role needed (panel context is provided by the Tile).
-- Review buttons are `<button>` elements (via Button primitive) — already accessible.
+- Review buttons are `<button>` elements (via Button primitive) — already accessible. Each button carries a distinct `aria-label` (see Attention needed panel above) so screen readers can distinguish the two "Review" labels.
 
 ---
 
@@ -212,7 +222,7 @@ Source: `src/i18n/translations.ts:844-861`; CONTEXT.md § Specific Ideas.
 | Alert | Route | Param | Param value | Target filter field |
 |-------|-------|-------|-------------|---------------------|
 | Therapy breakers | `/quality` | `therapy` | `breaker` | `filterTherapy` in QualityPage state |
-| Implausible CRT | `/quality` | `status` | `in_progress` | `filterStatus` in QualityPage state |
+| Implausible CRT | `/quality` | `status` | `flagged` | `filterStatus` in QualityPage state |
 
 These values are locked (CONTEXT.md D-03, D-04, D-05). The planner must implement `useSearchParams` read on QualityPage mount for both params.
 
