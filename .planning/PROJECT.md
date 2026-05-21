@@ -145,10 +145,12 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 ## Current State
 
-**In Progress:** Milestone v1.10 — Session Hardening & UX Closure
+**Latest (complete):** Milestone v1.10 — Session Hardening & UX Closure
 - Phase 27 complete (2026-05-11): `server/sessionsDb.ts` (SQLite WAL, jti-keyed rows), jti rotation in /refresh, RFC 6819 family revocation, dual-key signing window, `/api/auth/rotate-key` admin endpoint (SESS-02/03/04); 702/702 tests green
 - Phase 29 complete (2026-05-21): home-panel UX closure — "Attention needed" Review buttons deep-link to pre-filtered `/quality` (UX-01), per-username localStorage recent-activity store + `useRecentActivity` hook powering "Jump Back In" (UX-02), recents cleared on logout/login for real cross-user isolation (D-01); 754/754 tests green
 - Phase 30 complete (2026-05-21): terminology config docs cleanup — `docs/Konfiguration.md` `terminology.serverUrl` Default cell corrected to `—` (was misleadingly the Ontoserver URL; code default is undefined), URL relabelled as example placeholder; TERM-02 satisfied by the commented `config/settings.yaml` example block (TERM-01/TERM-02 complete); 754/754 tests green
+- Phase 31 complete (2026-05-21): subcohort support — `src/services/cohortNames.ts` (`parseSubcohortName`/`groupByParent`, name-only `ParentName:SubcohortName` convention, no new SavedSearch field), CohortBuilderPage inline validation + per-row Split action, CohortCompareDrawer tree picker (expanded-by-default, independent selection, max-4); KOH-003/KOH-004 (newly added to reqs); 783/783 tests green; code-review BLOCKER (drawer crash on empty-segment names) fixed + regression-tested; human UAT approved
+- **Milestone v1.10 — Session Hardening & UX Closure: COMPLETE (2026-05-21)** — all 5 phases (27 stateful sessions, 28 admin session UI, 29 home-panel UX, 30 terminology docs, 31 subcohorts) shipped; ready for `/gsd-complete-milestone`
 
 **Shipped:** Milestone v1.9.5 — Synthetic Data Realism (2026-05-01)
 - Phase 26 complete: terminology seed extended (5 codes), disease-conditional comorbidities, HbA1c + age-disease coupling, AMD/DME/RVO template differentiation, 4 synthetic bundles regenerated, verify-bundle-distributions.mjs wired into test:ci
@@ -300,4 +302,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-21 — after Phase 30 (Terminology Configuration Docs cleanup) completion in milestone v1.10.*
+*Last updated: 2026-05-21 — Milestone v1.10 complete (Phases 27-31, ending with Phase 31 Subcohort Support).*
