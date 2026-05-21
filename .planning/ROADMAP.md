@@ -114,22 +114,52 @@ Plans:
 
 ### Phase 29: Home Panel UX
 **Goal**: Users can act on home-panel alerts and return to recent work with a single click
-**Depends on**: Nothing (independent UI wiring; no new backend required)
+**Depends on**: Nothing (no new backend; UX-02 introduces new *client-side* recent-activity state)
 **Requirements**: UX-01, UX-02
+**Scope note** (from adversarial review 2026-05-21): UX-02 is NOT mere "UI wiring" — no
+recent-activity / last-visited tracking exists anywhere (`LandingPage.tsx:238` is an explicit
+empty state). It must be built from scratch: a discovery/spec step, then client-side
+recent-activity infrastructure, then UI wiring. UX-01's "Attention needed" alerts are static
+hardcoded strings (`translations.ts:851-859`), not data-driven flagged-case lists — so the
+Review buttons route to a pre-filtered review *area*, not a specific case. Deep-linking needs
+new route/query contracts (`QualityPage`/`DocQualityPage` hold case selection in internal
+state only).
 **Success Criteria** (what must be TRUE):
-  1. Each "Review" button in the "Attention needed" panel navigates the user directly to the relevant case or review target — no dead-end buttons or console errors
-  2. Each arrow in the "Jump Back In" panel routes to the last-visited view for that patient/case — navigating to a patient with no prior visit shows an appropriate empty state rather than an error
-**Plans**: TBD
+  1. Each "Review" button in the "Attention needed" panel routes to the appropriate pre-filtered
+     review area via a defined query contract: the therapy-breaker alert opens the cohort/quality
+     view filtered to cases with a gap > `therapyBreakerDays`; the implausible-CRT alert opens the
+     doc-quality view scoped to flagged cases. No dead-end buttons or console errors.
+  2. A client-side recent-activity store records the last-visited view per patient/case (route +
+     any view params needed to restore the view), persisted across reloads (localStorage), scoped
+     to the signed-in session.
+  3. The "Jump Back In" panel renders a row per recent item (most-recent first); each row's arrow
+     routes to that item's recorded view. With no recorded activity the panel shows the existing
+     empty state (`jumpBackInEmpty`) rather than an error.
+**Plans**: 4 plans (3 waves)
+Plans:
+- [ ] 29-01-PLAN.md — Wave 0: 4 test scaffolds + reviewTherapyBreakers/reviewFlaggedCases i18n keys [UX-01, UX-02]
+- [ ] 29-02-PLAN.md — recentActivityStore (per-username localStorage CRUD) + useRecentActivity hook [UX-02]
+- [ ] 29-03-PLAN.md — QualityPage useSearchParams deep-link seeding (?therapy/?status, flagged→in_progress) [UX-01]
+- [ ] 29-04-PLAN.md — LandingPage Review-button targets + Jump Back In rows + recording triggers + clear-on-logout [UX-01, UX-02]
 **UI hint**: yes
 
-### Phase 30: Terminology Configuration Docs
+### Phase 30: Terminology Configuration Docs — CLEANUP ONLY
 **Goal**: Any operator can configure the terminology service by reading the shipped settings file and its documentation — no source-code archaeology required
 **Depends on**: Nothing (documentation only)
-**Requirements**: TERM-01, TERM-02
+**Requirements**: TERM-01 (already satisfied in Phase 25), TERM-02 (reworded)
+**Scope note** (from adversarial review 2026-05-21): TERM-01 is effectively DONE — `docs/Konfiguration.md:56-99`
+already documents all three keys (full YAML example, parameter table, dedicated "Terminologie-Server"
+section with disabled-behavior notes). The `terminology` block already exists in `config/settings.yaml`
+but is intentionally commented out (D-16/D-17: omit to preserve offline behavior). Phase 30 is reduced
+to two small cleanup tasks; no new documentation section is needed.
 **Success Criteria** (what must be TRUE):
-  1. `config/settings.yaml` contains a `terminology` block with `enabled`, `serverUrl`, and `cacheTtlMs` keys, each with an inline comment explaining its purpose and default value
-  2. `docs/Konfiguration.md` has a "Terminology Service" section documenting all three keys with valid value examples and the behavior when the service is disabled
-**Plans**: TBD
+  1. The `docs/Konfiguration.md` parameter table no longer presents the Ontoserver URL as the runtime
+     *default* for `terminology.serverUrl` — it is labelled an example placeholder, consistent with the
+     code default of empty/undefined (`server/terminologyApi.ts:52-63`) and the existing "Minimal vs. voll" note.
+  2. TERM-02 is satisfied by the commented-out example block in `config/settings.yaml` with inline
+     comments (kept commented to preserve the D-16/D-17 offline-by-default design); the requirement
+     wording reflects "commented example" rather than an active block.
+**Plans**: TBD — single small doc/config plan.
 
 ### Phase 31: Subcohort Support
 **Goal**: Users can split any saved cohort into named subcohorts (one level deep) using a `ParentName:SubcohortName` naming convention; subcohorts appear in a tree-grouped picker wherever cohorts are selectable for comparison
@@ -157,10 +187,10 @@ Plans:
 |-------|----------------|--------|-----------|
 | 27. Stateful Session Backend | 4/4 | Complete | 2026-05-11 |
 | 28. Admin Session Control UI | 4/4 | Complete   | 2026-05-14 |
-| 29. Home Panel UX | 0/? | Not started | - |
+| 29. Home Panel UX | 0/4 | Not started | - |
 | 30. Terminology Configuration Docs | 0/? | Not started | - |
 | 31. Subcohort Support | 0/? | Not started | - |
 
 ---
 
-*Last updated: 2026-05-14 — Phase 28 complete (Admin Session Control UI).*
+*Last updated: 2026-05-21 — adversarial review (Claude + Codex) re-scoped Phases 29 & 30: UX-02 needs new recent-activity infrastructure (not "UI wiring"); UX-01 reworded to "pre-filtered review area"; Phase 30 reduced to cleanup (TERM-01 already done in Phase 25, TERM-02 reworded to "commented example").*
