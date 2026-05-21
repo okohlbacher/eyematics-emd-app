@@ -537,22 +537,25 @@ Existing component tests (e.g. `OutcomesViewRouting.test.tsx`) mock `useData` an
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`?status=flagged` mapping choice**
    - What we know: `QualityStatus` has no `'flagged'` value; cases with open flags are `'in_progress'`
    - What's unclear: Should the URL param vocabulary stay as `'flagged'` (user-facing intent) mapped to `'in_progress'` internally? Or should `'flagged'` be added to `QualityStatus`?
    - Recommendation: Map to `'in_progress'` (Option 1). Simpler, fewer files touched, semantically correct.
+   - **RESOLVED:** Map `?status=flagged` to `filterStatus='in_progress'` (Option 1). Implemented in Plan 29-03; the `QualityStatus` type is left unchanged.
 
 2. **QualityPage recording trigger — mount vs case-selected**
    - What we know: UI-SPEC says "record on mount of QualityPage (case detail selected)"
    - What's unclear: The UI-SPEC phrase "case detail selected" could mean "only when a case is actually selected" OR "the page where case detail is shown"
    - Recommendation: Record when `setSelectedCase` is called with a non-null case, via `useEffect` on `selectedCase`. This avoids recording `/quality` visits that end without any case interaction.
+   - **RESOLVED:** Record when `selectedCase` is set (non-null) via `useEffect([selectedCase])`. Implemented in Plan 29-04 Task 2.
 
 3. **`aria-label` i18n keys for Review buttons**
    - What we know: UI-SPEC specifies `aria-label={t('reviewTherapyBreakers')}` and `aria-label={t('reviewFlaggedCases')}`
    - What's unclear: These keys do NOT currently exist in `translations.ts` (the file ends at line 885 with session-TTL keys)
    - Recommendation: Add both keys in the Wave 0 / i18n task. Check `translations.ts` carefully — `attentionTherapyBreakers` exists (line 851) but `reviewTherapyBreakers` and `reviewFlaggedCases` do not. The planner must include a translations task.
+   - **RESOLVED:** `reviewTherapyBreakers` + `reviewFlaggedCases` keys (DE+EN) added in Wave 0, Plan 29-01 Task 1.
 
 ---
 
