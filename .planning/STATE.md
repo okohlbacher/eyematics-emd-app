@@ -24,10 +24,17 @@ See: .planning/PROJECT.md (updated 2026-05-21 after v1.10)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Not started (defining requirements — PAUSED)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-21 — Milestone v1.11 started
+Status: Requirements drafted (VVBACK-01..05), NOT committed; roadmap not yet created
+Last activity: 2026-05-21 — Milestone v1.11 started; paused before roadmap
+
+**Resume note (paused 2026-05-21):** PROJECT.md + STATE.md committed (`56d882b`).
+`.planning/REQUIREMENTS.md` is a draft on disk (uncommitted) with VVBACK-01..05.
+Before building the roadmap, fold in a few issues from the last major UAT (to be
+pulled in 2026-05-22), then commit requirements and spawn the roadmapper.
+Phase numbering continues at 32. `phases.clear` was intentionally NOT run — v1.11
+deliverables live inside the in-tree phase dirs `.planning/phases/27..31/`.
 
 ## Milestones Shipped
 
@@ -83,4 +90,5 @@ Acknowledged and accepted as tech debt at v1.10 milestone close on 2026-05-21:
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- (2026-05-22) Pull in the few outstanding issues from the last major UAT and add them as requirements to `.planning/REQUIREMENTS.md`
+- Commit requirements, then create the v1.11 roadmap (continues at Phase 32)
