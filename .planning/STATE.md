@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.11
-milestone_name: UAT Fixes, Data Completeness & Quality Closure
-status: active
-last_updated: "2026-05-21T16:00:00.000Z"
-last_activity: 2026-05-21
+milestone_name: — UAT Fixes, Data Completeness & Quality Closure
+status: planning
+last_updated: "2026-05-21T18:19:47.267Z"
+last_activity: 2026-05-21 — Roadmap created for v1.11 (Phases 32–36)
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 2
+  completed_plans: 1
+  percent: 10
 ---
 
 # Project State
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-05-21 after v1.10)
 
 ## Current Position
 
-Phase: 32 — User Management & Auth Hardening (not started)
-Plan: —
-Status: Roadmap created; ready to plan Phase 32
-Last activity: 2026-05-21 — Roadmap created for v1.11 (Phases 32–36)
+Phase: 32 — User Management & Auth Hardening
+Plan: 32-01 complete; 32-02 next
+Status: Plan 32-01 executed (UMGMT-01/02/03 satisfied)
+Last activity: 2026-05-21 — Executed 32-01: user activation lifecycle + dialog hardening
 
-**Progress:** `[ ][ ][ ][ ][ ]` 0/5 phases complete
+**Progress:** `[░][ ][ ][ ][ ]` 1/2 plans in Phase 32; 0/5 phases complete
 
 ## Milestones Shipped
 
@@ -51,6 +51,9 @@ Last activity: 2026-05-21 — Roadmap created for v1.11 (Phases 32–36)
 
 ### Decisions (authoritative)
 
+- Inactive user gate: `user.active === false` → generic 401 `{ error: 'Invalid credentials' }` at both POST /login and POST /verify (T-02-05 non-enumeration preserved).
+- Session revocation on deactivation: `revokeByUsername(target)` called after write commits, in try/catch (sessionsDb-uninit safe, PROT-001 parity).
+- `editActive` seeded from `user.active !== false` in `startEdit` (absent active field means active — migration-safe).
 - All `jwt.verify()` call sites route through `server/jwtUtil.ts` with HS256 hard pin; ESLint `no-restricted-imports` enforces.
 - AuditPage uses useReducer state machine; `describeAction` lives at `src/pages/audit/auditFormatters.ts`.
 - Refresh storage: httpOnly `Secure` `SameSite=Strict` cookie scoped to `/api/auth/refresh`.
