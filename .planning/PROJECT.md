@@ -1,12 +1,22 @@
 # EMD Backend Redesign
 
-## Status: Between Milestones (v1.10 shipped 2026-05-21)
+## Status: In Milestone v1.11 — Verification & Validation Backfill (started 2026-05-21)
 
-**Latest milestone:** v1.10 — Session Hardening & UX Closure (Phases 27–31), shipped 2026-05-21. Closed all long-deferred session-management, home-panel UX, terminology-docs, and subcohort items.
-
-**Next milestone:** TBD via `/gsd-new-milestone`. Leading candidate: real Keycloak OIDC redirect flow (KEYCLK-01, blocked on a live Keycloak instance).
+**Latest shipped milestone:** v1.10 — Session Hardening & UX Closure (Phases 27–31), shipped 2026-05-21. Closed all long-deferred session-management, home-panel UX, terminology-docs, and subcohort items.
 
 **Next phase number:** 32 (continues v1.10's Phase 31).
+
+## Current Milestone: v1.11 Verification & Validation Backfill
+
+**Goal:** Close the accepted v1.10 tech debt by producing the missing verification and Nyquist-validation paper trail — no new features, no behavior changes.
+
+**Target work:**
+- Backfill `VERIFICATION.md` for Phase 27 (stateful session backend) and Phase 28 (admin session UI) via goal-backward analysis against shipped code
+- Bring Nyquist `VALIDATION.md` to `nyquist_compliant: true` / `wave_0_complete: true` for Phases 27, 28, 29 (generating/verifying test coverage where gaps exist)
+- Resolve Phase 31's cosmetic `wave_0_complete: false`; flip all `status: draft` → final
+- Test suite stays green throughout (783/783 baseline)
+
+**Out of scope:** KEYCLK-01 (Keycloak OIDC) stays in backlog; no new product features.
 
 ## What This Is
 
@@ -136,7 +146,14 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] Terminology `serverUrl` default-vs-placeholder docs fix + commented settings.yaml example (TERM-01/02, was TERM-04) — v1.10 (Phase 30)
 - [x] Subcohort support: `ParentName:Sub` convention, validation, tree-grouped compare picker (KOH-003/004) — v1.10 (Phase 31)
 
-### Active (next-milestone candidates)
+### Active (v1.11 — Verification & Validation Backfill)
+
+- [ ] VERIFICATION.md backfilled for Phase 27 (stateful session backend) via goal-backward analysis (VVBACK-01)
+- [ ] VERIFICATION.md backfilled for Phase 28 (admin session control UI) via goal-backward analysis (VVBACK-02)
+- [ ] Nyquist VALIDATION.md brought to compliant/complete for Phases 27, 28, 29 (VVBACK-03)
+- [ ] Phase 31 VALIDATION `wave_0_complete` resolved; all v1.10 VALIDATION `status: draft` flipped to final (VVBACK-04)
+
+### Backlog (deferred — not in v1.11)
 
 - [ ] Real Keycloak OIDC redirect flow (KEYCLK-01) — blocked at initAuth until the redirect flow ships (M7); needs a live Keycloak instance
 
@@ -305,4 +322,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-21 after v1.10 milestone — full evolution review (requirements migrated to Validated in v1.10, Active reset to KEYCLK-01, Out-of-Scope sub-cohort line corrected, Context + Key Decisions updated).*
+*Last updated: 2026-05-21 — started milestone v1.11 (Verification & Validation Backfill). Active reset to VVBACK-01..04 tech-debt requirements; KEYCLK-01 moved to Backlog.*
