@@ -17,8 +17,8 @@ vi.stubGlobal('localStorage', {
   clear: () => { for (const k of Object.keys(store)) delete store[k]; },
 });
 
-import { clearAll, clear, getEntries, record } from '../src/services/recentActivityStore';
 import type { RecentActivityEntry } from '../src/services/recentActivityStore';
+import { clear, clearAll, getEntries, record } from '../src/services/recentActivityStore';
 
 const makeEntry = (id: string, overrides?: Partial<RecentActivityEntry>): RecentActivityEntry => ({
   id,
