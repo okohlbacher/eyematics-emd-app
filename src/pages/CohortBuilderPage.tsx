@@ -5,6 +5,7 @@ import {
   ChevronUp,
   Download,
   Filter,
+  GitBranch,
   LayoutList,
   LineChart,
   Play,
@@ -13,11 +14,12 @@ import {
   Table2,
   Trash2,
 } from 'lucide-react';
-import { useMemo,useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import { isDuplicateName, parseSubcohortName } from '../services/cohortNames';
 import {
   applyFilters,
   getAge,
@@ -61,6 +63,80 @@ export default function CohortBuilderPage() {
 
   const [savedSort, setSavedSort] = useState<SortField>('date');
 
+  // Ref to the save-name input for cursor placement (Pitfall 5, D-03)
+  const saveNameInputRef = useRef<HTMLInputElement>(null);
+  // Track whether a Split pre-fill just occurred, so useEffect can place the cursor correctly
+  const splitPreFillRef = useRef(false);
+
+  // Effect: after saveName changes from a Split button click, place cursor at end
+  useEffect(() => {
+    if (splitPreFillRef.current && saveNameInputRef.current) {
+      const len = saveName.length;
+      saveNameInputRef.current.setSelectionRange(len, len);
+      splitPreFillRef.current = false;
+    }
+  }, [saveName]);
+
+  // -------------------------------------------------------------------------
+  // Live validation (runs on every saveName change — consistent with existing
+  // disabled={!saveName.trim()} pattern; no blur required)
+  // -------------------------------------------------------------------------
+  const { hasHardError, isHardError, validationMsg } = (() => {
+    const trimmed = saveName.trim();
+    if (!trimmed) return { hasHardError: false, isHardError: false, validationMsg: '' };
+
+    const colonCount = trimmed.split(':').length - 1;
+
+    // Hard error: 2+ colons
+    if (colonCount >= 2) {
+      return { hasHardError: true, isHardError: true, validationMsg: t('cohortNameTooManyColons') };
+    }
+
+    // Hard errors for empty segments when exactly one colon
+    if (colonCount === 1) {
+      // Check empty segments via parseSubcohortName (throws for invalid)
+      let parent: string;
+      try {
+        ({ parent } = parseSubcohortName(trimmed));
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : '';
+        if (msg.includes('parent segment')) {
+          return { hasHardError: true, isHardError: true, validationMsg: t('cohortNameEmptyParent') };
+        }
+        if (msg.includes('sub segment')) {
+          return { hasHardError: true, isHardError: true, validationMsg: t('cohortNameEmptySub') };
+        }
+        return { hasHardError: true, isHardError: true, validationMsg: t('cohortNameTooManyColons') };
+      }
+
+      // Duplicate check before orphan (D-04)
+      if (isDuplicateName(trimmed, savedSearches.map((s) => s.name))) {
+        return { hasHardError: true, isHardError: true, validationMsg: t('cohortNameDuplicate') };
+      }
+
+      // Soft orphan warning — parent name exists as subcohort with no matching parent cohort
+      const parentExists = savedSearches.some(
+        (s) => s.name.trim().toLowerCase() === parent.toLowerCase(),
+      );
+      if (!parentExists) {
+        return {
+          hasHardError: false,
+          isHardError: false,
+          validationMsg: t('cohortNameOrphanWarning'),
+        };
+      }
+
+      return { hasHardError: false, isHardError: false, validationMsg: '' };
+    }
+
+    // No colon (plain name) — duplicate check
+    if (isDuplicateName(trimmed, savedSearches.map((s) => s.name))) {
+      return { hasHardError: true, isHardError: true, validationMsg: t('cohortNameDuplicate') };
+    }
+
+    return { hasHardError: false, isHardError: false, validationMsg: '' };
+  })();
+
   // Text state for visus inputs (allows typing decimals with comma or dot)
   const [visusMinText, setVisusMinText] = useState('');
   const [visusMaxText, setVisusMaxText] = useState('');
@@ -88,6 +164,7 @@ export default function CohortBuilderPage() {
 
   const handleSave = () => {
     if (!saveName.trim()) return;
+    if (hasHardError) return; // defense in depth — button is already disabled on hard error
     const s: SavedSearch = {
       id: crypto.randomUUID(),
       name: saveName.trim(),
@@ -203,6 +280,22 @@ export default function CohortBuilderPage() {
                   </p>
                 </div>
                 <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      splitPreFillRef.current = true;
+                      setSaveName(`${s.name.trim()}:`);
+                      if (typeof saveNameInputRef.current?.scrollIntoView === 'function') {
+                        saveNameInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                      }
+                      saveNameInputRef.current?.focus();
+                    }}
+                    className="p-1.5 text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
+                    title={t('cohortSplitIntoSubcohort')}
+                    aria-label={t('cohortSplitIntoSubcohort')}
+                  >
+                    <GitBranch className="w-4 h-4" />
+                  </button>
                   <button
                     type="button"
                     onClick={() => navigate(`/analysis?tab=trajectories&cohort=${encodeURIComponent(s.id)}`)}
@@ -477,21 +570,38 @@ export default function CohortBuilderPage() {
               </p>
               <div className="flex gap-2">
                 <input
+                  id="cohort-name-input"
+                  ref={saveNameInputRef}
                   type="text"
                   placeholder={t('searchNamePlaceholder')}
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
+                  aria-invalid={hasHardError ? 'true' : 'false'}
+                  aria-describedby={validationMsg ? 'cohort-name-validation' : undefined}
                   className="flex-1 px-3 py-2 border rounded-lg text-sm text-left text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
                 <button
                   onClick={handleSave}
-                  disabled={!saveName.trim()}
+                  disabled={hasHardError || !saveName.trim()}
                   className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
                 >
                   <Save className="w-3.5 h-3.5" />
-                  {t('save')}
+                  {t('cohortSaveSearch')}
                 </button>
               </div>
+              {validationMsg && (
+                <p
+                  id="cohort-name-validation"
+                  role={isHardError ? 'alert' : 'status'}
+                  className={`mt-1 text-xs px-2 py-1 rounded border ${
+                    isHardError
+                      ? 'bg-red-50 border-red-200 text-red-600 dark:bg-[--color-coral-soft] dark:border-[--color-coral] dark:text-[--color-coral-ink]'
+                      : 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-[--color-amber-soft] dark:border-[--color-amber] dark:text-[--color-amber-ink]'
+                  }`}
+                >
+                  {validationMsg}
+                </p>
+              )}
             </div>
           </div>
         </div>
