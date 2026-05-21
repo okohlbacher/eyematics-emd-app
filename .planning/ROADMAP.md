@@ -75,7 +75,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 - [x] **Phase 27: Stateful Session Backend** — Server-side refresh-sessions table, OAuth2-style token rotation, and signing-key rotation
 - [x] **Phase 28: Admin Session Control UI** — Force sign-out, per-device session listing + individual revocation, TTL configuration UI (completed 2026-05-14)
 - [x] **Phase 29: Home Panel UX** — Wire "Attention needed" Review buttons and "Jump Back In" panel routing (completed 2026-05-21)
-- [ ] **Phase 30: Terminology Configuration Docs** — Document terminology settings keys in settings.yaml and Konfiguration.md
+- [x] **Phase 30: Terminology Configuration Docs** — Document terminology settings keys in settings.yaml and Konfiguration.md (completed 2026-05-21)
 - [ ] **Phase 31: Subcohort Support** — Colon-namespaced subcohorts, tree-view picker in comparison drawer, subcohort split UI in cohort builder
 
 ## Phase Details
@@ -164,7 +164,7 @@ to two small cleanup tasks; no new documentation section is needed.
      wording reflects "commented example" rather than an active block.
 **Plans**: 1 plan (1 wave)
 Plans:
-- [ ] 30-01-PLAN.md — Fix terminology.serverUrl Default-cell wording in Konfiguration.md, verify commented settings.yaml block, tick TERM-02 in REQUIREMENTS.md [TERM-01, TERM-02]
+- [x] 30-01-PLAN.md — Fix terminology.serverUrl Default-cell wording in Konfiguration.md, verify commented settings.yaml block, tick TERM-02 in REQUIREMENTS.md [TERM-01, TERM-02]
 
 ### Phase 31: Subcohort Support
 **Goal**: Users can split any saved cohort into named subcohorts (one level deep) using a `ParentName:SubcohortName` naming convention; subcohorts appear in a tree-grouped picker wherever cohorts are selectable for comparison
@@ -193,7 +193,7 @@ Plans:
 | 27. Stateful Session Backend | 4/4 | Complete | 2026-05-11 |
 | 28. Admin Session Control UI | 4/4 | Complete   | 2026-05-14 |
 | 29. Home Panel UX | 4/4 | Complete    | 2026-05-21 |
-| 30. Terminology Configuration Docs | 0/1 | Not started | - |
+| 30. Terminology Configuration Docs | 1/1 | Complete   | 2026-05-21 |
 | 31. Subcohort Support | 0/? | Not started | - |
 
 ---
