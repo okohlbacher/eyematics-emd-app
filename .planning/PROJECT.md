@@ -1,22 +1,24 @@
 # EMD Backend Redesign
 
-## Status: In Milestone v1.11 — Verification & Validation Backfill (started 2026-05-21)
+## Status: In Milestone v1.11 — Subcohort Enhancements & Quality Closure (started 2026-05-21, scope expanding)
 
 **Latest shipped milestone:** v1.10 — Session Hardening & UX Closure (Phases 27–31), shipped 2026-05-21. Closed all long-deferred session-management, home-panel UX, terminology-docs, and subcohort items.
 
 **Next phase number:** 32 (continues v1.10's Phase 31).
 
-## Current Milestone: v1.11 Verification & Validation Backfill
+## Current Milestone: v1.11 Subcohort Enhancements & Quality Closure
 
-**Goal:** Close the accepted v1.10 tech debt by producing the missing verification and Nyquist-validation paper trail — no new features, no behavior changes.
+**Goal:** Deliver the subcohort feature addenda and outstanding UAT-driven feature requests, then close all open gaps and accepted tech debt — giving v1.11 a single comprehensive scope.
 
-**Target work:**
-- Backfill `VERIFICATION.md` for Phase 27 (stateful session backend) and Phase 28 (admin session UI) via goal-backward analysis against shipped code
-- Bring Nyquist `VALIDATION.md` to `nyquist_compliant: true` / `wave_0_complete: true` for Phases 27, 28, 29 (generating/verifying test coverage where gaps exist)
-- Resolve Phase 31's cosmetic `wave_0_complete: false`; flip all `status: draft` → final
-- Test suite stays green throughout (783/783 baseline)
+**Scope (three intake buckets — concrete requirements land after UAT issue triage, expected 2026-05-22):**
 
-**Out of scope:** KEYCLK-01 (Keycloak OIDC) stays in backlog; no new product features.
+1. **Subcohort enhancements & addenda** — feature requests and follow-ups to the v1.10 subcohort feature (Phase 31). To be itemized from the last major UAT.
+2. **UAT issues & open gaps** — remaining issues from the last major UAT plus any open gaps surfaced across the codebase.
+3. **Tech-debt / V&V closure** — backfill `VERIFICATION.md` for Phases 27 & 28; bring Nyquist `VALIDATION.md` to `nyquist_compliant: true` / `wave_0_complete: true` for Phases 27, 28, 29; resolve Phase 31's cosmetic `wave_0_complete: false`; flip all v1.10 `VALIDATION.md` `status: draft` → final (VVBACK-01..05).
+
+Test suite stays green throughout (783/783 baseline).
+
+**Out of scope:** KEYCLK-01 (Keycloak OIDC) stays in backlog — needs a live Keycloak instance.
 
 ## What This Is
 
@@ -146,12 +148,16 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] Terminology `serverUrl` default-vs-placeholder docs fix + commented settings.yaml example (TERM-01/02, was TERM-04) — v1.10 (Phase 30)
 - [x] Subcohort support: `ParentName:Sub` convention, validation, tree-grouped compare picker (KOH-003/004) — v1.10 (Phase 31)
 
-### Active (v1.11 — Verification & Validation Backfill)
+### Active (v1.11 — Subcohort Enhancements & Quality Closure)
 
+**Subcohort enhancements & UAT issues / open gaps** — _pending intake; to be itemized from the last major UAT (expected 2026-05-22), then assigned REQ-IDs._
+
+**Tech-debt / V&V closure:**
 - [ ] VERIFICATION.md backfilled for Phase 27 (stateful session backend) via goal-backward analysis (VVBACK-01)
 - [ ] VERIFICATION.md backfilled for Phase 28 (admin session control UI) via goal-backward analysis (VVBACK-02)
 - [ ] Nyquist VALIDATION.md brought to compliant/complete for Phases 27, 28, 29 (VVBACK-03)
 - [ ] Phase 31 VALIDATION `wave_0_complete` resolved; all v1.10 VALIDATION `status: draft` flipped to final (VVBACK-04)
+- [ ] Final `test:ci` green + deferred-debt entries updated to reflect closure (VVBACK-05)
 
 ### Backlog (deferred — not in v1.11)
 
@@ -322,4 +328,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-21 — started milestone v1.11 (Verification & Validation Backfill). Active reset to VVBACK-01..04 tech-debt requirements; KEYCLK-01 moved to Backlog.*
+*Last updated: 2026-05-21 — started milestone v1.11 (Subcohort Enhancements & Quality Closure), scope expanded beyond pure tech-debt to include subcohort feature addenda + UAT issues/open gaps + V&V closure (VVBACK-01..05). Feature requirements pending UAT triage on 2026-05-22; KEYCLK-01 in Backlog.*

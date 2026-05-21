@@ -1,7 +1,7 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.11
-milestone_name: Verification & Validation Backfill
+milestone_name: Subcohort Enhancements & Quality Closure
 status: planning
 last_updated: "2026-05-21T15:02:21.789Z"
 last_activity: 2026-05-21
@@ -29,12 +29,15 @@ Plan: —
 Status: Requirements drafted (VVBACK-01..05), NOT committed; roadmap not yet created
 Last activity: 2026-05-21 — Milestone v1.11 started; paused before roadmap
 
-**Resume note (paused 2026-05-21):** PROJECT.md + STATE.md committed (`56d882b`).
-`.planning/REQUIREMENTS.md` is a draft on disk (uncommitted) with VVBACK-01..05.
-Before building the roadmap, fold in a few issues from the last major UAT (to be
-pulled in 2026-05-22), then commit requirements and spawn the roadmapper.
-Phase numbering continues at 32. `phases.clear` was intentionally NOT run — v1.11
-deliverables live inside the in-tree phase dirs `.planning/phases/27..31/`.
+**Resume note (paused 2026-05-21):** Scope expanded — v1.11 now covers (1) subcohort
+feature addenda, (2) UAT issues / open gaps, (3) tech-debt / V&V closure (VVBACK-01..05).
+`.planning/REQUIREMENTS.md` is a draft on disk (uncommitted): VVBACK-* are firm; the
+Subcohort Enhancements and UAT Issues / Open Gaps categories are placeholders awaiting
+intake. Tomorrow (2026-05-22): take the last-major-UAT issue list, itemize subcohort
+addenda (`SUBCO-*`) + UAT issues/gaps into requirements, then commit REQUIREMENTS.md and
+spawn the roadmapper. Phase numbering continues at 32. `phases.clear` was intentionally
+NOT run — the V&V backfill deliverables live inside the in-tree phase dirs
+`.planning/phases/27..31/`.
 
 ## Milestones Shipped
 
@@ -90,5 +93,5 @@ Acknowledged and accepted as tech debt at v1.10 milestone close on 2026-05-21:
 
 ## Operator Next Steps
 
-- (2026-05-22) Pull in the few outstanding issues from the last major UAT and add them as requirements to `.planning/REQUIREMENTS.md`
+- (2026-05-22) Triage the last-major-UAT issue list; itemize subcohort addenda (`SUBCO-*`) + UAT issues/open gaps into `.planning/REQUIREMENTS.md` alongside the firm VVBACK-* tech-debt reqs
 - Commit requirements, then create the v1.11 roadmap (continues at Phase 32)
