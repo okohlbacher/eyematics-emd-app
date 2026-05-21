@@ -3,6 +3,7 @@ import { createContext, type ReactNode,useCallback, useContext, useEffect, useMe
 import { broadcastLogout, serverLogout } from '../services/authHeaders';
 import { invalidateBundleCache } from '../services/fhirLoader';
 import * as recentActivityStore from '../services/recentActivityStore';
+import * as settingsService from '../services/settingsService';
 
 /**
  * Roles from the Lastenheft stakeholder analysis (K10 N10.01):
@@ -38,6 +39,8 @@ interface AuthContextType {
   login: (username: string, password: string, otp?: string, challengeToken?: string) => Promise<LoginResult>;
   logout: () => void;
   inactivityWarning: boolean;
+  /** Live countdown in seconds; only meaningful when inactivityWarning is true (AUTHCFG-02). */
+  inactivitySecondsRemaining: number;
   /** Check if current user has a given role or is in a role list */
   hasRole: (roles: UserRole[]) => boolean;
   /** JWT token for API calls */
@@ -46,9 +49,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Exported for v1.9 Phase 21 UAT-AUTO-04 test-hook (constant import, not magic number).
-export const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
-const WARNING_BEFORE = 60 * 1000; // warn 1 minute before
+// Exported defaults — used as safe fallbacks when loadSettings() rejects (T-32-09).
+// The active timer values are sourced from settings at mount time; these are the fallbacks only.
+export const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes (safe default)
+export const WARNING_BEFORE = 3 * 60 * 1000;       // 3 minutes (AUTHCFG-02)
 
 /**
  * Decode a JWT payload without cryptographic verification.
@@ -99,8 +103,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
   const [displayName, setDisplayName] = useState('');
   const [inactivityWarning, setInactivityWarning] = useState(false);
+  /** Live seconds remaining in the inactivity warning window (AUTHCFG-02). */
+  const [inactivitySecondsRemaining, setInactivitySecondsRemaining] = useState(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const warningRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const warningEndsAtRef = useRef<number>(0);
+  /** Effective timer values sourced from settings (with safe-default fallback). */
+  const inactivityTimeoutMsRef = useRef<number>(INACTIVITY_TIMEOUT);
+  const warningBeforeMsRef = useRef<number>(WARNING_BEFORE);
 
   useEffect(() => {
     if (!user || !token) {
@@ -155,18 +166,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetInactivityTimer = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     if (warningRef.current) clearTimeout(warningRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
     setInactivityWarning(false);
+    setInactivitySecondsRemaining(0);
 
     if (!user) return;
 
+    const timeoutMs = inactivityTimeoutMsRef.current;
+    const warningMs = warningBeforeMsRef.current;
+
     warningRef.current = setTimeout(() => {
       setInactivityWarning(true);
-    }, INACTIVITY_TIMEOUT - WARNING_BEFORE);
+      // Start the live countdown when the warning fires (AUTHCFG-02)
+      warningEndsAtRef.current = Date.now() + warningMs;
+      setInactivitySecondsRemaining(Math.ceil(warningMs / 1000));
+      countdownRef.current = setInterval(() => {
+        const remaining = Math.max(0, Math.ceil((warningEndsAtRef.current - Date.now()) / 1000));
+        setInactivitySecondsRemaining(remaining);
+        if (remaining <= 0 && countdownRef.current) {
+          clearInterval(countdownRef.current);
+          countdownRef.current = null;
+        }
+      }, 1000);
+    }, timeoutMs - warningMs);
 
     timerRef.current = setTimeout(() => {
       performLogout(true);
-    }, INACTIVITY_TIMEOUT);
+    }, timeoutMs);
   }, [user, performLogout]);
+
+  // AUTHCFG-03: load inactivity timer values from settings before starting the timer.
+  // Falls back to safe defaults (INACTIVITY_TIMEOUT / WARNING_BEFORE) if loadSettings()
+  // rejects — the timer never disables itself on failure (T-32-09).
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await settingsService.loadSettings();
+        if (cancelled) return;
+        inactivityTimeoutMsRef.current = s.auth?.inactivityTimeoutMs ?? INACTIVITY_TIMEOUT;
+        warningBeforeMsRef.current = s.auth?.warningBeforeMs ?? WARNING_BEFORE;
+      } catch {
+        // Safe-default fallback — use the exported constants (T-32-09)
+        inactivityTimeoutMsRef.current = INACTIVITY_TIMEOUT;
+        warningBeforeMsRef.current = WARNING_BEFORE;
+      }
+      if (!cancelled) {
+        resetInactivityTimer();
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // Set up activity listeners (EMDREQ-USM-008)
   useEffect(() => {
@@ -176,12 +228,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handler = () => resetInactivityTimer();
 
     events.forEach((e) => window.addEventListener(e, handler, { passive: true }));
-    resetInactivityTimer();
+    // Note: initial timer start is handled by the settings-load effect above
 
     return () => {
       events.forEach((e) => window.removeEventListener(e, handler));
       if (timerRef.current) clearTimeout(timerRef.current);
       if (warningRef.current) clearTimeout(warningRef.current);
+      if (countdownRef.current) clearInterval(countdownRef.current);
     };
   }, [user, resetInactivityTimer]);
 
@@ -274,8 +327,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const value = useMemo<AuthContextType>(() => ({
-    user, displayName, login, logout, inactivityWarning, hasRole, token,
-  }), [user, displayName, login, logout, inactivityWarning, hasRole, token]);
+    user, displayName, login, logout, inactivityWarning, inactivitySecondsRemaining, hasRole, token,
+  }), [user, displayName, login, logout, inactivityWarning, inactivitySecondsRemaining, hasRole, token]);
 
   return (
     <AuthContext.Provider value={value}>

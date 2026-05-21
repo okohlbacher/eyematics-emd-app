@@ -14,11 +14,11 @@ import type { Request, Response } from 'express';
 import { Router } from 'express';
 import yaml from 'js-yaml';
 
+import { resetLimiter } from './authApi.js';
 import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
 import { SETTINGS_FILE } from './constants.js';
 import { invalidateFhirCache } from './fhirApi.js';
 import { initHashCohortId } from './hashCohortId.js';
-import { resetLimiter } from './authApi.js';
 import { updateAuthConfig } from './initAuth.js';
 import { initOutcomesAggregateCache, invalidateAllAggregates } from './outcomesAggregateCache.js';
 

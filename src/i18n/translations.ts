@@ -446,6 +446,21 @@ const translations = {
     de: 'Sie werden in Kürze wegen Inaktivität abgemeldet. Bewegen Sie die Maus, um angemeldet zu bleiben.',
     en: 'You will be logged out shortly due to inactivity. Move the mouse to stay logged in.',
   },
+  // AUTHCFG-02 — live countdown in the inactivity banner (seconds mm:ss)
+  inactivityCountdown: {
+    de: 'Automatische Abmeldung in {0}',
+    en: 'Auto-logout in {0}',
+  },
+  // AUTHCFG-01 — remaining login attempts after a bad-password failure
+  loginAttemptsRemaining: {
+    de: 'Noch {0} Versuch(e) übrig.',
+    en: '{0} attempt(s) remaining.',
+  },
+  // AUTHCFG-01 — live lockout countdown on login page
+  loginLockoutCountdown: {
+    de: 'Konto gesperrt. Bitte warten Sie {0}.',
+    en: 'Account locked. Please wait {0}.',
+  },
 
   // Audit action labels (translated for display)
   audit_action_login: { de: 'Anmeldung', en: 'Login' },

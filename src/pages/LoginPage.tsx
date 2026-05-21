@@ -1,5 +1,5 @@
 import { AlertCircle, Eye, EyeOff, Globe, Info } from 'lucide-react';
-import { useEffect,useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
@@ -12,9 +12,12 @@ export default function LoginPage() {
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
   const [error, setError] = useState('');
+  const [attemptsRemaining, setAttemptsRemaining] = useState<number | null>(null);
+  const [lockoutSecondsRemaining, setLockoutSecondsRemaining] = useState<number>(0);
   const [challengeToken, setChallengeToken] = useState('');
   const [provider, setProvider] = useState<'local' | 'keycloak'>('local');
   const [showKeycloakInfo, setShowKeycloakInfo] = useState(false);
+  const lockoutIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { locale, setLocale, t } = useLanguage();
@@ -34,12 +37,30 @@ export default function LoginPage() {
     return () => { cancelled = true; };
   }, []);
 
+  // Clean up lockout countdown interval on unmount or step change
+  useEffect(() => {
+    return () => {
+      if (lockoutIntervalRef.current) {
+        clearInterval(lockoutIntervalRef.current);
+        lockoutIntervalRef.current = null;
+      }
+    };
+  }, [step]);
+
   const handleCredentials = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
       setError(t('loginErrorEmpty'));
       return;
     }
+    // Clear prior lockout countdown
+    if (lockoutIntervalRef.current) {
+      clearInterval(lockoutIntervalRef.current);
+      lockoutIntervalRef.current = null;
+    }
+    setLockoutSecondsRemaining(0);
+    setAttemptsRemaining(null);
+
     const result = await login(username, password);
     if (result.ok) {
       navigate('/');
@@ -51,11 +72,32 @@ export default function LoginPage() {
       setStep('otp');
       setError('');
     } else if (result.error === 'account_locked') {
-      // F-10: server-side rate limiting is the sole enforcement
+      // F-10: server-side rate limiting is the sole enforcement.
+      // AUTHCFG-01: show live countdown from retryAfterMs.
+      const retryMs = result.retryAfterMs ?? 0;
+      const initialSecs = Math.ceil(retryMs / 1000);
+      setLockoutSecondsRemaining(initialSecs);
+      const lockoutEndsAt = Date.now() + retryMs;
+      lockoutIntervalRef.current = setInterval(() => {
+        const remaining = Math.max(0, Math.ceil((lockoutEndsAt - Date.now()) / 1000));
+        setLockoutSecondsRemaining(remaining);
+        if (remaining <= 0) {
+          clearInterval(lockoutIntervalRef.current!);
+          lockoutIntervalRef.current = null;
+          setLockoutSecondsRemaining(0);
+          setError(''); // re-enable the form
+        }
+      }, 1000);
       setError(t('loginErrorTooMany'));
     } else if (result.error === 'invalid_credentials') {
       // Generic message — do not distinguish user_not_found from wrong_password (prevents enumeration)
       setError(t('loginErrorWrongPassword'));
+      // AUTHCFG-01: show remaining attempts if the server provided them
+      if (typeof result.attemptsRemaining === 'number' && result.attemptsRemaining > 0) {
+        setAttemptsRemaining(result.attemptsRemaining);
+      } else {
+        setAttemptsRemaining(null);
+      }
     } else {
       setError(t('loginErrorFailed'));
     }
@@ -97,9 +139,21 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-sm text-red-700 dark:text-red-400">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            {error}
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex flex-col gap-1 text-sm text-red-700 dark:text-red-400">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              {error}
+            </div>
+            {attemptsRemaining !== null && attemptsRemaining > 0 && (
+              <div className="ml-6 text-xs">
+                {t('loginAttemptsRemaining').replace('{0}', String(attemptsRemaining))}
+              </div>
+            )}
+            {lockoutSecondsRemaining > 0 && (
+              <div className="ml-6 text-xs font-mono">
+                {t('loginLockoutCountdown').replace('{0}', `${String(Math.floor(lockoutSecondsRemaining / 60)).padStart(2, '0')}:${String(lockoutSecondsRemaining % 60).padStart(2, '0')}`)}
+              </div>
+            )}
           </div>
         )}
 
@@ -165,7 +219,8 @@ export default function LoginPage() {
             </div>
             <button
               type="submit"
-              className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              disabled={lockoutSecondsRemaining > 0}
+              className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('loginContinue')}
             </button>

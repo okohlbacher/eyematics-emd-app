@@ -10,7 +10,7 @@ import FeedbackButton from './FeedbackButton';
 import { ThemeToggle } from './ThemeToggle';
 
 export default function Layout() {
-  const { user, logout, inactivityWarning } = useAuth();
+  const { user, logout, inactivityWarning, inactivitySecondsRemaining } = useAuth();
   const navigate = useNavigate();
   const { locale, setLocale, t } = useLanguage();
 
@@ -68,6 +68,11 @@ export default function Layout() {
         <div className="fixed top-0 left-0 right-0 z-50 bg-[var(--color-amber)] text-white text-center py-2 px-4 text-sm font-medium flex items-center justify-center gap-2">
           <AlertTriangle className="w-4 h-4" />
           {t('inactivityWarning')}
+          {inactivitySecondsRemaining > 0 && (
+            <span className="ml-2 font-mono">
+              {t('inactivityCountdown').replace('{0}', `${String(Math.floor(inactivitySecondsRemaining / 60)).padStart(2, '0')}:${String(inactivitySecondsRemaining % 60).padStart(2, '0')}`)}
+            </span>
+          )}
         </div>
       )}
 

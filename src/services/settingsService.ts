@@ -17,6 +17,12 @@ export interface AppSettings {
   auth?: {
     refreshTokenTtlMs?: number;
     refreshAbsoluteCapMs?: number;
+    /** AUTHCFG-03: inactivity timeout in ms (default 10 min) */
+    inactivityTimeoutMs?: number;
+    /** AUTHCFG-02: warning lead time before auto-logout in ms (default 3 min) */
+    warningBeforeMs?: number;
+    /** AUTHCFG-04: max failed login attempts before lockout */
+    maxLoginAttempts?: number;
   };
 }
 
@@ -35,6 +41,9 @@ const DEFAULTS: AppSettings = {
   auth: {
     refreshTokenTtlMs: 28_800_000,
     refreshAbsoluteCapMs: 43_200_000,
+    inactivityTimeoutMs: 600_000,  // 10 min (AUTHCFG-03 safe default)
+    warningBeforeMs: 180_000,      // 3 min (AUTHCFG-02 — was 60 s hardcoded)
+    maxLoginAttempts: 5,
   },
 };
 
