@@ -357,6 +357,10 @@ const translations = {
   adminFirstName: { de: 'Vorname', en: 'First Name' },
   adminLastName: { de: 'Nachname', en: 'Last Name' },
   adminFullName: { de: 'Name', en: 'Name' },
+  /** UMGMT-03: activation checkbox label in the edit dialog */
+  adminUserActive: { de: 'Aktiv', en: 'Active' },
+  /** UMGMT-03: muted badge shown next to username of inactive users */
+  adminUserInactiveBadge: { de: 'inaktiv', en: 'inactive' },
 
   // Dataset download (K08 N08.01)
   downloadDataset: { de: 'Datensatz herunterladen', en: 'Download Dataset' },

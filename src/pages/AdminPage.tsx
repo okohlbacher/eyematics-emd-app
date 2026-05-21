@@ -18,6 +18,8 @@ interface ServerUser {
   centers: string[];
   createdAt: string;
   lastLogin?: string;
+  /** UMGMT-03: activation flag; absent means active (migration target) */
+  active?: boolean;
 }
 
 // DTO returned by GET /api/auth/sessions — projected subset of server/sessionsDb.ts SessionRow.
@@ -106,13 +108,18 @@ export default function AdminPage() {
   const [copyFeedback, setCopyFeedback] = useState(false);
   // L3: inline action-error banner replaces blocking alert() for create/update failures.
   const [actionError, setActionError] = useState<string | null>(null);
-  const [formErrors, setFormErrors] = useState<{ username?: string; centers?: string }>({});
+  // UMGMT-02: extended to include firstName, lastName, role validation
+  const [formErrors, setFormErrors] = useState<{ username?: string; firstName?: string; lastName?: string; role?: string; centers?: string }>({});
 
   const [editUsername, setEditUsername] = useState<string | null>(null);
   const [editFirstName, setEditFirstName] = useState('');
   const [editLastName, setEditLastName] = useState('');
   const [editRole, setEditRole] = useState<UserRole>('researcher');
   const [editCenters, setEditCenters] = useState<string[]>([]);
+  // UMGMT-01/02/03: edit-dialog validation errors and activation state
+  const [editFormErrors, setEditFormErrors] = useState<{ firstName?: string; lastName?: string; role?: string; centers?: string }>({});
+  // UMGMT-03: activation flag, seeded from user.active (absent → true)
+  const [editActive, setEditActive] = useState<boolean>(true);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
@@ -275,9 +282,12 @@ export default function AdminPage() {
   };
 
   const handleAdd = async () => {
-    // USM-001: validate required fields before submitting
-    const errors: { username?: string; centers?: string } = {};
+    // USM-001 + UMGMT-02: validate all required fields before submitting
+    const errors: typeof formErrors = {};
     if (!username.trim()) errors.username = t('fieldRequired');
+    if (!firstName.trim()) errors.firstName = t('fieldRequired');
+    if (!lastName.trim()) errors.lastName = t('fieldRequired');
+    if (!role) errors.role = t('fieldRequired');
     if (selectedCenters.length === 0) errors.centers = t('centerRequired');
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -372,21 +382,39 @@ export default function AdminPage() {
     setEditLastName(u.lastName ?? '');
     setEditRole(u.role);
     setEditCenters(u.centers ?? []);
+    // UMGMT-03: seed activation state; absent active field means active (migration target)
+    setEditActive(u.active !== false);
+    setEditFormErrors({});
   };
 
   const cancelEdit = () => setEditUsername(null);
 
   const handleEditSave = async () => {
     if (!editUsername) return;
+
+    // UMGMT-01 + UMGMT-02: validate all required edit-dialog fields before submitting
+    const errors: typeof editFormErrors = {};
+    if (!editFirstName.trim()) errors.firstName = t('fieldRequired');
+    if (!editLastName.trim()) errors.lastName = t('fieldRequired');
+    if (!editRole) errors.role = t('fieldRequired');
+    if (editCenters.length === 0) errors.centers = t('centerRequired');
+    if (Object.keys(errors).length > 0) {
+      setEditFormErrors(errors);
+      return;
+    }
+    setEditFormErrors({});
+
     try {
       const resp = await authFetch(`/api/auth/users/${encodeURIComponent(editUsername)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        // UMGMT-03: include active in PUT body
         body: JSON.stringify({
           firstName: editFirstName.trim() || undefined,
           lastName: editLastName.trim() || undefined,
           role: editRole,
           centers: editCenters,
+          active: editActive,
         }),
       });
       if (resp.ok) {
@@ -528,36 +556,40 @@ export default function AdminPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('adminFirstName')}
+                  {t('adminFirstName')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={t('adminFirstName')}
+                  onChange={(e) => { setFirstName(e.target.value); setFormErrors((prev) => ({ ...prev, firstName: undefined })); }}
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 ${formErrors.firstName ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                 />
+                {formErrors.firstName && <p className="text-xs text-red-500 mt-1">{formErrors.firstName}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('adminLastName')}
+                  {t('adminLastName')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={t('adminLastName')}
+                  onChange={(e) => { setLastName(e.target.value); setFormErrors((prev) => ({ ...prev, lastName: undefined })); }}
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 ${formErrors.lastName ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                 />
+                {formErrors.lastName && <p className="text-xs text-red-500 mt-1">{formErrors.lastName}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('adminRole')}
+                  {t('adminRole')} <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={role}
-                  onChange={(e) => setRole(e.target.value as UserRole)}
-                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => { setRole(e.target.value as UserRole); setFormErrors((prev) => ({ ...prev, role: undefined })); }}
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 ${formErrors.role ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                 >
                   <option value="researcher">{t('roleResearcher')}</option>
                   <option value="admin">{t('roleAdmin')}</option>
@@ -566,6 +598,7 @@ export default function AdminPage() {
                   <option value="data_manager">{t('roleDataManager')}</option>
                   <option value="clinic_lead">{t('roleClinicLead')}</option>
                 </select>
+                {formErrors.role && <p className="text-xs text-red-500 mt-1">{formErrors.role}</p>}
               </div>
             </div>
 
@@ -709,51 +742,75 @@ export default function AdminPage() {
                     <tr key={u.username} className="border-b border-blue-100 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-900/10">
                       <td className="py-3 font-medium text-gray-900 dark:text-gray-100">{u.username}</td>
                       <td className="py-2" colSpan={2}>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={editFirstName}
-                            onChange={(e) => setEditFirstName(e.target.value)}
-                            placeholder={t('adminFirstName')}
-                            className="w-28 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                          <input
-                            type="text"
-                            value={editLastName}
-                            onChange={(e) => setEditLastName(e.target.value)}
-                            placeholder={t('adminLastName')}
-                            className="w-28 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                          <select
-                            value={editRole}
-                            onChange={(e) => setEditRole(e.target.value as UserRole)}
-                            className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="researcher">{t('roleResearcher')}</option>
-                            <option value="admin">{t('roleAdmin')}</option>
-                            <option value="epidemiologist">{t('roleEpidemiologist')}</option>
-                            <option value="clinician">{t('roleClinician')}</option>
-                            <option value="data_manager">{t('roleDataManager')}</option>
-                            <option value="clinic_lead">{t('roleClinicLead')}</option>
-                          </select>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex gap-2">
+                            <div className="flex flex-col">
+                              <input
+                                type="text"
+                                value={editFirstName}
+                                onChange={(e) => { setEditFirstName(e.target.value); setEditFormErrors((prev) => ({ ...prev, firstName: undefined })); }}
+                                placeholder={t('adminFirstName')}
+                                className={`w-28 border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 ${editFormErrors.firstName ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+                              />
+                              {editFormErrors.firstName && <p className="text-xs text-red-500 mt-0.5">{editFormErrors.firstName}</p>}
+                            </div>
+                            <div className="flex flex-col">
+                              <input
+                                type="text"
+                                value={editLastName}
+                                onChange={(e) => { setEditLastName(e.target.value); setEditFormErrors((prev) => ({ ...prev, lastName: undefined })); }}
+                                placeholder={t('adminLastName')}
+                                className={`w-28 border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 ${editFormErrors.lastName ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+                              />
+                              {editFormErrors.lastName && <p className="text-xs text-red-500 mt-0.5">{editFormErrors.lastName}</p>}
+                            </div>
+                            <div className="flex flex-col">
+                              <select
+                                value={editRole}
+                                onChange={(e) => { setEditRole(e.target.value as UserRole); setEditFormErrors((prev) => ({ ...prev, role: undefined })); }}
+                                className={`border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 ${editFormErrors.role ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+                              >
+                                <option value="researcher">{t('roleResearcher')}</option>
+                                <option value="admin">{t('roleAdmin')}</option>
+                                <option value="epidemiologist">{t('roleEpidemiologist')}</option>
+                                <option value="clinician">{t('roleClinician')}</option>
+                                <option value="data_manager">{t('roleDataManager')}</option>
+                                <option value="clinic_lead">{t('roleClinicLead')}</option>
+                              </select>
+                              {editFormErrors.role && <p className="text-xs text-red-500 mt-0.5">{editFormErrors.role}</p>}
+                            </div>
+                          </div>
+                          {/* UMGMT-03: activation checkbox */}
+                          <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editActive}
+                              onChange={(e) => setEditActive(e.target.checked)}
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            {t('adminUserActive')}
+                          </label>
                         </div>
                       </td>
                       <td className="py-2">
-                        <div className="flex flex-wrap gap-1">
-                          {centerOptions.map((c) => (
-                            <button
-                              key={c.id}
-                              type="button"
-                              onClick={() => toggleEditCenter(c.id)}
-                              className={`px-2 py-0.5 text-xs rounded border transition-colors ${
-                                editCenters.includes(c.id)
-                                  ? 'bg-blue-50 border-blue-300 text-blue-700 font-medium'
-                                  : 'border-gray-200 text-gray-500 hover:bg-gray-50'
-                              }`}
-                            >
-                              {c.label}
-                            </button>
-                          ))}
+                        <div className="flex flex-col gap-1">
+                          <div className="flex flex-wrap gap-1">
+                            {centerOptions.map((c) => (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => { toggleEditCenter(c.id); setEditFormErrors((prev) => ({ ...prev, centers: undefined })); }}
+                                className={`px-2 py-0.5 text-xs rounded border transition-colors ${
+                                  editCenters.includes(c.id)
+                                    ? 'bg-blue-50 border-blue-300 text-blue-700 font-medium'
+                                    : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                                }`}
+                              >
+                                {c.label}
+                              </button>
+                            ))}
+                          </div>
+                          {editFormErrors.centers && <p className="text-xs text-red-500 mt-0.5">{editFormErrors.centers}</p>}
                         </div>
                       </td>
                       <td className="py-2 text-gray-600 dark:text-gray-300">
@@ -777,7 +834,15 @@ export default function AdminPage() {
                   ) : (
                     <React.Fragment key={u.username}>
                     <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="py-3 font-medium text-gray-900 dark:text-gray-100">{u.username}</td>
+                      <td className="py-3 font-medium text-gray-900 dark:text-gray-100">
+                        {u.username}
+                        {/* UMGMT-03: show muted "inactive" badge for deactivated users */}
+                        {u.active === false && (
+                          <span className="ml-2 inline-block px-1.5 py-0.5 bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400 rounded text-xs font-normal">
+                            {t('adminUserInactiveBadge')}
+                          </span>
+                        )}
+                      </td>
                       <td className="py-3 text-gray-600 dark:text-gray-300">
                         {u.firstName || u.lastName
                           ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim()
