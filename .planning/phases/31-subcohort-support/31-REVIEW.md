@@ -16,8 +16,23 @@ findings:
   warning: 5
   info: 3
   total: 9
-status: issues_found
+  critical_resolved: 1
+  warning_resolved: 2
+  open: 6
+status: criticals_resolved
+resolved:
+  - CR-01 (commit d4ff9d5)
+  - WR-01 (commit d4ff9d5)
+  - WR-02 (commit d4ff9d5)
 ---
+
+> **Resolution note (2026-05-21, commit d4ff9d5):** The BLOCKER CR-01 and its root causes
+> WR-01/WR-02 are fixed. `isSubcohortName` now requires non-empty trimmed segments (true guard),
+> `groupByParent` defensively skips unparseable names and uses the shared `normalizeCohortName`
+> for parent linking. A regression test (`groupByParent` "does not throw on empty-segment names")
+> locks the fix. Remaining open items: WR-03 (validation distinguishes empty-parent/sub by matching
+> the thrown Error message — brittle under localization), WR-05 (drawer Escape listener not gated on
+> `open`), and the 3 INFO items — all advisory, non-blocking.
 
 # Phase 31: Code Review Report
 
