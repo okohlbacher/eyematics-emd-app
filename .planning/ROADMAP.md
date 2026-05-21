@@ -201,7 +201,7 @@ Plans:
 | 28. Admin Session Control UI | 4/4 | Complete   | 2026-05-14 |
 | 29. Home Panel UX | 4/4 | Complete    | 2026-05-21 |
 | 30. Terminology Configuration Docs | 1/1 | Complete    | 2026-05-21 |
-| 31. Subcohort Support | 3/3 | Complete   | 2026-05-21 |
+| 31. Subcohort Support | 3/3 | Complete    | 2026-05-21 |
 
 ---
 
