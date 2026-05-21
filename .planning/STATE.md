@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: — UAT Fixes, Data Completeness & Quality Closure
-status: planning
-last_updated: "2026-05-21T18:19:47.267Z"
-last_activity: 2026-05-21 — Roadmap created for v1.11 (Phases 32–36)
+status: Plan 32-02 executed (AUTHCFG-01/02/03/04 satisfied)
+last_updated: "2026-05-21T20:37:00.000Z"
+last_activity: "2026-05-21 — Executed 32-02: auth config hardening, lockout cap, symmetric branches, live countdowns"
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
-  percent: 10
+  completed_plans: 2
+  percent: 40
 ---
 
 # Project State
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-05-21 after v1.10)
 ## Current Position
 
 Phase: 32 — User Management & Auth Hardening
-Plan: 32-01 complete; 32-02 next
-Status: Plan 32-01 executed (UMGMT-01/02/03 satisfied)
-Last activity: 2026-05-21 — Executed 32-01: user activation lifecycle + dialog hardening
+Plan: 32-01 + 32-02 complete; Phase 32 done
+Status: Plan 32-02 executed (AUTHCFG-01/02/03/04 satisfied)
+Last activity: 2026-05-21 — Executed 32-02: auth config hardening, lockout cap, symmetric branches, live countdowns
 
-**Progress:** `[░][ ][ ][ ][ ]` 1/2 plans in Phase 32; 0/5 phases complete
+**Progress:** `[░░][ ][ ][ ][ ]` 2/2 plans in Phase 32; Phase 32 complete
 
 ## Milestones Shipped
 
@@ -51,6 +51,10 @@ Last activity: 2026-05-21 — Executed 32-01: user activation lifecycle + dialog
 
 ### Decisions (authoritative)
 
+- AUTHCFG-04: lockoutCapMs named for cap semantics; formula `min(2^failures*1s, cap)` preserved; `resetLimiter()` exported from authApi and called by settingsApi PUT after updateAuthConfig (avoids circular import).
+- AUTHCFG-01: both unknown-user and known-user login failure branches are symmetric — 429+retryAfterMs on lockout, 401+attemptsRemaining otherwise (T-32-06 non-enumeration parity).
+- AUTHCFG-02/03: WARNING_BEFORE default raised to 3 min (180 s); inactivity timers sourced from settings.auth.* with safe-default fallback (T-32-09); inactivitySecondsRemaining live countdown in context.
+- auth.inactivityTimeoutMs/warningBeforeMs/lockoutCapMs are NOT stripped from non-admin GET /api/settings (W5 — operational params, not secrets).
 - Inactive user gate: `user.active === false` → generic 401 `{ error: 'Invalid credentials' }` at both POST /login and POST /verify (T-02-05 non-enumeration preserved).
 - Session revocation on deactivation: `revokeByUsername(target)` called after write commits, in try/catch (sessionsDb-uninit safe, PROT-001 parity).
 - `editActive` seeded from `user.active !== false` in `startEdit` (absent active field means active — migration-safe).
