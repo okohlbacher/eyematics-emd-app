@@ -28,6 +28,11 @@
 - [x] **TERM-01**: `terminology.*` settings keys documented in `docs/Konfiguration.md` (enable/disable, proxy URL, cache TTL) — satisfied in Phase 25; Phase 30 only fixes the serverUrl default-vs-placeholder wording
 - [x] **TERM-02**: `config/settings.yaml` ships with a commented `terminology.*` example block + inline comments (kept commented per D-16/D-17 offline-by-default design)
 
+### Cohort
+
+- [ ] **KOH-003**: Users can split any saved cohort into named subcohorts (one level deep) via a `ParentName:SubcohortName` naming convention. A subcohort is an ordinary `SavedSearch` whose name contains exactly one `:`; the name is validated (exactly one colon, non-empty parent and sub identifiers, no duplicate names) and orphan subcohorts (parent name matching no existing cohort) are allowed with a non-blocking warning. *Added 2026-05-21 for Phase 31.*
+- [ ] **KOH-004**: Subcohorts appear in a tree-grouped picker wherever cohorts are selectable for comparison (`CohortCompareDrawer`): parent rows with indented subcohort rows. Selecting a parent applies the parent's own saved filter (not a union); each parent/subcohort entry is independently selectable and counts individually toward the existing max-4 comparison limit. *Added 2026-05-21 for Phase 31.*
+
 ## Backlog (not in v1.10)
 
 ### Keycloak
@@ -58,6 +63,8 @@
 | UX-02 | Phase 29 | Complete |
 | TERM-01 | Phase 25 / 30 | Complete (docs shipped in Phase 25) |
 | TERM-02 | Phase 30 | Complete (Phase 30) |
+| KOH-003 | Phase 31 | Pending |
+| KOH-004 | Phase 31 | Pending |
 
 **Coverage:**
 - v1.10 requirements: 11 total
