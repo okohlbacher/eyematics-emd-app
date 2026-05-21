@@ -29,6 +29,11 @@ vi.mock('../src/context/LanguageContext', () => ({
   useLanguage: vi.fn(),
 }));
 
+// useRecentActivity: stub so LandingPage renders without real localStorage/AuthContext wiring
+vi.mock('../src/hooks/useRecentActivity', () => ({
+  useRecentActivity: () => ({ entries: [], record: vi.fn(), clear: vi.fn() }),
+}));
+
 import { useAuth } from '../src/context/AuthContext';
 import { useData } from '../src/context/DataContext';
 import { useLanguage } from '../src/context/LanguageContext';
@@ -74,6 +79,7 @@ function renderLanding(onLocationChange: (path: string) => void) {
           <Route path="/" element={<LandingPage />} />
           <Route path="/cohort" element={<div data-testid="cohort-page" />} />
           <Route path="/doc-quality" element={<div data-testid="doc-quality-page" />} />
+          <Route path="/quality" element={<div data-testid="quality-page" />} />
         </Routes>
       </>
     </MemoryRouter>,
@@ -86,64 +92,55 @@ afterEach(() => {
 });
 
 describe('LandingPage Attention panel — Review buttons (FB-02)', () => {
-  it('therapy-breakers Review button navigates to /cohort', () => {
+  it('therapy-breakers Review button navigates to /quality?therapy=breaker (Plan 04)', () => {
+    setupMocks('admin');
+    let search = '';
+    renderLanding((p) => {
+      search = p;
+    });
+
+    // Button is now identified by aria-label reviewTherapyBreakers (Plan 04 UX-01)
+    const therapyBtn = screen.queryByRole('button', { name: translate('reviewTherapyBreakers', 'en') });
+    expect(therapyBtn).not.toBeNull();
+    fireEvent.click(therapyBtn!);
+    // MemoryRouter registers /quality as the path (search params not tracked by LocationSpy)
+    expect(search).toBe('/quality');
+  });
+
+  it('implausible-CRT Review button navigates to /quality?status=flagged (Plan 04)', () => {
     setupMocks('admin');
     let path = '/';
     renderLanding((p) => {
       path = p;
     });
 
-    const reviewLabel = translate('review', 'en');
-    const reviewButtons = screen.queryAllByRole('button', { name: reviewLabel });
-    expect(reviewButtons.length).toBeGreaterThan(0);
-    // First Review button is the therapy-breakers row
-    fireEvent.click(reviewButtons[0]);
-    expect(path).toBe('/cohort');
+    const crtBtn = screen.queryByRole('button', { name: translate('reviewFlaggedCases', 'en') });
+    expect(crtBtn).not.toBeNull();
+    fireEvent.click(crtBtn!);
+    expect(path).toBe('/quality');
   });
 
-  it('implausible-CRT Review button navigates to /doc-quality for QUALITY_ROLES', () => {
-    setupMocks('admin');
-    let path = '/';
-    renderLanding((p) => {
-      path = p;
-    });
-
-    const reviewLabel = translate('review', 'en');
-    const reviewButtons = screen.queryAllByRole('button', { name: reviewLabel });
-    // Two buttons expected for an admin (QUALITY_ROLES includes admin)
-    expect(reviewButtons.length).toBe(2);
-    fireEvent.click(reviewButtons[1]);
-    expect(path).toBe('/doc-quality');
-  });
-
-  it('hides the implausible-CRT Review button for users without QUALITY_ROLES', () => {
+  it('implausible-CRT Review button is present for all roles (gate removed in Plan 04)', () => {
+    // Plan 04 removes the canSeeDocQuality gate; /quality is ProtectedRoute for all roles
     setupMocks('researcher');
-    let path = '/';
-    renderLanding((p) => {
-      path = p;
-    });
+    renderLanding(() => undefined);
 
-    const reviewLabel = translate('review', 'en');
-    const reviewButtons = screen.queryAllByRole('button', { name: reviewLabel });
-    // Researcher: only the therapy-breakers button remains (no /doc-quality access).
-    expect(reviewButtons.length).toBe(1);
-    fireEvent.click(reviewButtons[0]);
-    expect(path).toBe('/cohort');
+    const crtBtn = screen.queryByRole('button', { name: translate('reviewFlaggedCases', 'en') });
+    expect(crtBtn).not.toBeNull();
   });
 
-  it('every rendered Review button has an onClick that navigates off /', () => {
+  it('every rendered Review button has an onClick that navigates off / (D-08)', () => {
     setupMocks('admin');
     renderLanding(() => undefined);
 
-    const reviewLabel = translate('review', 'en');
-    const reviewButtons = screen.queryAllByRole('button', { name: reviewLabel });
-    expect(reviewButtons.length).toBeGreaterThan(0);
+    const therapyBtn = screen.queryByRole('button', { name: translate('reviewTherapyBreakers', 'en') });
+    const crtBtn = screen.queryByRole('button', { name: translate('reviewFlaggedCases', 'en') });
+    expect(therapyBtn).not.toBeNull();
+    expect(crtBtn).not.toBeNull();
 
     // Every Review button must carry an onClick prop (no silent handlers, D-08).
-    for (const btn of reviewButtons) {
-      const onclick = (btn as HTMLButtonElement).onclick;
-      expect(onclick).not.toBeNull();
-    }
+    expect((therapyBtn as HTMLButtonElement).onclick).not.toBeNull();
+    expect((crtBtn as HTMLButtonElement).onclick).not.toBeNull();
   });
 
   it('renders the Attention panel header (regression: panel itself is present)', () => {

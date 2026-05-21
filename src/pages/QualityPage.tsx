@@ -1,6 +1,6 @@
 /** Data quality review page — EMDREQ-QUAL-001 to QUAL-010 (SDV, error flagging, exclusions, therapy discontinuation). */
 import { Ban, CheckCircle2, Circle, Clock, Download } from 'lucide-react';
-import { type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { pickCoding } from '../../shared/fhirQueries';
@@ -10,6 +10,7 @@ import QualityFlagDialog from '../components/quality/QualityFlagDialog';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useRecentActivity } from '../hooks/useRecentActivity';
 import {
   getAge,
   getCenterShorthand,
@@ -80,6 +81,7 @@ export default function QualityPage() {
   const navigate = useNavigate();
   const { locale, t } = useLanguage();
   const [searchParams] = useSearchParams();
+  const { record } = useRecentActivity();
 
   const [selectedCase, setSelectedCase] = useState<PatientCase | null>(null);
   const [flagDialog, setFlagDialog] = useState<{ parameter: string; value: string } | null>(null);
@@ -106,6 +108,19 @@ export default function QualityPage() {
   const [showFilters, setShowFilters] = useState<boolean>(() => {
     return searchParams.get('therapy') !== null || searchParams.get('status') !== null;
   });
+
+  // Record a recent-activity entry when the user opens a case (UX-02).
+  // path is /quality (not the filtered URL) so restoring lands on the review surface
+  // without re-applying URL filters — the user can adjust filters after returning.
+  useEffect(() => {
+    if (!selectedCase) return;
+    record({
+      id: selectedCase.id,
+      label: selectedCase.pseudonym,
+      sub: t('navQuality'),
+      path: '/quality',
+    });
+  }, [selectedCase]); // eslint-disable-line react-hooks/exhaustive-deps -- record/t are stable refs; selectedCase is the meaningful dep
 
   const dateFmt = getDateLocale(locale);
 

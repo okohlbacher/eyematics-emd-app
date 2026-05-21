@@ -16,6 +16,7 @@ import { useSearchParams } from 'react-router-dom';
 import { computeCrtTrajectory } from '../../../shared/cohortTrajectory';
 import { useData } from '../../context/DataContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useRecentActivity } from '../../hooks/useRecentActivity';
 import type { TranslationKey } from '../../i18n/translations';
 import { authFetch } from '../../services/authHeaders';
 import { applyFilters } from '../../services/fhirLoader';
@@ -82,6 +83,7 @@ export default function OutcomesView() {
   const { activeCases, savedSearches } = useData();
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale } = useLanguage();
+  const { record } = useRecentActivity();
 
   // Phase 16 / XCOHORT-01..04: cross-cohort URL parsing (placed here, above any early return, per Pitfall 3 hook-order rule).
   const rawCohortsParam = searchParams.get('cohorts');
@@ -155,6 +157,19 @@ export default function OutcomesView() {
     }
     return { name: null, cases: activeCases };
   }, [activeCases, savedSearches, searchParams]);
+
+  // Record a recent-activity entry when a cohort is active (UX-02).
+  // Keyed on primaryCohortId so recording updates when the user switches cohorts.
+  // path captures the full URL so cohort/filter params are preserved for restoration.
+  useEffect(() => {
+    if (!cohort || cohort.cases.length === 0) return;
+    record({
+      id: primaryCohortId ?? 'outcomes',
+      label: cohort.name ?? t('outcomesTitle'),
+      sub: t('outcomesTitle'),
+      path: window.location.pathname + window.location.search,
+    });
+  }, [primaryCohortId]); // eslint-disable-line react-hooks/exhaustive-deps -- record/t/cohort are stable per primaryCohortId change
 
   // D-37 default-scatter-off once cohort size known
   useEffect(() => {

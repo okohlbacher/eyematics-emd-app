@@ -62,6 +62,11 @@ vi.mock('../src/context/LanguageContext', () => ({
   useLanguage: vi.fn(),
 }));
 
+// useRecentActivity: stub record/clear so OutcomesView's recording effect is a no-op in tests
+vi.mock('../src/hooks/useRecentActivity', () => ({
+  useRecentActivity: () => ({ entries: [], record: vi.fn(), clear: vi.fn() }),
+}));
+
 vi.mock('../src/services/fhirLoader', () => ({
   applyFilters: vi.fn((cases: unknown[]) => cases),
   LOINC_VISUS: '79880-1',
