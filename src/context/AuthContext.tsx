@@ -2,6 +2,7 @@ import { createContext, type ReactNode,useCallback, useContext, useEffect, useMe
 
 import { broadcastLogout, serverLogout } from '../services/authHeaders';
 import { invalidateBundleCache } from '../services/fhirLoader';
+import * as recentActivityStore from '../services/recentActivityStore';
 
 /**
  * Roles from the Lastenheft stakeholder analysis (K10 N10.01):
@@ -131,6 +132,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const performLogout = useCallback((auto = false) => {
     void auto; // auto-logout logged server-side via audit middleware
+    // T-29-09 / D-02: clear per-user recent-activity trail BEFORE nulling the user so the
+    // username is still available in the closure. Null-safe form handles a no-user logout.
+    recentActivityStore.clear(user?.username ?? '');
     // Phase 20 / D-15: notify server to clear refresh + CSRF cookies and bump tokenVersion.
     // serverLogout() swallows network errors so a failure never traps the user in a
     // half-logged-in state. Fire-and-forget — local state is cleared synchronously below.
@@ -142,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setInactivityWarning(false);
     sessionStorage.removeItem('emd-token');
     invalidateBundleCache(); // L-12: clear stale data from previous user's center scope
-  }, []);
+  }, [user]);
 
   const resetInactivityTimer = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
