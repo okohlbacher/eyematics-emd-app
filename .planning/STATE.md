@@ -30,7 +30,8 @@ Status: Requirements drafted (VVBACK-01..05), NOT committed; roadmap not yet cre
 Last activity: 2026-05-21 — Milestone v1.11 started; paused before roadmap
 
 **Resume note (paused 2026-05-21):** Scope expanded — v1.11 now covers (1) subcohort
-feature addenda, (2) UAT issues / open gaps, (3) tech-debt / V&V closure (VVBACK-01..05).
+feature addenda, (2) UAT issues / open gaps, (3) tech-debt / V&V closure (VVBACK-01..05),
+(4) adversarial CODEX full-codebase architecture review & compaction (ARCH-01..03, firm).
 `.planning/REQUIREMENTS.md` is a draft on disk (uncommitted): VVBACK-* are firm; the
 Subcohort Enhancements and UAT Issues / Open Gaps categories are placeholders awaiting
 intake. Tomorrow (2026-05-22): take the last-major-UAT issue list, itemize subcohort

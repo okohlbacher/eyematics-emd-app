@@ -15,6 +15,7 @@
 1. **Subcohort enhancements & addenda** — feature requests and follow-ups to the v1.10 subcohort feature (Phase 31). To be itemized from the last major UAT.
 2. **UAT issues & open gaps** — remaining issues from the last major UAT plus any open gaps surfaced across the codebase.
 3. **Tech-debt / V&V closure** — backfill `VERIFICATION.md` for Phases 27 & 28; bring Nyquist `VALIDATION.md` to `nyquist_compliant: true` / `wave_0_complete: true` for Phases 27, 28, 29; resolve Phase 31's cosmetic `wave_0_complete: false`; flip all v1.10 `VALIDATION.md` `status: draft` → final (VVBACK-01..05).
+4. **Architecture review & compaction** — adversarial, in-depth full-codebase review with CODEX (architecture, separation of concerns, overall design) producing a prioritized de-bloat / compaction plan, then applying remediations with no behavior regressions (ARCH-01..03).
 
 Test suite stays green throughout (783/783 baseline).
 
@@ -151,6 +152,11 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 ### Active (v1.11 — Subcohort Enhancements & Quality Closure)
 
 **Subcohort enhancements & UAT issues / open gaps** — _pending intake; to be itemized from the last major UAT (expected 2026-05-22), then assigned REQ-IDs._
+
+**Architecture review & compaction:**
+- [ ] Adversarial full-codebase review with CODEX (architecture, separation of concerns, design) → severity-classified findings report (ARCH-01)
+- [ ] Prioritized compaction / de-bloat plan with concrete file refs — dead code, redundant abstractions, duplicated logic, oversized modules (ARCH-02)
+- [ ] Approved compaction remediations applied; `test:ci` green, `knip` clean, `lint` passes, no behavior regressions (ARCH-03)
 
 **Tech-debt / V&V closure:**
 - [ ] VERIFICATION.md backfilled for Phase 27 (stateful session backend) via goal-backward analysis (VVBACK-01)
@@ -328,4 +334,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-21 — started milestone v1.11 (Subcohort Enhancements & Quality Closure), scope expanded beyond pure tech-debt to include subcohort feature addenda + UAT issues/open gaps + V&V closure (VVBACK-01..05). Feature requirements pending UAT triage on 2026-05-22; KEYCLK-01 in Backlog.*
+*Last updated: 2026-05-21 — started milestone v1.11 (Subcohort Enhancements & Quality Closure), scope expanded beyond pure tech-debt to include subcohort feature addenda + UAT issues/open gaps + V&V closure (VVBACK-01..05) + adversarial CODEX architecture review & compaction (ARCH-01..03). Feature requirements pending UAT triage on 2026-05-22; KEYCLK-01 in Backlog.*
