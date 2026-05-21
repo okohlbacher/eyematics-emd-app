@@ -26,7 +26,7 @@
 ### Terminology Docs
 
 - [x] **TERM-01**: `terminology.*` settings keys documented in `docs/Konfiguration.md` (enable/disable, proxy URL, cache TTL) — satisfied in Phase 25; Phase 30 only fixes the serverUrl default-vs-placeholder wording
-- [ ] **TERM-02**: `config/settings.yaml` ships with a commented `terminology.*` example block + inline comments (kept commented per D-16/D-17 offline-by-default design)
+- [x] **TERM-02**: `config/settings.yaml` ships with a commented `terminology.*` example block + inline comments (kept commented per D-16/D-17 offline-by-default design)
 
 ## Backlog (not in v1.10)
 
@@ -57,7 +57,7 @@
 | UX-01 | Phase 29 | Complete |
 | UX-02 | Phase 29 | Complete |
 | TERM-01 | Phase 25 / 30 | Complete (docs shipped in Phase 25) |
-| TERM-02 | Phase 30 | Pending (reworded — commented example) |
+| TERM-02 | Phase 30 | Complete (Phase 30) |
 
 **Coverage:**
 - v1.10 requirements: 11 total
