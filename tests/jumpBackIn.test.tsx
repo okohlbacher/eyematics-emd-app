@@ -6,8 +6,8 @@
  */
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { RecentActivityEntry } from '../src/services/recentActivityStore';
 
@@ -57,13 +57,13 @@ vi.mock('../src/context/LanguageContext', () => ({
   useLanguage: () => ({ t: (k: string) => k, locale: 'en' }),
 }));
 
-// useRecentActivity mock — overridden per test via vi.mocked().mockReturnValue
+// useRecentActivity mock — vi.fn() so tests can override per vi.mocked().mockReturnValue
 vi.mock('../src/hooks/useRecentActivity', () => ({
-  useRecentActivity: () => ({ entries: [], record: vi.fn(), clear: vi.fn() }),
+  useRecentActivity: vi.fn(() => ({ entries: [], record: vi.fn(), clear: vi.fn() })),
 }));
 
-import LandingPage from '../src/pages/LandingPage';
 import { useRecentActivity } from '../src/hooks/useRecentActivity';
+import LandingPage from '../src/pages/LandingPage';
 
 const makeEntry = (
   id: string,

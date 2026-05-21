@@ -4,7 +4,7 @@
  *   - aggregate (default): center / diagnosis / visus-trend / CRT / age-vs-visus charts
  *   - trajectories:        OD / OS / combined Visus trajectory panels (OUTCOME-01..12)
  */
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Bar,
@@ -29,6 +29,7 @@ import OutcomesView from '../components/outcomes/OutcomesView';
 import { CHART_COLORS } from '../config/clinicalThresholds';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useRecentActivity } from '../hooks/useRecentActivity';
 import {
   applyFilters,
   getAge,
@@ -51,6 +52,7 @@ export default function AnalysisPage() {
   const { activeCases, savedSearches } = useData();
   const [searchParams, setSearchParams] = useSearchParams();
   const { locale, t } = useLanguage();
+  const { record } = useRecentActivity();
 
   // Tab selection via ?tab=aggregate|trajectories (default: aggregate).
   const tab: AnalysisTab = useMemo(() => {
@@ -74,6 +76,17 @@ export default function AnalysisPage() {
     () => (savedSearchId ? (savedSearches.find((s) => s.id === savedSearchId) ?? null) : null),
     [savedSearchId, savedSearches],
   );
+
+  // Record a recent-activity entry on mount (UX-02).
+  // path captures the full URL so cohort/filter params are preserved for restoration.
+  useEffect(() => {
+    record({
+      id: savedSearchId ?? 'analysis',
+      label: activeSavedSearch?.name ?? t('navAnalysis'),
+      sub: t('navAnalysis'),
+      path: window.location.pathname + window.location.search,
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- mount-only; record/t/savedSearchId are stable at mount
 
   const filters: CohortFilter = useMemo(() => {
     // If a saved search is referenced, use its stored filters (KOH-005 / Issue 4 fix).

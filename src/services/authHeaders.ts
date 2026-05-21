@@ -10,6 +10,8 @@
  * - refreshPromise resets in `finally` so a failed refresh never permanently blocks the tab.
  */
 
+import * as recentActivityStore from './recentActivityStore';
+
 const RETRY_GUARD_HEADER = 'X-EMD-Retry-After-Refresh';
 const REFRESH_URL = '/api/auth/refresh';
 
@@ -26,6 +28,11 @@ bc?.addEventListener('message', (e: MessageEvent) => {
   if (msg.type === 'refresh-success' && typeof msg.token === 'string') {
     sessionStorage.setItem('emd-token', msg.token);
   } else if (msg.type === 'logout') {
+    // T-29-10 / D-02: purge all emd-recent:* keys BEFORE removing the token.
+    // clearAll() is used here (not clear(username)) because this module-level
+    // BroadcastChannel listener has no React context and no safe way to decode
+    // the username from the token (RESEARCH Pitfall 2).
+    recentActivityStore.clearAll();
     sessionStorage.removeItem('emd-token');
     if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
       window.location.href = '/login';

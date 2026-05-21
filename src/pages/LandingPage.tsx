@@ -11,9 +11,10 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 import { Badge, Button, SectionHead, Tile } from '../components/primitives';
-import { QUALITY_ROLES, useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useRecentActivity } from '../hooks/useRecentActivity';
 import { getCenterShorthand } from '../services/fhirLoader';
 import { getDateLocale } from '../utils/dateFormat';
 
@@ -28,10 +29,10 @@ const CENTRE_ACCENTS: Record<string, string> = {
 
 export default function LandingPage() {
   const { loading, centers, cases } = useData();
-  const { displayName, user } = useAuth();
+  const { displayName } = useAuth();
   const { locale, t } = useLanguage();
   const navigate = useNavigate();
-  const canSeeDocQuality = user ? QUALITY_ROLES.includes(user.role) : false;
+  const { entries } = useRecentActivity();
 
   if (loading) {
     return (
@@ -235,19 +236,39 @@ export default function LandingPage() {
             <div className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[var(--color-ink-3)] mb-3.5">
               {t('jumpBackIn')}
             </div>
-            {/*
-             * FB-03 / D-09..D-11: no recent-activity state has ever been wired
-             * up in app context, so the previous placeholder rows with dead
-             * arrow buttons are replaced by an explicit empty state. When real
-             * history tracking lands, render rows here with a navigate(...)
-             * onClick rather than re-introducing silent click handlers.
-             */}
-            <div
-              data-testid="jump-back-in-empty"
-              className="py-3 text-center text-[12px] text-[var(--color-ink-3)]"
-            >
-              {t('jumpBackInEmpty')}
-            </div>
+            {entries.length === 0 ? (
+              <div
+                data-testid="jump-back-in-empty"
+                className="py-3 text-center text-[12px] text-[var(--color-ink-3)]"
+              >
+                {t('jumpBackInEmpty')}
+              </div>
+            ) : (
+              entries.map((entry, i) => (
+                <div
+                  key={entry.id ?? i}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(entry.path)}
+                  onKeyDown={(e) => e.key === 'Enter' && navigate(entry.path)}
+                  className="grid items-center cursor-pointer hover:bg-[var(--color-surface-2)] transition-colors px-5 py-3"
+                  style={{
+                    gridTemplateColumns: '1fr auto',
+                    borderBottom: i < entries.length - 1 ? '1px solid var(--color-line)' : 'none',
+                  }}
+                >
+                  <div>
+                    <div className="text-[13px] font-semibold text-[var(--color-ink)]">
+                      {entry.label}
+                    </div>
+                    <div className="text-[13px] text-[var(--color-ink-3)]">
+                      {entry.sub}
+                    </div>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-[var(--color-ink-3)]" aria-hidden="true" />
+                </div>
+              ))
+            )}
           </Tile>
 
           <Tile className="p-[18px]">
@@ -264,7 +285,7 @@ export default function LandingPage() {
                   {t('attentionTherapyBreakersSub')}
                 </div>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/cohort')}>
+              <Button variant="ghost" size="sm" aria-label={t('reviewTherapyBreakers')} onClick={() => navigate('/quality?therapy=breaker')}>
                 {t('review')}
               </Button>
             </div>
@@ -278,11 +299,9 @@ export default function LandingPage() {
                   {t('attentionImplausibleCrtSub')}
                 </div>
               </div>
-              {canSeeDocQuality && (
-                <Button variant="ghost" size="sm" onClick={() => navigate('/doc-quality')}>
-                  {t('review')}
-                </Button>
-              )}
+              <Button variant="ghost" size="sm" aria-label={t('reviewFlaggedCases')} onClick={() => navigate('/quality?status=flagged')}>
+                {t('review')}
+              </Button>
             </div>
           </Tile>
         </div>

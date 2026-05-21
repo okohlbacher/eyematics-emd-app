@@ -5,8 +5,8 @@
  */
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // Spy on navigate — module-level so it's available in vi.mock factory.
 const mockNavigate = vi.fn();

@@ -63,6 +63,10 @@ vi.mock('../src/context/LanguageContext', languageContextFactory);
 vi.mock('../src/services/fhirLoader', fhirLoaderFactory);
 vi.mock('../src/utils/cohortTrajectory', cohortTrajectoryFactory);
 vi.mock('recharts', rechartsFactory);
+// useRecentActivity: stub so OutcomesView's recording effect is a no-op in routing tests
+vi.mock('../src/hooks/useRecentActivity', () => ({
+  useRecentActivity: () => ({ entries: [], record: vi.fn(), clear: vi.fn() }),
+}));
 
 // ---------------------------------------------------------------------------
 // Imports from shared helper (after vi.mock blocks)
