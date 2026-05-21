@@ -193,7 +193,7 @@ Plans:
 | 27. Stateful Session Backend | 4/4 | Complete | 2026-05-11 |
 | 28. Admin Session Control UI | 4/4 | Complete   | 2026-05-14 |
 | 29. Home Panel UX | 4/4 | Complete    | 2026-05-21 |
-| 30. Terminology Configuration Docs | 1/1 | Complete   | 2026-05-21 |
+| 30. Terminology Configuration Docs | 1/1 | Complete    | 2026-05-21 |
 | 31. Subcohort Support | 0/? | Not started | - |
 
 ---
