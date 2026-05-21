@@ -12,9 +12,19 @@ export interface LockState {
   lastActivity: number;
 }
 
-const MAX_LOCKOUT_MS = 3_600_000; // 1 hour cap
+// Default cap (1 hour) — used when no lockoutCapMs is passed to createRateLimiter.
+// Backoff formula: lockedUntil delta = min(2^failures * 1000ms, lockoutCapMs).
+// The cap is configurable so a live settings change (admin PUT /api/settings) can
+// tighten or loosen the maximum lockout duration without a restart.
+const MAX_LOCKOUT_MS = 3_600_000; // 1 hour — used as default lockoutCapMs
 
-export function createRateLimiter(maxLoginAttempts: number) {
+/**
+ * Create a rate limiter instance with configurable max attempts and lockout cap.
+ * @param maxLoginAttempts - number of failures before lockout
+ * @param lockoutCapMs - exponential backoff cap in ms (default: 1h). The lockout
+ *   duration is min(2^failures * 1000ms, lockoutCapMs), NOT a fixed window.
+ */
+export function createRateLimiter(maxLoginAttempts: number, lockoutCapMs: number = MAX_LOCKOUT_MS) {
   const loginAttempts = new Map<string, LockState>();
 
   function getLockState(username: string): LockState {
@@ -29,7 +39,7 @@ export function createRateLimiter(maxLoginAttempts: number) {
     const state = getLockState(username);
     const newCount = state.count + 1;
     const lockedUntil = newCount >= maxLoginAttempts
-      ? Date.now() + Math.min(Math.pow(2, newCount) * 1000, MAX_LOCKOUT_MS)
+      ? Date.now() + Math.min(Math.pow(2, newCount) * 1000, lockoutCapMs)
       : 0;
     const newState: LockState = { count: newCount, lockedUntil, lastActivity: Date.now() };
     loginAttempts.set(username, newState);

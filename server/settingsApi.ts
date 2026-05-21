@@ -18,6 +18,7 @@ import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
 import { SETTINGS_FILE } from './constants.js';
 import { invalidateFhirCache } from './fhirApi.js';
 import { initHashCohortId } from './hashCohortId.js';
+import { resetLimiter } from './authApi.js';
 import { updateAuthConfig } from './initAuth.js';
 import { initOutcomesAggregateCache, invalidateAllAggregates } from './outcomesAggregateCache.js';
 
@@ -109,6 +110,32 @@ function validateSettingsSchema(parsed: unknown): string | null {
     }
     if (auth.refreshCookieSecure !== undefined && typeof auth.refreshCookieSecure !== 'boolean') {
       return 'auth.refreshCookieSecure must be a boolean';
+    }
+    // Phase 32 / AUTHCFG-04 — lockout + inactivity configuration validation
+    if (auth.maxLoginAttempts !== undefined) {
+      if (typeof auth.maxLoginAttempts !== 'number' || !Number.isInteger(auth.maxLoginAttempts) || auth.maxLoginAttempts < 1) {
+        return 'auth.maxLoginAttempts must be a positive integer >= 1';
+      }
+    }
+    if (auth.lockoutCapMs !== undefined) {
+      if (typeof auth.lockoutCapMs !== 'number' || !Number.isInteger(auth.lockoutCapMs) || auth.lockoutCapMs <= 0) {
+        return 'auth.lockoutCapMs must be a positive integer';
+      }
+    }
+    if (auth.inactivityTimeoutMs !== undefined) {
+      if (typeof auth.inactivityTimeoutMs !== 'number' || !Number.isInteger(auth.inactivityTimeoutMs) || auth.inactivityTimeoutMs <= 0) {
+        return 'auth.inactivityTimeoutMs must be a positive integer';
+      }
+    }
+    if (auth.warningBeforeMs !== undefined) {
+      if (typeof auth.warningBeforeMs !== 'number' || !Number.isInteger(auth.warningBeforeMs) || auth.warningBeforeMs <= 0) {
+        return 'auth.warningBeforeMs must be a positive integer';
+      }
+      // warningBeforeMs must be strictly less than inactivityTimeoutMs when both are present
+      const inactivity = typeof auth.inactivityTimeoutMs === 'number' ? auth.inactivityTimeoutMs : null;
+      if (inactivity !== null && auth.warningBeforeMs >= inactivity) {
+        return 'auth.warningBeforeMs must be less than auth.inactivityTimeoutMs';
+      }
     }
   }
   return null;
@@ -212,6 +239,10 @@ settingsApiRouter.put('/', (req: Request, res: Response): void => {
     writeSettings(body, req.auth!.preferred_username);
     const parsedObj = parsed as Record<string, unknown>;
     updateAuthConfig(parsedObj);
+    // Blocker #1 / AUTHCFG-04: null the lazy limiter singleton so the next login
+    // request rebuilds it from the updated config (e.g. a lowered maxLoginAttempts
+    // or tightened lockoutCapMs takes effect immediately without a restart).
+    resetLimiter();
     // M4: refresh cohort-hash secret (honors a rotated settings.audit.cohortHashSecret
     // or a newly dropped-in data/cohort-hash-secret.txt) and re-read the aggregate
     // cache TTL. Drop all cached aggregates so responses can't outlive the config

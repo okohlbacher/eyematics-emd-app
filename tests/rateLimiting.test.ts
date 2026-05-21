@@ -119,4 +119,42 @@ describe('rateLimiting', () => {
       expect(limiter.isLocked({ count: 5, lockedUntil: Date.now() + 60000, lastActivity: 0 })).toBe(true);
     });
   });
+
+  describe('configurable lockoutCapMs (AUTHCFG-04)', () => {
+    it('caps lockout at custom lockoutCapMs when provided', () => {
+      const cap = 5000; // 5s cap
+      const limiter = createRateLimiter(1, cap);
+      // trigger many failures to exceed the cap
+      let state = limiter.recordFailure('user1');
+      for (let i = 0; i < 30; i++) {
+        state = limiter.recordFailure('user1');
+      }
+      const duration = state.lockedUntil - Date.now();
+      expect(duration).toBeLessThanOrEqual(cap);
+      expect(duration).toBeGreaterThan(0);
+    });
+
+    it('defaults cap to 1 hour when no second arg (regression)', () => {
+      const limiter = createRateLimiter(1);
+      let state = limiter.recordFailure('user1');
+      for (let i = 0; i < 50; i++) {
+        state = limiter.recordFailure('user1');
+      }
+      const duration = state.lockedUntil - Date.now();
+      expect(duration).toBeLessThanOrEqual(3_600_000);
+      expect(duration).toBeGreaterThan(0);
+    });
+
+    it('lockoutCapMs is passed through to cap the backoff formula', () => {
+      // With a tiny cap, even a high failure count can't exceed it
+      const smallCap = 2000;
+      const limiter = createRateLimiter(3, smallCap);
+      limiter.recordFailure('u');
+      limiter.recordFailure('u');
+      const state = limiter.recordFailure('u'); // triggers lockout
+      const duration = state.lockedUntil - Date.now();
+      // formula: min(2^3 * 1000, 2000) = min(8000, 2000) = 2000
+      expect(duration).toBeLessThanOrEqual(smallCap);
+    });
+  });
 });

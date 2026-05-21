@@ -54,6 +54,8 @@ interface AuthConfig {
   twoFactorEnabled: boolean;
   maxLoginAttempts: number;
   otpCode: string;
+  /** Exponential-backoff cap in ms (AUTHCFG-04). lockout = min(2^failures * 1s, lockoutCapMs). */
+  lockoutCapMs: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -122,11 +124,15 @@ export function initAuth(dataDir: string, settings: Record<string, unknown>): vo
     _jwtSecretPrev = null;
   }
 
-  // Parse auth config from flat settings structure (F-10: consistent with validator)
+  // Parse auth config from settings. AUTHCFG-04: prefer settings.auth.maxLoginAttempts / lockoutCapMs
+  // when present; fall back to top-level maxLoginAttempts (backward compat), then hard defaults.
+  const authSub = (settings.auth ?? {}) as Record<string, unknown>;
   _authConfig = {
     twoFactorEnabled: typeof settings.twoFactorEnabled === 'boolean' ? settings.twoFactorEnabled : false,
-    maxLoginAttempts: typeof settings.maxLoginAttempts === 'number' ? settings.maxLoginAttempts : 5,
+    maxLoginAttempts: typeof authSub.maxLoginAttempts === 'number' ? authSub.maxLoginAttempts
+      : typeof settings.maxLoginAttempts === 'number' ? settings.maxLoginAttempts : 5,
     otpCode: typeof settings.otpCode === 'string' ? settings.otpCode : '123456',
+    lockoutCapMs: typeof authSub.lockoutCapMs === 'number' ? authSub.lockoutCapMs : 900_000,
   };
 
   // Parse auth provider and initialize Keycloak if needed
@@ -233,12 +239,17 @@ export function getAuthConfig(): AuthConfig {
 /**
  * Re-parse auth config from updated settings.
  * Called after settings.yaml is written so the in-memory config stays in sync.
+ * AUTHCFG-04: prefers settings.auth.maxLoginAttempts / lockoutCapMs; falls back to
+ * top-level maxLoginAttempts for backward compat, then hard defaults.
  */
 export function updateAuthConfig(settings: Record<string, unknown>): void {
+  const authSub = (settings.auth ?? {}) as Record<string, unknown>;
   _authConfig = {
     twoFactorEnabled: typeof settings.twoFactorEnabled === 'boolean' ? settings.twoFactorEnabled : false,
-    maxLoginAttempts: typeof settings.maxLoginAttempts === 'number' ? settings.maxLoginAttempts : 5,
+    maxLoginAttempts: typeof authSub.maxLoginAttempts === 'number' ? authSub.maxLoginAttempts
+      : typeof settings.maxLoginAttempts === 'number' ? settings.maxLoginAttempts : 5,
     otpCode: typeof settings.otpCode === 'string' ? settings.otpCode : '123456',
+    lockoutCapMs: typeof authSub.lockoutCapMs === 'number' ? authSub.lockoutCapMs : 900_000,
   };
 }
 
