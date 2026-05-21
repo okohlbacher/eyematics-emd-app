@@ -59,11 +59,15 @@ export function parseSubcohortName(name: string): SubcohortName {
 }
 
 /**
- * Returns true when name contains exactly one colon (the subcohort convention).
- * Use this as a guard before calling parseSubcohortName (Pitfall 3).
+ * Returns true when name is a VALID subcohort name: exactly one colon AND both
+ * trimmed segments non-empty. This is a true guard for parseSubcohortName — when
+ * it returns true, parseSubcohortName(name) will not throw. Names like ":Male" or
+ * "C1:" (which would throw) return false here and are treated as plain cohorts.
  */
 export function isSubcohortName(name: string): boolean {
-  return name.split(':').length === 2;
+  const parts = name.split(':');
+  if (parts.length !== 2) return false;
+  return parts[0].trim() !== '' && parts[1].trim() !== '';
 }
 
 // ---------------------------------------------------------------------------
@@ -111,10 +115,12 @@ export function isDuplicateName(candidate: string, existingNames: string[]): boo
  *  - Everything else (including orphan subcohorts with no matching parent) goes into flat.
  */
 export function groupByParent(searches: SavedSearch[]): GroupByParentResult {
-  // Build a lookup of lowercase-trimmed name → SavedSearch for fast parent matching.
+  // Build a lookup of normalized name → SavedSearch for fast parent matching.
+  // Uses the same normalization as duplicate detection (D-04 / WR-02) so parent
+  // linking and duplicate checks never disagree.
   const byNormalizedName = new Map<string, SavedSearch>();
   for (const s of searches) {
-    byNormalizedName.set(s.name.trim().toLowerCase(), s);
+    byNormalizedName.set(normalizeCohortName(s.name), s);
   }
 
   const parentIds = new Set<string>();
@@ -122,10 +128,17 @@ export function groupByParent(searches: SavedSearch[]): GroupByParentResult {
   const subcohortsByParentId = new Map<string, SavedSearch[]>();
 
   for (const s of searches) {
+    // isSubcohortName already guarantees non-empty segments, so parseSubcohortName
+    // will not throw. The try/catch is defensive insurance: a server-loaded name
+    // must never crash the drawer render (CR-01).
     if (!isSubcohortName(s.name)) continue;
-
-    const { parent } = parseSubcohortName(s.name);
-    const parentEntry = byNormalizedName.get(parent.toLowerCase());
+    let parent: string;
+    try {
+      ({ parent } = parseSubcohortName(s.name));
+    } catch {
+      continue; // unparseable → treat as flat, never throw during render
+    }
+    const parentEntry = byNormalizedName.get(normalizeCohortName(parent));
     if (!parentEntry) continue; // orphan subcohort → will land in flat
 
     // Found a real parent-subcohort relationship.

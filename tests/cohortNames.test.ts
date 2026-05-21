@@ -9,9 +9,11 @@ import { describe, expect, it } from 'vitest';
 
 // RED: this import will fail until Plan 02 creates src/services/cohortNames.ts
 import {
+  groupByParent,
   isSubcohortName,
   parseSubcohortName,
 } from '../src/services/cohortNames';
+import type { SavedSearch } from '../shared/types/fhir';
 
 // ---------------------------------------------------------------------------
 // parseSubcohortName — contract tests
@@ -58,6 +60,37 @@ describe('isSubcohortName', () => {
 
   it('returns false for a name with two colons', () => {
     expect(isSubcohortName('A:B:C')).toBe(false);
+  });
+
+  it('CR-01: returns false for empty-segment names (":Male", "C1:")', () => {
+    expect(isSubcohortName(':Male')).toBe(false);
+    expect(isSubcohortName('C1:')).toBe(false);
+    expect(isSubcohortName(' : ')).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// groupByParent — must never throw on malformed server-loaded names (CR-01)
+// ---------------------------------------------------------------------------
+
+describe('groupByParent', () => {
+  const mk = (id: string, name: string): SavedSearch => ({
+    id,
+    name,
+    createdAt: '2026-05-21T00:00:00.000Z',
+    filters: {},
+  });
+
+  it('CR-01: does not throw on empty-segment names and treats them as flat', () => {
+    const searches = [mk('1', 'C1'), mk('2', ':Male'), mk('3', 'C1:'), mk('4', 'C1:Female')];
+    let result!: ReturnType<typeof groupByParent>;
+    expect(() => {
+      result = groupByParent(searches);
+    }).not.toThrow();
+    // ":Male" and "C1:" are not valid subcohorts → flat; "C1:Female" links to parent "C1".
+    expect(result.flat.map((s) => s.id).sort()).toEqual(['2', '3']);
+    expect(result.parents.map((s) => s.id)).toEqual(['1']);
+    expect(result.subcohorts.map((s) => s.id)).toEqual(['4']);
   });
 });
 
