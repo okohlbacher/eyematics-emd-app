@@ -188,7 +188,7 @@ Plans:
 **Wave 0**
 - [x] 31-01-PLAN.md — Wave 0 RED test scaffolds (cohortNames unit + builder/drawer component) + 10 i18n keys [KOH-003, KOH-004]
 **Wave 1**
-- [ ] 31-02-PLAN.md — src/services/cohortNames.ts (parseSubcohortName/isSubcohortName/duplicate/groupByParent) [KOH-003]
+- [x] 31-02-PLAN.md — src/services/cohortNames.ts (parseSubcohortName/isSubcohortName/duplicate/groupByParent) [KOH-003]
 **Wave 2**
 - [ ] 31-03-PLAN.md — CohortBuilderPage validation + Split affordance & CohortCompareDrawer tree render [KOH-003, KOH-004]
 **UI hint**: yes
@@ -201,7 +201,7 @@ Plans:
 | 28. Admin Session Control UI | 4/4 | Complete   | 2026-05-14 |
 | 29. Home Panel UX | 4/4 | Complete    | 2026-05-21 |
 | 30. Terminology Configuration Docs | 1/1 | Complete    | 2026-05-21 |
-| 31. Subcohort Support | 1/3 | In Progress|  |
+| 31. Subcohort Support | 2/3 | In Progress|  |
 
 ---
 
