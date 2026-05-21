@@ -162,7 +162,9 @@ to two small cleanup tasks; no new documentation section is needed.
   2. TERM-02 is satisfied by the commented-out example block in `config/settings.yaml` with inline
      comments (kept commented to preserve the D-16/D-17 offline-by-default design); the requirement
      wording reflects "commented example" rather than an active block.
-**Plans**: TBD — single small doc/config plan.
+**Plans**: 1 plan (1 wave)
+Plans:
+- [ ] 30-01-PLAN.md — Fix terminology.serverUrl Default-cell wording in Konfiguration.md, verify commented settings.yaml block, tick TERM-02 in REQUIREMENTS.md [TERM-01, TERM-02]
 
 ### Phase 31: Subcohort Support
 **Goal**: Users can split any saved cohort into named subcohorts (one level deep) using a `ParentName:SubcohortName` naming convention; subcohorts appear in a tree-grouped picker wherever cohorts are selectable for comparison
@@ -191,7 +193,7 @@ to two small cleanup tasks; no new documentation section is needed.
 | 27. Stateful Session Backend | 4/4 | Complete | 2026-05-11 |
 | 28. Admin Session Control UI | 4/4 | Complete   | 2026-05-14 |
 | 29. Home Panel UX | 4/4 | Complete    | 2026-05-21 |
-| 30. Terminology Configuration Docs | 0/? | Not started | - |
+| 30. Terminology Configuration Docs | 0/1 | Not started | - |
 | 31. Subcohort Support | 0/? | Not started | - |
 
 ---
