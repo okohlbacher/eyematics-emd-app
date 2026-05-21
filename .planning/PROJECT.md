@@ -148,6 +148,7 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 **In Progress:** Milestone v1.10 — Session Hardening & UX Closure
 - Phase 27 complete (2026-05-11): `server/sessionsDb.ts` (SQLite WAL, jti-keyed rows), jti rotation in /refresh, RFC 6819 family revocation, dual-key signing window, `/api/auth/rotate-key` admin endpoint (SESS-02/03/04); 702/702 tests green
 - Phase 29 complete (2026-05-21): home-panel UX closure — "Attention needed" Review buttons deep-link to pre-filtered `/quality` (UX-01), per-username localStorage recent-activity store + `useRecentActivity` hook powering "Jump Back In" (UX-02), recents cleared on logout/login for real cross-user isolation (D-01); 754/754 tests green
+- Phase 30 complete (2026-05-21): terminology config docs cleanup — `docs/Konfiguration.md` `terminology.serverUrl` Default cell corrected to `—` (was misleadingly the Ontoserver URL; code default is undefined), URL relabelled as example placeholder; TERM-02 satisfied by the commented `config/settings.yaml` example block (TERM-01/TERM-02 complete); 754/754 tests green
 
 **Shipped:** Milestone v1.9.5 — Synthetic Data Realism (2026-05-01)
 - Phase 26 complete: terminology seed extended (5 codes), disease-conditional comorbidities, HbA1c + age-disease coupling, AMD/DME/RVO template differentiation, 4 synthetic bundles regenerated, verify-bundle-distributions.mjs wired into test:ci
@@ -299,4 +300,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-21 — after Phase 29 (Home Panel UX) completion in milestone v1.10.*
+*Last updated: 2026-05-21 — after Phase 30 (Terminology Configuration Docs cleanup) completion in milestone v1.10.*
