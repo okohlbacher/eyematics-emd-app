@@ -19,13 +19,40 @@ function storageKey(username: string): string {
   return `emd-recent:${username}`;
 }
 
+/**
+ * Shape + same-origin validation for a single deserialized entry.
+ * localStorage is user-writable (DevTools) and attacker-writable under any XSS
+ * foothold, and entry.path flows verbatim into navigate() on the landing page.
+ * A crafted value such as "//evil.example/phish" or a "http:"/"javascript:" scheme
+ * is an open-redirect / navigation-hijack primitive, so path is constrained to an
+ * app-relative, same-origin route: it must start with a single "/" and NOT with
+ * "//" (protocol-relative) or "/\" (which some routers normalize to "//").
+ * Entries that fail validation are dropped silently (consistent with the existing
+ * try/catch swallow-on-failure idiom — validation must never throw into render).
+ */
+function isValidEntry(value: unknown): value is RecentActivityEntry {
+  if (!value || typeof value !== 'object') return false;
+  const entry = value as Record<string, unknown>;
+  return (
+    typeof entry.id === 'string' &&
+    typeof entry.label === 'string' &&
+    typeof entry.sub === 'string' &&
+    typeof entry.path === 'string' &&
+    entry.path.startsWith('/') &&
+    !entry.path.startsWith('//') &&
+    !entry.path.startsWith('/\\') &&
+    typeof entry.visitedAt === 'number'
+  );
+}
+
 export function getEntries(username: string): RecentActivityEntry[] {
   try {
     const raw = localStorage.getItem(storageKey(username));
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed as RecentActivityEntry[];
+    // Per-element shape validation: drop entries that fail (untrusted source).
+    return parsed.filter(isValidEntry);
   } catch {
     return [];
   }
