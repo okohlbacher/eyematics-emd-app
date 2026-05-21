@@ -59,7 +59,7 @@
 | KOH-002 | Negativer Wert bei Alter, Visus, CRT möglich | ✅ | **Behoben in A-03** (s. o.) |
 | KOH-002 | Visus-Eingabe akzeptiert String | ✅ | **Behoben in A-03** — `v >= 0`-Guard verhindert ungültige Werte |
 | KOH-002 | Cursor bleibt links bei Kohortenname | ✅ | **Behoben.** `text-left text-gray-900` zum Kohortennamen-Input ergänzt. |
-| KOH-003 | Subkohorten nur sehr implizit möglich | 💬 | **Design-Entscheidung:** EMD hat keine expliziten Subkohorten; Kohorten werden über gespeicherte Suchen abgebildet. Für Subkohorten wäre eine verschachtelte Filter-Hierarchie nötig — Backlog. |
+| KOH-003 | Subkohorten nur sehr implizit möglich | ⏳ | **Geplant für Phase 31 (v1.10).** Subkohorten via `ParentName:SubName`-Konvention; ein Level Tiefe; Baumansicht im Vergleichs-Drawer; Split-UI im CohortBuilder. |
 | KOH-005 | „Analyse"-Tab zeigt nicht an, in welcher Kohorte ich arbeite | ✅ | **Behoben in A-04** — Kohortenname wird bei gespeicherten Suchen unter dem Seitentitel angezeigt |
 | KOH-003 | Auswahl wird gelöscht, wenn auf „Analysieren" geklickt und dann zurück | 💬 | **Accept als Backlog.** Filter-State sollte beim Rücknavigieren erhalten bleiben (History-State oder Persistenz im Context). Nicht trivial — aufwandsmäßig einordnen. |
 | KOH-006 | Kohorte eher umständlich anzuzeigen | 💬 | Gemeint ist wahrscheinlich, dass der Weg zur Kohortenübersicht nicht direkt ist. UX-Verbesserung, Backlog. |
@@ -70,7 +70,7 @@
 
 | ID | Finding | Status | Empfehlung |
 |----|---------|--------|------------|
-| ANL-002 | Subkohorte gibt es nicht; man kann Kohorten vergleichen | 💬 | Korrekte Beobachtung — entspricht dem Design (CohortCompareDrawer). Keine Änderung nötig; Anforderungstext präzisieren. |
+| ANL-002 | Subkohorte gibt es nicht; man kann Kohorten vergleichen | ⏳ | **Phase 31 (v1.10):** Echte Subkohorten via `ParentName:SubName`-Konvention; im Vergleichs-Drawer als Baumstruktur selektierbar. |
 | ANL-002 | Behandlungsintervall nicht vergleichend dargestellt | 💬 | Intervall-Histogramm existiert als eigenständiger Metrik-Tab, aber `IntervalHistogram` nimmt nur eine Kohorte. Vergleichs-Modus erfordert Erweiterung der Komponente. Backlog. |
 | ANL-002 | Was ist „Responder"? | ✅ | **Behoben.** ℹ-Tooltip am Responder-Tab: „Visus-Verbesserung ≥ 5 Buchstaben ETDRS oder CRT-Reduktion ≥ 10 % gegenüber Baseline". |
 | ANL-002 | Vergleich anderer Parameter (Aggregiert-Tab) relevant | 💬 | **Backlog.** Kohorten-Vergleich auf Aggregiert-Tab ausweiten ist Erweiterungsfeature. |

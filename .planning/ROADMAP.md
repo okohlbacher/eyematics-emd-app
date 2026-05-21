@@ -68,7 +68,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ## Active Milestone: v1.10 — Session Hardening & UX Closure
 
-**Goal:** Close all long-deferred session management, home panel UX, and terminology documentation items.
+**Goal:** Close all long-deferred session management, home panel UX, terminology documentation, and subcohort items.
 
 ## Phases
 
@@ -76,6 +76,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 - [x] **Phase 28: Admin Session Control UI** — Force sign-out, per-device session listing + individual revocation, TTL configuration UI (completed 2026-05-14)
 - [ ] **Phase 29: Home Panel UX** — Wire "Attention needed" Review buttons and "Jump Back In" panel routing
 - [ ] **Phase 30: Terminology Configuration Docs** — Document terminology settings keys in settings.yaml and Konfiguration.md
+- [ ] **Phase 31: Subcohort Support** — Colon-namespaced subcohorts, tree-view picker in comparison drawer, subcohort split UI in cohort builder
 
 ## Phase Details
 
@@ -130,6 +131,26 @@ Plans:
   2. `docs/Konfiguration.md` has a "Terminology Service" section documenting all three keys with valid value examples and the behavior when the service is disabled
 **Plans**: TBD
 
+### Phase 31: Subcohort Support
+**Goal**: Users can split any saved cohort into named subcohorts (one level deep) using a `ParentName:SubcohortName` naming convention; subcohorts appear in a tree-grouped picker wherever cohorts are selectable for comparison
+**Depends on**: Nothing (builds on existing `SavedSearch` / `CohortFilter` infrastructure; no new backend tables required)
+**Requirements**: KOH-003, KOH-004
+**Decisions**:
+- Subcohort identity is purely the name: any `SavedSearch.name` containing exactly one `:` is a subcohort; `text before :` is the parent cohort name. Two or more colons are rejected at save time.
+- Subcohorts are regular `SavedSearch` objects — no new field on the type. The colon convention is the only differentiator.
+- The "Split into subcohort" button in `CohortBuilderPage` pre-populates the save dialog with `ParentName:` so users type only the subcohort identifier.
+- Users may also type `ParentName:Sub` manually in the name field — the builder validates and rejects double colons.
+- In `CohortCompareDrawer` and any future cohort-selection dropdown, cohorts with subcohorts are rendered as a collapsible tree: parent row (selects parent cohort's own filter) → indented subcohort rows. Selecting the parent does NOT implicitly include subcohorts — each is independently selectable.
+- Max 4 cohorts in comparison (existing limit) counts each entry (parent or subcohort) individually.
+**Success Criteria** (what must be TRUE):
+  1. A user can save a subcohort `Cohort1:Male` from the cohort builder — the name is validated (exactly one colon, non-empty parent and sub identifiers, no duplicate names) and the entry appears under `Cohort1` in the comparison drawer
+  2. `CohortCompareDrawer` renders a tree: parent cohort as top-level row, its subcohorts indented beneath it; cohorts with no subcohorts render as before (flat)
+  3. Selecting the parent cohort row in the drawer applies the parent's own saved filter (not a union of subcohorts); selecting a subcohort row applies that subcohort's filter independently
+  4. A name field validation helper `parseSubcohortName(name)` in `src/services/cohortNames.ts` returns `{ parent, sub }` for valid subcohort names and throws for names with 0 or 2+ colons; it is covered by unit tests
+  5. Attempting to save a subcohort whose parent name does not match any existing `SavedSearch` shows a validation warning (not a hard block — orphan subcohorts are allowed for manual-entry workflows)
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress Table
 
 | Phase | Plans Complete | Status | Completed |
@@ -138,6 +159,7 @@ Plans:
 | 28. Admin Session Control UI | 4/4 | Complete   | 2026-05-14 |
 | 29. Home Panel UX | 0/? | Not started | - |
 | 30. Terminology Configuration Docs | 0/? | Not started | - |
+| 31. Subcohort Support | 0/? | Not started | - |
 
 ---
 
