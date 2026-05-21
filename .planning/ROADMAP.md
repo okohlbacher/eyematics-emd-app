@@ -183,7 +183,14 @@ Plans:
   3. Selecting the parent cohort row in the drawer applies the parent's own saved filter (not a union of subcohorts); selecting a subcohort row applies that subcohort's filter independently
   4. A name field validation helper `parseSubcohortName(name)` in `src/services/cohortNames.ts` returns `{ parent, sub }` for valid subcohort names and throws for names with 0 or 2+ colons; it is covered by unit tests
   5. Attempting to save a subcohort whose parent name does not match any existing `SavedSearch` shows a validation warning (not a hard block — orphan subcohorts are allowed for manual-entry workflows)
-**Plans**: TBD
+**Plans**: 3 plans (3 waves)
+Plans:
+**Wave 0**
+- [ ] 31-01-PLAN.md — Wave 0 RED test scaffolds (cohortNames unit + builder/drawer component) + 10 i18n keys [KOH-003, KOH-004]
+**Wave 1**
+- [ ] 31-02-PLAN.md — src/services/cohortNames.ts (parseSubcohortName/isSubcohortName/duplicate/groupByParent) [KOH-003]
+**Wave 2**
+- [ ] 31-03-PLAN.md — CohortBuilderPage validation + Split affordance & CohortCompareDrawer tree render [KOH-003, KOH-004]
 **UI hint**: yes
 
 ## Progress Table
@@ -194,7 +201,7 @@ Plans:
 | 28. Admin Session Control UI | 4/4 | Complete   | 2026-05-14 |
 | 29. Home Panel UX | 4/4 | Complete    | 2026-05-21 |
 | 30. Terminology Configuration Docs | 1/1 | Complete    | 2026-05-21 |
-| 31. Subcohort Support | 0/? | Not started | - |
+| 31. Subcohort Support | 0/3 | Not started | - |
 
 ---
 
