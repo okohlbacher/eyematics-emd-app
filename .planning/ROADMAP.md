@@ -137,9 +137,12 @@ state only).
      empty state (`jumpBackInEmpty`) rather than an error.
 **Plans**: 4 plans (3 waves)
 Plans:
+**Wave 1**
 - [ ] 29-01-PLAN.md — Wave 0: 4 test scaffolds + reviewTherapyBreakers/reviewFlaggedCases i18n keys [UX-01, UX-02]
 - [ ] 29-02-PLAN.md — recentActivityStore (per-username localStorage CRUD) + useRecentActivity hook [UX-02]
 - [ ] 29-03-PLAN.md — QualityPage useSearchParams deep-link seeding (?therapy/?status, flagged→in_progress) [UX-01]
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 29-04-PLAN.md — LandingPage Review-button targets + Jump Back In rows + recording triggers + clear-on-logout [UX-01, UX-02]
 **UI hint**: yes
 
