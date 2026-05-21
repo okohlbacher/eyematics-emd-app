@@ -58,24 +58,10 @@ export default function CohortCompareDrawer({
     for (const sub of subs) subcohortIdSet.add(sub.id);
   }
 
-  // Expand/collapse state: all parents expanded by default (D-02)
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(
-    () => new Set(parents.map((p) => p.id)),
-  );
-
-  // When new parent cohorts appear (e.g. after save), auto-expand them
-  useEffect(() => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      for (const p of parents) {
-        if (!next.has(p.id)) next.add(p.id);
-      }
-      return next;
-    });
-  // parents identity changes with every savedSearches change — exhaustive dep would
-  // cause infinite loop; savedSearches is the stable dependency here.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [savedSearches]);
+  // Collapse state: track only explicitly-collapsed parents. Empty set = all expanded
+  // by default (D-02), and parents added later (e.g. after a save) are expanded
+  // automatically because they aren't in the collapsed set — no effect needed.
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(() => new Set());
 
   /** Renders a single cohort label row (shared between flat, parent, and subcohort renders) */
   function renderLabel(s: SavedSearch, extraClass?: string) {
@@ -144,7 +130,7 @@ export default function CohortCompareDrawer({
           }
 
           // Parent with subcohorts — render tree group with chevron
-          const isExpanded = expandedIds.has(s.id);
+          const isExpanded = !collapsedIds.has(s.id);
           const subcohorts = subcohortsByParentId.get(s.id) ?? [];
 
           return (
@@ -156,7 +142,7 @@ export default function CohortCompareDrawer({
                   aria-expanded={isExpanded}
                   aria-label={isExpanded ? t('cohortTreeCollapseGroup') : t('cohortTreeExpandGroup')}
                   onClick={() => {
-                    setExpandedIds((prev) => {
+                    setCollapsedIds((prev) => {
                       const next = new Set(prev);
                       if (next.has(s.id)) {
                         next.delete(s.id);
