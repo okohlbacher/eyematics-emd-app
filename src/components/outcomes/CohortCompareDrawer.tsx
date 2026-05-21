@@ -1,6 +1,7 @@
-import { X } from 'lucide-react';
-import { useEffect } from 'react';
+import { ChevronDown, ChevronUp, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
+import { groupByParent } from '../../services/cohortNames';
 import type { SavedSearch } from '../../types/fhir';
 
 export interface CohortCompareDrawerProps {
@@ -47,6 +48,67 @@ export default function CohortCompareDrawer({
     onChange(next);
   };
 
+  // Derive the tree grouping at render time — no persisted state (anti-pattern per RESEARCH)
+  const { parents, subcohortsByParentId } = groupByParent(savedSearches);
+  const parentIds = new Set(parents.map((p) => p.id));
+
+  // Subcohort id set for filtering top-level items
+  const subcohortIdSet = new Set<string>();
+  for (const [, subs] of subcohortsByParentId) {
+    for (const sub of subs) subcohortIdSet.add(sub.id);
+  }
+
+  // Expand/collapse state: all parents expanded by default (D-02)
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(
+    () => new Set(parents.map((p) => p.id)),
+  );
+
+  // When new parent cohorts appear (e.g. after save), auto-expand them
+  useEffect(() => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      for (const p of parents) {
+        if (!next.has(p.id)) next.add(p.id);
+      }
+      return next;
+    });
+  // parents identity changes with every savedSearches change — exhaustive dep would
+  // cause infinite loop; savedSearches is the stable dependency here.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedSearches]);
+
+  /** Renders a single cohort label row (shared between flat, parent, and subcohort renders) */
+  function renderLabel(s: SavedSearch, extraClass?: string) {
+    const isPrimary = s.id === primaryCohortId;
+    const checked = isPrimary || selectedIds.includes(s.id);
+    const disabled = isPrimary || (isMaxReached && !selectedIds.includes(s.id));
+    const count = patientCounts[s.id] ?? 0;
+    const label = isPrimary
+      ? `${s.name} (N=${count} patients) · ${t('outcomesComparePrimaryLabel')}`
+      : `${s.name} (N=${count} patients)`;
+    return (
+      <label
+        key={s.id}
+        className={`flex items-center gap-2 text-sm${extraClass ? ` ${extraClass}` : ''}`}
+      >
+        <input
+          type="checkbox"
+          aria-label={label}
+          className="accent-blue-600"
+          checked={checked}
+          disabled={disabled}
+          onChange={() => toggle(s.id)}
+        />
+        <span className={disabled && !isPrimary ? 'text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200'}>
+          {label}
+        </span>
+      </label>
+    );
+  }
+
+  // Top-level items: parents and flat cohorts (subcohorts are rendered inside parent groups)
+  const topLevelItems = savedSearches.filter((s) => !subcohortIdSet.has(s.id));
+
   return (
     <aside
       id="outcomes-compare-drawer"
@@ -73,33 +135,55 @@ export default function CohortCompareDrawer({
       >
         <p className="text-sm text-gray-500">{t('outcomesCompareDrawerHint')}</p>
 
-        {savedSearches.map((s) => {
-          const isPrimary = s.id === primaryCohortId;
-          const checked = isPrimary || selectedIds.includes(s.id);
-          const disabled =
-            isPrimary ||
-            (isMaxReached && !selectedIds.includes(s.id));
-          const count = patientCounts[s.id] ?? 0;
-          const label = isPrimary
-            ? `${s.name} (N=${count} patients) · ${t('outcomesComparePrimaryLabel')}`
-            : `${s.name} (N=${count} patients)`;
+        {topLevelItems.map((s) => {
+          const isParent = parentIds.has(s.id);
+
+          if (!isParent) {
+            // Flat cohort — render unchanged, identical to pre-Phase-31 behavior (Pitfall 2)
+            return renderLabel(s);
+          }
+
+          // Parent with subcohorts — render tree group with chevron
+          const isExpanded = expandedIds.has(s.id);
+          const subcohorts = subcohortsByParentId.get(s.id) ?? [];
+
           return (
-            <label
-              key={s.id}
-              className="flex items-center gap-2 text-sm"
-            >
-              <input
-                type="checkbox"
-                aria-label={label}
-                className="accent-blue-600"
-                checked={checked}
-                disabled={disabled}
-                onChange={() => toggle(s.id)}
-              />
-              <span className={disabled && !isPrimary ? 'text-gray-400' : 'text-gray-800'}>
-                {label}
-              </span>
-            </label>
+            <div key={s.id}>
+              {/* Parent row: chevron button + parent checkbox label */}
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  aria-expanded={isExpanded}
+                  aria-label={isExpanded ? t('cohortTreeCollapseGroup') : t('cohortTreeExpandGroup')}
+                  onClick={() => {
+                    setExpandedIds((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(s.id)) {
+                        next.delete(s.id);
+                      } else {
+                        next.add(s.id);
+                      }
+                      return next;
+                    });
+                  }}
+                  className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex-shrink-0"
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronUp className="w-4 h-4" />
+                  )}
+                </button>
+                {renderLabel(s)}
+              </div>
+
+              {/* Subcohort rows — pl-6 indented, space-y-1 within the group (UI-SPEC) */}
+              {isExpanded && (
+                <div className="space-y-1 mt-1">
+                  {subcohorts.map((sub) => renderLabel(sub, 'pl-6'))}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
