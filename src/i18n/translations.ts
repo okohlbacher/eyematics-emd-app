@@ -859,6 +859,14 @@ const translations = {
     en: 'Flagged for quality review',
   },
   review: { de: 'Pr\u00fcfen', en: 'Review' },
+  reviewTherapyBreakers: {
+    de: 'Therapie-Abbrecher pr\u00fcfen',
+    en: 'Review therapy breakers',
+  },
+  reviewFlaggedCases: {
+    de: 'Markierte F\u00e4lle pr\u00fcfen',
+    en: 'Review flagged cases',
+  },
 
   // Session management (Phase 28 / SESSUI-01, SESSUI-02)
   adminSessions: { de: 'Sitzungen', en: 'Sessions' },
