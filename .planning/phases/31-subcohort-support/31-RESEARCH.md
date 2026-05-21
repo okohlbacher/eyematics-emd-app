@@ -558,7 +558,7 @@ Step 2.6: SKIPPED — Phase 31 is purely frontend code changes with no external 
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`GitBranch` icon availability in installed lucide-react version**
    - What we know: lucide-react is already imported in `CohortBuilderPage.tsx` (`import { ..., LineChart, Play, ... } from 'lucide-react'`). `GitBranch` is in the standard lucide-react icon set (available since early versions).
