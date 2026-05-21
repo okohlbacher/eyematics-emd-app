@@ -63,8 +63,8 @@
 | UX-02 | Phase 29 | Complete |
 | TERM-01 | Phase 25 / 30 | Complete (docs shipped in Phase 25) |
 | TERM-02 | Phase 30 | Complete (Phase 30) |
-| KOH-003 | Phase 31 | Complete (Phase 31, UAT pending) |
-| KOH-004 | Phase 31 | Complete (Phase 31, UAT pending) |
+| KOH-003 | Phase 31 | Complete |
+| KOH-004 | Phase 31 | Complete |
 
 **Coverage:**
 - v1.10 requirements: 11 total
