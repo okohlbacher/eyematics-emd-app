@@ -27,6 +27,7 @@
   - Add FHIR `Consent` resources with a research-use policy for the existing synthetic patients (the consented cohort)
   - Generate patient **stubs** at a configurable multiplier (default ~4–5× the consented count) carrying only encounter date, gender (m/f), and year of birth — nothing else
   - The dashboard shows the total patient count (consented + stubs) and the consented count, and surfaces **Datenvollzähligkeit** = consented ÷ total (fraction of patients amenable to research)
+  - **Stub isolation (H2):** stubs are **excluded from all clinical surfaces** — cohort building, outcomes/trajectories, quality review, case detail, charts — and appear **only** in the Datenvollzähligkeit denominator. Stubs are **site-attributed** so the metric honors per-user site restriction. Adding stubs must not regress FHIR load performance or the >1000-patient server-aggregation routing.
   - (source: DAT-003 — corrects the earlier incorrect single-count fix)
 - [ ] **DASH-02**: The dashboard "Attention needed" Review buttons route correctly — 'Prüfen' / 'Therapie-Abbrecher' lands on the right patient or a pre-filtered issue cohort rather than the wrong place (source: DAT----; depends on COH-03)
 
@@ -35,7 +36,7 @@
 - [ ] **COH-01**: Cohort-builder plausibility checks — the lower age bound cannot exceed the upper bound; Visus input is constrained to the 0–1 decimal range; non-numeric and negative inputs are rejected on age/Visus/CRT (source: KOH-002)
 - [ ] **COH-02**: Cohort filter state is persisted across the full navigation path for the session (client-side, not server-side), with a reset control to clear filters on demand (source: KOH-003, promoted from backlog)
 - [ ] **COH-03**: Issue-based cohort presets are available in cohort selection and wired to the dashboard Review buttons — **Therapie-Abbrecher** (existing IVI-gap > `therapyBreakerDays` rule), **Unplausible CRT-Werte** (outside `clinicalThresholds`), **Flagged data-quality cases**, and **Implausible Visus** (outside 0–1) (source: KOH-001 / DAT----)
-- [ ] **COH-04**: An advanced filter dialog exposes additional fields. First attempt rolling **all available data-model fields** into the dialog; if that proves unwieldy, fall back to the 5–10 most relevant attributes (e.g. diagnosis subtype, comorbidities, HbA1c, drug/agent, laterality) (source: KOH-001)
+- [ ] **COH-04**: An advanced filter dialog exposes additional fields. A spike first evaluates rolling **all available data-model fields** into the dialog; the spike outcome (full-field vs a curated 5–10 attribute set such as diagnosis subtype, comorbidities, HbA1c, drug/agent, laterality) is **recorded as a decision**, then the chosen approach is implemented (source: KOH-001)
 
 ### Architecture Review & Compaction (ARCH)
 
@@ -47,8 +48,10 @@ Adversarial, in-depth review of the entire existing codebase conducted with CODE
 
 ### Tech-Debt / Verification & Validation Closure (VVBACK)
 
-- [ ] **VVBACK-01**: Phase 27 (stateful session backend) has a `VERIFICATION.md` produced by goal-backward analysis (SESS-02/03/04), each criterion mapped to code refs + passing tests
-- [ ] **VVBACK-02**: Phase 28 (admin session control UI) has a `VERIFICATION.md` produced by goal-backward analysis (SESS-01 + SESSUI-01/02/03), each criterion mapped to code refs + passing tests
+> **H1 (anchor to git tag):** the VVBACK-01/02 verification documents the v1.10 phases **as shipped**. All code references cite the **`v1.10`** git tag (tags `v1.10` / `v1.10-phase28` exist), so the paper trail is immune to the UAT code changes in Phases 32–34 and the Phase 36 compaction. This removes the false ordering dependency — V&V backfill does not depend on the feature phases.
+
+- [ ] **VVBACK-01**: Phase 27 (stateful session backend) has a `VERIFICATION.md` produced by goal-backward analysis (SESS-02/03/04), each criterion mapped to code refs **at the `v1.10` tag** + passing tests
+- [ ] **VVBACK-02**: Phase 28 (admin session control UI) has a `VERIFICATION.md` produced by goal-backward analysis (SESS-01 + SESSUI-01/02/03), each criterion mapped to code refs **at the `v1.10` tag** + passing tests
 - [ ] **VVBACK-03**: Phases 27, 28, and 29 each have a `VALIDATION.md` at `nyquist_compliant: true` / `wave_0_complete: true`, with any coverage gaps filled by passing tests
 - [ ] **VVBACK-04**: Phase 31's `VALIDATION.md` `wave_0_complete` is resolved to `true`, and every v1.10 phase `VALIDATION.md` (27–31) `status: draft` is flipped to final
 - [ ] **VVBACK-05**: `npm run test:ci` passes (zero failures) after all feature, backfill, review, and compaction work; STATE.md / PROJECT.md / MILESTONES.md deferred-debt entries are updated to reflect closure
@@ -85,24 +88,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UMGMT-01 | TBD | Pending |
-| UMGMT-02 | TBD | Pending |
-| UMGMT-03 | TBD | Pending |
-| AUTHCFG-01 | TBD | Pending |
-| AUTHCFG-02 | TBD | Pending |
-| AUTHCFG-03 | TBD | Pending |
-| AUTHCFG-04 | TBD | Pending |
-| DASH-01 | TBD | Pending |
-| DASH-02 | TBD | Pending |
-| COH-01 | TBD | Pending |
-| COH-02 | TBD | Pending |
-| COH-03 | TBD | Pending |
-| COH-04 | TBD | Pending |
-| ARCH-01 | TBD | Pending |
-| ARCH-02 | TBD | Pending |
-| ARCH-03 | TBD | Pending |
-| VVBACK-01 | TBD | Pending |
-| VVBACK-02 | TBD | Pending |
-| VVBACK-03 | TBD | Pending |
-| VVBACK-04 | TBD | Pending |
-| VVBACK-05 | TBD | Pending |
+| UMGMT-01 | Phase 32 | Pending |
+| UMGMT-02 | Phase 32 | Pending |
+| UMGMT-03 | Phase 32 | Pending |
+| AUTHCFG-01 | Phase 32 | Pending |
+| AUTHCFG-02 | Phase 32 | Pending |
+| AUTHCFG-03 | Phase 32 | Pending |
+| AUTHCFG-04 | Phase 32 | Pending |
+| DASH-01 | Phase 34 | Pending |
+| DASH-02 | Phase 33 | Pending |
+| COH-01 | Phase 33 | Pending |
+| COH-02 | Phase 33 | Pending |
+| COH-03 | Phase 33 | Pending |
+| COH-04 | Phase 33 | Pending |
+| ARCH-01 | Phase 36 | Pending |
+| ARCH-02 | Phase 36 | Pending |
+| ARCH-03 | Phase 36 | Pending |
+| VVBACK-01 | Phase 35 | Pending |
+| VVBACK-02 | Phase 35 | Pending |
+| VVBACK-03 | Phase 35 | Pending |
+| VVBACK-04 | Phase 35 | Pending |
+| VVBACK-05 | Phase 36 | Pending |

@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.11
-milestone_name: Subcohort Enhancements & Quality Closure
-status: planning
-last_updated: "2026-05-21T15:02:21.789Z"
+milestone_name: UAT Fixes, Data Completeness & Quality Closure
+status: active
+last_updated: "2026-05-21T16:00:00.000Z"
 last_activity: 2026-05-21
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,25 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-21 after v1.10)
 
 **Core value:** Every user sees only authorized data, with tamper-proof audit trail — while maintaining the zero-friction local development experience.
-**Current focus:** Between milestones — plan next via `/gsd-new-milestone` (next phase: 32)
+**Current focus:** v1.11 — Phase 32: User Management & Auth Hardening
 
 ## Current Position
 
-Phase: Not started (defining requirements — PAUSED)
+Phase: 32 — User Management & Auth Hardening (not started)
 Plan: —
-Status: Requirements drafted (VVBACK-01..05), NOT committed; roadmap not yet created
-Last activity: 2026-05-21 — Milestone v1.11 started; paused before roadmap
+Status: Roadmap created; ready to plan Phase 32
+Last activity: 2026-05-21 — Roadmap created for v1.11 (Phases 32–36)
 
-**Resume note (paused 2026-05-21):** Scope expanded — v1.11 now covers (1) subcohort
-feature addenda, (2) UAT issues / open gaps, (3) tech-debt / V&V closure (VVBACK-01..05),
-(4) adversarial CODEX full-codebase architecture review & compaction (ARCH-01..03, firm).
-`.planning/REQUIREMENTS.md` is a draft on disk (uncommitted): VVBACK-* are firm; the
-Subcohort Enhancements and UAT Issues / Open Gaps categories are placeholders awaiting
-intake. Tomorrow (2026-05-22): take the last-major-UAT issue list, itemize subcohort
-addenda (`SUBCO-*`) + UAT issues/gaps into requirements, then commit REQUIREMENTS.md and
-spawn the roadmapper. Phase numbering continues at 32. `phases.clear` was intentionally
-NOT run — the V&V backfill deliverables live inside the in-tree phase dirs
-`.planning/phases/27..31/`.
+**Progress:** `[ ][ ][ ][ ][ ]` 0/5 phases complete
 
 ## Milestones Shipped
 
@@ -74,19 +65,19 @@ NOT run — the V&V backfill deliverables live inside the in-tree phase dirs
 - Subcohort identity is name-only: a `SavedSearch` with exactly one `:` is a subcohort (`cohortNames.ts`); no new type field. Orphan subcohorts allowed with a soft warning.
 - "Jump Back In" uses a client-side, per-username localStorage recent-activity store (`emd-recent:<username>`, cap 5); cleared on logout/login same-tab and cross-tab.
 
-### Open Items (carry to next milestone)
+### Open Items
 
 - KEYCLK-01: Real Keycloak OIDC redirect flow (blocked by M7) — pushed to backlog
 
 ### Deferred Items
 
-Acknowledged and accepted as tech debt at v1.10 milestone close on 2026-05-21:
+Acknowledged and accepted as tech debt at v1.10 milestone close on 2026-05-21 — to be closed in v1.11 Phase 35:
 
 | Category | Item | Status |
 |----------|------|--------|
-| verification | Phases 27 & 28 have no VERIFICATION.md (evidenced by SUMMARYs + green tests + integration check) | accepted — backfill via `/gsd-verify-work` |
-| nyquist | VALIDATION.md for phases 27/28/29 left `draft`/`nyquist_compliant: false` | accepted — closable via `/gsd-validate-phase` |
-| nyquist | Phase 31 VALIDATION `wave_0_complete: false` despite passing VERIFICATION + UAT | accepted — cosmetic |
+| verification | Phases 27 & 28 have no VERIFICATION.md (evidenced by SUMMARYs + green tests + integration check) | v1.11 Phase 35 — VVBACK-01/02 |
+| nyquist | VALIDATION.md for phases 27/28/29 left `draft`/`nyquist_compliant: false` | v1.11 Phase 35 — VVBACK-03 |
+| nyquist | Phase 31 VALIDATION `wave_0_complete: false` despite passing VERIFICATION + UAT | v1.11 Phase 35 — VVBACK-04 |
 
 ### Blockers
 
@@ -94,5 +85,6 @@ Acknowledged and accepted as tech debt at v1.10 milestone close on 2026-05-21:
 
 ## Operator Next Steps
 
-- (2026-05-22) Triage the last-major-UAT issue list; itemize subcohort addenda (`SUBCO-*`) + UAT issues/open gaps into `.planning/REQUIREMENTS.md` alongside the firm VVBACK-* tech-debt reqs
-- Commit requirements, then create the v1.11 roadmap (continues at Phase 32)
+1. `/gsd-plan-phase 32` — plan Phase 32: User Management & Auth Hardening (UMGMT-01/02/03, AUTHCFG-01/02/03/04)
+2. Execute Phase 32, then plan and execute Phases 33–36 in sequence
+3. Phase 36 is the final gate: ARCH review + compaction + VVBACK-05 green test:ci

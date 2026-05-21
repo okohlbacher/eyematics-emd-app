@@ -1,12 +1,12 @@
 # EMD Backend Redesign
 
-## Status: In Milestone v1.11 — Subcohort Enhancements & Quality Closure (started 2026-05-21, scope expanding)
+## Status: In Milestone v1.11 — UAT Fixes, Data Completeness & Quality Closure (started 2026-05-21, Phases 32–36)
 
 **Latest shipped milestone:** v1.10 — Session Hardening & UX Closure (Phases 27–31), shipped 2026-05-21. Closed all long-deferred session-management, home-panel UX, terminology-docs, and subcohort items.
 
 **Next phase number:** 32 (continues v1.10's Phase 31).
 
-## Current Milestone: v1.11 Subcohort Enhancements & Quality Closure
+## Current Milestone: v1.11 UAT Fixes, Data Completeness & Quality Closure
 
 **Goal:** Deliver the subcohort feature addenda and outstanding UAT-driven feature requests, then close all open gaps and accepted tech debt — giving v1.11 a single comprehensive scope.
 
@@ -149,17 +149,21 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] Terminology `serverUrl` default-vs-placeholder docs fix + commented settings.yaml example (TERM-01/02, was TERM-04) — v1.10 (Phase 30)
 - [x] Subcohort support: `ParentName:Sub` convention, validation, tree-grouped compare picker (KOH-003/004) — v1.10 (Phase 31)
 
-### Active (v1.11 — Subcohort Enhancements & Quality Closure)
+### Active (v1.11 — UAT Fixes, Data Completeness & Quality Closure)
 
-**Subcohort enhancements & UAT issues / open gaps** — _pending intake; to be itemized from the last major UAT (expected 2026-05-22), then assigned REQ-IDs._
+**UAT batch 1 — features & fixes** (from `EMD-v1.10-Changelog-Feedback_discussion.docx`):
+- [ ] User management: edit-dialog center requirement (UMGMT-01), all-fields mandatory create+edit (UMGMT-02), user activation status + de/reactivate + session revoke (UMGMT-03) — **Phase 32**
+- [ ] Auth feedback/config: lockout attempts+time on login (AUTHCFG-01), inactivity countdown @3min (AUTHCFG-02), inactivity + lockout constants → settings.yaml (AUTHCFG-03/04) — **Phase 32**
+- [ ] Cohort builder: plausibility checks (COH-01), session filter persistence + reset (COH-02), issue presets (COH-03), advanced filter dialog (COH-04), dashboard Review routing (DASH-02) — **Phase 33**
+- [ ] Data completeness: FHIR Consent + ~4–5× patient stubs + Datenvollzähligkeit, stubs isolated from clinical surfaces (DASH-01) — **Phase 34**
 
-**Architecture review & compaction:**
+**Architecture review & compaction (Phase 36):**
 - [ ] Adversarial full-codebase review with CODEX (architecture, separation of concerns, design) → severity-classified findings report (ARCH-01)
 - [ ] Prioritized compaction / de-bloat plan with concrete file refs — dead code, redundant abstractions, duplicated logic, oversized modules (ARCH-02)
 - [ ] Approved compaction remediations applied; `test:ci` green, `knip` clean, `lint` passes, no behavior regressions (ARCH-03)
 
-**Tech-debt / V&V closure:**
-- [ ] VERIFICATION.md backfilled for Phase 27 (stateful session backend) via goal-backward analysis (VVBACK-01)
+**Tech-debt / V&V closure (Phases 35–36):**
+- [ ] VERIFICATION.md backfilled for Phase 27 (stateful session backend) via goal-backward analysis, refs anchored to `v1.10` tag (VVBACK-01)
 - [ ] VERIFICATION.md backfilled for Phase 28 (admin session control UI) via goal-backward analysis (VVBACK-02)
 - [ ] Nyquist VALIDATION.md brought to compliant/complete for Phases 27, 28, 29 (VVBACK-03)
 - [ ] Phase 31 VALIDATION `wave_0_complete` resolved; all v1.10 VALIDATION `status: draft` flipped to final (VVBACK-04)
@@ -334,4 +338,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-21 — started milestone v1.11 (Subcohort Enhancements & Quality Closure), scope expanded beyond pure tech-debt to include subcohort feature addenda + UAT issues/open gaps + V&V closure (VVBACK-01..05) + adversarial CODEX architecture review & compaction (ARCH-01..03). Feature requirements pending UAT triage on 2026-05-22; KEYCLK-01 in Backlog.*
+*Last updated: 2026-05-21 — milestone v1.11 (UAT Fixes, Data Completeness & Quality Closure) scoped + roadmapped (Phases 32–36). UAT batch 1 integrated from changelog-feedback doc (UMGMT/AUTHCFG/COH/DASH), plus ARCH compaction + VVBACK closure. Roadmap revised per adversarial review (H1 tag-anchor, H2 stub isolation, M1 COH-04→P33, M2 rename). KEYCLK-01 in Backlog.*
