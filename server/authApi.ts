@@ -221,6 +221,14 @@ authApiRouter.post('/login', async (req: Request, res: Response): Promise<void> 
   // Successful login — reset attempts
   limiter().resetAttempts(key);
 
+  // UMGMT-03 / T-32-01 — inactive user gate. absent `active` means active —
+  // migration target; only an explicit `false` blocks login.
+  // Return the SAME generic 401 as bad credentials to prevent account enumeration (T-02-05).
+  if (user.active === false) {
+    res.status(401).json({ error: 'Invalid credentials' });
+    return;
+  }
+
   const { twoFactorEnabled } = getAuthConfig();
 
   // Per-user TOTP overrides the global twoFactorEnabled toggle — if this user has
@@ -285,6 +293,14 @@ authApiRouter.post('/verify', async (req: Request, res: Response): Promise<void>
   const user = users.find((u) => u.username.toLowerCase() === key);
   if (!user) {
     res.status(401).json({ error: 'User not found' });
+    return;
+  }
+
+  // UMGMT-03 / T-32-02 — inactive gate at verify step too. A challenge token
+  // issued before deactivation must not complete login (T-32-02).
+  // absent `active` means active — only explicit false blocks.
+  if (user.active === false) {
+    res.status(401).json({ error: 'Invalid credentials' });
     return;
   }
 
@@ -524,8 +540,9 @@ authApiRouter.get('/users', (req: Request, res: Response): void => {
     res.status(403).json({ error: 'Admin access required' });
     return;
   }
-  const users = loadUsers().map(({ username, firstName, lastName, role, centers, createdAt, lastLogin }) => ({
-    username, firstName, lastName, role, centers, createdAt, lastLogin,
+  // UMGMT-03: include active in projection so admin UI can show deactivation status
+  const users = loadUsers().map(({ username, firstName, lastName, role, centers, createdAt, lastLogin, active }) => ({
+    username, firstName, lastName, role, centers, createdAt, lastLogin, active,
   }));
   res.json({ users });
 });
@@ -662,11 +679,18 @@ authApiRouter.put('/users/:username', async (req: Request, res: Response): Promi
   }
 
   const target = String(req.params.username ?? '');
-  const { role, centers, firstName, lastName } = req.body as Record<string, unknown>;
+  const { role, centers, firstName, lastName, active } = req.body as Record<string, unknown>;
 
   // Validate role against allowlist
   if (role !== undefined && (typeof role !== 'string' || !VALID_ROLES.has(role))) {
     res.status(400).json({ error: `Invalid role. Must be one of: ${[...VALID_ROLES].join(', ')}` });
+    return;
+  }
+
+  // UMGMT-03 / T-32-04 — validate active is boolean when present.
+  // Server is authoritative; client checkbox is convenience only.
+  if (active !== undefined && typeof active !== 'boolean') {
+    res.status(400).json({ error: '`active` must be a boolean when provided' });
     return;
   }
 
@@ -682,6 +706,10 @@ authApiRouter.put('/users/:username', async (req: Request, res: Response): Promi
   }
 
   let updated: UserRecord | undefined;
+  // UMGMT-03 / T-32-03 — track whether this PUT deactivates the user (true→false).
+  // Used to revoke sessions AFTER the write commits (mirrors PROT-001 delete at :644-648).
+  let wasDeactivated = false;
+
   try {
     await modifyUsers((users) => {
       const user = users.find((u) => u.username.toLowerCase() === target.toLowerCase());
@@ -690,6 +718,15 @@ authApiRouter.put('/users/:username', async (req: Request, res: Response): Promi
       if (rawCenters !== undefined) user.centers = rawCenters;
       if (typeof firstName === 'string') user.firstName = firstName.trim() || undefined;
       if (typeof lastName === 'string') user.lastName = lastName.trim() || undefined;
+      // UMGMT-03: set active flag when provided; capture deactivation transition
+      if (typeof active === 'boolean') {
+        const previousActive = user.active;
+        user.active = active;
+        // revokeByUsername on true→false transition (PROT-001 parity)
+        if (active === false && previousActive !== false) {
+          wasDeactivated = true;
+        }
+      }
       updated = user;
       return users;
     });
@@ -699,6 +736,16 @@ authApiRouter.put('/users/:username', async (req: Request, res: Response): Promi
       return;
     }
     throw err;
+  }
+
+  // UMGMT-03 / T-32-03 — revoke all sessions for a freshly deactivated user.
+  // If sessionsDb is uninitialised this is a no-op (mirrors DELETE handler).
+  if (wasDeactivated) {
+    try {
+      revokeByUsername(target);
+    } catch {
+      // sessionsDb not initialised — safe to ignore
+    }
   }
 
   const { passwordHash: _omit, ...safeUser } = updated!;

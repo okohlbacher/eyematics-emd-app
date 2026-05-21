@@ -5,6 +5,7 @@
  * These tests are written BEFORE the implementation (TDD RED phase).
  */
 
+import bcrypt from 'bcryptjs';
 import type { NextFunction,Request, Response } from 'express';
 import express from 'express';
 import jwt from 'jsonwebtoken';
@@ -24,7 +25,23 @@ let mockUsers: Array<{
   lastName?: string;
   createdAt: string;
   lastLogin?: string;
+  active?: boolean;
 }> = [];
+
+// Mock sessionsDb for UMGMT-03 revokeByUsername assertion
+const mockRevokeByUsername = vi.fn((_username: string) => 0);
+
+vi.mock('../server/sessionsDb.js', () => ({
+  revokeByUsername: (...args: unknown[]) => mockRevokeByUsername(args[0] as string),
+  revokeSession: vi.fn(),
+  revokeFamily: vi.fn(),
+  insertSession: vi.fn(),
+  getSession: vi.fn(),
+  listActiveSessionsByUser: vi.fn(() => []),
+  initSessionsDb: vi.fn(),
+  _closeForTests: vi.fn(),
+  cleanupExpiredSessions: vi.fn(),
+}));
 
 vi.mock('../server/initAuth.js', () => ({
   loadUsers: () => mockUsers,
@@ -308,5 +325,148 @@ describe('PUT /api/auth/users/:username/password', () => {
     // Server generates its own password regardless of what's sent
     expect(res.body.generatedPassword).toBeTruthy();
     expect(res.body.generatedPassword).not.toBe('this-should-be-ignored');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// UMGMT-03: Inactive user login gate (Task 2 — TDD RED)
+// ---------------------------------------------------------------------------
+
+const CORRECT_PASSWORD = 'correct-test-password';
+// Use cost=4 for fast tests — real bcrypt
+const CORRECT_HASH = bcrypt.hashSync(CORRECT_PASSWORD, 4);
+
+describe('POST /login — inactive user gate (UMGMT-03)', () => {
+  let app: express.Express;
+
+  beforeEach(() => {
+    mockRevokeByUsername.mockClear();
+    mockUsers = [
+      {
+        username: 'active-user',
+        passwordHash: CORRECT_HASH,
+        role: 'researcher',
+        centers: ['org-uka'],
+        createdAt: '2025-01-01T00:00:00Z',
+        active: true,
+      },
+      {
+        username: 'inactive-user',
+        passwordHash: CORRECT_HASH,
+        role: 'researcher',
+        centers: ['org-uka'],
+        createdAt: '2025-01-01T00:00:00Z',
+        active: false,
+      },
+      {
+        username: 'legacy-user',
+        passwordHash: CORRECT_HASH,
+        role: 'researcher',
+        centers: ['org-uka'],
+        createdAt: '2025-01-01T00:00:00Z',
+        // active absent — should be treated as active
+      },
+    ];
+    app = makeApp();
+  });
+
+  it('returns 401 for inactive user even with correct password (non-enumeration, generic message)', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'inactive-user', password: CORRECT_PASSWORD });
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe('Invalid credentials');
+  });
+
+  it('succeeds for active user with correct password', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'active-user', password: CORRECT_PASSWORD });
+    expect(res.status).toBe(200);
+    expect(res.body.token).toBeTruthy();
+  });
+
+  it('succeeds for legacy user (absent active field) — treated as active', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'legacy-user', password: CORRECT_PASSWORD });
+    expect(res.status).toBe(200);
+    expect(res.body.token).toBeTruthy();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// UMGMT-03: PUT /users/:username — active toggle + session revocation
+// ---------------------------------------------------------------------------
+
+describe('PUT /api/auth/users/:username — active toggle (UMGMT-03)', () => {
+  let app: express.Express;
+
+  beforeEach(() => {
+    mockRevokeByUsername.mockClear();
+    mockUsers = [
+      { username: 'alice', role: 'admin', centers: ['org-uka'], createdAt: '2025-01-01T00:00:00Z', active: true },
+      { username: 'bob', role: 'researcher', centers: ['org-uka'], createdAt: '2025-01-02T00:00:00Z', active: true },
+      { username: 'carol', role: 'clinician', centers: ['org-uka'], createdAt: '2025-01-03T00:00:00Z', active: false },
+    ];
+    app = makeApp();
+  });
+
+  it('deactivates user: returns 200, persists active:false, calls revokeByUsername once', async () => {
+    const token = makeToken('alice', 'admin');
+    const res = await request(app)
+      .put('/api/auth/users/bob')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ active: false });
+    expect(res.status).toBe(200);
+    expect(res.body.user.active).toBe(false);
+    // Verify revokeByUsername was called for bob
+    expect(mockRevokeByUsername).toHaveBeenCalledTimes(1);
+    expect(mockRevokeByUsername).toHaveBeenCalledWith('bob');
+  });
+
+  it('reactivates user: returns 200, persists active:true, does NOT call revokeByUsername', async () => {
+    const token = makeToken('alice', 'admin');
+    const res = await request(app)
+      .put('/api/auth/users/carol')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ active: true });
+    expect(res.status).toBe(200);
+    expect(res.body.user.active).toBe(true);
+    expect(mockRevokeByUsername).not.toHaveBeenCalled();
+  });
+
+  it('omitting active leaves it unchanged and does NOT revoke', async () => {
+    const token = makeToken('alice', 'admin');
+    const res = await request(app)
+      .put('/api/auth/users/bob')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ role: 'clinician' });
+    expect(res.status).toBe(200);
+    expect(res.body.user.active).toBe(true);
+    expect(mockRevokeByUsername).not.toHaveBeenCalled();
+  });
+
+  it('non-boolean active value → 400', async () => {
+    const token = makeToken('alice', 'admin');
+    const res = await request(app)
+      .put('/api/auth/users/bob')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ active: 'yes' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/active/i);
+  });
+
+  it('GET /users returns active field', async () => {
+    const token = makeToken('alice', 'admin');
+    const res = await request(app)
+      .get('/api/auth/users')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    const bob = res.body.users.find((u: { username: string }) => u.username === 'bob');
+    expect(bob).toBeDefined();
+    expect(bob.active).toBe(true);
+    const carol = res.body.users.find((u: { username: string }) => u.username === 'carol');
+    expect(carol.active).toBe(false);
   });
 });
