@@ -43,6 +43,11 @@ export interface UserRecord {
   passwordChangedAt?: string;
   /** Phase 20 / D-16 — ISO timestamp of the last TOTP mutation (enroll/disable/reset). */
   totpChangedAt?: string;
+  /**
+   * UMGMT-03 — activation flag. Default true; an absent field means active (migration target).
+   * Set to false by admin to prevent login without deleting the account.
+   */
+  active?: boolean;
 }
 
 interface AuthConfig {
@@ -451,6 +456,30 @@ export function _migrateSessionFields(
 }
 
 /**
+ * UMGMT-03 / Phase 32 — Add the `active` flag to user records missing it.
+ * Pure helper, exported for testing. Idempotent: re-running on already-migrated
+ * users yields `changed=false` and identical output.
+ *
+ * Absent `active` → set to `true` (migration target; absent === active).
+ * Explicit `false` → preserved unchanged (deactivated users stay deactivated).
+ * Explicit `true`  → preserved unchanged (already migrated).
+ */
+export function _migrateActiveFlag(
+  users: UserRecord[],
+): { users: UserRecord[]; changed: boolean } {
+  let changed = false;
+  const migrated = users.map((u) => {
+    // absent `active` means active — set to true (migration target)
+    if (typeof u.active !== 'boolean') {
+      changed = true;
+      return { ...u, active: true };
+    }
+    return u;
+  });
+  return { users: migrated, changed };
+}
+
+/**
  * Migrate users.json: add passwordHash for any user missing it,
  * and convert center IDs from shorthand to org-* format.
  * Uses bcrypt with 12 rounds and the default password 'changeme2025!'.
@@ -503,6 +532,15 @@ function _migrateUsersJson(filePath: string): void {
     needsWrite = true;
     workingUsers = withSessionFields;
     console.log('[initAuth] Migrated users.json: added tokenVersion / *ChangedAt for Phase 20');
+  }
+
+  // Phase 32 / UMGMT-03 — add `active: true` for any user without the field.
+  // Absent active means active; explicit false (deactivated) is preserved.
+  const { users: withActiveFlag, changed: activeChanged } = _migrateActiveFlag(workingUsers);
+  if (activeChanged) {
+    needsWrite = true;
+    workingUsers = withActiveFlag;
+    console.log('[initAuth] Migrated users.json: added active flag (default true)');
   }
 
   if (needsWrite) {

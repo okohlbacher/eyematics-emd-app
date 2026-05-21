@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { UserRecord } from '../server/initAuth';
-import { _migrateRemovedCenters, _migrateSessionFields } from '../server/initAuth';
+import { _migrateActiveFlag, _migrateRemovedCenters, _migrateSessionFields } from '../server/initAuth';
 
 describe('_migrateRemovedCenters — strip org-ukb/org-lmu, fallback to org-uka', () => {
   it('strips removed IDs while keeping valid ones', () => {
@@ -103,5 +103,63 @@ describe('Phase 20 session field migration — _migrateSessionFields', () => {
     expect(changed).toBe(true);
     expect(out[0].tokenVersion).toBe(5);
     expect(out[0].passwordChangedAt).toBe('2025-01-15T00:00:00Z');
+  });
+});
+
+describe('UMGMT-03 — _migrateActiveFlag: add active flag for absent records', () => {
+  it('adds active: true for a user without an active field, changed=true', () => {
+    const users: UserRecord[] = [
+      { username: 'u1', role: 'researcher', centers: ['org-uka'], createdAt: '2025-01-01T00:00:00Z' },
+    ];
+    const { users: out, changed } = _migrateActiveFlag(users);
+    expect(changed).toBe(true);
+    expect(out[0].active).toBe(true);
+  });
+
+  it('preserves explicit active: false, changed=false', () => {
+    const users: UserRecord[] = [
+      { username: 'u1', role: 'researcher', centers: ['org-uka'], createdAt: '2025-01-01T00:00:00Z', active: false },
+    ];
+    const { users: out, changed } = _migrateActiveFlag(users);
+    expect(changed).toBe(false);
+    expect(out[0].active).toBe(false);
+  });
+
+  it('preserves explicit active: true, changed=false (idempotent)', () => {
+    const users: UserRecord[] = [
+      { username: 'u1', role: 'researcher', centers: ['org-uka'], createdAt: '2025-01-01T00:00:00Z', active: true },
+    ];
+    const { users: out, changed } = _migrateActiveFlag(users);
+    expect(changed).toBe(false);
+    expect(out[0].active).toBe(true);
+  });
+
+  it('is idempotent: re-running on migrated users returns changed=false', () => {
+    const users: UserRecord[] = [
+      { username: 'u1', role: 'researcher', centers: ['org-uka'], createdAt: '2025-01-01T00:00:00Z', active: true },
+    ];
+    const { users: first } = _migrateActiveFlag(users);
+    const { users: second, changed } = _migrateActiveFlag(first);
+    expect(changed).toBe(false);
+    expect(second[0].active).toBe(true);
+  });
+
+  it('returns changed=false for an empty array', () => {
+    const { users: out, changed } = _migrateActiveFlag([]);
+    expect(changed).toBe(false);
+    expect(out).toHaveLength(0);
+  });
+
+  it('migrates mixed batch: only absent fields set to true', () => {
+    const users: UserRecord[] = [
+      { username: 'u1', role: 'researcher', centers: ['org-uka'], createdAt: '2025-01-01T00:00:00Z' },
+      { username: 'u2', role: 'admin', centers: ['org-uka'], createdAt: '2025-01-01T00:00:00Z', active: false },
+      { username: 'u3', role: 'clinician', centers: ['org-uka'], createdAt: '2025-01-01T00:00:00Z', active: true },
+    ];
+    const { users: out, changed } = _migrateActiveFlag(users);
+    expect(changed).toBe(true);
+    expect(out[0].active).toBe(true);
+    expect(out[1].active).toBe(false);
+    expect(out[2].active).toBe(true);
   });
 });
