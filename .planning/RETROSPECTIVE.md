@@ -4,6 +4,51 @@ Living retrospective across milestones. Each milestone gets a section. Cross-mil
 
 ---
 
+## Milestone: v1.10 — Session Hardening & UX Closure
+
+**Shipped:** 2026-05-21
+**Phases:** 5 (27–31) | **Plans:** 16 | **Timeline:** 2026-05-11 → 2026-05-21
+
+### What Was Built
+
+- Phase 27 (stateful session backend): SQLite `refresh_sessions` table (jti-keyed, WAL, mirrors `auditDb.ts`), OAuth2-style refresh rotation with RFC 6819 family revocation in `/refresh`, dual-key signing window + admin `POST /api/auth/rotate-key`
+- Phase 28 (admin session control UI): `listActiveSessionsByUser` + three admin endpoints (list / revoke-one / sign-out-everywhere), AdminPage session accordion, in-UI TTL config persisting to settings.yaml, wire-DTO that strips sid/ver/revoked
+- Phase 29 (home panel UX): query-contract deep-links from "Attention needed" Review buttons to pre-filtered `/quality`; new client-side recent-activity store + `useRecentActivity` hook powering "Jump Back In", cleared on logout same-tab and cross-tab
+- Phase 30 (terminology docs cleanup): corrected `serverUrl` default-vs-placeholder wording, verified offline-by-default commented block — no code change
+- Phase 31 (subcohort support): `cohortNames.ts` name-only `Parent:Sub` convention, builder validation + Split affordance, CohortCompareDrawer tree render; human UAT passed 3/3
+
+### What Worked
+
+- **Adversarial pre-scoping (Claude + Codex) on Phases 29 & 30:** Caught that UX-02 was net-new infrastructure (no recent-activity tracking existed), not "UI wiring," and that TERM-01 was already done in Phase 25 — reducing Phase 30 to a 1-plan cleanup. This re-scope before planning saved building the wrong thing.
+- **Reusing the audit SQLite pattern for sessions:** `sessionsDb.ts` mirrored `auditDb.ts` exactly, so the no-database constraint was revisited cleanly (SQLite already a dependency) without inventing a new storage stack.
+- **Wave-0 RED test scaffolds first** across all phases pinned the contracts (sessionsDb CRUD, jti reuse, deep-link seeding, cohortNames) before implementation — the Nyquist-style discipline kept verification honest.
+- **Milestone integration check caught nothing broken** — all six cross-phase seams traced WIRED on first pass against a green suite, which is the payoff of the wave sequencing.
+
+### What Was Inefficient
+
+- **Premature `v1.10` git tag at Phase 28:** A `v1.10` tag (and `v1.10-phase28`) was pushed mid-milestone, requiring a force-move to the true completion commit at close. Tags should be reserved for actual milestone completion, not phase checkpoints.
+- **Phases 27 & 28 never got a VERIFICATION.md:** Work was real and tests green, but the formal goal-backward verification artifact was skipped, surfacing as tech debt at milestone audit. Later phases (29/30/31) produced them — the inconsistency cost an audit-classification judgment call.
+- **Nyquist VALIDATION.md left in `draft`** for 27/28/29: the validation contracts were scaffolded but never finalized/flipped to compliant, so Nyquist coverage reads "partial" despite passing tests.
+
+### Patterns Established
+
+- **Name-only subcohorts** (`Parent:Sub`, no schema change) — a lightweight convention pattern reusable for other ad-hoc groupings over `SavedSearch`.
+- **Per-username localStorage namespace** (`emd-recent:<username>`) with clear-on-auth-change for cross-user isolation without backend state.
+- **Wire-DTO projection** on session endpoints — never ship internal columns (sid/ver/revoked) to the browser.
+
+### Key Lessons
+
+- Tag only at milestone completion; use branches/checkpoints for mid-milestone state.
+- Keep the verification artifact set uniform across phases — a missing VERIFICATION.md becomes an audit-time ambiguity even when the work is sound.
+- An adversarial scope review before planning is high-leverage when requirements were inherited/deferred from earlier milestones and may already be partially satisfied.
+
+### Cost Observations
+
+- Model mix: implementation largely Sonnet (per commit co-author trailers); orchestration/review Opus.
+- Notable: the cheapest phase (30) was correctly recognized as near-complete before any code was written — scope discipline beats execution speed.
+
+---
+
 ## Milestone: v1.9.5 — Synthetic Data Realism
 
 **Shipped:** 2026-05-01
@@ -140,13 +185,13 @@ Living retrospective across milestones. Each milestone gets a section. Cross-mil
 
 ## Cross-Milestone Trends
 
-| Metric | v1.5 | v1.6 | v1.7 |
-|--------|------|------|------|
-| Tests at close | 313 | 429 | (tracked per-phase) |
-| Phases | 3 | 4 | 4 |
-| Plans | ~12 | 19 | 16 |
-| Timeline | multi-day | 1 day | 4 days |
-| Parallel execution | No | Yes (wave-based worktrees) | Yes + parallel full-review |
-| Security review | No | No | Yes (v1.7-full-review, C/H/M/L) |
+| Metric | v1.5 | v1.6 | v1.7 | v1.9.5 | v1.10 |
+|--------|------|------|------|--------|-------|
+| Tests at close | 313 | 429 | (per-phase) | 682 | ~783 |
+| Phases | 3 | 4 | 4 | 1 | 5 |
+| Plans | ~12 | 19 | 16 | 4 | 16 |
+| Timeline | multi-day | 1 day | 4 days | 2 days | 10 days |
+| Parallel execution | No | Yes (wave-based worktrees) | Yes + parallel full-review | Yes | Yes (wave-based) |
+| Security review | No | No | Yes (v1.7-full-review, C/H/M/L) | No | Adversarial pre-scope (29/30) |
 
-**Trend:** Parallel wave execution retained from v1.6. v1.7 added a parallel security review track that ran alongside feature phases rather than gating at milestone close — this should become a standing pattern. Milestone timelines lengthening (1 → 4 days) reflect security scope and UAT gates, not slower execution.
+**Trend:** Parallel wave execution is now standing practice. v1.10's longer 10-day timeline reflects net-new infrastructure (stateful sessions, recent-activity store) plus an adversarial pre-scope step that re-shaped two phases before planning. Recurring process gap: verification-artifact uniformity — v1.10 shipped 2 of 5 phases without a VERIFICATION.md and left Nyquist VALIDATION contracts in `draft`, the first milestone to close on `tech_debt` rather than `passed`. Worth tightening the execute→verify handoff so the artifact is always produced.

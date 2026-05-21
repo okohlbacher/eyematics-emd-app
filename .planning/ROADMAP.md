@@ -16,9 +16,10 @@
 | v1.9.3 | Production Feedback Fixes (partial) | 2026-04-28 | 24 (2/4 plans) | (in-tree) |
 | v1.9.4 | Terminology Resolver Refactor (partial) | 2026-04-30 | 25 (3/4 plans) | (in-tree) |
 | v1.9.5 | Synthetic Data Realism | 2026-05-01 | 26 | [`milestones/v1.9.5-ROADMAP.md`](milestones/v1.9.5-ROADMAP.md) |
+| v1.10 | Session Hardening & UX Closure | 2026-05-21 | 27–31 | [`milestones/v1.10-ROADMAP.md`](milestones/v1.10-ROADMAP.md) |
 
 > Note: v1.2–v1.4 shipped between v1.1 and v1.5 but were not tracked in GSD artifacts; git history is authoritative for those releases.
-> Note: v1.9.3 and v1.9.4 were partially executed; deferred plans (FB-02, FB-03, TERM-04) are folded into v1.10.
+> Note: v1.9.3 and v1.9.4 were partially executed; deferred plans (FB-02, FB-03, TERM-04) shipped in v1.10.
 
 <details>
 <summary>✅ v1.9.5 Synthetic Data Realism (Phase 26) — SHIPPED 2026-05-01</summary>
@@ -66,143 +67,20 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 
 ---
 
-## Active Milestone: v1.10 — Session Hardening & UX Closure
+<details>
+<summary>✅ v1.10 Session Hardening & UX Closure (Phases 27–31) — SHIPPED 2026-05-21</summary>
 
-**Goal:** Close all long-deferred session management, home panel UX, terminology documentation, and subcohort items.
+- [x] **Phase 27: Stateful Session Backend** — Persistent SQLite `refresh_sessions` table, OAuth2-style jti rotation with RFC 6819 family revocation, dual-key signing-key rotation + `POST /api/auth/rotate-key` (SESS-02/03/04) — completed 2026-05-11
+- [x] **Phase 28: Admin Session Control UI** — Per-user active-session listing, individual + sign-out-everywhere revocation, in-UI TTL config persisted to settings.yaml (SESS-01, SESSUI-01/02/03) — completed 2026-05-14
+- [x] **Phase 29: Home Panel UX** — Review buttons → pre-filtered quality deep-links (`?therapy=breaker`, `?status=flagged`); client-side recent-activity store + `useRecentActivity` powering "Jump Back In", cleared on logout/cross-tab (UX-01/02) — completed 2026-05-21
+- [x] **Phase 30: Terminology Configuration Docs (cleanup)** — Corrected `terminology.serverUrl` default-vs-placeholder wording; verified commented offline-by-default block (TERM-01/02) — completed 2026-05-21
+- [x] **Phase 31: Subcohort Support** — `ParentName:Sub` convention, `cohortNames.ts` validation, tree-grouped CohortCompareDrawer picker, Split affordance in cohort builder (KOH-003/004) — completed 2026-05-21
 
-## Phases
+Full phase details: [`milestones/v1.10-ROADMAP.md`](milestones/v1.10-ROADMAP.md)
+Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`](milestones/v1.10-MILESTONE-AUDIT.md)
 
-- [x] **Phase 27: Stateful Session Backend** — Server-side refresh-sessions table, OAuth2-style token rotation, and signing-key rotation
-- [x] **Phase 28: Admin Session Control UI** — Force sign-out, per-device session listing + individual revocation, TTL configuration UI (completed 2026-05-14)
-- [x] **Phase 29: Home Panel UX** — Wire "Attention needed" Review buttons and "Jump Back In" panel routing (completed 2026-05-21)
-- [x] **Phase 30: Terminology Configuration Docs** — Document terminology settings keys in settings.yaml and Konfiguration.md (completed 2026-05-21)
-- [x] **Phase 31: Subcohort Support** — Colon-namespaced subcohorts, tree-view picker in comparison drawer, subcohort split UI in cohort builder (completed 2026-05-21)
-
-## Phase Details
-
-### Phase 27: Stateful Session Backend
-**Goal**: The server tracks every issued refresh token in a persistent table and invalidates tokens correctly on rotation and key change
-**Depends on**: Nothing (server-side only; builds on existing refresh cookie infrastructure from Phase 20)
-**Requirements**: SESS-02, SESS-03, SESS-04
-**Success Criteria** (what must be TRUE):
-  1. A new `refresh_sessions` table (or JSON equivalent) is created at server startup with one row per issued refresh token, storing user, device fingerprint, issued-at, expires-at, and revoked flag
-  2. When a client uses a refresh token, the server issues a new token and immediately marks the previous row as revoked — presenting the old token a second time returns 401
-  3. When an admin rotates the signing key, existing sessions continue to refresh until their absolute cap expires, then expire gracefully rather than returning 500 or a crash
-  4. All session-table operations are covered by automated tests that assert row state after rotation and reuse attempts
-**Plans**: 4 plans
-- [x] 27-01-PLAN.md — Wave 0 test scaffolds for SESS-02/03/04 (sessionsDb, sessionRotation, rotateKey)
-- [x] 27-02-PLAN.md — sessionsDb.ts module (schema, CRUD, cleanup) + index.ts bootstrap [SESS-02]
-- [x] 27-03-PLAN.md — jti claim + /refresh rotation + family revocation in jwtUtil/authApi [SESS-03]
-- [x] 27-04-PLAN.md — Dual-key window + POST /api/auth/rotate-key admin endpoint [SESS-04]
-
-### Phase 28: Admin Session Control UI
-**Goal**: Admins can see every active session for any user and end sessions — individually or all at once — and can adjust session TTL values without touching config files
-**Depends on**: Phase 27
-**Requirements**: SESS-01, SESSUI-01, SESSUI-02, SESSUI-03
-**Success Criteria** (what must be TRUE):
-  1. The admin UI lists all active sessions for a selected user, showing device fingerprint, issued-at, last-used, and expires-at columns
-  2. An admin can revoke any individual session from the listing — the revoked session's next API call returns 401 and the frontend redirects to login
-  3. An admin can trigger "sign out everywhere" for a user — all that user's sessions are revoked immediately and their next request returns 401
-  4. An admin can view and save `refreshTokenTtlMs` and `refreshAbsoluteCapMs` values from the admin UI; the values persist to `config/settings.yaml` and take effect on the next issued token
-**Plans**: 4 plans
-Plans:
-- [x] 28-01-PLAN.md — Wave 0 test scaffolds (sessionRevoke + ttlConversion)
-- [x] 28-02-PLAN.md — Backend: listActiveSessionsByUser + 3 admin session endpoints [SESS-01, SESSUI-01, SESSUI-02]
-- [x] 28-03-PLAN.md — SettingsPage TTL config form + ttlConversion helpers [SESSUI-03]
-- [x] 28-04-PLAN.md — AdminPage session accordion UI + i18n [SESS-01, SESSUI-01, SESSUI-02]
-**UI hint**: yes
-
-### Phase 29: Home Panel UX
-**Goal**: Users can act on home-panel alerts and return to recent work with a single click
-**Depends on**: Nothing (no new backend; UX-02 introduces new *client-side* recent-activity state)
-**Requirements**: UX-01, UX-02
-**Scope note** (from adversarial review 2026-05-21): UX-02 is NOT mere "UI wiring" — no
-recent-activity / last-visited tracking exists anywhere (`LandingPage.tsx:238` is an explicit
-empty state). It must be built from scratch: a discovery/spec step, then client-side
-recent-activity infrastructure, then UI wiring. UX-01's "Attention needed" alerts are static
-hardcoded strings (`translations.ts:851-859`), not data-driven flagged-case lists — so the
-Review buttons route to a pre-filtered review *area*, not a specific case. Deep-linking needs
-new route/query contracts (`QualityPage`/`DocQualityPage` hold case selection in internal
-state only).
-**Success Criteria** (what must be TRUE):
-  1. Each "Review" button in the "Attention needed" panel routes to the appropriate pre-filtered
-     review area via a defined query contract: the therapy-breaker alert opens the cohort/quality
-     view filtered to cases with a gap > `therapyBreakerDays`; the implausible-CRT alert opens the
-     doc-quality view scoped to flagged cases. No dead-end buttons or console errors.
-  2. A client-side recent-activity store records the last-visited view per patient/case (route +
-     any view params needed to restore the view), persisted across reloads (localStorage), scoped
-     to the signed-in session.
-  3. The "Jump Back In" panel renders a row per recent item (most-recent first); each row's arrow
-     routes to that item's recorded view. With no recorded activity the panel shows the existing
-     empty state (`jumpBackInEmpty`) rather than an error.
-**Plans**: 4 plans (3 waves)
-Plans:
-**Wave 1**
-- [x] 29-01-PLAN.md — Wave 0: 4 test scaffolds + reviewTherapyBreakers/reviewFlaggedCases i18n keys [UX-01, UX-02]
-- [x] 29-02-PLAN.md — recentActivityStore (per-username localStorage CRUD) + useRecentActivity hook [UX-02]
-- [x] 29-03-PLAN.md — QualityPage useSearchParams deep-link seeding (?therapy/?status, flagged→in_progress) [UX-01]
-
-**Wave 2** *(blocked on Wave 1 completion)*
-- [x] 29-04-PLAN.md — LandingPage Review-button targets + Jump Back In rows + recording triggers + clear-on-logout [UX-01, UX-02]
-**UI hint**: yes
-
-### Phase 30: Terminology Configuration Docs — CLEANUP ONLY
-**Goal**: Any operator can configure the terminology service by reading the shipped settings file and its documentation — no source-code archaeology required
-**Depends on**: Nothing (documentation only)
-**Requirements**: TERM-01 (already satisfied in Phase 25), TERM-02 (reworded)
-**Scope note** (from adversarial review 2026-05-21): TERM-01 is effectively DONE — `docs/Konfiguration.md:56-99`
-already documents all three keys (full YAML example, parameter table, dedicated "Terminologie-Server"
-section with disabled-behavior notes). The `terminology` block already exists in `config/settings.yaml`
-but is intentionally commented out (D-16/D-17: omit to preserve offline behavior). Phase 30 is reduced
-to two small cleanup tasks; no new documentation section is needed.
-**Success Criteria** (what must be TRUE):
-  1. The `docs/Konfiguration.md` parameter table no longer presents the Ontoserver URL as the runtime
-     *default* for `terminology.serverUrl` — it is labelled an example placeholder, consistent with the
-     code default of empty/undefined (`server/terminologyApi.ts:52-63`) and the existing "Minimal vs. voll" note.
-  2. TERM-02 is satisfied by the commented-out example block in `config/settings.yaml` with inline
-     comments (kept commented to preserve the D-16/D-17 offline-by-default design); the requirement
-     wording reflects "commented example" rather than an active block.
-**Plans**: 1 plan (1 wave)
-Plans:
-- [x] 30-01-PLAN.md — Fix terminology.serverUrl Default-cell wording in Konfiguration.md, verify commented settings.yaml block, tick TERM-02 in REQUIREMENTS.md [TERM-01, TERM-02]
-
-### Phase 31: Subcohort Support
-**Goal**: Users can split any saved cohort into named subcohorts (one level deep) using a `ParentName:SubcohortName` naming convention; subcohorts appear in a tree-grouped picker wherever cohorts are selectable for comparison
-**Depends on**: Nothing (builds on existing `SavedSearch` / `CohortFilter` infrastructure; no new backend tables required)
-**Requirements**: KOH-003, KOH-004
-**Decisions**:
-- Subcohort identity is purely the name: any `SavedSearch.name` containing exactly one `:` is a subcohort; `text before :` is the parent cohort name. Two or more colons are rejected at save time.
-- Subcohorts are regular `SavedSearch` objects — no new field on the type. The colon convention is the only differentiator.
-- The "Split into subcohort" button in `CohortBuilderPage` pre-populates the save dialog with `ParentName:` so users type only the subcohort identifier.
-- Users may also type `ParentName:Sub` manually in the name field — the builder validates and rejects double colons.
-- In `CohortCompareDrawer` and any future cohort-selection dropdown, cohorts with subcohorts are rendered as a collapsible tree: parent row (selects parent cohort's own filter) → indented subcohort rows. Selecting the parent does NOT implicitly include subcohorts — each is independently selectable.
-- Max 4 cohorts in comparison (existing limit) counts each entry (parent or subcohort) individually.
-**Success Criteria** (what must be TRUE):
-  1. A user can save a subcohort `Cohort1:Male` from the cohort builder — the name is validated (exactly one colon, non-empty parent and sub identifiers, no duplicate names) and the entry appears under `Cohort1` in the comparison drawer
-  2. `CohortCompareDrawer` renders a tree: parent cohort as top-level row, its subcohorts indented beneath it; cohorts with no subcohorts render as before (flat)
-  3. Selecting the parent cohort row in the drawer applies the parent's own saved filter (not a union of subcohorts); selecting a subcohort row applies that subcohort's filter independently
-  4. A name field validation helper `parseSubcohortName(name)` in `src/services/cohortNames.ts` returns `{ parent, sub }` for valid subcohort names and throws for names with 0 or 2+ colons; it is covered by unit tests
-  5. Attempting to save a subcohort whose parent name does not match any existing `SavedSearch` shows a validation warning (not a hard block — orphan subcohorts are allowed for manual-entry workflows)
-**Plans**: 3 plans (3 waves)
-Plans:
-**Wave 0**
-- [x] 31-01-PLAN.md — Wave 0 RED test scaffolds (cohortNames unit + builder/drawer component) + 10 i18n keys [KOH-003, KOH-004]
-**Wave 1**
-- [x] 31-02-PLAN.md — src/services/cohortNames.ts (parseSubcohortName/isSubcohortName/duplicate/groupByParent) [KOH-003]
-**Wave 2**
-- [x] 31-03-PLAN.md — CohortBuilderPage validation + Split affordance & CohortCompareDrawer tree render [KOH-003, KOH-004]
-**UI hint**: yes
-
-## Progress Table
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 27. Stateful Session Backend | 4/4 | Complete | 2026-05-11 |
-| 28. Admin Session Control UI | 4/4 | Complete   | 2026-05-14 |
-| 29. Home Panel UX | 4/4 | Complete    | 2026-05-21 |
-| 30. Terminology Configuration Docs | 1/1 | Complete    | 2026-05-21 |
-| 31. Subcohort Support | 3/3 | Complete    | 2026-05-21 |
+</details>
 
 ---
 
-*Last updated: 2026-05-21 — adversarial review (Claude + Codex) re-scoped Phases 29 & 30: UX-02 needs new recent-activity infrastructure (not "UI wiring"); UX-01 reworded to "pre-filtered review area"; Phase 30 reduced to cleanup (TERM-01 already done in Phase 25, TERM-02 reworded to "commented example").*
+*Last updated: 2026-05-21 — v1.10 shipped and archived. Next milestone TBD via `/gsd-new-milestone`.*

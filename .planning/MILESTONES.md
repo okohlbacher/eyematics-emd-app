@@ -1,5 +1,31 @@
 # Milestones
 
+## v1.10 Session Hardening & UX Closure (Shipped: 2026-05-21)
+
+**Phases completed:** 5 phases (27–31), 16 plans, 17 tasks
+**Timeline:** 2026-05-11 → 2026-05-21
+**Tests:** green (754/754 at Phase 30 baseline; Phase 31 added subcohort suites)
+
+**Key accomplishments:**
+
+- **Stateful session backend (Phase 27):** Persistent SQLite `refresh_sessions` table (`server/sessionsDb.ts`, WAL, mirrors auditDb pattern); OAuth2-style jti rotation with RFC 6819 family revocation in `/refresh` (reuse → revoke family + 401); dual-key signing-key rotation + admin `POST /api/auth/rotate-key` so existing sessions expire gracefully across a key change (SESS-02/03/04).
+- **Admin session control UI (Phase 28):** `listActiveSessionsByUser` + three admin-only endpoints (`GET /api/auth/sessions`, `DELETE /api/auth/sessions/:id`, sign-out-everywhere `DELETE …?username=`); AdminPage session accordion with per-device listing and revoke; in-UI TTL config form persisting `refreshTokenTtlMs`/`refreshAbsoluteCapMs` to settings.yaml (read at token-issue time). Session DTO strips sid/ver/revoked from the wire (SESS-01, SESSUI-01/02/03).
+- **Home panel UX (Phase 29):** "Attention needed" Review buttons wired to pre-filtered quality views via query contracts (`/quality?therapy=breaker`, `?status=flagged`→`in_progress`); new client-side recent-activity store (`emd-recent:<username>`, capped at 5) + `useRecentActivity` hook powering "Jump Back In", with recording triggers on Quality/Analysis/Outcomes and clear-on-logout across same-tab and cross-tab broadcast (UX-01/02).
+- **Terminology config docs (Phase 30, cleanup):** Corrected `terminology.serverUrl` Default cell in Konfiguration.md from the Ontoserver URL to an em-dash + example-placeholder labelling (matches code default `undefined`); verified the commented offline-by-default `terminology.*` block in settings.yaml (TERM-01/02).
+- **Subcohort support (Phase 31):** `ParentName:Sub` naming convention; `src/services/cohortNames.ts` (`parseSubcohortName`/`isSubcohortName`/`groupByParent`) with validation; CohortBuilderPage inline validation (hard errors + soft orphan warning) and per-row Split affordance pre-filling `Parent:`; CohortCompareDrawer tree render (parent rows + indented subcohorts, chevron toggle); max-4 comparison counts each entry individually (KOH-003/004). Human UAT passed 3/3.
+
+**Audit:** tech_debt (no functional gaps; 13/13 requirements satisfied, all cross-phase flows WIRED, green tests).
+
+**Known deferred items (accepted at close):**
+
+- Phases 27 & 28 shipped without a formal VERIFICATION.md — work evidenced by complete SUMMARYs, green tests, and the milestone integration check. Retroactively producible via `/gsd-verify-work`.
+- Nyquist VALIDATION.md for phases 27/28/29 left `draft`/`nyquist_compliant: false`; Phase 31 `wave_0_complete: false`. Closable via `/gsd-validate-phase`.
+- KEYCLK-01 (real Keycloak OIDC redirect flow) — carried to backlog, needs a live Keycloak instance.
+
+**Archive:** [milestones/v1.10-ROADMAP.md](milestones/v1.10-ROADMAP.md) · [milestones/v1.10-REQUIREMENTS.md](milestones/v1.10-REQUIREMENTS.md) · [milestones/v1.10-MILESTONE-AUDIT.md](milestones/v1.10-MILESTONE-AUDIT.md)
+
+---
+
 ## v1.9.5 Synthetic Data Realism (Shipped: 2026-05-01)
 
 **Phases completed:** 1 phase (26), 4 plans

@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.10
 milestone_name: — Session Hardening & UX Closure
-status: executing
-last_updated: "2026-05-21T14:10:18.690Z"
-last_activity: 2026-05-21
+status: Awaiting next milestone
+last_updated: "2026-05-21T14:29:52.627Z"
+last_activity: 2026-05-21 — Milestone v1.10 completed and archived
 progress:
   total_phases: 5
   completed_phases: 5
@@ -17,21 +17,17 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-01)
+See: .planning/PROJECT.md (updated 2026-05-21 after v1.10)
 
 **Core value:** Every user sees only authorized data, with tamper-proof audit trail — while maintaining the zero-friction local development experience.
-**Current focus:** Phase 31 — subcohort-support
+**Current focus:** Between milestones — plan next via `/gsd-new-milestone` (next phase: 32)
 
 ## Current Position
 
-Phase: 31
-Plan: Not started
-Status: Executing Phase 31
-Last activity: 2026-05-21
-
-```
-Progress: [████████░░░░░░░░░░░░] 40% (2/5 phases)
-```
+Phase: Milestone v1.10 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-05-21 — Milestone v1.10 completed and archived
 
 ## Milestones Shipped
 
@@ -47,6 +43,7 @@ Progress: [████████░░░░░░░░░░░░] 40% (2/
 | v1.9.3 | Production Feedback Fixes (partial) | 24 | 2026-04-28 |
 | v1.9.4 | Terminology Resolver Refactor (partial) | 25 | 2026-04-30 |
 | v1.9.5 | Synthetic Data Realism | 26 | 2026-05-01 |
+| v1.10 | Session Hardening & UX Closure | 27–31 | 2026-05-21 |
 
 ## Accumulated Context
 
@@ -60,12 +57,30 @@ Progress: [████████░░░░░░░░░░░░] 40% (2/
 - Terminology: `_seedMap` has 15 entries; `EXPECTED_SEED_KEYS` in audit script mirrors it; drift-guard test enforces symmetry.
 - Reference bundles (Aachen, Tübingen) are curated and must NOT be regenerated (D-06).
 - Synthetic bundles (Chemnitz, Leipzig, Greifswald, Münster) must be regenerated atomically (D-11).
-- Phase 27 storage: refresh-sessions table must use the same JSON-file storage pattern as the rest of v1 (no new SQLite tables without revisiting the no-database constraint; SQLite already used for audit log — decision to revisit at plan time).
+- Refresh sessions use a SQLite `refresh_sessions` table (jti-keyed, WAL) — the no-database constraint was revisited at Phase 27 plan time and SQLite chosen (already a dependency for audit). Mirrors `auditDb.ts`.
+- Refresh tokens rotate on every use with RFC 6819 family revocation; reuse of a rotated token revokes the family and returns 401.
+- Signing-key rotation uses a dual-key window: existing sessions verify against the previous key until their absolute cap (admin endpoint `POST /api/auth/rotate-key`).
+- Subcohort identity is name-only: a `SavedSearch` with exactly one `:` is a subcohort (`cohortNames.ts`); no new type field. Orphan subcohorts allowed with a soft warning.
+- "Jump Back In" uses a client-side, per-username localStorage recent-activity store (`emd-recent:<username>`, cap 5); cleared on logout/login same-tab and cross-tab.
 
 ### Open Items (carry to next milestone)
 
 - KEYCLK-01: Real Keycloak OIDC redirect flow (blocked by M7) — pushed to backlog
 
+### Deferred Items
+
+Acknowledged and accepted as tech debt at v1.10 milestone close on 2026-05-21:
+
+| Category | Item | Status |
+|----------|------|--------|
+| verification | Phases 27 & 28 have no VERIFICATION.md (evidenced by SUMMARYs + green tests + integration check) | accepted — backfill via `/gsd-verify-work` |
+| nyquist | VALIDATION.md for phases 27/28/29 left `draft`/`nyquist_compliant: false` | accepted — closable via `/gsd-validate-phase` |
+| nyquist | Phase 31 VALIDATION `wave_0_complete: false` despite passing VERIFICATION + UAT | accepted — cosmetic |
+
 ### Blockers
 
 - None
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone

@@ -1,19 +1,12 @@
 # EMD Backend Redesign
 
-## Current Milestone: v1.9 — Codebase Consistency & Test/Tech-Debt Polish
+## Status: Between Milestones (v1.10 shipped 2026-05-21)
 
-**Goal:** Raise internal quality — eliminate code duplication, enforce consistency across the codebase, green the test suite, automate deferred UAT items, and modernize deps/lint.
+**Latest milestone:** v1.10 — Session Hardening & UX Closure (Phases 27–31), shipped 2026-05-21. Closed all long-deferred session-management, home-panel UX, terminology-docs, and subcohort items.
 
-**Target themes:**
-- Codebase consistency audit: sweep for duplicated utilities, divergent patterns, inconsistent naming, stale abstractions; refactor to single-source-of-truth
-- Documentation consistency: `.planning/`, `README.md`, inline docs audited for accuracy & conciseness
-- Test-suite green: fix 3 pre-existing failures (outcomesPanelCrt ×2 visus absolute y-domain; OutcomesPage ×1 audit beacon POST)
-- Session UAT → automated: convert Phase 20's 5 human-verification items into automated tests
-- Dependency + lint cleanup: npm audit, non-breaking upgrades, tighter ESLint rules, dead-code removal
+**Next milestone:** TBD via `/gsd-new-milestone`. Leading candidate: real Keycloak OIDC redirect flow (KEYCLK-01, blocked on a live Keycloak instance).
 
-**Explicitly out of scope:** KEYCLK-01, SESSION-10/11, Playwright E2E (MSEL-04 gap stays deferred), new product features.
-
-**Starting phase number:** 21 (continues v1.8's Phase 20)
+**Next phase number:** 32 (continues v1.10's Phase 31).
 
 ## What This Is
 
@@ -131,17 +124,21 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] HbA1c for DME + age-disease coupling (truncated-normal per cohort) + AMD/DME/RVO template differentiation + Faricimab/Dexamethasone (SYNTH-03) — v1.9.5 (Phase 26-03)
 - [x] 4 synthetic bundles regenerated atomically; verify-bundle-distributions.mjs wired into test:ci; 682/682 tests green (SYNTH-04) — v1.9.5 (Phase 26-04)
 
+### Validated in v1.10
+
+- [x] Stateful refresh-sessions table (SQLite WAL, jti-keyed) with OAuth2-style rotation + RFC 6819 family revocation (SESS-02/03) — v1.10 (Phase 27)
+- [x] Refresh-token signing-key rotation + dual-key window + `POST /api/auth/rotate-key` (SESS-04) — v1.10 (Phase 27)
+- [x] Admin-triggered force sign-out everywhere (SESS-01) — v1.10 (Phase 28)
+- [x] Per-user active-session listing + individual revocation UI (SESSUI-01/02) — v1.10 (Phase 28)
+- [x] In-UI session TTL config (`refreshTokenTtlMs` / `refreshAbsoluteCapMs` → settings.yaml) (SESSUI-03) — v1.10 (Phase 28)
+- [x] Home "Attention needed" Review buttons deep-link to pre-filtered `/quality` (UX-01, was FB-02) — v1.10 (Phase 29)
+- [x] Home "Jump Back In" panel via client-side recent-activity store (UX-02, was FB-03) — v1.10 (Phase 29)
+- [x] Terminology `serverUrl` default-vs-placeholder docs fix + commented settings.yaml example (TERM-01/02, was TERM-04) — v1.10 (Phase 30)
+- [x] Subcohort support: `ParentName:Sub` convention, validation, tree-grouped compare picker (KOH-003/004) — v1.10 (Phase 31)
+
 ### Active (next-milestone candidates)
 
-- [ ] Real Keycloak OIDC redirect flow (KEYCLK-01) — blocked at initAuth until the redirect flow ships (M7)
-- [x] SESSION-11: stateful refresh-sessions table with OAuth2-style rotation + family revocation (SESS-02/03) — v1.10 (Phase 27)
-- [x] Refresh-token signing-key rotation + dual-key window (SESS-04) — v1.10 (Phase 27)
-- [ ] SESSION-10: admin-triggered force sign-out everywhere
-- [ ] UI surface for `auth.refreshTokenTtlMs` / `auth.refreshAbsoluteCapMs`
-- [ ] Per-device session listing + revocation UI
-- [ ] Home "Attention needed" panel Review buttons (FB-02) — deferred from v1.9.3
-- [ ] Home "Jump Back In" panel routing (FB-03) — deferred from v1.9.3
-- [ ] Terminology settings + Konfiguration.md docs (TERM-04) — deferred from v1.9.4
+- [ ] Real Keycloak OIDC redirect flow (KEYCLK-01) — blocked at initAuth until the redirect flow ships (M7); needs a live Keycloak instance
 
 ## Current State
 
@@ -183,12 +180,9 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 ## Next Milestone Goals (TBD)
 
-- **Real Keycloak OIDC redirect flow** (KEYCLK-01 — blocked by M7 at initAuth)
-- **SESSION-10**: admin-triggered global sign-out (Phase 28)
-- **Per-device session listing / revocation UI** (Phase 28)
-- **UI surface for session TTL settings** (Phase 28)
-- **Home panel UX fixes** — "Attention needed" Review buttons + "Jump Back In" routing (FB-02, FB-03; deferred from v1.9.3)
-- **Terminology settings + docs** — `terminology.*` settings.yaml keys + `docs/Konfiguration.md` (TERM-04; deferred from v1.9.4)
+To be defined via `/gsd-new-milestone`. Carried-forward candidate:
+
+- **Real Keycloak OIDC redirect flow** (KEYCLK-01 — blocked by M7 at initAuth; needs a live Keycloak instance)
 
 ## Historical Milestone Goals (archived)
 
@@ -216,22 +210,25 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 ### Out of Scope
 
 - Full Keycloak OIDC redirect flow — prepared but not implemented (complexity, needs real Keycloak instance)
-- Database storage — JSON files for v1, API designed for future DB swap
+- Database storage — JSON files for v1 (audit + sessions use SQLite); API designed for future DB swap
 - Parameter-level exclusion from analysis — only case-level exclusion exists
-- Sub-cohort comparison — not in current codebase, not part of this redesign
+- Multi-level subcohorts — v1.10 ships one-level subcohorts (`Parent:Sub`); deeper nesting is out of scope
 - Self-service password change/reset — admin sets passwords; self-service deferred to Keycloak
 
 ## Context
 
-- **Codebase (v1.9.5):** React/TypeScript SPA + Express 5 server + `shared/` pure-TS module
+- **Codebase (v1.10):** React/TypeScript SPA + Express 5 server + `shared/` pure-TS module
 - **Server**: Express 5 production server (server/index.ts) + Vite dev plugins for backward compat
 - **Auth flow**: Server-side bcrypt + JWT (HS256), TOTP 2FA (per-user enrollment), silent refresh via httpOnly cookie + BroadcastChannel, rate limiting with exponential backoff
+- **Sessions (v1.10)**: Stateful `refresh_sessions` SQLite table (jti-keyed, WAL); OAuth2-style refresh rotation with RFC 6819 family revocation; dual-key signing window + admin `POST /api/auth/rotate-key`; admin session-control UI (list / revoke / sign-out-everywhere) + in-UI TTL config
 - **Audit**: Server-side SQLite (data/audit.db), auto-logged by middleware, immutable from client, configurable retention; cohort IDs hashed via HMAC-SHA256 (v1.6)
 - **User sites**: Server-enforced site filtering on all data endpoints; 6 participating sites (Aachen, Chemnitz, Greifswald, Leipzig, Münster, Tübingen) — UKD + UKMZ removed v1.9.3
 - **FHIR data**: 4 synthetic sites with deterministic synthetic data (Mulberry32 PRNG) + comorbidities + HbA1c + age-disease coupling + AMD/DME/RVO template differentiation (v1.9.5); 2 reference sites (Aachen, Tübingen)
 - **Terminology**: `src/services/terminology.ts` — 15-entry `_seedMap`, `collectCodings`, `resolveDisplay`, `useDiagnosisDisplay`; server-side proxy disabled by default; CI drift-guard enforces 0 unresolvable codes
 - **Outcomes**: 4 metrics (Visus, CRT, Treatment-Interval, Responder) with server-side pre-aggregation at >1000-patient threshold; metric selector with `?metric=` deep-link; cross-cohort overlay (up to 4)
-- **Test surface**: 682 tests passing across ~65 test files (v1.9.5 close)
+- **Cohorts (v1.10)**: One-level subcohorts via `ParentName:Sub` naming (`src/services/cohortNames.ts`); tree-grouped picker in CohortCompareDrawer; Split affordance in cohort builder
+- **Home UX (v1.10)**: Client-side recent-activity store (`emd-recent:<username>`, capped 5) + `useRecentActivity` powering "Jump Back In"; "Attention needed" Review buttons deep-link to pre-filtered `/quality`
+- **Test surface**: ~783 tests passing (v1.10 close; 754 at Phase 30 baseline + Phase 31 subcohort suites)
 - **Requirements docs**: Lastenheft (RE-EM-LH) and Pflichtenheft (EMDREQ-*) define the formal requirements
 
 ### DSF Integration Architecture (Multi-Site)
@@ -283,6 +280,12 @@ The EMD operates within a four-zone architecture at each site:
 | Whitelist split: WHITELIST_SYSTEMS vs WHITELIST_KEYS (v1.9.5) | LOINC + ATC blanket-whitelisted (non-diagnostic); SNOMED requires specific allow-list entries (also used for diagnostics like AMD) | ✓ Validated — correct categorization; no false positives in audit:bundles |
 | AMD ≥60% comorbidity assertable at bundle level only (v1.9.5) | Unit test uses ≥45% (pre-age-coupling); verifier enforces ≥60% against shipped bundles (with age coupling active). Two-layer design. | ✓ Validated — verifier confirms 65% in shipped bundles; unit test remains valid for isolated testing |
 | Atomic 4-bundle commit (D-11, v1.9.5) | Prevents partial-regeneration hazard where one bundle encodes new model while others don't; all 4 JSONs committed together | ✓ Validated — commit 5bdd89a contains all 4 synthetic JSONs atomically |
+| Refresh sessions in SQLite, not JSON (v1.10) | Per-token jti rows need indexed lookup + atomic revoke; reuses the better-sqlite3 dependency already present for audit. No new DB stack. | ✓ Validated — mirrors auditDb pattern; family-revocation tests green |
+| RFC 6819 refresh-token family revocation (v1.10) | Reuse of a rotated token revokes the whole family + returns 401 — limits replay of a stolen refresh token | ✓ Validated — reuse-detection tests + milestone integration check |
+| Dual-key signing window for key rotation (v1.10) | Existing sessions verify against the previous key until their absolute cap, so a key rotation doesn't hard-crash live sessions | ✓ Validated — rotate-key endpoint + dual-key fallback in verifyRefreshToken |
+| Subcohort identity = name only, no new field (v1.10) | A `SavedSearch` whose name has exactly one `:` is a subcohort; avoids a schema/type change and keeps the colon convention the single differentiator | ✓ Validated — `cohortNames.ts` parse/group; orphan subcohorts allowed with soft warning |
+| Client-side recent-activity store (localStorage, per-username) (v1.10) | No server need for "Jump Back In"; per-username key + clear-on-logout/login gives cross-user isolation without backend state | ✓ Validated — UX-02 verified; cleared same-tab + cross-tab broadcast |
+| Phases 27 & 28 shipped without VERIFICATION.md (v1.10) | Verified via complete SUMMARYs + green tests + milestone integration check; formal artifact deferred as accepted tech debt | ⚠️ Revisit — backfill via `/gsd-verify-work` if a paper trail is needed |
 
 ## Evolution
 
@@ -302,4 +305,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-21 — Milestone v1.10 complete (Phases 27-31, ending with Phase 31 Subcohort Support).*
+*Last updated: 2026-05-21 after v1.10 milestone — full evolution review (requirements migrated to Validated in v1.10, Active reset to KEYCLK-01, Out-of-Scope sub-cohort line corrected, Context + Key Decisions updated).*
