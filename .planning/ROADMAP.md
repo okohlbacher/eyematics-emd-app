@@ -118,7 +118,9 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
   3. After a failed login attempt, the login page shows the exact number of remaining attempts; the lockout screen shows the remaining lockout duration counting down
   4. The inactivity warning banner displays a live countdown to logout, beginning 3 minutes before the session expires
   5. `INACTIVITY_TIMEOUT`, `WARNING_BEFORE`, `maxLoginAttempts`, and lockout duration are read from `config/settings.yaml` — no hardcoded values remain in `src/context/AuthContext.tsx` or `server/initAuth.ts`
-**Plans**: TBD
+**Plans**: 2 plans
+  - [ ] 32-01-PLAN.md — Activation lifecycle + admin dialog validation (UMGMT-01/02/03)
+  - [ ] 32-02-PLAN.md — Auth feedback + config externalization (AUTHCFG-01/02/03/04)
 **UI hint**: yes
 
 #### Phase 33: Cohort Builder UX & Advanced Filters
