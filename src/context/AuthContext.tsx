@@ -132,9 +132,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const performLogout = useCallback((auto = false) => {
     void auto; // auto-logout logged server-side via audit middleware
-    // T-29-09 / D-02: clear per-user recent-activity trail BEFORE nulling the user so the
-    // username is still available in the closure. Null-safe form handles a no-user logout.
-    recentActivityStore.clear(user?.username ?? '');
+    // T-29-09 / D-02 / CR-01: purge ALL emd-recent:* keys on every interactive logout.
+    // localStorage is origin-scoped and shared across every user of this browser profile,
+    // and entry labels store patient pseudonyms — clearing only the logging-out user's key
+    // (clear(username)) leaves any other user's residue physically readable on the same
+    // machine, defeating the D-01 per-username isolation guarantee. clearAll() sweeps every
+    // namespace so a normal single-tab logout leaves no pseudonym behind.
+    recentActivityStore.clearAll();
     // Phase 20 / D-15: notify server to clear refresh + CSRF cookies and bump tokenVersion.
     // serverLogout() swallows network errors so a failure never traps the user in a
     // half-logged-in state. Fire-and-forget — local state is cleared synchronously below.
@@ -198,6 +202,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (resp.ok) {
           const data = await resp.json() as { token: string };
+          // CR-01: purge any prior user's recent-activity residue before seeding the new
+          // session so a fresh login never inherits stale pseudonyms from shared-origin
+          // localStorage on this machine.
+          recentActivityStore.clearAll();
           sessionStorage.setItem('emd-token', data.token);
           setToken(data.token);
           setUser(userFromToken(data.token));
@@ -224,6 +232,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (data.token) {
           // 2FA disabled — direct session token
+          // CR-01: purge any prior user's recent-activity residue before seeding the new
+          // session so a fresh login never inherits stale pseudonyms from shared-origin
+          // localStorage on this machine.
+          recentActivityStore.clearAll();
           sessionStorage.setItem('emd-token', data.token);
           setToken(data.token);
           setUser(userFromToken(data.token));
