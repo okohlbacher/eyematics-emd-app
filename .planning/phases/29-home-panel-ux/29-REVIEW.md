@@ -23,7 +23,12 @@ findings:
   warning: 6
   info: 4
   total: 12
-status: issues_found
+  critical_resolved: 2
+  open: 10
+status: criticals_resolved
+resolved:
+  - CR-01 (commit b4bbfa4)
+  - CR-02 (commit 175e011)
 ---
 
 # Phase 29: Code Review Report
@@ -52,6 +57,8 @@ isolation gap is a PHI-adjacent leak, not just a UX inconvenience.
 ## Critical Issues
 
 ### CR-01: Per-username recent-activity is NOT isolated — prior users' pseudonyms persist in shared-machine localStorage
+
+> **RESOLVED (commit b4bbfa4):** `performLogout` now calls `recentActivityStore.clearAll()` (full `emd-recent:*` prefix sweep) on every interactive logout, and `login` calls `clearAll()` before seeding a new session. No prior user's pseudonyms survive a logout/login on a shared machine.
 
 **File:** `src/services/recentActivityStore.ts:18-47`, `src/context/AuthContext.tsx:133-149`
 **Issue:**
@@ -88,6 +95,8 @@ If true cross-user persistence is desired, the data must instead be stored serve
 under the authenticated identity, never in shared-origin localStorage.
 
 ### CR-02: Untrusted localStorage is deserialized into `navigate(entry.path)` and rendered without validation
+
+> **RESOLVED (commit 175e011):** `getEntries` now filters through an `isValidEntry` type guard (string `id`/`label`/`sub`/`path`, numeric `visitedAt`) and rejects any `path` that is not a single-slash app-relative route (blocks `//` protocol-relative and `/\` router-normalized variants). Malformed entries are dropped silently, preserving the existing try/catch idiom.
 
 **File:** `src/services/recentActivityStore.ts:22-32`, `src/pages/LandingPage.tsx:247-269`
 **Issue:**
