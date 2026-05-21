@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-05-21
+revised: 2026-05-21
 ---
 
 # Phase 31 — UI Design Contract: Subcohort Support
@@ -36,14 +37,15 @@ Declared values (must be multiples of 4):
 | xs | 4px | Icon gaps, inline padding (e.g. `gap-1`, `p-1`) |
 | sm | 8px | Compact element spacing (e.g. `gap-2`, `p-2`) |
 | md | 16px | Default element spacing (e.g. `gap-4`, `p-4`) |
-| lg | 24px | Section padding (e.g. `p-6` in drawer) |
+| lg | 24px | Section padding and subcohort tree indentation (e.g. `p-6`, `pl-6`) |
 | xl | 32px | Layout gaps (e.g. `p-8` page root) |
 | 2xl | 48px | Major section breaks |
 | 3xl | 64px | Page-level spacing |
 
 Exceptions:
-- Tree subcohort indentation: 20px (pl-5) — not a multiple of 8 but matches Tailwind's `pl-5` = 1.25rem = 20px, consistent with the existing `p-1.5` / `gap-1.5` usage in the saved-search row buttons. Acceptable fractional step for tree indentation visual rhythm.
 - Touch target minimum for icon-only buttons: 32px (h-8 w-8) — matches existing `p-1.5` button padding around `w-4 h-4` icons.
+
+Note: subcohort tree indentation uses `pl-6` (24px), which is a standard scale value. The 24px aligns subcohort checkboxes flush with the parent label text column: chevron 16px + `gap-2` 8px = 24px. No off-scale values.
 
 ---
 
@@ -53,10 +55,12 @@ Source: `src/index.css` `@theme` + CohortBuilderPage/CohortCompareDrawer pattern
 
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
-| Body / row label | 14px (`text-sm`) | 400 (regular) | 1.5 |
-| Label / field caption | 12px (`text-xs`) | 500 (`font-medium`) | 1.4 |
+| Body / row label | 14px (`text-sm`) | 400 (`font-normal`) | 1.5 |
+| Label / field caption | 12px (`text-xs`) | 400 (`font-normal`) | 1.4 |
 | Section heading | 16px (`text-base`) | 600 (`font-semibold`) | 1.2 |
-| Validation message | 12px (`text-xs`) | 400 (regular) | 1.4 |
+| Validation message | 12px (`text-xs`) | 400 (`font-normal`) | 1.4 |
+
+Exactly 2 weights declared: 400 (regular) for all body, row labels, field captions, and validation messages; 600 (semibold) for section headings only. The 12px size (`text-xs`) provides sufficient visual distinction for field captions without requiring a third weight. No `font-medium` / weight 500 used anywhere in this phase.
 
 No new type sizes introduced. All values match existing drawer and builder patterns.
 
@@ -70,8 +74,11 @@ Source: `src/index.css` custom token palette (OKLCH). Tailwind semantic classes 
 |------|--------------|-------|
 | Dominant (60%) | `--color-canvas` / `--color-surface` | Drawer background (`bg-white dark:bg-gray-800`), page background |
 | Secondary (30%) | `--color-surface-2` / `bg-gray-50 dark:bg-gray-700` | Saved-search row background, tree parent rows |
-| Accent (10%) | `--color-teal` / `text-blue-600 bg-blue-600` | Primary Save button, checkbox `accent-blue-600`, Split icon color |
+| Accent-primary (10% shared) | `--color-blue` / `text-blue-600 bg-blue-600` | Save cohort button (focal point of save-filter panel), checkbox `accent-blue-600`, "Compare cohorts" drawer button |
+| Accent-secondary (10% shared) | `--color-teal` / `text-teal-600 hover:bg-teal-50` | Split action button only — teal distinguishes the branching action from primary save actions |
 | Destructive | `--color-coral` / `text-red-500 bg-red-50` | Hard-error validation message, Delete button (existing) |
+
+Accent-primary (blue-600) and Accent-secondary (teal-600) share the 10% budget. They serve distinct semantic roles: blue = save/compare confirmatory actions; teal = Split branching action only. No other element uses either accent color.
 
 ### Validation color contracts
 
@@ -87,8 +94,6 @@ Source: `src/index.css` custom token palette (OKLCH). Tailwind semantic classes 
 - Text: `text-amber-700 dark:text-amber-ink` (`text-xs`, weight 400)
 - Icon: none (text message only)
 
-Accent reserved for: primary Save button, checkbox accent color, Split button icon, the "Compare cohorts" open-drawer button. NOT used for general text or non-interactive elements.
-
 Dark-mode: All tokens have `.dark` overrides in `src/index.css`; use the `dark:` prefix on Tailwind classes per existing pattern (`dark:bg-gray-700`, `dark:text-gray-300`, etc.).
 
 ---
@@ -96,6 +101,8 @@ Dark-mode: All tokens have `.dark` overrides in `src/index.css`; use the `dark:`
 ## Component Contracts
 
 ### 1. Tree in CohortCompareDrawer
+
+**Focal point:** The chevron toggle is the focal interaction; the parent row label is the visual anchor for each group.
 
 **When to tree-render:** A parent group exists when ≥1 `SavedSearch` in `savedSearches` has a name containing exactly one `:` whose text-before-colon (trimmed) matches the `name` of another `SavedSearch` (also trimmed, case-insensitive). Groups are computed at render time from the `savedSearches` list — no new state.
 
@@ -111,8 +118,8 @@ Dark-mode: All tokens have `.dark` overrides in `src/index.css`; use the `dark:`
 - **Chevron:** `ChevronDown` (16×16, `w-4 h-4`) when expanded; `ChevronUp` (16×16) when collapsed. Rotates on state change. Positioned flush-left before the parent checkbox. `aria-expanded` on the chevron button reflects open/closed state.
 - **Chevron button:** `type="button"`, `aria-label={t('cohortTreeCollapseGroup')}` when expanded, `aria-label={t('cohortTreeExpandGroup')}` when collapsed. Size: `p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700`. Does not trigger checkbox toggle.
 - **Default state:** Expanded (`true`) per D-02. State held in local `useState<Set<string>>(new Set(allParentIds))` — one entry per parent name.
-- **Indentation:** Subcohort rows use `pl-5` (20px) padding-left on the `<label>` element, aligning the subcohort checkbox with the text of the parent label (offset = chevron 16px + gap 4px = 20px).
-- **Checkbox alignment:** Parent checkbox: `flex items-center gap-2` (8px gap between checkbox and label text). Subcohort checkbox: same flex row, same gap, but parent has `pl-5` so the checkbox aligns with the parent's label text column.
+- **Indentation:** Subcohort rows use `pl-6` (24px) padding-left on the `<label>` element, aligning the subcohort checkbox with the text of the parent label. The 24px is derived from: chevron 16px + `gap-2` 8px = 24px.
+- **Checkbox alignment:** Parent checkbox: `flex items-center gap-2` (8px gap between checkbox and label text). Subcohort checkbox: same flex row, same gap, but parent has `pl-6` so the checkbox aligns with the parent's label text column.
 - **Disabled state:** Existing logic unchanged — disabled when max-4 reached and not already selected. Disabled subcohort rows use `text-gray-400 dark:text-gray-500` (same as current).
 - **Selection counting:** Each row (parent or subcohort) counts individually toward the max-4 limit. The `isMaxReached` check is applied to `selectedIds.length >= 4` — no change to this logic.
 
@@ -122,7 +129,9 @@ Dark-mode: All tokens have `.dark` overrides in `src/index.css`; use the `dark:`
 
 ### 2. Inline validation in the save dialog (CohortBuilderPage)
 
-**Location:** Directly below the `<input type="text" />` name field in the "Save current filters" section of the filter panel (below the `flex gap-2` row containing the input and Save button). Spacing: `mt-1` (4px above the message).
+**Focal point:** The accent-primary (blue-600) "Save cohort" button anchors the save-filter panel as the primary call to action.
+
+**Location:** Directly below the `<input type="text" />` name field in the "Save current filters" section of the filter panel (below the `flex gap-2` row containing the input and Save cohort button). Spacing: `mt-1` (4px above the message).
 
 **DOM structure:**
 ```html
@@ -134,7 +143,13 @@ Dark-mode: All tokens have `.dark` overrides in `src/index.css`; use the `dark:`
     aria-describedby={validationMsg ? "cohort-name-validation" : undefined}
     ...
   />
-  <button disabled={hasHardError || !saveName.trim()} ...>Save</button>
+  <button
+    disabled={hasHardError || !saveName.trim()}
+    aria-label={t('cohortSaveSearch')}
+    ...
+  >
+    {t('cohortSaveSearch')}
+  </button>
 </div>
 {validationMsg && (
   <p
@@ -147,7 +162,9 @@ Dark-mode: All tokens have `.dark` overrides in `src/index.css`; use the `dark:`
 )}
 ```
 
-**Hard error states (block Save button):**
+The save-dialog primary button uses `t('cohortSaveSearch')` ("Save cohort" / "Kohorte speichern") — NOT the global `save` key. The global `save` key ("Save" / "Speichern") remains unchanged for all other contexts in the application.
+
+**Hard error states (block Save cohort button):**
 1. Two or more colons: `t('cohortNameTooManyColons')`
 2. Empty parent identifier (e.g. name is `:Sub`): `t('cohortNameEmptyParent')`
 3. Empty sub identifier (e.g. name is `Parent:`): `t('cohortNameEmptySub')`
@@ -157,18 +174,20 @@ Hard-error style: `text-xs px-2 py-1 rounded border bg-red-50 border-red-200 tex
 
 `aria-invalid="true"` on the input, `role="alert"` on the message paragraph (announces immediately to screen reader).
 
-**Soft orphan warning (does NOT block Save button):**
+**Soft orphan warning (does NOT block Save cohort button):**
 - Triggered when: name contains exactly one `:`, parent identifier is non-empty, but no `SavedSearch` with `name.trim().toLowerCase() === parentIdentifier.toLowerCase()` exists in `savedSearches`.
 - Message: `t('cohortNameOrphanWarning')`
 - Style: `text-xs px-2 py-1 rounded border bg-amber-50 border-amber-200 text-amber-700 dark:bg-[--color-amber-soft] dark:border-[--color-amber] dark:text-[--color-amber-ink]`
 - `aria-invalid="false"` on the input (no error), `role="status"` on the message paragraph (non-urgent live region).
-- Save button remains enabled.
+- Save cohort button remains enabled.
 
 **Validation timing:** Evaluate on every `onChange` of the name field (live, not on blur) — consistent with the existing `disabled={!saveName.trim()}` pattern which already reacts to every keystroke.
 
-**Save button disabled condition:** `disabled={hasHardError || !saveName.trim()}` — the save button is disabled when any hard error is active OR the field is empty, but NOT disabled for the orphan warning.
+**Save cohort button disabled condition:** `disabled={hasHardError || !saveName.trim()}` — the button is disabled when any hard error is active OR the field is empty, but NOT disabled for the orphan warning.
 
 ### 3. Per-row "Split" action (CohortBuilderPage saved-searches list)
+
+**Focal point:** The accent-secondary (teal-600) `GitBranch` icon is the sole teal element on each saved-search row, making it immediately distinguishable from the other gray/muted actions.
 
 **Placement:** Added to the `flex gap-2` button group at the right of each saved-search row, between the LineChart (analysis) button and the Play (load) button:
 
@@ -178,7 +197,7 @@ Hard-error style: `text-xs px-2 py-1 rounded border bg-red-50 border-red-200 tex
 
 **Icon:** `GitBranch` from lucide-react (16×16, `w-4 h-4`). This icon clearly conveys "branch / split into" without inventing a new visual concept.
 
-**Button style:** `p-1.5 text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2` — mirrors the violet LineChart button style but uses teal (the app's primary accent token) to distinguish the action.
+**Button style:** `p-1.5 text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2` — uses Accent-secondary (teal) to distinguish this branching action from primary save/compare actions (Accent-primary, blue).
 
 **Accessible name:** `aria-label={t('cohortSplitIntoSubcohort')}` (interpolates no variable — the label applies to the row context). `title={t('cohortSplitIntoSubcohort')}` also set for hover tooltip.
 
@@ -196,10 +215,11 @@ If the cohort being split is itself a subcohort (its name already contains `:`),
 
 All strings are bilingual DE/EN following the `{ de: '...', en: '...' }` pattern in `src/i18n/translations.ts`.
 
-### New i18n keys required
+### New i18n keys required (10 keys)
 
 | Key | DE | EN | Notes |
 |-----|----|----|-------|
+| `cohortSaveSearch` | `Kohorte speichern` | `Save cohort` | **Save-dialog primary button** (verb + noun, specific to this context; replaces generic `save` key in this button only) |
 | `cohortSplitIntoSubcohort` | `Als Unterkohorte aufteilen` | `Split into subcohort` | Button aria-label + tooltip on per-row Split button |
 | `cohortNameTooManyColons` | `Name darf nur einen Doppelpunkt enthalten` | `Name must contain at most one colon` | Hard-error: 2+ colons |
 | `cohortNameEmptyParent` | `Übergeordneter Name darf nicht leer sein` | `Parent name must not be empty` | Hard-error: empty text before `:` |
@@ -214,7 +234,7 @@ All strings are bilingual DE/EN following the `{ de: '...', en: '...' }` pattern
 
 | Element | Existing key | Copy |
 |---------|-------------|------|
-| Save CTA | `save` | DE: Speichern / EN: Save |
+| Generic save (other contexts) | `save` | DE: Speichern / EN: Save — NOT used for save-dialog button in this phase |
 | Name input placeholder | `searchNamePlaceholder` | DE: z.B. AMD Kohorte 2026 / EN: e.g. AMD Cohort 2026 |
 | Compare drawer title | `outcomesCompareDrawerTitle` | DE: Kohorten vergleichen / EN: Compare Cohorts |
 | Compare hint | `outcomesCompareDrawerHint` | DE: Bis zu 4 Kohorten auswählen / EN: Select up to 4 cohorts |
@@ -239,7 +259,7 @@ No new destructive actions in this phase. The existing Delete (`Trash2`) button 
 | Element | States |
 |---------|--------|
 | Split button | default / hover (`bg-teal-50`) / focus-visible (blue outline) / disabled: never disabled |
-| Save button | default / hover / disabled (empty name OR hard error) |
+| Save cohort button | default / hover / disabled (empty name OR hard error) |
 | Name input | default / focus / aria-invalid=true (hard error) / aria-invalid=false (warning or clean) |
 | Validation message | absent / hard-error (role=alert, red) / soft-warning (role=status, amber) |
 | Chevron toggle | expanded (ChevronDown) / collapsed (ChevronUp) / hover (`bg-gray-100`) / focus-visible |
@@ -257,6 +277,7 @@ No new destructive actions in this phase. The existing Delete (`Trash2`) button 
 - `aria-expanded` on chevron button reflects group open/closed state.
 - Chevron button has explicit `aria-label` (not just an icon with no text).
 - All icon-only buttons have `aria-label` — matching existing pattern (see Split button, existing LineChart button uses `aria-label={t('outcomesOpenForCohort')}`).
+- Save cohort button uses `t('cohortSaveSearch')` as both visible label and aria label — no separate aria-label needed.
 - Subcohort checkbox `aria-label` includes the full label string (parent context not required in the label string itself since the visual hierarchy conveys it, but `t('cohortTreeSubcohortOf')` may be prepended as a screen-reader-only prefix if testing reveals ambiguity).
 - Color is never the sole differentiator: hard-error vs soft-warning also differ in `role` attribute (alert vs status) and message copy.
 - Focus order within a parent group: chevron button → parent label checkbox → subcohort checkboxes (natural DOM order; no `tabindex` manipulation needed).
@@ -282,6 +303,7 @@ No new component library dependencies. All new UI uses existing lucide-react ico
 | ROADMAP.md Phase 31 | 5 (D-R1..D-R5: colon convention, no new type field, Split pre-fill, tree independent selection, max-4 unchanged) |
 | REQUIREMENTS.md | 2 (KOH-003, KOH-004 requirements descriptions and success criteria) |
 | Codebase scan | 6 (existing color tokens from `src/index.css`, icon library from CohortBuilderPage/CohortCompareDrawer imports, spacing patterns from drawer/builder JSX, existing amber/red validation patterns from QualityCaseDetail, ChevronRight rotate-90 pattern from OutcomesDataPreview, aria pattern from OutcomesView `role="status"`) |
+| Checker revision | 3 (cohortSaveSearch key, 2-weight collapse, pl-6 indentation) |
 | User input | 0 (auto mode; all gaps filled from upstream + codebase) |
 
 ---
