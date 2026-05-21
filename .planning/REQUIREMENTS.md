@@ -8,9 +8,9 @@
 ### Session Management
 
 - [x] **SESS-01**: Admin can trigger immediate sign-out of all active sessions for any user
-- [ ] **SESS-02**: Server maintains a stateful refresh-sessions table (one row per issued refresh token, tracking user, device fingerprint, issued-at, expires-at, revoked flag)
-- [ ] **SESS-03**: Server rotates refresh tokens on every use (OAuth2-style: previous token invalidated immediately on reuse)
-- [ ] **SESS-04**: Admin can rotate the refresh-token signing key; existing sessions gracefully expire rather than hard-crashing
+- [x] **SESS-02**: Server maintains a stateful refresh-sessions table (one row per issued refresh token, tracking user, device fingerprint, issued-at, expires-at, revoked flag)
+- [x] **SESS-03**: Server rotates refresh tokens on every use (OAuth2-style: previous token invalidated immediately on reuse)
+- [x] **SESS-04**: Admin can rotate the refresh-token signing key; existing sessions gracefully expire rather than hard-crashing
 
 ### Session UI
 
@@ -20,13 +20,13 @@
 
 ### UX Fixes
 
-- [ ] **UX-01**: Home "Attention needed" panel — Review buttons navigate to the relevant case or review target (FB-02)
-- [ ] **UX-02**: Home "Jump Back In" panel — arrows route to the last-visited view for the patient/case (FB-03)
+- [x] **UX-01**: Home "Attention needed" panel — Review buttons route to the appropriate pre-filtered review area via a defined query contract (FB-02). *Reworded 2026-05-21: alerts are static, not data-driven; route to review area, not a specific case.*
+- [x] **UX-02**: Home "Jump Back In" panel — arrows route to the last-visited view for the patient/case (FB-03). *Requires new client-side recent-activity tracking — none exists today.*
 
 ### Terminology Docs
 
-- [ ] **TERM-01**: `terminology.*` settings keys documented in `docs/Konfiguration.md` (enable/disable, proxy URL, cache TTL)
-- [ ] **TERM-02**: `config/settings.yaml` ships with `terminology.*` keys and inline comments
+- [x] **TERM-01**: `terminology.*` settings keys documented in `docs/Konfiguration.md` (enable/disable, proxy URL, cache TTL) — satisfied in Phase 25; Phase 30 only fixes the serverUrl default-vs-placeholder wording
+- [ ] **TERM-02**: `config/settings.yaml` ships with a commented `terminology.*` example block + inline comments (kept commented per D-16/D-17 offline-by-default design)
 
 ## Backlog (not in v1.10)
 
@@ -48,16 +48,16 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | SESS-01 | Phase 28 | Complete |
-| SESS-02 | Phase 27 | Pending |
-| SESS-03 | Phase 27 | Pending |
-| SESS-04 | Phase 27 | Pending |
+| SESS-02 | Phase 27 | Complete |
+| SESS-03 | Phase 27 | Complete |
+| SESS-04 | Phase 27 | Complete |
 | SESSUI-01 | Phase 28 | Complete |
 | SESSUI-02 | Phase 28 | Complete |
 | SESSUI-03 | Phase 28 | Complete |
-| UX-01 | Phase 29 | Pending |
-| UX-02 | Phase 29 | Pending |
-| TERM-01 | Phase 30 | Pending |
-| TERM-02 | Phase 30 | Pending |
+| UX-01 | Phase 29 | Complete |
+| UX-02 | Phase 29 | Complete |
+| TERM-01 | Phase 25 / 30 | Complete (docs shipped in Phase 25) |
+| TERM-02 | Phase 30 | Pending (reworded — commented example) |
 
 **Coverage:**
 - v1.10 requirements: 11 total
@@ -66,4 +66,4 @@
 
 ---
 *Requirements defined: 2026-05-01*
-*Last updated: 2026-05-01 — traceability filled (Phases 27–30)*
+*Last updated: 2026-05-21 — adversarial review: SESS-02/03/04 marked complete (Phase 27 shipped); UX-01/UX-02/TERM-01/TERM-02 re-scoped per Phases 29 & 30 review.*

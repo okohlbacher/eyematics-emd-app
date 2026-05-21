@@ -190,7 +190,7 @@ to two small cleanup tasks; no new documentation section is needed.
 |-------|----------------|--------|-----------|
 | 27. Stateful Session Backend | 4/4 | Complete | 2026-05-11 |
 | 28. Admin Session Control UI | 4/4 | Complete   | 2026-05-14 |
-| 29. Home Panel UX | 4/4 | Complete   | 2026-05-21 |
+| 29. Home Panel UX | 4/4 | Complete    | 2026-05-21 |
 | 30. Terminology Configuration Docs | 0/? | Not started | - |
 | 31. Subcohort Support | 0/? | Not started | - |
 
