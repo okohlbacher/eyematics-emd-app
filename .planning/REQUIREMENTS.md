@@ -10,16 +10,16 @@
 
 ### User Management (UMGMT)
 
-- [ ] **UMGMT-01**: The "at least one assigned center" requirement is enforced in the admin **edit-user** dialog, not only on create (source: USM-001)
-- [ ] **UMGMT-02**: All user fields are mandatory (non-empty) with inline validation errors in **both** the create and edit user dialogs (source: USM-001/USM-002)
-- [ ] **UMGMT-03**: Users have an activation status — an `active` flag (default `true`) on the user model; an admin can de/reactivate a user via a checkbox; an inactive user cannot authenticate; deactivating a user immediately revokes their active sessions (mirrors PROT-001 delete behavior) (source: USM-002, reject overturned — confirmed in requirements)
+- [x] **UMGMT-01**: The "at least one assigned center" requirement is enforced in the admin **edit-user** dialog, not only on create (source: USM-001)
+- [x] **UMGMT-02**: All user fields are mandatory (non-empty) with inline validation errors in **both** the create and edit user dialogs (source: USM-001/USM-002)
+- [x] **UMGMT-03**: Users have an activation status — an `active` flag (default `true`) on the user model; an admin can de/reactivate a user via a checkbox; an inactive user cannot authenticate; deactivating a user immediately revokes their active sessions (mirrors PROT-001 delete behavior) (source: USM-002, reject overturned — confirmed in requirements)
 
 ### Auth Feedback & Configuration (AUTHCFG)
 
-- [ ] **AUTHCFG-01**: After the first failed login the login page shows the number of attempts remaining, and when locked it shows the remaining lockout time (source: USM-006)
-- [ ] **AUTHCFG-02**: The inactivity warning banner shows a live countdown of time remaining; the warning lead time is 3 minutes before logout (source: USM-008)
-- [ ] **AUTHCFG-03**: `INACTIVITY_TIMEOUT` and `WARNING_BEFORE` are sourced from `config/settings.yaml` (no hardcoded client constants in `src/context/AuthContext.tsx`) (source: USM-008)
-- [ ] **AUTHCFG-04**: `maxLoginAttempts` and the lockout duration are sourced from `config/settings.yaml`, replacing the hardcoded values in `server/initAuth.ts` and any client equivalent (source: USM-008)
+- [x] **AUTHCFG-01**: After the first failed login the login page shows the number of attempts remaining, and when locked it shows the remaining lockout time (source: USM-006)
+- [x] **AUTHCFG-02**: The inactivity warning banner shows a live countdown of time remaining; the warning lead time is 3 minutes before logout (source: USM-008)
+- [x] **AUTHCFG-03**: `INACTIVITY_TIMEOUT` and `WARNING_BEFORE` are sourced from `config/settings.yaml` (no hardcoded client constants in `src/context/AuthContext.tsx`) (source: USM-008)
+- [x] **AUTHCFG-04**: `maxLoginAttempts` and the lockout duration are sourced from `config/settings.yaml`, replacing the hardcoded values in `server/initAuth.ts` and any client equivalent (source: USM-008)
 
 ### Dashboard / Data Completeness (DASH)
 
@@ -88,13 +88,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UMGMT-01 | Phase 32 | Pending |
-| UMGMT-02 | Phase 32 | Pending |
-| UMGMT-03 | Phase 32 | Pending |
-| AUTHCFG-01 | Phase 32 | Pending |
-| AUTHCFG-02 | Phase 32 | Pending |
-| AUTHCFG-03 | Phase 32 | Pending |
-| AUTHCFG-04 | Phase 32 | Pending |
+| UMGMT-01 | Phase 32 | Done ✅ |
+| UMGMT-02 | Phase 32 | Done ✅ |
+| UMGMT-03 | Phase 32 | Done ✅ |
+| AUTHCFG-01 | Phase 32 | Done ✅ |
+| AUTHCFG-02 | Phase 32 | Done ✅ |
+| AUTHCFG-03 | Phase 32 | Done ✅ |
+| AUTHCFG-04 | Phase 32 | Done ✅ |
 | DASH-01 | Phase 34 | Pending |
 | DASH-02 | Phase 33 | Pending |
 | COH-01 | Phase 33 | Pending |

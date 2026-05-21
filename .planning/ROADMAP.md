@@ -90,7 +90,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 
 ### Phases
 
-- [ ] **Phase 32: User Management & Auth Hardening** — Enforce validation in create/edit user dialogs; add user activation/deactivation with session revocation; surface lockout feedback, live inactivity countdown, and settings.yaml-sourced auth constants
+- [x] **Phase 32: User Management & Auth Hardening** — Enforce validation in create/edit user dialogs; add user activation/deactivation with session revocation; surface lockout feedback, live inactivity countdown, and settings.yaml-sourced auth constants (UMGMT-01/02/03, AUTHCFG-01/02/03/04) — completed 2026-05-21, 828/828 tests, verified 5/5
 - [ ] **Phase 33: Cohort Builder UX** — Plausibility checks on age/Visus/CRT bounds; persistent filter state with reset; issue-based cohort presets (Therapie-Abbrecher, Unplausible CRT, Flagged, Implausible Visus); advanced filter dialog (spike-then-build); dashboard Review buttons routing correctly
 - [ ] **Phase 34: Data Completeness** — Patient stub + Consent model for Datenvollzähligkeit (consented fraction), with strict stub isolation from clinical surfaces
 - [ ] **Phase 35: V&V Backfill** — VERIFICATION.md for Phases 27 & 28; VALIDATION.md brought to nyquist_compliant/wave_0_complete for Phases 27/28/29; Phase 31 and all v1.10 VALIDATION status flipped to final
@@ -100,7 +100,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 32. User Management & Auth Hardening | 0/? | Not started | - |
+| 32. User Management & Auth Hardening | 2/2 | ✅ Complete (verified 5/5) | 2026-05-21 |
 | 33. Cohort Builder UX & Advanced Filters | 0/? | Not started | - |
 | 34. Data Completeness (Consent + Stubs) | 0/? | Not started | - |
 | 35. V&V Backfill | 0/? | Not started | - |

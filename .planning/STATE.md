@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: — UAT Fixes, Data Completeness & Quality Closure
-status: Plan 32-02 executed (AUTHCFG-01/02/03/04 satisfied)
-last_updated: "2026-05-21T20:37:00.000Z"
-last_activity: "2026-05-21 — Executed 32-02: auth config hardening, lockout cap, symmetric branches, live countdowns"
+status: Phase 32 complete + verified (5/5); ready for Phase 33
+last_updated: "2026-05-21T20:45:00.000Z"
+last_activity: "2026-05-21 — Phase 32 verified 5/5, 828/828 tests green; next Phase 33"
 progress:
   total_phases: 5
   completed_phases: 1
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-21 after v1.10)
 
 **Core value:** Every user sees only authorized data, with tamper-proof audit trail — while maintaining the zero-friction local development experience.
-**Current focus:** v1.11 — Phase 32: User Management & Auth Hardening
+**Current focus:** v1.11 — Phase 33: Cohort Builder UX & Advanced Filters (next)
 
 ## Current Position
 
-Phase: 32 — User Management & Auth Hardening
-Plan: 32-01 + 32-02 complete; Phase 32 done
-Status: Plan 32-02 executed (AUTHCFG-01/02/03/04 satisfied)
-Last activity: 2026-05-21 — Executed 32-02: auth config hardening, lockout cap, symmetric branches, live countdowns
+Phase: 32 complete + verified → Phase 33 next
+Plan: 32-01 + 32-02 complete (UMGMT + AUTHCFG); Phase 32 verified 5/5
+Status: Phase 32 done; 828/828 tests green. 3 runtime UI behaviors flagged for human UAT (inactivity countdown, lockout countdown, deactivation flow) — see 32-VERIFICATION.md
+Last activity: 2026-05-21 — Phase 32 verified; next Phase 33 (COH-01/02/03/04, DASH-02)
 
-**Progress:** `[░░][ ][ ][ ][ ]` 2/2 plans in Phase 32; Phase 32 complete
+**Progress:** `[█][ ][ ][ ][ ]` Phase 32 complete; 1/5 phases done
 
 ## Milestones Shipped
 
@@ -92,6 +92,7 @@ Acknowledged and accepted as tech debt at v1.10 milestone close on 2026-05-21 �
 
 ## Operator Next Steps
 
-1. `/gsd-plan-phase 32` — plan Phase 32: User Management & Auth Hardening (UMGMT-01/02/03, AUTHCFG-01/02/03/04)
-2. Execute Phase 32, then plan and execute Phases 33–36 in sequence
-3. Phase 36 is the final gate: ARCH review + compaction + VVBACK-05 green test:ci
+1. `/gsd-plan-phase 33` — plan Phase 33: Cohort Builder UX & Advanced Filters (COH-01/02/03/04, DASH-02)
+2. Then execute Phases 33–36 in sequence
+3. Optional: human UAT of Phase 32's 3 runtime UI behaviors (32-VERIFICATION.md)
+4. Phase 36 is the final gate: ARCH review + compaction + VVBACK-05 green test:ci
