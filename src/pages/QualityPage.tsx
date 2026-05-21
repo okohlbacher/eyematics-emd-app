@@ -1,7 +1,7 @@
 /** Data quality review page — EMDREQ-QUAL-001 to QUAL-010 (SDV, error flagging, exclusions, therapy discontinuation). */
 import { Ban, CheckCircle2, Circle, Clock, Download } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { pickCoding } from '../../shared/fhirQueries';
 import QualityCaseDetail from '../components/quality/QualityCaseDetail';
@@ -79,18 +79,33 @@ export default function QualityPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { locale, t } = useLanguage();
+  const [searchParams] = useSearchParams();
 
   const [selectedCase, setSelectedCase] = useState<PatientCase | null>(null);
   const [flagDialog, setFlagDialog] = useState<{ parameter: string; value: string } | null>(null);
   const [errorType, setErrorType] = useState('');
 
-  // Search & filter state
+  // Search & filter state — filterStatus and filterTherapy are seeded from URL params on mount
+  // via lazy initializers (no useEffect: avoids double-render flash, see RESEARCH Pitfall 3).
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<QualityStatus | 'all'>('all');
+  const [filterStatus, setFilterStatus] = useState<QualityStatus | 'all'>(() => {
+    const v = searchParams.get('status');
+    // 'flagged' is the locked D-04 URL contract value; it maps to 'in_progress' because
+    // QualityStatus has no 'flagged' member and cases with an open quality flag are
+    // caseStatus==='in_progress' (see caseStatus useMemo below and RESEARCH Pitfall 1).
+    return v === 'flagged' ? 'in_progress' : 'all';
+  });
   const [filterCenter, setFilterCenter] = useState<string>('all');
-  const [filterTherapy, setFilterTherapy] = useState<string>('all');
+  const [filterTherapy, setFilterTherapy] = useState<string>(() => {
+    const v = searchParams.get('therapy');
+    return v === 'breaker' || v === 'interrupter' ? v : 'all';
+  });
   const [showExcluded, setShowExcluded] = useState(true);
-  const [showFilters, setShowFilters] = useState(false);
+  // Auto-open the filter panel when a URL param seeds a non-default filter value
+  // so the seeded filter state is immediately visible to the user.
+  const [showFilters, setShowFilters] = useState<boolean>(() => {
+    return searchParams.get('therapy') !== null || searchParams.get('status') !== null;
+  });
 
   const dateFmt = getDateLocale(locale);
 
