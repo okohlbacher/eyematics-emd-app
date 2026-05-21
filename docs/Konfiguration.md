@@ -77,7 +77,7 @@ terminology:
 | `dataSource.type` | `"local"` \| `"blaze"` | `"local"` | Art der Datenquelle. `local`: JSON-Dateien aus `public/data/`. `blaze`: Blaze FHIR Server. |
 | `dataSource.blazeUrl` | `string` | `http://localhost:8080/fhir` | URL des Blaze FHIR Servers. Zugriff über Server-Proxy (`/api/fhir-proxy`). |
 | `terminology.enabled` | `boolean` | `false` | Aktiviert den Terminologie-Resolver-Server-Proxy. Standard `false` (Offline-Betrieb mit eingebauter Seed-Map). |
-| `terminology.serverUrl` | `string` | `https://r4.ontoserver.csiro.au/fhir` | FHIR-Endpunkt mit `$lookup`-Unterstützung. Produktiv durch nationalen oder institutionellen Server ersetzen. |
+| `terminology.serverUrl` | `string` | — | FHIR-Endpunkt mit `$lookup`-Unterstützung. Beispiel-Platzhalter: `https://r4.ontoserver.csiro.au/fhir` — pro Deployment durch nationalen oder institutionellen Server ersetzen. |
 | `terminology.cacheTtlMs` | `number` | `86400000` | Server-seitige LRU-Cache-Lebensdauer in Millisekunden (24 h). Max. 10 000 Einträge, prozesslokal. |
 
 ## Terminologie-Server (`terminology`)
