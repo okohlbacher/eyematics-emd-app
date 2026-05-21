@@ -76,7 +76,7 @@ Full phase details: [`milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md)
 - [x] **Phase 28: Admin Session Control UI** — Force sign-out, per-device session listing + individual revocation, TTL configuration UI (completed 2026-05-14)
 - [x] **Phase 29: Home Panel UX** — Wire "Attention needed" Review buttons and "Jump Back In" panel routing (completed 2026-05-21)
 - [x] **Phase 30: Terminology Configuration Docs** — Document terminology settings keys in settings.yaml and Konfiguration.md (completed 2026-05-21)
-- [ ] **Phase 31: Subcohort Support** — Colon-namespaced subcohorts, tree-view picker in comparison drawer, subcohort split UI in cohort builder
+- [x] **Phase 31: Subcohort Support** — Colon-namespaced subcohorts, tree-view picker in comparison drawer, subcohort split UI in cohort builder (completed 2026-05-21)
 
 ## Phase Details
 
@@ -190,7 +190,7 @@ Plans:
 **Wave 1**
 - [x] 31-02-PLAN.md — src/services/cohortNames.ts (parseSubcohortName/isSubcohortName/duplicate/groupByParent) [KOH-003]
 **Wave 2**
-- [ ] 31-03-PLAN.md — CohortBuilderPage validation + Split affordance & CohortCompareDrawer tree render [KOH-003, KOH-004]
+- [x] 31-03-PLAN.md — CohortBuilderPage validation + Split affordance & CohortCompareDrawer tree render [KOH-003, KOH-004]
 **UI hint**: yes
 
 ## Progress Table
@@ -201,7 +201,7 @@ Plans:
 | 28. Admin Session Control UI | 4/4 | Complete   | 2026-05-14 |
 | 29. Home Panel UX | 4/4 | Complete    | 2026-05-21 |
 | 30. Terminology Configuration Docs | 1/1 | Complete    | 2026-05-21 |
-| 31. Subcohort Support | 2/3 | In Progress|  |
+| 31. Subcohort Support | 3/3 | Complete   | 2026-05-21 |
 
 ---
 
