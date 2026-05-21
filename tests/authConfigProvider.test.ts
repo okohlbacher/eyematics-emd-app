@@ -161,3 +161,4 @@ describe('POST /api/auth/login — provider guard (D-04)', () => {
     expect(res.body).toHaveProperty('error', 'Invalid credentials');
   });
 });
+

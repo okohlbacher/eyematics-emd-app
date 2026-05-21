@@ -29,7 +29,7 @@ export interface User {
 
 type LoginResult =
   | { ok: true }
-  | { ok: false; error: 'invalid_credentials' | 'otp_required' | 'account_locked' | 'invalid_otp' | 'network_error'; challengeToken?: string; retryAfterMs?: number };
+  | { ok: false; error: 'invalid_credentials' | 'otp_required' | 'account_locked' | 'invalid_otp' | 'network_error'; challengeToken?: string; retryAfterMs?: number; attemptsRemaining?: number };
 
 interface AuthContextType {
   user: User | null;
@@ -253,7 +253,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { ok: false, error: 'account_locked', retryAfterMs: data.retryAfterMs };
       }
 
-      return { ok: false, error: 'invalid_credentials' };
+      // Parse 401 body to surface attemptsRemaining for the login page (AUTHCFG-01).
+      // The server returns attemptsRemaining on both known-user and unknown-user 401 paths.
+      try {
+        const data = await resp.json() as { attemptsRemaining?: number };
+        return { ok: false, error: 'invalid_credentials', attemptsRemaining: data.attemptsRemaining };
+      } catch {
+        return { ok: false, error: 'invalid_credentials' };
+      }
     } catch {
       return { ok: false, error: 'network_error' };
     }

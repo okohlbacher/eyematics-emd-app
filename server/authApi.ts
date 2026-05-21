@@ -57,12 +57,27 @@ function currentKeyId(): string {
 
 // Rate limiter -- lazy init because getAuthConfig() requires initAuth() to have run first.
 // Single instance shared by /login and /verify handlers (addresses Codex review concern).
+// resetLimiter() is exported so settingsApi can null the singleton after updateAuthConfig(),
+// ensuring a live config change (e.g. lowered maxLoginAttempts) applies on the next request
+// without a server restart (Blocker #1 / AUTHCFG-04).
 let _limiter: ReturnType<typeof createRateLimiter> | null = null;
 function limiter() {
   if (!_limiter) {
-    _limiter = createRateLimiter(getAuthConfig().maxLoginAttempts);
+    const cfg = getAuthConfig();
+    _limiter = createRateLimiter(cfg.maxLoginAttempts, cfg.lockoutCapMs);
   }
   return _limiter;
+}
+
+/**
+ * Null the lazy limiter singleton so the next request rebuilds it from the
+ * current getAuthConfig() values. Call this immediately after updateAuthConfig()
+ * in the settings PUT path so a live cap change takes effect on the next login.
+ * Note: initAuth.ts MUST NOT import this — that would be a circular import.
+ * The reset is driven from settingsApi, which already imports both modules.
+ */
+export function resetLimiter(): void {
+  _limiter = null;
 }
 
 // ---------------------------------------------------------------------------
@@ -199,9 +214,18 @@ authApiRouter.post('/login', async (req: Request, res: Response): Promise<void> 
   const user = users.find((u) => u.username.toLowerCase() === key);
 
   if (!user || !user.passwordHash) {
-    // Record failure even for unknown users (prevent timing-based enumeration)
-    limiter().recordFailure(key);
-    res.status(401).json({ error: 'Invalid credentials' });
+    // Record failure even for unknown users (prevent timing-based enumeration — T-02-05).
+    // Symmetric with the known-user bad-password branch (Blocker #2 / T-32-06):
+    // unknown-user crossing the threshold gets the same 429 shape as a known-user lockout
+    // so response shape cannot reveal account existence.
+    const newStateUnknown = limiter().recordFailure(key);
+    if (limiter().isLocked(newStateUnknown)) {
+      const retryAfterMs = newStateUnknown.lockedUntil - Date.now();
+      res.status(429).json({ error: 'Account locked', retryAfterMs });
+      return;
+    }
+    const attemptsRemainingUnknown = Math.max(0, getAuthConfig().maxLoginAttempts - newStateUnknown.count);
+    res.status(401).json({ error: 'Invalid credentials', attemptsRemaining: attemptsRemainingUnknown });
     return;
   }
 
@@ -214,7 +238,8 @@ authApiRouter.post('/login', async (req: Request, res: Response): Promise<void> 
       res.status(429).json({ error: 'Account locked', retryAfterMs });
       return;
     }
-    res.status(401).json({ error: 'Invalid credentials' });
+    const attemptsRemaining = Math.max(0, getAuthConfig().maxLoginAttempts - newState.count);
+    res.status(401).json({ error: 'Invalid credentials', attemptsRemaining });
     return;
   }
 
