@@ -4,7 +4,7 @@ milestone: v1.10
 milestone_name: — Session Hardening & UX Closure
 status: planning
 last_updated: "2026-05-21T09:14:04.957Z"
-last_activity: 2026-05-14 -- Phase 28 complete (Admin Session Control UI)
+last_activity: 2026-05-21 -- Phase 29 context gathered (Home Panel UX)
 progress:
   total_phases: 5
   completed_phases: 2
@@ -24,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-05-01)
 
 ## Current Position
 
-Phase: 29 (home-panel-ux) — NEXT
+Phase: 29 (home-panel-ux) — context gathered, pending planning
 Plan: 0 of ?
-Status: Phase 28 complete, Phase 29 pending planning
-Last activity: 2026-05-14 -- Phase 28 complete (Admin Session Control UI)
+Status: Phase 29 CONTEXT.md written; ready for /gsd-plan-phase 29
+Last activity: 2026-05-21 -- Phase 29 context gathered (Home Panel UX)
 
 ```
 Progress: [████████░░░░░░░░░░░░] 40% (2/5 phases)
