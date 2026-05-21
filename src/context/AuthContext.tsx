@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setInactivityWarning(false);
     sessionStorage.removeItem('emd-token');
     invalidateBundleCache(); // L-12: clear stale data from previous user's center scope
-  }, [user]);
+  }, []);
 
   const resetInactivityTimer = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
