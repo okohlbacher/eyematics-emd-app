@@ -1,7 +1,8 @@
 ---
 phase: 33
 slug: cohort-builder-ux-advanced-filters
-status: draft
+status: approved
+reviewed_at: 2026-05-22
 shadcn_initialized: false
 preset: none
 created: 2026-05-22
