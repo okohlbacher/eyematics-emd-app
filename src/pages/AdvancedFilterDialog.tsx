@@ -126,13 +126,16 @@ export default function AdvancedFilterDialog({
 
     const minVal = hba1cMin !== '' ? parseFloat(hba1cMin) : NaN;
     const maxVal = hba1cMax !== '' ? parseFloat(hba1cMax) : NaN;
+    // CR-03: require both bounds — partial input is silently dropped to avoid
+    // silent sentinel clamping that could exclude clinically valid high HbA1c values.
+    // WR-03: block apply when both bounds are present but min > max (consistent with COH-01).
     if (!isNaN(minVal) && !isNaN(maxVal)) {
+      if (minVal > maxVal) {
+        return; // silent block — same pattern as COH-01 visusError guard
+      }
       advancedFields.hba1cRange = [minVal, maxVal];
-    } else if (!isNaN(minVal)) {
-      advancedFields.hba1cRange = [minVal, 20];
-    } else if (!isNaN(maxVal)) {
-      advancedFields.hba1cRange = [0, maxVal];
     }
+    // Single-bound input: omit hba1cRange (user must provide both bounds)
 
     if (medicationCodes.length > 0) advancedFields.medicationCodes = medicationCodes;
     if (laterality) advancedFields.laterality = laterality;
