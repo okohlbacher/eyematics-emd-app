@@ -199,8 +199,23 @@ export default function CohortBuilderPage() {
   })();
 
   // Text state for visus inputs (allows typing decimals with comma or dot)
-  const [visusMinText, setVisusMinText] = useState('');
-  const [visusMaxText, setVisusMaxText] = useState('');
+  // CR-02: seed from restored visusRange so inputs are not blank after sessionStorage rehydration
+  const [visusMinText, setVisusMinText] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem('emd-cohort-filters');
+      if (!raw) return '';
+      const restored = safePickCohortFilter(JSON.parse(raw) as unknown);
+      return restored.visusRange?.[0] != null ? String(restored.visusRange[0]) : '';
+    } catch { return ''; }
+  });
+  const [visusMaxText, setVisusMaxText] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem('emd-cohort-filters');
+      if (!raw) return '';
+      const restored = safePickCohortFilter(JSON.parse(raw) as unknown);
+      return restored.visusRange?.[1] != null ? String(restored.visusRange[1]) : '';
+    } catch { return ''; }
+  });
 
   const [showDetailedView, setShowDetailedView] = useState(false);
 
