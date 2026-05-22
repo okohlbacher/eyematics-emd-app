@@ -897,6 +897,40 @@ const translations = {
     en: 'Review flagged cases',
   },
 
+  // Phase 33 \u2014 COH-01 validation
+  cohortValidationAgeNonNumeric: { de: 'Ung\u00fcltige Eingabe: nur Zahlen \u2265 0 erlaubt', en: 'Invalid input: numbers \u2265 0 only' },
+  cohortValidationAgeLowerExceedsUpper: { de: 'Untergrenze darf die Obergrenze nicht \u00fcberschreiten', en: 'Lower bound must not exceed upper bound' },
+  cohortValidationVisusOutOfRange: { de: 'Visus muss im Bereich 0\u20131 liegen', en: 'Visus must be in range 0\u20131' },
+  cohortValidationVisusLowerExceedsUpper: { de: 'Untergrenze darf die Obergrenze nicht \u00fcberschreiten', en: 'Lower bound must not exceed upper bound' },
+  cohortValidationCrtNonNumeric: { de: 'Ung\u00fcltige Eingabe: nur Zahlen \u2265 0 erlaubt', en: 'Invalid input: numbers \u2265 0 only' },
+  cohortValidationCrtLowerExceedsUpper: { de: 'Untergrenze darf die Obergrenze nicht \u00fcberschreiten', en: 'Lower bound must not exceed upper bound' },
+
+  // Phase 33 \u2014 COH-03 presets
+  cohortPresets: { de: 'Schnellauswahl', en: 'Quick presets' },
+  presetTherapyBreaker: { de: 'Therapie-Abbrecher', en: 'Therapy breakers' },
+  presetImplausibleCrt: { de: 'Unplausible CRT-Werte', en: 'Implausible CRT' },
+  presetFlaggedQuality: { de: 'Markierte Qualit\u00e4tsf\u00e4lle', en: 'Flagged quality cases' },
+  presetImplausibleVisus: { de: 'Implausible Visus', en: 'Implausible Visus' },
+
+  // Phase 33 \u2014 COH-04 advanced dialog
+  advancedFilters: { de: 'Erweiterte Filter', en: 'Advanced filters' },
+  advancedFiltersTitle: { de: 'Erweiterte Filterkriterien', en: 'Advanced filter criteria' },
+  advancedFiltersApply: { de: 'Filter anwenden', en: 'Apply filters' },
+  advancedFiltersClear: { de: 'Felder leeren', en: 'Clear fields' },
+  advancedFiltersDiscard: { de: '\u00c4nderungen verwerfen', en: 'Discard changes' },
+  advancedFiltersDiagnosisSubtype: { de: 'Diagnose-Untertyp', en: 'Diagnosis subtype' },
+  advancedFiltersComorbidities: { de: 'Komorbidit\u00e4ten', en: 'Comorbidities' },
+  advancedFiltersComorbiditiesAny: { de: 'Hat Komorbidit\u00e4ten', en: 'Has comorbidities' },
+  advancedFiltersHba1c: { de: 'HbA1c (%)', en: 'HbA1c (%)' },
+  advancedFiltersMedication: { de: 'Wirkstoff / Medikament', en: 'Drug / agent' },
+  advancedFiltersLaterality: { de: 'Lateralit\u00e4t', en: 'Laterality' },
+  advancedFiltersLateralityOD: { de: 'OD (rechtes Auge)', en: 'OD (right eye)' },
+  advancedFiltersLateralityOS: { de: 'OS (linkes Auge)', en: 'OS (left eye)' },
+  advancedFiltersLateralityOU: { de: 'OU (beide Augen)', en: 'OU (both eyes)' },
+
+  // Phase 33 \u2014 DASH-02
+  reviewImplausibleCrt: { de: 'Unplausible CRT-Werte pr\u00fcfen', en: 'Review implausible CRT readings' },
+
   // Session management (Phase 28 / SESSUI-01, SESSUI-02)
   adminSessions: { de: 'Sitzungen', en: 'Sessions' },
   adminSessionsTitle: { de: 'Aktive Sitzungen', en: 'Active Sessions' },
