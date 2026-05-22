@@ -27,6 +27,7 @@ export interface QualityCaseListProps {
   filterStatus: QualityStatus | 'all';
   filterCenter: string;
   filterTherapy: string;
+  filterCrt: 'implausible' | 'all';
   showExcluded: boolean;
   showFilters: boolean;
   centerNames: string[];
@@ -35,6 +36,7 @@ export interface QualityCaseListProps {
   onFilterStatusChange: (s: QualityStatus | 'all') => void;
   onFilterCenterChange: (c: string) => void;
   onFilterTherapyChange: (t: string) => void;
+  onFilterCrtChange: (v: 'implausible' | 'all') => void;
   onShowExcludedChange: (v: boolean) => void;
   onToggleFilters: () => void;
 }
@@ -61,6 +63,7 @@ export default function QualityCaseList({
   filterStatus,
   filterCenter,
   filterTherapy,
+  filterCrt,
   showExcluded,
   showFilters,
   centerNames,
@@ -69,6 +72,7 @@ export default function QualityCaseList({
   onFilterStatusChange,
   onFilterCenterChange,
   onFilterTherapyChange,
+  onFilterCrtChange,
   onShowExcludedChange,
   onToggleFilters,
 }: QualityCaseListProps) {
@@ -169,6 +173,19 @@ export default function QualityCaseList({
                 <option value="active">{t('therapyActive')}</option>
                 <option value="interrupter">{t('therapyInterrupter')}</option>
                 <option value="breaker">{t('therapyBreaker')}</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-0.5">
+                {t('qualityFilterCrt')}
+              </label>
+              <select
+                value={filterCrt}
+                onChange={(e) => onFilterCrtChange(e.target.value as 'implausible' | 'all')}
+                className="w-full text-xs border border-gray-200 dark:border-gray-600 rounded px-2 py-1 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="all">{t('qualityFilterAll')}</option>
+                <option value="implausible">{t('qualityFilterCrtImplausible')}</option>
               </select>
             </div>
             <div className="flex items-end pb-0.5">

@@ -15,6 +15,8 @@ import { getTherapyStatus } from '../../shared/qualityPredicates';
 import {
   getAge,
   getCenterShorthand,
+  getLatestObservation,
+  LOINC_CRT,
 } from '../services/fhirLoader';
 import { getSettings } from '../services/settingsService';
 import { getCachedDisplay } from '../services/terminology';
@@ -75,11 +77,18 @@ export default function QualityPage() {
     const v = searchParams.get('therapy');
     return v === 'breaker' || v === 'interrupter' ? v : 'all';
   });
+  const [filterCrt, setFilterCrt] = useState<'implausible' | 'all'>(() => {
+    return searchParams.get('crt') === 'implausible' ? 'implausible' : 'all';
+  });
   const [showExcluded, setShowExcluded] = useState(true);
   // Auto-open the filter panel when a URL param seeds a non-default filter value
   // so the seeded filter state is immediately visible to the user.
   const [showFilters, setShowFilters] = useState<boolean>(() => {
-    return searchParams.get('therapy') !== null || searchParams.get('status') !== null;
+    return (
+      searchParams.get('therapy') !== null ||
+      searchParams.get('status') !== null ||
+      searchParams.get('crt') !== null
+    );
   });
 
   // Record a recent-activity entry when the user opens a case (UX-02).
@@ -143,10 +152,16 @@ export default function QualityPage() {
       if (filterStatus !== 'all' && (caseStatus.get(c.id) ?? 'unchecked') !== filterStatus) return false;
       if (filterCenter !== 'all' && c.centerName !== filterCenter) return false;
       if (filterTherapy !== 'all' && therapyStatuses.get(c.id)?.status !== filterTherapy) return false;
+      if (filterCrt === 'implausible') {
+        const latest = getLatestObservation(c.observations, LOINC_CRT);
+        const val = latest?.valueQuantity?.value;
+        const threshold = getSettings().crtImplausibleThresholdUm;
+        if (val == null || val <= threshold) return false;
+      }
       if (!showExcluded && excludedCases.includes(c.id)) return false;
       return true;
     });
-  }, [cases, searchQuery, filterStatus, filterCenter, filterTherapy, showExcluded, caseStatus, therapyStatuses, excludedCases]);
+  }, [cases, searchQuery, filterStatus, filterCenter, filterTherapy, filterCrt, showExcluded, caseStatus, therapyStatuses, excludedCases]);
 
   const handleFlag = () => {
     if (!selectedCase || !flagDialog || !errorType) return;
@@ -244,6 +259,7 @@ export default function QualityPage() {
             filterStatus={filterStatus}
             filterCenter={filterCenter}
             filterTherapy={filterTherapy}
+            filterCrt={filterCrt}
             showExcluded={showExcluded}
             showFilters={showFilters}
             centerNames={centerNames}
@@ -252,6 +268,7 @@ export default function QualityPage() {
             onFilterStatusChange={setFilterStatus}
             onFilterCenterChange={setFilterCenter}
             onFilterTherapyChange={setFilterTherapy}
+            onFilterCrtChange={setFilterCrt}
             onShowExcludedChange={setShowExcluded}
             onToggleFilters={() => setShowFilters((v) => !v)}
           />
