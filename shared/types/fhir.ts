@@ -163,6 +163,15 @@ export interface CohortFilter {
   visusRange?: [number, number];
   crtRange?: [number, number];
   centers?: string[];
+  // Phase 33 — COH-03 preset discriminant
+  preset?: 'therapyBreaker' | 'implausibleCrt' | 'flaggedQuality' | 'implausibleVisus';
+  flaggedCaseIds?: Set<string>; // NOTE: not JSON-serializable; serialize as string[] for sessionStorage
+  // Phase 33 — COH-04 advanced dialog (D-11)
+  diagnosisSubtype?: string[];
+  hasComorbidity?: boolean;
+  hba1cRange?: [number, number];
+  medicationCodes?: string[];
+  laterality?: 'OD' | 'OS' | 'OU';
 }
 
 export interface SavedSearch {

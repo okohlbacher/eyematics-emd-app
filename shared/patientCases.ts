@@ -9,7 +9,8 @@
  * No I/O, no browser APIs, no side effects.
  */
 
-import { LOINC_CRT, LOINC_VISUS } from './fhirCodes.js';
+import { LOINC_CRT, LOINC_HBA1C, LOINC_VISUS, SNOMED_AMD, SNOMED_DR, SNOMED_EYE_LEFT, SNOMED_EYE_LEFT_ALT, SNOMED_EYE_RIGHT, SNOMED_EYE_RIGHT_ALT } from './fhirCodes.js';
+import { getTherapyStatus } from './qualityPredicates.js';
 import { getLatestObservation } from './fhirQueries.js';
 import type {
   CohortFilter,
@@ -108,7 +109,23 @@ export function getAge(birthDate: string): number {
   return age;
 }
 
-export function applyFilters(cases: PatientCase[], filters: CohortFilter): PatientCase[] {
+export interface ApplyFiltersOptions {
+  therapyInterrupterDays?: number;
+  therapyBreakerDays?: number;
+  crtImplausibleThresholdUm?: number;
+}
+
+export function applyFilters(
+  cases: PatientCase[],
+  filters: CohortFilter,
+  options: ApplyFiltersOptions = {},
+): PatientCase[] {
+  const settings = {
+    therapyInterrupterDays: options.therapyInterrupterDays ?? 120,
+    therapyBreakerDays: options.therapyBreakerDays ?? 365,
+    crtImplausibleThresholdUm: options.crtImplausibleThresholdUm ?? 400,
+  };
+
   return cases.filter((c) => {
     if (filters.centers?.length && !filters.centers.includes(c.centerId)) return false;
     if (filters.gender?.length && !filters.gender.includes(c.gender)) return false;
@@ -132,6 +149,67 @@ export function applyFilters(cases: PatientCase[], filters: CohortFilter): Patie
       if (val == null) return false;
       if (val < filters.crtRange[0] || val > filters.crtRange[1]) return false;
     }
+
+    // Phase 33 — COH-03 preset predicates (guard-clause pattern)
+    if (filters.preset === 'therapyBreaker') {
+      const thresholds = { interrupterDays: settings.therapyInterrupterDays, breakerDays: settings.therapyBreakerDays };
+      const { status } = getTherapyStatus(c, thresholds);
+      if (status !== 'breaker') return false;
+    }
+    if (filters.preset === 'implausibleCrt') {
+      const latest = getLatestObservation(c.observations, LOINC_CRT);
+      const val = latest?.valueQuantity?.value;
+      if (val == null || val <= settings.crtImplausibleThresholdUm) return false;
+    }
+    if (filters.preset === 'flaggedQuality') {
+      if (!filters.flaggedCaseIds?.has(c.id)) return false;
+    }
+    if (filters.preset === 'implausibleVisus') {
+      const latest = getLatestObservation(c.observations, LOINC_VISUS);
+      const val = latest?.valueQuantity?.value;
+      // Keep cases where val is null (missing) OR outside the plausible range [0, 1]
+      if (val != null && val >= 0 && val <= 1) return false;
+    }
+
+    // Phase 33 — COH-04 advanced dialog attributes
+    if (filters.diagnosisSubtype?.length) {
+      const codes = c.conditions.flatMap((cond) => cond.code.coding.map((cd) => cd.code));
+      if (!filters.diagnosisSubtype.some((d) => codes.includes(d))) return false;
+    }
+    if (filters.hasComorbidity === true) {
+      const PRIMARY_CODES = [SNOMED_AMD, SNOMED_DR];
+      const hasComorb = c.conditions.some(
+        (cond) => !cond.code.coding.some((cd) => PRIMARY_CODES.includes(cd.code)),
+      );
+      if (!hasComorb) return false;
+    }
+    if (filters.hba1cRange) {
+      const latest = getLatestObservation(c.observations, LOINC_HBA1C);
+      const val = latest?.valueQuantity?.value;
+      if (val == null) return false;
+      if (val < filters.hba1cRange[0] || val > filters.hba1cRange[1]) return false;
+    }
+    if (filters.medicationCodes?.length) {
+      const patientCodes = c.medications.flatMap(
+        (m) => m.medicationCodeableConcept?.coding?.map((cd) => cd.code) ?? [],
+      );
+      if (!filters.medicationCodes.some((code) => patientCodes.includes(code))) return false;
+    }
+    if (filters.laterality) {
+      const targetCodes =
+        filters.laterality === 'OD'
+          ? [SNOMED_EYE_RIGHT, SNOMED_EYE_RIGHT_ALT]
+          : filters.laterality === 'OS'
+            ? [SNOMED_EYE_LEFT, SNOMED_EYE_LEFT_ALT]
+            : null; // 'OU' — no narrowing
+      if (targetCodes) {
+        const hasLat = c.conditions.some(
+          (cond) => cond.bodySite?.some((bs) => bs.coding?.some((cd) => targetCodes.includes(cd.code))),
+        );
+        if (!hasLat) return false;
+      }
+    }
+
     return true;
   });
 }

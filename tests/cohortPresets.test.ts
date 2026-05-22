@@ -76,11 +76,11 @@ describe('applyFilters — preset predicates', () => {
         makeProcedureIVI('2024-01-01'),
       ],
     });
-    // A case with injections within therapyInterrupterDays (< 120 days) → active
+    // A case with two very recent injections ~60 days apart → active (gap < 120, lastToNow < 120)
     const activeCase2 = makeCase('active-2', {
       procedures: [
-        makeProcedureIVI('2024-01-01'),
-        makeProcedureIVI('2024-03-01'), // gap ~60 days
+        makeProcedureIVI('2026-03-01'),
+        makeProcedureIVI('2026-05-01'), // gap ~61 days; lastToNow ~21 days from 2026-05-22 → max gap ~61 < 120
       ],
     });
 
