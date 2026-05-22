@@ -11,6 +11,7 @@ import {
   Play,
   Save,
   Search,
+  Sliders,
   Table2,
   Trash2,
 } from 'lucide-react';
@@ -19,6 +20,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import Button from '../components/primitives/Button';
+import Badge from '../components/primitives/Badge';
 import { isDuplicateName, parseSubcohortName } from '../services/cohortNames';
 import {
   applyFilters,
@@ -29,10 +32,12 @@ import {
   SNOMED_AMD,
   SNOMED_DR,
 } from '../services/fhirLoader';
+import { getSettings } from '../services/settingsService';
 import { getCachedDisplay, useDiagnosisDisplay } from '../services/terminology';
 import type { CohortFilter, SavedSearch } from '../types/fhir';
 import { formatDate } from '../utils/dateFormat';
 import { datedFilename,downloadCsv, downloadJson } from '../utils/download';
+import AdvancedFilterDialog from './AdvancedFilterDialog';
 
 type SortField = 'date' | 'name';
 
@@ -84,7 +89,7 @@ function DiagnosisCodeChip({ code, locale, prefix }: { code: string; locale: str
 }
 
 export default function CohortBuilderPage() {
-  const { activeCases, centers, savedSearches, addSavedSearch, removeSavedSearch } =
+  const { activeCases, centers, savedSearches, addSavedSearch, removeSavedSearch, qualityFlags } =
     useData();
   const navigate = useNavigate();
   const { locale, t } = useLanguage();
@@ -199,6 +204,49 @@ export default function CohortBuilderPage() {
 
   const [showDetailedView, setShowDetailedView] = useState(false);
 
+  // COH-03: Advanced dialog visibility
+  const [showAdvancedDialog, setShowAdvancedDialog] = useState(false);
+
+  // COH-03: Apply preset — sets filters.preset; flaggedQuality also builds flaggedCaseIds
+  const applyPreset = (preset: NonNullable<CohortFilter['preset']>) => {
+    if (preset === 'flaggedQuality') {
+      const flaggedCaseIds = new Set(
+        qualityFlags
+          .filter((f) => f.status === 'open')
+          .map((f) => f.caseId),
+      );
+      setFilters((prev) => ({ ...prev, preset, flaggedCaseIds }));
+    } else {
+      setFilters((prev) => ({ ...prev, preset, flaggedCaseIds: undefined }));
+    }
+  };
+
+  // COH-03: Clear active preset (and flaggedCaseIds)
+  const clearPreset = () => {
+    setFilters((prev) => {
+      const { preset: _, flaggedCaseIds: __, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  // COH-04: Derive distinct medication options from activeCases
+  const medicationOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const c of activeCases) {
+      for (const med of c.medications) {
+        const coding = med.medicationCodeableConcept?.coding;
+        if (!coding || coding.length === 0) continue;
+        const code = coding[0].code;
+        if (!code || seen.has(code)) continue;
+        const label = coding[0].display ?? (coding[0] as { text?: string }).text ?? code;
+        seen.set(code, label);
+      }
+    }
+    return [...seen.entries()]
+      .map(([code, label]) => ({ code, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [activeCases]);
+
   // -------------------------------------------------------------------------
   // COH-01: Inline numeric field validation (derived, no useState)
   // -------------------------------------------------------------------------
@@ -235,6 +283,34 @@ export default function CohortBuilderPage() {
 
   const hasAnyFilterError = !!(ageError || visusError || crtError);
 
+  // COH-03: Helper to clear preset when a manual filter is edited
+  const clearPresetOnManualEdit = (updater: (prev: CohortFilter) => CohortFilter) => {
+    setFilters((prev) => {
+      const next = updater(prev);
+      if (next.preset) {
+        const { preset: _, flaggedCaseIds: __, ...rest } = next;
+        return rest;
+      }
+      return next;
+    });
+  };
+
+  // COH-04: Derived advanced filter activity indicators
+  const hasAdvancedFilters = !!(
+    filters.diagnosisSubtype?.length ||
+    filters.hasComorbidity ||
+    filters.hba1cRange ||
+    filters.medicationCodes?.length ||
+    filters.laterality
+  );
+  const activeAdvancedCount = [
+    filters.diagnosisSubtype?.length ? 1 : 0,
+    filters.hasComorbidity ? 1 : 0,
+    filters.hba1cRange ? 1 : 0,
+    filters.medicationCodes?.length ? 1 : 0,
+    filters.laterality ? 1 : 0,
+  ].reduce((a, b) => a + b, 0);
+
   // Build a filter copy that excludes invalid fields so live results ignore them (D-03)
   const validFilters = useMemo<CohortFilter>(() => {
     const f = { ...filters };
@@ -244,7 +320,14 @@ export default function CohortBuilderPage() {
     return f;
   }, [filters, ageError, visusError, crtError]);
 
-  const filteredCases = useMemo(() => applyFilters(activeCases, validFilters), [activeCases, validFilters]);
+  const filteredCases = useMemo(() => {
+    const { therapyInterrupterDays, therapyBreakerDays, crtImplausibleThresholdUm } = getSettings();
+    return applyFilters(activeCases, validFilters, {
+      therapyInterrupterDays,
+      therapyBreakerDays,
+      crtImplausibleThresholdUm,
+    });
+  }, [activeCases, validFilters]);
 
   // Summary metrics for the default (non-detailed) view
   const cohortSummary = useMemo(() => {
@@ -436,6 +519,44 @@ export default function CohortBuilderPage() {
               {t('filterCriteria')}
             </h3>
 
+            {/* COH-03: Quick presets */}
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
+                {t('cohortPresets')}
+              </p>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {(
+                  [
+                    { key: 'therapyBreaker', label: t('presetTherapyBreaker') },
+                    { key: 'implausibleCrt', label: t('presetImplausibleCrt') },
+                    { key: 'flaggedQuality', label: t('presetFlaggedQuality') },
+                    { key: 'implausibleVisus', label: t('presetImplausibleVisus') },
+                  ] as const
+                ).map(({ key, label }) => {
+                  const isActive = filters.preset === key;
+                  return (
+                    <Button
+                      key={key}
+                      variant={isActive ? 'soft' : 'ghost'}
+                      size="sm"
+                      className={`px-3${isActive ? ' ring-1 ring-[var(--color-teal)]' : ''}`}
+                      aria-pressed={isActive ? 'true' : 'false'}
+                      onClick={() => {
+                        if (isActive) {
+                          clearPreset();
+                        } else {
+                          applyPreset(key);
+                        }
+                      }}
+                    >
+                      {label}
+                    </Button>
+                  );
+                })}
+              </div>
+              <div className="border-t border-[var(--color-line)] mt-3 mb-4" />
+            </div>
+
             {/* Diagnosis */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -451,12 +572,12 @@ export default function CohortBuilderPage() {
                     checked={filters.diagnosis?.includes(d.code) ?? false}
                     onChange={(e) => {
                       const current = filters.diagnosis ?? [];
-                      setFilters({
-                        ...filters,
+                      clearPresetOnManualEdit((prev) => ({
+                        ...prev,
                         diagnosis: e.target.checked
                           ? [...current, d.code]
                           : current.filter((c) => c !== d.code),
-                      });
+                      }));
                     }}
                     className="rounded border-gray-300"
                   />
@@ -480,12 +601,12 @@ export default function CohortBuilderPage() {
                     checked={filters.gender?.includes(g) ?? false}
                     onChange={(e) => {
                       const current = filters.gender ?? [];
-                      setFilters({
-                        ...filters,
+                      clearPresetOnManualEdit((prev) => ({
+                        ...prev,
                         gender: e.target.checked
                           ? [...current, g]
                           : current.filter((c) => c !== g),
-                      });
+                      }));
                     }}
                     className="rounded border-gray-300"
                   />
@@ -509,12 +630,12 @@ export default function CohortBuilderPage() {
                     checked={filters.centers?.includes(c.id) ?? false}
                     onChange={(e) => {
                       const current = filters.centers ?? [];
-                      setFilters({
-                        ...filters,
+                      clearPresetOnManualEdit((prev) => ({
+                        ...prev,
                         centers: e.target.checked
                           ? [...current, c.id]
                           : current.filter((x) => x !== c.id),
-                      });
+                      }));
                     }}
                     className="rounded border-gray-300"
                   />
@@ -537,12 +658,12 @@ export default function CohortBuilderPage() {
                   onChange={(e) => {
                     const raw = e.target.value;
                     if (raw === '') {
-                      setFilters((f) => { const { ageRange: _, ...rest } = f; return rest; });
+                      clearPresetOnManualEdit((f) => { const { ageRange: _, ...rest } = f; return rest; });
                       return;
                     }
                     const v = Number(raw);
                     if (isNaN(v)) return; // skip NaN — leave current state so live results don't freeze
-                    setFilters({ ...filters, ageRange: [v, filters.ageRange?.[1] ?? 120] });
+                    clearPresetOnManualEdit((f) => ({ ...f, ageRange: [v, f.ageRange?.[1] ?? 120] }));
                   }}
                   className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
@@ -555,7 +676,7 @@ export default function CohortBuilderPage() {
                   onChange={(e) => {
                     const raw = e.target.value;
                     if (raw === '') {
-                      setFilters((f) => {
+                      clearPresetOnManualEdit((f) => {
                         const { ageRange } = f;
                         if (!ageRange) return f;
                         return { ...f, ageRange: [ageRange[0], 120] };
@@ -564,7 +685,7 @@ export default function CohortBuilderPage() {
                     }
                     const v = Number(raw);
                     if (isNaN(v)) return;
-                    setFilters({ ...filters, ageRange: [filters.ageRange?.[0] ?? 0, v] });
+                    clearPresetOnManualEdit((f) => ({ ...f, ageRange: [f.ageRange?.[0] ?? 0, v] }));
                   }}
                   className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
@@ -595,12 +716,12 @@ export default function CohortBuilderPage() {
                     const raw = e.target.value;
                     setVisusMinText(raw);
                     if (raw === '' || raw === '.' || raw === ',') {
-                      setFilters((f) => { const { visusRange: _, ...rest } = f; return rest; });
+                      clearPresetOnManualEdit((f) => { const { visusRange: _, ...rest } = f; return rest; });
                       return;
                     }
                     const v = parseFloat(raw.replace(',', '.'));
                     if (!isNaN(v) && v >= 0) {
-                      setFilters((f) => ({ ...f, visusRange: [v, f.visusRange?.[1] ?? 2] }));
+                      clearPresetOnManualEdit((f) => ({ ...f, visusRange: [v, f.visusRange?.[1] ?? 2] }));
                     }
                   }}
                   className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
@@ -615,12 +736,12 @@ export default function CohortBuilderPage() {
                     const raw = e.target.value;
                     setVisusMaxText(raw);
                     if (raw === '' || raw === '.' || raw === ',') {
-                      setFilters((f) => { const { visusRange: _, ...rest } = f; return rest; });
+                      clearPresetOnManualEdit((f) => { const { visusRange: _, ...rest } = f; return rest; });
                       return;
                     }
                     const v = parseFloat(raw.replace(',', '.'));
                     if (!isNaN(v) && v >= 0) {
-                      setFilters((f) => ({ ...f, visusRange: [f.visusRange?.[0] ?? 0, v] }));
+                      clearPresetOnManualEdit((f) => ({ ...f, visusRange: [f.visusRange?.[0] ?? 0, v] }));
                     }
                   }}
                   className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
@@ -651,12 +772,12 @@ export default function CohortBuilderPage() {
                   onChange={(e) => {
                     const raw = e.target.value;
                     if (raw === '') {
-                      setFilters((f) => { const { crtRange: _, ...rest } = f; return rest; });
+                      clearPresetOnManualEdit((f) => { const { crtRange: _, ...rest } = f; return rest; });
                       return;
                     }
                     const v = Number(raw);
                     if (isNaN(v)) return;
-                    setFilters({ ...filters, crtRange: [v, filters.crtRange?.[1] ?? 800] });
+                    clearPresetOnManualEdit((f) => ({ ...f, crtRange: [v, f.crtRange?.[1] ?? 800] }));
                   }}
                   className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
@@ -669,7 +790,7 @@ export default function CohortBuilderPage() {
                   onChange={(e) => {
                     const raw = e.target.value;
                     if (raw === '') {
-                      setFilters((f) => {
+                      clearPresetOnManualEdit((f) => {
                         const { crtRange } = f;
                         if (!crtRange) return f;
                         return { ...f, crtRange: [crtRange[0], 800] };
@@ -678,7 +799,7 @@ export default function CohortBuilderPage() {
                     }
                     const v = Number(raw);
                     if (isNaN(v)) return;
-                    setFilters({ ...filters, crtRange: [filters.crtRange?.[0] ?? 0, v] });
+                    clearPresetOnManualEdit((f) => ({ ...f, crtRange: [f.crtRange?.[0] ?? 0, v] }));
                   }}
                   className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
@@ -707,6 +828,33 @@ export default function CohortBuilderPage() {
                 {t('reset')}
               </button>
             </div>
+
+            {/* COH-04: Advanced filters trigger */}
+            <div className="mt-2">
+              <Button
+                variant={hasAdvancedFilters ? 'accent' : 'ghost'}
+                size="sm"
+                icon={<Sliders className="w-3.5 h-3.5" />}
+                className="w-full justify-center"
+                onClick={() => setShowAdvancedDialog(true)}
+              >
+                {t('advancedFilters')}
+                {hasAdvancedFilters && activeAdvancedCount > 0 && (
+                  <Badge tone="teal" className="ml-1">{activeAdvancedCount}</Badge>
+                )}
+              </Button>
+            </div>
+
+            {/* COH-04: AdvancedFilterDialog */}
+            <AdvancedFilterDialog
+              open={showAdvancedDialog}
+              filters={filters}
+              medicationOptions={medicationOptions}
+              onApply={(advancedFields) => {
+                setFilters((prev) => ({ ...prev, ...advancedFields }));
+              }}
+              onClose={() => setShowAdvancedDialog(false)}
+            />
 
             {/* Save search */}
             <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
