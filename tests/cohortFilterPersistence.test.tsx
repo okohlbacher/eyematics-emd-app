@@ -24,6 +24,8 @@ const STORAGE_KEY = 'emd-cohort-filters';
 vi.mock('../src/services/authHeaders', () => ({
   authFetch: vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
   getAuthHeaders: vi.fn().mockReturnValue({}),
+  serverLogout: vi.fn().mockResolvedValue(undefined),
+  broadcastLogout: vi.fn(),
 }));
 
 vi.mock('../src/context/DataContext', () => ({
@@ -49,6 +51,7 @@ vi.mock('../src/services/settingsService', () => ({
 
 import { useData } from '../src/context/DataContext';
 import { useLanguage } from '../src/context/LanguageContext';
+import { AuthProvider as AuthProviderComponent, useAuth as useAuthHook } from '../src/context/AuthContext';
 import CohortBuilderPage from '../src/pages/CohortBuilderPage';
 import type { PatientCase, SavedSearch } from '../src/types/fhir';
 
@@ -225,51 +228,51 @@ describe('cohortFilterPersistence — COH-02 sessionStorage round-trip', () => {
 // Tests — AuthContext logout clears emd-cohort-filters
 // ---------------------------------------------------------------------------
 
+// WR-01: render a real AuthProvider and call logout() via useAuth() so a regression
+// in performLogout (e.g. accidentally removing the sessionStorage.removeItem call)
+// will be caught by this test rather than a stub that only asserts its own logic.
+
+vi.mock('../src/services/recentActivityStore', () => ({
+  clearAll: vi.fn(),
+}));
+
+vi.mock('../src/services/fhirLoader', () => ({
+  invalidateBundleCache: vi.fn(),
+  applyFilters: vi.fn().mockReturnValue([]),
+  getAge: vi.fn().mockReturnValue(0),
+  getLatestObservation: vi.fn().mockReturnValue(null),
+  LOINC_CRT: 'LP267955-5',
+  LOINC_VISUS: '79880-1',
+  SNOMED_AMD: '267718000',
+  SNOMED_DR: '312898008',
+}));
+
 describe('cohortFilterPersistence — performLogout clears emd-cohort-filters', () => {
-  it('AuthContext performLogout removes the emd-cohort-filters sessionStorage key', async () => {
-    // Seed filters in sessionStorage
+  it('AuthContext logout() removes the emd-cohort-filters sessionStorage key', () => {
+    // Seed a live session
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ ageRange: [30, 70] }));
-    // Also set the emd-token to simulate a live session
     sessionStorage.setItem('emd-token', 'fake-token');
 
-    // Import AuthContext and call performLogout indirectly via module internals.
-    // We test the contract: after performLogout, the key must be absent.
-    // We import the module fresh and call logout by simulating what performLogout does.
-    // The cleanest approach: verify the module-level behavior by importing the actual function.
+    // Helper component that calls the real logout from AuthContext
+    function LogoutButton() {
+      const { logout } = useAuthHook();
+      return <button onClick={logout}>logout</button>;
+    }
 
-    // Import AuthContext module to verify performLogout removes the key
-    const authModule = await import('../src/context/AuthContext');
-    // performLogout is internal to the hook; test the output: emd-cohort-filters removed.
-    // We can test this by checking that performLogout's implementation includes the removeItem.
-    // The file-level assertion: the key must be removed during logout execution.
-    // We check the actual implementation by verifying sessionStorage state.
+    render(
+      <AuthProviderComponent>
+        <LogoutButton />
+      </AuthProviderComponent>,
+    );
 
-    // Simulate logout: call removeItem directly as performLogout would do (acceptance test)
-    // The real test is the import: we verify the source contains the expected call.
-    // We read the source to ensure it's there.
-
-    // Actually: test the behavior by rendering AuthContext and calling performLogout
-    // via a test component. However, that's complex. The cleanest unit test:
-    // verify that sessionStorage.removeItem('emd-cohort-filters') is called during logout.
-
-    // Re-approach: use a simulated logout flow without full provider tree.
-    // Read the AuthContext module source to verify correct implementation.
-    // This is an acceptance criterion — source must contain the removeItem call.
-    // For behavioral verification, seed and check state directly:
-
-    // Pre-condition: both keys exist
+    // Pre-condition: key must exist before logout
     expect(sessionStorage.getItem(STORAGE_KEY)).not.toBeNull();
-    expect(sessionStorage.getItem('emd-token')).not.toBeNull();
 
-    // Call the pattern that performLogout implements — the test verifies that
-    // both emd-token AND emd-cohort-filters are removed together.
-    sessionStorage.removeItem('emd-token');
-    sessionStorage.removeItem(STORAGE_KEY);
+    fireEvent.click(screen.getByRole('button', { name: 'logout' }));
 
-    expect(sessionStorage.getItem('emd-token')).toBeNull();
+    // performLogout must have removed the cohort-filter key — if this assertion fails,
+    // it means performLogout no longer removes 'emd-cohort-filters' (regression caught).
     expect(sessionStorage.getItem(STORAGE_KEY)).toBeNull();
-
-    // Ensure AuthContext module exports the expected function shape
-    expect(typeof authModule.useAuth).toBe('function');
+    expect(sessionStorage.getItem('emd-token')).toBeNull();
   });
 });
