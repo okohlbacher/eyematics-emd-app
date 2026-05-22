@@ -11,10 +11,10 @@ import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useRecentActivity } from '../hooks/useRecentActivity';
+import { getTherapyStatus } from '../../shared/qualityPredicates';
 import {
   getAge,
   getCenterShorthand,
-  SNOMED_IVI,
 } from '../services/fhirLoader';
 import { getSettings } from '../services/settingsService';
 import { getCachedDisplay } from '../services/terminology';
@@ -37,33 +37,6 @@ function SummaryCard({ icon, count, label, total }: { icon: ReactNode; count: nu
   );
 }
 
-// Therapy discontinuation detection (EMDREQ-QUAL-009)
-// F-20: thresholds passed as parameters instead of reading global singleton
-function getTherapyStatus(
-  pc: PatientCase,
-  thresholds: { interrupterDays: number; breakerDays: number },
-): { status: 'active' | 'interrupter' | 'breaker'; gapDays: number } {
-  const injections = pc.procedures
-    .filter((p) => p.code.coding.some((c) => c.code === SNOMED_IVI))
-    .map((p) => new Date(p.performedDateTime ?? '').getTime())
-    .filter((t) => !isNaN(t))
-    .sort((a, b) => a - b);
-
-  if (injections.length < 2) return { status: 'active', gapDays: 0 };
-
-  let maxGap = 0;
-  for (let i = 1; i < injections.length; i++) {
-    const gap = (injections[i] - injections[i - 1]) / (1000 * 60 * 60 * 24);
-    if (gap > maxGap) maxGap = gap;
-  }
-
-  const lastToNow = (Date.now() - injections[injections.length - 1]) / (1000 * 60 * 60 * 24);
-  if (lastToNow > maxGap) maxGap = lastToNow;
-
-  if (maxGap > thresholds.breakerDays) return { status: 'breaker', gapDays: Math.round(maxGap) };
-  if (maxGap > thresholds.interrupterDays) return { status: 'interrupter', gapDays: Math.round(maxGap) };
-  return { status: 'active', gapDays: Math.round(maxGap) };
-}
 
 export default function QualityPage() {
   const {
