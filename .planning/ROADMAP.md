@@ -101,7 +101,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 32. User Management & Auth Hardening | 2/2 | ✅ Complete (verified 5/5) | 2026-05-21 |
-| 33. Cohort Builder UX & Advanced Filters | 0/4 | Planned | - |
+| 33. Cohort Builder UX & Advanced Filters | 1/4 | In Progress|  |
 | 34. Data Completeness (Consent + Stubs) | 0/? | Not started | - |
 | 35. V&V Backfill | 0/? | Not started | - |
 | 36. Architecture Review & Compaction | 0/? | Not started | - |
@@ -134,7 +134,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
   4. Dashboard "Attention needed" Review buttons route to the correct pre-filtered cohort or quality view — each button lands where its label promises (DASH-02; destination per button resolved at plan time — L2)
   5. An advanced filter dialog is reachable from the cohort builder; a recorded spike decides full-field vs a curated 5–10 attribute set, and the chosen approach is implemented (COH-04)
 **Plans**: 4 plans (3 waves)
-  - [ ] 33-01-PLAN.md — Shared foundation: lift getTherapyStatus, extend CohortFilter + applyFilters (presets + advanced), CRT threshold + i18n keys (COH-03/04)
+  - [x] 33-01-PLAN.md — Shared foundation: lift getTherapyStatus, extend CohortFilter + applyFilters (presets + advanced), CRT threshold + i18n keys (COH-03/04)
   - [ ] 33-02-PLAN.md — COH-01 inline validation + COH-02 sessionStorage persistence/reset/logout-clear + safe-pick updates (COH-01/02)
   - [ ] 33-03-PLAN.md — COH-03 preset buttons + COH-04 advanced filter modal wired to applyFilters (COH-03/04)
   - [ ] 33-04-PLAN.md — DASH-02 dashboard CRT Review button fix + QualityPage crt=implausible seeding (DASH-02)
