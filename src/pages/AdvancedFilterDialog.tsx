@@ -103,6 +103,11 @@ export default function AdvancedFilterDialog({
   useEffect(() => {
     if (open) {
       document.addEventListener('keydown', handleKeyDown);
+      // WR-02: move focus into the dialog on open (WCAG 2.1 SC 2.4.3 Focus Order)
+      const firstFocusable = dialogRef.current?.querySelector<HTMLElement>(
+        'button, input, select, [tabindex]:not([tabindex="-1"])',
+      );
+      firstFocusable?.focus();
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
   }, [open, handleKeyDown]);
