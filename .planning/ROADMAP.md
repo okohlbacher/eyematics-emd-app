@@ -101,7 +101,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 32. User Management & Auth Hardening | 2/2 | ✅ Complete (verified 5/5) | 2026-05-21 |
-| 33. Cohort Builder UX & Advanced Filters | 4/4 | Complete   | 2026-05-22 |
+| 33. Cohort Builder UX & Advanced Filters | 4/4 | Complete    | 2026-05-22 |
 | 34. Data Completeness (Consent + Stubs) | 0/? | Not started | - |
 | 35. V&V Backfill | 0/? | Not started | - |
 | 36. Architecture Review & Compaction | 0/? | Not started | - |

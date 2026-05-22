@@ -29,14 +29,14 @@
   - The dashboard shows the total patient count (consented + stubs) and the consented count, and surfaces **Datenvollzähligkeit** = consented ÷ total (fraction of patients amenable to research)
   - **Stub isolation (H2):** stubs are **excluded from all clinical surfaces** — cohort building, outcomes/trajectories, quality review, case detail, charts — and appear **only** in the Datenvollzähligkeit denominator. Stubs are **site-attributed** so the metric honors per-user site restriction. Adding stubs must not regress FHIR load performance or the >1000-patient server-aggregation routing.
   - (source: DAT-003 — corrects the earlier incorrect single-count fix)
-- [ ] **DASH-02**: The dashboard "Attention needed" Review buttons route correctly — 'Prüfen' / 'Therapie-Abbrecher' lands on the right patient or a pre-filtered issue cohort rather than the wrong place (source: DAT----; depends on COH-03)
+- [x] **DASH-02**: The dashboard "Attention needed" Review buttons route correctly — 'Prüfen' / 'Therapie-Abbrecher' lands on the right patient or a pre-filtered issue cohort rather than the wrong place (source: DAT----; depends on COH-03)
 
 ### Cohort Builder (COH)
 
-- [ ] **COH-01**: Cohort-builder plausibility checks — the lower age bound cannot exceed the upper bound; Visus input is constrained to the 0–1 decimal range; non-numeric and negative inputs are rejected on age/Visus/CRT (source: KOH-002)
-- [ ] **COH-02**: Cohort filter state is persisted across the full navigation path for the session (client-side, not server-side), with a reset control to clear filters on demand (source: KOH-003, promoted from backlog)
-- [ ] **COH-03**: Issue-based cohort presets are available in cohort selection and wired to the dashboard Review buttons — **Therapie-Abbrecher** (existing IVI-gap > `therapyBreakerDays` rule), **Unplausible CRT-Werte** (outside `clinicalThresholds`), **Flagged data-quality cases**, and **Implausible Visus** (outside 0–1) (source: KOH-001 / DAT----)
-- [ ] **COH-04**: An advanced filter dialog exposes additional fields. A spike first evaluates rolling **all available data-model fields** into the dialog; the spike outcome (full-field vs a curated 5–10 attribute set such as diagnosis subtype, comorbidities, HbA1c, drug/agent, laterality) is **recorded as a decision**, then the chosen approach is implemented (source: KOH-001)
+- [x] **COH-01**: Cohort-builder plausibility checks — the lower age bound cannot exceed the upper bound; Visus input is constrained to the 0–1 decimal range; non-numeric and negative inputs are rejected on age/Visus/CRT (source: KOH-002)
+- [x] **COH-02**: Cohort filter state is persisted across the full navigation path for the session (client-side, not server-side), with a reset control to clear filters on demand (source: KOH-003, promoted from backlog)
+- [x] **COH-03**: Issue-based cohort presets are available in cohort selection and wired to the dashboard Review buttons — **Therapie-Abbrecher** (existing IVI-gap > `therapyBreakerDays` rule), **Unplausible CRT-Werte** (outside `clinicalThresholds`), **Flagged data-quality cases**, and **Implausible Visus** (outside 0–1) (source: KOH-001 / DAT----)
+- [x] **COH-04**: An advanced filter dialog exposes additional fields. A spike first evaluates rolling **all available data-model fields** into the dialog; the spike outcome (full-field vs a curated 5–10 attribute set such as diagnosis subtype, comorbidities, HbA1c, drug/agent, laterality) is **recorded as a decision**, then the chosen approach is implemented (source: KOH-001)
 
 ### Architecture Review & Compaction (ARCH)
 
@@ -96,11 +96,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTHCFG-03 | Phase 32 | Done ✅ |
 | AUTHCFG-04 | Phase 32 | Done ✅ |
 | DASH-01 | Phase 34 | Pending |
-| DASH-02 | Phase 33 | Pending |
-| COH-01 | Phase 33 | Pending |
-| COH-02 | Phase 33 | Pending |
-| COH-03 | Phase 33 | Pending |
-| COH-04 | Phase 33 | Pending |
+| DASH-02 | Phase 33 | Complete |
+| COH-01 | Phase 33 | Complete |
+| COH-02 | Phase 33 | Complete |
+| COH-03 | Phase 33 | Complete |
+| COH-04 | Phase 33 | Complete |
 | ARCH-01 | Phase 36 | Pending |
 | ARCH-02 | Phase 36 | Pending |
 | ARCH-03 | Phase 36 | Pending |
