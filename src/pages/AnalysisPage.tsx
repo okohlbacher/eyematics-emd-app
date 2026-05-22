@@ -39,6 +39,7 @@ import {
   LOINC_VISUS,
 } from '../services/fhirLoader';
 import { getCachedDisplay, getCachedFullText } from '../services/terminology';
+import { getSettings } from '../services/settingsService';
 import type { CohortFilter } from '../types/fhir';
 import { computeCrtDistribution } from '../utils/distributionBins';
 
@@ -104,11 +105,28 @@ export default function AnalysisPage() {
       if (Array.isArray(parsed.visusRange) && parsed.visusRange.length === 2) safe.visusRange = [Number(parsed.visusRange[0]), Number(parsed.visusRange[1])];
       if (Array.isArray(parsed.crtRange) && parsed.crtRange.length === 2) safe.crtRange = [Number(parsed.crtRange[0]), Number(parsed.crtRange[1])];
       if (Array.isArray(parsed.centers)) safe.centers = parsed.centers.map(String);
+      // Phase 33 fields (T-33-01 whitelist — prevents silent drop of preset/advanced state)
+      const PRESET_LITERALS = ['therapyBreaker', 'implausibleCrt', 'flaggedQuality', 'implausibleVisus'] as const;
+      if (typeof parsed.preset === 'string' && (PRESET_LITERALS as readonly string[]).includes(parsed.preset)) safe.preset = parsed.preset as CohortFilter['preset'];
+      if (Array.isArray(parsed.flaggedCaseIds)) safe.flaggedCaseIds = new Set(parsed.flaggedCaseIds.map(String));
+      if (Array.isArray(parsed.diagnosisSubtype)) safe.diagnosisSubtype = parsed.diagnosisSubtype.map(String);
+      if (typeof parsed.hasComorbidity === 'boolean') safe.hasComorbidity = parsed.hasComorbidity;
+      if (Array.isArray(parsed.hba1cRange) && parsed.hba1cRange.length === 2) safe.hba1cRange = [Number(parsed.hba1cRange[0]), Number(parsed.hba1cRange[1])];
+      if (Array.isArray(parsed.medicationCodes)) safe.medicationCodes = parsed.medicationCodes.map(String);
+      const LATERALITY_LITERALS = ['OD', 'OS', 'OU'] as const;
+      if (typeof parsed.laterality === 'string' && (LATERALITY_LITERALS as readonly string[]).includes(parsed.laterality)) safe.laterality = parsed.laterality as CohortFilter['laterality'];
       return safe;
     } catch { return {}; }
   }, [activeSavedSearch, searchParams]);
 
-  const cohort = useMemo(() => applyFilters(activeCases, filters), [activeCases, filters]);
+  const cohort = useMemo(() => {
+    const s = getSettings();
+    return applyFilters(activeCases, filters, {
+      therapyInterrupterDays: s.therapyInterrupterDays,
+      therapyBreakerDays: s.therapyBreakerDays,
+      crtImplausibleThresholdUm: s.crtImplausibleThresholdUm,
+    });
+  }, [activeCases, filters]);
 
   const centerDist = useMemo(() => {
     const map = new Map<string, number>();

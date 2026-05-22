@@ -21,7 +21,7 @@ import type { TranslationKey } from '../../i18n/translations';
 import { authFetch } from '../../services/authHeaders';
 import { applyFilters } from '../../services/fhirLoader';
 import { type AggregateResponse,postAggregate } from '../../services/outcomesAggregateService';
-import { loadSettings } from '../../services/settingsService';
+import { getSettings, loadSettings } from '../../services/settingsService';
 import type { CohortFilter } from '../../types/fhir';
 import {
   type AxisMode,
@@ -59,6 +59,7 @@ function metricTitleKey(m: MetricType): 'metricsVisus' | 'metricsCrt' | 'metrics
 }
 
 // M-04 safe-pick pattern (mirrors AnalysisPage.tsx filter parsing).
+// Phase 33: extended to include preset and advanced fields (T-33-01 whitelist).
 function safePickFilter(raw: unknown): CohortFilter {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
   const parsed = raw as Record<string, unknown>;
@@ -69,6 +70,16 @@ function safePickFilter(raw: unknown): CohortFilter {
   if (Array.isArray(parsed.visusRange) && parsed.visusRange.length === 2) safe.visusRange = [Number(parsed.visusRange[0]), Number(parsed.visusRange[1])];
   if (Array.isArray(parsed.crtRange) && parsed.crtRange.length === 2) safe.crtRange = [Number(parsed.crtRange[0]), Number(parsed.crtRange[1])];
   if (Array.isArray(parsed.centers)) safe.centers = parsed.centers.map(String);
+  // Phase 33 fields (T-33-01 whitelist — prevents silent drop of preset/advanced state)
+  const PRESET_LITERALS = ['therapyBreaker', 'implausibleCrt', 'flaggedQuality', 'implausibleVisus'] as const;
+  if (typeof parsed.preset === 'string' && (PRESET_LITERALS as readonly string[]).includes(parsed.preset)) safe.preset = parsed.preset as CohortFilter['preset'];
+  if (Array.isArray(parsed.flaggedCaseIds)) safe.flaggedCaseIds = new Set(parsed.flaggedCaseIds.map(String));
+  if (Array.isArray(parsed.diagnosisSubtype)) safe.diagnosisSubtype = parsed.diagnosisSubtype.map(String);
+  if (typeof parsed.hasComorbidity === 'boolean') safe.hasComorbidity = parsed.hasComorbidity;
+  if (Array.isArray(parsed.hba1cRange) && parsed.hba1cRange.length === 2) safe.hba1cRange = [Number(parsed.hba1cRange[0]), Number(parsed.hba1cRange[1])];
+  if (Array.isArray(parsed.medicationCodes)) safe.medicationCodes = parsed.medicationCodes.map(String);
+  const LATERALITY_LITERALS = ['OD', 'OS', 'OU'] as const;
+  if (typeof parsed.laterality === 'string' && (LATERALITY_LITERALS as readonly string[]).includes(parsed.laterality)) safe.laterality = parsed.laterality as CohortFilter['laterality'];
   return safe;
 }
 
@@ -84,6 +95,17 @@ export default function OutcomesView() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale } = useLanguage();
   const { record } = useRecentActivity();
+
+  // Phase 33: compute filter options once from getSettings() — passed to all applyFilters calls
+  // so preset predicates evaluate against configured thresholds rather than applyFilters fallbacks.
+  const filterOptions = useMemo(() => {
+    const s = getSettings();
+    return {
+      therapyInterrupterDays: s.therapyInterrupterDays,
+      therapyBreakerDays: s.therapyBreakerDays,
+      crtImplausibleThresholdUm: s.crtImplausibleThresholdUm,
+    };
+  }, []); // settings are a stable singleton; recompute never needed within component lifetime
 
   // Phase 16 / XCOHORT-01..04: cross-cohort URL parsing (placed here, above any early return, per Pitfall 3 hook-order rule).
   const rawCohortsParam = searchParams.get('cohorts');
@@ -147,16 +169,16 @@ export default function OutcomesView() {
     const filterParam = searchParams.get('filter');
     if (cohortId) {
       const saved = savedSearches.find((s) => s.id === cohortId);
-      return saved ? { name: saved.name, cases: applyFilters(activeCases, saved.filters) } : null;
+      return saved ? { name: saved.name, cases: applyFilters(activeCases, saved.filters, filterOptions) } : null;
     }
     if (filterParam) {
       try {
         const parsed = JSON.parse(decodeURIComponent(filterParam));
-        return { name: null, cases: applyFilters(activeCases, safePickFilter(parsed)) };
+        return { name: null, cases: applyFilters(activeCases, safePickFilter(parsed), filterOptions) };
       } catch { return null; }
     }
     return { name: null, cases: activeCases };
-  }, [activeCases, savedSearches, searchParams]);
+  }, [activeCases, savedSearches, searchParams, filterOptions]);
 
   // Record a recent-activity entry when a cohort is active (UX-02).
   // Keyed on primaryCohortId so recording updates when the user switches cohorts.
@@ -360,7 +382,7 @@ export default function OutcomesView() {
     crossCohortIds.forEach((id, idx) => {
       const saved = savedSearches.find((s) => s.id === id);
       if (!saved) return;
-      const cases = applyFilters(activeCases, saved.filters);
+      const cases = applyFilters(activeCases, saved.filters, filterOptions);
       const result = activeMetric === 'crt'
         ? computeCrtTrajectory({ cases, axisMode, yMetric, gridPoints, spreadMode })
         : computeCohortTrajectory({ cases, axisMode, yMetric, gridPoints, spreadMode });
@@ -376,16 +398,16 @@ export default function OutcomesView() {
       combined.push({ ...base, panel: result.combined });
     });
     return { od, os, combined };
-  }, [isCrossMode, crossCohortIds, savedSearches, activeCases, activeMetric, axisMode, yMetric, gridPoints, spreadMode]);
+  }, [isCrossMode, crossCohortIds, savedSearches, activeCases, activeMetric, axisMode, yMetric, gridPoints, spreadMode, filterOptions]);
 
   // Phase 16: patient counts for the compare drawer.
   const patientCounts = useMemo<Record<string, number>>(() => {
     const counts: Record<string, number> = {};
     savedSearches.forEach((s) => {
-      counts[s.id] = applyFilters(activeCases, s.filters).length;
+      counts[s.id] = applyFilters(activeCases, s.filters, filterOptions).length;
     });
     return counts;
-  }, [savedSearches, activeCases]);
+  }, [savedSearches, activeCases, filterOptions]);
 
   // Phase 16: drawer onChange + onReset handlers.
   const handleCompareChange = (nextIds: string[]) => {
