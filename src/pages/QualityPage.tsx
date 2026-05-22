@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { pickCoding } from '../../shared/fhirQueries';
+import { getTherapyStatus } from '../../shared/qualityPredicates';
 import QualityCaseDetail from '../components/quality/QualityCaseDetail';
 import QualityCaseList from '../components/quality/QualityCaseList';
 import QualityFlagDialog from '../components/quality/QualityFlagDialog';
@@ -11,7 +12,6 @@ import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useRecentActivity } from '../hooks/useRecentActivity';
-import { getTherapyStatus } from '../../shared/qualityPredicates';
 import {
   getAge,
   getCenterShorthand,

@@ -7,13 +7,13 @@
  */
 import { describe, expect, it } from 'vitest';
 
+import type { SavedSearch } from '../shared/types/fhir';
 // RED: this import will fail until Plan 02 creates src/services/cohortNames.ts
 import {
   groupByParent,
   isSubcohortName,
   parseSubcohortName,
 } from '../src/services/cohortNames';
-import type { SavedSearch } from '../shared/types/fhir';
 
 // ---------------------------------------------------------------------------
 // parseSubcohortName — contract tests

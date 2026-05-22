@@ -10,8 +10,8 @@
  */
 
 import { LOINC_CRT, LOINC_HBA1C, LOINC_VISUS, SNOMED_AMD, SNOMED_DR, SNOMED_EYE_LEFT, SNOMED_EYE_LEFT_ALT, SNOMED_EYE_RIGHT, SNOMED_EYE_RIGHT_ALT } from './fhirCodes.js';
-import { getTherapyStatus } from './qualityPredicates.js';
 import { getLatestObservation } from './fhirQueries.js';
+import { getTherapyStatus } from './qualityPredicates.js';
 import type {
   CohortFilter,
   Condition,

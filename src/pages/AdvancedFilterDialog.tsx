@@ -11,8 +11,8 @@
 import { X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useLanguage } from '../context/LanguageContext';
 import Button from '../components/primitives/Button';
+import { useLanguage } from '../context/LanguageContext';
 import type { CohortFilter } from '../types/fhir';
 
 // AMD and DR subtype codes sourced from shared/fhirCodes — representative SNOMED values
@@ -61,18 +61,9 @@ export default function AdvancedFilterDialog({
     filters.laterality,
   );
 
-  // Re-seed local state when dialog opens (or filters change externally)
-  useEffect(() => {
-    if (open) {
-      setDiagnosisSubtype(filters.diagnosisSubtype ?? []);
-      setHasComorbidity(filters.hasComorbidity ?? false);
-      setHba1cMin(filters.hba1cRange?.[0] != null ? String(filters.hba1cRange[0]) : '');
-      setHba1cMax(filters.hba1cRange?.[1] != null ? String(filters.hba1cRange[1]) : '');
-      setMedicationCodes(filters.medicationCodes ?? []);
-      setLaterality(filters.laterality);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  // Local state is seeded from props.filters by the useState initializers above.
+  // The dialog unmounts when closed (`if (!open) return null` below), so it
+  // remounts — and re-seeds — on every open; no re-seed effect is needed.
 
   // Focus trap + Escape (FeedbackButton.tsx lines 40-68 pattern)
   const handleKeyDown = useCallback(

@@ -49,9 +49,9 @@ vi.mock('../src/services/settingsService', () => ({
   }),
 }));
 
+import { AuthProvider as AuthProviderComponent, useAuth as useAuthHook } from '../src/context/AuthContext';
 import { useData } from '../src/context/DataContext';
 import { useLanguage } from '../src/context/LanguageContext';
-import { AuthProvider as AuthProviderComponent, useAuth as useAuthHook } from '../src/context/AuthContext';
 import CohortBuilderPage from '../src/pages/CohortBuilderPage';
 import type { PatientCase, SavedSearch } from '../src/types/fhir';
 

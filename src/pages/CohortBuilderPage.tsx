@@ -18,10 +18,10 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import Badge from '../components/primitives/Badge';
+import Button from '../components/primitives/Button';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
-import Button from '../components/primitives/Button';
-import Badge from '../components/primitives/Badge';
 import { isDuplicateName, parseSubcohortName } from '../services/cohortNames';
 import {
   applyFilters,

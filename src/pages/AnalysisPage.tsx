@@ -38,8 +38,8 @@ import {
   LOINC_CRT,
   LOINC_VISUS,
 } from '../services/fhirLoader';
-import { getCachedDisplay, getCachedFullText } from '../services/terminology';
 import { getSettings } from '../services/settingsService';
+import { getCachedDisplay, getCachedFullText } from '../services/terminology';
 import type { CohortFilter } from '../types/fhir';
 import { computeCrtDistribution } from '../utils/distributionBins';
 
