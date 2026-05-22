@@ -364,11 +364,14 @@ export default function CohortBuilderPage() {
   const handleSave = () => {
     if (!saveName.trim()) return;
     if (hasHardError) return; // defense in depth — button is already disabled on hard error
+    // WR-05: persist validFilters (invalid ranges stripped) rather than raw filters,
+    // so saved searches never encode a broken visus/age/crt range that bypassed the
+    // disabled-button guard (e.g. after CR-02 fix: a restored-but-not-yet-validated range).
     const s: SavedSearch = {
       id: crypto.randomUUID(),
       name: saveName.trim(),
       createdAt: new Date().toISOString(),
-      filters: { ...filters },
+      filters: { ...validFilters },
     };
     addSavedSearch(s);
     setSaveName('');
