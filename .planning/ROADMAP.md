@@ -91,7 +91,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 ### Phases
 
 - [x] **Phase 32: User Management & Auth Hardening** — Enforce validation in create/edit user dialogs; add user activation/deactivation with session revocation; surface lockout feedback, live inactivity countdown, and settings.yaml-sourced auth constants (UMGMT-01/02/03, AUTHCFG-01/02/03/04) — completed 2026-05-21, 828/828 tests, verified 5/5
-- [ ] **Phase 33: Cohort Builder UX** — Plausibility checks on age/Visus/CRT bounds; persistent filter state with reset; issue-based cohort presets (Therapie-Abbrecher, Unplausible CRT, Flagged, Implausible Visus); advanced filter dialog (spike-then-build); dashboard Review buttons routing correctly
+- [x] **Phase 33: Cohort Builder UX** — Plausibility checks on age/Visus/CRT bounds; persistent filter state with reset; issue-based cohort presets (Therapie-Abbrecher, Unplausible CRT, Flagged, Implausible Visus); advanced filter dialog (spike-then-build); dashboard Review buttons routing correctly (completed 2026-05-22)
 - [ ] **Phase 34: Data Completeness** — Patient stub + Consent model for Datenvollzähligkeit (consented fraction), with strict stub isolation from clinical surfaces
 - [ ] **Phase 35: V&V Backfill** — VERIFICATION.md for Phases 27 & 28; VALIDATION.md brought to nyquist_compliant/wave_0_complete for Phases 27/28/29; Phase 31 and all v1.10 VALIDATION status flipped to final
 - [ ] **Phase 36: Architecture Review & Compaction** — Adversarial CODEX full-codebase review producing severity-classified findings; prioritized compaction plan; approved remediations applied with green test:ci + clean knip + lint; final milestone-integrity gate
@@ -101,7 +101,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 32. User Management & Auth Hardening | 2/2 | ✅ Complete (verified 5/5) | 2026-05-21 |
-| 33. Cohort Builder UX & Advanced Filters | 3/4 | In Progress|  |
+| 33. Cohort Builder UX & Advanced Filters | 4/4 | Complete   | 2026-05-22 |
 | 34. Data Completeness (Consent + Stubs) | 0/? | Not started | - |
 | 35. V&V Backfill | 0/? | Not started | - |
 | 36. Architecture Review & Compaction | 0/? | Not started | - |
@@ -136,7 +136,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 **Plans**: 4 plans (3 waves)
   - [x] 33-01-PLAN.md — Shared foundation: lift getTherapyStatus, extend CohortFilter + applyFilters (presets + advanced), CRT threshold + i18n keys (COH-03/04)
   - [x] 33-02-PLAN.md — COH-01 inline validation + COH-02 sessionStorage persistence/reset/logout-clear + safe-pick updates (COH-01/02)
-  - [ ] 33-03-PLAN.md — COH-03 preset buttons + COH-04 advanced filter modal wired to applyFilters (COH-03/04)
+  - [x] 33-03-PLAN.md — COH-03 preset buttons + COH-04 advanced filter modal wired to applyFilters (COH-03/04)
   - [x] 33-04-PLAN.md — DASH-02 dashboard CRT Review button fix + QualityPage crt=implausible seeding (DASH-02)
 **UI hint**: yes
 
