@@ -107,14 +107,14 @@ describe('LandingPage Attention panel — Review buttons (FB-02)', () => {
     expect(search).toBe('/quality');
   });
 
-  it('implausible-CRT Review button navigates to /quality?status=flagged (Plan 04)', () => {
+  it('implausible-CRT Review button navigates to /quality?crt=implausible (Plan 04)', () => {
     setupMocks('admin');
     let path = '/';
     renderLanding((p) => {
       path = p;
     });
 
-    const crtBtn = screen.queryByRole('button', { name: translate('reviewFlaggedCases', 'en') });
+    const crtBtn = screen.queryByRole('button', { name: translate('reviewImplausibleCrt', 'en') });
     expect(crtBtn).not.toBeNull();
     fireEvent.click(crtBtn!);
     expect(path).toBe('/quality');
@@ -125,7 +125,7 @@ describe('LandingPage Attention panel — Review buttons (FB-02)', () => {
     setupMocks('researcher');
     renderLanding(() => undefined);
 
-    const crtBtn = screen.queryByRole('button', { name: translate('reviewFlaggedCases', 'en') });
+    const crtBtn = screen.queryByRole('button', { name: translate('reviewImplausibleCrt', 'en') });
     expect(crtBtn).not.toBeNull();
   });
 
@@ -134,7 +134,7 @@ describe('LandingPage Attention panel — Review buttons (FB-02)', () => {
     renderLanding(() => undefined);
 
     const therapyBtn = screen.queryByRole('button', { name: translate('reviewTherapyBreakers', 'en') });
-    const crtBtn = screen.queryByRole('button', { name: translate('reviewFlaggedCases', 'en') });
+    const crtBtn = screen.queryByRole('button', { name: translate('reviewImplausibleCrt', 'en') });
     expect(therapyBtn).not.toBeNull();
     expect(crtBtn).not.toBeNull();
 
