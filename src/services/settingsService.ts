@@ -6,6 +6,8 @@ export interface AppSettings {
   twoFactorEnabled: boolean;
   therapyInterrupterDays: number;
   therapyBreakerDays: number;
+  /** Phase 33 / COH-03: CRT implausibility threshold in µm (default 400, matches CRITICAL_CRT_THRESHOLD) */
+  crtImplausibleThresholdUm: number;
   dataSource: {
     type: 'local' | 'blaze';
     blazeUrl: string;
@@ -30,6 +32,7 @@ const DEFAULTS: AppSettings = {
   twoFactorEnabled: false,
   therapyInterrupterDays: 120,
   therapyBreakerDays: 365,
+  crtImplausibleThresholdUm: 400,
   dataSource: {
     type: 'local',
     blazeUrl: 'http://localhost:8080/fhir',

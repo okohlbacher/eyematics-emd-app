@@ -1,6 +1,7 @@
 twoFactorEnabled: false
 therapyInterrupterDays: 120
 therapyBreakerDays: 365
+crtImplausibleThresholdUm: 400     # Phase 33 / COH-03: CRT implausibility threshold in µm
 dataSource:
   type: local
   blazeUrl: http://localhost:8080/fhir
