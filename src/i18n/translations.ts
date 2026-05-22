@@ -434,6 +434,8 @@ const translations = {
   qualityFilterCenter: { de: 'Zentrum', en: 'Center' },
   qualityFilterTherapy: { de: 'Therapiestatus', en: 'Therapy Status' },
   qualityFilterAll: { de: 'Alle', en: 'All' },
+  qualityFilterCrt: { de: 'CRT-Wert', en: 'CRT Value' },
+  qualityFilterCrtImplausible: { de: 'Unplausibel (> 400 µm)', en: 'Implausible (> 400 µm)' },
   qualityShowExcluded: { de: 'Ausgeschlossene anzeigen', en: 'Show excluded' },
   qualityFilteredCount: { de: 'gefiltert', en: 'filtered' },
 
