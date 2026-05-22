@@ -143,7 +143,52 @@ export default function CohortBuilderPage() {
 
   const [showDetailedView, setShowDetailedView] = useState(false);
 
-  const filteredCases = useMemo(() => applyFilters(activeCases, filters), [activeCases, filters]);
+  // -------------------------------------------------------------------------
+  // COH-01: Inline numeric field validation (derived, no useState)
+  // -------------------------------------------------------------------------
+  const ageError = (() => {
+    const min = filters.ageRange?.[0];
+    const max = filters.ageRange?.[1];
+    if (min !== undefined && (isNaN(min) || min < 0)) return t('cohortValidationAgeNonNumeric');
+    if (max !== undefined && (isNaN(max) || max < 0)) return t('cohortValidationAgeNonNumeric');
+    if (min !== undefined && max !== undefined && min > max) return t('cohortValidationAgeLowerExceedsUpper');
+    return '';
+  })();
+
+  const visusError = (() => {
+    const minParsed = visusMinText !== '' && visusMinText !== '.' && visusMinText !== ','
+      ? parseFloat(visusMinText.replace(',', '.'))
+      : NaN;
+    const maxParsed = visusMaxText !== '' && visusMaxText !== '.' && visusMaxText !== ','
+      ? parseFloat(visusMaxText.replace(',', '.'))
+      : NaN;
+    if (!isNaN(minParsed) && minParsed > 1) return t('cohortValidationVisusOutOfRange');
+    if (!isNaN(maxParsed) && maxParsed > 1) return t('cohortValidationVisusOutOfRange');
+    if (!isNaN(minParsed) && !isNaN(maxParsed) && minParsed > maxParsed) return t('cohortValidationVisusLowerExceedsUpper');
+    return '';
+  })();
+
+  const crtError = (() => {
+    const min = filters.crtRange?.[0];
+    const max = filters.crtRange?.[1];
+    if (min !== undefined && (isNaN(min) || min < 0)) return t('cohortValidationCrtNonNumeric');
+    if (max !== undefined && (isNaN(max) || max < 0)) return t('cohortValidationCrtNonNumeric');
+    if (min !== undefined && max !== undefined && min > max) return t('cohortValidationCrtLowerExceedsUpper');
+    return '';
+  })();
+
+  const hasAnyFilterError = !!(ageError || visusError || crtError);
+
+  // Build a filter copy that excludes invalid fields so live results ignore them (D-03)
+  const validFilters = useMemo<CohortFilter>(() => {
+    const f = { ...filters };
+    if (ageError) delete f.ageRange;
+    if (visusError) delete f.visusRange;
+    if (crtError) delete f.crtRange;
+    return f;
+  }, [filters, ageError, visusError, crtError]);
+
+  const filteredCases = useMemo(() => applyFilters(activeCases, validFilters), [activeCases, validFilters]);
 
   // Summary metrics for the default (non-detailed) view
   const cohortSummary = useMemo(() => {
@@ -433,15 +478,16 @@ export default function CohortBuilderPage() {
                   placeholder="Min"
                   min={0}
                   value={filters.ageRange?.[0] ?? ''}
-                  onChange={(e) =>
-                    setFilters({
-                      ...filters,
-                      ageRange: [
-                        Math.max(0, Number(e.target.value) || 0),
-                        filters.ageRange?.[1] ?? 120,
-                      ],
-                    })
-                  }
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === '') {
+                      setFilters((f) => { const { ageRange: _, ...rest } = f; return rest; });
+                      return;
+                    }
+                    const v = Number(raw);
+                    if (isNaN(v)) return; // skip NaN — leave current state so live results don't freeze
+                    setFilters({ ...filters, ageRange: [v, filters.ageRange?.[1] ?? 120] });
+                  }}
                   className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
                 <span className="text-gray-400 dark:text-gray-500">—</span>
@@ -450,18 +496,32 @@ export default function CohortBuilderPage() {
                   placeholder="Max"
                   min={0}
                   value={filters.ageRange?.[1] ?? ''}
-                  onChange={(e) =>
-                    setFilters({
-                      ...filters,
-                      ageRange: [
-                        filters.ageRange?.[0] ?? 0,
-                        Math.max(0, Number(e.target.value) || 120),
-                      ],
-                    })
-                  }
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === '') {
+                      setFilters((f) => {
+                        const { ageRange } = f;
+                        if (!ageRange) return f;
+                        return { ...f, ageRange: [ageRange[0], 120] };
+                      });
+                      return;
+                    }
+                    const v = Number(raw);
+                    if (isNaN(v)) return;
+                    setFilters({ ...filters, ageRange: [filters.ageRange?.[0] ?? 0, v] });
+                  }}
                   className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
+              {ageError && (
+                <p
+                  id="age-range-validation"
+                  role="alert"
+                  className="mt-1 text-xs px-2 py-1.5 rounded border bg-red-50 border-red-200 text-red-600 dark:bg-[--color-coral-soft] dark:border-[--color-coral] dark:text-[--color-coral-ink]"
+                >
+                  {ageError}
+                </p>
+              )}
             </div>
 
             {/* Visus range */}
@@ -510,6 +570,15 @@ export default function CohortBuilderPage() {
                   className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
+              {visusError && (
+                <p
+                  id="visus-range-validation"
+                  role="alert"
+                  className="mt-1 text-xs px-2 py-1.5 rounded border bg-red-50 border-red-200 text-red-600 dark:bg-[--color-coral-soft] dark:border-[--color-coral] dark:text-[--color-coral-ink]"
+                >
+                  {visusError}
+                </p>
+              )}
             </div>
 
             {/* CRT range */}
@@ -523,15 +592,16 @@ export default function CohortBuilderPage() {
                   placeholder="Min"
                   min={0}
                   value={filters.crtRange?.[0] ?? ''}
-                  onChange={(e) =>
-                    setFilters({
-                      ...filters,
-                      crtRange: [
-                        Math.max(0, Number(e.target.value) || 0),
-                        filters.crtRange?.[1] ?? 800,
-                      ],
-                    })
-                  }
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === '') {
+                      setFilters((f) => { const { crtRange: _, ...rest } = f; return rest; });
+                      return;
+                    }
+                    const v = Number(raw);
+                    if (isNaN(v)) return;
+                    setFilters({ ...filters, crtRange: [v, filters.crtRange?.[1] ?? 800] });
+                  }}
                   className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
                 <span className="text-gray-400 dark:text-gray-500">—</span>
@@ -540,18 +610,32 @@ export default function CohortBuilderPage() {
                   placeholder="Max"
                   min={0}
                   value={filters.crtRange?.[1] ?? ''}
-                  onChange={(e) =>
-                    setFilters({
-                      ...filters,
-                      crtRange: [
-                        filters.crtRange?.[0] ?? 0,
-                        Math.max(0, Number(e.target.value) || 800),
-                      ],
-                    })
-                  }
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === '') {
+                      setFilters((f) => {
+                        const { crtRange } = f;
+                        if (!crtRange) return f;
+                        return { ...f, crtRange: [crtRange[0], 800] };
+                      });
+                      return;
+                    }
+                    const v = Number(raw);
+                    if (isNaN(v)) return;
+                    setFilters({ ...filters, crtRange: [filters.crtRange?.[0] ?? 0, v] });
+                  }}
                   className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
               </div>
+              {crtError && (
+                <p
+                  id="crt-range-validation"
+                  role="alert"
+                  className="mt-1 text-xs px-2 py-1.5 rounded border bg-red-50 border-red-200 text-red-600 dark:bg-[--color-coral-soft] dark:border-[--color-coral] dark:text-[--color-coral-ink]"
+                >
+                  {crtError}
+                </p>
+              )}
             </div>
 
             <div className="flex gap-2 pt-2">
@@ -582,7 +666,7 @@ export default function CohortBuilderPage() {
                 />
                 <button
                   onClick={handleSave}
-                  disabled={hasHardError || !saveName.trim()}
+                  disabled={hasHardError || hasAnyFilterError || !saveName.trim()}
                   className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
                 >
                   <Save className="w-3.5 h-3.5" />
