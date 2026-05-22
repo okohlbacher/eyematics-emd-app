@@ -23,6 +23,7 @@ vi.mock('../src/context/AuthContext', () => ({
 const highCrtCase: PatientCase = {
   id: 'case-high-crt',
   pseudonym: 'HIGH-CRT',
+  gender: 'male',
   birthDate: '1960-01-01',
   centerId: 'CENTER-A',
   centerName: 'Center A',
@@ -34,15 +35,16 @@ const highCrtCase: PatientCase = {
       effectiveDateTime: '2024-01-01T00:00:00Z',
     },
   ],
-  encounters: [],
   medications: [],
   procedures: [],
+  imagingStudies: [],
 };
 
 // A case whose latest CRT is below the threshold (should be hidden by filterCrt=implausible).
 const lowCrtCase: PatientCase = {
   id: 'case-low-crt',
   pseudonym: 'LOW-CRT',
+  gender: 'female',
   birthDate: '1960-01-01',
   centerId: 'CENTER-A',
   centerName: 'Center A',
@@ -54,9 +56,9 @@ const lowCrtCase: PatientCase = {
       effectiveDateTime: '2024-01-01T00:00:00Z',
     },
   ],
-  encounters: [],
   medications: [],
   procedures: [],
+  imagingStudies: [],
 };
 
 vi.mock('../src/context/DataContext', () => ({
