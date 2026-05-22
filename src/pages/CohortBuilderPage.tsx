@@ -37,6 +37,38 @@ import { datedFilename,downloadCsv, downloadJson } from '../utils/download';
 type SortField = 'date' | 'name';
 
 /**
+ * COH-02 / T-33-04: Safe-pick whitelist for CohortFilter deserialization from sessionStorage.
+ * Accepts only known keys with correct shapes; preset only if one of the four literals.
+ * flaggedCaseIds stored as string[] is reconstructed as a Set.
+ */
+function safePickCohortFilter(raw: unknown): CohortFilter {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const parsed = raw as Record<string, unknown>;
+  const safe: CohortFilter = {};
+  if (Array.isArray(parsed.diagnosis)) safe.diagnosis = parsed.diagnosis.map(String);
+  if (Array.isArray(parsed.gender)) safe.gender = parsed.gender.map(String);
+  if (Array.isArray(parsed.ageRange) && parsed.ageRange.length === 2) safe.ageRange = [Number(parsed.ageRange[0]), Number(parsed.ageRange[1])];
+  if (Array.isArray(parsed.visusRange) && parsed.visusRange.length === 2) safe.visusRange = [Number(parsed.visusRange[0]), Number(parsed.visusRange[1])];
+  if (Array.isArray(parsed.crtRange) && parsed.crtRange.length === 2) safe.crtRange = [Number(parsed.crtRange[0]), Number(parsed.crtRange[1])];
+  if (Array.isArray(parsed.centers)) safe.centers = parsed.centers.map(String);
+  // Phase 33 fields
+  const PRESET_LITERALS = ['therapyBreaker', 'implausibleCrt', 'flaggedQuality', 'implausibleVisus'] as const;
+  if (typeof parsed.preset === 'string' && (PRESET_LITERALS as readonly string[]).includes(parsed.preset)) {
+    safe.preset = parsed.preset as CohortFilter['preset'];
+  }
+  if (Array.isArray(parsed.flaggedCaseIds)) safe.flaggedCaseIds = new Set(parsed.flaggedCaseIds.map(String));
+  if (Array.isArray(parsed.diagnosisSubtype)) safe.diagnosisSubtype = parsed.diagnosisSubtype.map(String);
+  if (typeof parsed.hasComorbidity === 'boolean') safe.hasComorbidity = parsed.hasComorbidity;
+  if (Array.isArray(parsed.hba1cRange) && parsed.hba1cRange.length === 2) safe.hba1cRange = [Number(parsed.hba1cRange[0]), Number(parsed.hba1cRange[1])];
+  if (Array.isArray(parsed.medicationCodes)) safe.medicationCodes = parsed.medicationCodes.map(String);
+  const LATERALITY_LITERALS = ['OD', 'OS', 'OU'] as const;
+  if (typeof parsed.laterality === 'string' && (LATERALITY_LITERALS as readonly string[]).includes(parsed.laterality)) {
+    safe.laterality = parsed.laterality as CohortFilter['laterality'];
+  }
+  return safe;
+}
+
+/**
  * Per-code diagnosis chip rendered with the terminology resolver hook (Phase 25 D-19).
  * Extracted so `useDiagnosisDisplay` lives at the top of a component.
  * `system` is undefined here — this map iterates raw codes pulled from
@@ -57,11 +89,35 @@ export default function CohortBuilderPage() {
   const navigate = useNavigate();
   const { locale, t } = useLanguage();
 
-  const [filters, setFilters] = useState<CohortFilter>({});
+  const [filters, setFilters] = useState<CohortFilter>(() => {
+    // COH-02: restore persisted filter state from sessionStorage on mount (T-33-04 safe-pick)
+    try {
+      const raw = sessionStorage.getItem('emd-cohort-filters');
+      if (!raw) return {};
+      const parsed = JSON.parse(raw) as unknown;
+      return safePickCohortFilter(parsed);
+    } catch { return {}; }
+  });
   const [showSaved, setShowSaved] = useState(false);
   const [saveName, setSaveName] = useState('');
 
   const [savedSort, setSavedSort] = useState<SortField>('date');
+
+  // COH-02: persist filter changes to sessionStorage on every update
+  useEffect(() => {
+    try {
+      if (Object.keys(filters).length === 0) {
+        // Empty filter object — remove the key so Reset leaves no residue
+        sessionStorage.removeItem('emd-cohort-filters');
+        return;
+      }
+      // flaggedCaseIds is a Set — convert to array for JSON serialization (RESEARCH Pitfall 2)
+      const serializable = filters.flaggedCaseIds !== undefined
+        ? { ...filters, flaggedCaseIds: Array.from(filters.flaggedCaseIds) }
+        : filters;
+      sessionStorage.setItem('emd-cohort-filters', JSON.stringify(serializable));
+    } catch { /* ignore — storage quota or private mode */ }
+  }, [filters]);
 
   // Ref to the save-name input for cursor placement (Pitfall 5, D-03)
   const saveNameInputRef = useRef<HTMLInputElement>(null);
@@ -640,7 +696,12 @@ export default function CohortBuilderPage() {
 
             <div className="flex gap-2 pt-2">
               <button
-                onClick={() => setFilters({})}
+                onClick={() => {
+                  setFilters({});
+                  setVisusMinText('');
+                  setVisusMaxText('');
+                  try { sessionStorage.removeItem('emd-cohort-filters'); } catch { /* ignore */ }
+                }}
                 className="flex-1 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:text-gray-300"
               >
                 {t('reset')}

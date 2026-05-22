@@ -160,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setInactivityWarning(false);
     sessionStorage.removeItem('emd-token');
+    sessionStorage.removeItem('emd-cohort-filters'); // D-05: clear persisted cohort context on logout (T-33-03)
     invalidateBundleCache(); // L-12: clear stale data from previous user's center scope
   }, []);
 
