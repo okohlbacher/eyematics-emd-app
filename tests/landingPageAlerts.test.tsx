@@ -80,30 +80,28 @@ describe('LandingPage — Attention needed Review buttons (UX-01)', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/quality?therapy=breaker');
   });
 
-  it('implausible-CRT Review button navigates to /quality?status=flagged', () => {
+  it('implausible-CRT Review button navigates to /quality?crt=implausible', () => {
     render(
       <MemoryRouter>
         <LandingPage />
       </MemoryRouter>,
     );
 
-    const crtBtn = screen.queryByRole('button', { name: 'reviewFlaggedCases' });
+    const crtBtn = screen.queryByRole('button', { name: 'reviewImplausibleCrt' });
     expect(crtBtn).not.toBeNull();
     fireEvent.click(crtBtn!);
-    expect(mockNavigate).toHaveBeenCalledWith('/quality?status=flagged');
+    expect(mockNavigate).toHaveBeenCalledWith('/quality?crt=implausible');
   });
 
-  it('implausible-CRT button is present even without QUALITY role (gate removed in Plan 04)', () => {
-    // The canSeeDocQuality gate wraps the old button. After Plan 04 removes it,
-    // the button is visible to all authenticated users.
+  it('implausible-CRT button uses the reviewImplausibleCrt aria-label', () => {
     render(
       <MemoryRouter>
         <LandingPage />
       </MemoryRouter>,
     );
 
-    // With the admin role (mocked) the button should be present
-    const crtBtn = screen.queryByRole('button', { name: 'reviewFlaggedCases' });
+    // The button must use the new reviewImplausibleCrt key, not the old reviewFlaggedCases key
+    const crtBtn = screen.queryByRole('button', { name: 'reviewImplausibleCrt' });
     expect(crtBtn).not.toBeNull();
   });
 });

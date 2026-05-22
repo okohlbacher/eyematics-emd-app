@@ -299,7 +299,7 @@ export default function LandingPage() {
                   {t('attentionImplausibleCrtSub')}
                 </div>
               </div>
-              <Button variant="ghost" size="sm" aria-label={t('reviewFlaggedCases')} onClick={() => navigate('/quality?status=flagged')}>
+              <Button variant="ghost" size="sm" aria-label={t('reviewImplausibleCrt')} onClick={() => navigate('/quality?crt=implausible')}>
                 {t('review')}
               </Button>
             </div>
