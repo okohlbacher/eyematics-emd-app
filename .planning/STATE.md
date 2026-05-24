@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: — UAT Fixes, Data Completeness & Quality Closure
-status: executing
-last_updated: "2026-05-24T17:11:58.008Z"
-last_activity: 2026-05-24 -- Phase 36 execution started
+status: complete
+last_updated: "2026-05-24"
+last_activity: 2026-05-24 -- Phase 36 complete; v1.11 milestone closed
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 16
-  completed_plans: 13
-  percent: 80
+  completed_plans: 16
+  percent: 100
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-21 after v1.10)
 
 **Core value:** Every user sees only authorized data, with tamper-proof audit trail — while maintaining the zero-friction local development experience.
-**Current focus:** Phase 36 — architecture-review-compaction
+**Current focus:** v1.11 closed (2026-05-24) — ready to scope v1.12
 
 ## Current Position
 
-Phase: 36 (architecture-review-compaction) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 36
-Last activity: 2026-05-24 -- Phase 36 execution started
+Phase: 36 (architecture-review-compaction) — COMPLETE
+Plan: 3 of 3 (all plans complete)
+Status: v1.11 milestone closed 2026-05-24; ready for v1.12 planning
+Last activity: 2026-05-24 -- Phase 36 complete; VVBACK-05 confirmed (901/901 tests green)
 
 **Progress:** [██████████] 100%
 
@@ -46,6 +46,7 @@ Last activity: 2026-05-24 -- Phase 36 execution started
 | v1.9.4 | Terminology Resolver Refactor (partial) | 25 | 2026-04-30 |
 | v1.9.5 | Synthetic Data Realism | 26 | 2026-05-01 |
 | v1.10 | Session Hardening & UX Closure | 27–31 | 2026-05-21 |
+| v1.11 | UAT Fixes, Data Completeness & Quality Closure | 32–36 | 2026-05-24 |
 
 ## Accumulated Context
 
@@ -78,13 +79,26 @@ Last activity: 2026-05-24 -- Phase 36 execution started
 
 ### Deferred Items
 
-Acknowledged and accepted as tech debt at v1.10 milestone close on 2026-05-21 — to be closed in v1.11 Phase 35:
+#### CLOSED at v1.11 (Phase 35, 2026-05-24)
 
 | Category | Item | Status |
 |----------|------|--------|
-| verification | Phases 27 & 28 have no VERIFICATION.md (evidenced by SUMMARYs + green tests + integration check) | v1.11 Phase 35 — VVBACK-01/02 |
-| nyquist | VALIDATION.md for phases 27/28/29 left `draft`/`nyquist_compliant: false` | v1.11 Phase 35 — VVBACK-03 |
-| nyquist | Phase 31 VALIDATION `wave_0_complete: false` despite passing VERIFICATION + UAT | v1.11 Phase 35 — VVBACK-04 |
+| verification | Phases 27 & 28 have no VERIFICATION.md (evidenced by SUMMARYs + green tests + integration check) | CLOSED — VVBACK-01/02 resolved by Phase 35 |
+| nyquist | VALIDATION.md for phases 27/28/29 left `draft`/`nyquist_compliant: false` | CLOSED — VVBACK-03 resolved by Phase 35 |
+| nyquist | Phase 31 VALIDATION `wave_0_complete: false` despite passing VERIFICATION + UAT | CLOSED — VVBACK-04 resolved by Phase 35 |
+
+#### Accepted tech debt at v1.11 close — target v1.12
+
+New items deferred from Phase 36 CODEX architecture review (Tier C). Reference: `.planning/reviews/v1.11-arch-review/FINDINGS.md`.
+
+| Category | ID | Item | Target |
+|----------|----|------|--------|
+| soc-violation | F-01 | Server outcome aggregation ignores settings-derived filter thresholds (therapyBreaker, implausibleCrt) — latent correctness gap vs UI path | v1.12 |
+| soc-violation | F-02 | Clinical thresholds (`CRITICAL_CRT_THRESHOLD`, etc.) live in `src/config/clinicalThresholds.ts` outside `settings.yaml` — violates single-config invariant | v1.12 |
+| dead-code | F-03 | Unreachable Keycloak runtime path still wired through auth middleware — remove or gate behind real OIDC support (tied to KEYCLK-01) | v1.12 |
+| oversized-module | F-09 | `authApi.ts` God module (1,175 lines) — split into `authLoginApi`, `authUserAdminApi`, `totpApi`, `sessionApi` | v1.12 |
+| oversized-module | F-10 | `OutcomesView.tsx` owns too many unrelated responsibilities (URL parsing, cohort resolution, audit, aggregation routing, metric render) — decompose | v1.12 |
+| soc-violation | F-13 | Saved-search provenance is client-owned — server should generate `id`/`createdAt` and validate/sanitize `filters` at API boundary | v1.12 |
 
 ### Blockers
 
@@ -92,10 +106,9 @@ Acknowledged and accepted as tech debt at v1.10 milestone close on 2026-05-21 �
 
 ## Operator Next Steps
 
-1. `/gsd-plan-phase 33` — plan Phase 33: Cohort Builder UX & Advanced Filters (COH-01/02/03/04, DASH-02)
-2. Then execute Phases 33–36 in sequence
-3. Optional: human UAT of Phase 32's 3 runtime UI behaviors (32-VERIFICATION.md)
-4. Phase 36 is the final gate: ARCH review + compaction + VVBACK-05 green test:ci
+1. v1.11 is CLOSED. Use `/gsd-new-milestone` to scope v1.12.
+2. v1.12 candidates: Tier C items from the v1.11 CODEX review (F-01, F-02, F-03, F-09, F-10, F-13) and KEYCLK-01 Keycloak OIDC flow.
+3. 901/901 tests green; no blockers.
 
 ## Performance Metrics
 

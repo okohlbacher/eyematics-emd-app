@@ -1,25 +1,24 @@
 # EMD Backend Redesign
 
-## Status: In Milestone v1.11 — UAT Fixes, Data Completeness & Quality Closure (started 2026-05-21, Phases 32–36)
+## Status: v1.11 Shipped — UAT Fixes, Data Completeness & Quality Closure (Phases 32–36, 2026-05-24)
 
-**Latest shipped milestone:** v1.10 — Session Hardening & UX Closure (Phases 27–31), shipped 2026-05-21. Closed all long-deferred session-management, home-panel UX, terminology-docs, and subcohort items.
+**Latest shipped milestone:** v1.11 — UAT Fixes, Data Completeness & Quality Closure (Phases 32–36), shipped 2026-05-24. Delivered User Management & Auth Hardening (Phase 32), Cohort Builder UX (Phase 33), Data Completeness (Phase 34), V&V Backfill (Phase 35), and Architecture Review & Compaction (Phase 36). CODEX adversarial review applied Tier A + Tier B compaction (net −240 LOC); Tier C deferred to v1.12. 901/901 tests green at close.
 
-**Next phase number:** 32 (continues v1.10's Phase 31).
+**Next milestone:** v1.12 (to be scoped via `/gsd-new-milestone`).
 
-## Current Milestone: v1.11 UAT Fixes, Data Completeness & Quality Closure
+## Shipped Milestone: v1.11 UAT Fixes, Data Completeness & Quality Closure (CLOSED 2026-05-24)
 
-**Goal:** Deliver the subcohort feature addenda and outstanding UAT-driven feature requests, then close all open gaps and accepted tech debt — giving v1.11 a single comprehensive scope.
+**Goal (delivered):** UAT-driven feature requests, Data Completeness, V&V backfill, and architecture compaction — all in a single comprehensive scope.
 
-**Scope (three intake buckets — concrete requirements land after UAT issue triage, expected 2026-05-22):**
+**Delivered scope:**
 
-1. **Subcohort enhancements & addenda** — feature requests and follow-ups to the v1.10 subcohort feature (Phase 31). To be itemized from the last major UAT.
-2. **UAT issues & open gaps** — remaining issues from the last major UAT plus any open gaps surfaced across the codebase.
-3. **Tech-debt / V&V closure** — backfill `VERIFICATION.md` for Phases 27 & 28; bring Nyquist `VALIDATION.md` to `nyquist_compliant: true` / `wave_0_complete: true` for Phases 27, 28, 29; resolve Phase 31's cosmetic `wave_0_complete: false`; flip all v1.10 `VALIDATION.md` `status: draft` → final (VVBACK-01..05).
-4. **Architecture review & compaction** — adversarial, in-depth full-codebase review with CODEX (architecture, separation of concerns, overall design) producing a prioritized de-bloat / compaction plan, then applying remediations with no behavior regressions (ARCH-01..03).
+1. **User Management & Auth Hardening (Phase 32):** Edit-dialog center requirement, mandatory fields, user activation/deactivation with session revoke, lockout feedback, inactivity countdown, auth constants in settings.yaml (UMGMT-01..03, AUTHCFG-01..04).
+2. **Cohort Builder UX (Phase 33):** Plausibility checks, filter persistence+reset, issue presets, advanced filter dialog, Dashboard Review routing (COH-01..04, DASH-02).
+3. **Data Completeness (Phase 34):** FHIR Consent + patient stub Datenvollzähligkeit card, stubs isolated from clinical surfaces (DASH-01).
+4. **V&V Backfill (Phase 35):** VERIFICATION.md backfilled for Phases 27 & 28; Nyquist VALIDATION.md brought to compliant for Phases 27/28/29/31 (VVBACK-01..04).
+5. **Architecture Review & Compaction (Phase 36):** CODEX adversarial review → 15 findings (ARCH-01); Tier A + Tier B compaction applied (ARCH-02/03); net −240 LOC; Tier C deferred to v1.12 (ARCH-03). Final test:ci green (901/901 — VVBACK-05).
 
-Test suite stays green throughout (783/783 baseline).
-
-**Out of scope:** KEYCLK-01 (Keycloak OIDC) stays in backlog — needs a live Keycloak instance.
+**Out of scope:** KEYCLK-01 (Keycloak OIDC) remains in backlog — needs a live Keycloak instance.
 
 ## What This Is
 
@@ -149,25 +148,25 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 - [x] Terminology `serverUrl` default-vs-placeholder docs fix + commented settings.yaml example (TERM-01/02, was TERM-04) — v1.10 (Phase 30)
 - [x] Subcohort support: `ParentName:Sub` convention, validation, tree-grouped compare picker (KOH-003/004) — v1.10 (Phase 31)
 
-### Active (v1.11 — UAT Fixes, Data Completeness & Quality Closure)
+### Validated in v1.11 (Phases 32–36, shipped 2026-05-24)
 
-**UAT batch 1 — features & fixes** (from `EMD-v1.10-Changelog-Feedback_discussion.docx`):
-- [ ] User management: edit-dialog center requirement (UMGMT-01), all-fields mandatory create+edit (UMGMT-02), user activation status + de/reactivate + session revoke (UMGMT-03) — **Phase 32**
-- [ ] Auth feedback/config: lockout attempts+time on login (AUTHCFG-01), inactivity countdown @3min (AUTHCFG-02), inactivity + lockout constants → settings.yaml (AUTHCFG-03/04) — **Phase 32**
-- [ ] Cohort builder: plausibility checks (COH-01), session filter persistence + reset (COH-02), issue presets (COH-03), advanced filter dialog (COH-04), dashboard Review routing (DASH-02) — **Phase 33**
-- [ ] Data completeness: FHIR Consent + ~4–5× patient stubs + Datenvollzähligkeit, stubs isolated from clinical surfaces (DASH-01) — **Phase 34**
+**UAT batch 1 — features & fixes:**
+- [x] User management: edit-dialog center requirement (UMGMT-01), all-fields mandatory create+edit (UMGMT-02), user activation status + de/reactivate + session revoke (UMGMT-03) — Phase 32
+- [x] Auth feedback/config: lockout attempts+time on login (AUTHCFG-01), inactivity countdown @3min (AUTHCFG-02), inactivity + lockout constants → settings.yaml (AUTHCFG-03/04) — Phase 32
+- [x] Cohort builder: plausibility checks (COH-01), session filter persistence + reset (COH-02), issue presets (COH-03), advanced filter dialog (COH-04), dashboard Review routing (DASH-02) — Phase 33
+- [x] Data completeness: FHIR Consent + patient stubs + Datenvollzähligkeit card, stubs isolated from clinical surfaces (DASH-01) — Phase 34
 
-**Architecture review & compaction (Phase 36):**
-- [ ] Adversarial full-codebase review with CODEX (architecture, separation of concerns, design) → severity-classified findings report (ARCH-01)
-- [ ] Prioritized compaction / de-bloat plan with concrete file refs — dead code, redundant abstractions, duplicated logic, oversized modules (ARCH-02)
-- [ ] Approved compaction remediations applied; `test:ci` green, `knip` clean, `lint` passes, no behavior regressions (ARCH-03)
+**Architecture review & compaction:**
+- [x] Adversarial full-codebase review with CODEX → 15 severity-classified findings (ARCH-01) — Phase 36
+- [x] Prioritized Tier A/B/C compaction plan with concrete file refs (ARCH-02) — Phase 36
+- [x] Tier A + Tier B remediations applied; `test:ci` green (901/901), `knip` clean, `lint` 0 warnings; net −240 LOC (ARCH-03) — Phase 36
 
-**Tech-debt / V&V closure (Phases 35–36):**
-- [ ] VERIFICATION.md backfilled for Phase 27 (stateful session backend) via goal-backward analysis, refs anchored to `v1.10` tag (VVBACK-01)
-- [ ] VERIFICATION.md backfilled for Phase 28 (admin session control UI) via goal-backward analysis (VVBACK-02)
-- [ ] Nyquist VALIDATION.md brought to compliant/complete for Phases 27, 28, 29 (VVBACK-03)
-- [ ] Phase 31 VALIDATION `wave_0_complete` resolved; all v1.10 VALIDATION `status: draft` flipped to final (VVBACK-04)
-- [ ] Final `test:ci` green + deferred-debt entries updated to reflect closure (VVBACK-05)
+**Tech-debt / V&V closure:**
+- [x] VERIFICATION.md backfilled for Phase 27 (stateful session backend) via goal-backward analysis (VVBACK-01) — Phase 35
+- [x] VERIFICATION.md backfilled for Phase 28 (admin session control UI) via goal-backward analysis (VVBACK-02) — Phase 35
+- [x] Nyquist VALIDATION.md brought to compliant/complete for Phases 27, 28, 29 (VVBACK-03) — Phase 35
+- [x] Phase 31 VALIDATION `wave_0_complete` resolved; all v1.10 VALIDATION `status: draft` flipped to final (VVBACK-04) — Phase 35
+- [x] Final `test:ci` green (901/901) + deferred-debt entries updated to reflect closure (VVBACK-05) — Phase 36
 
 ### Backlog (deferred — not in v1.11)
 
@@ -175,12 +174,13 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 ## Current State
 
-**Latest (complete):** Milestone v1.10 — Session Hardening & UX Closure
-- Phase 27 complete (2026-05-11): `server/sessionsDb.ts` (SQLite WAL, jti-keyed rows), jti rotation in /refresh, RFC 6819 family revocation, dual-key signing window, `/api/auth/rotate-key` admin endpoint (SESS-02/03/04); 702/702 tests green
-- Phase 29 complete (2026-05-21): home-panel UX closure — "Attention needed" Review buttons deep-link to pre-filtered `/quality` (UX-01), per-username localStorage recent-activity store + `useRecentActivity` hook powering "Jump Back In" (UX-02), recents cleared on logout/login for real cross-user isolation (D-01); 754/754 tests green
-- Phase 30 complete (2026-05-21): terminology config docs cleanup — `docs/Konfiguration.md` `terminology.serverUrl` Default cell corrected to `—` (was misleadingly the Ontoserver URL; code default is undefined), URL relabelled as example placeholder; TERM-02 satisfied by the commented `config/settings.yaml` example block (TERM-01/TERM-02 complete); 754/754 tests green
-- Phase 31 complete (2026-05-21): subcohort support — `src/services/cohortNames.ts` (`parseSubcohortName`/`groupByParent`, name-only `ParentName:SubcohortName` convention, no new SavedSearch field), CohortBuilderPage inline validation + per-row Split action, CohortCompareDrawer tree picker (expanded-by-default, independent selection, max-4); KOH-003/KOH-004 (newly added to reqs); 783/783 tests green; code-review BLOCKER (drawer crash on empty-segment names) fixed + regression-tested; human UAT approved
-- **Milestone v1.10 — Session Hardening & UX Closure: COMPLETE (2026-05-21)** — all 5 phases (27 stateful sessions, 28 admin session UI, 29 home-panel UX, 30 terminology docs, 31 subcohorts) shipped; ready for `/gsd-complete-milestone`
+**Latest (complete):** Milestone v1.11 — UAT Fixes, Data Completeness & Quality Closure (2026-05-24)
+- Phase 32 complete (2026-05-24): User management hardening + auth feedback/config — edit-dialog center requirement, mandatory create/edit fields, user activation/deactivation with session revoke, login lockout feedback, inactivity countdown at 3 min, auth constants in settings.yaml (UMGMT-01..03, AUTHCFG-01..04)
+- Phase 33 complete (2026-05-24): Cohort builder UX — plausibility checks, filter persistence+reset, issue presets, advanced filter dialog, Dashboard Review routing (COH-01..04, DASH-02)
+- Phase 34 complete (2026-05-24): Data completeness — FHIR Consent + patient stub Datenvollzähligkeit card, stubs isolated from clinical surfaces (DASH-01)
+- Phase 35 complete (2026-05-24): V&V backfill — VERIFICATION.md for Phases 27 & 28; Nyquist VALIDATION.md brought to compliant for Phases 27/28/29/31 (VVBACK-01..04)
+- Phase 36 complete (2026-05-24): Architecture review + compaction — CODEX adversarial review (15 findings), Tier A + Tier B remediations applied (net −240 LOC, 901/901 tests green, knip clean, lint 0 warnings), Tier C deferred to v1.12; VVBACK-05 confirmed (ARCH-01..03)
+- **Milestone v1.11 — UAT Fixes, Data Completeness & Quality Closure: COMPLETE (2026-05-24)**
 
 **Shipped:** Milestone v1.9.5 — Synthetic Data Realism (2026-05-01)
 - Phase 26 complete: terminology seed extended (5 codes), disease-conditional comorbidities, HbA1c + age-disease coupling, AMD/DME/RVO template differentiation, 4 synthetic bundles regenerated, verify-bundle-distributions.mjs wired into test:ci
@@ -250,7 +250,7 @@ To be defined via `/gsd-new-milestone`. Carried-forward candidate:
 
 ## Context
 
-- **Codebase (v1.10):** React/TypeScript SPA + Express 5 server + `shared/` pure-TS module
+- **Codebase (v1.11):** React/TypeScript SPA + Express 5 server + `shared/` pure-TS module
 - **Server**: Express 5 production server (server/index.ts) + Vite dev plugins for backward compat
 - **Auth flow**: Server-side bcrypt + JWT (HS256), TOTP 2FA (per-user enrollment), silent refresh via httpOnly cookie + BroadcastChannel, rate limiting with exponential backoff
 - **Sessions (v1.10)**: Stateful `refresh_sessions` SQLite table (jti-keyed, WAL); OAuth2-style refresh rotation with RFC 6819 family revocation; dual-key signing window + admin `POST /api/auth/rotate-key`; admin session-control UI (list / revoke / sign-out-everywhere) + in-UI TTL config
@@ -261,7 +261,7 @@ To be defined via `/gsd-new-milestone`. Carried-forward candidate:
 - **Outcomes**: 4 metrics (Visus, CRT, Treatment-Interval, Responder) with server-side pre-aggregation at >1000-patient threshold; metric selector with `?metric=` deep-link; cross-cohort overlay (up to 4)
 - **Cohorts (v1.10)**: One-level subcohorts via `ParentName:Sub` naming (`src/services/cohortNames.ts`); tree-grouped picker in CohortCompareDrawer; Split affordance in cohort builder
 - **Home UX (v1.10)**: Client-side recent-activity store (`emd-recent:<username>`, capped 5) + `useRecentActivity` powering "Jump Back In"; "Attention needed" Review buttons deep-link to pre-filtered `/quality`
-- **Test surface**: ~783 tests passing (v1.10 close; 754 at Phase 30 baseline + Phase 31 subcohort suites)
+- **Test surface**: 901 tests passing (v1.11 close; 783 at v1.10 + Phase 32–36 additions + compaction refactors)
 - **Requirements docs**: Lastenheft (RE-EM-LH) and Pflichtenheft (EMDREQ-*) define the formal requirements
 
 ### DSF Integration Architecture (Multi-Site)
@@ -338,4 +338,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-21 — milestone v1.11 (UAT Fixes, Data Completeness & Quality Closure) scoped + roadmapped (Phases 32–36). UAT batch 1 integrated from changelog-feedback doc (UMGMT/AUTHCFG/COH/DASH), plus ARCH compaction + VVBACK closure. Roadmap revised per adversarial review (H1 tag-anchor, H2 stub isolation, M1 COH-04→P33, M2 rename). KEYCLK-01 in Backlog.*
+*Last updated: 2026-05-24 — milestone v1.11 (UAT Fixes, Data Completeness & Quality Closure) closed. All 5 phases (32–36) complete; 901/901 tests green. CODEX architecture review Tier A + Tier B applied (net −240 LOC); Tier C deferred to v1.12. KEYCLK-01 remains in Backlog.*
