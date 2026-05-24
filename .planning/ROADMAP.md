@@ -102,7 +102,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 |-------|----------------|--------|-----------|
 | 32. User Management & Auth Hardening | 2/2 | ✅ Complete (verified 5/5) | 2026-05-21 |
 | 33. Cohort Builder UX & Advanced Filters | 4/4 | Complete    | 2026-05-22 |
-| 34. Data Completeness (Consent + Stubs) | 1/4 | In Progress|  |
+| 34. Data Completeness (Consent + Stubs) | 2/4 | In Progress|  |
 | 35. V&V Backfill | 0/? | Not started | - |
 | 36. Architecture Review & Compaction | 0/? | Not started | - |
 
@@ -151,7 +151,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
   4. **Stub isolation (H2):** stubs do NOT appear in cohort building, outcomes/trajectories, quality review, case detail, or charts — they affect only the completeness denominator; stubs are site-attributed; FHIR load + >1000-patient aggregation routing show no regression
 **Plans**: 4 plans (3 waves)
   - [x] 34-01-PLAN.md — Foundation: Consent + Encounter FHIR types + Wave 0 test scaffolds (DASH-01)
-  - [ ] 34-02-PLAN.md — Stub isolation chokepoints: extractPatientCases (D-03) + patientCount (D-04) + countRawPatients (D-09) (DASH-01)
+  - [x] 34-02-PLAN.md — Stub isolation chokepoints: extractPatientCases (D-03) + patientCount (D-04) + countRawPatients (D-09) (DASH-01)
   - [ ] 34-03-PLAN.md — Data generation: Consent + seeded stubs for synthetic + reference bundles, CI gate extensions (D-06/D-11/D-12/D-13/D-14) (DASH-01)
   - [ ] 34-04-PLAN.md — Datenvollzähligkeit dashboard card + i18n (D-08/D-09/D-10) (DASH-01)
 **UI hint**: yes
