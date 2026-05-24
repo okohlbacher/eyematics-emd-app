@@ -1,7 +1,7 @@
 ---
 phase: 30
 slug: terminology-configuration-docs-cleanup-only
-status: draft
+status: final
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-05-21

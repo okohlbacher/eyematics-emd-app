@@ -1,7 +1,7 @@
 ---
 phase: 27
 slug: stateful-session-backend
-status: draft
+status: final
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-05-11

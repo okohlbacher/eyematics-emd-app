@@ -1,9 +1,9 @@
 ---
 phase: 31
 slug: subcohort-support
-status: draft
+status: final
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-05-21
 ---
 
@@ -91,3 +91,5 @@ No new test framework install needed — Vitest + RTL already configured.
 - [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** approved 2026-05-21
+
+31-VERIFICATION.md (status: passed, 5/5) + UAT confirm Wave 0 RED scaffolds (cohortNames + builder/drawer component tests) reached GREEN; wave_0_complete: true set 2026-05-24 (V&V backfill, Phase 35).

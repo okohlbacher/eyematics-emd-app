@@ -1,7 +1,7 @@
 ---
 phase: 28
 slug: admin-session-control-ui
-status: draft
+status: final
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-05-14
