@@ -104,7 +104,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 | 33. Cohort Builder UX & Advanced Filters | 4/4 | Complete    | 2026-05-22 |
 | 34. Data Completeness (Consent + Stubs) | 4/4 | Complete    | 2026-05-24 |
 | 35. V&V Backfill | 3/3 | Complete    | 2026-05-24 |
-| 36. Architecture Review & Compaction | 3/3 | Complete   | 2026-05-24 |
+| 36. Architecture Review & Compaction | 3/3 | Complete    | 2026-05-24 |
 
 ### Phase Details
 
