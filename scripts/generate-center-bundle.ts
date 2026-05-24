@@ -333,6 +333,18 @@ export function generateCenterBundle(input: GenerateCenterBundleInput): unknown 
     throw new Error(`generateCenterBundle: cohortMix must sum to 1.0 (got ${mixSum})`);
   }
 
+  // WR-04: assert each cohort's drug CDF terminates at p=1.0, mirroring the
+  // cohortMix sum guard above. pickDrugFromCdf falls back to the last bucket if
+  // no entry matches; without this guard a future authoring typo (e.g. a final
+  // p=0.99) would let draws in (0.99, 1.0] silently fall through, distorting the
+  // intended drug mix with no error. Consumes no rand() — byte-identical regen.
+  for (const [k, t] of Object.entries(TEMPLATES)) {
+    const lastP = t.drugs[t.drugs.length - 1]!.p;
+    if (Math.abs(lastP - 1) > 1e-9) {
+      throw new Error(`generateCenterBundle: TEMPLATES.${k}.drugs CDF must end at p=1.0 (got ${lastP})`);
+    }
+  }
+
   // WR-03 / D-11: load the stub factor bounds from config/settings.yaml (the
   // single config source per CLAUDE.md) BEFORE constructing `rand`, so this read
   // consumes no PRNG draws and existing bundles regenerate byte-identically.
