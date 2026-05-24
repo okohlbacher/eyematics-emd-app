@@ -23,7 +23,7 @@
 
 ### Dashboard / Data Completeness (DASH)
 
-- [ ] **DASH-01**: Patient-stub + consent model for "Datenvollzähligkeit":
+- [x] **DASH-01**: Patient-stub + consent model for "Datenvollzähligkeit":
   - Add FHIR `Consent` resources with a research-use policy for the existing synthetic patients (the consented cohort)
   - Generate patient **stubs** at a configurable multiplier (default ~4–5× the consented count) carrying only encounter date, gender (m/f), and year of birth — nothing else
   - The dashboard shows the total patient count (consented + stubs) and the consented count, and surfaces **Datenvollzähligkeit** = consented ÷ total (fraction of patients amenable to research)
@@ -95,7 +95,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTHCFG-02 | Phase 32 | Done ✅ |
 | AUTHCFG-03 | Phase 32 | Done ✅ |
 | AUTHCFG-04 | Phase 32 | Done ✅ |
-| DASH-01 | Phase 34 | Pending |
+| DASH-01 | Phase 34 | Complete |
 | DASH-02 | Phase 33 | Complete |
 | COH-01 | Phase 33 | Complete |
 | COH-02 | Phase 33 | Complete |
