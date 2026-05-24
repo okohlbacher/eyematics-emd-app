@@ -55,8 +55,19 @@ export function extractCenters(bundles: FhirBundle[]): CenterInfo[] {
   const observations = resourcesOfType<Observation>(bundles, 'Observation');
 
   return orgs.map((org) => {
+    // WR-05: resolve the source bundle by Organization membership, not raw id
+    // equality across all resource types. Matching `e.resource.id === org.id`
+    // alone could pick the wrong bundle if any non-Org resource id collided
+    // with the Org id. We narrow to the Organization resource. NOTE: this still
+    // assumes one Organization per bundle (the current one-Org-per-file layout)
+    // — a multi-Org bundle exposes a single bundle-level meta.lastUpdated, so
+    // every Org in it would share that timestamp. The rest of the codebase
+    // (filterBundlesByCenters, buildCaseIndex) does not rely on 1:1, so this is
+    // a documented narrowing rather than a full multi-Org fix.
     const bundle = bundles.find((b) =>
-      b.entry.some((e) => e.resource.id === org.id)
+      b.entry.some(
+        (e) => e.resource.resourceType === 'Organization' && e.resource.id === org.id,
+      )
     );
     const orgPatients = patients.filter(
       (p) => p.meta?.source === org.id
