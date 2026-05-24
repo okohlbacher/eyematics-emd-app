@@ -32,7 +32,7 @@ No shadcn. No third-party registries. Registry safety gate: not applicable.
 
 ## Spacing Scale
 
-Declared values (must be multiples of 4):
+Declared values (must be multiples of 4) — applies to NEW markup only:
 
 | Token | Value | Usage |
 |-------|-------|-------|
@@ -44,16 +44,17 @@ Declared values (must be multiples of 4):
 | 2xl | 48px | Major section breaks |
 | 3xl | 64px | Page-level spacing |
 
-Exceptions:
-- Tile internal padding follows the established `p-[18px_18px_14px]` pattern (18px top/sides, 14px bottom) — used across all existing KPI cards on LandingPage
-- Row items in Tile use `px-5 py-3.5` (20px / 14px) — match this in any new list rows
-- Card icon containers use `w-8 h-8` (32px) with `rounded-lg` — match for the Datenvollzähligkeit card icon
+**Exclusion clause:** The 8-point spacing scale applies to new markup introduced in Phase 34 only. The existing `Tile` primitive's internal padding (`p-[18px_18px_14px]`, `px-5 py-3.5`) is inherited unchanged from its source (`src/components/primitives/Tile.tsx`) and is NOT redeclared here. The Datenvollzähligkeit card reuses the existing `Tile` component as-is; its internal spacing is not a new design decision and is not subject to this contract's grid constraint.
 
-Source: `src/pages/LandingPage.tsx` inline Tailwind classes
+Card icon container size follows the established `w-8 h-8` (32px) with `rounded-lg` pattern — match for the Datenvollzähligkeit card icon container.
+
+Source: `src/pages/LandingPage.tsx` inline Tailwind classes, `src/components/primitives/Tile.tsx`
 
 ---
 
 ## Typography
+
+This contract covers only the typographic roles used inside the NEW Datenvollzähligkeit card component. The page `h1` (28px) is a pre-existing LandingPage element, unmodified in this phase, and is not part of this contract.
 
 | Role | Size | Weight | Line Height | Notes |
 |------|------|--------|-------------|-------|
@@ -61,7 +62,6 @@ Source: `src/pages/LandingPage.tsx` inline Tailwind classes
 | Label | 12px | 400 | 1.4 | Secondary labels, sub-text (`text-[var(--color-ink-2)]`) |
 | Caption | 11px | 600 | 1.3 | ALL CAPS section headers, uppercase tracking `tracking-[0.12em]` (`text-[var(--color-ink-3)]`) |
 | Display | 32px | 600 | 1.0 | KPI metric numbers (font-data / JetBrains Mono, `tracking-[-0.03em]`) |
-| Heading | 28px | 600 | 1.15 | Page h1, `tracking-[-0.02em]` |
 
 Rules:
 - Body (14px / 400 / 1.5): all non-headline content in cards and rows
@@ -69,6 +69,7 @@ Rules:
 - Display (32px / 600 / mono): the primary numeric value in the card (the fraction as a percentage)
 - Secondary metric values (consented count, total count) use Label (12px / 400 / 1.4)
 - No new font sizes or weights outside this table
+- Pre-existing page h1 (28px / 600 / 1.15 / `tracking-[-0.02em]`) is unchanged and not governed by this contract
 
 Source: `src/pages/LandingPage.tsx`, `src/index.css`
 
@@ -126,7 +127,7 @@ Inserted as the **5th card** in the existing `grid-cols-4` KPI row on LandingPag
 ### Card Internal Structure
 
 ```
-[Tile p-[18px_18px_14px]]
+[Tile]
   ┌ Icon container (w-8 h-8, rounded-lg, teal-soft bg) — ShieldCheck icon (teal)
   │
   ├ Fraction display: "21 %" — 32px semibold mono (color: semantic, see above)
@@ -139,6 +140,8 @@ Inserted as the **5th card** in the existing `grid-cols-4` KPI row on LandingPag
 ```
 
 Icon: `ShieldCheck` from lucide-react (conveys consent/compliance). Size: `w-4 h-4`.
+
+Note: The `Tile` component's internal padding is inherited as-is from `src/components/primitives/Tile.tsx` — no new padding values are introduced.
 
 ### Responsive behavior
 
