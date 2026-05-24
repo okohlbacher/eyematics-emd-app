@@ -13,6 +13,7 @@
 import { ChevronRight, Download } from 'lucide-react';
 
 import { flattenIntervalRows } from '../../../shared/intervalMetric';
+import { projectResponderRows } from '../../../shared/responderMetric';
 import type { TranslationKey } from '../../i18n/translations';
 import { LOINC_CRT, LOINC_VISUS, SNOMED_IVI } from '../../services/fhirLoader';
 import type { PatientCase } from '../../types/fhir';
@@ -56,14 +57,6 @@ interface CrtRow {
   observation_date: string;
   crt_um: number;
   crt_delta_um: number;
-}
-
-interface ResponderRow {
-  patient_pseudonym: string;
-  eye: 'od' | 'os';
-  bucket: string;
-  delta_visus_letters: number;
-  measurement_date: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -193,92 +186,6 @@ function flattenCrtRows(cases: PatientCase[]): CrtRow[] {
           crt_delta_um: Math.round(o.um - baselineUm),
         });
       }
-    });
-  }
-
-  return rows;
-}
-
-// ---------------------------------------------------------------------------
-// flattenResponderRows — METRIC-05 / responder classification
-// ---------------------------------------------------------------------------
-
-function deltaLogmarAtYear1(
-  obs: Array<{ date: string; logmar: number }>,
-): { delta: number; measurementDate: string } | null {
-  if (obs.length < 2) return null;
-  const baseline = obs[0];
-  const year1Min = new Date(baseline.date);
-  year1Min.setDate(year1Min.getDate() - 180);
-  const year1Max = new Date(baseline.date);
-  year1Max.setDate(year1Max.getDate() + 180);
-  year1Max.setFullYear(year1Max.getFullYear() + 1);
-
-  let best: { delta: number; measurementDate: string } | null = null;
-  let minDist = Infinity;
-
-  for (const o of obs.slice(1)) {
-    const d = new Date(o.date);
-    const target = new Date(baseline.date);
-    target.setFullYear(target.getFullYear() + 1);
-    if (d < year1Min || d > year1Max) continue;
-    const dist = Math.abs(d.getTime() - target.getTime());
-    if (dist < minDist) {
-      minDist = dist;
-      best = { delta: o.logmar - baseline.logmar, measurementDate: o.date };
-    }
-  }
-  return best;
-}
-
-function flattenResponderRows(
-  cases: PatientCase[],
-  thresholdLetters: number,
-): ResponderRow[] {
-  const thresholdLogmar = Math.max(0, thresholdLetters) * 0.02;
-  const rows: ResponderRow[] = [];
-
-  for (const pc of cases) {
-    const visusByEye: Record<'od' | 'os', Array<{ date: string; logmar: number }>> = {
-      od: [],
-      os: [],
-    };
-
-    for (const obs of pc.observations ?? []) {
-      const isVisus = (obs.code?.coding ?? []).some((c) => c.code === LOINC_VISUS);
-      if (!isVisus) continue;
-
-      const e = eyeOf(obs.bodySite);
-      if (e !== 'od' && e !== 'os') continue;
-
-      const decimal =
-        typeof obs.valueQuantity?.value === 'number' ? obs.valueQuantity.value : NaN;
-      if (!Number.isFinite(decimal) || decimal <= 0) continue;
-
-      const date =
-        typeof obs.effectiveDateTime === 'string' ? obs.effectiveDateTime.slice(0, 10) : '';
-      if (!date) continue;
-
-      visusByEye[e].push({ date, logmar: decimalToLogmar(decimal) });
-    }
-
-    (['od', 'os'] as const).forEach((eye) => {
-      visusByEye[eye].sort((a, b) => a.date.localeCompare(b.date));
-      const result = deltaLogmarAtYear1(visusByEye[eye]);
-      if (!result) return;
-
-      const { delta, measurementDate } = result;
-      const bucket =
-        delta <= -thresholdLogmar ? 'responder' : delta >= thresholdLogmar ? 'non-responder' : 'partial';
-      const deltaLetters = Math.round(-delta / 0.02); // improvement = positive letters
-
-      rows.push({
-        patient_pseudonym: pc.pseudonym,
-        eye,
-        bucket,
-        delta_visus_letters: deltaLetters,
-        measurement_date: measurementDate,
-      });
     });
   }
 
@@ -483,7 +390,7 @@ export default function OutcomesDataPreview({
   }
 
   if (activeMetric === 'responder') {
-    const rows = flattenResponderRows(cases, thresholdLetters);
+    const rows = projectResponderRows(cases, thresholdLetters);
 
     const handleExport = () => {
       const headers = [
