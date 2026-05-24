@@ -899,6 +899,12 @@ const translations = {
     en: 'Review flagged cases',
   },
 
+  // Phase 34 \u2014 Datenvollz\u00e4hligkeit card (DASH-01)
+  datenvollstaendigkeitCaption: { de: 'DATENVOLLZ\u00c4HLIGKEIT', en: 'DATA COMPLETENESS' },
+  datenvollstaendigkeitLabel: { de: 'Datenvollz\u00e4hligkeit', en: 'Data completeness' },
+  datenvollstaendigkeitPatients: { de: '{n} / {m} Patienten', en: '{n} / {m} patients' },
+  datenvollstaendigkeitAriaLabel: { de: 'Datenvollz\u00e4hligkeit: {pct}%', en: 'Data completeness: {pct}%' },
+
   // Phase 33 \u2014 COH-01 validation
   cohortValidationAgeNonNumeric: { de: 'Ung\u00fcltige Eingabe: nur Zahlen \u2265 0 erlaubt', en: 'Invalid input: numbers \u2265 0 only' },
   cohortValidationAgeLowerExceedsUpper: { de: 'Untergrenze darf die Obergrenze nicht \u00fcberschreiten', en: 'Lower bound must not exceed upper bound' },
