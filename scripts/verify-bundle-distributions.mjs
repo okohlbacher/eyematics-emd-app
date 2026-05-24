@@ -46,6 +46,10 @@ const THRESHOLDS = {
   amdMedianAgeMin: 70,
   amdComorbidityRateMin: 0.6,
   dmeHba1cMin: 2,
+  // Phase 34 / D-14: per-site stub count / consented count must be in [2, 8].
+  // Values mirror config/settings.yaml stubs.factorMin / stubs.factorMax.
+  stubFactorMin: 2,
+  stubFactorMax: 8,
 };
 
 const BUNDLE_GLOB = process.env.BUNDLE_GLOB ?? 'public/data/center-*.json';
@@ -130,6 +134,9 @@ function isHbA1c(observation) {
  * For each Patient, determine cohort + age-at-onset (using the FIRST primary
  * Condition encountered) and accumulate comorbidity codes + hba1c counts.
  * Returns array of patient records (one per Patient that has a primary).
+ *
+ * Also computes stub stats: { fullCount, stubCount } for D-14 stub-ratio assertion.
+ * Stubs = Patient resources with zero Observations referencing them.
  */
 function aggregateBundle(bundle) {
   const patients = new Map(); // id -> { id, birthDate, cohort, primaryOnset, comorbidities:Set, hba1cCount }
@@ -162,21 +169,62 @@ function aggregateBundle(bundle) {
     const icd = comorbidityCode(r);
     if (icd) rec.comorbidities.add(icd);
   }
-  // Pass 2: count HbA1c Observations.
+  // Pass 2: count HbA1c Observations; also track which patients have any Observation.
+  const patientsWithObs = new Set();
   for (const entry of bundle.entry ?? []) {
     const r = entry?.resource;
     if (r?.resourceType !== 'Observation') continue;
-    if (!isHbA1c(r)) continue;
     const subjectId = parseRefId(r.subject?.reference);
-    if (!subjectId) continue;
+    if (subjectId) patientsWithObs.add(subjectId);
+    if (!isHbA1c(r)) continue;
     const rec = patients.get(subjectId);
     if (!rec) continue;
     rec.hba1cCount++;
   }
-  return [...patients.values()].filter((p) => p.cohort);
+
+  // Phase 34 / D-14: Compute stub stats for per-bundle stub-ratio assertion.
+  // Full patients = those with ≥1 Observation (same rule as D-03 extractPatientCases).
+  // Stub patients = those with zero Observations.
+  let fullCount = 0;
+  let stubCount = 0;
+  for (const patId of patients.keys()) {
+    if (patientsWithObs.has(patId)) {
+      fullCount++;
+    } else {
+      stubCount++;
+    }
+  }
+
+  const patientRecords = [...patients.values()].filter((p) => p.cohort);
+  // Attach stub stats as a non-enumerable property for the caller.
+  return Object.assign(patientRecords, { stubStats: { fullCount, stubCount } });
 }
 
 // --- Verification ------------------------------------------------------------
+
+/**
+ * Verify per-bundle stub ratios (D-14 / Phase 34).
+ * stubCount / fullCount must be in [stubFactorMin, stubFactorMax] (allowing Math.round boundary).
+ */
+function verifyStubRatios(perBundleStats) {
+  const failures = [];
+  for (const { file, fullCount, stubCount } of perBundleStats) {
+    if (fullCount === 0) {
+      failures.push(`${file}: no full patients found (cannot compute stub ratio)`);
+      continue;
+    }
+    const ratio = stubCount / fullCount;
+    // Allow a small rounding tolerance (Math.round can produce factor slightly outside range).
+    const tolerance = 0.5 / fullCount;
+    if (ratio < THRESHOLDS.stubFactorMin - tolerance || ratio > THRESHOLDS.stubFactorMax + tolerance) {
+      failures.push(
+        `${file}: stub ratio = ${ratio.toFixed(3)} (${stubCount}/${fullCount}); ` +
+        `expected [${THRESHOLDS.stubFactorMin}, ${THRESHOLDS.stubFactorMax}]`,
+      );
+    }
+  }
+  return failures;
+}
 
 function verify(allPatients) {
   const failures = [];
@@ -252,6 +300,7 @@ function main() {
     process.exit(1);
   }
   const allPatients = [];
+  const perBundleStats = [];
   for (const f of all) {
     let bundle;
     try {
@@ -259,9 +308,15 @@ function main() {
     } catch (err) {
       throw new Error(`verify:bundles — failed to parse ${f}: ${err.message}`);
     }
-    for (const p of aggregateBundle(bundle)) allPatients.push(p);
+    const bundlePatients = aggregateBundle(bundle);
+    for (const p of bundlePatients) allPatients.push(p);
+    // Phase 34 / D-14: collect per-bundle stub stats for ratio assertion.
+    perBundleStats.push({ file: f, ...bundlePatients.stubStats });
   }
   const { failures, summary } = verify(allPatients);
+  // Phase 34 / D-14: check stub ratios per bundle.
+  const stubFailures = verifyStubRatios(perBundleStats);
+  for (const sf of stubFailures) failures.push(sf);
   summary.bundles = all.length;
   if (failures.length > 0) {
     for (const fmsg of failures) {

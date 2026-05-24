@@ -49,6 +49,10 @@ const EXPECTED_SEED_KEYS = [
 const WHITELIST_SYSTEMS = new Set([
   'http://loinc.org',          // LOINC — local resolution
   'http://www.whocc.no/atc',   // ATC — medications, not diagnoses
+  // Phase 34 / D-14: Consent coding systems (structural, not diagnosis codes — Pitfall 4 guard)
+  'http://terminology.hl7.org/CodeSystem/consentscope',
+  'http://terminology.hl7.org/CodeSystem/v3-ActCode',
+  'http://terminology.hl7.org/CodeSystem/v3-ActReason',
 ]);
 // Structural / non-diagnostic SNOMED codes used in bodySite / procedure / method slots:
 const WHITELIST_KEYS = new Set([

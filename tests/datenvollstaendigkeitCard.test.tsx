@@ -85,13 +85,24 @@ function setupMocks(caseCount = 7) {
       },
     ],
     centers: [],
-    // caseCount controls how many cases the mock returns (affects completeness fraction)
+    // caseCount controls how many cases the mock returns (affects completeness fraction).
+    // Must provide full PatientCase shape (observations + imagingStudies) to avoid
+    // LandingPage crashing at reduce calls.
     cases: Array.from({ length: caseCount }, (_, i) => ({
       id: `pat-full-${String(i + 1).padStart(3, '0')}`,
       centerId: 'org-test',
       pseudonym: `FULL-${String(i + 1).padStart(3, '0')}`,
       age: 60 + i,
       gender: i % 2 === 0 ? 'female' : 'male',
+      observations: [],
+      imagingStudies: [],
+      conditions: [],
+      procedures: [],
+      medications: [],
+      primaryDiagnosisCode: undefined,
+      primaryDiagnosisDisplay: undefined,
+      cohort: undefined,
+      baselineDate: undefined,
     })),
   });
   (useLanguage as unknown as ReturnType<typeof vi.fn>).mockReturnValue({

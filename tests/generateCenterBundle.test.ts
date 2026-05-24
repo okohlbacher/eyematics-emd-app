@@ -26,6 +26,18 @@ interface BundleEntry {
   };
 }
 
+/**
+ * Phase 34 / D-01: Filter only full (non-stub) Patient entries.
+ * Stubs have no identifier; full patients have urn:eyematics:pseudonym identifier.
+ */
+function fullPatients(entry: BundleEntry[]): BundleEntry[] {
+  return entry.filter(
+    (e) =>
+      e.resource.resourceType === 'Patient' &&
+      Array.isArray((e.resource as { identifier?: unknown[] }).identifier),
+  );
+}
+
 interface Bundle {
   resourceType: string;
   type: string;
@@ -45,14 +57,13 @@ describe('generateCenterBundle (DATA-GEN-01..04)', () => {
 
   it('emits exactly the requested number of Patient entries', () => {
     const b = generateCenterBundle({ ...COMMON, seed: 7 }) as Bundle;
-    const patients = b.entry.filter(e => e.resource.resourceType === 'Patient');
+    const patients = fullPatients(b.entry);
     expect(patients).toHaveLength(COMMON.patients);
   });
 
   it('every Patient has meta.source === centerId and a pseudonym EM-<SH>-NNNN', () => {
     const b = generateCenterBundle({ ...COMMON, seed: 7 }) as Bundle;
-    const patients = b.entry
-      .filter(e => e.resource.resourceType === 'Patient')
+    const patients = fullPatients(b.entry)
       .map(e => e.resource as { meta?: { source?: string }; identifier?: Array<{ system?: string; value: string }> });
     for (const p of patients) {
       expect(p.meta?.source).toBe('org-test');
@@ -65,7 +76,7 @@ describe('generateCenterBundle (DATA-GEN-01..04)', () => {
   it('every Patient has at least one Condition with an AMD/DME/RVO SNOMED code', () => {
     const b = generateCenterBundle({ ...COMMON, seed: 7 }) as Bundle;
     const validCohortCodes = new Set(['267718000', '312903003', '362098006']);
-    const patients = b.entry.filter(e => e.resource.resourceType === 'Patient');
+    const patients = fullPatients(b.entry);
     const conditions = b.entry.filter(e => e.resource.resourceType === 'Condition');
     for (const p of patients) {
       const ref = `Patient/${p.resource.id}`;
@@ -82,7 +93,7 @@ describe('generateCenterBundle (DATA-GEN-01..04)', () => {
 
   it('every Patient has ≥2 visus (LOINC 79880-1) Observations covering at least one eye', () => {
     const b = generateCenterBundle({ ...COMMON, seed: 7 }) as Bundle;
-    const patients = b.entry.filter(e => e.resource.resourceType === 'Patient');
+    const patients = fullPatients(b.entry);
     const obs = b.entry.filter(e => e.resource.resourceType === 'Observation');
     for (const p of patients) {
       const ref = `Patient/${p.resource.id}`;
@@ -106,7 +117,7 @@ describe('generateCenterBundle (DATA-GEN-01..04)', () => {
     // (up to 2 eyes) → 1..44 procedures per patient. Per-eye dates remain
     // monotonic; combined sequence may interleave when bilateral.
     const b = generateCenterBundle({ ...COMMON, seed: 7 }) as Bundle;
-    const patients = b.entry.filter(e => e.resource.resourceType === 'Patient');
+    const patients = fullPatients(b.entry);
     const procs = b.entry.filter(e => e.resource.resourceType === 'Procedure');
     for (const p of patients) {
       const ref = `Patient/${p.resource.id}`;
@@ -132,7 +143,7 @@ describe('generateCenterBundle (DATA-GEN-01..04)', () => {
 
   it('every Patient has at least one MedicationStatement with ATC S01LA05 or L01XC07', () => {
     const b = generateCenterBundle({ ...COMMON, seed: 7 }) as Bundle;
-    const patients = b.entry.filter(e => e.resource.resourceType === 'Patient');
+    const patients = fullPatients(b.entry);
     const meds = b.entry.filter(e => e.resource.resourceType === 'MedicationStatement');
     for (const p of patients) {
       const ref = `Patient/${p.resource.id}`;
@@ -204,9 +215,9 @@ function comorbidityConditions(conds: ConditionResource[]): ConditionResource[] 
 }
 
 function getPatients(b: Bundle): PatientResource[] {
-  return b.entry
-    .filter(e => e.resource.resourceType === 'Patient')
-    .map(e => e.resource as unknown as PatientResource);
+  // Phase 34 / D-01: return only full (non-stub) patients for clinical assertions.
+  // Stubs have no identifier; full patients carry urn:eyematics:pseudonym identifier.
+  return fullPatients(b.entry).map(e => e.resource as unknown as PatientResource);
 }
 
 function primaryConditionFor(b: Bundle, patientId: string): ConditionResource | undefined {
