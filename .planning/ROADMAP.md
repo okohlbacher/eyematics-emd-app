@@ -92,7 +92,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 
 - [x] **Phase 32: User Management & Auth Hardening** — Enforce validation in create/edit user dialogs; add user activation/deactivation with session revocation; surface lockout feedback, live inactivity countdown, and settings.yaml-sourced auth constants (UMGMT-01/02/03, AUTHCFG-01/02/03/04) — completed 2026-05-21, 828/828 tests, verified 5/5
 - [x] **Phase 33: Cohort Builder UX** — Plausibility checks on age/Visus/CRT bounds; persistent filter state with reset; issue-based cohort presets (Therapie-Abbrecher, Unplausible CRT, Flagged, Implausible Visus); advanced filter dialog (spike-then-build); dashboard Review buttons routing correctly (completed 2026-05-22)
-- [ ] **Phase 34: Data Completeness** — Patient stub + Consent model for Datenvollzähligkeit (consented fraction), with strict stub isolation from clinical surfaces
+- [x] **Phase 34: Data Completeness** — Patient stub + Consent model for Datenvollzähligkeit (consented fraction), with strict stub isolation from clinical surfaces (completed 2026-05-24)
 - [ ] **Phase 35: V&V Backfill** — VERIFICATION.md for Phases 27 & 28; VALIDATION.md brought to nyquist_compliant/wave_0_complete for Phases 27/28/29; Phase 31 and all v1.10 VALIDATION status flipped to final
 - [ ] **Phase 36: Architecture Review & Compaction** — Adversarial CODEX full-codebase review producing severity-classified findings; prioritized compaction plan; approved remediations applied with green test:ci + clean knip + lint; final milestone-integrity gate
 
@@ -102,7 +102,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 |-------|----------------|--------|-----------|
 | 32. User Management & Auth Hardening | 2/2 | ✅ Complete (verified 5/5) | 2026-05-21 |
 | 33. Cohort Builder UX & Advanced Filters | 4/4 | Complete    | 2026-05-22 |
-| 34. Data Completeness (Consent + Stubs) | 3/4 | In Progress|  |
+| 34. Data Completeness (Consent + Stubs) | 4/4 | Complete   | 2026-05-24 |
 | 35. V&V Backfill | 0/? | Not started | - |
 | 36. Architecture Review & Compaction | 0/? | Not started | - |
 
@@ -153,7 +153,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
   - [x] 34-01-PLAN.md — Foundation: Consent + Encounter FHIR types + Wave 0 test scaffolds (DASH-01)
   - [x] 34-02-PLAN.md — Stub isolation chokepoints: extractPatientCases (D-03) + patientCount (D-04) + countRawPatients (D-09) (DASH-01)
   - [x] 34-03-PLAN.md — Data generation: Consent + seeded stubs for synthetic + reference bundles, CI gate extensions (D-06/D-11/D-12/D-13/D-14) (DASH-01)
-  - [ ] 34-04-PLAN.md — Datenvollzähligkeit dashboard card + i18n (D-08/D-09/D-10) (DASH-01)
+  - [x] 34-04-PLAN.md — Datenvollzähligkeit dashboard card + i18n (D-08/D-09/D-10) (DASH-01)
 **UI hint**: yes
 
 #### Phase 35: V&V Backfill
