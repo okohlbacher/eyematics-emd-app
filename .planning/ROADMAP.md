@@ -168,9 +168,16 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
   4. Phase 31's `VALIDATION.md` has `wave_0_complete: true`; every v1.10 phase (27–31) `VALIDATION.md` has `status: final`
 **Plans**: 3 plans (2 waves)
 Plans:
+**Wave 1**
 - [ ] 35-01-PLAN.md — Create 27-VERIFICATION.md, goal-backward SESS-02/03/04 anchored to v1.10 (VVBACK-01)
 - [ ] 35-02-PLAN.md — Create 28-VERIFICATION.md, goal-backward SESS-01 + SESSUI-01/02/03 anchored to v1.10 (VVBACK-02)
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 35-03-PLAN.md — VALIDATION frontmatter flips: 27/28/29 nyquist+wave_0 true, 31 wave_0 true, all 27–31 status final (VVBACK-03/04)
+
+**Cross-cutting constraints:**
+- Each criterion cites a passing test runnable against the current tree
+- Every code reference uses git show v1.10:<path> / git grep <pattern> v1.10 form — no HEAD line numbers
 
 #### Phase 36: Architecture Review & Compaction
 **Goal**: The codebase has been reviewed adversarially by CODEX, a compaction plan has been executed, and the milestone is closed with a green test suite and updated debt tracking.
