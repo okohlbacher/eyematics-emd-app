@@ -11,9 +11,9 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { countRawPatients, extractCenters } from '../src/services/fhirLoader';
 import { extractPatientCases } from '../shared/patientCases';
 import type { FhirBundle } from '../shared/types/fhir';
+import { countRawPatients, extractCenters } from '../src/services/fhirLoader';
 
 // ---------------------------------------------------------------------------
 // Minimal in-memory fixture bundle

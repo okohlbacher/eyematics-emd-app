@@ -10,10 +10,10 @@
  *   2. At least one new entry (Consent or stub) was appended.
  *   3. Running the script twice does not change bundle.entry.length (idempotency).
  */
+import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
 
 import { describe, expect, it } from 'vitest';
 
