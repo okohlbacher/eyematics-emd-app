@@ -104,7 +104,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 | 33. Cohort Builder UX & Advanced Filters | 4/4 | Complete    | 2026-05-22 |
 | 34. Data Completeness (Consent + Stubs) | 4/4 | Complete    | 2026-05-24 |
 | 35. V&V Backfill | 3/3 | Complete    | 2026-05-24 |
-| 36. Architecture Review & Compaction | 0/? | Not started | - |
+| 36. Architecture Review & Compaction | 0/3 | Planned     | - |
 
 ### Phase Details
 
@@ -188,7 +188,10 @@ Plans:
   2. A prioritized compaction plan exists with concrete file references for each finding (dead code, redundant abstractions, duplicated logic, oversized modules, SoC violations)
   3. All approved compaction remediations are applied: `npm run test:ci` passes (zero failures), `npm run knip` reports no new dead code, `npm run lint` passes, and no behavior regressions are detectable
   4. `npm run test:ci` exits green after all v1.11 work (features, backfill, compaction); STATE.md, PROJECT.md, and MILESTONES.md deferred-debt entries are updated to reflect closure
-**Plans**: TBD
+**Plans**: 3 plans (3 waves)
+  - [ ] 36-01-PLAN.md — Adversarial CODEX full-codebase review + prioritized compaction plan (ARCH-01/02)
+  - [ ] 36-02-PLAN.md — Approval gate + apply approved remediations, gates green (ARCH-03)
+  - [ ] 36-03-PLAN.md — Milestone close-out: test:ci green + debt tracking updated (VVBACK-05)
 
 ---
 
