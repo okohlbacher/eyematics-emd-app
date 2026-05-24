@@ -173,7 +173,7 @@ export default function LandingPage() {
       </div>
 
       {/* Datenvollzähligkeit card — D-10: full-width row between KPI tiles and Centers */}
-      <div className="px-8 mb-3.5">
+      <div className="px-8 mt-3.5 mb-3.5">
         <Tile className="p-[18px_18px_14px]">
           <div className="flex items-center gap-4">
             <div
@@ -197,7 +197,7 @@ export default function LandingPage() {
                 >
                   {completenessPercent} %
                 </span>
-                <span className="text-[12px] text-[var(--color-ink-3)]">
+                <span className="text-[12px] text-[var(--color-ink-2)]">
                   {t('datenvollstaendigkeitPatients')
                     .replace('{n}', String(consentedPatients))
                     .replace('{m}', String(totalRawPatients))}
