@@ -93,7 +93,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 - [x] **Phase 32: User Management & Auth Hardening** — Enforce validation in create/edit user dialogs; add user activation/deactivation with session revocation; surface lockout feedback, live inactivity countdown, and settings.yaml-sourced auth constants (UMGMT-01/02/03, AUTHCFG-01/02/03/04) — completed 2026-05-21, 828/828 tests, verified 5/5
 - [x] **Phase 33: Cohort Builder UX** — Plausibility checks on age/Visus/CRT bounds; persistent filter state with reset; issue-based cohort presets (Therapie-Abbrecher, Unplausible CRT, Flagged, Implausible Visus); advanced filter dialog (spike-then-build); dashboard Review buttons routing correctly (completed 2026-05-22)
 - [x] **Phase 34: Data Completeness** — Patient stub + Consent model for Datenvollzähligkeit (consented fraction), with strict stub isolation from clinical surfaces (completed 2026-05-24)
-- [ ] **Phase 35: V&V Backfill** — VERIFICATION.md for Phases 27 & 28; VALIDATION.md brought to nyquist_compliant/wave_0_complete for Phases 27/28/29; Phase 31 and all v1.10 VALIDATION status flipped to final
+- [x] **Phase 35: V&V Backfill** — VERIFICATION.md for Phases 27 & 28; VALIDATION.md brought to nyquist_compliant/wave_0_complete for Phases 27/28/29; Phase 31 and all v1.10 VALIDATION status flipped to final (completed 2026-05-24)
 - [ ] **Phase 36: Architecture Review & Compaction** — Adversarial CODEX full-codebase review producing severity-classified findings; prioritized compaction plan; approved remediations applied with green test:ci + clean knip + lint; final milestone-integrity gate
 
 ### Progress
@@ -103,7 +103,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 | 32. User Management & Auth Hardening | 2/2 | ✅ Complete (verified 5/5) | 2026-05-21 |
 | 33. Cohort Builder UX & Advanced Filters | 4/4 | Complete    | 2026-05-22 |
 | 34. Data Completeness (Consent + Stubs) | 4/4 | Complete    | 2026-05-24 |
-| 35. V&V Backfill | 2/3 | In Progress|  |
+| 35. V&V Backfill | 3/3 | Complete   | 2026-05-24 |
 | 36. Architecture Review & Compaction | 0/? | Not started | - |
 
 ### Phase Details
@@ -173,7 +173,7 @@ Plans:
 - [x] 35-02-PLAN.md — Create 28-VERIFICATION.md, goal-backward SESS-01 + SESSUI-01/02/03 anchored to v1.10 (VVBACK-02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 35-03-PLAN.md — VALIDATION frontmatter flips: 27/28/29 nyquist+wave_0 true, 31 wave_0 true, all 27–31 status final (VVBACK-03/04)
+- [x] 35-03-PLAN.md — VALIDATION frontmatter flips: 27/28/29 nyquist+wave_0 true, 31 wave_0 true, all 27–31 status final (VVBACK-03/04)
 
 **Cross-cutting constraints:**
 - Each criterion cites a passing test runnable against the current tree
