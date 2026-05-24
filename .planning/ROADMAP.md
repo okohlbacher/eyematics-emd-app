@@ -103,7 +103,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 | 32. User Management & Auth Hardening | 2/2 | ✅ Complete (verified 5/5) | 2026-05-21 |
 | 33. Cohort Builder UX & Advanced Filters | 4/4 | Complete    | 2026-05-22 |
 | 34. Data Completeness (Consent + Stubs) | 4/4 | Complete    | 2026-05-24 |
-| 35. V&V Backfill | 0/? | Not started | - |
+| 35. V&V Backfill | 0/3 | Planned | - |
 | 36. Architecture Review & Compaction | 0/? | Not started | - |
 
 ### Phase Details
@@ -166,7 +166,11 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
   2. `.planning/phases/28/VERIFICATION.md` exists, produced by goal-backward analysis of SESS-01 + SESSUI-01/02/03, with each criterion mapped to code references **at the `v1.10` tag** and passing tests
   3. Phases 27, 28, and 29 each have a `VALIDATION.md` with `nyquist_compliant: true` and `wave_0_complete: true`; any coverage gaps are closed by passing tests
   4. Phase 31's `VALIDATION.md` has `wave_0_complete: true`; every v1.10 phase (27–31) `VALIDATION.md` has `status: final`
-**Plans**: TBD
+**Plans**: 3 plans (2 waves)
+Plans:
+- [ ] 35-01-PLAN.md — Create 27-VERIFICATION.md, goal-backward SESS-02/03/04 anchored to v1.10 (VVBACK-01)
+- [ ] 35-02-PLAN.md — Create 28-VERIFICATION.md, goal-backward SESS-01 + SESSUI-01/02/03 anchored to v1.10 (VVBACK-02)
+- [ ] 35-03-PLAN.md — VALIDATION frontmatter flips: 27/28/29 nyquist+wave_0 true, 31 wave_0 true, all 27–31 status final (VVBACK-03/04)
 
 #### Phase 36: Architecture Review & Compaction
 **Goal**: The codebase has been reviewed adversarially by CODEX, a compaction plan has been executed, and the milestone is closed with a green test suite and updated debt tracking.
