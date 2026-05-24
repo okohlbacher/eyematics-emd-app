@@ -268,7 +268,20 @@ function emitHbA1c(args: {
   const { ref, patIdSuffix, visitDates, rand } = args;
   if (visitDates.length === 0) return [];
   const target = seededRandInt(rand, 2, 5);
-  const readingCount = Math.min(target, visitDates.length);
+  // WR-01: the distribution verifier asserts every DME patient has >=2 HbA1c
+  // Observations (THRESHOLDS.dmeHba1cMin). `target` is already drawn from [2,5]
+  // and DME patients always have >=2 visit dates (ivomCount>=1 ⇒ baseline + >=1
+  // follow-up), so today the floor is satisfied with zero slack. Make the >=2
+  // invariant explicit and seed-independent rather than relying on those two
+  // facts holding after future edits to seeds, ivi ranges, or cohort mix. The
+  // Math.max wrappers are no-ops for every current draw (target>=2,
+  // visitDates.length>=2 for DME), so this keeps synthetic bundles
+  // byte-identical while removing the silent coupling to the sampled target.
+  const HBA1C_MIN_READINGS = 2; // mirror verify-bundle-distributions.mjs THRESHOLDS.dmeHba1cMin
+  const readingCount = Math.min(
+    Math.max(target, HBA1C_MIN_READINGS),
+    Math.max(visitDates.length, HBA1C_MIN_READINGS),
+  );
 
   // Pick `readingCount` distinct visit indices, then sort ascending so dates
   // appear in chronological order.
