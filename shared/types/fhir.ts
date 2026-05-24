@@ -91,6 +91,29 @@ export interface FhirPeriod {
   end?: string;
 }
 
+export interface Encounter extends FhirResource {
+  resourceType: 'Encounter';
+  status: string;
+  subject: FhirReference;
+  period?: FhirPeriod;
+  serviceProvider?: FhirReference;
+}
+
+export interface Consent extends FhirResource {
+  resourceType: 'Consent';
+  status: string;
+  scope: FhirCodeableConcept;
+  category: FhirCodeableConcept[];
+  patient: FhirReference;
+  organization?: FhirReference[];
+  dateTime?: string;
+  policyRule?: FhirCodeableConcept;
+  provision?: {
+    type: string;
+    purpose?: FhirCoding[];
+  };
+}
+
 export interface MedicationStatement extends FhirResource {
   resourceType: 'MedicationStatement';
   status: string;
