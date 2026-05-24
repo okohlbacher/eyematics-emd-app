@@ -30,6 +30,7 @@
 
 import fs from 'node:fs';
 
+import { loadStubFactorBounds } from './loadStubConfig.js';
 import { addDays, mulberry32, seededRandInt } from './prng.js';
 
 // ---------------------------------------------------------------------------
@@ -331,6 +332,11 @@ export function generateCenterBundle(input: GenerateCenterBundleInput): unknown 
   if (Math.abs(mixSum - 1) > 1e-6) {
     throw new Error(`generateCenterBundle: cohortMix must sum to 1.0 (got ${mixSum})`);
   }
+
+  // WR-03 / D-11: load the stub factor bounds from config/settings.yaml (the
+  // single config source per CLAUDE.md) BEFORE constructing `rand`, so this read
+  // consumes no PRNG draws and existing bundles regenerate byte-identically.
+  const { factorMin: stubFactorMin, factorMax: stubFactorMax } = loadStubFactorBounds();
 
   const rand = mulberry32(seed);
 
@@ -637,9 +643,11 @@ export function generateCenterBundle(input: GenerateCenterBundleInput): unknown 
     });
   }
 
-  // Stubs: D-11 per-site factor in [2, 8] drawn once from seeded PRNG.
-  // stubFactorMin/Max sourced from config/settings.yaml stubs section (D-11).
-  const stubFactor = seededRandInt(rand, 2, 8);
+  // Stubs: D-11 per-site factor drawn once from seeded PRNG. Bounds are
+  // sourced from config/settings.yaml stubs.factorMin / stubs.factorMax
+  // (loaded above into stubFactorMin/stubFactorMax) — WR-03 makes this coupling
+  // real instead of a stale comment over inlined magic numbers.
+  const stubFactor = seededRandInt(rand, stubFactorMin, stubFactorMax);
   const stubCount = Math.round(patients * stubFactor);
   const stubEntries: unknown[] = [];
   const stubEncounterEntries: unknown[] = [];

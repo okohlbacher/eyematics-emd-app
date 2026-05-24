@@ -21,6 +21,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { loadStubFactorBounds } from './loadStubConfig.js';
 import { addDays, mulberry32, seededRandInt } from './prng.js';
 
 // ---------------------------------------------------------------------------
@@ -188,7 +189,13 @@ function augmentBundle(filePath: string, site: ReferenceSite): void {
   }
 
   // Append stub Patient + Encounter entries.
-  const stubFactor = seededRandInt(rand, 2, 8);
+  // WR-03 / D-11: stub factor bounds come from config/settings.yaml
+  // (stubs.factorMin / stubs.factorMax) — the single config source per
+  // CLAUDE.md. loadStubFactorBounds() consumes no PRNG draws, so curated
+  // bundles stay byte-stable. Keep verify-bundle-distributions.mjs THRESHOLDS
+  // in sync with the same YAML keys.
+  const { factorMin: stubFactorMin, factorMax: stubFactorMax } = loadStubFactorBounds();
+  const stubFactor = seededRandInt(rand, stubFactorMin, stubFactorMax);
   const stubCount = Math.round(fullPatientIds.length * stubFactor);
 
   for (let s = 1; s <= stubCount; s++) {
