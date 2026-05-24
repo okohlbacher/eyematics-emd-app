@@ -30,14 +30,10 @@ export function getDataSourceConfig(): DataSourceConfig {
 /**
  * Load FHIR bundles from the server API.
  * Center-based filtering is applied server-side; the client receives only the
- * bundles it is authorised to see.
- *
- * The `config` parameter is accepted for call-site compatibility but the
- * routing decision (local vs. Blaze) is now made entirely by the server.
+ * bundles it is authorised to see. The routing decision (local vs. Blaze) is
+ * made entirely by the server.
  */
-export async function loadBundlesFromSource(
-  _config: DataSourceConfig
-): Promise<FhirBundle[]> {
+export async function loadBundlesFromSource(): Promise<FhirBundle[]> {
   const resp = await authFetch('/api/fhir/bundles', {
     headers: { Accept: 'application/json' },
   });
@@ -66,7 +62,7 @@ export async function loadBundlesFromSource(
  * from settings.yaml and makes a direct outbound request (avoids the
  * startup-time-fixed proxy target).
  */
-export async function testBlazeConnection(_blazeUrl: string): Promise<string> {
+export async function testBlazeConnection(): Promise<string> {
   const resp = await authFetch('/api/settings/fhir-connection-test');
 
   if (!resp.ok) {

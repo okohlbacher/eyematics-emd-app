@@ -288,7 +288,7 @@ export default function SettingsPage() {
     setConnectionStatus('testing');
     setConnectionDetail('');
     try {
-      const detail = await testBlazeConnection(blazeUrl);
+      const detail = await testBlazeConnection();
       setConnectionStatus('ok');
       setConnectionDetail(detail);
     } catch (err) {

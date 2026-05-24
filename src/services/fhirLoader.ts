@@ -7,7 +7,7 @@ import type {
   Patient,
 } from '../types/fhir';
 import { authFetch } from './authHeaders';
-import { getDataSourceConfig, loadBundlesFromSource } from './dataSource';
+import { loadBundlesFromSource } from './dataSource';
 
 // retained: live module (loadAllBundles, extractCenters, loadCenterShorthands,
 // etc.) that also re-exports a stable public surface for pure helpers from
@@ -27,8 +27,7 @@ let cachedBundles: FhirBundle[] | null = null;
 
 export async function loadAllBundles(): Promise<FhirBundle[]> {
   if (cachedBundles) return cachedBundles;
-  const config = getDataSourceConfig();
-  const bundles = await loadBundlesFromSource(config);
+  const bundles = await loadBundlesFromSource();
   cachedBundles = bundles;
   return bundles;
 }
