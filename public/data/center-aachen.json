@@ -82246,7 +82246,7 @@
         },
         "effectiveDateTime": "2024-06-15",
         "valueQuantity": {
-          "value": 11.0,
+          "value": 11,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -82818,7 +82818,7 @@
         },
         "effectiveDateTime": "2025-08-26",
         "valueQuantity": {
-          "value": 20.0,
+          "value": 20,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -83917,7 +83917,7 @@
         },
         "effectiveDateTime": "2023-11-12",
         "valueQuantity": {
-          "value": 16.0,
+          "value": 16,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -84357,7 +84357,7 @@
         },
         "effectiveDateTime": "2024-11-30",
         "valueQuantity": {
-          "value": 22.0,
+          "value": 22,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -84489,7 +84489,7 @@
         },
         "effectiveDateTime": "2025-02-13",
         "valueQuantity": {
-          "value": 13.0,
+          "value": 13,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -84621,7 +84621,7 @@
         },
         "effectiveDateTime": "2025-05-02",
         "valueQuantity": {
-          "value": 11.0,
+          "value": 11,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -84665,7 +84665,7 @@
         },
         "effectiveDateTime": "2025-06-17",
         "valueQuantity": {
-          "value": 19.0,
+          "value": 19,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -86420,7 +86420,7 @@
         },
         "effectiveDateTime": "2024-03-07",
         "valueQuantity": {
-          "value": 6.0,
+          "value": 6,
           "unit": "%",
           "system": "http://unitsofmeasure.org"
         }
@@ -86869,7 +86869,7 @@
         },
         "effectiveDateTime": "2024-07-19",
         "valueQuantity": {
-          "value": 20.0,
+          "value": 20,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -88095,7 +88095,7 @@
         },
         "effectiveDateTime": "2024-11-07",
         "valueQuantity": {
-          "value": 17.0,
+          "value": 17,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -88271,7 +88271,7 @@
         },
         "effectiveDateTime": "2025-03-23",
         "valueQuantity": {
-          "value": 18.0,
+          "value": 18,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -88447,7 +88447,7 @@
         },
         "effectiveDateTime": "2025-09-09",
         "valueQuantity": {
-          "value": 16.0,
+          "value": 16,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -88857,7 +88857,7 @@
         },
         "effectiveDateTime": "2023-12-14",
         "valueQuantity": {
-          "value": 7.0,
+          "value": 7,
           "unit": "%",
           "system": "http://unitsofmeasure.org"
         }
@@ -90285,7 +90285,7 @@
         },
         "effectiveDateTime": "2025-03-05",
         "valueQuantity": {
-          "value": 17.0,
+          "value": 17,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -90461,7 +90461,7 @@
         },
         "effectiveDateTime": "2025-07-03",
         "valueQuantity": {
-          "value": 22.0,
+          "value": 22,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -90637,7 +90637,7 @@
         },
         "effectiveDateTime": "2025-12-25",
         "valueQuantity": {
-          "value": 13.0,
+          "value": 13,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -90681,7 +90681,7 @@
         },
         "effectiveDateTime": "2026-02-09",
         "valueQuantity": {
-          "value": 20.0,
+          "value": 20,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -91082,7 +91082,7 @@
         },
         "effectiveDateTime": "2024-02-02",
         "valueQuantity": {
-          "value": 14.0,
+          "value": 14,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -91302,7 +91302,7 @@
         },
         "effectiveDateTime": "2024-12-08",
         "valueQuantity": {
-          "value": 12.0,
+          "value": 12,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -92624,7 +92624,7 @@
         },
         "effectiveDateTime": "2025-06-26",
         "valueQuantity": {
-          "value": 17.0,
+          "value": 17,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -93589,7 +93589,7 @@
         },
         "effectiveDateTime": "2025-01-23",
         "valueQuantity": {
-          "value": 10.0,
+          "value": 10,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -93809,7 +93809,7 @@
         },
         "effectiveDateTime": "2025-05-31",
         "valueQuantity": {
-          "value": 21.0,
+          "value": 21,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -93853,7 +93853,7 @@
         },
         "effectiveDateTime": "2025-07-02",
         "valueQuantity": {
-          "value": 20.0,
+          "value": 20,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -93941,7 +93941,7 @@
         },
         "effectiveDateTime": "2025-09-20",
         "valueQuantity": {
-          "value": 21.0,
+          "value": 21,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -95832,7 +95832,7 @@
         },
         "effectiveDateTime": "2024-07-13",
         "valueQuantity": {
-          "value": 19.0,
+          "value": 19,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -96228,7 +96228,7 @@
         },
         "effectiveDateTime": "2025-04-29",
         "valueQuantity": {
-          "value": 20.0,
+          "value": 20,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -96866,7 +96866,7 @@
         },
         "effectiveDateTime": "2024-08-27",
         "valueQuantity": {
-          "value": 7.0,
+          "value": 7,
           "unit": "%",
           "system": "http://unitsofmeasure.org"
         }
@@ -97225,7 +97225,7 @@
         },
         "effectiveDateTime": "2023-12-09",
         "valueQuantity": {
-          "value": 22.0,
+          "value": 22,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -98852,7 +98852,7 @@
         },
         "effectiveDateTime": "2023-06-06",
         "valueQuantity": {
-          "value": 10.0,
+          "value": 10,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -100596,7 +100596,7 @@
         },
         "effectiveDateTime": "2025-12-27",
         "valueQuantity": {
-          "value": 8.0,
+          "value": 8,
           "unit": "%",
           "system": "http://unitsofmeasure.org"
         }
@@ -101704,7 +101704,7 @@
         },
         "effectiveDateTime": "2024-10-02",
         "valueQuantity": {
-          "value": 19.0,
+          "value": 19,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -101836,7 +101836,7 @@
         },
         "effectiveDateTime": "2024-12-23",
         "valueQuantity": {
-          "value": 10.0,
+          "value": 10,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -102320,7 +102320,7 @@
         },
         "effectiveDateTime": "2026-01-05",
         "valueQuantity": {
-          "value": 20.0,
+          "value": 20,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -103282,7 +103282,7 @@
         },
         "effectiveDateTime": "2025-02-17",
         "valueQuantity": {
-          "value": 11.0,
+          "value": 11,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -103414,7 +103414,7 @@
         },
         "effectiveDateTime": "2025-07-05",
         "valueQuantity": {
-          "value": 18.0,
+          "value": 18,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -103458,7 +103458,7 @@
         },
         "effectiveDateTime": "2025-08-13",
         "valueQuantity": {
-          "value": 20.0,
+          "value": 20,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -104335,7 +104335,7 @@
         },
         "effectiveDateTime": "2024-06-01",
         "valueQuantity": {
-          "value": 20.0,
+          "value": 20,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -104467,7 +104467,7 @@
         },
         "effectiveDateTime": "2024-08-16",
         "valueQuantity": {
-          "value": 22.0,
+          "value": 22,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -106405,7 +106405,7 @@
         },
         "effectiveDateTime": "2025-01-31",
         "valueQuantity": {
-          "value": 17.0,
+          "value": 17,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -107045,7 +107045,7 @@
               ]
             },
             "valueQuantity": {
-              "value": -3.0,
+              "value": -3,
               "unit": "dpt"
             }
           },
@@ -108213,7 +108213,7 @@
         },
         "effectiveDateTime": "2025-06-11",
         "valueQuantity": {
-          "value": 18.0,
+          "value": 18,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -109142,7 +109142,7 @@
         },
         "effectiveDateTime": "2024-12-10",
         "valueQuantity": {
-          "value": 12.0,
+          "value": 12,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -110283,7 +110283,7 @@
         },
         "effectiveDateTime": "2023-12-12",
         "valueQuantity": {
-          "value": 16.0,
+          "value": 16,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -111031,7 +111031,7 @@
         },
         "effectiveDateTime": "2025-08-19",
         "valueQuantity": {
-          "value": 18.0,
+          "value": 18,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -111563,7 +111563,7 @@
         },
         "effectiveDateTime": "2024-06-14",
         "valueQuantity": {
-          "value": 7.0,
+          "value": 7,
           "unit": "%",
           "system": "http://unitsofmeasure.org"
         }
@@ -111615,7 +111615,7 @@
         },
         "effectiveDateTime": "2025-02-08",
         "valueQuantity": {
-          "value": 9.0,
+          "value": 9,
           "unit": "%",
           "system": "http://unitsofmeasure.org"
         }
@@ -112139,7 +112139,7 @@
         },
         "effectiveDateTime": "2024-11-30",
         "valueQuantity": {
-          "value": 10.0,
+          "value": 10,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -112883,7 +112883,7 @@
         },
         "effectiveDateTime": "2024-09-10",
         "valueQuantity": {
-          "value": 7.0,
+          "value": 7,
           "unit": "%",
           "system": "http://unitsofmeasure.org"
         }
@@ -113392,7 +113392,7 @@
         },
         "effectiveDateTime": "2025-04-22",
         "valueQuantity": {
-          "value": 13.0,
+          "value": 13,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -113958,7 +113958,7 @@
         },
         "effectiveDateTime": "2024-01-06",
         "valueQuantity": {
-          "value": 11.0,
+          "value": 11,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -114398,7 +114398,7 @@
         },
         "effectiveDateTime": "2024-11-13",
         "valueQuantity": {
-          "value": 19.0,
+          "value": 19,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -114530,7 +114530,7 @@
         },
         "effectiveDateTime": "2025-03-04",
         "valueQuantity": {
-          "value": 12.0,
+          "value": 12,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -114750,7 +114750,7 @@
         },
         "effectiveDateTime": "2025-10-04",
         "valueQuantity": {
-          "value": 16.0,
+          "value": 16,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -115330,7 +115330,7 @@
         },
         "effectiveDateTime": "2023-10-02",
         "valueQuantity": {
-          "value": 11.0,
+          "value": 11,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -115462,7 +115462,7 @@
         },
         "effectiveDateTime": "2024-04-01",
         "valueQuantity": {
-          "value": 15.0,
+          "value": 15,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -115594,7 +115594,7 @@
         },
         "effectiveDateTime": "2024-07-17",
         "valueQuantity": {
-          "value": 20.0,
+          "value": 20,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -117216,7 +117216,7 @@
         },
         "effectiveDateTime": "2025-02-12",
         "valueQuantity": {
-          "value": 19.0,
+          "value": 19,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -118010,7 +118010,7 @@
         },
         "effectiveDateTime": "2024-07-23",
         "valueQuantity": {
-          "value": 10.0,
+          "value": 10,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -118804,7 +118804,7 @@
         },
         "effectiveDateTime": "2025-03-18",
         "valueQuantity": {
-          "value": 21.0,
+          "value": 21,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -119288,7 +119288,7 @@
         },
         "effectiveDateTime": "2026-01-18",
         "valueQuantity": {
-          "value": 21.0,
+          "value": 21,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -119857,7 +119857,7 @@
         },
         "effectiveDateTime": "2024-05-24",
         "valueQuantity": {
-          "value": 17.0,
+          "value": 17,
           "unit": "mmHg",
           "system": "http://unitsofmeasure.org"
         },
@@ -120232,6 +120232,7566 @@
               "display": "Left eye"
             }
           ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-001",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-001"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-07-28",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-002",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-002"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-07-25",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-003",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-003"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-08-05",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-004",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-004"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-08-03",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-005",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-005"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-07-12",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-006",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-006"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-07-15",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-007",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-007"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-07-31",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-008",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-008"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-08-03",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-009",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-009"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-08-01",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-010",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-010"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-08-09",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-011",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-011"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-08-07",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-012",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-012"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-08-10",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-013",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-013"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-07-24",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-014",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-014"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-07-16",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-015",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-015"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-08-07",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-016",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-016"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-07-30",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-017",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-017"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-07-31",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-018",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-018"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-08-11",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-019",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-019"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-09-10",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-020",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-020"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-08-01",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-021",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-021"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-08-19",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-022",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-022"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-09-10",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-023",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-023"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-09-14",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-024",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-024"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-09-01",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-025",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-025"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-10-05",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-026",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-026"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-09-01",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-027",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-027"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-08-22",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-028",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-028"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-08-28",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-029",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-029"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-09-29",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-030",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-030"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-10-17",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-031",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-031"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-09-03",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-032",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-032"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-09-09",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-033",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-033"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-11-04",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-034",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-034"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-10-14",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-uka-035",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-uka-035"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-uka"
+          }
+        ],
+        "dateTime": "2022-10-25",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0001",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1941-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0001",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0001"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-12-28"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0002",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1947-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0002",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0002"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-04-01"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0003",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1948-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0003",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0003"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-11-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0004",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1954-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0004",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0004"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-05-25"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0005",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1959-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0005",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0005"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-02-25"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0006",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1981-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0006",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0006"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-11-14"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0007",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1941-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0007",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0007"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-03-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0008",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1979-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0008",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0008"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-02-20"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0009",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1979-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0009",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0009"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-08-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0010",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1943-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0010",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0010"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-04-06"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0011",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1940-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0011",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0011"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-10-05"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0012",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1963-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0012",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0012"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-09-23"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0013",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1976-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0013",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0013"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-02-18"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0014",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1959-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0014",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0014"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-04-11"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0015",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1981-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0015",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0015"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-08-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0016",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1966-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0016",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0016"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-02-24"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0017",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1952-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0017",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0017"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-12-14"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0018",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1935-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0018",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0018"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-11-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0019",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1932-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0019",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0019"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-06-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0020",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1963-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0020",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0020"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-04-14"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0021",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1945-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0021",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0021"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-05-20"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0022",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1993-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0022",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0022"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-06-06"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0023",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1963-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0023",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0023"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-08-27"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0024",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1988-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0024",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0024"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-02-12"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0025",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1936-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0025",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0025"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-05-28"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0026",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1949-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0026",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0026"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-01-20"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0027",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1958-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0027",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0027"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-11-04"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0028",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1947-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0028",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0028"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-06-11"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0029",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1995-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0029",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0029"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0030",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1930-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0030",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0030"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-08-09"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0031",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1959-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0031",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0031"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-12-10"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0032",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1984-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0032",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0032"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-06-21"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0033",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1973-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0033",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0033"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-05-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0034",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1990-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0034",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0034"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-03-16"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0035",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1993-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0035",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0035"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-07-24"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0036",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1992-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0036",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0036"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-08-12"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0037",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1983-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0037",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0037"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-10-31"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0038",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1957-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0038",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0038"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-06-07"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0039",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1989-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0039",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0039"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-02-03"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0040",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1936-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0040",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0040"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-04-04"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0041",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1936-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0041",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0041"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-11-14"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0042",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1932-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0042",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0042"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-11-11"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0043",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1990-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0043",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0043"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-09-12"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0044",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1978-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0044",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0044"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-11-21"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0045",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1990-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0045",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0045"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-04-21"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0046",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1952-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0046",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0046"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-10-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0047",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1989-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0047",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0047"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-10-17"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0048",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1965-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0048",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0048"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-12-23"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0049",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1961-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0049",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0049"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-06-22"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0050",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1989-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0050",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0050"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-04-03"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0051",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1953-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0051",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0051"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-11-19"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0052",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1932-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0052",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0052"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-02-03"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0053",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1983-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0053",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0053"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-04-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0054",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1972-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0054",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0054"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-05-11"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0055",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1957-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0055",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0055"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-02-21"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0056",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1954-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0056",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0056"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-12-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0057",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1970-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0057",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0057"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-03-23"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0058",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1961-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0058",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0058"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-04-17"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0059",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1955-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0059",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0059"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-06-06"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0060",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1979-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0060",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0060"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-04-18"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0061",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1947-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0061",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0061"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-02-14"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0062",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1949-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0062",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0062"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-01-03"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0063",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1954-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0063",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0063"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-03-06"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0064",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1958-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0064",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0064"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-07-31"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0065",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1936-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0065",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0065"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-05-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0066",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1937-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0066",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0066"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-02-06"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0067",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1969-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0067",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0067"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-02-17"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0068",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1978-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0068",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0068"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-05-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0069",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1974-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0069",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0069"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-03-06"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0070",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1930-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0070",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0070"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-10-18"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0071",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1977-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0071",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0071"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-02-09"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0072",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1942-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0072",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0072"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-02-23"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0073",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1938-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0073",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0073"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-02-25"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0074",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1977-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0074",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0074"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-11-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0075",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1970-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0075",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0075"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-04-11"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0076",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1946-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0076",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0076"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-09-04"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0077",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1966-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0077",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0077"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-05-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0078",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1974-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0078",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0078"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-04-03"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0079",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1934-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0079",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0079"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-08-19"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0080",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1990-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0080",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0080"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-02-01"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0081",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1976-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0081",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0081"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-10-17"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0082",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1940-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0082",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0082"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-01-17"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0083",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1981-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0083",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0083"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-07-22"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0084",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1937-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0084",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0084"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-12-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0085",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1952-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0085",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0085"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-07-03"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0086",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1994-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0086",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0086"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-01-17"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0087",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1988-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0087",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0087"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-08-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0088",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1974-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0088",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0088"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-02-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0089",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1986-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0089",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0089"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-03-27"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0090",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1965-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0090",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0090"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-05-05"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0091",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1966-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0091",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0091"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-04-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0092",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1976-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0092",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0092"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-09-21"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0093",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1937-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0093",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0093"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-04-25"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0094",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1930-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0094",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0094"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-04-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0095",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1935-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0095",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0095"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-10-27"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0096",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1989-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0096",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0096"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-05-19"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0097",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1994-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0097",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0097"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-08-13"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0098",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1980-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0098",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0098"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-05-09"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0099",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1988-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0099",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0099"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-04-09"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0100",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1973-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0100",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0100"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-12-26"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0101",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1977-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0101",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0101"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-06-24"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0102",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1934-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0102",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0102"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-01-14"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0103",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1937-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0103",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0103"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-01-09"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0104",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1966-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0104",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0104"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-02-10"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0105",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1970-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0105",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0105"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-02-19"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0106",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1978-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0106",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0106"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-11-20"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0107",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1984-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0107",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0107"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-09-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0108",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1974-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0108",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0108"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-07-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0109",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1991-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0109",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0109"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-04-07"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0110",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1973-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0110",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0110"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-06-14"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0111",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1943-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0111",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0111"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-05-24"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0112",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1936-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0112",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0112"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-01-16"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0113",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1936-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0113",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0113"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-10-17"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0114",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1957-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0114",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0114"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-12-14"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0115",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1948-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0115",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0115"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-10-31"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0116",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1959-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0116",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0116"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-07-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0117",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1972-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0117",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0117"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-02-21"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0118",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1991-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0118",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0118"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-05-31"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0119",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1942-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0119",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0119"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-04-26"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0120",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1956-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0120",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0120"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-08-04"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0121",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1961-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0121",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0121"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-12-09"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0122",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1960-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0122",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0122"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-08-31"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0123",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1985-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0123",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0123"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-03-09"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0124",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1949-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0124",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0124"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-08-26"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0125",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1963-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0125",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0125"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-11-19"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0126",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1966-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0126",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0126"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-10-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0127",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1985-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0127",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0127"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-08-13"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0128",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1978-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0128",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0128"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-03-04"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0129",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1957-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0129",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0129"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-03-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0130",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1990-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0130",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0130"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-05-20"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0131",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1990-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0131",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0131"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-06-24"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0132",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1970-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0132",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0132"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-03-20"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0133",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1991-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0133",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0133"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-06-19"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0134",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1960-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0134",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0134"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-04-28"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0135",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1946-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0135",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0135"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-05-18"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0136",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1936-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0136",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0136"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-02-11"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0137",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1937-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0137",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0137"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-12-06"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0138",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1963-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0138",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0138"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-03-31"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0139",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1974-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0139",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0139"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-01-21"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0140",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1956-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0140",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0140"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-12-03"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0141",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1973-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0141",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0141"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-02-09"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0142",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1943-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0142",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0142"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-02-27"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0143",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1984-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0143",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0143"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-03-01"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0144",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1937-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0144",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0144"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-08-22"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0145",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1969-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0145",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0145"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-03-13"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0146",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1959-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0146",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0146"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-03-05"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0147",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1953-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0147",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0147"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-12-25"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0148",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1961-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0148",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0148"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-03-26"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0149",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1977-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0149",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0149"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-05-22"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0150",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1986-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0150",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0150"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-09-06"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0151",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1941-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0151",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0151"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-10-20"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0152",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1931-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0152",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0152"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-04-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0153",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1962-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0153",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0153"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-05-12"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0154",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1977-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0154",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0154"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-02-21"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0155",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1972-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0155",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0155"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-08-23"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0156",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1954-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0156",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0156"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-06-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0157",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1935-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0157",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0157"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-04-16"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0158",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1989-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0158",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0158"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-05-01"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0159",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1950-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0159",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0159"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-05-26"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0160",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1951-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0160",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0160"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-01-19"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0161",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1938-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0161",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0161"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-04-09"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0162",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1948-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0162",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0162"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-07-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0163",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1932-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0163",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0163"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-11-11"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0164",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1972-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0164",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0164"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-08-24"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0165",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1971-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0165",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0165"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-07-12"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0166",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1932-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0166",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0166"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-04-18"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0167",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1981-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0167",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0167"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-03-16"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0168",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1994-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0168",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0168"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-10-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0169",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1973-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0169",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0169"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-12-31"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0170",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1980-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0170",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0170"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-02-27"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0171",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1982-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0171",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0171"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-05-13"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0172",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1942-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0172",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0172"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-09-22"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0173",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1930-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0173",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0173"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-11-07"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0174",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1974-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0174",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0174"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-02-26"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0175",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1950-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0175",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0175"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-05-12"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0176",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1958-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0176",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0176"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-03-31"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0177",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1957-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0177",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0177"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-02-17"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0178",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1975-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0178",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0178"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-06-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0179",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1960-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0179",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0179"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-04-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0180",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1961-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0180",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0180"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-10-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0181",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1968-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0181",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0181"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-02-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0182",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1960-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0182",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0182"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-04-25"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0183",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1953-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0183",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0183"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-09-11"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0184",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1985-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0184",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0184"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-03-03"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0185",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1950-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0185",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0185"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-03-09"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0186",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1953-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0186",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0186"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-08-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0187",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1951-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0187",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0187"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-04-07"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0188",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1966-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0188",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0188"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-02-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0189",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1932-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0189",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0189"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-04-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0190",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1994-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0190",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0190"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-01-18"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0191",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1983-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0191",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0191"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-02-28"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0192",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1954-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0192",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0192"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-12-17"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0193",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1983-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0193",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0193"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-08-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0194",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1935-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0194",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0194"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-07-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0195",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1975-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0195",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0195"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-08-21"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0196",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1967-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0196",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0196"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-04-24"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0197",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1954-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0197",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0197"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-06-24"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0198",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1970-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0198",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0198"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-05-06"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0199",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1942-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0199",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0199"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-03-16"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0200",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1931-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0200",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0200"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-11-21"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0201",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1958-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0201",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0201"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-09-25"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0202",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1956-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0202",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0202"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-01-24"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0203",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1990-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0203",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0203"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-08-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0204",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1987-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0204",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0204"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-01-27"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0205",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1939-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0205",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0205"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-10-22"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0206",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1947-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0206",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0206"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-10-17"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0207",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1986-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0207",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0207"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-01-01"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0208",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1964-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0208",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0208"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2023-12-21"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0209",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "male",
+        "birthDate": "1963-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0209",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0209"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2024-05-25"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-uka-stub-0210",
+        "meta": {
+          "source": "org-uka"
+        },
+        "gender": "female",
+        "birthDate": "1976-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-uka-stub-0210",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-uka-stub-0210"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-uka"
+        },
+        "period": {
+          "start": "2022-01-13"
         }
       }
     }

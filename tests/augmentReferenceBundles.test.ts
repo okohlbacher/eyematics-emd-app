@@ -20,8 +20,7 @@ import { describe, expect, it } from 'vitest';
 const SCRIPT = resolve('scripts/augment-reference-bundles.ts');
 const REFERENCE_BUNDLE = 'public/data/center-aachen.json';
 
-// SKIP_REASON: scripts/augment-reference-bundles.ts does not exist until Plan 03.
-it.skip('augment-reference-bundles: pre-existing resources are byte-identical after augmentation (D-13)', () => {
+it('augment-reference-bundles: pre-existing resources are byte-identical after augmentation (D-13)', () => {
   const tmp = mkdtempSync(join(tmpdir(), 'augment-test-'));
   const src = readFileSync(REFERENCE_BUNDLE, 'utf-8');
   const bundleBefore = JSON.parse(src) as {
@@ -62,18 +61,28 @@ it.skip('augment-reference-bundles: pre-existing resources are byte-identical af
   }
 });
 
-// SKIP_REASON: scripts/augment-reference-bundles.ts does not exist until Plan 03.
-it.skip('augment-reference-bundles: at least one new Consent or stub entry is appended', () => {
+it('augment-reference-bundles: at least one new Consent or stub entry is appended', () => {
   const tmp = mkdtempSync(join(tmpdir(), 'augment-new-test-'));
   const src = readFileSync(REFERENCE_BUNDLE, 'utf-8');
-  const bundleBefore = JSON.parse(src) as {
+  const bundleParsed = JSON.parse(src) as {
     entry: Array<{ resource: { resourceType: string; id: string } }>;
   };
+
+  // Strip any augmentation entries (Consent, stub Patients, stub Encounters)
+  // so the temp copy starts from the original curated state regardless of
+  // whether the real bundle on disk is already augmented.
+  const STUB_RESOURCES = new Set(['Consent', 'Encounter']);
+  const curatedEntries = bundleParsed.entry.filter((e) => {
+    if (STUB_RESOURCES.has(e.resource.resourceType)) return false;
+    if (e.resource.resourceType === 'Patient' && e.resource.id?.includes('-stub-')) return false;
+    return true;
+  });
+  const bundleBefore = { ...bundleParsed, entry: curatedEntries };
 
   const curatedIds = new Set(bundleBefore.entry.map((e) => e.resource.id));
 
   const outPath = join(tmp, 'center-aachen.json');
-  writeFileSync(outPath, src, 'utf-8');
+  writeFileSync(outPath, JSON.stringify(bundleBefore, null, 2) + '\n', 'utf-8');
 
   const result = spawnSync(
     'node',
@@ -101,8 +110,7 @@ it.skip('augment-reference-bundles: at least one new Consent or stub entry is ap
 });
 
 describe('augment-reference-bundles: idempotency (D-13)', () => {
-  // SKIP_REASON: scripts/augment-reference-bundles.ts does not exist until Plan 03.
-  it.skip('running the script twice does not change bundle.entry.length', () => {
+  it('running the script twice does not change bundle.entry.length', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'augment-idempotent-test-'));
     const src = readFileSync(REFERENCE_BUNDLE, 'utf-8');
     const outPath = join(tmp, 'center-aachen.json');
