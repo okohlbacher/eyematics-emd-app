@@ -1,5 +1,28 @@
 # Milestones
 
+## v1.11 UAT Fixes, Data Completeness & Quality Closure (Shipped: 2026-05-24)
+
+**Phases completed:** 5 phases, 16 plans, 20 tasks
+
+**Key accomplishments:**
+
+- 1. [Rule 3 - Blocking] Test file extension .tsx instead of .ts
+- 011da76
+- Lifted getTherapyStatus to shared/, extended CohortFilter with 9 new fields, extended applyFilters with 4 preset + 5 advanced predicates via options param, added crtImplausibleThresholdUm to settings.yaml + AppSettings, and registered all 25 Phase 33 i18n keys.
+- AnalysisPage
+- Preset section
+- CRT Review button re-routed from wrong `/quality?status=flagged` to `/quality?crt=implausible`; QualityPage seeds and applies the CRT filter from URL param via lazy useState + filteredCases memo clause.
+- Consent and Encounter FHIR interfaces in shared/types/fhir.ts + three Wave 0 RED/skipped test scaffolds that Plans 02, 03, 04 will turn green.
+- D-03 single-chokepoint stub filter in extractPatientCases + D-04 clinical-only patientCount + D-09 countRawPatients denominator helper — turns all stubIsolation.test.ts assertions green.
+- Task 1 — Synthetic bundle generator extended (D-06/D-11/D-12)
+- Datenvollzähligkeit completeness card on LandingPage using countRawPatients denominator and cases.length numerator, with CSS-token semantic colors and accessible progress bar — turns all 5 skipped card assertions green.
+- Goal-backward verification of Phase 27 (Stateful Session Backend) mapping SESS-02/03/04 success criteria to concrete v1.10-anchored code evidence and passing tests.
+- Flipped all v1.10 VALIDATION.md frontmatter to nyquist_compliant/wave_0_complete/status final, closing VVBACK-03 and VVBACK-04 via the 35-01/35-02 VERIFICATION evidence.
+- 1. [Rule 3 - Blocking] Removed now-unused `CohortFilter` import in `OutcomesView.tsx`
+- `npm run test:ci` → **901 passed (83 files), 0 failures** (including `audit:bundles` and `verify:bundles` distribution priors). VVBACK-05 gate satisfied.
+
+---
+
 ## v1.11 — UAT Fixes, Data Completeness & Quality Closure (Shipped: 2026-05-24)
 
 **Phases completed:** 5 phases (32–36), 16 plans

@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: — UAT Fixes, Data Completeness & Quality Closure
-status: verifying
-last_updated: "2026-05-24T17:48:24.641Z"
-last_activity: 2026-05-24
+status: Awaiting next milestone
+last_updated: "2026-05-24T17:59:22.691Z"
+last_activity: 2026-05-24 — Milestone v1.11 completed and archived
 progress:
   total_phases: 5
   completed_phases: 5
@@ -24,12 +24,10 @@ See: .planning/PROJECT.md (updated 2026-05-21 after v1.10)
 
 ## Current Position
 
-Phase: 36
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-05-24
-
-**Progress:** [██████████] 100%
+Phase: Milestone v1.11 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-05-24 — Milestone v1.11 completed and archived
 
 ## Milestones Shipped
 
@@ -106,9 +104,7 @@ New items deferred from Phase 36 CODEX architecture review (Tier C). Reference: 
 
 ## Operator Next Steps
 
-1. v1.11 is CLOSED. Use `/gsd-new-milestone` to scope v1.12.
-2. v1.12 candidates: Tier C items from the v1.11 CODEX review (F-01, F-02, F-03, F-09, F-10, F-13) and KEYCLK-01 Keycloak OIDC flow.
-3. 901/901 tests green; no blockers.
+- Start the next milestone with /gsd-new-milestone
 
 ## Performance Metrics
 
