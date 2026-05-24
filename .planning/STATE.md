@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.11
 milestone_name: — UAT Fixes, Data Completeness & Quality Closure
 status: executing
-last_updated: "2026-05-24T16:49:52.102Z"
+last_updated: "2026-05-24T16:54:08.644Z"
 last_activity: 2026-05-24
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 13
-  completed_plans: 11
+  completed_plans: 12
   percent: 60
 ---
 
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-05-21 after v1.10)
 ## Current Position
 
 Phase: 35 (v-v-backfill) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-05-24
 
-**Progress:** [█████████░] 85%
+**Progress:** [█████████░] 92%
 
 ## Milestones Shipped
 
@@ -105,6 +105,7 @@ Acknowledged and accepted as tech debt at v1.10 milestone close on 2026-05-21 �
 | Phase 34 P02 | 10 | 2 tasks | 3 files |
 | Phase 34 P03 | 25 minutes | 3 tasks | 14 files |
 | Phase 34 P04 | 10m | 2 tasks | 4 files |
+| Phase 35 P02 | 8 minutes | 2 tasks | 1 files |
 
 ## Decisions
 

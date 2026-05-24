@@ -103,7 +103,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 | 32. User Management & Auth Hardening | 2/2 | ✅ Complete (verified 5/5) | 2026-05-21 |
 | 33. Cohort Builder UX & Advanced Filters | 4/4 | Complete    | 2026-05-22 |
 | 34. Data Completeness (Consent + Stubs) | 4/4 | Complete    | 2026-05-24 |
-| 35. V&V Backfill | 1/3 | In Progress|  |
+| 35. V&V Backfill | 2/3 | In Progress|  |
 | 36. Architecture Review & Compaction | 0/? | Not started | - |
 
 ### Phase Details
@@ -170,7 +170,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 Plans:
 **Wave 1**
 - [x] 35-01-PLAN.md — Create 27-VERIFICATION.md, goal-backward SESS-02/03/04 anchored to v1.10 (VVBACK-01)
-- [ ] 35-02-PLAN.md — Create 28-VERIFICATION.md, goal-backward SESS-01 + SESSUI-01/02/03 anchored to v1.10 (VVBACK-02)
+- [x] 35-02-PLAN.md — Create 28-VERIFICATION.md, goal-backward SESS-01 + SESSUI-01/02/03 anchored to v1.10 (VVBACK-02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 35-03-PLAN.md — VALIDATION frontmatter flips: 27/28/29 nyquist+wave_0 true, 31 wave_0 true, all 27–31 status final (VVBACK-03/04)

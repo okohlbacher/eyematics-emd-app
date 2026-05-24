@@ -51,7 +51,7 @@ Adversarial, in-depth review of the entire existing codebase conducted with CODE
 > **H1 (anchor to git tag):** the VVBACK-01/02 verification documents the v1.10 phases **as shipped**. All code references cite the **`v1.10`** git tag (tags `v1.10` / `v1.10-phase28` exist), so the paper trail is immune to the UAT code changes in Phases 32–34 and the Phase 36 compaction. This removes the false ordering dependency — V&V backfill does not depend on the feature phases.
 
 - [x] **VVBACK-01**: Phase 27 (stateful session backend) has a `VERIFICATION.md` produced by goal-backward analysis (SESS-02/03/04), each criterion mapped to code refs **at the `v1.10` tag** + passing tests
-- [ ] **VVBACK-02**: Phase 28 (admin session control UI) has a `VERIFICATION.md` produced by goal-backward analysis (SESS-01 + SESSUI-01/02/03), each criterion mapped to code refs **at the `v1.10` tag** + passing tests
+- [x] **VVBACK-02**: Phase 28 (admin session control UI) has a `VERIFICATION.md` produced by goal-backward analysis (SESS-01 + SESSUI-01/02/03), each criterion mapped to code refs **at the `v1.10` tag** + passing tests
 - [ ] **VVBACK-03**: Phases 27, 28, and 29 each have a `VALIDATION.md` at `nyquist_compliant: true` / `wave_0_complete: true`, with any coverage gaps filled by passing tests
 - [ ] **VVBACK-04**: Phase 31's `VALIDATION.md` `wave_0_complete` is resolved to `true`, and every v1.10 phase `VALIDATION.md` (27–31) `status: draft` is flipped to final
 - [ ] **VVBACK-05**: `npm run test:ci` passes (zero failures) after all feature, backfill, review, and compaction work; STATE.md / PROJECT.md / MILESTONES.md deferred-debt entries are updated to reflect closure
@@ -105,7 +105,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ARCH-02 | Phase 36 | Pending |
 | ARCH-03 | Phase 36 | Pending |
 | VVBACK-01 | Phase 35 | Complete |
-| VVBACK-02 | Phase 35 | Pending |
+| VVBACK-02 | Phase 35 | Complete |
 | VVBACK-03 | Phase 35 | Pending |
 | VVBACK-04 | Phase 35 | Pending |
 | VVBACK-05 | Phase 36 | Pending |
