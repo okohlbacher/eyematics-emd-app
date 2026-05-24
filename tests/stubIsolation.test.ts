@@ -11,7 +11,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { extractCenters } from '../src/services/fhirLoader';
+import { countRawPatients, extractCenters } from '../src/services/fhirLoader';
 import { extractPatientCases } from '../shared/patientCases';
 import type { FhirBundle } from '../shared/types/fhir';
 
@@ -88,5 +88,17 @@ describe('D-04: extractCenters patientCount accuracy', () => {
     const centers = extractCenters([bundle]);
     const testCenter = centers.find((c) => c.id === 'org-test');
     expect(testCenter?.patientCount).toBe(1); // only pat-full-001
+  });
+});
+
+describe('D-09: countRawPatients denominator', () => {
+  it('returns total Patient count including stubs (denominator)', () => {
+    // bundle has 2 Patients: pat-full-001 (clinical) + pat-stub-001 (stub)
+    expect(countRawPatients([bundle])).toBe(2);
+  });
+
+  it('takes only bundles parameter — no center filter', () => {
+    // Signature check: countRawPatients accepts bundles[] with no second arg
+    expect(countRawPatients.length).toBe(1);
   });
 });

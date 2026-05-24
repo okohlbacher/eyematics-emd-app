@@ -2,6 +2,7 @@ import type {
   CenterInfo,
   FhirBundle,
   FhirResource,
+  Observation,
   Organization,
   Patient,
 } from '../types/fhir';
@@ -51,6 +52,7 @@ function resourcesOfType<T extends FhirResource>(
 export function extractCenters(bundles: FhirBundle[]): CenterInfo[] {
   const orgs = resourcesOfType<Organization>(bundles, 'Organization');
   const patients = resourcesOfType<Patient>(bundles, 'Patient');
+  const observations = resourcesOfType<Observation>(bundles, 'Observation');
 
   return orgs.map((org) => {
     const bundle = bundles.find((b) =>
@@ -64,10 +66,29 @@ export function extractCenters(bundles: FhirBundle[]): CenterInfo[] {
       name: org.name,
       city: org.address?.[0]?.city ?? '',
       state: org.address?.[0]?.state ?? '',
-      patientCount: orgPatients.length,
+      // D-04: patientCount = patients with ≥1 Observation (excludes stubs).
+      // Same structural rule as D-03: absence of Observations = stub.
+      patientCount: orgPatients.filter((p) =>
+        observations.some((o) => o.subject.reference === `Patient/${p.id}`)
+      ).length,
       lastUpdated: bundle?.meta?.lastUpdated ?? '',
     };
   });
+}
+
+/**
+ * D-09: Count ALL Patient resources across the provided bundles.
+ * Does NOT exclude stubs — this is the Datenvollzähligkeit denominator.
+ * The bundles parameter already contains only the user's permitted bundles
+ * (server-side filtering by req.auth.centers), so no extra center filter
+ * is needed for the full-page LandingPage display.
+ */
+export function countRawPatients(bundles: FhirBundle[]): number {
+  return bundles.reduce(
+    (sum, b) =>
+      sum + b.entry.filter((e) => e.resource.resourceType === 'Patient').length,
+    0,
+  );
 }
 
 // extractPatientCases, getAge — re-exported from shared/patientCases above (M1 fix).
