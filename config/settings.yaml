@@ -1,4 +1,9 @@
 twoFactorEnabled: false
+# Phase 34 / D-11 — stub generation factor range.
+# Per-site stub count ≈ factor × consented count; factor drawn seeded from [factorMin, factorMax].
+stubs:
+  factorMin: 2
+  factorMax: 8
 therapyInterrupterDays: 120
 therapyBreakerDays: 365
 crtImplausibleThresholdUm: 400     # Phase 33 / COH-03: CRT implausibility threshold in µm

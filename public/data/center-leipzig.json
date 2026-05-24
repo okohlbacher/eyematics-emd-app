@@ -786,6 +786,6081 @@
     },
     {
       "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0001",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0001"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-06-22",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0002",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0002"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-07-14",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0003",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0003"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-07-13",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0004",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0004"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-07-06",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0005",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0005"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-07-25",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0006",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0006"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-07-27",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0007",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0007"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-06-22",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0008",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0008"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-08-21",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0009",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0009"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-07-05",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0010",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0010"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-08-23",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0011",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0011"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-08-24",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0012",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0012"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-07-11",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0013",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0013"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-08-14",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0014",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0014"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-08-07",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0015",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0015"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-08-17",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0016",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0016"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-08-22",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0017",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0017"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-08-06",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0018",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0018"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-08-02",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0019",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0019"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-08-08",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0020",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0020"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-08-09",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0021",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0021"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-10-02",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0022",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0022"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-09-10",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0023",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0023"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-09-14",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0024",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0024"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-08-16",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0025",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0025"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-08-24",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0026",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0026"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-09-22",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0027",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0027"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-09-20",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0028",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0028"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-09-03",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0029",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0029"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-09-29",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0030",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0030"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-10-04",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0031",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0031"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-10-05",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0032",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0032"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-09-22",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0033",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0033"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-10-07",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0034",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0034"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-10-18",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0035",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0035"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-10-30",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0036",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0036"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-09-18",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0037",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0037"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-10-26",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0038",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0038"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-10-07",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0039",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0039"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-11-18",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0040",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0040"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-10-14",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0041",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0041"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-11-29",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0042",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0042"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-11-20",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0043",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0043"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-12-03",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0044",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0044"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-11-24",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Consent",
+        "id": "consent-ukl-0045",
+        "status": "active",
+        "scope": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/consentscope",
+              "code": "research",
+              "display": "Research"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                "code": "INFOACCESS",
+                "display": "Information Access"
+              }
+            ]
+          }
+        ],
+        "patient": {
+          "reference": "Patient/pat-ukl-0045"
+        },
+        "organization": [
+          {
+            "reference": "Organization/org-ukl"
+          }
+        ],
+        "dateTime": "2022-11-12",
+        "policyRule": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "OPTIN"
+            }
+          ]
+        },
+        "provision": {
+          "type": "permit",
+          "purpose": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HRESCH",
+              "display": "healthcare research"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0001",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1945-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0002",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1955-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0003",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1944-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0004",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1950-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0005",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1991-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0006",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1946-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0007",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1984-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0008",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1955-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0009",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1974-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0010",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1955-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0011",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1976-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0012",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1931-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0013",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1942-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0014",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1938-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0015",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1931-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0016",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1953-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0017",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1936-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0018",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1969-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0019",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1934-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0020",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1994-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0021",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1942-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0022",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1950-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0023",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1980-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0024",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1985-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0025",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1941-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0026",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1964-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0027",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1950-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0028",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1957-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0029",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1961-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0030",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1982-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0031",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1933-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0032",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1947-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0033",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1963-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0034",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1935-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0035",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1938-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0036",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1983-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0037",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1967-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0038",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1972-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0039",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1931-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0040",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1960-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0041",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1993-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0042",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1932-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0043",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1936-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0044",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1972-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0045",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1982-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0046",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1957-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0047",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1988-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0048",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1972-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0049",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1930-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0050",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1974-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0051",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1930-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0052",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1957-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0053",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1964-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0054",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1962-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0055",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1987-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0056",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1978-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0057",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1963-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0058",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1936-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0059",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1956-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0060",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1971-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0061",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1963-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0062",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1970-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0063",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1934-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0064",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1966-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0065",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1969-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0066",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1993-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0067",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1958-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0068",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1939-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0069",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1984-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0070",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1958-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0071",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1979-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0072",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1962-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0073",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1951-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0074",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1956-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0075",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1951-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0076",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1986-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0077",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1980-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0078",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1954-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0079",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1994-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0080",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1952-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0081",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1988-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0082",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1945-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0083",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1979-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0084",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1987-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0085",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1950-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0086",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1983-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0087",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1933-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0088",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1993-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0089",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1965-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0090",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1959-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0091",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1992-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0092",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1992-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0093",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1933-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0094",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1971-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0095",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1959-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0096",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1978-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0097",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1977-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0098",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1944-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0099",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1987-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0100",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1984-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0101",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1966-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0102",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1940-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0103",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1995-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0104",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1978-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0105",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1954-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0106",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1941-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0107",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1992-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0108",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1974-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0109",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1947-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0110",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1946-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0111",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1958-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0112",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1951-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0113",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1947-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0114",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1945-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0115",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1956-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0116",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1981-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0117",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1969-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0118",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1971-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0119",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1939-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0120",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1987-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0121",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1936-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0122",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1976-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0123",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1977-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0124",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1963-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0125",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1936-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0126",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1960-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0127",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1992-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0128",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1981-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0129",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1980-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0130",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1943-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0131",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1943-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0132",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1986-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0133",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1974-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0134",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "male",
+        "birthDate": "1974-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-ukl-stub-0135",
+        "meta": {
+          "source": "org-ukl"
+        },
+        "gender": "female",
+        "birthDate": "1955-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0001",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0001"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-11-23"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0002",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0002"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-05-07"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0003",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0003"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-10-20"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0004",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0004"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-08-03"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0005",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0005"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-06-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0006",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0006"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-05-01"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0007",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0007"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-09-24"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0008",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0008"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-02-16"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0009",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0009"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-12-14"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0010",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0010"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-06-20"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0011",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0011"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-05-21"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0012",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0012"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-05-20"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0013",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0013"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-04-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0014",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0014"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-05-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0015",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0015"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-06-04"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0016",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0016"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-03-05"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0017",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0017"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-03-19"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0018",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0018"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-04-05"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0019",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0019"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-08-14"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0020",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0020"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-09-06"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0021",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0021"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-03-20"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0022",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0022"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-03-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0023",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0023"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-02-23"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0024",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0024"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-04-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0025",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0025"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-04-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0026",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0026"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-05-17"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0027",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0027"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-12-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0028",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0028"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-03-28"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0029",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0029"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-11-10"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0030",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0030"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-03-05"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0031",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0031"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-11-05"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0032",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0032"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-05-14"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0033",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0033"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-11-10"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0034",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0034"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-07-03"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0035",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0035"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-03-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0036",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0036"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-12-22"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0037",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0037"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-09-24"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0038",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0038"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-02-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0039",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0039"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-01-11"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0040",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0040"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-01-11"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0041",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0041"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-11-10"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0042",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0042"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-04-27"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0043",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0043"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-08-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0044",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0044"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-03-14"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0045",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0045"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-01-10"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0046",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0046"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-03-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0047",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0047"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-06-25"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0048",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0048"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-01-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0049",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0049"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-07-05"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0050",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0050"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-11-18"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0051",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0051"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-08-20"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0052",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0052"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-11-01"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0053",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0053"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-10-09"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0054",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0054"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-05-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0055",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0055"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-04-18"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0056",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0056"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-07-04"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0057",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0057"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-03-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0058",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0058"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-10-26"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0059",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0059"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-09-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0060",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0060"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-01-16"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0061",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0061"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-11-24"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0062",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0062"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-07-05"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0063",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0063"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-10-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0064",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0064"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-12-03"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0065",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0065"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-10-13"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0066",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0066"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-04-23"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0067",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0067"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-03-19"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0068",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0068"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-05-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0069",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0069"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-05-12"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0070",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0070"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-07-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0071",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0071"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-05-17"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0072",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0072"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-01-25"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0073",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0073"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-04-05"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0074",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0074"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-11-21"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0075",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0075"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-02-27"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0076",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0076"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-03-05"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0077",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0077"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-11-24"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0078",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0078"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-08-09"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0079",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0079"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-11-25"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0080",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0080"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-10-13"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0081",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0081"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-10-17"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0082",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0082"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-01-28"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0083",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0083"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-07-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0084",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0084"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-12-03"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0085",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0085"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-07-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0086",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0086"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-01-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0087",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0087"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-04-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0088",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0088"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-08-03"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0089",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0089"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-07-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0090",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0090"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-04-21"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0091",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0091"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-05-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0092",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0092"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-12-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0093",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0093"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-12-06"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0094",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0094"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-10-28"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0095",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0095"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-03-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0096",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0096"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-11-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0097",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0097"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-02-16"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0098",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0098"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-09-23"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0099",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0099"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-05-06"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0100",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0100"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-11-20"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0101",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0101"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-02-25"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0102",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0102"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-01-14"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0103",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0103"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-08-16"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0104",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0104"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-01-07"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0105",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0105"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-02-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0106",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0106"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-12-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0107",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0107"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-06-17"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0108",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0108"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-02-13"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0109",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0109"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-01-18"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0110",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0110"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-12-30"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0111",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0111"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-06-05"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0112",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0112"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-03-22"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0113",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0113"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0114",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0114"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0115",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0115"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-11-04"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0116",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0116"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-12-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0117",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0117"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-04-08"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0118",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0118"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-01-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0119",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0119"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-01-19"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0120",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0120"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-08-04"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0121",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0121"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-05-09"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0122",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0122"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-03-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0123",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0123"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-01-01"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0124",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0124"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-06-10"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0125",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0125"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-06-20"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0126",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0126"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-03-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0127",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0127"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-03-22"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0128",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0128"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-04-29"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0129",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0129"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-04-23"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0130",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0130"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-04-06"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0131",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0131"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-12-25"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0132",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0132"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-03-01"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0133",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0133"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2023-09-02"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0134",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0134"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2022-03-31"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-ukl-stub-0135",
+        "status": "finished",
+        "subject": {
+          "reference": "Patient/pat-ukl-stub-0135"
+        },
+        "serviceProvider": {
+          "reference": "Organization/org-ukl"
+        },
+        "period": {
+          "start": "2024-04-13"
+        }
+      }
+    },
+    {
+      "resource": {
         "resourceType": "Condition",
         "id": "cond-ukl-0001-como-1",
         "subject": {

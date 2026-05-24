@@ -580,6 +580,102 @@ export function generateCenterBundle(input: GenerateCenterBundleInput): unknown 
     });
   }
 
+  // ---------------------------------------------------------------------------
+  // D-12 / D-11: Consent resources (one per full patient) + stub generation.
+  // ALL rand() calls for these come AFTER the full-patient loop to preserve
+  // byte-identical regen of existing patients (Pitfall 2 guard).
+  // ---------------------------------------------------------------------------
+
+  const sh = shorthand.toLowerCase();
+  const consentEntries: unknown[] = [];
+
+  // Consent: one active research Consent per full patient (D-06, 100% consent).
+  for (let i = 1; i <= patients; i++) {
+    const patNum = String(i).padStart(4, '0');
+    const patId = `pat-${sh}-${patNum}`;
+    // Consent dateTime: random offset [0, 60] days after a fixed reference date.
+    // One rand() call per patient — after the full-patient loop.
+    const consentOffset = seededRandInt(rand, 0, 60);
+    const consentDate = addDays('2022-06-01', consentOffset + i * 3);
+    consentEntries.push({
+      resource: {
+        resourceType: 'Consent',
+        id: `consent-${sh}-${patNum}`,
+        status: 'active',
+        scope: {
+          coding: [{
+            system: 'http://terminology.hl7.org/CodeSystem/consentscope',
+            code: 'research',
+            display: 'Research',
+          }],
+        },
+        category: [{
+          coding: [{
+            system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
+            code: 'INFOACCESS',
+            display: 'Information Access',
+          }],
+        }],
+        patient: { reference: `Patient/${patId}` },
+        organization: [{ reference: `Organization/${centerId}` }],
+        dateTime: consentDate,
+        policyRule: {
+          coding: [{
+            system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
+            code: 'OPTIN',
+          }],
+        },
+        provision: {
+          type: 'permit',
+          purpose: [{
+            system: 'http://terminology.hl7.org/CodeSystem/v3-ActReason',
+            code: 'HRESCH',
+            display: 'healthcare research',
+          }],
+        },
+      },
+    });
+  }
+
+  // Stubs: D-11 per-site factor in [2, 8] drawn once from seeded PRNG.
+  // stubFactorMin/Max sourced from config/settings.yaml stubs section (D-11).
+  const stubFactor = seededRandInt(rand, 2, 8);
+  const stubCount = Math.round(patients * stubFactor);
+  const stubEntries: unknown[] = [];
+  const stubEncounterEntries: unknown[] = [];
+
+  for (let s = 1; s <= stubCount; s++) {
+    const stubNum = String(s).padStart(4, '0');
+    const stubId = `pat-${sh}-stub-${stubNum}`;
+    // D-02: only gender + year-of-birth + one Encounter. No Observations.
+    const stubGender = rand() < 0.55 ? 'female' : 'male';
+    const stubBirthYear = 1930 + seededRandInt(rand, 0, 65); // 1930–1995
+    const stubBirthDate = `${stubBirthYear}-01-01`; // YYYY-01-01 per Claude's Discretion
+    // One minimal Encounter — visit date within the baseline range used by full patients.
+    const visitOffset = seededRandInt(rand, 0, 880);
+    const visitDate = addDays('2022-01-01', visitOffset);
+    stubEntries.push({
+      resource: {
+        resourceType: 'Patient',
+        id: stubId,
+        meta: { source: centerId }, // D-10: site attribution for filter
+        gender: stubGender,
+        birthDate: stubBirthDate,
+        // No identifier (no pseudonym system) — stubs are not enrollees.
+      },
+    });
+    stubEncounterEntries.push({
+      resource: {
+        resourceType: 'Encounter',
+        id: `enc-${sh}-stub-${stubNum}`,
+        status: 'finished',
+        subject: { reference: `Patient/${stubId}` },
+        serviceProvider: { reference: `Organization/${centerId}` },
+        period: { start: visitDate },
+      },
+    });
+  }
+
   // Seed-derived meta.lastUpdated for byte-identical regeneration (T-07-06).
   const lastUpdatedDate = addDays('2026-04-01', seed % 30);
   const lastUpdated = `${lastUpdatedDate}T06:00:00Z`;
@@ -591,6 +687,9 @@ export function generateCenterBundle(input: GenerateCenterBundleInput): unknown 
     entry: [
       orgEntry,
       ...patientEntries,
+      ...consentEntries,
+      ...stubEntries,
+      ...stubEncounterEntries,
       ...conditionEntries,
       ...observationEntries,
       ...procedureEntries,
