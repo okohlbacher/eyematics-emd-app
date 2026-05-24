@@ -12,6 +12,7 @@
  */
 import { ChevronRight, Download } from 'lucide-react';
 
+import { flattenIntervalRows } from '../../../shared/intervalMetric';
 import type { TranslationKey } from '../../i18n/translations';
 import { LOINC_CRT, LOINC_VISUS, SNOMED_IVI } from '../../services/fhirLoader';
 import type { PatientCase } from '../../types/fhir';
@@ -55,14 +56,6 @@ interface CrtRow {
   observation_date: string;
   crt_um: number;
   crt_delta_um: number;
-}
-
-interface IntervalRow {
-  patient_pseudonym: string;
-  eye: 'od' | 'os';
-  gap_index: number;
-  gap_days: number;
-  procedure_date: string;
 }
 
 interface ResponderRow {
@@ -199,53 +192,6 @@ function flattenCrtRows(cases: PatientCase[]): CrtRow[] {
           crt_um: Math.round(o.um),
           crt_delta_um: Math.round(o.um - baselineUm),
         });
-      }
-    });
-  }
-
-  return rows;
-}
-
-// ---------------------------------------------------------------------------
-// flattenIntervalRows — METRIC-05 / treatment intervals
-// ---------------------------------------------------------------------------
-
-function flattenIntervalRows(cases: PatientCase[]): IntervalRow[] {
-  const rows: IntervalRow[] = [];
-
-  for (const pc of cases) {
-    const iviByEye: Record<'od' | 'os', string[]> = { od: [], os: [] };
-
-    for (const proc of pc.procedures ?? []) {
-      const isIvi = (proc.code?.coding ?? []).some((c) => c.code === SNOMED_IVI);
-      if (!isIvi) continue;
-
-      const e = eyeOf(proc.bodySite);
-      if (e !== 'od' && e !== 'os') continue;
-
-      const date =
-        typeof proc.performedDateTime === 'string' ? proc.performedDateTime.slice(0, 10) : '';
-      if (!date) continue;
-
-      iviByEye[e].push(date);
-    }
-
-    (['od', 'os'] as const).forEach((eye) => {
-      iviByEye[eye].sort();
-      const dates = iviByEye[eye];
-      for (let i = 1; i < dates.length; i++) {
-        const gapDays = Math.round(
-          (new Date(dates[i]).getTime() - new Date(dates[i - 1]).getTime()) / (24 * 60 * 60 * 1000),
-        );
-        if (gapDays >= 0) {
-          rows.push({
-            patient_pseudonym: pc.pseudonym,
-            eye,
-            gap_index: i,
-            gap_days: gapDays,
-            procedure_date: dates[i],
-          });
-        }
       }
     });
   }

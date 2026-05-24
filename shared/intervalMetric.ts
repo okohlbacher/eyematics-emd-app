@@ -84,6 +84,62 @@ function computeGaps(sortedDates: string[]): number[] {
   return gaps;
 }
 
+/**
+ * Per-gap flattened interval row for CSV export (F-07).
+ * Shares the IVI/laterality extraction with the histogram but exposes the
+ * additional per-gap detail (gap index, the later procedure's date) needed by
+ * the OutcomesDataPreview CSV path.
+ *
+ * Behavior matches the prior in-component flattener exactly:
+ *   - dates are truncated to YYYY-MM-DD (`.slice(0, 10)`) before gap math
+ *   - gap days use Math.round of the day difference
+ *   - only non-negative gaps are emitted
+ *   - gap_index is the 1-based position of the later procedure within the
+ *     eye's date-sorted sequence; procedure_date is that later procedure's date
+ */
+export interface IntervalGapRow {
+  patient_pseudonym: string;
+  eye: 'od' | 'os';
+  gap_index: number;
+  gap_days: number;
+  procedure_date: string;
+}
+
+export function flattenIntervalRows(cases: PatientCase[]): IntervalGapRow[] {
+  const rows: IntervalGapRow[] = [];
+
+  for (const pc of cases) {
+    (['od', 'os'] as const).forEach((eye) => {
+      const dates = (pc.procedures ?? [])
+        .filter((p) => (p.code?.coding ?? []).some((c) => c?.code === SNOMED_IVI))
+        .filter((p) => resolveEye(p.bodySite) === eye)
+        .map((p) =>
+          typeof p.performedDateTime === 'string' ? p.performedDateTime.slice(0, 10) : '',
+        )
+        .filter((d) => d.length > 0)
+        .sort();
+
+      for (let i = 1; i < dates.length; i++) {
+        const gapDays = Math.round(
+          (new Date(dates[i]).getTime() - new Date(dates[i - 1]).getTime()) /
+            (24 * 60 * 60 * 1000),
+        );
+        if (gapDays >= 0) {
+          rows.push({
+            patient_pseudonym: pc.pseudonym,
+            eye,
+            gap_index: i,
+            gap_days: gapDays,
+            procedure_date: dates[i],
+          });
+        }
+      }
+    });
+  }
+
+  return rows;
+}
+
 export function computeIntervalDistribution(
   cases: PatientCase[],
   eye: IntervalEye,
