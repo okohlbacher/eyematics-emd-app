@@ -1,27 +1,7 @@
 import type { FhirBundle } from '../types/fhir';
 import { authFetch } from './authHeaders';
-import { getSettings } from './settingsService';
 
 export type DataSourceType = 'local' | 'blaze';
-
-export interface DataSourceConfig {
-  type: DataSourceType;
-  blazeUrl?: string;
-}
-
-const DEFAULT_BLAZE_URL = 'http://localhost:8080/fhir';
-
-// ---------------------------------------------------------------------------
-// Config – delegates to the central settings service
-// ---------------------------------------------------------------------------
-
-export function getDataSourceConfig(): DataSourceConfig {
-  const s = getSettings();
-  return {
-    type: s.dataSource.type,
-    blazeUrl: s.dataSource.blazeUrl || DEFAULT_BLAZE_URL,
-  };
-}
 
 // ---------------------------------------------------------------------------
 // Public entry point – all data loading goes through the authenticated server API
