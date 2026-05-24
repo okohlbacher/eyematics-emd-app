@@ -94,7 +94,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 - [x] **Phase 33: Cohort Builder UX** — Plausibility checks on age/Visus/CRT bounds; persistent filter state with reset; issue-based cohort presets (Therapie-Abbrecher, Unplausible CRT, Flagged, Implausible Visus); advanced filter dialog (spike-then-build); dashboard Review buttons routing correctly (completed 2026-05-22)
 - [x] **Phase 34: Data Completeness** — Patient stub + Consent model for Datenvollzähligkeit (consented fraction), with strict stub isolation from clinical surfaces (completed 2026-05-24)
 - [x] **Phase 35: V&V Backfill** — VERIFICATION.md for Phases 27 & 28; VALIDATION.md brought to nyquist_compliant/wave_0_complete for Phases 27/28/29; Phase 31 and all v1.10 VALIDATION status flipped to final (completed 2026-05-24)
-- [ ] **Phase 36: Architecture Review & Compaction** — Adversarial CODEX full-codebase review producing severity-classified findings; prioritized compaction plan; approved remediations applied with green test:ci + clean knip + lint; final milestone-integrity gate
+- [x] **Phase 36: Architecture Review & Compaction** — Adversarial CODEX full-codebase review producing severity-classified findings; prioritized compaction plan; approved remediations applied with green test:ci + clean knip + lint; final milestone-integrity gate (completed 2026-05-24)
 
 ### Progress
 
@@ -104,7 +104,7 @@ Audit: tech_debt (no functional gaps) — [`milestones/v1.10-MILESTONE-AUDIT.md`
 | 33. Cohort Builder UX & Advanced Filters | 4/4 | Complete    | 2026-05-22 |
 | 34. Data Completeness (Consent + Stubs) | 4/4 | Complete    | 2026-05-24 |
 | 35. V&V Backfill | 3/3 | Complete    | 2026-05-24 |
-| 36. Architecture Review & Compaction | 1/3 | In Progress|  |
+| 36. Architecture Review & Compaction | 3/3 | Complete   | 2026-05-24 |
 
 ### Phase Details
 
@@ -190,8 +190,8 @@ Plans:
   4. `npm run test:ci` exits green after all v1.11 work (features, backfill, compaction); STATE.md, PROJECT.md, and MILESTONES.md deferred-debt entries are updated to reflect closure
 **Plans**: 3 plans (3 waves)
   - [x] 36-01-PLAN.md — Adversarial CODEX full-codebase review + prioritized compaction plan (ARCH-01/02)
-  - [ ] 36-02-PLAN.md — Approval gate + apply approved remediations, gates green (ARCH-03)
-  - [ ] 36-03-PLAN.md — Milestone close-out: test:ci green + debt tracking updated (VVBACK-05)
+  - [x] 36-02-PLAN.md — Approval gate + apply approved remediations, gates green (ARCH-03)
+  - [x] 36-03-PLAN.md — Milestone close-out: test:ci green + debt tracking updated (VVBACK-05)
 
 ---
 
