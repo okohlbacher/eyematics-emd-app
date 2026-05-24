@@ -6,6 +6,7 @@ import {
   Download,
   Plus,
   ScanEye,
+  ShieldCheck,
   Users,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useRecentActivity } from '../hooks/useRecentActivity';
-import { getCenterShorthand } from '../services/fhirLoader';
+import { countRawPatients, getCenterShorthand } from '../services/fhirLoader';
 import { getDateLocale } from '../utils/dateFormat';
 
 const CENTRE_ACCENTS: Record<string, string> = {
@@ -27,8 +28,14 @@ const CENTRE_ACCENTS: Record<string, string> = {
   UKT: 'var(--color-sage)',
 };
 
+function completenessColor(fraction: number): string {
+  if (fraction >= 0.5) return 'var(--color-sage)';
+  if (fraction >= 0.25) return 'var(--color-amber)';
+  return 'var(--color-coral)';
+}
+
 export default function LandingPage() {
-  const { loading, centers, cases } = useData();
+  const { loading, bundles, centers, cases } = useData();
   const { displayName } = useAuth();
   const { locale, t } = useLanguage();
   const navigate = useNavigate();
@@ -54,6 +61,14 @@ export default function LandingPage() {
       ),
     0,
   );
+
+  // D-09: denominator = raw Patient count from bundles (includes stubs).
+  // D-05: numerator = cases.length (extractPatientCases already excluded stubs).
+  const totalRawPatients = countRawPatients(bundles);
+  const consentedPatients = cases.length; // non-stub clinical set
+  const completenessFraction =
+    totalRawPatients > 0 ? consentedPatients / totalRawPatients : 0;
+  const completenessPercent = Math.round(completenessFraction * 100);
 
   const tonePairs = {
     teal: { bg: 'var(--color-teal-soft)', fg: 'var(--color-teal)' },
@@ -155,6 +170,60 @@ export default function LandingPage() {
             </Tile>
           );
         })}
+      </div>
+
+      {/* Datenvollzähligkeit card — D-10: full-width row between KPI tiles and Centers */}
+      <div className="px-8 mb-3.5">
+        <Tile className="p-[18px_18px_14px]">
+          <div className="flex items-center gap-4">
+            <div
+              className="w-8 h-8 rounded-lg grid place-items-center shrink-0"
+              style={{ background: 'var(--color-teal-soft)' }}
+            >
+              <ShieldCheck
+                className="w-4 h-4"
+                style={{ color: 'var(--color-teal)' }}
+                aria-hidden="true"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[var(--color-ink-3)] mb-1">
+                {t('datenvollstaendigkeitCaption')}
+              </div>
+              <div className="flex items-baseline gap-3">
+                <span
+                  className="text-[32px] font-semibold tracking-[-0.03em] font-data"
+                  style={{ color: completenessColor(completenessFraction) }}
+                >
+                  {completenessPercent} %
+                </span>
+                <span className="text-[12px] text-[var(--color-ink-3)]">
+                  {t('datenvollstaendigkeitPatients')
+                    .replace('{n}', String(consentedPatients))
+                    .replace('{m}', String(totalRawPatients))}
+                </span>
+              </div>
+              {/* Progress bar — replicates MetricCard.tsx:31-36 pattern */}
+              <div className="mt-2 h-1.5 rounded-full bg-[var(--color-teal-soft)]">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.min(completenessPercent, 100)}%`,
+                    backgroundColor: completenessColor(completenessFraction),
+                  }}
+                  role="progressbar"
+                  aria-valuenow={completenessPercent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={t('datenvollstaendigkeitAriaLabel').replace(
+                    '{pct}',
+                    String(completenessPercent),
+                  )}
+                />
+              </div>
+            </div>
+          </div>
+        </Tile>
       </div>
 
       {/* Centres + Right rail */}

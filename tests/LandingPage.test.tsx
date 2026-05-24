@@ -60,6 +60,7 @@ function setupMocks(role: 'admin' | 'researcher' = 'admin') {
   });
   (useData as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
     loading: false,
+    bundles: [],
     centers: [],
     cases: [],
   });

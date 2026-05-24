@@ -56,7 +56,7 @@ import LandingPage from '../src/pages/LandingPage';
 // ---------- Setup helpers ----------
 
 /** Minimal PatientCase shape sufficient for LandingPage rendering */
-const MOCK_CASES = [
+const _MOCK_CASES = [
   { id: 'pat-full-001', centerId: 'org-test', pseudonym: 'FULL-001', age: 75, gender: 'female' },
   { id: 'pat-full-002', centerId: 'org-test', pseudonym: 'FULL-002', age: 68, gender: 'male' },
 ];
@@ -151,7 +151,7 @@ describe('Datenvollzähligkeit card — mock wiring smoke test', () => {
 
 describe('Datenvollzähligkeit card — card presence and percentage (Plan 04)', () => {
   // SKIP_REASON: card does not exist in LandingPage.tsx until Plan 04 adds it.
-  it.skip('renders the DATENVOLLZÄHLIGKEIT caption', () => {
+  it('renders the DATENVOLLZÄHLIGKEIT caption', () => {
     setupMocks(7);
     renderLanding();
     // Plan 04 adds datenvollstaendigkeitCaption i18n key and the card heading.
@@ -160,7 +160,7 @@ describe('Datenvollzähligkeit card — card presence and percentage (Plan 04)',
   });
 
   // SKIP_REASON: card does not exist in LandingPage.tsx until Plan 04 adds it.
-  it.skip('renders the completeness percentage (70 % for 7 of 10 patients)', () => {
+  it('renders the completeness percentage (70 % for 7 of 10 patients)', () => {
     setupMocks(7);
     renderLanding();
     // countRawPatients is mocked to return 10; cases.length = 7 → 70 %
@@ -169,7 +169,7 @@ describe('Datenvollzähligkeit card — card presence and percentage (Plan 04)',
   });
 
   // SKIP_REASON: card does not exist in LandingPage.tsx until Plan 04 adds it.
-  it.skip('renders the n / m patients sub-label', () => {
+  it('renders the n / m patients sub-label', () => {
     setupMocks(7);
     renderLanding();
     // datenvollstaendigkeitPatients key: "{n} / {m} patients"
@@ -178,7 +178,7 @@ describe('Datenvollzähligkeit card — card presence and percentage (Plan 04)',
   });
 
   // SKIP_REASON: card does not exist in LandingPage.tsx until Plan 04 adds it.
-  it.skip('renders the ShieldCheck icon container (aria-hidden)', () => {
+  it('renders the ShieldCheck icon container (aria-hidden)', () => {
     setupMocks();
     const { container } = renderLanding();
     // The ShieldCheck icon in the card has aria-hidden="true"
@@ -187,7 +187,7 @@ describe('Datenvollzähligkeit card — card presence and percentage (Plan 04)',
   });
 
   // SKIP_REASON: card does not exist in LandingPage.tsx until Plan 04 adds it.
-  it.skip('renders progressbar with correct aria-valuenow (70 for 70%)', () => {
+  it('renders progressbar with correct aria-valuenow (70 for 70%)', () => {
     setupMocks(7);
     renderLanding();
     const progressbar = screen.queryByRole('progressbar');
