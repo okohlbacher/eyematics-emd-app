@@ -42,9 +42,9 @@
 
 Adversarial, in-depth review of the entire existing codebase conducted with CODEX, targeting a more compact, less bloated design. Sequenced **after** the UAT feature work and V&V backfill so it accounts for the new code.
 
-- [ ] **ARCH-01**: A full-codebase adversarial review is conducted with CODEX covering architecture, separation of concerns, and overall design, producing a severity-classified findings report (e.g. `.planning/reviews/v1.11-arch-review/`)
-- [ ] **ARCH-02**: Review findings are distilled into a prioritized compaction / de-bloat plan with concrete file references — dead code, redundant or premature abstractions, duplicated logic, oversized modules, and separation-of-concerns violations
-- [ ] **ARCH-03**: Approved compaction remediations are applied with no behavior regressions: `npm run test:ci` stays green, `npm run knip` reports no new dead code, and `npm run lint` passes
+- [x] **ARCH-01**: A full-codebase adversarial review is conducted with CODEX covering architecture, separation of concerns, and overall design, producing a severity-classified findings report (e.g. `.planning/reviews/v1.11-arch-review/`)
+- [x] **ARCH-02**: Review findings are distilled into a prioritized compaction / de-bloat plan with concrete file references — dead code, redundant or premature abstractions, duplicated logic, oversized modules, and separation-of-concerns violations
+- [x] **ARCH-03**: Approved compaction remediations are applied with no behavior regressions: `npm run test:ci` stays green, `npm run knip` reports no new dead code, and `npm run lint` passes
 
 ### Tech-Debt / Verification & Validation Closure (VVBACK)
 
@@ -101,9 +101,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COH-02 | Phase 33 | Complete |
 | COH-03 | Phase 33 | Complete |
 | COH-04 | Phase 33 | Complete |
-| ARCH-01 | Phase 36 | Pending |
-| ARCH-02 | Phase 36 | Pending |
-| ARCH-03 | Phase 36 | Pending |
+| ARCH-01 | Phase 36 | Complete |
+| ARCH-02 | Phase 36 | Complete |
+| ARCH-03 | Phase 36 | Complete |
 | VVBACK-01 | Phase 35 | Complete |
 | VVBACK-02 | Phase 35 | Complete |
 | VVBACK-03 | Phase 35 | Complete |
