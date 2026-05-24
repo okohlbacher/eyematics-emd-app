@@ -150,9 +150,17 @@ function augmentBundle(filePath: string, site: ReferenceSite): void {
   const raw = fs.readFileSync(filePath, 'utf-8');
   const bundle = JSON.parse(raw) as Bundle;
 
-  // Idempotency guard (D-13): skip if any Consent already exists.
+  // Idempotency guard (D-13): skip if the bundle carries EITHER augmentation
+  // marker. WR-02: keying solely on Consent presence is not robust — a bundle
+  // that somehow reaches a stubs-without-Consent state (hand-edited fixture, or
+  // a future two-pass writer interrupted mid-write) would look "fresh" and a
+  // re-run would append a SECOND full set of stubs, silently doubling stub
+  // Patients/Encounters and corrupting the documented stub ratio. Guard on the
+  // union of markers: any Consent OR any stub Patient (id contains '-stub-').
   const alreadyAugmented = bundle.entry.some(
-    (e) => e.resource.resourceType === 'Consent',
+    (e) =>
+      e.resource.resourceType === 'Consent' ||
+      (e.resource.resourceType === 'Patient' && (e.resource.id?.includes('-stub-') ?? false)),
   );
   if (alreadyAugmented) {
     console.log(`[augment] ${filePath} already augmented — skipping`);
