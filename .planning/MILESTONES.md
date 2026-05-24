@@ -1,5 +1,37 @@
 # Milestones
 
+## v1.11 — UAT Fixes, Data Completeness & Quality Closure (Shipped: 2026-05-24)
+
+**Phases completed:** 5 phases (32–36), 16 plans
+**Timeline:** 2026-05-21 → 2026-05-24
+**Tests:** 901/901 passing at close (783 at v1.10 baseline; +118 across Phases 32–36)
+
+**Scope summary:** UAT-driven user management hardening, cohort builder UX, FHIR data completeness card, V&V backfill for v1.10 deferred artifacts, and adversarial CODEX architecture review with Tier A + Tier B compaction (net −240 LOC). Tier C deferred to v1.12.
+
+**Key accomplishments:**
+
+- **User Management & Auth Hardening (Phase 32):** Edit-dialog center requirement enforced (UMGMT-01); all create+edit fields made mandatory (UMGMT-02); user activation/deactivation with real-time session revoke on deactivation (UMGMT-03); login lockout feedback with attempt counter and wait-time display (AUTHCFG-01); inactivity countdown timer starting at 3 min (AUTHCFG-02); inactivity timeout + lockout cap constants moved to `settings.yaml` (AUTHCFG-03/04). `editActive` seeded from `user.active !== false` (migration-safe).
+- **Cohort Builder UX (Phase 33):** Plausibility warning preset (`implausibleCrt`) + CRT threshold in filters (COH-01); CohortFilter session persistence + reset button (COH-02); clinical issue preset selector (COH-03); advanced filter dialog with full field set (COH-04); Dashboard "Review" buttons deep-link to pre-filtered `/quality` (DASH-02).
+- **Data Completeness (Phase 34):** FHIR Consent resource loading + patient-stub isolation; "Datenvollzähligkeit" completeness card on dashboard showing data completeness %; stubs never flow to clinical analysis surfaces (DASH-01). UI-SPEC design contract written and reviewed.
+- **V&V Backfill (Phase 35):** Formal `VERIFICATION.md` backfilled for Phase 27 (stateful session backend) and Phase 28 (admin session control UI) via goal-backward analysis with refs anchored to `v1.10` tag (VVBACK-01/02). Nyquist `VALIDATION.md` brought to `nyquist_compliant: true` / `wave_0_complete: true` for Phases 27, 28, 29, and 31; all v1.10 `VALIDATION.md` `status: draft` flipped to `final` (VVBACK-03/04).
+- **Architecture Review & Compaction (Phase 36):** CODEX adversarial review produced 15 severity-classified findings across SOC violations, duplicated logic, oversized modules, and dead code (ARCH-01). User-approved Tier A (mechanical hygiene: knip unused types, lint-sort fixes, dead code deletion) + Tier B (behavior-preserving de-duplication: centralized laterality `shared/laterality.ts`, CohortFilter safe-pick `src/utils/cohortFilterSerialization.ts`, shared interval/responder/measurement row projectors, `OutcomesDataPreview` collapsed from 751 → ~270 lines) applied cleanly (ARCH-02/03). `npm run test:ci` 901/901 green, `knip` clean, `lint` 0 warnings. Cumulative Tier A + Tier B diff: 16 files, +624 / −864 lines (net −240).
+- **VVBACK-05 (final gate):** `npm run test:ci` exits 0 with 901/901 passing across 83 test files (including `audit:bundles` and `verify:bundles` distribution priors). Confirmed 2026-05-24.
+
+**Known deferred items (accepted at close):**
+
+Tier C items from the CODEX v1.11 review — ref `.planning/reviews/v1.11-arch-review/FINDINGS.md`:
+
+| ID | Category | Item |
+|----|----------|------|
+| F-01 | soc-violation | Server outcome aggregation ignores settings-derived filter thresholds (therapyBreaker, implausibleCrt) |
+| F-02 | soc-violation | Clinical thresholds live in `src/config/clinicalThresholds.ts` outside `settings.yaml` |
+| F-03 | dead-code | Unreachable Keycloak runtime path wired through auth middleware (tied to KEYCLK-01) |
+| F-09 | oversized-module | `authApi.ts` God module (1,175 lines) — split deferred |
+| F-10 | oversized-module | `OutcomesView.tsx` multi-responsibility component — decomposition deferred |
+| F-13 | soc-violation | Saved-search provenance is client-owned; server-side id/createdAt generation deferred |
+
+---
+
 ## v1.10 Session Hardening & UX Closure (Shipped: 2026-05-21)
 
 **Phases completed:** 5 phases (27–31), 16 plans, 17 tasks
