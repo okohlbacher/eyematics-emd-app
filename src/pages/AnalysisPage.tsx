@@ -41,6 +41,7 @@ import {
 import { getSettings } from '../services/settingsService';
 import { getCachedDisplay, getCachedFullText } from '../services/terminology';
 import type { CohortFilter } from '../types/fhir';
+import { parseCohortFilterJson } from '../utils/cohortFilterSerialization';
 import { computeCrtDistribution } from '../utils/distributionBins';
 
 type AnalysisTab = 'aggregate' | 'trajectories';
@@ -92,31 +93,8 @@ export default function AnalysisPage() {
   const filters: CohortFilter = useMemo(() => {
     // If a saved search is referenced, use its stored filters (KOH-005 / Issue 4 fix).
     if (activeSavedSearch) return activeSavedSearch.filters;
-    const raw = searchParams.get('filters');
-    if (!raw) return {};
-    // M-04: explicitly pick known CohortFilter keys to prevent prototype pollution
-    try {
-      const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
-      const safe: CohortFilter = {};
-      if (Array.isArray(parsed.diagnosis)) safe.diagnosis = parsed.diagnosis.map(String);
-      if (Array.isArray(parsed.gender)) safe.gender = parsed.gender.map(String);
-      if (Array.isArray(parsed.ageRange) && parsed.ageRange.length === 2) safe.ageRange = [Number(parsed.ageRange[0]), Number(parsed.ageRange[1])];
-      if (Array.isArray(parsed.visusRange) && parsed.visusRange.length === 2) safe.visusRange = [Number(parsed.visusRange[0]), Number(parsed.visusRange[1])];
-      if (Array.isArray(parsed.crtRange) && parsed.crtRange.length === 2) safe.crtRange = [Number(parsed.crtRange[0]), Number(parsed.crtRange[1])];
-      if (Array.isArray(parsed.centers)) safe.centers = parsed.centers.map(String);
-      // Phase 33 fields (T-33-01 whitelist — prevents silent drop of preset/advanced state)
-      const PRESET_LITERALS = ['therapyBreaker', 'implausibleCrt', 'flaggedQuality', 'implausibleVisus'] as const;
-      if (typeof parsed.preset === 'string' && (PRESET_LITERALS as readonly string[]).includes(parsed.preset)) safe.preset = parsed.preset as CohortFilter['preset'];
-      if (Array.isArray(parsed.flaggedCaseIds)) safe.flaggedCaseIds = new Set(parsed.flaggedCaseIds.map(String));
-      if (Array.isArray(parsed.diagnosisSubtype)) safe.diagnosisSubtype = parsed.diagnosisSubtype.map(String);
-      if (typeof parsed.hasComorbidity === 'boolean') safe.hasComorbidity = parsed.hasComorbidity;
-      if (Array.isArray(parsed.hba1cRange) && parsed.hba1cRange.length === 2) safe.hba1cRange = [Number(parsed.hba1cRange[0]), Number(parsed.hba1cRange[1])];
-      if (Array.isArray(parsed.medicationCodes)) safe.medicationCodes = parsed.medicationCodes.map(String);
-      const LATERALITY_LITERALS = ['OD', 'OS', 'OU'] as const;
-      if (typeof parsed.laterality === 'string' && (LATERALITY_LITERALS as readonly string[]).includes(parsed.laterality)) safe.laterality = parsed.laterality as CohortFilter['laterality'];
-      return safe;
-    } catch { return {}; }
+    // M-04: explicitly pick known CohortFilter keys to prevent prototype pollution (F-04 shared serializer).
+    return parseCohortFilterJson(searchParams.get('filters'));
   }, [activeSavedSearch, searchParams]);
 
   const cohort = useMemo(() => {

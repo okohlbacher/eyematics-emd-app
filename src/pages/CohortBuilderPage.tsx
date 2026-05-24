@@ -35,43 +35,12 @@ import {
 import { getSettings } from '../services/settingsService';
 import { getCachedDisplay, useDiagnosisDisplay } from '../services/terminology';
 import type { CohortFilter, SavedSearch } from '../types/fhir';
+import { safePickCohortFilter } from '../utils/cohortFilterSerialization';
 import { formatDate } from '../utils/dateFormat';
 import { datedFilename,downloadCsv, downloadJson } from '../utils/download';
 import AdvancedFilterDialog from './AdvancedFilterDialog';
 
 type SortField = 'date' | 'name';
-
-/**
- * COH-02 / T-33-04: Safe-pick whitelist for CohortFilter deserialization from sessionStorage.
- * Accepts only known keys with correct shapes; preset only if one of the four literals.
- * flaggedCaseIds stored as string[] is reconstructed as a Set.
- */
-function safePickCohortFilter(raw: unknown): CohortFilter {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
-  const parsed = raw as Record<string, unknown>;
-  const safe: CohortFilter = {};
-  if (Array.isArray(parsed.diagnosis)) safe.diagnosis = parsed.diagnosis.map(String);
-  if (Array.isArray(parsed.gender)) safe.gender = parsed.gender.map(String);
-  if (Array.isArray(parsed.ageRange) && parsed.ageRange.length === 2) safe.ageRange = [Number(parsed.ageRange[0]), Number(parsed.ageRange[1])];
-  if (Array.isArray(parsed.visusRange) && parsed.visusRange.length === 2) safe.visusRange = [Number(parsed.visusRange[0]), Number(parsed.visusRange[1])];
-  if (Array.isArray(parsed.crtRange) && parsed.crtRange.length === 2) safe.crtRange = [Number(parsed.crtRange[0]), Number(parsed.crtRange[1])];
-  if (Array.isArray(parsed.centers)) safe.centers = parsed.centers.map(String);
-  // Phase 33 fields
-  const PRESET_LITERALS = ['therapyBreaker', 'implausibleCrt', 'flaggedQuality', 'implausibleVisus'] as const;
-  if (typeof parsed.preset === 'string' && (PRESET_LITERALS as readonly string[]).includes(parsed.preset)) {
-    safe.preset = parsed.preset as CohortFilter['preset'];
-  }
-  if (Array.isArray(parsed.flaggedCaseIds)) safe.flaggedCaseIds = new Set(parsed.flaggedCaseIds.map(String));
-  if (Array.isArray(parsed.diagnosisSubtype)) safe.diagnosisSubtype = parsed.diagnosisSubtype.map(String);
-  if (typeof parsed.hasComorbidity === 'boolean') safe.hasComorbidity = parsed.hasComorbidity;
-  if (Array.isArray(parsed.hba1cRange) && parsed.hba1cRange.length === 2) safe.hba1cRange = [Number(parsed.hba1cRange[0]), Number(parsed.hba1cRange[1])];
-  if (Array.isArray(parsed.medicationCodes)) safe.medicationCodes = parsed.medicationCodes.map(String);
-  const LATERALITY_LITERALS = ['OD', 'OS', 'OU'] as const;
-  if (typeof parsed.laterality === 'string' && (LATERALITY_LITERALS as readonly string[]).includes(parsed.laterality)) {
-    safe.laterality = parsed.laterality as CohortFilter['laterality'];
-  }
-  return safe;
-}
 
 /**
  * Per-code diagnosis chip rendered with the terminology resolver hook (Phase 25 D-19).

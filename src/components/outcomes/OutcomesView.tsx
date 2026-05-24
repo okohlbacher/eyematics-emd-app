@@ -23,6 +23,7 @@ import { applyFilters } from '../../services/fhirLoader';
 import { type AggregateResponse,postAggregate } from '../../services/outcomesAggregateService';
 import { getSettings, loadSettings } from '../../services/settingsService';
 import type { CohortFilter } from '../../types/fhir';
+import { safePickCohortFilter } from '../../utils/cohortFilterSerialization';
 import {
   type AxisMode,
   computeCohortTrajectory,
@@ -56,31 +57,6 @@ function metricTitleKey(m: MetricType): 'metricsVisus' | 'metricsCrt' | 'metrics
   if (m === 'interval') return 'metricsInterval';
   if (m === 'responder') return 'metricsResponder';
   return 'metricsVisus';
-}
-
-// M-04 safe-pick pattern (mirrors AnalysisPage.tsx filter parsing).
-// Phase 33: extended to include preset and advanced fields (T-33-01 whitelist).
-function safePickFilter(raw: unknown): CohortFilter {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
-  const parsed = raw as Record<string, unknown>;
-  const safe: CohortFilter = {};
-  if (Array.isArray(parsed.diagnosis)) safe.diagnosis = parsed.diagnosis.map(String);
-  if (Array.isArray(parsed.gender)) safe.gender = parsed.gender.map(String);
-  if (Array.isArray(parsed.ageRange) && parsed.ageRange.length === 2) safe.ageRange = [Number(parsed.ageRange[0]), Number(parsed.ageRange[1])];
-  if (Array.isArray(parsed.visusRange) && parsed.visusRange.length === 2) safe.visusRange = [Number(parsed.visusRange[0]), Number(parsed.visusRange[1])];
-  if (Array.isArray(parsed.crtRange) && parsed.crtRange.length === 2) safe.crtRange = [Number(parsed.crtRange[0]), Number(parsed.crtRange[1])];
-  if (Array.isArray(parsed.centers)) safe.centers = parsed.centers.map(String);
-  // Phase 33 fields (T-33-01 whitelist — prevents silent drop of preset/advanced state)
-  const PRESET_LITERALS = ['therapyBreaker', 'implausibleCrt', 'flaggedQuality', 'implausibleVisus'] as const;
-  if (typeof parsed.preset === 'string' && (PRESET_LITERALS as readonly string[]).includes(parsed.preset)) safe.preset = parsed.preset as CohortFilter['preset'];
-  if (Array.isArray(parsed.flaggedCaseIds)) safe.flaggedCaseIds = new Set(parsed.flaggedCaseIds.map(String));
-  if (Array.isArray(parsed.diagnosisSubtype)) safe.diagnosisSubtype = parsed.diagnosisSubtype.map(String);
-  if (typeof parsed.hasComorbidity === 'boolean') safe.hasComorbidity = parsed.hasComorbidity;
-  if (Array.isArray(parsed.hba1cRange) && parsed.hba1cRange.length === 2) safe.hba1cRange = [Number(parsed.hba1cRange[0]), Number(parsed.hba1cRange[1])];
-  if (Array.isArray(parsed.medicationCodes)) safe.medicationCodes = parsed.medicationCodes.map(String);
-  const LATERALITY_LITERALS = ['OD', 'OS', 'OU'] as const;
-  if (typeof parsed.laterality === 'string' && (LATERALITY_LITERALS as readonly string[]).includes(parsed.laterality)) safe.laterality = parsed.laterality as CohortFilter['laterality'];
-  return safe;
 }
 
 type LayerState = {
@@ -174,7 +150,7 @@ export default function OutcomesView() {
     if (filterParam) {
       try {
         const parsed = JSON.parse(decodeURIComponent(filterParam));
-        return { name: null, cases: applyFilters(activeCases, safePickFilter(parsed), filterOptions) };
+        return { name: null, cases: applyFilters(activeCases, safePickCohortFilter(parsed), filterOptions) };
       } catch { return null; }
     }
     return { name: null, cases: activeCases };
