@@ -78,7 +78,16 @@ export function extractPatientCases(bundles: BundleLike[]): PatientCase[] {
   const medicationsByRef = groupBySubject(medications);
   const orgById = new Map(orgs.map((o) => [o.id, o]));
 
-  return patients.map((pat) => {
+  // D-03: exclude stub Patients (zero Observations) before building PatientCase objects.
+  // Stubs are identified purely by the absence of Observation resources — no tag/extension.
+  // This is the SINGLE chokepoint; all clinical consumers (cohort, outcomes, quality,
+  // case detail, charts, server aggregation) are clean by construction.
+  const clinicalPatients = patients.filter((pat) => {
+    const ref = `Patient/${pat.id}`;
+    return (observationsByRef.get(ref) ?? []).length > 0;
+  });
+
+  return clinicalPatients.map((pat) => {
     const ref = `Patient/${pat.id}`;
     const org = pat.meta?.source ? orgById.get(pat.meta.source) : undefined;
     return {
