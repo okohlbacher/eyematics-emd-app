@@ -22,7 +22,6 @@ import { authFetch } from '../../services/authHeaders';
 import { applyFilters } from '../../services/fhirLoader';
 import { type AggregateResponse,postAggregate } from '../../services/outcomesAggregateService';
 import { getSettings, loadSettings } from '../../services/settingsService';
-import type { CohortFilter } from '../../types/fhir';
 import { safePickCohortFilter } from '../../utils/cohortFilterSerialization';
 import {
   type AxisMode,
