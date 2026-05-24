@@ -8,8 +8,9 @@
  * and gaps from both eyes are pooled. This avoids spurious 0-day cross-eye gaps
  * when a patient has same-day OD and OS injections.
  */
-import { eyeOf, percentile } from './cohortTrajectory';
+import { percentile } from './cohortTrajectory';
 import { SNOMED_IVI } from './fhirCodes';
+import { resolveEye } from './laterality';
 import type { PatientCase } from './types/fhir';
 
 export type IntervalEye = 'od' | 'os' | 'combined';
@@ -33,32 +34,6 @@ export const INTERVAL_BINS = [
   { label: '120–180d', min: 120, max: 180 },
   { label: '180+d', min: 180, max: Infinity },
 ] as const;
-
-/**
- * Resolve eye laterality from a procedure bodySite, handling both the
- * SNOMED laterality codes (362503005 / 362502000) used by eyeOf() and the
- * SNOMED structure codes (24028007 / 8966001) used in synthetic bundles.
- */
-function eyeOfProc(bodySite: unknown): 'od' | 'os' | null {
-  // Delegate to the shared eyeOf for the primary code set
-  const primary = eyeOf(bodySite);
-  if (primary !== null) return primary;
-
-  // Fallback: check for SNOMED structure codes
-  let coding: Array<{ code?: string }> | undefined;
-  if (Array.isArray(bodySite)) {
-    const first = bodySite[0] as { coding?: Array<{ code?: string }> } | undefined;
-    coding = first?.coding;
-  } else if (typeof bodySite === 'object' && bodySite !== null) {
-    coding = (bodySite as { coding?: Array<{ code?: string }> }).coding;
-  }
-  if (!coding || !Array.isArray(coding)) return null;
-  const code = coding[0]?.code;
-  // SNOMED: Right eye structure = 24028007, Left eye structure = 8966001
-  if (code === '24028007') return 'od';
-  if (code === '8966001') return 'os';
-  return null;
-}
 
 /** Zero-filled bins matching INTERVAL_BINS order (used for empty-state / starting value). */
 function emptyBins(): IntervalBin[] {
@@ -85,7 +60,7 @@ function getEyeDates(pc: PatientCase, filterEye: 'od' | 'os' | null): string[] {
     .filter((p) => (p.code?.coding ?? []).some((c) => c?.code === SNOMED_IVI))
     .filter((p) => {
       if (filterEye === null) return true;
-      const procEye = eyeOfProc(p.bodySite);
+      const procEye = resolveEye(p.bodySite);
       return procEye === filterEye;
     })
     .map((p) => p.performedDateTime)

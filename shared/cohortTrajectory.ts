@@ -10,16 +10,9 @@
  * All functions are pure — no Date.now(), no Math.random(), no I/O.
  */
 
-import {
-  LOINC_CRT,
-  LOINC_VISUS,
-  SNOMED_EYE_LEFT,
-  SNOMED_EYE_LEFT_ALT,
-  SNOMED_EYE_RIGHT,
-  SNOMED_EYE_RIGHT_ALT,
-  SNOMED_IVI,
-} from './fhirCodes';
+import { LOINC_CRT, LOINC_VISUS, SNOMED_IVI } from './fhirCodes';
 import { getObservationsByCode } from './fhirQueries';
+import { resolveEye } from './laterality';
 import type { Observation, PatientCase, Procedure } from './types/fhir';
 
 // ---------------------------------------------------------------------------
@@ -99,32 +92,11 @@ export function decimalToSnellen(
 
 /**
  * Determine the eye laterality from a FHIR bodySite.
- * Accepts either:
- *   - CodeableConcept (object with .coding[]) — Observation.bodySite
- *   - Array of CodeableConcept — Procedure.bodySite
- * Returns 'od' | 'os' | null.
+ * Re-exported alias of the shared `resolveEye` (F-05) — kept as a named export
+ * because the public import surface (`src/utils/cohortTrajectory` shim and many
+ * callers) reference `eyeOf` directly.
  */
-export function eyeOf(bodySite: unknown): 'od' | 'os' | null {
-  if (!bodySite) return null;
-
-  let coding: Array<{ code?: string }> | undefined;
-
-  if (Array.isArray(bodySite)) {
-    // Procedure.bodySite is an array of CodeableConcepts
-    const first = bodySite[0] as { coding?: Array<{ code?: string }> } | undefined;
-    coding = first?.coding;
-  } else if (typeof bodySite === 'object' && bodySite !== null) {
-    // Observation.bodySite is a single CodeableConcept
-    coding = (bodySite as { coding?: Array<{ code?: string }> }).coding;
-  }
-
-  if (!coding || !Array.isArray(coding)) return null;
-
-  const code = coding[0]?.code;
-  if (code === SNOMED_EYE_RIGHT || code === SNOMED_EYE_RIGHT_ALT) return 'od';
-  if (code === SNOMED_EYE_LEFT || code === SNOMED_EYE_LEFT_ALT) return 'os';
-  return null;
-}
+export const eyeOf = resolveEye;
 
 /**
  * Cumulative count of IVI Procedures (SNOMED_IVI) up to and including observationDate.

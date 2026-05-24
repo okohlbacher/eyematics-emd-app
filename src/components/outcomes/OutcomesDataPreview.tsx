@@ -74,20 +74,6 @@ interface ResponderRow {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers: eyeOf for dual SNOMED codes
-// ---------------------------------------------------------------------------
-
-function bodySiteEye(bodySite: unknown): 'od' | 'os' | null {
-  if (!bodySite || typeof bodySite !== 'object') return null;
-  const coding = (bodySite as Record<string, unknown>).coding;
-  if (!Array.isArray(coding) || coding.length === 0) return null;
-  const code = (coding[0] as Record<string, unknown>).code;
-  if (code === '362503005' || code === '24028007') return 'od';
-  if (code === '362502000' || code === '8966001') return 'os';
-  return null;
-}
-
-// ---------------------------------------------------------------------------
 // flattenToRows — visus (locked decision 3: lives inside this file only)
 // ---------------------------------------------------------------------------
 
@@ -186,7 +172,7 @@ function flattenCrtRows(cases: PatientCase[]): CrtRow[] {
       const isCrt = (obs.code?.coding ?? []).some((c) => c.code === LOINC_CRT);
       if (!isCrt) continue;
 
-      const e = bodySiteEye(obs.bodySite);
+      const e = eyeOf(obs.bodySite);
       if (e !== 'od' && e !== 'os') continue;
 
       const um = typeof obs.valueQuantity?.value === 'number' ? obs.valueQuantity.value : NaN;
@@ -234,7 +220,7 @@ function flattenIntervalRows(cases: PatientCase[]): IntervalRow[] {
       const isIvi = (proc.code?.coding ?? []).some((c) => c.code === SNOMED_IVI);
       if (!isIvi) continue;
 
-      const e = bodySiteEye(proc.bodySite) ?? eyeOf(proc.bodySite);
+      const e = eyeOf(proc.bodySite);
       if (e !== 'od' && e !== 'os') continue;
 
       const date =
@@ -316,7 +302,7 @@ function flattenResponderRows(
       const isVisus = (obs.code?.coding ?? []).some((c) => c.code === LOINC_VISUS);
       if (!isVisus) continue;
 
-      const e = bodySiteEye(obs.bodySite) ?? eyeOf(obs.bodySite);
+      const e = eyeOf(obs.bodySite);
       if (e !== 'od' && e !== 'os') continue;
 
       const decimal =

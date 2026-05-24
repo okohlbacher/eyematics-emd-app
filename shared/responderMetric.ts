@@ -13,7 +13,8 @@
  * (5 ETDRS letters = 0.1 logMAR = 1 ETDRS line)
  */
 import { decimalToLogmar } from './cohortTrajectory';
-import { LOINC_VISUS, SNOMED_EYE_LEFT,SNOMED_EYE_RIGHT } from './fhirCodes';
+import { LOINC_VISUS } from './fhirCodes';
+import { resolveEye } from './laterality';
 import type { Observation,PatientCase } from './types/fhir';
 
 export type ResponderEye = 'od' | 'os' | 'combined';
@@ -28,34 +29,12 @@ export interface ResponderBuckets {
 const YEAR_1_WINDOW_DAYS = 180;
 const YEAR_1_TARGET_DAYS = 365;
 
-/**
- * Determine eye laterality from an Observation bodySite.
- * Supports both SNOMED right/left eye codes known in the codebase and
- * alternative SNOMED codes used in test fixtures.
- */
-function eyeFromBodySite(bodySite: unknown): 'od' | 'os' | null {
-  if (!bodySite || typeof bodySite !== 'object') return null;
-  const concept = bodySite as { coding?: Array<{ code?: string }> };
-  const coding = concept.coding;
-  if (!Array.isArray(coding) || coding.length === 0) return null;
-  const code = coding[0]?.code;
-  if (!code) return null;
-  // Primary SNOMED codes (production data)
-  if (code === SNOMED_EYE_RIGHT) return 'od';
-  if (code === SNOMED_EYE_LEFT) return 'os';
-  // Alternative SNOMED codes used in test fixtures
-  // 24028007 = Right eye structure; 8966001 = Left eye structure
-  if (code === '24028007') return 'od';
-  if (code === '8966001') return 'os';
-  return null;
-}
-
 function filterVisus(obs: Observation[], eye: 'od' | 'os' | null): Observation[] {
   return obs.filter((o) => {
     const isVisus = (o.code?.coding ?? []).some((c) => c?.code === LOINC_VISUS);
     if (!isVisus) return false;
     if (eye === null) return true;
-    return eyeFromBodySite(o.bodySite) === eye;
+    return resolveEye(o.bodySite) === eye;
   });
 }
 
