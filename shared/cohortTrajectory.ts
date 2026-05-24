@@ -245,6 +245,167 @@ function standardDeviation(arr: number[]): number {
 }
 
 // ---------------------------------------------------------------------------
+// Export-row projectors (F-08) — shared measurement-series builders.
+//
+// The OutcomesDataPreview CSV path previously reimplemented observation
+// filtering, per-eye grouping, baseline selection, date math, laterality, and
+// treatment-index logic that already lives in this trajectory module. These
+// projectors own that transform so the preview consumes them directly.
+//
+// Behavior matches the prior in-component flatteners exactly:
+//   - visus/CRT observations matched by LOINC code, laterality via resolveEye
+//   - values truncated to YYYY-MM-DD (`.slice(0, 10)`), positive finite only
+//   - per-eye series sorted by date string; baseline = first (earliest) row
+//   - days_since_baseline = Math.round(day diff); treatment_index = count of
+//     same-eye IVI procedure dates on or before the observation date
+//   - CRT µm rounded; crt_delta_um = round(um - baselineUm)
+// ---------------------------------------------------------------------------
+
+export interface VisusExportRow {
+  patient_pseudonym: string;
+  eye: 'od' | 'os';
+  observation_date: string;
+  days_since_baseline: number;
+  treatment_index: number;
+  visus_logmar: number;
+  visus_snellen_numerator: number;
+  visus_snellen_denominator: number;
+}
+
+export interface CrtExportRow {
+  patient_pseudonym: string;
+  eye: 'od' | 'os';
+  observation_date: string;
+  crt_um: number;
+  crt_delta_um: number;
+}
+
+export function flattenVisusRows(cases: PatientCase[]): VisusExportRow[] {
+  const rows: VisusExportRow[] = [];
+
+  for (const pc of cases) {
+    const visusByEye: Record<'od' | 'os', Array<{ date: string; decimal: number }>> = {
+      od: [],
+      os: [],
+    };
+
+    for (const obs of pc.observations ?? []) {
+      const isVisus = (obs.code?.coding ?? []).some((c) => c.code === LOINC_VISUS);
+      if (!isVisus) continue;
+
+      const e = resolveEye(obs.bodySite);
+      if (e !== 'od' && e !== 'os') continue;
+
+      const decimal =
+        typeof obs.valueQuantity?.value === 'number' ? obs.valueQuantity.value : NaN;
+      if (!Number.isFinite(decimal) || decimal <= 0) continue;
+
+      const date =
+        typeof obs.effectiveDateTime === 'string' ? obs.effectiveDateTime.slice(0, 10) : '';
+      if (!date) continue;
+
+      visusByEye[e].push({ date, decimal });
+    }
+
+    (['od', 'os'] as const).forEach((eye) =>
+      visusByEye[eye].sort((a, b) => a.date.localeCompare(b.date)),
+    );
+
+    const iviByEye: Record<'od' | 'os', string[]> = { od: [], os: [] };
+
+    for (const proc of pc.procedures ?? []) {
+      const isIvi = (proc.code?.coding ?? []).some((c) => c.code === SNOMED_IVI);
+      if (!isIvi) continue;
+
+      const e = resolveEye(proc.bodySite);
+      if (e !== 'od' && e !== 'os') continue;
+
+      const date =
+        typeof proc.performedDateTime === 'string' ? proc.performedDateTime.slice(0, 10) : '';
+      if (!date) continue;
+
+      iviByEye[e].push(date);
+    }
+
+    iviByEye.od.sort();
+    iviByEye.os.sort();
+
+    (['od', 'os'] as const).forEach((eye) => {
+      const observations = visusByEye[eye];
+      if (observations.length === 0) return;
+
+      const baseline = observations[0].date;
+
+      for (const obs of observations) {
+        const logmar = decimalToLogmar(obs.decimal);
+        const snellen = decimalToSnellen(obs.decimal);
+        const daysSinceBaseline = Math.round(
+          (new Date(obs.date).getTime() - new Date(baseline).getTime()) / (24 * 60 * 60 * 1000),
+        );
+        const treatmentIndex = iviByEye[eye].filter((d) => d <= obs.date).length;
+
+        rows.push({
+          patient_pseudonym: pc.pseudonym,
+          eye,
+          observation_date: obs.date,
+          days_since_baseline: daysSinceBaseline,
+          treatment_index: treatmentIndex,
+          visus_logmar: logmar,
+          visus_snellen_numerator: snellen.num,
+          visus_snellen_denominator: snellen.den,
+        });
+      }
+    });
+  }
+
+  return rows;
+}
+
+export function flattenCrtRows(cases: PatientCase[]): CrtExportRow[] {
+  const rows: CrtExportRow[] = [];
+
+  for (const pc of cases) {
+    const crtByEye: Record<'od' | 'os', Array<{ date: string; um: number }>> = { od: [], os: [] };
+
+    for (const obs of pc.observations ?? []) {
+      const isCrt = (obs.code?.coding ?? []).some((c) => c.code === LOINC_CRT);
+      if (!isCrt) continue;
+
+      const e = resolveEye(obs.bodySite);
+      if (e !== 'od' && e !== 'os') continue;
+
+      const um = typeof obs.valueQuantity?.value === 'number' ? obs.valueQuantity.value : NaN;
+      if (!Number.isFinite(um) || um <= 0) continue;
+
+      const date =
+        typeof obs.effectiveDateTime === 'string' ? obs.effectiveDateTime.slice(0, 10) : '';
+      if (!date) continue;
+
+      crtByEye[e].push({ date, um });
+    }
+
+    (['od', 'os'] as const).forEach((eye) => {
+      crtByEye[eye].sort((a, b) => a.date.localeCompare(b.date));
+      const obs = crtByEye[eye];
+      if (obs.length === 0) return;
+
+      const baselineUm = obs[0].um;
+      for (const o of obs) {
+        rows.push({
+          patient_pseudonym: pc.pseudonym,
+          eye,
+          observation_date: o.date,
+          crt_um: Math.round(o.um),
+          crt_delta_um: Math.round(o.um - baselineUm),
+        });
+      }
+    });
+  }
+
+  return rows;
+}
+
+// ---------------------------------------------------------------------------
 // computeCohortTrajectory
 // ---------------------------------------------------------------------------
 

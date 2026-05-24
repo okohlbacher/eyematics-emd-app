@@ -1,10 +1,11 @@
 /**
  * OutcomesDataPreview — collapsible data preview with CSV export (OUTCOME-08 / D-27..D-30).
  *
- * Design decisions (09-CONTEXT.md locked decision 3):
- *   - flattenToRows() lives HERE, not in cohortTrajectory.ts (frozen from Phase 8).
+ * Design decisions (09-CONTEXT.md locked decision 3, superseded by F-08 Phase 36):
+ *   - Measurement-series flatteners now live in shared/cohortTrajectory.ts
+ *     (flattenVisusRows / flattenCrtRows) so the CSV path reuses trajectory
+ *     ingest logic instead of duplicating it. This component consumes them.
  *   - Does NOT call computeCohortTrajectory a second time.
- *   - Imports only pure helpers from cohortTrajectory.ts: decimalToLogmar, decimalToSnellen, eyeOf.
  *   - Uses native <details> element (no React state for open/closed — D-27 "no-JS" requirement).
  *   - CSV columns: D-28 order, no center_id (D-30).
  *
@@ -12,17 +13,12 @@
  */
 import { ChevronRight, Download } from 'lucide-react';
 
+import { flattenCrtRows, flattenVisusRows } from '../../../shared/cohortTrajectory';
 import { flattenIntervalRows } from '../../../shared/intervalMetric';
 import { projectResponderRows } from '../../../shared/responderMetric';
 import type { TranslationKey } from '../../i18n/translations';
-import { LOINC_CRT, LOINC_VISUS, SNOMED_IVI } from '../../services/fhirLoader';
 import type { PatientCase } from '../../types/fhir';
-import {
-  decimalToLogmar,
-  decimalToSnellen,
-  eyeOf,
-  type TrajectoryResult,
-} from '../../utils/cohortTrajectory';
+import { type TrajectoryResult } from '../../utils/cohortTrajectory';
 import { datedFilename, downloadCsv } from '../../utils/download';
 
 // ---------------------------------------------------------------------------
@@ -38,158 +34,6 @@ interface Props {
   locale: 'de' | 'en';
   activeMetric?: MetricType;
   thresholdLetters?: number;
-}
-
-interface VisusRow {
-  patient_pseudonym: string;
-  eye: 'od' | 'os';
-  observation_date: string;
-  days_since_baseline: number;
-  treatment_index: number;
-  visus_logmar: number;
-  visus_snellen_numerator: number;
-  visus_snellen_denominator: number;
-}
-
-interface CrtRow {
-  patient_pseudonym: string;
-  eye: 'od' | 'os';
-  observation_date: string;
-  crt_um: number;
-  crt_delta_um: number;
-}
-
-// ---------------------------------------------------------------------------
-// flattenToRows — visus (locked decision 3: lives inside this file only)
-// ---------------------------------------------------------------------------
-
-function flattenVisusRows(cases: PatientCase[]): VisusRow[] {
-  const rows: VisusRow[] = [];
-
-  for (const pc of cases) {
-    const visusByEye: Record<'od' | 'os', Array<{ date: string; decimal: number }>> = {
-      od: [],
-      os: [],
-    };
-
-    for (const obs of pc.observations ?? []) {
-      const isVisus = (obs.code?.coding ?? []).some((c) => c.code === LOINC_VISUS);
-      if (!isVisus) continue;
-
-      const e = eyeOf(obs.bodySite);
-      if (e !== 'od' && e !== 'os') continue;
-
-      const decimal =
-        typeof obs.valueQuantity?.value === 'number' ? obs.valueQuantity.value : NaN;
-      if (!Number.isFinite(decimal) || decimal <= 0) continue;
-
-      const date =
-        typeof obs.effectiveDateTime === 'string' ? obs.effectiveDateTime.slice(0, 10) : '';
-      if (!date) continue;
-
-      visusByEye[e].push({ date, decimal });
-    }
-
-    (['od', 'os'] as const).forEach((eye) =>
-      visusByEye[eye].sort((a, b) => a.date.localeCompare(b.date)),
-    );
-
-    const iviByEye: Record<'od' | 'os', string[]> = { od: [], os: [] };
-
-    for (const proc of pc.procedures ?? []) {
-      const isIvi = (proc.code?.coding ?? []).some((c) => c.code === SNOMED_IVI);
-      if (!isIvi) continue;
-
-      const e = eyeOf(proc.bodySite);
-      if (e !== 'od' && e !== 'os') continue;
-
-      const date =
-        typeof proc.performedDateTime === 'string' ? proc.performedDateTime.slice(0, 10) : '';
-      if (!date) continue;
-
-      iviByEye[e].push(date);
-    }
-
-    iviByEye.od.sort();
-    iviByEye.os.sort();
-
-    (['od', 'os'] as const).forEach((eye) => {
-      const observations = visusByEye[eye];
-      if (observations.length === 0) return;
-
-      const baseline = observations[0].date;
-
-      for (const obs of observations) {
-        const logmar = decimalToLogmar(obs.decimal);
-        const snellen = decimalToSnellen(obs.decimal);
-        const daysSinceBaseline = Math.round(
-          (new Date(obs.date).getTime() - new Date(baseline).getTime()) / (24 * 60 * 60 * 1000),
-        );
-        const treatmentIndex = iviByEye[eye].filter((d) => d <= obs.date).length;
-
-        rows.push({
-          patient_pseudonym: pc.pseudonym,
-          eye,
-          observation_date: obs.date,
-          days_since_baseline: daysSinceBaseline,
-          treatment_index: treatmentIndex,
-          visus_logmar: logmar,
-          visus_snellen_numerator: snellen.num,
-          visus_snellen_denominator: snellen.den,
-        });
-      }
-    });
-  }
-
-  return rows;
-}
-
-// ---------------------------------------------------------------------------
-// flattenCrtRows — METRIC-05 / CRT
-// ---------------------------------------------------------------------------
-
-function flattenCrtRows(cases: PatientCase[]): CrtRow[] {
-  const rows: CrtRow[] = [];
-
-  for (const pc of cases) {
-    const crtByEye: Record<'od' | 'os', Array<{ date: string; um: number }>> = { od: [], os: [] };
-
-    for (const obs of pc.observations ?? []) {
-      const isCrt = (obs.code?.coding ?? []).some((c) => c.code === LOINC_CRT);
-      if (!isCrt) continue;
-
-      const e = eyeOf(obs.bodySite);
-      if (e !== 'od' && e !== 'os') continue;
-
-      const um = typeof obs.valueQuantity?.value === 'number' ? obs.valueQuantity.value : NaN;
-      if (!Number.isFinite(um) || um <= 0) continue;
-
-      const date =
-        typeof obs.effectiveDateTime === 'string' ? obs.effectiveDateTime.slice(0, 10) : '';
-      if (!date) continue;
-
-      crtByEye[e].push({ date, um });
-    }
-
-    (['od', 'os'] as const).forEach((eye) => {
-      crtByEye[eye].sort((a, b) => a.date.localeCompare(b.date));
-      const obs = crtByEye[eye];
-      if (obs.length === 0) return;
-
-      const baselineUm = obs[0].um;
-      for (const o of obs) {
-        rows.push({
-          patient_pseudonym: pc.pseudonym,
-          eye,
-          observation_date: o.date,
-          crt_um: Math.round(o.um),
-          crt_delta_um: Math.round(o.um - baselineUm),
-        });
-      }
-    });
-  }
-
-  return rows;
 }
 
 // ---------------------------------------------------------------------------
