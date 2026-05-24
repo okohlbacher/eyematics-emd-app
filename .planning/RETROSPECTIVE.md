@@ -4,6 +4,43 @@ Living retrospective across milestones. Each milestone gets a section. Cross-mil
 
 ---
 
+## Milestone: v1.11 — UAT Fixes, Data Completeness & Quality Closure
+
+**Shipped:** 2026-05-24
+**Phases:** 5 (32–36) | **Plans:** 16 | **Tasks:** ~20
+
+### What Was Built
+- User management & auth hardening: create/edit validation, activation/deactivation with session revocation, settings.yaml-sourced auth constants, live inactivity countdown + lockout feedback.
+- Cohort builder UX: age/Visus/CRT plausibility validation, sessionStorage filter persistence + reset, 4 issue-based presets, advanced filter dialog, dashboard Review-button routing.
+- Data Completeness: FHIR Consent + seeded patient stubs across 6 bundles, single-chokepoint stub isolation (H2), Datenvollzähligkeit dashboard card.
+- V&V backfill: 27/28 VERIFICATION.md + all v1.10 VALIDATION.md finalized, anchored to the v1.10 git tag.
+- CODEX adversarial review (15 findings) + Tier A/B compaction: net −747 LOC, knip/lint clean, test:ci 901/901.
+
+### What Worked
+- Single-chokepoint design (`extractPatientCases`) made stub isolation a one-line, fully-testable invariant — and it survived the Phase 36 compaction untouched.
+- Anchoring V&V verification to the `v1.10` tag (H1) kept the paper trail immune to concurrent feature work and the compaction pass.
+- Read-only CODEX review → explicit human approval gate → conservative tiering kept the irreversible compaction step safe; test:ci green after every commit.
+- Sequential-on-main execution (no worktrees) sidestepped the known stale-worktree merge hazard.
+
+### What Was Inefficient
+- The DAG resolver collapsed declared waves (short-form `depends_on: [01]` not mapped to `34-01`); waves had to be honored from frontmatter instead. 
+- An executor turn truncated mid-Task-2 (Phase 34-01) and needed a resume.
+- A plan-checker caught a real shell-logic bug in a verify command (test:ci failure could echo PASS) — good catch, one revision cycle.
+
+### Patterns Established
+- Approval-gated compaction: review (read-only) → COMPACTION-PLAN tiers → user approval → apply only approved → gates.
+- Behavior-preserving de-duplication verified purely by the existing suite (shared/laterality.ts, cohortFilterSerialization.ts, shared outcome projectors).
+
+### Key Lessons
+- Treat external-AI review output as input, not truth: the UI auditor over-inferred a required label; verifying against the actual UI-SPEC avoided a redundant element.
+- Knip is a useful close-out gate — it surfaced the Phase 34 unused type exports that became Tier A compaction.
+
+### Cost Observations
+- Model mix: planners/hard refactor on opus; executors/researchers/checkers on sonnet; review via external CODEX CLI.
+- Net compaction removed more than it added (−747 LOC) while holding 901/901 tests.
+
+---
+
 ## Milestone: v1.10 — Session Hardening & UX Closure
 
 **Shipped:** 2026-05-21
