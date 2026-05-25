@@ -14,6 +14,14 @@ import type { Request, Response } from 'express';
 import { Router } from 'express';
 import yaml from 'js-yaml';
 
+import {
+  PLAUSIBILITY_DEFAULTS,
+  THRESHOLD_DEFAULTS,
+  validatePlausibility,
+  validateThresholds,
+  type PlausibilityConfig,
+  type ThresholdConfig,
+} from '../shared/thresholdConfig.js';
 import { resetLimiter } from './authApi.js';
 import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
 import { SETTINGS_FILE } from './constants.js';
@@ -138,6 +146,30 @@ function validateSettingsSchema(parsed: unknown): string | null {
       }
     }
   }
+  // Phase 39 / CFG-01 — validate optional thresholds block
+  if (obj.thresholds !== undefined) {
+    if (obj.thresholds === null || typeof obj.thresholds !== 'object') {
+      return 'thresholds must be an object';
+    }
+    const t = obj.thresholds as Record<string, unknown>;
+    const merged: ThresholdConfig = { ...THRESHOLD_DEFAULTS, ...t };
+    const err = validateThresholds(merged);
+    if (err !== 'ok') {
+      return `thresholds validation failed: ${err}`;
+    }
+  }
+  // Phase 39 / CFG-02 — validate optional plausibility block
+  if (obj.plausibility !== undefined) {
+    if (obj.plausibility === null || typeof obj.plausibility !== 'object') {
+      return 'plausibility must be an object';
+    }
+    const p = obj.plausibility as Record<string, unknown>;
+    const merged: PlausibilityConfig = { ...PLAUSIBILITY_DEFAULTS, ...p };
+    const err = validatePlausibility(merged);
+    if (err !== 'ok') {
+      return `plausibility validation failed: ${err}`;
+    }
+  }
   return null;
 }
 
@@ -170,6 +202,37 @@ export function getAuthSettings(): AuthSettings {
     return { ...AUTH_DEFAULTS, ...(parsed?.auth ?? {}) };
   } catch {
     return AUTH_DEFAULTS;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 39 / CFG-03 — threshold settings reader for server-side parity
+// ---------------------------------------------------------------------------
+
+export interface ThresholdSettings {
+  thresholds: ThresholdConfig;
+  plausibility: PlausibilityConfig;
+}
+
+/**
+ * Reads `thresholds.*` and `plausibility.*` from settings.yaml at call time
+ * (NOT boot-cached) — mirrors getAuthSettings() exactly. Returns defaults
+ * for any missing field, including when settings.yaml is unreadable.
+ * CFG-03: server uses the same operator-configured values as the client.
+ */
+export function getThresholdSettings(): ThresholdSettings {
+  try {
+    const raw = fs.readFileSync(SETTINGS_FILE, 'utf-8');
+    const parsed = yaml.load(raw) as {
+      thresholds?: Partial<ThresholdConfig>;
+      plausibility?: Partial<PlausibilityConfig>;
+    } | null;
+    return {
+      thresholds: { ...THRESHOLD_DEFAULTS, ...(parsed?.thresholds ?? {}) },
+      plausibility: { ...PLAUSIBILITY_DEFAULTS, ...(parsed?.plausibility ?? {}) },
+    };
+  } catch {
+    return { thresholds: THRESHOLD_DEFAULTS, plausibility: PLAUSIBILITY_DEFAULTS };
   }
 }
 

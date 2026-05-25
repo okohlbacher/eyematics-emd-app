@@ -329,9 +329,10 @@ describe('EMDREQ-QUAL: Quality Review', () => {
 
   describe('QUAL-009: Therapy discontinuation', () => {
     it('clinical thresholds are imported from config, not hardcoded', () => {
-      expect(CRITICAL_CRT_THRESHOLD).toBe(400);
-      expect(CRITICAL_VISUS_THRESHOLD).toBe(0.1);
-      expect(VISUS_JUMP_THRESHOLD).toBe(0.3);
+      // CFG-01: thresholds are now settings-backed functions; call them to get the value
+      expect(CRITICAL_CRT_THRESHOLD()).toBe(400);
+      expect(CRITICAL_VISUS_THRESHOLD()).toBe(0.1);
+      expect(VISUS_JUMP_THRESHOLD()).toBe(0.3);
     });
 
     it('classifies patient by days since last injection', () => {
