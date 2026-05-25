@@ -187,7 +187,7 @@ Plans:
 **Plans**: 3 plans
 - [x] 41-01-PLAN.md — Shared CenterMultiSelect + multi-select quality center filter; server authorized-center intersection test (QUAL-024)
 - [ ] 41-02-PLAN.md — Time-range filter driving Grundgesamtheit denominator + summary counts; prominent absolute counts (QUAL-022, QUAL-023)
-- [ ] 41-03-PLAN.md — Reposition approve/flag-status control to top of case detail (QUAL-025)
+- [x] 41-03-PLAN.md — Reposition approve/flag-status control to top of case detail (QUAL-025)
 **UI hint**: yes
 
 ### Phase 42: Analysis Cohort Comparison & Labeling
@@ -246,7 +246,7 @@ Plans:
 | 38. Audit Actor Correctness | 1/1 | Complete    | 2026-05-25 |
 | 39. Configurable Clinical Thresholds + Parity | 3/3 | Complete    | 2026-05-25 |
 | 40. SavedSearch Hardening + Quality Check Config | 3/3 | Complete    | 2026-05-25 |
-| 41. Doc-Quality Correctness, Multi-Select Centers & UX | 1/3 | In Progress|  |
+| 41. Doc-Quality Correctness, Multi-Select Centers & UX | 2/3 | In Progress|  |
 | 42. Analysis Cohort Comparison & Labeling | 0/0 | Not started | - |
 | 43. Case Navigation, Reference & Chart Clarity | 0/0 | Not started | - |
 | 44. Tech-Debt Compaction | 0/0 | Not started | - |
