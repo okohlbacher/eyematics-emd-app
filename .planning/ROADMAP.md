@@ -140,7 +140,9 @@ Deferred to v1.12: CODEX Tier C (F-01/02/03/09/10/13) + Phase 33 advisory UAT â€
   1. An unauthenticated request to any `/api/*` endpoint produces an audit row with `actor = 'unauthenticated'` â€” the string `'anonymous'` never appears in new rows.
   2. Audit rows created before the change (including rows for now-deleted users) are not modified; historical actor values remain as originally written.
   3. Automated tests cover both the unauthenticated path and the deleted-user historical-actor path, and both pass in `test:ci`.
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 38-01-PLAN.md â€” Relabel audit actor fallback to unauthenticated; extend actor-correctness tests
 
 ### Phase 39: Configurable Clinical Thresholds + Server/Client Parity
 **Goal**: Admins can view and edit all clinical thresholds and plausibility ranges in the Settings UI, and the server uses the same settings-derived values as the client when computing outcome aggregates.
@@ -231,7 +233,7 @@ Deferred to v1.12: CODEX Tier C (F-01/02/03/09/10/13) + Phase 33 advisory UAT â€
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 37. UAT Re-test & Spec Lock | 1/0 | Complete    | 2026-05-25 |
-| 38. Audit Actor Correctness | 0/0 | Not started | - |
+| 38. Audit Actor Correctness | 0/1 | In progress | - |
 | 39. Configurable Clinical Thresholds + Parity | 0/0 | Not started | - |
 | 40. SavedSearch Hardening + Quality Check Config | 0/0 | Not started | - |
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 0/0 | Not started | - |
