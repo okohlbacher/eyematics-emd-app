@@ -101,4 +101,145 @@ Deferred to v1.12: CODEX Tier C (F-01/02/03/09/10/13) + Phase 33 advisory UAT �
 
 ---
 
-*Last updated: 2026-05-24 — v1.11 shipped and archived (Phases 32–36): UAT fixes, Data Completeness (Consent + stubs), V&V backfill, and CODEX adversarial review + Tier A/B compaction. Tier C findings + Phase 33 advisory UAT deferred to v1.12.*
+## Active Milestone: v1.12 — Quality, Configurability & Analysis Depth (Phases 37–45)
+
+**Locked decisions (2026-05-25):** D1 global admin thresholds · D1b plausibility ranges centralized + admin-editable · D2 QUAL-001 persists with SavedSearch (couples SEC-06/F-13 into Phase 40) · D3 multi-select centers IN · PROT-001 → `'unauthenticated'` · single milestone (no v1.12/v1.13 split).
+
+### Phases
+
+- [ ] **Phase 37: UAT Re-test & Spec Lock** — Re-verify the 12 v1.11 fixes; capture per-phase open decisions; lock v1.12 REQ-IDs and acceptance criteria *(process/feedback — no production code)*
+- [ ] **Phase 38: Audit Actor Correctness** — Replace `'anonymous'` with `'unauthenticated'` in audit log for 401/unauth requests; keep immutable historical actors for deleted users (AUDIT-01)
+- [ ] **Phase 39: Configurable Clinical Thresholds + Server/Client Parity** — Move critical/action thresholds and plausibility ranges to `settings.yaml`; expose admin UI in SettingsPage; enforce server/client parity in aggregation (CFG-01, CFG-02, CFG-03)
+- [ ] **Phase 40: SavedSearch Hardening + Quality Check Configuration** — Server-side SavedSearch provenance (id/createdAt generated server-side, filters sanitized at API boundary); cohort-scoped configurable quality check parameters persisted with the saved cohort (SEC-06, QUAL-020, QUAL-021)
+- [ ] **Phase 41: Doc-Quality Correctness, Multi-Select Centers & UX** — Time-filtered Grundgesamtheit denominator; absolute-count discoverability; multi-select center filter (D3, shared with Phase 42); repositioned approve/flag dropdown (QUAL-022, QUAL-023, QUAL-024, QUAL-025)
+- [ ] **Phase 42: Analysis Cohort Comparison & Labeling** — Cohort labels on all comparison plots; Aggregated-tab cohort comparison (diagnosis distribution, age-vs-Visus); active cohort name on `?filters=` direct-load (ANL-010, ANL-011, ANL-012)
+- [ ] **Phase 43: Case Navigation, Reference & Chart Clarity** — Chart-point → case-detail drill-down; cohort reference overlay in case view; self-explanatory CRT/Visus chart labels; axis-tick and responder-tooltip polish (FALL-010, FALL-011, FALL-012, CHART-01)
+- [ ] **Phase 44: Tech-Debt Compaction** — Behavior-preserving: split `authApi.ts` God module; decompose `OutcomesView.tsx`; all gates (test:ci, knip, lint) green with no behavior change (TECH-01, TECH-02)
+- [ ] **Phase 45: UAT Validation & Milestone Close** — Consolidated human UAT across all v1.12 changes; audit and close milestone *(process/feedback — no production code)*
+
+---
+
+## Phase Details
+
+### Phase 37: UAT Re-test & Spec Lock
+**Goal**: Verify that the 12 issues claimed fixed by v1.11 are actually resolved, capture small per-phase open decisions, and lock the v1.12 requirement set.
+**Type**: process/feedback — no production code delivered
+**Depends on**: Nothing (opens the milestone)
+**Requirements**: None (process phase)
+**Success Criteria** (what must be TRUE):
+  1. Each of the 12 v1.11 fixes has been re-tested in a running build and the outcome (pass / regressed / missed intent) is recorded.
+  2. Per-phase open decisions are resolved and written down: FALL-003 label wording, FALL-001 drill-down interaction, responder-tooltip placement, A-06 screenshot repro, QUAL-011 absolute-value placement.
+  3. The v1.12 REQUIREMENTS.md REQ-IDs and acceptance criteria are locked — no further scope changes without a new decision record.
+**Plans**: TBD
+
+### Phase 38: Audit Actor Correctness
+**Goal**: The audit log records unauthenticated/401 requests as `'unauthenticated'` (not `'anonymous'`), with no change to immutable historical actor entries.
+**Depends on**: Phase 37
+**Requirements**: AUDIT-01
+**Success Criteria** (what must be TRUE):
+  1. An unauthenticated request to any `/api/*` endpoint produces an audit row with `actor = 'unauthenticated'` — the string `'anonymous'` never appears in new rows.
+  2. Audit rows created before the change (including rows for now-deleted users) are not modified; historical actor values remain as originally written.
+  3. Automated tests cover both the unauthenticated path and the deleted-user historical-actor path, and both pass in `test:ci`.
+**Plans**: TBD
+
+### Phase 39: Configurable Clinical Thresholds + Server/Client Parity
+**Goal**: Admins can view and edit all clinical thresholds and plausibility ranges in the Settings UI, and the server uses the same settings-derived values as the client when computing outcome aggregates.
+**Depends on**: Phase 37
+**Requirements**: CFG-01, CFG-02, CFG-03
+**Success Criteria** (what must be TRUE):
+  1. An admin can open the Settings page and read/edit critical/action thresholds (CRT critical, Visus critical, IOP critical, Visus-jump, therapy-interrupter days); values are written to `config/settings.yaml` and survive a server restart.
+  2. An admin can read and edit plausibility ranges (Visus, CRT, IOP min/max) from the same Settings UI using the same config + validation pattern.
+  3. After changing any threshold, the server-side outcome aggregation (`outcomesAggregateApi.ts`) applies the updated value — a client-computed cohort and a server-computed cohort with the same data and the same settings produce identical classification results.
+  4. The aggregate cache is invalidated on threshold change so stale pre-change results are not served to subsequent requests.
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 40: SavedSearch Hardening + Quality Check Configuration
+**Goal**: SavedSearch provenance is owned by the server, and users can configure and persist which quality parameters are checked per subcohort.
+**Depends on**: Phase 37, Phase 39
+**Requirements**: SEC-06, QUAL-020, QUAL-021
+**Success Criteria** (what must be TRUE):
+  1. Creating or updating a saved search: the server generates `id` and `createdAt`; any client-supplied values for those fields are ignored; existing saved searches migrate cleanly without data loss.
+  2. The API boundary sanitizes the `filters` field of an incoming saved search — malformed or extraneous fields are rejected or stripped before persistence.
+  3. A user can run the quality review scoped to a selected cohort or subcohort (not only the global set), and the results reflect only that cohort's cases.
+  4. A user can select which parameters to check for a given subcohort, and that selection is stored with the saved cohort so it is restored when the cohort is loaded again.
+**Plans**: TBD
+
+### Phase 41: Doc-Quality Correctness, Multi-Select Centers & UX
+**Goal**: The quality module shows correct population denominators, surfaces absolute counts, supports multi-site filtering, and places the approve/flag control within easy reach.
+**Depends on**: Phase 39
+**Requirements**: QUAL-022, QUAL-023, QUAL-024, QUAL-025
+**Success Criteria** (what must be TRUE):
+  1. When the user applies a time-range filter on the quality page, the Grundgesamtheit (population denominator) updates to reflect only cases within that time range — it does not remain at the unfiltered total.
+  2. Absolute patient/case counts are clearly visible on the quality overview without requiring a hover, tooltip, or secondary navigation step.
+  3. A user can select multiple centers simultaneously in the quality filter; the server still restricts results to the user's authorized centers regardless of what is selected client-side.
+  4. The approve/flag-status control in quality case detail is reachable without scrolling past all patient data.
+  5. The multi-select center filter component is implemented as a shared component (consumed by both quality and analysis) ready for Phase 42 reuse.
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 42: Analysis Cohort Comparison & Labeling
+**Goal**: Cohort comparison plots are clearly labeled, the Aggregated tab supports between-cohort comparison, and the active cohort name is shown on direct-URL load.
+**Depends on**: Phase 41
+**Requirements**: ANL-010, ANL-011, ANL-012
+**Success Criteria** (what must be TRUE):
+  1. When comparing two or more cohorts, every plot — including the interval histogram — has a visible legend or label that unambiguously identifies which series belongs to which cohort.
+  2. The Aggregated tab in Analysis presents side-by-side or overlaid comparison data (diagnosis distribution, age-vs-Visus) for the selected cohorts.
+  3. When a user navigates to Analysis via a `?filters=` deep-link, the cohort or filter name is displayed in the UI — not just the results — without requiring the user to first save the search.
+  4. The shared multi-select center filter from Phase 41 is correctly consumed by the Analysis views.
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 43: Case Navigation, Reference & Chart Clarity
+**Goal**: Users can drill into a case from a trajectory chart, compare a single case against cohort reference values, and read chart labels without ambiguity.
+**Depends on**: Phase 42
+**Requirements**: FALL-010, FALL-011, FALL-012, CHART-01
+**Success Criteria** (what must be TRUE):
+  1. Clicking a data point on a trajectory plot navigates to (or opens) the corresponding case detail — the drill-down interaction matches the decision captured in Phase 37.
+  2. The case detail view can display cohort reference values (e.g. median trajectory) alongside the single case's values for direct comparison.
+  3. CRT legend label, Visus measurement-type axis/legend, and the interpolation ("open circle") legend wording are self-explanatory without reference to external documentation — wording locked by Phase 37 decision.
+  4. Trajectory and analysis charts render all expected axis ticks (A-06 fix); the responder "(i)" tooltip is placed adjacent to the relevant plot element, not in an unrelated page region.
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 44: Tech-Debt Compaction
+**Goal**: The `authApi.ts` God module and `OutcomesView.tsx` multi-responsibility component are restructured into cohesive units with no observable behavior change.
+**Depends on**: Phase 38, Phase 39, Phase 40, Phase 41, Phase 42, Phase 43
+**Requirements**: TECH-01, TECH-02
+**Success Criteria** (what must be TRUE):
+  1. `server/authApi.ts` is split into at minimum login, user-admin, TOTP, and session routers; no endpoint URL, response shape, or auth behavior changes; `test:ci` exits 0 with all tests green.
+  2. `src/components/outcomes/OutcomesView.tsx` is decomposed into hooks and metric container components; no visible behavior, URL handling, or chart output changes; `test:ci` exits 0 with all tests green.
+  3. `knip` reports no new unused exports and `lint` reports 0 warnings after the refactor.
+**Plans**: TBD
+
+### Phase 45: UAT Validation & Milestone Close
+**Goal**: All v1.12 changes pass consolidated human UAT and the milestone is audited and closed.
+**Type**: process/feedback — no production code delivered
+**Depends on**: Phase 37, Phase 38, Phase 39, Phase 40, Phase 41, Phase 42, Phase 43, Phase 44
+**Requirements**: None (process phase)
+**Success Criteria** (what must be TRUE):
+  1. Every v1.12 feature (Phases 38–44) has been exercised by a human tester in a running build and the result (pass / fail / caveat) is recorded — applying the v1.11 lesson that "claimed fixed" must be verified.
+  2. Any failures or caveats found during UAT are triaged: either fixed before close or explicitly deferred with a decision record.
+  3. The milestone audit confirms 100% requirement coverage: all 20 v1.12 REQ-IDs map to a completed phase, and the REQUIREMENTS.md Traceability table is updated to reflect final status.
+  4. `test:ci` exits 0 (all tests green) at milestone close — the final gate matches the v1.11 close standard.
+**Plans**: TBD
+
+---
+
+## Progress Table
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 37. UAT Re-test & Spec Lock | 0/0 | Not started | - |
+| 38. Audit Actor Correctness | 0/0 | Not started | - |
+| 39. Configurable Clinical Thresholds + Parity | 0/0 | Not started | - |
+| 40. SavedSearch Hardening + Quality Check Config | 0/0 | Not started | - |
+| 41. Doc-Quality Correctness, Multi-Select Centers & UX | 0/0 | Not started | - |
+| 42. Analysis Cohort Comparison & Labeling | 0/0 | Not started | - |
+| 43. Case Navigation, Reference & Chart Clarity | 0/0 | Not started | - |
+| 44. Tech-Debt Compaction | 0/0 | Not started | - |
+| 45. UAT Validation & Milestone Close | 0/0 | Not started | - |
+
+---
+
+*Last updated: 2026-05-25 — v1.12 roadmap created (Phases 37–45): Quality, Configurability & Analysis Depth. Locked decisions D1/D1b/D2/D3 + PROT-001 from CODEX-converged proposal. v1.11 shipped and archived (Phases 32–36).*

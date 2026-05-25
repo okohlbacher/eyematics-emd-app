@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Quality, Configurability & Analysis Depth
-status: planning
-last_updated: "2026-05-25T20:12:25.583Z"
+status: active
+last_updated: "2026-05-25"
 last_activity: 2026-05-25
 progress:
-  total_phases: 0
+  total_phases: 9
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,17 +17,19 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-21 after v1.10)
+See: .planning/PROJECT.md (updated 2026-05-25 for v1.12)
 
 **Core value:** Every user sees only authorized data, with tamper-proof audit trail — while maintaining the zero-friction local development experience.
-**Current focus:** v1.11 closed (2026-05-24) — ready to scope v1.12
+**Current focus:** v1.12 roadmap created — ready to begin Phase 37 (UAT Re-test & Spec Lock)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Phase 37 — UAT Re-test & Spec Lock (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-25 — Milestone v1.12 started
+Status: Roadmap created; awaiting Phase 37 kickoff
+Last activity: 2026-05-25 — v1.12 roadmap instantiated (Phases 37–45)
+
+**Progress:** 0/9 phases complete [░░░░░░░░░] 0%
 
 ## Milestones Shipped
 
@@ -46,9 +48,33 @@ Last activity: 2026-05-25 — Milestone v1.12 started
 | v1.10 | Session Hardening & UX Closure | 27–31 | 2026-05-21 |
 | v1.11 | UAT Fixes, Data Completeness & Quality Closure | 32–36 | 2026-05-24 |
 
+## v1.12 Phase Map
+
+| Phase | Name | Type | Status |
+|-------|------|------|--------|
+| 37 | UAT Re-test & Spec Lock | process/feedback | Not started |
+| 38 | Audit Actor Correctness | feature (AUDIT-01) | Not started |
+| 39 | Configurable Clinical Thresholds + Parity | feature (CFG-01/02/03) | Not started |
+| 40 | SavedSearch Hardening + Quality Check Config | feature (SEC-06, QUAL-020/021) | Not started |
+| 41 | Doc-Quality Correctness, Multi-Select Centers & UX | feature/UI (QUAL-022/023/024/025) | Not started |
+| 42 | Analysis Cohort Comparison & Labeling | feature/UI (ANL-010/011/012) | Not started |
+| 43 | Case Navigation, Reference & Chart Clarity | feature/UI (FALL-010/011/012, CHART-01) | Not started |
+| 44 | Tech-Debt Compaction | refactor (TECH-01/02) | Not started |
+| 45 | UAT Validation & Milestone Close | process/feedback | Not started |
+
 ## Accumulated Context
 
-### Decisions (authoritative)
+### Locked Decisions (v1.12, 2026-05-25)
+
+- **D1 — threshold scope:** GLOBAL admin-configured thresholds (per-site / per-cohort deferred).
+- **D1b — plausibility ranges:** centralized to `config/settings.yaml` AND admin-editable in SettingsPage (same config + validation pattern as critical thresholds).
+- **D2 — QUAL-001 persistence:** quality parameter selection PERSISTS with the saved cohort → changes `SavedSearch` shape; F-13 pulled forward to pair with this work (Phase 40).
+- **D3 — multi-select centers:** IN for v1.12 → shared multi-select center filter component consumed by quality (Phase 41) and analysis (Phase 42); server still enforces user's authorized centers.
+- **PROT-001:** actor label for unauthenticated/401 requests → `'unauthenticated'` (not `'anonymous'`); deleted users keep immutable historical actor identity.
+- **Milestone size:** ONE milestone v1.12 (Phases 37–45) — no split.
+- Source: CODEX CLI (codex-cli 0.128.0) 3-round convergence + product-owner approval 2026-05-25.
+
+### Decisions (inherited from v1.11 — authoritative)
 
 - AUTHCFG-04: lockoutCapMs named for cap semantics; formula `min(2^failures*1s, cap)` preserved; `resetLimiter()` exported from authApi and called by settingsApi PUT after updateAuthConfig (avoids circular import).
 - AUTHCFG-01: both unknown-user and known-user login failure branches are symmetric — 429+retryAfterMs on lockout, 401+attemptsRemaining otherwise (T-32-06 non-enumeration parity).
@@ -65,38 +91,36 @@ Last activity: 2026-05-25 — Milestone v1.12 started
 - Terminology: `_seedMap` has 15 entries; `EXPECTED_SEED_KEYS` in audit script mirrors it; drift-guard test enforces symmetry.
 - Reference bundles (Aachen, Tübingen) are curated and must NOT be regenerated (D-06).
 - Synthetic bundles (Chemnitz, Leipzig, Greifswald, Münster) must be regenerated atomically (D-11).
-- Refresh sessions use a SQLite `refresh_sessions` table (jti-keyed, WAL) — the no-database constraint was revisited at Phase 27 plan time and SQLite chosen (already a dependency for audit). Mirrors `auditDb.ts`.
+- Refresh sessions use a SQLite `refresh_sessions` table (jti-keyed, WAL) — mirrors `auditDb.ts`.
 - Refresh tokens rotate on every use with RFC 6819 family revocation; reuse of a rotated token revokes the family and returns 401.
-- Signing-key rotation uses a dual-key window: existing sessions verify against the previous key until their absolute cap (admin endpoint `POST /api/auth/rotate-key`).
+- Signing-key rotation uses a dual-key window: existing sessions verify against the previous key until their absolute cap.
 - Subcohort identity is name-only: a `SavedSearch` with exactly one `:` is a subcohort (`cohortNames.ts`); no new type field. Orphan subcohorts allowed with a soft warning.
 - "Jump Back In" uses a client-side, per-username localStorage recent-activity store (`emd-recent:<username>`, cap 5); cleared on logout/login same-tab and cross-tab.
 
-### Open Items
+### Open Items (v1.12 — to resolve in Phase 37)
+
+- FALL-003: CRT/Visus label wording decision (Phase 37 discussion)
+- FALL-001: drill-down interaction pattern (Phase 37 discussion)
+- Responder tooltip placement (Phase 37 discussion)
+- A-06: screenshot repro of missing axis ticks (Phase 37)
+- QUAL-011: absolute-value discoverability — where on the page (Phase 37 discussion)
+
+### Open Items (carried)
 
 - KEYCLK-01: Real Keycloak OIDC redirect flow (blocked by M7) — pushed to backlog
 
 ### Deferred Items
 
-#### CLOSED at v1.11 (Phase 35, 2026-05-24)
+#### Accepted tech debt at v1.11 close — addressed in v1.12
 
-| Category | Item | Status |
-|----------|------|--------|
-| verification | Phases 27 & 28 have no VERIFICATION.md (evidenced by SUMMARYs + green tests + integration check) | CLOSED — VVBACK-01/02 resolved by Phase 35 |
-| nyquist | VALIDATION.md for phases 27/28/29 left `draft`/`nyquist_compliant: false` | CLOSED — VVBACK-03 resolved by Phase 35 |
-| nyquist | Phase 31 VALIDATION `wave_0_complete: false` despite passing VERIFICATION + UAT | CLOSED — VVBACK-04 resolved by Phase 35 |
-
-#### Accepted tech debt at v1.11 close — target v1.12
-
-New items deferred from Phase 36 CODEX architecture review (Tier C). Reference: `.planning/reviews/v1.11-arch-review/FINDINGS.md`.
-
-| Category | ID | Item | Target |
-|----------|----|------|--------|
-| soc-violation | F-01 | Server outcome aggregation ignores settings-derived filter thresholds (therapyBreaker, implausibleCrt) — latent correctness gap vs UI path | v1.12 |
-| soc-violation | F-02 | Clinical thresholds (`CRITICAL_CRT_THRESHOLD`, etc.) live in `src/config/clinicalThresholds.ts` outside `settings.yaml` — violates single-config invariant | v1.12 |
-| dead-code | F-03 | Unreachable Keycloak runtime path still wired through auth middleware — remove or gate behind real OIDC support (tied to KEYCLK-01) | v1.12 |
-| oversized-module | F-09 | `authApi.ts` God module (1,175 lines) — split into `authLoginApi`, `authUserAdminApi`, `totpApi`, `sessionApi` | v1.12 |
-| oversized-module | F-10 | `OutcomesView.tsx` owns too many unrelated responsibilities (URL parsing, cohort resolution, audit, aggregation routing, metric render) — decompose | v1.12 |
-| soc-violation | F-13 | Saved-search provenance is client-owned — server should generate `id`/`createdAt` and validate/sanitize `filters` at API boundary | v1.12 |
+| Category | ID | Item | Phase |
+|----------|----|------|-------|
+| soc-violation | F-01 | Server outcome aggregation ignores settings-derived filter thresholds | 39 (CFG-03) |
+| soc-violation | F-02 | Clinical thresholds live outside `settings.yaml` | 39 (CFG-01) |
+| dead-code | F-03 | Unreachable Keycloak runtime path — blocked by KEYCLK-01 | Out of scope v1.12 |
+| oversized-module | F-09 | `authApi.ts` God module (1,175 lines) | 44 (TECH-01) |
+| oversized-module | F-10 | `OutcomesView.tsx` multi-responsibility | 44 (TECH-02) |
+| soc-violation | F-13 | Saved-search provenance is client-owned | 40 (SEC-06) |
 
 ### Blockers
 
@@ -104,7 +128,7 @@ New items deferred from Phase 36 CODEX architecture review (Tier C). Reference: 
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Run `/gsd-plan-phase 37` to plan the UAT Re-test & Spec Lock phase
 
 ## Performance Metrics
 
