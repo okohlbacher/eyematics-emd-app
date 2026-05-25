@@ -1,6 +1,6 @@
 # EMD Backend Redesign
 
-## Status: v1.11 Shipped — UAT Fixes, Data Completeness & Quality Closure (Phases 32–36, 2026-05-24)
+## Status: v1.12 In Progress — Quality, Configurability & Analysis Depth (Phases 37–45) · v1.11 shipped 2026-05-24
 
 **Latest shipped milestone:** v1.11 — UAT Fixes, Data Completeness & Quality Closure (Phases 32–36), shipped 2026-05-24. Delivered User Management & Auth Hardening (Phase 32), Cohort Builder UX (Phase 33), Data Completeness (Phase 34), V&V Backfill (Phase 35), and Architecture Review & Compaction (Phase 36). CODEX adversarial review applied Tier A + Tier B compaction (net −240 LOC); Tier C deferred to v1.12. 901/901 tests green at close.
 
@@ -211,11 +211,27 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 **Archive:** [`.planning/milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md), [`.planning/milestones/v1.6-REQUIREMENTS.md`](milestones/v1.6-REQUIREMENTS.md)
 
-## Next Milestone Goals (TBD)
+## Current Milestone: v1.12 — Quality, Configurability & Analysis Depth
 
-To be defined via `/gsd-new-milestone`. Carried-forward candidate:
+**Goal:** Close the verified-open v1.10 UAT feedback (reconciled against shipped v1.11) plus the CODEX Tier-C deferrals — deepening the quality module, making clinical thresholds configurable, improving analysis comparison & case navigation, and hardening audit/saved-search correctness.
+
+**Target features (Phases 37–45):**
+- Audit actor correctness — `'unauthenticated'` instead of `anonymous` (PROT-001)
+- Configurable clinical thresholds + plausibility ranges in `settings.yaml`, admin-editable; server/client parity (ANL-004, F-02, F-01)
+- SavedSearch hardening (server-owned provenance, F-13) + cohort-scoped configurable quality checks (QUAL-001)
+- Doc-quality correctness: time-filtered Grundgesamtheit, absolute-value discoverability, multi-select centers, approve-dropdown placement (QUAL-011, QUAL-006)
+- Analysis cohort comparison & labeling (ANL-002, ANL-003, KOH-005)
+- Case navigation, reference & chart clarity (FALL-001, FALL-006, FALL-003, A-06)
+- Tech-debt compaction (F-09 authApi split, F-10 OutcomesView decomposition)
+- Two user-feedback phases: 37 (UAT re-test + spec lock) and 45 (UAT validation + close)
+
+**Locked decisions (2026-05-25):** global admin thresholds (D1); plausibility ranges centralized + admin-editable (D1b); QUAL-001 persists with SavedSearch (D2); multi-select centers IN (D3); PROT-001 → `'unauthenticated'`; single milestone (no v1.12/v1.13 split). Full plan: `.planning/v1.12-roadmap-PROPOSAL.md` (CODEX-converged).
+
+## Next Milestone Goals (carried forward)
 
 - **Real Keycloak OIDC redirect flow** (KEYCLK-01 — blocked by M7 at initAuth; needs a live Keycloak instance)
+- Per-site / per-cohort clinical thresholds (deferred from v1.12 D1 to avoid threshold-snapshot provenance)
+- QUAL-004 imputation / auto-suggest missing values
 
 ## Historical Milestone Goals (archived)
 
