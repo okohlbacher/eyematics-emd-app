@@ -15,7 +15,7 @@
 
 ### QUAL — Data-quality module
 - [ ] **QUAL-020**: A user can run the quality review scoped to a selected cohort/subcohort (not only the global set). (QUAL-001)
-- [ ] **QUAL-021**: A user can select which parameters are checked for a selected subcohort; the selection persists with the saved cohort. (EMDREQ-QUAL-001, D2)
+- [x] **QUAL-021**: A user can select which parameters are checked for a selected subcohort; the selection persists with the saved cohort. (EMDREQ-QUAL-001, D2)
 - [ ] **QUAL-022**: The Grundgesamtheit (population denominator) on the quality page reflects the active time-range filter. (QUAL-011)
 - [ ] **QUAL-023**: Absolute counts (not only percentages) are clearly discoverable on the quality overview. (QUAL-011)
 - [ ] **QUAL-024**: A user can filter quality (and analysis) by multiple centers at once; the server still restricts results to the user's authorized centers. (QUAL-011, D3)
@@ -57,7 +57,7 @@
 | CFG-03 | Phase 39 | Complete |
 | SEC-06 | Phase 40 | Complete |
 | QUAL-020 | Phase 40 | Pending |
-| QUAL-021 | Phase 40 | Pending |
+| QUAL-021 | Phase 40 | Complete |
 | QUAL-022 | Phase 41 | Pending |
 | QUAL-023 | Phase 41 | Pending |
 | QUAL-024 | Phase 41 | Pending |

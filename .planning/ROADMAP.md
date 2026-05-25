@@ -171,7 +171,7 @@ Plans:
   4. A user can select which parameters to check for a given subcohort, and that selection is stored with the saved cohort so it is restored when the cohort is loaded again.
 **Plans**: 3 plans (2 waves; 40-03 sequenced after 40-02 on shared types)
 - [x] 40-01-PLAN.md — SEC-06/F-13 server foundation: server-owned id/createdAt + shared filter sanitizer; client adopts canonical record (wave 1)
-- [ ] 40-02-PLAN.md — QUAL-021: persisted qualityParams field on SavedSearch + cohort-builder check-selection UI (wave 2)
+- [x] 40-02-PLAN.md — QUAL-021: persisted qualityParams field on SavedSearch + cohort-builder check-selection UI (wave 2)
 - [ ] 40-03-PLAN.md — QUAL-020: QualityPage cohort scoping + anomaly checks honor cohort qualityParams (wave 3)
 
 ### Phase 41: Doc-Quality Correctness, Multi-Select Centers & UX
@@ -242,7 +242,7 @@ Plans:
 | 37. UAT Re-test & Spec Lock | 1/0 | Complete    | 2026-05-25 |
 | 38. Audit Actor Correctness | 1/1 | Complete    | 2026-05-25 |
 | 39. Configurable Clinical Thresholds + Parity | 3/3 | Complete    | 2026-05-25 |
-| 40. SavedSearch Hardening + Quality Check Config | 1/3 | In Progress|  |
+| 40. SavedSearch Hardening + Quality Check Config | 2/3 | In Progress|  |
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 0/0 | Not started | - |
 | 42. Analysis Cohort Comparison & Labeling | 0/0 | Not started | - |
 | 43. Case Navigation, Reference & Chart Clarity | 0/0 | Not started | - |
