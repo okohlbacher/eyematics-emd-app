@@ -173,6 +173,34 @@ export default function QualityCaseDetail({
             </button>
           </div>
         </div>
+        {/* Flag status control — QUAL-025: reachable near top without scrolling */}
+        {caseFlags.length > 0 && (
+          <div className="mb-3 border-t border-gray-100 dark:border-gray-700 pt-3">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1">
+              <Flag className="w-3 h-3" />
+              {t('reviewResults')} ({caseFlags.length})
+            </p>
+            <div className="flex flex-wrap gap-2" data-testid="top-flag-status-controls">
+              {caseFlags.map((f, i) => (
+                <div key={i} className="flex items-center gap-1.5 bg-gray-50 dark:bg-gray-700 rounded-lg px-2 py-1">
+                  <span className="text-xs text-gray-700 dark:text-gray-300 max-w-[160px] truncate" title={f.parameter}>{f.parameter}</span>
+                  <select
+                    value={f.status}
+                    onChange={(e) =>
+                      onUpdateFlagStatus(f.caseId, f.flaggedAt, e.target.value as QualityFlag['status'])
+                    }
+                    aria-label={`${t('reviewResults')} ${f.parameter}`}
+                    className="text-xs border rounded px-1.5 py-0.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  >
+                    <option value="open">{t('statusOpen')}</option>
+                    <option value="acknowledged">{t('statusAcknowledged')}</option>
+                    <option value="resolved">{t('statusResolved')}</option>
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-5 gap-4 text-sm">
           <div>
             <p className="text-gray-500 dark:text-gray-400">{t('age')}</p>
