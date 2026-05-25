@@ -34,8 +34,8 @@ import {
 } from 'recharts';
 
 import OutcomesView from '../components/outcomes/OutcomesView';
-import { CHART_COLORS } from '../config/clinicalThresholds';
 import { COHORT_PALETTES } from '../components/outcomes/palette';
+import { CHART_COLORS } from '../config/clinicalThresholds';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useRecentActivity } from '../hooks/useRecentActivity';
@@ -50,7 +50,7 @@ import {
 import { getSettings } from '../services/settingsService';
 import { getCachedDisplay, getCachedFullText } from '../services/terminology';
 import type { CohortFilter, PatientCase } from '../types/fhir';
-import { parseCohortFilterJson } from '../utils/cohortFilterSerialization';
+import { parseCohortFilterJson, summarizeCohortFilter } from '../utils/cohortFilterSerialization';
 import { computeCrtDistribution } from '../utils/distributionBins';
 
 type AnalysisTab = 'aggregate' | 'trajectories';
@@ -111,6 +111,31 @@ export default function AnalysisPage() {
     // M-04: explicitly pick known CohortFilter keys to prevent prototype pollution (F-04 shared serializer).
     return parseCohortFilterJson(searchParams.get('filters'));
   }, [activeSavedSearch, searchParams]);
+
+  /**
+   * ANL-012: Display name for the active cohort / filter set.
+   * - Saved search path: activeSavedSearch.name (unchanged)
+   * - Direct ?filters= path with ?name=: use the supplied name (React auto-escapes text content — T-42-06)
+   * - Direct ?filters= path without ?name=: synthesize from t('analysisFilteredCohort') + summarizeCohortFilter
+   * - No cohort/filter active: null (no name line rendered)
+   * Total length is capped at 80 chars with ellipsis to mirror OutcomesView cross-mode truncation.
+   */
+  const displayCohortName: string | null = useMemo(() => {
+    if (activeSavedSearch) return activeSavedSearch.name;
+    const filtersParam = searchParams.get('filters');
+    if (filtersParam !== null) {
+      const urlName = searchParams.get('name')?.trim();
+      if (urlName) {
+        // User-supplied name — React text content auto-escapes (T-42-06); cap length
+        return urlName.length > 80 ? urlName.slice(0, 79) + '…' : urlName;
+      }
+      const base = t('analysisFilteredCohort');
+      const summary = summarizeCohortFilter(filters);
+      const full = summary ? `${base} · ${summary}` : base;
+      return full.length > 80 ? full.slice(0, 79) + '…' : full;
+    }
+    return null;
+  }, [activeSavedSearch, searchParams, filters, t]);
 
   const cohort = useMemo(() => {
     const s = getSettings();
@@ -267,9 +292,9 @@ export default function AnalysisPage() {
     <div className="p-8 dark:bg-gray-900 min-h-screen">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('analysisTitle')}</h1>
-        {activeSavedSearch && (
+        {displayCohortName !== null && (
           <p className="text-sm font-medium text-blue-700 dark:text-blue-400 mt-0.5">
-            {activeSavedSearch.name}
+            {displayCohortName}
           </p>
         )}
         <p className="text-gray-500 dark:text-gray-400 mt-1">
