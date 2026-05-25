@@ -317,4 +317,40 @@ describe('fhirApi — filtering and bypass logic', () => {
     const result = _migrateCenterIds(users as Parameters<typeof _migrateCenterIds>[0]);
     expect(result.changed).toBe(false);
   });
+
+  // QUAL-024 regression: authorized-center intersect — client multi-select cannot escalate privilege.
+  //
+  // The CenterMultiSelect component is CLIENT-SIDE NARROWING only. It never sends a center list
+  // to the server. The server always derives the center list from req.auth.centers (the
+  // authenticated user's authorized centers, from the verified JWT) and passes it to
+  // filterBundlesByCenters. A client cannot pass an unauthorized center to this function because
+  // the server never reads a center list from the request body or query string.
+  //
+  // This test locks the invariant: a user authorized for only org-uka receives exactly the aachen
+  // bundle — even though the chemnitz bundle (org-ukc) exists in the input. An org-ukc bundle
+  // can never appear in the intersect result for an org-uka-only user.
+  it('QUAL-024 intersect: authorized-center intersection cannot be widened by client selection', () => {
+    const bundles = [AACHEN_BUNDLE, CHEMNITZ_BUNDLE];
+
+    // User is authorized for org-uka only (as set in req.auth.centers).
+    const result = filterBundlesByCenters(bundles, ['org-uka']);
+
+    // Only the aachen bundle (org-uka) should be returned — intersect produces exactly 1 bundle.
+    expect(result).toHaveLength(1);
+
+    // The returned bundle must be the aachen bundle.
+    const orgEntry = result[0].entry.find(
+      (e: { resource: { resourceType: string; id?: string } }) => e.resource.resourceType === 'Organization',
+    );
+    expect(orgEntry?.resource.id).toBe('org-uka');
+
+    // The chemnitz bundle (org-ukc) must not appear — unauthorized center cannot be added.
+    const hasUkc = result.some((bundle) =>
+      bundle.entry.some(
+        (e: { resource: { resourceType: string; id?: string } }) =>
+          e.resource.resourceType === 'Organization' && e.resource.id === 'org-ukc',
+      ),
+    );
+    expect(hasUkc).toBe(false);
+  });
 });
