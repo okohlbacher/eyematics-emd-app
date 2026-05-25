@@ -250,7 +250,7 @@ Plans:
 | 39. Configurable Clinical Thresholds + Parity | 3/3 | Complete    | 2026-05-25 |
 | 40. SavedSearch Hardening + Quality Check Config | 3/3 | Complete    | 2026-05-25 |
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 3/3 | Complete    | 2026-05-25 |
-| 42. Analysis Cohort Comparison & Labeling | 3/3 | Complete   | 2026-05-25 |
+| 42. Analysis Cohort Comparison & Labeling | 3/3 | Complete    | 2026-05-25 |
 | 43. Case Navigation, Reference & Chart Clarity | 0/0 | Not started | - |
 | 44. Tech-Debt Compaction | 0/0 | Not started | - |
 | 45. UAT Validation & Milestone Close | 0/0 | Not started | - |
