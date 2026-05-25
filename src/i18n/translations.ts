@@ -830,6 +830,8 @@ const translations = {
   metricsIntervalBin_180_plus: { de: '180+d', en: '180+d' },
   metricsIntervalNoDataTitle: { de: 'Keine Behandlungsintervalle berechenbar', en: 'No treatment intervals calculable' },
   metricsIntervalNoDataBody: { de: 'Mindestens 2 IVOM-Einträge pro Patient:in erforderlich.', en: 'At least 2 IVOM entries per patient required.' },
+  metricsIntervalCohortLegendAriaLabel: { de: 'Kohorten-Legende', en: 'Cohort legend' },
+  metricsIntervalMedianLineCohort: { de: 'Median {name}: {days} Tage', en: 'Median {name}: {days} days' },
 
   // ---- Phase 13: Responder Classification (METRIC-03 / D-05) ----
   metricsResponderTitle: { de: 'Responder-Klassifikation', en: 'Responder Classification' },
@@ -845,6 +847,7 @@ const translations = {
   metricsResponderNoDataTitle: { de: 'Klassifikation nicht möglich', en: 'Classification not possible' },
   metricsResponderNoDataBody: { de: 'Zu wenig Messungen für eine Responder-Klassifikation.', en: 'Insufficient measurements for responder classification.' },
   metricsResponderTooltip: { de: 'Responder: Visus-Verbesserung ≥ 5 Buchstaben ETDRS oder CRT-Reduktion ≥ 10 % gegenüber Baseline', en: 'Responder: Visus improvement ≥ 5 ETDRS letters or CRT reduction ≥ 10 % from baseline' },
+  metricsResponderCohortLegendAriaLabel: { de: 'Kohorten-Legende', en: 'Cohort legend' },
 
   // ---- Phase 13: CSV Export (METRIC-05 / D-07) ----
   metricsPreviewExportCsvCrt: { de: 'CSV exportieren (CRT)', en: 'Export CSV (CRT)' },
