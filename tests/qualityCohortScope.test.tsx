@@ -64,7 +64,6 @@ vi.mock('../src/services/settingsService', async (importOriginal) => {
 
 // LOINC codes matching the app's constants (shared/fhirCodes.ts)
 const LOINC_CRT = 'LP267955-5';
-const LOINC_VISUS = '79880-1';
 
 // A case designed to trip multiple anomaly branches simultaneously:
 //   - has NO Visus obs → missingVisus fires
@@ -157,8 +156,8 @@ vi.mock('../src/context/DataContext', () => ({
   useData: () => makeDataMock(),
 }));
 
-import QualityPage from '../src/pages/QualityPage';
 import QualityCaseDetail from '../src/components/quality/QualityCaseDetail';
+import QualityPage from '../src/pages/QualityPage';
 
 afterEach(() => {
   cleanup();
