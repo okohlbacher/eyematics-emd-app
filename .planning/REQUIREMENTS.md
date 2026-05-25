@@ -37,7 +37,7 @@
 
 ### TECH — Tech-debt compaction (behavior-preserving)
 - [x] **TECH-01**: `server/authApi.ts` is split into cohesive routers (login / user-admin / totp / session) with no behavior change; tests green. (F-09)
-- [ ] **TECH-02**: `src/components/outcomes/OutcomesView.tsx` is decomposed into hooks + metric containers with no behavior change; tests green. (F-10)
+- [x] **TECH-02**: `src/components/outcomes/OutcomesView.tsx` is decomposed into hooks + metric containers with no behavior change; tests green. (F-10)
 
 ## Future Requirements (deferred)
 - Per-site / per-cohort clinical thresholds (threshold-snapshot provenance) — deferred from D1.
@@ -70,6 +70,6 @@
 | FALL-012 | Phase 43 | Complete |
 | CHART-01 | Phase 43 | Complete |
 | TECH-01 | Phase 44 | Complete |
-| TECH-02 | Phase 44 | Pending |
+| TECH-02 | Phase 44 | Complete |
 
 *Phases 37 (UAT re-test & spec lock) and 45 (UAT validation & close) are process/feedback phases with no feature REQ-IDs; their work is captured as phase success criteria.*

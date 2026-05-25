@@ -114,7 +114,7 @@ Deferred to v1.12: CODEX Tier C (F-01/02/03/09/10/13) + Phase 33 advisory UAT �
 - [x] **Phase 41: Doc-Quality Correctness, Multi-Select Centers & UX** — Time-filtered Grundgesamtheit denominator; absolute-count discoverability; multi-select center filter (D3, shared with Phase 42); repositioned approve/flag dropdown (QUAL-022, QUAL-023, QUAL-024, QUAL-025) (completed 2026-05-25)
 - [x] **Phase 42: Analysis Cohort Comparison & Labeling** — Cohort labels on all comparison plots; Aggregated-tab cohort comparison (diagnosis distribution, age-vs-Visus); active cohort name on `?filters=` direct-load (ANL-010, ANL-011, ANL-012) (completed 2026-05-25)
 - [x] **Phase 43: Case Navigation, Reference & Chart Clarity** — Chart-point → case-detail drill-down; cohort reference overlay in case view; self-explanatory CRT/Visus chart labels; axis-tick and responder-tooltip polish (FALL-010, FALL-011, FALL-012, CHART-01) (completed 2026-05-25)
-- [ ] **Phase 44: Tech-Debt Compaction** — Behavior-preserving: split `authApi.ts` God module; decompose `OutcomesView.tsx`; all gates (test:ci, knip, lint) green with no behavior change (TECH-01, TECH-02)
+- [x] **Phase 44: Tech-Debt Compaction** — Behavior-preserving: split `authApi.ts` God module; decompose `OutcomesView.tsx`; all gates (test:ci, knip, lint) green with no behavior change (TECH-01, TECH-02) (completed 2026-05-25)
 - [ ] **Phase 45: UAT Validation & Milestone Close** — Consolidated human UAT across all v1.12 changes; audit and close milestone *(process/feedback — no production code)*
 
 ---
@@ -231,7 +231,7 @@ Plans:
 **Plans**: 2 plans (2 waves; run sequentially to bound risk — disjoint files but both large)
 Plans:
 - [x] 44-01-PLAN.md — TECH-01: split authApi.ts into authHelpers + login/user-admin/totp/session routers; thin authApi re-exports resetLimiter (wave 1)
-- [ ] 44-02-PLAN.md — TECH-02: decompose OutcomesView into useOutcomesRouteState + useOutcomesAggregation hooks + Visus/CRT metric containers (wave 2)
+- [x] 44-02-PLAN.md — TECH-02: decompose OutcomesView into useOutcomesRouteState + useOutcomesAggregation hooks + Visus/CRT metric containers (wave 2)
 
 ### Phase 45: UAT Validation & Milestone Close
 **Goal**: All v1.12 changes pass consolidated human UAT and the milestone is audited and closed.
@@ -258,7 +258,7 @@ Plans:
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 3/3 | Complete    | 2026-05-25 |
 | 42. Analysis Cohort Comparison & Labeling | 3/3 | Complete    | 2026-05-25 |
 | 43. Case Navigation, Reference & Chart Clarity | 3/3 | Complete    | 2026-05-25 |
-| 44. Tech-Debt Compaction | 1/2 | In Progress|  |
+| 44. Tech-Debt Compaction | 2/2 | Complete   | 2026-05-25 |
 | 45. UAT Validation & Milestone Close | 0/0 | Not started | - |
 
 ---
