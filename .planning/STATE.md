@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: — Quality, Configurability & Analysis Depth
 status: completed
-last_updated: "2026-05-25T20:56:38.005Z"
+last_updated: "2026-05-25T21:12:15.461Z"
 last_activity: 2026-05-25
 progress:
   total_phases: 9
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 5
+  total_plans: 7
+  completed_plans: 6
   percent: 22
 ---
 
@@ -29,7 +29,7 @@ Plan: Not started
 Status: Phase 38 Plan 01 complete — audit actor fallback relabeled to 'unauthenticated'
 Last activity: 2026-05-25
 
-**Progress:** [██████████] 100%
+**Progress:** [█████████░] 86%
 
 ## Milestones Shipped
 

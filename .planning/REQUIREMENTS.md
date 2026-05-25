@@ -33,7 +33,7 @@
 - [ ] **CHART-01**: Trajectory/analysis chart polish — missing axis ticks rendered (A-06); responder "(i)" tooltip placed adjacent to the plot. (A-06, ANL-002)
 
 ### SEC — Saved-search hardening
-- [ ] **SEC-06**: SavedSearch `id`/`createdAt` are generated server-side and incoming `filters` are sanitized at the API boundary; existing saved searches migrate cleanly. (F-13)
+- [x] **SEC-06**: SavedSearch `id`/`createdAt` are generated server-side and incoming `filters` are sanitized at the API boundary; existing saved searches migrate cleanly. (F-13)
 
 ### TECH — Tech-debt compaction (behavior-preserving)
 - [ ] **TECH-01**: `server/authApi.ts` is split into cohesive routers (login / user-admin / totp / session) with no behavior change; tests green. (F-09)
@@ -55,7 +55,7 @@
 | CFG-01 | Phase 39 | Complete |
 | CFG-02 | Phase 39 | Complete |
 | CFG-03 | Phase 39 | Complete |
-| SEC-06 | Phase 40 | Pending |
+| SEC-06 | Phase 40 | Complete |
 | QUAL-020 | Phase 40 | Pending |
 | QUAL-021 | Phase 40 | Pending |
 | QUAL-022 | Phase 41 | Pending |
