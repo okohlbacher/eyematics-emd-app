@@ -449,6 +449,8 @@ const translations = {
   qualityFilterCrt: { de: 'CRT-Wert', en: 'CRT Value' },
   qualityFilterCrtImplausible: { de: 'Unplausibel (> 400 µm)', en: 'Implausible (> 400 µm)' },
   qualityShowExcluded: { de: 'Ausgeschlossene anzeigen', en: 'Show excluded' },
+  qualityFilterCentersAll: { de: 'Alle Zentren', en: 'All centers' },
+  qualityFilterCentersClear: { de: 'Zurücksetzen', en: 'Clear' },
   qualityFilteredCount: { de: 'gefiltert', en: 'filtered' },
 
   // Sort
