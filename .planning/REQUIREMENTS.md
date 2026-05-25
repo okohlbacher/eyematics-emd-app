@@ -18,7 +18,7 @@
 - [x] **QUAL-021**: A user can select which parameters are checked for a selected subcohort; the selection persists with the saved cohort. (EMDREQ-QUAL-001, D2)
 - [ ] **QUAL-022**: The Grundgesamtheit (population denominator) on the quality page reflects the active time-range filter. (QUAL-011)
 - [ ] **QUAL-023**: Absolute counts (not only percentages) are clearly discoverable on the quality overview. (QUAL-011)
-- [ ] **QUAL-024**: A user can filter quality (and analysis) by multiple centers at once; the server still restricts results to the user's authorized centers. (QUAL-011, D3)
+- [x] **QUAL-024**: A user can filter quality (and analysis) by multiple centers at once; the server still restricts results to the user's authorized centers. (QUAL-011, D3)
 - [ ] **QUAL-025**: The approve/flag-status control in quality case detail is reachable without scrolling past all patient data. (QUAL-006)
 
 ### ANL — Analysis comparison & labeling
@@ -60,7 +60,7 @@
 | QUAL-021 | Phase 40 | Complete |
 | QUAL-022 | Phase 41 | Pending |
 | QUAL-023 | Phase 41 | Pending |
-| QUAL-024 | Phase 41 | Pending |
+| QUAL-024 | Phase 41 | Complete |
 | QUAL-025 | Phase 41 | Pending |
 | ANL-010 | Phase 42 | Pending |
 | ANL-011 | Phase 42 | Pending |
