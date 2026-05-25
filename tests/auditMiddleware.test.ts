@@ -11,7 +11,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock auditDb to capture logged entries
-const loggedEntries: Array<{ body: string | null; query: string | null; method: string; path: string }> = [];
+const loggedEntries: Array<{ body: string | null; query: string | null; method: string; path: string; user: string }> = [];
 vi.mock('../server/auditDb.js', () => ({
   logAuditEntry: vi.fn((entry: Record<string, unknown>) => {
     loggedEntries.push({
@@ -19,6 +19,7 @@ vi.mock('../server/auditDb.js', () => ({
       query: entry.query as string | null,
       method: entry.method as string,
       path: entry.path as string,
+      user: entry.user as string,
     });
   }),
 }));
@@ -174,12 +175,25 @@ describe('auditMiddleware', () => {
     expect(loggedEntries[0].query).toBe('{"limit":"50"}');
   });
 
-  it('uses anonymous for unauthenticated requests', () => {
+  it('records actor unauthenticated for requests with no auth (401)', () => {
     const req = mockReq({ originalUrl: '/api/auth/login', method: 'POST', auth: undefined, body: { username: 'x', password: 'y' } });
     const res = mockRes();
     auditMiddleware(req, res, vi.fn());
     (res as unknown as { _emit: (e: string) => void })._emit('finish');
     expect(loggedEntries[0]).toBeDefined();
+    expect(loggedEntries[0].user).toBe('unauthenticated');
+  });
+
+  it('records the real username for authenticated requests', () => {
+    const req = mockReq({
+      originalUrl: '/api/data/cases',
+      method: 'GET',
+      auth: { sub: 'alice', preferred_username: 'alice', role: 'viewer', centers: [], iat: 0, exp: 0 },
+    });
+    const res = mockRes();
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries[0].user).toBe('alice');
   });
 
   it('strips query string from path', () => {
