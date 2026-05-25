@@ -28,6 +28,7 @@ import {
 } from './dataDb.js';
 import { getCaseToCenter, isBypass } from './fhirApi.js';
 import { invalidateByCohort } from './outcomesAggregateCache.js';
+import { sanitizeSavedSearchFilters } from '../shared/savedSearchSanitize.js';
 
 export const dataApiRouter = Router();
 
@@ -171,34 +172,25 @@ dataApiRouter.get('/saved-searches', (req: Request, res: Response): void => {
 });
 
 dataApiRouter.post('/saved-searches', (req: Request, res: Response): void => {
+  // F-13 — server owns id/createdAt; filters sanitized; back-compat = old rows unaffected on read.
   const username = req.auth!.preferred_username;
-  const { id, name, createdAt, filters } = req.body as Record<string, unknown>;
+  const { name, filters } = req.body as Record<string, unknown>;
 
-  if (typeof id !== 'string' || !id.trim()) {
-    res.status(400).json({ error: 'id is required' });
-    return;
-  }
   if (typeof name !== 'string' || !name.trim()) {
     res.status(400).json({ error: 'name is required' });
     return;
   }
-  if (filters === undefined || filters === null || typeof filters !== 'object') {
-    res.status(400).json({ error: 'filters object is required' });
-    return;
-  }
 
-  // Cap serialized filters size to prevent garbage rows (review suggestion)
-  const filtersStr = JSON.stringify(filters);
-  if (filtersStr.length > 50000) {
-    res.status(400).json({ error: 'filters object is too large' });
-    return;
-  }
-
-  // Validate center ownership for any explicit case IDs in filters (CENTER-03)
-  const filtersObj = typeof filters === 'object' && filters !== null ? filters as Record<string, unknown> : {};
+  // Validate center ownership for any explicit case IDs in the RAW filters BEFORE sanitization
+  // (CENTER-03, T-40-05). caseIds/selectedCases may carry arbitrary case references —
+  // check them before stripping, so a user cannot bypass the center check by wrapping
+  // them in a non-whitelisted key name.
+  const rawFiltersObj = typeof filters === 'object' && filters !== null && !Array.isArray(filters)
+    ? filters as Record<string, unknown>
+    : {};
   const searchCaseIds: string[] = [];
-  if (Array.isArray(filtersObj['caseIds'])) searchCaseIds.push(...filtersObj['caseIds'].map(String));
-  if (Array.isArray(filtersObj['selectedCases'])) searchCaseIds.push(...filtersObj['selectedCases'].map(String));
+  if (Array.isArray(rawFiltersObj['caseIds'])) searchCaseIds.push(...(rawFiltersObj['caseIds'] as unknown[]).map(String));
+  if (Array.isArray(rawFiltersObj['selectedCases'])) searchCaseIds.push(...(rawFiltersObj['selectedCases'] as unknown[]).map(String));
   if (searchCaseIds.length > 0) {
     const centerError = validateCaseCenters(searchCaseIds, req.auth!.centers, req.auth!.role);
     if (centerError) {
@@ -207,10 +199,21 @@ dataApiRouter.post('/saved-searches', (req: Request, res: Response): void => {
     }
   }
 
+  // Sanitize incoming filters through the shared whitelist — strips unknown keys before persistence (SEC-06, T-40-02/03)
+  const safeFilters = sanitizeSavedSearchFilters(filters);
+
+  // Cap serialized filters size to prevent garbage rows; applied AFTER sanitization (T-40-04)
+  const filtersStr = JSON.stringify(safeFilters);
+  if (filtersStr.length > 50000) {
+    res.status(400).json({ error: 'filters object is too large' });
+    return;
+  }
+
+  // Server generates id and createdAt — client-supplied values are ignored (T-40-01)
   const row: SavedSearchRow = {
-    id: id.trim(),
+    id: crypto.randomUUID(),
     name: name.trim(),
-    created_at: typeof createdAt === 'string' ? createdAt : new Date().toISOString(),
+    created_at: new Date().toISOString(),
     filters: filtersStr,
     updated_at: new Date().toISOString(),
   };
