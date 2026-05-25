@@ -84,13 +84,10 @@ vi.mock('../src/context/DataContext', () => ({
   useData: () => mockDataContextValue,
 }));
 
-// Recharts — lightweight stubs that render children as-is (avoids SVG jsdom issues)
+// Recharts — null stubs (avoids SVG jsdom issues and require() inside factory).
+// These components are never inspected by RTL — only their container divs (data-testid) matter.
 vi.mock('recharts', () => {
-  const React = require('react');
-  const stub =
-    (name: string) =>
-    ({ children, ...props }: Record<string, unknown>) =>
-      React.createElement('div', { 'data-testid': `recharts-${name}`, ...props }, children);
+  const stub = (_name: string) => () => null;
 
   return {
     BarChart: stub('BarChart'),
