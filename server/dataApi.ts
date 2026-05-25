@@ -58,9 +58,9 @@ function qualityFlagRowToClient(f: QualityFlagRow) {
  * Validate that all case IDs belong to the user's permitted centers.
  * Returns an error message string if any case is outside permitted centers, or null if all pass.
  *
- * - Admin users and users with all centers bypass validation (same logic as isBypass).
- * - Unknown case IDs (not in FHIR cache) are REJECTED — prevents writes to
- *   unauthorized centers before cache warms (H-10).
+ * Only admin users bypass validation (see isBypass / F-05).
+ * Unknown case IDs (not in FHIR cache) are REJECTED — prevents writes to
+ * unauthorized centers before cache warms (H-10).
  */
 function validateCaseCenters(caseIds: string[], userCenters: string[], role: string): string | null {
   if (isBypass(role, userCenters)) return null;
@@ -173,7 +173,9 @@ dataApiRouter.get('/saved-searches', (req: Request, res: Response): void => {
         id: r.id,
         name: r.name,
         createdAt: r.created_at,
-        filters: JSON.parse(r.filters) as unknown,
+        // Defense-in-depth: sanitize on read to strip any unknown keys that may
+        // have slipped into legacy rows before the F-13 write-side whitelist (WR-03).
+        filters: sanitizeSavedSearchFilters(JSON.parse(r.filters) as unknown),
       };
       if (qualityParams !== undefined) {
         entry.qualityParams = qualityParams;
@@ -196,16 +198,15 @@ dataApiRouter.post('/saved-searches', (req: Request, res: Response): void => {
     return;
   }
 
-  // Validate center ownership for any explicit case IDs in the RAW filters BEFORE sanitization
-  // (CENTER-03, T-40-05). caseIds/selectedCases may carry arbitrary case references —
-  // check them before stripping, so a user cannot bypass the center check by wrapping
-  // them in a non-whitelisted key name.
+  // Validate center ownership for any flaggedCaseIds in the incoming filters (CENTER-03, T-40-05).
+  // flaggedCaseIds is the only whitelisted field that carries explicit case references (persisted
+  // by sanitizeSavedSearchFilters). caseIds/selectedCases are not in CohortFilter and are stripped
+  // by the sanitizer, so they are not a center-bypass vector and do not require validation.
   const rawFiltersObj = typeof filters === 'object' && filters !== null && !Array.isArray(filters)
     ? filters as Record<string, unknown>
     : {};
   const searchCaseIds: string[] = [];
-  if (Array.isArray(rawFiltersObj['caseIds'])) searchCaseIds.push(...(rawFiltersObj['caseIds'] as unknown[]).map(String));
-  if (Array.isArray(rawFiltersObj['selectedCases'])) searchCaseIds.push(...(rawFiltersObj['selectedCases'] as unknown[]).map(String));
+  if (Array.isArray(rawFiltersObj['flaggedCaseIds'])) searchCaseIds.push(...(rawFiltersObj['flaggedCaseIds'] as unknown[]).map(String));
   if (searchCaseIds.length > 0) {
     const centerError = validateCaseCenters(searchCaseIds, req.auth!.centers, req.auth!.role);
     if (centerError) {

@@ -6,7 +6,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { pickCoding } from '../../shared/fhirQueries';
 import { applyFilters } from '../../shared/patientCases';
 import { getTherapyStatus } from '../../shared/qualityPredicates';
-import { safePickCohortFilter } from '../utils/cohortFilterSerialization';
 import QualityCaseDetail from '../components/quality/QualityCaseDetail';
 import QualityCaseList from '../components/quality/QualityCaseList';
 import QualityFlagDialog from '../components/quality/QualityFlagDialog';
@@ -23,6 +22,7 @@ import {
 import { getSettings } from '../services/settingsService';
 import { getCachedDisplay } from '../services/terminology';
 import type { PatientCase, QualityFlag, QualityStatus } from '../types/fhir';
+import { safePickCohortFilter } from '../utils/cohortFilterSerialization';
 import { getDateLocale } from '../utils/dateFormat';
 import { datedFilename, downloadCsv } from '../utils/download';
 

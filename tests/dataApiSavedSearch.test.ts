@@ -195,8 +195,10 @@ describe('POST /saved-searches — F-13 server-owned provenance + filter sanitiz
     expect(res.status).toBe(400);
   });
 
-  // (e) filters.caseIds referencing a case in a center the user cannot access → 403
-  it('(e) POST with filters.caseIds outside permitted center returns 403', async () => {
+  // (e) filters.flaggedCaseIds referencing a case in a center the user cannot access → 403
+  // WR-01: flaggedCaseIds is the only whitelisted field that carries explicit case references.
+  // caseIds/selectedCases are stripped by the sanitizer and are not validated.
+  it('(e) POST with filters.flaggedCaseIds outside permitted center returns 403', async () => {
     const app = buildApp();
     // forscher1 only has org-uka; case-ukc-001 belongs to org-ukc
     const token = makeToken('forscher1', 'researcher', ['org-uka']);
@@ -206,10 +208,27 @@ describe('POST /saved-searches — F-13 server-owned provenance + filter sanitiz
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Bad Search',
-        filters: { caseIds: ['case-ukc-001'] },
+        filters: { flaggedCaseIds: ['case-ukc-001'] },
       });
 
     expect(res.status).toBe(403);
+  });
+
+  // (e2) filters.caseIds (a non-whitelisted field) does NOT trigger 403 — it is stripped
+  // by sanitizeSavedSearchFilters and never reaches the center-ownership check.
+  it('(e2) POST with filters.caseIds (non-whitelisted) is stripped — returns 201', async () => {
+    const app = buildApp();
+    const token = makeToken('forscher1', 'researcher', ['org-uka']);
+
+    const res = await request(app)
+      .post('/data/saved-searches')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Stripped Field Search',
+        filters: { caseIds: ['case-ukc-001'] },
+      });
+
+    expect(res.status).toBe(201);
   });
 
   // (f) Valid POST with no client id/createdAt — still succeeds and returns server values
