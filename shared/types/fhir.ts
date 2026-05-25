@@ -180,6 +180,14 @@ export interface SavedSearch {
   name: string;
   createdAt: string;
   filters: CohortFilter;
+  /**
+   * Per-cohort quality-check parameter selection (QUAL-021, D2).
+   * Tri-state — see shared/qualityParams.ts for semantics:
+   *   undefined ⇒ all default checks (back-compat for old records)
+   *   []        ⇒ no checks (explicit user choice)
+   *   string[]  ⇒ only those check keys apply
+   */
+  qualityParams?: string[];
 }
 
 export type QualityStatus = 'unchecked' | 'in_progress' | 'reviewed';
