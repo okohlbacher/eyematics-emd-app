@@ -33,7 +33,7 @@ import {
   type YMetric,
 } from '../../utils/cohortTrajectory';
 import CohortCompareDrawer from './CohortCompareDrawer';
-import IntervalHistogram from './IntervalHistogram';
+import IntervalHistogram, { type IntervalCohortSeries } from './IntervalHistogram';
 import OutcomesDataPreview from './OutcomesDataPreview';
 import OutcomesEmptyState from './OutcomesEmptyState';
 import type { CohortSeriesEntry } from './OutcomesPanel';
@@ -375,6 +375,20 @@ export default function OutcomesView() {
     return { od, os, combined };
   }, [isCrossMode, crossCohortIds, savedSearches, activeCases, activeMetric, axisMode, yMetric, gridPoints, spreadMode, filterOptions]);
 
+  // Phase 42 / ANL-010: per-cohort case series for interval histogram + responder view.
+  // Uses the same cohort order and COHORT_PALETTES index as crossCohortAggregates so
+  // colors are consistent across all four metric tabs.
+  const crossCohortCaseSeries = useMemo((): IntervalCohortSeries[] => {
+    if (!isCrossMode || crossCohortIds.length === 0) return [];
+    return crossCohortIds.flatMap((id, idx) => {
+      const saved = savedSearches.find((s) => s.id === id);
+      if (!saved) return [];
+      const cases = applyFilters(activeCases, saved.filters, filterOptions);
+      const color = COHORT_PALETTES[idx % COHORT_PALETTES.length];
+      return [{ cohortId: id, cohortName: saved.name, patientCount: cases.length, color, cases }];
+    });
+  }, [isCrossMode, crossCohortIds, savedSearches, activeCases, filterOptions]);
+
   // Phase 16: patient counts for the compare drawer.
   const patientCounts = useMemo<Record<string, number>>(() => {
     const counts: Record<string, number> = {};
@@ -614,6 +628,7 @@ export default function OutcomesView() {
             cases={cohort.cases}
             t={t as (k: TranslationKey) => string}
             locale={locale as 'de' | 'en'}
+            cohortSeries={isCrossMode && crossCohortCaseSeries.length >= 2 ? crossCohortCaseSeries : undefined}
           />
           <OutcomesDataPreview
             activeMetric="interval"
@@ -634,6 +649,7 @@ export default function OutcomesView() {
             thresholdLetters={thresholdLetters}
             t={t as (k: TranslationKey) => string}
             locale={locale as 'de' | 'en'}
+            cohortSeries={isCrossMode && crossCohortCaseSeries.length >= 2 ? crossCohortCaseSeries : undefined}
           />
           <OutcomesDataPreview
             activeMetric="responder"

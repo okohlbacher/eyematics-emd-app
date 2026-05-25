@@ -5,8 +5,7 @@
 import { cleanup,fireEvent, render, screen } from '@testing-library/react';
 import { afterEach,describe, expect, it } from 'vitest';
 
-import IntervalHistogram from '../src/components/outcomes/IntervalHistogram';
-import type { IntervalCohortSeries } from '../src/components/outcomes/IntervalHistogram';
+import IntervalHistogram, { type IntervalCohortSeries } from '../src/components/outcomes/IntervalHistogram';
 import type { TranslationKey } from '../src/i18n/translations';
 import { translations } from '../src/i18n/translations';
 import type { PatientCase } from '../src/types/fhir';
