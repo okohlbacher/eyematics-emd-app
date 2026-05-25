@@ -13,6 +13,24 @@ import type { PatientCase } from '../types/fhir';
 import { getEyeLabel, translateClinical } from '../utils/clinicalTerms';
 import { computeCrtDistribution, computeVisusDistribution } from '../utils/distributionBins';
 
+/** Per-date cohort percentile reference (FALL-011). */
+export interface CohortReferencePoint {
+  date: string;
+  visusMedian?: number;
+  visusP25?: number;
+  visusP75?: number;
+  crtMedian?: number;
+  crtP25?: number;
+  crtP75?: number;
+}
+
+/** Nearest-rank percentile (0-based fraction, 0 = min, 1 = max). */
+function percentile(sorted: number[], p: number): number {
+  if (sorted.length === 0) return 0;
+  const idx = Math.min(Math.floor(p * sorted.length), sorted.length - 1);
+  return sorted[idx];
+}
+
 export function useCaseData(
   patientCase: PatientCase | undefined,
   cases: PatientCase[],
@@ -262,9 +280,72 @@ export function useCaseData(
     [iopObs],
   );
 
+  // FALL-011: date-aligned cohort median + IQR reference series.
+  // For each date in the current case's combinedData, gather all cohort visus/crt
+  // values on that date (across all cases, including the current case) and compute
+  // median / p25 / p75. Dates with no cohort observations are omitted.
+  const cohortReference = useMemo((): CohortReferencePoint[] => {
+    if (!combinedData.length || !cases.length) return [];
+
+    // Build per-date buckets from the full cohort (all cases, including the current case).
+    const visusByDate = new Map<string, number[]>();
+    const crtByDate = new Map<string, number[]>();
+
+    for (const c of cases) {
+      for (const o of getObservationsByCode(c.observations, LOINC_VISUS)) {
+        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
+        if (!d) continue;
+        const val = o.valueQuantity?.value;
+        if (val == null) continue;
+        const bucket = visusByDate.get(d) ?? [];
+        bucket.push(val);
+        visusByDate.set(d, bucket);
+      }
+      for (const o of getObservationsByCode(c.observations, LOINC_CRT)) {
+        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
+        if (!d) continue;
+        const val = o.valueQuantity?.value;
+        if (val == null) continue;
+        const bucket = crtByDate.get(d) ?? [];
+        bucket.push(val);
+        crtByDate.set(d, bucket);
+      }
+    }
+
+    return combinedData
+      .map((point): CohortReferencePoint | null => {
+        const d = point.date;
+        const visusVals = visusByDate.get(d);
+        const crtVals = crtByDate.get(d);
+
+        const hasVisus = visusVals && visusVals.length > 0;
+        const hasCrt = crtVals && crtVals.length > 0;
+        if (!hasVisus && !hasCrt) return null;
+
+        const ref: CohortReferencePoint = { date: d };
+
+        if (hasVisus) {
+          const sorted = [...visusVals].sort((a, b) => a - b);
+          ref.visusMedian = percentile(sorted, 0.5);
+          ref.visusP25 = percentile(sorted, 0.25);
+          ref.visusP75 = percentile(sorted, 0.75);
+        }
+        if (hasCrt) {
+          const sorted = [...crtVals].sort((a, b) => a - b);
+          ref.crtMedian = percentile(sorted, 0.5);
+          ref.crtP25 = percentile(sorted, 0.25);
+          ref.crtP75 = percentile(sorted, 0.75);
+        }
+
+        return ref;
+      })
+      .filter((p): p is CohortReferencePoint => p !== null);
+  }, [combinedData, cases]);
+
   return {
     cohortAvgVisus,
     cohortAvgCrt,
+    cohortReference,
     visusObs,
     crtObs,
     iopObs,

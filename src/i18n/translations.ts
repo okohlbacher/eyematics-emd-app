@@ -1020,6 +1020,11 @@ const translations = {
   ttlValidationRefreshMin: { de: 'Refresh-TTL muss mindestens 1 Stunde betragen.', en: 'Refresh TTL must be at least 1 hour.' },
   ttlValidationCapMin: { de: 'Absolute Grenze muss \u2265 Refresh-TTL sein.', en: 'Absolute cap must be \u2265 Refresh TTL.' },
   ttlValidationCapMax: { de: 'Maximale Sitzungsdauer darf 720 Stunden (30 Tage) nicht \u00fcberschreiten.', en: 'Absolute cap must not exceed 720 hours (30 days).' },
+
+  // ---- FALL-011: Cohort reference overlay (case-detail Visus/CRT chart) ----
+  cohortReferenceToggle: { de: 'Kohorten-Referenz anzeigen', en: 'Show cohort reference' },
+  cohortReferenceMedian: { de: 'Kohorten-Median', en: 'Cohort median' },
+  cohortReferenceBand: { de: 'Kohorten-IQR (25.\u201375. Perzentil)', en: 'Cohort IQR (25th\u201375th percentile)' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

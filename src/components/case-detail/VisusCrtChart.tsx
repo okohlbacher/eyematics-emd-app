@@ -1,4 +1,5 @@
 import {
+  Area,
   CartesianGrid,
   Legend,
   Line,
@@ -11,6 +12,7 @@ import {
 } from 'recharts';
 
 import { CRITICAL_CRT_THRESHOLD } from '../../config/clinicalThresholds';
+import type { CohortReferencePoint } from '../../hooks/useCaseData';
 import type { TranslationKey } from '../../i18n/translations';
 import type { Observation } from '../../types/fhir';
 import { translateClinical } from '../../utils/clinicalTerms';
@@ -32,6 +34,10 @@ export interface VisusCrtChartProps {
   locale: string;
   t: (key: TranslationKey) => string;
   visusObs: Observation[];
+  /** FALL-011: toggle the cohort reference overlay on/off (default off). */
+  showCohortReference?: boolean;
+  /** FALL-011: date-aligned cohort median + IQR reference series. */
+  cohortReference?: CohortReferencePoint[];
 }
 
 export default function VisusCrtChart({
@@ -43,7 +49,10 @@ export default function VisusCrtChart({
   locale,
   t,
   visusObs,
+  showCohortReference = false,
+  cohortReference = [],
 }: VisusCrtChartProps) {
+  const hasReference = showCohortReference && cohortReference.length > 0;
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
       <h3 className="font-semibold text-gray-900 mb-1">
@@ -113,6 +122,81 @@ export default function VisusCrtChart({
               strokeDasharray="4 2"
               label={{ value: new Date(highlightDate).toLocaleDateString(dateFmt), position: 'top', fontSize: 10, fill: '#f59e0b' }}
             />
+          )}
+          {/* FALL-011: cohort reference overlay — rendered before patient lines so patient stays on top */}
+          {hasReference && (
+            <>
+              {/* Visus IQR band */}
+              <Area
+                yAxisId="visus"
+                data={cohortReference}
+                dataKey="visusP75"
+                stroke="none"
+                fill="#10b981"
+                fillOpacity={0.08}
+                legendType="none"
+                name={t('cohortReferenceBand')}
+                connectNulls
+              />
+              <Area
+                yAxisId="visus"
+                data={cohortReference}
+                dataKey="visusP25"
+                stroke="none"
+                fill="#ffffff"
+                fillOpacity={1}
+                legendType="none"
+                connectNulls
+              />
+              {/* CRT IQR band */}
+              <Area
+                yAxisId="crt"
+                data={cohortReference}
+                dataKey="crtP75"
+                stroke="none"
+                fill="#8b5cf6"
+                fillOpacity={0.08}
+                legendType="none"
+                connectNulls
+              />
+              <Area
+                yAxisId="crt"
+                data={cohortReference}
+                dataKey="crtP25"
+                stroke="none"
+                fill="#ffffff"
+                fillOpacity={1}
+                legendType="none"
+                connectNulls
+              />
+              {/* Visus median line */}
+              <Line
+                yAxisId="visus"
+                type="monotone"
+                data={cohortReference}
+                dataKey="visusMedian"
+                stroke="#6ee7b7"
+                strokeWidth={1.5}
+                strokeDasharray="4 3"
+                name={t('cohortReferenceMedian')}
+                dot={false}
+                connectNulls
+              />
+              {/* CRT median line */}
+              <Line
+                yAxisId="crt"
+                type="monotone"
+                data={cohortReference}
+                dataKey="crtMedian"
+                stroke="#c4b5fd"
+                strokeWidth={1.5}
+                strokeDasharray="4 3"
+                name={t('cohortReferenceMedian')}
+                legendType="none"
+                dot={false}
+                connectNulls
+              />
+            </>
           )}
           <Line
             yAxisId="visus"

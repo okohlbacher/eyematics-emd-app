@@ -37,6 +37,8 @@ export default function CaseDetailPage() {
   const octViewerRef = useRef<HTMLDivElement>(null);
   const [octSelectedIdx, setOctSelectedIdx] = useState(0);
   const [highlightDate, setHighlightDate] = useState<string | null>(null);
+  // FALL-011: cohort reference overlay toggle (off by default to avoid visual clutter)
+  const [showCohortReference, setShowCohortReference] = useState(false);
 
   const patientCase = cases.find((c) => c.id === caseId);
   const dateFmt = getDateLocale(locale);
@@ -44,6 +46,7 @@ export default function CaseDetailPage() {
   const {
     cohortAvgVisus,
     cohortAvgCrt,
+    cohortReference,
     visusObs,
     crtObs,
     iopObs,
@@ -128,6 +131,19 @@ export default function CaseDetailPage() {
       {/* Combined chart + injections row */}
       <div className="grid grid-cols-12 gap-6 mb-6">
         <div className="col-span-8">
+          {/* FALL-011: cohort reference overlay toggle */}
+          <div className="flex justify-end mb-1">
+            <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="w-3.5 h-3.5 cursor-pointer"
+                checked={showCohortReference}
+                onChange={(e) => setShowCohortReference(e.target.checked)}
+                aria-label={t('cohortReferenceToggle')}
+              />
+              {t('cohortReferenceToggle')}
+            </label>
+          </div>
           <VisusCrtChart
             combinedData={combinedData}
             cohortAvgVisus={cohortAvgVisus}
@@ -137,6 +153,8 @@ export default function CaseDetailPage() {
             locale={locale}
             t={t}
             visusObs={visusObs}
+            showCohortReference={showCohortReference}
+            cohortReference={cohortReference}
           />
         </div>
 

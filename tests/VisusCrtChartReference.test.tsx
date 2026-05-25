@@ -6,14 +6,12 @@
  * Task 2 tests: VisusCrtChart renders reference overlay gated by showCohortReference prop.
  */
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
 // ---------------------------------------------------------------------------
 // Task 1: useCaseData cohortReference — no DOM rendering needed, but we need
 // @testing-library/react for renderHook.
 // ---------------------------------------------------------------------------
-
-import { act, cleanup, render, renderHook, screen } from '@testing-library/react';
+import { cleanup, render, renderHook } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { TranslationKey } from '../src/i18n/translations';
 import type { PatientCase } from '../src/types/fhir';
