@@ -22,7 +22,7 @@
 - [x] **QUAL-025**: The approve/flag-status control in quality case detail is reachable without scrolling past all patient data. (QUAL-006)
 
 ### ANL — Analysis comparison & labeling
-- [ ] **ANL-010**: When comparing cohorts, each plot (incl. the interval histogram) clearly labels which cohort each series represents. (ANL-002)
+- [x] **ANL-010**: When comparing cohorts, each plot (incl. the interval histogram) clearly labels which cohort each series represents. (ANL-002)
 - [ ] **ANL-011**: The Aggregated tab supports comparison between cohorts (e.g. diagnosis distribution, age-vs-Visus). (ANL-003)
 - [ ] **ANL-012**: The active cohort/filter name is shown in Analysis when a filter is loaded directly (`?filters=`), not only via the saved-search path. (KOH-005)
 
@@ -62,7 +62,7 @@
 | QUAL-023 | Phase 41 | Complete |
 | QUAL-024 | Phase 41 | Complete |
 | QUAL-025 | Phase 41 | Complete |
-| ANL-010 | Phase 42 | Pending |
+| ANL-010 | Phase 42 | Complete |
 | ANL-011 | Phase 42 | Pending |
 | ANL-012 | Phase 42 | Pending |
 | FALL-010 | Phase 43 | Pending |

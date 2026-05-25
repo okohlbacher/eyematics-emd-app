@@ -200,7 +200,7 @@ Plans:
   3. When a user navigates to Analysis via a `?filters=` deep-link, the cohort or filter name is displayed in the UI — not just the results — without requiring the user to first save the search.
   4. The shared multi-select center filter from Phase 41 is correctly consumed by the Analysis views.
 **Plans**: 3 plans (3 waves; sequential — all touch translations.ts, 42-02/42-03 share AnalysisPage.tsx)
-- [ ] 42-01-PLAN.md — ANL-010: cohort labels/legend on interval histogram + responder in compare mode (palette colors + names)
+- [x] 42-01-PLAN.md — ANL-010: cohort labels/legend on interval histogram + responder in compare mode (palette colors + names)
 - [ ] 42-02-PLAN.md — ANL-011: between-cohort diagnosis-distribution + age-vs-Visus comparison in the Aggregated tab
 - [ ] 42-03-PLAN.md — ANL-012: derived cohort/filter name shown on direct ?filters= load
 **UI hint**: yes
@@ -250,7 +250,7 @@ Plans:
 | 39. Configurable Clinical Thresholds + Parity | 3/3 | Complete    | 2026-05-25 |
 | 40. SavedSearch Hardening + Quality Check Config | 3/3 | Complete    | 2026-05-25 |
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 3/3 | Complete    | 2026-05-25 |
-| 42. Analysis Cohort Comparison & Labeling | 0/0 | Not started | - |
+| 42. Analysis Cohort Comparison & Labeling | 1/3 | In Progress|  |
 | 43. Case Navigation, Reference & Chart Clarity | 0/0 | Not started | - |
 | 44. Tech-Debt Compaction | 0/0 | Not started | - |
 | 45. UAT Validation & Milestone Close | 0/0 | Not started | - |
