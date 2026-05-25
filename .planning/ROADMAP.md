@@ -258,7 +258,7 @@ Plans:
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 3/3 | Complete    | 2026-05-25 |
 | 42. Analysis Cohort Comparison & Labeling | 3/3 | Complete    | 2026-05-25 |
 | 43. Case Navigation, Reference & Chart Clarity | 3/3 | Complete    | 2026-05-25 |
-| 44. Tech-Debt Compaction | 2/2 | Complete   | 2026-05-25 |
+| 44. Tech-Debt Compaction | 2/2 | Complete    | 2026-05-25 |
 | 45. UAT Validation & Milestone Close | 0/0 | Not started | - |
 
 ---
