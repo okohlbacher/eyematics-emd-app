@@ -196,17 +196,17 @@ export function useCaseData(
     (patientCase?.observations.length ?? 0) + (patientCase?.procedures.length ?? 0);
 
   const hasCriticalValues =
-    crtObs.some((o) => (o.valueQuantity?.value ?? 0) > CRITICAL_CRT_THRESHOLD) ||
-    visusObs.some((o) => (o.valueQuantity?.value ?? 0) < CRITICAL_VISUS_THRESHOLD);
+    crtObs.some((o) => (o.valueQuantity?.value ?? 0) > CRITICAL_CRT_THRESHOLD()) ||
+    visusObs.some((o) => (o.valueQuantity?.value ?? 0) < CRITICAL_VISUS_THRESHOLD());
 
   const criticalCrtCount = crtObs.filter(
-    (o) => (o.valueQuantity?.value ?? 0) > CRITICAL_CRT_THRESHOLD,
+    (o) => (o.valueQuantity?.value ?? 0) > CRITICAL_CRT_THRESHOLD(),
   ).length;
   const criticalVisusCount = visusObs.filter(
-    (o) => (o.valueQuantity?.value ?? 0) < CRITICAL_VISUS_THRESHOLD,
+    (o) => (o.valueQuantity?.value ?? 0) < CRITICAL_VISUS_THRESHOLD(),
   ).length;
   const criticalIopCount = iopObs.filter(
-    (o) => (o.valueQuantity?.value ?? 0) > CRITICAL_IOP_THRESHOLD,
+    (o) => (o.valueQuantity?.value ?? 0) > CRITICAL_IOP_THRESHOLD(),
   ).length;
 
   const octImages = useMemo(

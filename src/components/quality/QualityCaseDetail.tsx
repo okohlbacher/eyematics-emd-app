@@ -90,20 +90,20 @@ export default function QualityCaseDetail({
 
     crtObs.forEach((o) => {
       const v = o.valueQuantity?.value;
-      if (v != null && v > CRITICAL_CRT_THRESHOLD) {
+      if (v != null && v > CRITICAL_CRT_THRESHOLD()) {
         results.push({ parameter: `CRT (${o.effectiveDateTime?.substring(0, 10)})`, value: `${v} µm`, reason: t('crtAnomaly') });
       }
     });
     visObs.forEach((o) => {
       const v = o.valueQuantity?.value;
-      if (v != null && v < CRITICAL_VISUS_THRESHOLD) {
+      if (v != null && v < CRITICAL_VISUS_THRESHOLD()) {
         results.push({ parameter: `Visus (${o.effectiveDateTime?.substring(0, 10)})`, value: `${v}`, reason: t('visusAnomaly') });
       }
     });
     for (let i = 1; i < visObs.length; i++) {
       const prev = visObs[i - 1].valueQuantity?.value ?? 0;
       const curr = visObs[i].valueQuantity?.value ?? 0;
-      if (Math.abs(curr - prev) > VISUS_JUMP_THRESHOLD) {
+      if (Math.abs(curr - prev) > VISUS_JUMP_THRESHOLD()) {
         results.push({ parameter: `Visus (${visObs[i].effectiveDateTime?.substring(0, 10)})`, value: `${prev} → ${curr}`, reason: t('visusJump') });
       }
     }

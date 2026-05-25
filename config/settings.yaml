@@ -1,4 +1,18 @@
 twoFactorEnabled: false
+# Phase 39 / CFG-01 — critical/action clinical thresholds (admin-configurable)
+thresholds:
+  criticalCrtUm: 400        # µm — CRT critical exceedance (was CRITICAL_CRT_THRESHOLD)
+  criticalVisus: 0.1        # decimal — Visus critical low (was CRITICAL_VISUS_THRESHOLD)
+  criticalIopMmHg: 21       # mmHg — IOP critical high (was CRITICAL_IOP_THRESHOLD)
+  visusJump: 0.3            # decimal — sudden visus change (was VISUS_JUMP_THRESHOLD)
+# Phase 39 / CFG-02 — plausibility ranges (admin-configurable)
+plausibility:
+  visusMin: 0               # Minimum plausible Visus (inclusive)
+  visusMax: 2.0             # Maximum plausible Visus (inclusive)
+  crtMin: 100               # Minimum plausible CRT in µm (inclusive)
+  crtMax: 800               # Maximum plausible CRT in µm (inclusive)
+  iopMin: 5                 # Minimum plausible IOP in mmHg (inclusive)
+  iopMax: 40                # Maximum plausible IOP in mmHg (inclusive)
 # Phase 34 / D-11 — stub generation factor range.
 # Per-site stub count ≈ factor × consented count; factor drawn seeded from [factorMin, factorMax].
 stubs:

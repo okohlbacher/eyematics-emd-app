@@ -95,7 +95,7 @@ export default function VisusCrtChart({
           />
           <ReferenceLine
             yAxisId="crt"
-            y={CRITICAL_CRT_THRESHOLD}
+            y={CRITICAL_CRT_THRESHOLD()}
             stroke="#ef4444"
             strokeDasharray="3 3"
             label={{ value: t('critical'), fontSize: 9, fill: '#ef4444' }}

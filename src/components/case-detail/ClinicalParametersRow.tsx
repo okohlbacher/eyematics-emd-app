@@ -60,7 +60,7 @@ export default function ClinicalParametersRow({
               <XAxis dataKey="date" tick={{ fontSize: 9 }} />
               <YAxis domain={[0, 30]} tick={{ fontSize: 10 }} />
               <Tooltip formatter={(v: unknown) => typeof v === 'number' ? `${v} mmHg` : String(v)} />
-              <ReferenceLine y={CRITICAL_IOP_THRESHOLD} stroke="#ef4444" strokeDasharray="3 3" label={{ value: String(CRITICAL_IOP_THRESHOLD), fontSize: 9, fill: '#ef4444' }} />
+              <ReferenceLine y={CRITICAL_IOP_THRESHOLD()} stroke="#ef4444" strokeDasharray="3 3" label={{ value: String(CRITICAL_IOP_THRESHOLD()), fontSize: 9, fill: '#ef4444' }} />
               <Bar dataKey="iop" fill="#6366f1" name={t('iop')} radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

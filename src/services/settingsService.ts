@@ -1,6 +1,14 @@
 import yaml from 'js-yaml';
 
 import { authFetch } from './authHeaders';
+import {
+  PLAUSIBILITY_DEFAULTS,
+  THRESHOLD_DEFAULTS,
+  type PlausibilityConfig,
+  type ThresholdConfig,
+} from '../../shared/thresholdConfig';
+
+export type { ThresholdConfig, PlausibilityConfig };
 
 export interface AppSettings {
   twoFactorEnabled: boolean;
@@ -26,6 +34,10 @@ export interface AppSettings {
     /** AUTHCFG-04: max failed login attempts before lockout */
     maxLoginAttempts?: number;
   };
+  /** CFG-01: critical/action clinical thresholds (admin-configurable). */
+  thresholds?: ThresholdConfig;
+  /** CFG-02: plausibility range configuration (admin-configurable). */
+  plausibility?: PlausibilityConfig;
 }
 
 const DEFAULTS: AppSettings = {
@@ -48,6 +60,9 @@ const DEFAULTS: AppSettings = {
     warningBeforeMs: 180_000,      // 3 min (AUTHCFG-02 — was 60 s hardcoded)
     maxLoginAttempts: 5,
   },
+  // CFG-01/CFG-02: use shared defaults as single source of truth
+  thresholds: THRESHOLD_DEFAULTS,
+  plausibility: PLAUSIBILITY_DEFAULTS,
 };
 
 /** Cached merged settings */

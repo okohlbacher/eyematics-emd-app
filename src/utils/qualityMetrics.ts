@@ -4,6 +4,8 @@ import {
   LOINC_IOP,
   LOINC_VISUS,
 } from '../services/fhirLoader';
+import { PLAUSIBILITY_DEFAULTS } from '../../shared/thresholdConfig';
+import { getSettings } from '../services/settingsService';
 import type { PatientCase } from '../types/fhir';
 
 // ---------------------------------------------------------------------------
@@ -67,19 +69,22 @@ export function scoreIconColor(score: number): string {
 }
 
 // ---------------------------------------------------------------------------
-// Plausibility range helpers
+// Plausibility range helpers (CFG-02 — bounds read from settings at call time)
 // ---------------------------------------------------------------------------
 
 function isVisusInRange(v: number): boolean {
-  return v >= 0 && v <= 2.0;
+  const p = getSettings().plausibility ?? PLAUSIBILITY_DEFAULTS;
+  return v >= p.visusMin && v <= p.visusMax;
 }
 
 function isCrtInRange(v: number): boolean {
-  return v >= 100 && v <= 800;
+  const p = getSettings().plausibility ?? PLAUSIBILITY_DEFAULTS;
+  return v >= p.crtMin && v <= p.crtMax;
 }
 
 function isIopInRange(v: number): boolean {
-  return v >= 5 && v <= 40;
+  const p = getSettings().plausibility ?? PLAUSIBILITY_DEFAULTS;
+  return v >= p.iopMin && v <= p.iopMax;
 }
 
 // ---------------------------------------------------------------------------
