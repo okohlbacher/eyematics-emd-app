@@ -108,7 +108,7 @@ Deferred to v1.12: CODEX Tier C (F-01/02/03/09/10/13) + Phase 33 advisory UAT �
 ### Phases
 
 - [x] **Phase 37: UAT Re-test & Spec Lock** — Re-verify the 12 v1.11 fixes; capture per-phase open decisions; lock v1.12 REQ-IDs and acceptance criteria *(process/feedback — no production code)* (completed 2026-05-25)
-- [ ] **Phase 38: Audit Actor Correctness** — Replace `'anonymous'` with `'unauthenticated'` in audit log for 401/unauth requests; keep immutable historical actors for deleted users (AUDIT-01)
+- [x] **Phase 38: Audit Actor Correctness** — Replace `'anonymous'` with `'unauthenticated'` in audit log for 401/unauth requests; keep immutable historical actors for deleted users (AUDIT-01) (completed 2026-05-25)
 - [ ] **Phase 39: Configurable Clinical Thresholds + Server/Client Parity** — Move critical/action thresholds and plausibility ranges to `settings.yaml`; expose admin UI in SettingsPage; enforce server/client parity in aggregation (CFG-01, CFG-02, CFG-03)
 - [ ] **Phase 40: SavedSearch Hardening + Quality Check Configuration** — Server-side SavedSearch provenance (id/createdAt generated server-side, filters sanitized at API boundary); cohort-scoped configurable quality check parameters persisted with the saved cohort (SEC-06, QUAL-020, QUAL-021)
 - [ ] **Phase 41: Doc-Quality Correctness, Multi-Select Centers & UX** — Time-filtered Grundgesamtheit denominator; absolute-count discoverability; multi-select center filter (D3, shared with Phase 42); repositioned approve/flag dropdown (QUAL-022, QUAL-023, QUAL-024, QUAL-025)
@@ -142,7 +142,7 @@ Deferred to v1.12: CODEX Tier C (F-01/02/03/09/10/13) + Phase 33 advisory UAT �
   3. Automated tests cover both the unauthenticated path and the deleted-user historical-actor path, and both pass in `test:ci`.
 **Plans**: 1 plan
 Plans:
-- [ ] 38-01-PLAN.md — Relabel audit actor fallback to unauthenticated; extend actor-correctness tests
+- [x] 38-01-PLAN.md — Relabel audit actor fallback to unauthenticated; extend actor-correctness tests
 
 ### Phase 39: Configurable Clinical Thresholds + Server/Client Parity
 **Goal**: Admins can view and edit all clinical thresholds and plausibility ranges in the Settings UI, and the server uses the same settings-derived values as the client when computing outcome aggregates.
@@ -233,7 +233,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 37. UAT Re-test & Spec Lock | 1/0 | Complete    | 2026-05-25 |
-| 38. Audit Actor Correctness | 0/1 | In progress | - |
+| 38. Audit Actor Correctness | 1/1 | Complete   | 2026-05-25 |
 | 39. Configurable Clinical Thresholds + Parity | 0/0 | Not started | - |
 | 40. SavedSearch Hardening + Quality Check Config | 0/0 | Not started | - |
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 0/0 | Not started | - |
