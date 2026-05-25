@@ -791,6 +791,8 @@ const translations = {
   outcomesCrossMode: { de: '{count} Kohorten verglichen', en: '{count} cohorts compared' },
   outcomesCompareReset: { de: 'Einzelne Kohorte anzeigen', en: 'Reset to single cohort' },
   outcomesComparePerPatientSuppressed: { de: 'Einzelkurven sind im Vergleichsmodus ausgeblendet.', en: 'Per-patient lines are suppressed in comparison mode.' },
+  // FALL-010: drill-down hint shown in aria-label when scatter points are clickable
+  outcomesDrillDownHint: { de: 'Datenpunkt anklicken, um den Fall zu öffnen', en: 'Click a data point to open the case' },
 
   // ---- Phase 13: Metric Selector (METRIC-04 / D-01) ----
   metricsVisus: { de: 'Visus', en: 'Visus' },

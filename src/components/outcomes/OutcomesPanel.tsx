@@ -49,6 +49,8 @@ interface Props {
           | 'metricsCrtPanelOd' | 'metricsCrtPanelOs' | 'metricsCrtPanelCombined';
   metric?: 'visus' | 'crt';  // NEW — default 'visus' for backward compat
   cohortSeries?: CohortSeriesEntry[];
+  /** FALL-010: optional callback fired when a scatter point is clicked; receives the patient pseudonym. Not active in cross-cohort mode. */
+  onPointClick?: (patientId: string) => void;
 }
 
 function yDomain(
@@ -92,6 +94,7 @@ export default function OutcomesPanel({
   titleKey,
   metric = 'visus',
   cohortSeries,
+  onPointClick,
 }: Props) {
   const { effectiveTheme } = useThemeSafe();
   const isDark = effectiveTheme === 'dark';
@@ -167,7 +170,11 @@ export default function OutcomesPanel({
       data-testid={`outcomes-panel-${eye}`}
       className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
       role="img"
-      aria-label={`${t(titleKey)} — ${panel.summary.patientCount} ${t('outcomesCardPatients')}`}
+      aria-label={
+        onPointClick
+          ? `${t(titleKey)} — ${panel.summary.patientCount} ${t('outcomesCardPatients')} — ${t('outcomesDrillDownHint')}`
+          : `${t(titleKey)} — ${panel.summary.patientCount} ${t('outcomesCardPatients')}`
+      }
     >
       <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t(titleKey)}</h3>
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
@@ -278,6 +285,15 @@ export default function OutcomesPanel({
               isAnimationActive={false}
               // Suppress legend chip — scatter points are an aggregate overlay.
               legendType="none"
+              // FALL-010: drill-down — only wired when caller provides the callback.
+              {...(onPointClick
+                ? {
+                    cursor: 'pointer',
+                    onClick: (datum: { patientId?: string }) => {
+                      if (datum?.patientId) onPointClick(datum.patientId);
+                    },
+                  }
+                : {})}
             />
           )}
 
