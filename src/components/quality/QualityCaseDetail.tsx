@@ -10,6 +10,7 @@ import {
 import { useMemo, useState } from 'react';
 
 import { pickCoding } from '../../../shared/fhirQueries';
+import { resolveQualityParams } from '../../../shared/qualityParams';
 import {
   CRITICAL_CRT_THRESHOLD,
   CRITICAL_VISUS_THRESHOLD,
@@ -35,6 +36,8 @@ export interface QualityCaseDetailProps {
   isExcluded: boolean;
   isReviewed: boolean;
   dateFmt: string;
+  /** When set, only the listed quality-check keys run for this case (resolveQualityParams fallback: all). */
+  activeQualityParams?: string[];
   onMarkReviewed: (caseId: string) => void;
   onExclude: (caseId: string) => void;
   onNavigateToCase: (caseId: string) => void;
@@ -49,6 +52,7 @@ export default function QualityCaseDetail({
   isExcluded,
   isReviewed,
   dateFmt,
+  activeQualityParams,
   onMarkReviewed,
   onExclude,
   onNavigateToCase,
@@ -74,9 +78,12 @@ export default function QualityCaseDetail({
     [selectedCase],
   );
 
-  // Anomalies including missing data (N03.05, EMDREQ-QUAL-004)
+  // Anomalies including missing data (N03.05, EMDREQ-QUAL-004).
+  // activeQualityParams gates which checks run; undefined ⇒ resolveQualityParams fallback (all six).
   const anomalies = useMemo(() => {
     const results: Array<{ parameter: string; value: string; reason: string }> = [];
+    // Resolve the effective key set (tri-state: undefined → all; [] → none; subset → that subset).
+    const activeKeys = new Set(resolveQualityParams(activeQualityParams));
 
     const visObs = getObservationsByCode(selectedCase.observations, LOINC_VISUS);
     const crtObs = getObservationsByCode(selectedCase.observations, LOINC_CRT);
@@ -84,31 +91,37 @@ export default function QualityCaseDetail({
       p.code.coding.some((c) => c.code === SNOMED_IVI)
     );
 
-    if (visObs.length === 0) results.push({ parameter: 'Visus', value: '—', reason: t('missingVisus') });
-    if (crtObs.length === 0) results.push({ parameter: 'CRT', value: '—', reason: t('missingCrt') });
-    if (injections.length === 0) results.push({ parameter: 'IVOM', value: '—', reason: t('missingInjections') });
+    if (activeKeys.has('missingVisus') && visObs.length === 0) results.push({ parameter: 'Visus', value: '—', reason: t('missingVisus') });
+    if (activeKeys.has('missingCrt') && crtObs.length === 0) results.push({ parameter: 'CRT', value: '—', reason: t('missingCrt') });
+    if (activeKeys.has('missingInjections') && injections.length === 0) results.push({ parameter: 'IVOM', value: '—', reason: t('missingInjections') });
 
-    crtObs.forEach((o) => {
-      const v = o.valueQuantity?.value;
-      if (v != null && v > CRITICAL_CRT_THRESHOLD()) {
-        results.push({ parameter: `CRT (${o.effectiveDateTime?.substring(0, 10)})`, value: `${v} µm`, reason: t('crtAnomaly') });
-      }
-    });
-    visObs.forEach((o) => {
-      const v = o.valueQuantity?.value;
-      if (v != null && v < CRITICAL_VISUS_THRESHOLD()) {
-        results.push({ parameter: `Visus (${o.effectiveDateTime?.substring(0, 10)})`, value: `${v}`, reason: t('visusAnomaly') });
-      }
-    });
-    for (let i = 1; i < visObs.length; i++) {
-      const prev = visObs[i - 1].valueQuantity?.value ?? 0;
-      const curr = visObs[i].valueQuantity?.value ?? 0;
-      if (Math.abs(curr - prev) > VISUS_JUMP_THRESHOLD()) {
-        results.push({ parameter: `Visus (${visObs[i].effectiveDateTime?.substring(0, 10)})`, value: `${prev} → ${curr}`, reason: t('visusJump') });
+    if (activeKeys.has('crtCritical')) {
+      crtObs.forEach((o) => {
+        const v = o.valueQuantity?.value;
+        if (v != null && v > CRITICAL_CRT_THRESHOLD()) {
+          results.push({ parameter: `CRT (${o.effectiveDateTime?.substring(0, 10)})`, value: `${v} µm`, reason: t('crtAnomaly') });
+        }
+      });
+    }
+    if (activeKeys.has('visusCritical')) {
+      visObs.forEach((o) => {
+        const v = o.valueQuantity?.value;
+        if (v != null && v < CRITICAL_VISUS_THRESHOLD()) {
+          results.push({ parameter: `Visus (${o.effectiveDateTime?.substring(0, 10)})`, value: `${v}`, reason: t('visusAnomaly') });
+        }
+      });
+    }
+    if (activeKeys.has('visusJump')) {
+      for (let i = 1; i < visObs.length; i++) {
+        const prev = visObs[i - 1].valueQuantity?.value ?? 0;
+        const curr = visObs[i].valueQuantity?.value ?? 0;
+        if (Math.abs(curr - prev) > VISUS_JUMP_THRESHOLD()) {
+          results.push({ parameter: `Visus (${visObs[i].effectiveDateTime?.substring(0, 10)})`, value: `${prev} → ${curr}`, reason: t('visusJump') });
+        }
       }
     }
     return results;
-  }, [selectedCase, t]);
+  }, [selectedCase, activeQualityParams, t]);
 
   return (
     <div className="space-y-4">
