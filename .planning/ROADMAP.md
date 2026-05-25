@@ -153,7 +153,11 @@ Plans:
   2. An admin can read and edit plausibility ranges (Visus, CRT, IOP min/max) from the same Settings UI using the same config + validation pattern.
   3. After changing any threshold, the server-side outcome aggregation (`outcomesAggregateApi.ts`) applies the updated value — a client-computed cohort and a server-computed cohort with the same data and the same settings produce identical classification results.
   4. The aggregate cache is invalidated on threshold change so stale pre-change results are not served to subsequent requests.
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 39-01-PLAN.md — Settings-backed threshold/plausibility config + shared validation + server reader (foundation)
+- [ ] 39-02-PLAN.md — SettingsPage "Clinical thresholds" + "Plausibility ranges" admin sections + DE/EN i18n
+- [ ] 39-03-PLAN.md — Server/client parity: inject settings options into applyFilters + threshold-aware cache key + parity test
 **UI hint**: yes
 
 ### Phase 40: SavedSearch Hardening + Quality Check Configuration
@@ -234,7 +238,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 37. UAT Re-test & Spec Lock | 1/0 | Complete    | 2026-05-25 |
 | 38. Audit Actor Correctness | 1/1 | Complete    | 2026-05-25 |
-| 39. Configurable Clinical Thresholds + Parity | 0/0 | Not started | - |
+| 39. Configurable Clinical Thresholds + Parity | 0/3 | Planned     | - |
 | 40. SavedSearch Hardening + Quality Check Config | 0/0 | Not started | - |
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 0/0 | Not started | - |
 | 42. Analysis Cohort Comparison & Labeling | 0/0 | Not started | - |
@@ -244,4 +248,4 @@ Plans:
 
 ---
 
-*Last updated: 2026-05-25 — v1.12 roadmap created (Phases 37–45): Quality, Configurability & Analysis Depth. Locked decisions D1/D1b/D2/D3 + PROT-001 from CODEX-converged proposal. v1.11 shipped and archived (Phases 32–36).*
+*Last updated: 2026-05-25 — Phase 39 planned (3 plans, 2 waves): Configurable Clinical Thresholds + Server/Client Parity (CFG-01/02/03). v1.12 milestone in progress (Phases 37–45).*
