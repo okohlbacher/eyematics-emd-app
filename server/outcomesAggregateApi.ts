@@ -34,6 +34,7 @@ import { computeCohortTrajectory, computeCrtTrajectory } from '../shared/cohortT
 import type { AggregateResponse } from '../shared/outcomesProjection.js';
 import { shapeOutcomesResponse } from '../shared/outcomesProjection.js';
 import { applyFilters, extractPatientCases } from '../shared/patientCases.js';
+import type { ApplyFiltersOptions } from '../shared/patientCases.js';
 import type { CohortFilter, PatientCase } from '../shared/types/fhir.js';
 import { logAuditEntry } from './auditDb.js';
 import { getSavedSearches } from './dataDb.js';
@@ -44,6 +45,7 @@ import {
   getCachedBundles,
   isBypass,
 } from './fhirApi.js';
+import { getFilterOptions } from './settingsApi.js';
 import { hashCohortId } from './hashCohortId.js';
 import {
   aggregateCacheGet,
@@ -115,11 +117,14 @@ async function resolveCohortCases(
   role: string,
   centers: string[],
   filters: CohortFilter,
+  options: ApplyFiltersOptions,
 ): Promise<PatientCase[]> {
   const all = await getCachedBundles();
   const bundles = isBypass(role, centers) ? all : filterBundlesByCenters(all, centers);
   const cases = extractPatientCases(bundles);
-  return applyFilters(cases, filters);
+  // CFG-03: inject settings-derived options so preset predicates (implausibleCrt,
+  // therapyBreaker) use operator-configured thresholds instead of hardcoded fallbacks.
+  return applyFilters(cases, filters, options);
 }
 
 // ---------------------------------------------------------------------------
@@ -162,6 +167,15 @@ outcomesAggregateRouter.post('/aggregate', async (req: Request, res: Response): 
     return;
   }
 
+  // CFG-03: read settings-derived filter options at request time (NOT boot-cached)
+  // so an operator edit + the existing cache invalidation takes effect without restart.
+  // T-39-07 defense-in-depth: include threshold values in the cache key so two
+  // concurrent settings snapshots never collide on one key (invalidateAllAggregates
+  // in the settings PUT handler already evicts all entries on a settings write —
+  // the key-inclusion is an additional guard, not a replacement).
+  const filterOptions = getFilterOptions();
+  const { therapyInterrupterDays, therapyBreakerDays, crtImplausibleThresholdUm } = filterOptions;
+
   // 4. Cache read (D-07/D-08 user-scoped key). Literal key construction.
   // T-13-04: metric must be in cache key so CRT and visus cache independently
   const cacheKey = JSON.stringify({
@@ -175,6 +189,10 @@ outcomesAggregateRouter.post('/aggregate', async (req: Request, res: Response): 
     includeScatter,
     user,
     metric,
+    // T-39-07: threshold values included so pre/post-settings-change keys differ
+    therapyInterrupterDays,
+    therapyBreakerDays,
+    crtImplausibleThresholdUm,
   });
   const cached = aggregateCacheGet(cacheKey);
   let response: AggregateResponse;
@@ -207,7 +225,7 @@ outcomesAggregateRouter.post('/aggregate', async (req: Request, res: Response): 
     }
     let cases: PatientCase[];
     try {
-      cases = await resolveCohortCases(userRole, userCenters, filters);
+      cases = await resolveCohortCases(userRole, userCenters, filters, filterOptions);
     } catch (err) {
       console.error('[outcomesAggregateApi] Cohort resolve failed:', (err as Error).message);
       logAuditEntry({

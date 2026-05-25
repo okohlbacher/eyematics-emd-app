@@ -236,6 +236,58 @@ export function getThresholdSettings(): ThresholdSettings {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Phase 39 / CFG-03 — applyFilters options reader for server-side parity
+// ---------------------------------------------------------------------------
+
+/**
+ * Defaults for the top-level applyFilters options fields.
+ * These mirror the hardcoded fallbacks in shared/patientCases.ts applyFilters
+ * so the server produces identical results when settings.yaml omits the fields.
+ */
+const FILTER_OPTION_DEFAULTS = {
+  therapyInterrupterDays: 120,
+  therapyBreakerDays: 365,
+  crtImplausibleThresholdUm: 400,
+} as const;
+
+export interface FilterOptions {
+  therapyInterrupterDays: number;
+  therapyBreakerDays: number;
+  crtImplausibleThresholdUm: number;
+}
+
+/**
+ * Reads the top-level `therapyInterrupterDays`, `therapyBreakerDays`, and
+ * `crtImplausibleThresholdUm` fields from settings.yaml at call time
+ * (NOT boot-cached) — mirrors getAuthSettings() / getThresholdSettings().
+ * Returns FILTER_OPTION_DEFAULTS for any missing or unreadable field.
+ * CFG-03: server passes the same operator-configured options to applyFilters
+ * as the client derives from settings.
+ */
+export function getFilterOptions(): FilterOptions {
+  try {
+    const raw = fs.readFileSync(SETTINGS_FILE, 'utf-8');
+    const parsed = yaml.load(raw) as Partial<FilterOptions> | null;
+    return {
+      therapyInterrupterDays:
+        typeof parsed?.therapyInterrupterDays === 'number' && Number.isFinite(parsed.therapyInterrupterDays)
+          ? parsed.therapyInterrupterDays
+          : FILTER_OPTION_DEFAULTS.therapyInterrupterDays,
+      therapyBreakerDays:
+        typeof parsed?.therapyBreakerDays === 'number' && Number.isFinite(parsed.therapyBreakerDays)
+          ? parsed.therapyBreakerDays
+          : FILTER_OPTION_DEFAULTS.therapyBreakerDays,
+      crtImplausibleThresholdUm:
+        typeof parsed?.crtImplausibleThresholdUm === 'number' && Number.isFinite(parsed.crtImplausibleThresholdUm)
+          ? parsed.crtImplausibleThresholdUm
+          : FILTER_OPTION_DEFAULTS.crtImplausibleThresholdUm,
+    };
+  } catch {
+    return { ...FILTER_OPTION_DEFAULTS };
+  }
+}
+
 function parseAndValidateYaml(body: string): { parsed: unknown; error?: string } {
   let parsed: unknown;
   try {
