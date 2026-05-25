@@ -109,7 +109,7 @@ Deferred to v1.12: CODEX Tier C (F-01/02/03/09/10/13) + Phase 33 advisory UAT �
 
 - [x] **Phase 37: UAT Re-test & Spec Lock** — Re-verify the 12 v1.11 fixes; capture per-phase open decisions; lock v1.12 REQ-IDs and acceptance criteria *(process/feedback — no production code)* (completed 2026-05-25)
 - [x] **Phase 38: Audit Actor Correctness** — Replace `'anonymous'` with `'unauthenticated'` in audit log for 401/unauth requests; keep immutable historical actors for deleted users (AUDIT-01) (completed 2026-05-25)
-- [ ] **Phase 39: Configurable Clinical Thresholds + Server/Client Parity** — Move critical/action thresholds and plausibility ranges to `settings.yaml`; expose admin UI in SettingsPage; enforce server/client parity in aggregation (CFG-01, CFG-02, CFG-03)
+- [x] **Phase 39: Configurable Clinical Thresholds + Server/Client Parity** — Move critical/action thresholds and plausibility ranges to `settings.yaml`; expose admin UI in SettingsPage; enforce server/client parity in aggregation (CFG-01, CFG-02, CFG-03) (completed 2026-05-25)
 - [ ] **Phase 40: SavedSearch Hardening + Quality Check Configuration** — Server-side SavedSearch provenance (id/createdAt generated server-side, filters sanitized at API boundary); cohort-scoped configurable quality check parameters persisted with the saved cohort (SEC-06, QUAL-020, QUAL-021)
 - [ ] **Phase 41: Doc-Quality Correctness, Multi-Select Centers & UX** — Time-filtered Grundgesamtheit denominator; absolute-count discoverability; multi-select center filter (D3, shared with Phase 42); repositioned approve/flag dropdown (QUAL-022, QUAL-023, QUAL-024, QUAL-025)
 - [ ] **Phase 42: Analysis Cohort Comparison & Labeling** — Cohort labels on all comparison plots; Aggregated-tab cohort comparison (diagnosis distribution, age-vs-Visus); active cohort name on `?filters=` direct-load (ANL-010, ANL-011, ANL-012)
@@ -157,7 +157,7 @@ Plans:
 Plans:
 - [x] 39-01-PLAN.md — Settings-backed threshold/plausibility config + shared validation + server reader (foundation)
 - [x] 39-02-PLAN.md — SettingsPage "Clinical thresholds" + "Plausibility ranges" admin sections + DE/EN i18n
-- [ ] 39-03-PLAN.md — Server/client parity: inject settings options into applyFilters + threshold-aware cache key + parity test
+- [x] 39-03-PLAN.md — Server/client parity: inject settings options into applyFilters + threshold-aware cache key + parity test
 **UI hint**: yes
 
 ### Phase 40: SavedSearch Hardening + Quality Check Configuration
@@ -238,7 +238,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 37. UAT Re-test & Spec Lock | 1/0 | Complete    | 2026-05-25 |
 | 38. Audit Actor Correctness | 1/1 | Complete    | 2026-05-25 |
-| 39. Configurable Clinical Thresholds + Parity | 2/3 | In Progress|  |
+| 39. Configurable Clinical Thresholds + Parity | 3/3 | Complete   | 2026-05-25 |
 | 40. SavedSearch Hardening + Quality Check Config | 0/0 | Not started | - |
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 0/0 | Not started | - |
 | 42. Analysis Cohort Comparison & Labeling | 0/0 | Not started | - |
