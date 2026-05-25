@@ -155,7 +155,7 @@ Plans:
   4. The aggregate cache is invalidated on threshold change so stale pre-change results are not served to subsequent requests.
 **Plans**: 3 plans
 Plans:
-- [ ] 39-01-PLAN.md — Settings-backed threshold/plausibility config + shared validation + server reader (foundation)
+- [x] 39-01-PLAN.md — Settings-backed threshold/plausibility config + shared validation + server reader (foundation)
 - [ ] 39-02-PLAN.md — SettingsPage "Clinical thresholds" + "Plausibility ranges" admin sections + DE/EN i18n
 - [ ] 39-03-PLAN.md — Server/client parity: inject settings options into applyFilters + threshold-aware cache key + parity test
 **UI hint**: yes
@@ -238,7 +238,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 37. UAT Re-test & Spec Lock | 1/0 | Complete    | 2026-05-25 |
 | 38. Audit Actor Correctness | 1/1 | Complete    | 2026-05-25 |
-| 39. Configurable Clinical Thresholds + Parity | 0/3 | Planned     | - |
+| 39. Configurable Clinical Thresholds + Parity | 1/3 | In Progress|  |
 | 40. SavedSearch Hardening + Quality Check Config | 0/0 | Not started | - |
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 0/0 | Not started | - |
 | 42. Analysis Cohort Comparison & Labeling | 0/0 | Not started | - |

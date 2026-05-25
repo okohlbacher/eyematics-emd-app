@@ -9,9 +9,9 @@
 - [x] **AUDIT-01**: Unauthenticated/401 requests are recorded in the audit log with actor `unauthenticated` (not `anonymous`); deleted users retain their immutable historical actor on past entries. (PROT-001)
 
 ### CFG — Configurable clinical thresholds
-- [ ] **CFG-01**: Admins can view and edit the critical/action clinical thresholds (CRT critical, Visus critical, IOP critical, Visus-jump, therapy interrupter/breaker days) in the Settings UI; values persist to `config/settings.yaml`. (ANL-004, F-02)
-- [ ] **CFG-02**: Plausibility ranges (Visus, CRT, IOP min/max) are centralized to `config/settings.yaml` and admin-editable in the Settings UI. (D1b)
-- [ ] **CFG-03**: Server-side outcome aggregation applies the same settings-derived thresholds as the client (no client/server divergence for preset cohorts); aggregate cache is keyed/invalidated on threshold change. (F-01)
+- [x] **CFG-01**: Admins can view and edit the critical/action clinical thresholds (CRT critical, Visus critical, IOP critical, Visus-jump, therapy interrupter/breaker days) in the Settings UI; values persist to `config/settings.yaml`. (ANL-004, F-02)
+- [x] **CFG-02**: Plausibility ranges (Visus, CRT, IOP min/max) are centralized to `config/settings.yaml` and admin-editable in the Settings UI. (D1b)
+- [x] **CFG-03**: Server-side outcome aggregation applies the same settings-derived thresholds as the client (no client/server divergence for preset cohorts); aggregate cache is keyed/invalidated on threshold change. (F-01)
 
 ### QUAL — Data-quality module
 - [ ] **QUAL-020**: A user can run the quality review scoped to a selected cohort/subcohort (not only the global set). (QUAL-001)
@@ -52,9 +52,9 @@
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
 | AUDIT-01 | Phase 38 | Complete |
-| CFG-01 | Phase 39 | Pending |
-| CFG-02 | Phase 39 | Pending |
-| CFG-03 | Phase 39 | Pending |
+| CFG-01 | Phase 39 | Complete |
+| CFG-02 | Phase 39 | Complete |
+| CFG-03 | Phase 39 | Complete |
 | SEC-06 | Phase 40 | Pending |
 | QUAL-020 | Phase 40 | Pending |
 | QUAL-021 | Phase 40 | Pending |
