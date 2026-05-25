@@ -61,3 +61,62 @@ export function parseCohortFilterJson(raw: string | null): CohortFilter {
     return {};
   }
 }
+
+/**
+ * Produce a short, deterministic, human-readable summary of the active fields
+ * in a CohortFilter. Returns an empty string when no fields are set (caller can
+ * then omit the suffix entirely).
+ *
+ * Field order is fixed (declared below) — only present fields appear.
+ * Set-valued fields (flaggedCaseIds) are summarised as a count to avoid echoing
+ * patient identifiers (security: T-42-05).
+ *
+ * Pure function; does not mutate input; no i18n inside (caller prepends the
+ * localised "Gefilterte Kohorte" prefix); throw-only on programmer error.
+ */
+export function summarizeCohortFilter(f: CohortFilter): string {
+  const parts: string[] = [];
+
+  if (f.diagnosis && f.diagnosis.length > 0) {
+    parts.push(`Diagnose: ${f.diagnosis.join(', ')}`);
+  }
+  if (f.diagnosisSubtype && f.diagnosisSubtype.length > 0) {
+    parts.push(`Subtyp: ${f.diagnosisSubtype.join(', ')}`);
+  }
+  if (f.gender && f.gender.length > 0) {
+    parts.push(`Geschlecht: ${f.gender.join(', ')}`);
+  }
+  if (f.ageRange) {
+    parts.push(`Alter ${f.ageRange[0]}–${f.ageRange[1]}`);
+  }
+  if (f.visusRange) {
+    parts.push(`Visus ${f.visusRange[0]}–${f.visusRange[1]}`);
+  }
+  if (f.crtRange) {
+    parts.push(`CRT ${f.crtRange[0]}–${f.crtRange[1]} µm`);
+  }
+  if (f.hba1cRange) {
+    parts.push(`HbA1c ${f.hba1cRange[0]}–${f.hba1cRange[1]}`);
+  }
+  if (f.centers && f.centers.length > 0) {
+    parts.push(f.centers.length <= 2 ? `Zentren: ${f.centers.join(', ')}` : `${f.centers.length} Zentren`);
+  }
+  if (f.preset) {
+    parts.push(`Preset: ${f.preset}`);
+  }
+  if (f.laterality) {
+    parts.push(`Seite: ${f.laterality}`);
+  }
+  if (f.hasComorbidity === true) {
+    parts.push('Komorbidität');
+  }
+  if (f.medicationCodes && f.medicationCodes.length > 0) {
+    parts.push(`${f.medicationCodes.length} Medikamente`);
+  }
+  // flaggedCaseIds: count only — never echo raw identifiers (T-42-05)
+  if (f.flaggedCaseIds && f.flaggedCaseIds.size > 0) {
+    parts.push(`${f.flaggedCaseIds.size} Fälle markiert`);
+  }
+
+  return parts.join(' · ');
+}
