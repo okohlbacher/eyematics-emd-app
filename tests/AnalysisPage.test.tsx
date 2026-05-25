@@ -279,3 +279,75 @@ describe('AnalysisPage — cross-cohort resolution (ANL-011 Task 1)', () => {
     expect(screen.queryByTestId('compare-age-visus')).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Tests: summarizeCohortFilter (ANL-012 Task 1)
+// ---------------------------------------------------------------------------
+import { summarizeCohortFilter } from '../src/utils/cohortFilterSerialization';
+
+describe('summarizeCohortFilter (ANL-012)', () => {
+  it('returns empty string for empty filter', () => {
+    expect(summarizeCohortFilter({})).toBe('');
+  });
+
+  it('returns summary for single diagnosis field', () => {
+    const result = summarizeCohortFilter({ diagnosis: ['E11'] });
+    expect(result).toContain('E11');
+  });
+
+  it('returns summary for ageRange as min–max', () => {
+    const result = summarizeCohortFilter({ ageRange: [50, 70] });
+    expect(result).toContain('50');
+    expect(result).toContain('70');
+  });
+
+  it('returns summary for diagnosis + ageRange separated by ·', () => {
+    const result = summarizeCohortFilter({ diagnosis: ['E11'], ageRange: [50, 70] });
+    expect(result).toContain('E11');
+    expect(result).toContain('·');
+  });
+
+  it('summarizes flaggedCaseIds as count only, not raw ids', () => {
+    const result = summarizeCohortFilter({ flaggedCaseIds: new Set(['id1', 'id2', 'id3']) });
+    expect(result).toContain('3');
+    expect(result).not.toContain('id1');
+    expect(result).not.toContain('id2');
+    expect(result).not.toContain('id3');
+  });
+
+  it('summarizes centers as joined list or count', () => {
+    const result = summarizeCohortFilter({ centers: ['CENTER-1', 'CENTER-2'] });
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('summarizes gender field', () => {
+    const result = summarizeCohortFilter({ gender: ['female'] });
+    expect(result).toContain('female');
+  });
+
+  it('summarizes visusRange as min–max', () => {
+    const result = summarizeCohortFilter({ visusRange: [0.2, 0.8] });
+    expect(result).toContain('0.2');
+    expect(result).toContain('0.8');
+  });
+
+  it('summarizes preset literal', () => {
+    const result = summarizeCohortFilter({ preset: 'therapyBreaker' });
+    expect(result).toContain('therapyBreaker');
+  });
+
+  it('summarizes laterality', () => {
+    const result = summarizeCohortFilter({ laterality: 'OD' });
+    expect(result).toContain('OD');
+  });
+
+  it('summarizes hasComorbidity boolean', () => {
+    const result = summarizeCohortFilter({ hasComorbidity: true });
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('is deterministic — same input produces same output', () => {
+    const filter = { diagnosis: ['E11', 'H35'], ageRange: [40, 80] as [number, number], gender: ['male'] };
+    expect(summarizeCohortFilter(filter)).toBe(summarizeCohortFilter(filter));
+  });
+});
