@@ -210,8 +210,9 @@ describe('AnalysisPage — cross-cohort resolution (ANL-011 Task 1)', () => {
     };
     setSearchParams({ cohort: 's1', cohorts: 's1,s2' });
     render(<AnalysisPage />);
-    expect(screen.queryByText('AMD Cohort')).not.toBeNull();
-    expect(screen.queryByText('DR Cohort')).not.toBeNull();
+    // Use queryAllByText since cohort name appears in legend span, h4 heading, and page subtitle
+    expect(screen.queryAllByText('AMD Cohort').length).toBeGreaterThan(0);
+    expect(screen.queryAllByText('DR Cohort').length).toBeGreaterThan(0);
   });
 
   it('cross-mode: unknown cohort ids are silently dropped', () => {
@@ -241,9 +242,9 @@ describe('AnalysisPage — cross-cohort resolution (ANL-011 Task 1)', () => {
     // primary NOT listed in cohorts param — should be prepended automatically
     setSearchParams({ cohort: 'primary', cohorts: 's2' });
     render(<AnalysisPage />);
-    // Both names rendered
-    expect(screen.queryByText('Primary Cohort')).not.toBeNull();
-    expect(screen.queryByText('Second Cohort')).not.toBeNull();
+    // Both names rendered (may appear multiple times — page header + legend + chart heading)
+    expect(screen.queryAllByText('Primary Cohort').length).toBeGreaterThan(0);
+    expect(screen.queryAllByText('Second Cohort').length).toBeGreaterThan(0);
   });
 
   it('cross-mode: capped at 4 cohorts', () => {
@@ -260,10 +261,10 @@ describe('AnalysisPage — cross-cohort resolution (ANL-011 Task 1)', () => {
     setSearchParams({ cohort: 's1', cohorts: 's1,s2,s3,s4,s5' });
     render(<AnalysisPage />);
     // Cohort 5 should NOT appear (capped at 4)
-    expect(screen.queryByText('Cohort 5')).toBeNull();
-    // First 4 should appear in legend
-    expect(screen.queryByText('Cohort 1')).not.toBeNull();
-    expect(screen.queryByText('Cohort 4')).not.toBeNull();
+    expect(screen.queryAllByText('Cohort 5').length).toBe(0);
+    // First 4 should appear in legend / chart headings
+    expect(screen.queryAllByText('Cohort 1').length).toBeGreaterThan(0);
+    expect(screen.queryAllByText('Cohort 4').length).toBeGreaterThan(0);
   });
 
   it('single-cohort: falls back gracefully when ?cohorts= has only 1 known id', () => {

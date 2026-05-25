@@ -849,6 +849,11 @@ const translations = {
   metricsResponderTooltip: { de: 'Responder: Visus-Verbesserung ≥ 5 Buchstaben ETDRS oder CRT-Reduktion ≥ 10 % gegenüber Baseline', en: 'Responder: Visus improvement ≥ 5 ETDRS letters or CRT reduction ≥ 10 % from baseline' },
   metricsResponderCohortLegendAriaLabel: { de: 'Kohorten-Legende', en: 'Cohort legend' },
 
+  // ---- Phase 42 / ANL-011: Aggregated tab cross-cohort comparison labels ----
+  analysisCompareDiagnosisTitle: { de: 'Diagnoseverteilung nach Kohorte', en: 'Diagnosis Distribution by Cohort' },
+  analysisCompareAgeVisusTitle: { de: 'Alter vs. Visus nach Kohorte', en: 'Age vs. Visual Acuity by Cohort' },
+  analysisCompareLegendAriaLabel: { de: 'Kohortenlegende (Farbe → Name)', en: 'Cohort legend (color → name)' },
+
   // ---- Phase 13: CSV Export (METRIC-05 / D-07) ----
   metricsPreviewExportCsvCrt: { de: 'CSV exportieren (CRT)', en: 'Export CSV (CRT)' },
   metricsPreviewExportCsvInterval: { de: 'CSV exportieren (Intervalle)', en: 'Export CSV (Intervals)' },

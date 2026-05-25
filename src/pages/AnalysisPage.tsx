@@ -3,6 +3,14 @@
  * Two tabs, selected via ?tab=aggregate|trajectories:
  *   - aggregate (default): center / diagnosis / visus-trend / CRT / age-vs-visus charts
  *   - trajectories:        OD / OS / combined Visus trajectory panels (OUTCOME-01..12)
+ *
+ * Phase 42 / ANL-011: cross-cohort comparison in the Aggregated tab.
+ * When ?cohorts=id1,id2[,...] is present and at least 2 known savedSearch ids resolve,
+ * the Aggregated tab switches to a comparison layout:
+ *   - Per-cohort diagnosis distribution (small-multiple pies, one per cohort)
+ *   - Per-cohort age-vs-Visus scatter (one ScatterChart, one Scatter series per cohort)
+ * Both use COHORT_PALETTES[idx] for color consistency with the Trajectories compare plots.
+ * Single-cohort mode is unchanged.
  */
 import { useCallback, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -27,6 +35,7 @@ import {
 
 import OutcomesView from '../components/outcomes/OutcomesView';
 import { CHART_COLORS } from '../config/clinicalThresholds';
+import { COHORT_PALETTES } from '../components/outcomes/palette';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useRecentActivity } from '../hooks/useRecentActivity';
@@ -40,7 +49,7 @@ import {
 } from '../services/fhirLoader';
 import { getSettings } from '../services/settingsService';
 import { getCachedDisplay, getCachedFullText } from '../services/terminology';
-import type { CohortFilter } from '../types/fhir';
+import type { CohortFilter, PatientCase } from '../types/fhir';
 import { parseCohortFilterJson } from '../utils/cohortFilterSerialization';
 import { computeCrtDistribution } from '../utils/distributionBins';
 
@@ -71,6 +80,12 @@ export default function AnalysisPage() {
     },
     [searchParams, setSearchParams],
   );
+
+  // Phase 42 / ANL-011: cross-cohort URL parsing — placed here above any early return per Rules of Hooks.
+  // Mirrors the pattern OutcomesView uses for consistency (same COHORT_PALETTES index order).
+  const rawCohortsParam = searchParams.get('cohorts');
+  const primaryCohortId = searchParams.get('cohort');
+  const isCrossMode = Boolean(rawCohortsParam);
 
   // Resolve active cohort: either a saved search (?cohort=<id>) or inline filters (?filters=<json>).
   const savedSearchId = searchParams.get('cohort');
@@ -105,6 +120,46 @@ export default function AnalysisPage() {
       crtImplausibleThresholdUm: s.crtImplausibleThresholdUm,
     });
   }, [activeCases, filters]);
+
+  // ---------------------------------------------------------------------------
+  // Phase 42 / ANL-011: cross-cohort series resolution
+  // ---------------------------------------------------------------------------
+
+  /** Parse, deduplicate, cap at 4, drop unknown ids, always include primary first. */
+  const crossCohortIds: string[] = useMemo(() => {
+    if (!rawCohortsParam) return [];
+    const raw = rawCohortsParam.split(',').map((s) => s.trim()).filter(Boolean);
+    const known = raw.filter((id) => savedSearches.some((s) => s.id === id));
+    const withPrimary =
+      primaryCohortId && !known.includes(primaryCohortId)
+        ? [primaryCohortId, ...known]
+        : known;
+    return withPrimary.slice(0, 4);
+  }, [rawCohortsParam, primaryCohortId, savedSearches]);
+
+  /** Per-cohort series: cases + color + name. Active when crossCohortIds.length >= 2. */
+  const crossCohorts: Array<{
+    cohortId: string;
+    cohortName: string;
+    patientCount: number;
+    color: string;
+    cases: PatientCase[];
+  }> = useMemo(() => {
+    if (crossCohortIds.length < 2) return [];
+    const s = getSettings();
+    const filterOptions = {
+      therapyInterrupterDays: s.therapyInterrupterDays,
+      therapyBreakerDays: s.therapyBreakerDays,
+      crtImplausibleThresholdUm: s.crtImplausibleThresholdUm,
+    };
+    return crossCohortIds.flatMap((id, idx) => {
+      const saved = savedSearches.find((s) => s.id === id);
+      if (!saved) return [];
+      const cases = applyFilters(activeCases, saved.filters, filterOptions);
+      const color = COHORT_PALETTES[idx % COHORT_PALETTES.length];
+      return [{ cohortId: id, cohortName: saved.name, patientCount: cases.length, color, cases }];
+    });
+  }, [crossCohortIds, savedSearches, activeCases]);
 
   const centerDist = useMemo(() => {
     const map = new Map<string, number>();
@@ -252,160 +307,306 @@ export default function AnalysisPage() {
           role="tabpanel"
           aria-labelledby="analysis-tab-aggregate-button"
           data-testid="analysis-tab-aggregate"
-          className="grid grid-cols-2 gap-6"
+          className="space-y-6"
         >
-        {/* Center distribution */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            {t('centerDistribution')}
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={centerDist}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" fill="#3b82f6" name={t('cases')} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Diagnosis distribution */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            {t('diagnosisDistribution')}
-          </h3>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">{t('diagnosisHoverHint')}</p>
-          <div className="flex gap-3 items-stretch">
-            <div className="flex-1 min-w-0">
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={diagDist}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={90}
-                    stroke="none"
-                    label={({ name, value }) => `${name}: ${value}`}
-                  >
-                    {diagDist.map((_, i) => (
-                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
-                      const d = payload[0].payload as { name: string; value: number; fullText: string };
-                      return (
-                        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg px-3 py-2 text-sm">
-                          <p className="font-semibold text-gray-900 dark:text-gray-100">{d.fullText}</p>
-                          <p className="text-gray-500 dark:text-gray-400">{t('cases')}: {d.value}</p>
-                        </div>
-                      );
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+        {/* ----------------------------------------------------------------
+            Phase 42 / ANL-011: cross-cohort comparison layout.
+            Rendered when isCrossMode && crossCohorts.length >= 2.
+            Uses small-multiple pies per cohort (rather than grouped bars)
+            because pie-per-cohort shows the intra-cohort distribution
+            proportionally and scales cleanly to 2–4 cohorts.
+            Legend: plain DOM text spans (queryByText-accessible for RTL).
+        ---------------------------------------------------------------- */}
+        {isCrossMode && crossCohorts.length >= 2 ? (
+          <>
+            {/* Cohort color legend — plain DOM text for RTL queryByText */}
             <ul
-              aria-label={t('diagnosisLegendAriaLabel')}
-              className="w-48 shrink-0 max-h-[250px] overflow-y-auto pr-1 text-xs space-y-1.5"
+              aria-label={t('analysisCompareLegendAriaLabel')}
+              className="flex flex-wrap gap-4"
             >
-              {diagDist.map((d, i) => (
-                <li key={d.name} className="flex items-start gap-2">
+              {crossCohorts.map((cohort) => (
+                <li key={cohort.cohortId} className="flex items-center gap-2 text-sm font-medium text-gray-800 dark:text-gray-200">
                   <span
-                    className="mt-1 w-2.5 h-2.5 shrink-0 rounded-sm"
-                    style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
+                    className="w-3 h-3 shrink-0 rounded-sm"
+                    style={{ backgroundColor: cohort.color }}
                     aria-hidden="true"
                   />
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium text-gray-800 dark:text-gray-200">
-                      {d.name} <span className="text-gray-400 dark:text-gray-500">({d.value})</span>
-                    </div>
-                    <div className="text-gray-500 dark:text-gray-400 leading-snug">
-                      {d.fullText}
-                    </div>
-                  </div>
+                  {/* Plain text span — required for RTL queryByText assertions */}
+                  <span>{cohort.cohortName}</span>
+                  <span className="text-gray-400 dark:text-gray-500 font-normal">
+                    ({cohort.patientCount})
+                  </span>
                 </li>
               ))}
             </ul>
+
+            {/* Diagnosis distribution comparison — small-multiple pies per cohort */}
+            <div
+              data-testid="compare-diagnosis"
+              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
+            >
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                {t('analysisCompareDiagnosisTitle')}
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                {crossCohorts.map((cohort) => {
+                  // Compute diagDist for this cohort using the same logic as the single-cohort path
+                  const map = new Map<string, { count: number; code: string; system: string | undefined }>();
+                  cohort.cases.forEach((c) => {
+                    c.conditions.forEach((cond) => {
+                      const system = cond.code.coding[0]?.system;
+                      const code = cond.code.coding[0]?.code ?? '';
+                      const label = getCachedDisplay(system, code, locale);
+                      const entry = map.get(label) ?? { count: 0, code, system };
+                      entry.count++;
+                      map.set(label, entry);
+                    });
+                  });
+                  const cohortDiagDist = Array.from(map, ([name, { count, code, system }]) => ({
+                    name,
+                    code,
+                    value: count,
+                    fullText: getCachedFullText(system, code, locale),
+                  })).sort((a, b) => b.value - a.value);
+
+                  return (
+                    <div key={cohort.cohortId}>
+                      <h4
+                        className="text-sm font-semibold mb-2"
+                        style={{ color: cohort.color }}
+                      >
+                        {cohort.cohortName}
+                      </h4>
+                      <ResponsiveContainer width="100%" height={220}>
+                        <PieChart>
+                          <Pie
+                            data={cohortDiagDist}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            stroke="none"
+                            label={({ name, value }) => `${name}: ${value}`}
+                          >
+                            {cohortDiagDist.map((_, i) => (
+                              <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            content={({ active, payload }) => {
+                              if (!active || !payload?.length) return null;
+                              const d = payload[0].payload as { name: string; value: number; fullText: string };
+                              return (
+                                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg px-3 py-2 text-sm">
+                                  <p className="font-semibold text-gray-900 dark:text-gray-100">{d.fullText}</p>
+                                  <p className="text-gray-500 dark:text-gray-400">{t('cases')}: {d.value}</p>
+                                </div>
+                              );
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Age-vs-Visus comparison — one ScatterChart, one Scatter series per cohort */}
+            <div
+              data-testid="compare-age-visus"
+              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
+            >
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                {t('analysisCompareAgeVisusTitle')}
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <ScatterChart>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" dataKey="age" name={t('age')} unit=" J." domain={['dataMin', 'dataMax']} />
+                  <YAxis type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} />
+                  <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                  <Legend />
+                  {crossCohorts.map((cohort) => {
+                    const cohortScatter = cohort.cases
+                      .map((c) => {
+                        const latest = getObservationsByCode(c.observations, LOINC_VISUS).slice(-1)[0];
+                        if (!latest?.valueQuantity) return null;
+                        return { age: getAge(c.birthDate), visus: latest.valueQuantity.value };
+                      })
+                      .filter(Boolean)
+                      .sort((a, b) => a!.age - b!.age) as { age: number; visus: number }[];
+                    return (
+                      <Scatter
+                        key={cohort.cohortId}
+                        data={cohortScatter}
+                        fill={cohort.color}
+                        name={cohort.cohortName}
+                      />
+                    );
+                  })}
+                </ScatterChart>
+              </ResponsiveContainer>
+            </div>
+          </>
+        ) : (
+          /* Single-cohort layout — original five charts, unchanged */
+          <div className="grid grid-cols-2 gap-6">
+            {/* Center distribution */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                {t('centerDistribution')}
+              </h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={centerDist}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#3b82f6" name={t('cases')} radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Diagnosis distribution */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                {t('diagnosisDistribution')}
+              </h3>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">{t('diagnosisHoverHint')}</p>
+              <div className="flex gap-3 items-stretch">
+                <div className="flex-1 min-w-0">
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={diagDist}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={90}
+                        stroke="none"
+                        label={({ name, value }) => `${name}: ${value}`}
+                      >
+                        {diagDist.map((_, i) => (
+                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const d = payload[0].payload as { name: string; value: number; fullText: string };
+                          return (
+                            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg px-3 py-2 text-sm">
+                              <p className="font-semibold text-gray-900 dark:text-gray-100">{d.fullText}</p>
+                              <p className="text-gray-500 dark:text-gray-400">{t('cases')}: {d.value}</p>
+                            </div>
+                          );
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <ul
+                  aria-label={t('diagnosisLegendAriaLabel')}
+                  className="w-48 shrink-0 max-h-[250px] overflow-y-auto pr-1 text-xs space-y-1.5"
+                >
+                  {diagDist.map((d, i) => (
+                    <li key={d.name} className="flex items-start gap-2">
+                      <span
+                        className="mt-1 w-2.5 h-2.5 shrink-0 rounded-sm"
+                        style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
+                        aria-hidden="true"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-gray-800 dark:text-gray-200">
+                          {d.name} <span className="text-gray-400 dark:text-gray-500">({d.value})</span>
+                        </div>
+                        <div className="text-gray-500 dark:text-gray-400 leading-snug">
+                          {d.fullText}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Temporal visus trend */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                {t('visusTrend')}
+              </h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={visusTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="quarter" tick={{ fontSize: 11 }} />
+                  <YAxis domain={[0, 1]} />
+                  <Tooltip
+                    formatter={(v: unknown) => typeof v === 'number' ? v.toFixed(3) : String(v)}
+                    labelFormatter={(l) => `${t('quarter')}: ${l}`}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="mean"
+                    stroke="#10b981"
+                    name={t('meanVisus')}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* CRT distribution */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                {t('crtDistribution')}
+              </h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={crtDistribution}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="range" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#8b5cf6" name={t('measurements')} radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Age vs Visus scatter */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 col-span-2">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                {t('ageVsVisus')}
+              </h3>
+              <ResponsiveContainer width="100%" height={280}>
+                <ScatterChart>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" dataKey="age" name={t('age')} unit=" J." domain={['dataMin', 'dataMax']} />
+                  <YAxis type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} />
+                  <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                  <Scatter data={ageVisusScatter} fill="#f59e0b" />
+                  {medianVisus !== null && (
+                    <ReferenceLine
+                      y={medianVisus}
+                      stroke="#dc2626"
+                      strokeDasharray="4 4"
+                      ifOverflow="extendDomain"
+                      label={{
+                        value: `${t('outcomesLayerMedian')}: ${medianVisus.toFixed(2)}`,
+                        position: 'insideTopRight',
+                        fill: '#dc2626',
+                        fontSize: 12,
+                      }}
+                    />
+                  )}
+                </ScatterChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
-
-        {/* Temporal visus trend */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            {t('visusTrend')}
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={visusTrend}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="quarter" tick={{ fontSize: 11 }} />
-              <YAxis domain={[0, 1]} />
-              <Tooltip
-                formatter={(v: unknown) => typeof v === 'number' ? v.toFixed(3) : String(v)}
-                labelFormatter={(l) => `${t('quarter')}: ${l}`}
-              />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="mean"
-                stroke="#10b981"
-                name={t('meanVisus')}
-                strokeWidth={2}
-                dot={{ r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* CRT distribution */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            {t('crtDistribution')}
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={crtDistribution}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="range" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" fill="#8b5cf6" name={t('measurements')} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Age vs Visus scatter */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 col-span-2">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            {t('ageVsVisus')}
-          </h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <ScatterChart>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" dataKey="age" name={t('age')} unit=" J." domain={['dataMin', 'dataMax']} />
-              <YAxis type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} />
-              <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-              <Scatter data={ageVisusScatter} fill="#f59e0b" />
-              {medianVisus !== null && (
-                <ReferenceLine
-                  y={medianVisus}
-                  stroke="#dc2626"
-                  strokeDasharray="4 4"
-                  ifOverflow="extendDomain"
-                  label={{
-                    value: `${t('outcomesLayerMedian')}: ${medianVisus.toFixed(2)}`,
-                    position: 'insideTopRight',
-                    fill: '#dc2626',
-                    fontSize: 12,
-                  }}
-                />
-              )}
-            </ScatterChart>
-          </ResponsiveContainer>
-        </div>
+        )}
         </section>
       )}
     </div>
