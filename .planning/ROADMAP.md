@@ -233,7 +233,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 37. UAT Re-test & Spec Lock | 1/0 | Complete    | 2026-05-25 |
-| 38. Audit Actor Correctness | 1/1 | Complete   | 2026-05-25 |
+| 38. Audit Actor Correctness | 1/1 | Complete    | 2026-05-25 |
 | 39. Configurable Clinical Thresholds + Parity | 0/0 | Not started | - |
 | 40. SavedSearch Hardening + Quality Check Config | 0/0 | Not started | - |
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 0/0 | Not started | - |

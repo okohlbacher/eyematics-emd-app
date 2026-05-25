@@ -6,7 +6,7 @@
 ## v1.12 Requirements
 
 ### AUDIT — Audit / Protocol correctness
-- [ ] **AUDIT-01**: Unauthenticated/401 requests are recorded in the audit log with actor `unauthenticated` (not `anonymous`); deleted users retain their immutable historical actor on past entries. (PROT-001)
+- [x] **AUDIT-01**: Unauthenticated/401 requests are recorded in the audit log with actor `unauthenticated` (not `anonymous`); deleted users retain their immutable historical actor on past entries. (PROT-001)
 
 ### CFG — Configurable clinical thresholds
 - [ ] **CFG-01**: Admins can view and edit the critical/action clinical thresholds (CRT critical, Visus critical, IOP critical, Visus-jump, therapy interrupter/breaker days) in the Settings UI; values persist to `config/settings.yaml`. (ANL-004, F-02)
@@ -51,7 +51,7 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| AUDIT-01 | Phase 38 | Pending |
+| AUDIT-01 | Phase 38 | Complete |
 | CFG-01 | Phase 39 | Pending |
 | CFG-02 | Phase 39 | Pending |
 | CFG-03 | Phase 39 | Pending |
