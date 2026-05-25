@@ -854,6 +854,9 @@ const translations = {
   analysisCompareAgeVisusTitle: { de: 'Alter vs. Visus nach Kohorte', en: 'Age vs. Visual Acuity by Cohort' },
   analysisCompareLegendAriaLabel: { de: 'Kohortenlegende (Farbe → Name)', en: 'Cohort legend (color → name)' },
 
+  // ---- Phase 42 / ANL-012: direct ?filters= load — derived cohort name ----
+  analysisFilteredCohort: { de: 'Gefilterte Kohorte', en: 'Filtered cohort' },
+
   // ---- Phase 13: CSV Export (METRIC-05 / D-07) ----
   metricsPreviewExportCsvCrt: { de: 'CSV exportieren (CRT)', en: 'Export CSV (CRT)' },
   metricsPreviewExportCsvInterval: { de: 'CSV exportieren (Intervalle)', en: 'Export CSV (Intervals)' },

@@ -351,3 +351,52 @@ describe('summarizeCohortFilter (ANL-012)', () => {
     expect(summarizeCohortFilter(filter)).toBe(summarizeCohortFilter(filter));
   });
 });
+
+// ---------------------------------------------------------------------------
+// Tests: AnalysisPage direct-filter display name (ANL-012 Task 2)
+// ---------------------------------------------------------------------------
+
+describe('AnalysisPage — direct ?filters= cohort name display (ANL-012 Task 2)', () => {
+  it('saved-search path: shows activeSavedSearch.name in header (unchanged)', () => {
+    mockDataContextValue = {
+      activeCases: makeCases(5),
+      savedSearches: [makeSavedSearch('s1', 'AMD Cohort')],
+    };
+    setSearchParams({ cohort: 's1' });
+    render(<AnalysisPage />);
+    expect(screen.queryByText('AMD Cohort')).not.toBeNull();
+  });
+
+  it('?filters= with ?name=: header shows the supplied name', () => {
+    mockDataContextValue = { activeCases: makeCases(3), savedSearches: [] };
+    setSearchParams({ filters: '{"diagnosis":["E11"]}', name: 'My Cohort' });
+    render(<AnalysisPage />);
+    expect(screen.queryByText('My Cohort')).not.toBeNull();
+  });
+
+  it('?filters= without ?name=: header shows "Filtered cohort" (English locale)', () => {
+    mockDataContextValue = { activeCases: makeCases(3), savedSearches: [] };
+    setSearchParams({ filters: '{"diagnosis":["E11"]}' });
+    render(<AnalysisPage />);
+    // Should show some form of the filtered cohort label
+    const el = screen.queryByText((text) => text.includes('Filtered cohort'));
+    expect(el).not.toBeNull();
+  });
+
+  it('?filters= empty/invalid json with no ?name=: shows bare filtered cohort label, no crash', () => {
+    mockDataContextValue = { activeCases: makeCases(0), savedSearches: [] };
+    setSearchParams({ filters: 'not-valid-json' });
+    render(<AnalysisPage />);
+    const el = screen.queryByText((text) => text.includes('Filtered cohort'));
+    expect(el).not.toBeNull();
+  });
+
+  it('no ?cohort= and no ?filters=: no cohort name line rendered', () => {
+    mockDataContextValue = { activeCases: makeCases(5), savedSearches: [] };
+    setSearchParams({});
+    render(<AnalysisPage />);
+    // Neither saved search name nor filtered cohort label should appear
+    expect(screen.queryByText('AMD Cohort')).toBeNull();
+    expect(screen.queryByText((text) => text.includes('Filtered cohort'))).toBeNull();
+  });
+});
