@@ -113,7 +113,7 @@ Deferred to v1.12: CODEX Tier C (F-01/02/03/09/10/13) + Phase 33 advisory UAT �
 - [x] **Phase 40: SavedSearch Hardening + Quality Check Configuration** — Server-side SavedSearch provenance (id/createdAt generated server-side, filters sanitized at API boundary); cohort-scoped configurable quality check parameters persisted with the saved cohort (SEC-06, QUAL-020, QUAL-021) (completed 2026-05-25)
 - [x] **Phase 41: Doc-Quality Correctness, Multi-Select Centers & UX** — Time-filtered Grundgesamtheit denominator; absolute-count discoverability; multi-select center filter (D3, shared with Phase 42); repositioned approve/flag dropdown (QUAL-022, QUAL-023, QUAL-024, QUAL-025) (completed 2026-05-25)
 - [x] **Phase 42: Analysis Cohort Comparison & Labeling** — Cohort labels on all comparison plots; Aggregated-tab cohort comparison (diagnosis distribution, age-vs-Visus); active cohort name on `?filters=` direct-load (ANL-010, ANL-011, ANL-012) (completed 2026-05-25)
-- [ ] **Phase 43: Case Navigation, Reference & Chart Clarity** — Chart-point → case-detail drill-down; cohort reference overlay in case view; self-explanatory CRT/Visus chart labels; axis-tick and responder-tooltip polish (FALL-010, FALL-011, FALL-012, CHART-01)
+- [x] **Phase 43: Case Navigation, Reference & Chart Clarity** — Chart-point → case-detail drill-down; cohort reference overlay in case view; self-explanatory CRT/Visus chart labels; axis-tick and responder-tooltip polish (FALL-010, FALL-011, FALL-012, CHART-01) (completed 2026-05-25)
 - [ ] **Phase 44: Tech-Debt Compaction** — Behavior-preserving: split `authApi.ts` God module; decompose `OutcomesView.tsx`; all gates (test:ci, knip, lint) green with no behavior change (TECH-01, TECH-02)
 - [ ] **Phase 45: UAT Validation & Milestone Close** — Consolidated human UAT across all v1.12 changes; audit and close milestone *(process/feedback — no production code)*
 
@@ -254,7 +254,7 @@ Plans:
 | 40. SavedSearch Hardening + Quality Check Config | 3/3 | Complete    | 2026-05-25 |
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 3/3 | Complete    | 2026-05-25 |
 | 42. Analysis Cohort Comparison & Labeling | 3/3 | Complete    | 2026-05-25 |
-| 43. Case Navigation, Reference & Chart Clarity | 3/3 | Complete |  |
+| 43. Case Navigation, Reference & Chart Clarity | 3/3 | Complete    | 2026-05-25 |
 | 44. Tech-Debt Compaction | 0/0 | Not started | - |
 | 45. UAT Validation & Milestone Close | 0/0 | Not started | - |
 
