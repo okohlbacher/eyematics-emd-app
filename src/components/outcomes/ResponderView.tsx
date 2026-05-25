@@ -234,8 +234,16 @@ export default function ResponderView({ cases, thresholdLetters, t, locale: _loc
       data-testid="responder-view"
       className="bg-white rounded-xl border border-gray-200 p-5"
     >
-      <h3 className="text-base font-semibold text-gray-900 mb-4">
+      <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center">
         {t('metricsResponderTitle')}
+        {/* ANL-002: plot-adjacent info affordance — separate from the tab affordance in OutcomesView */}
+        <span
+          title={t('metricsResponderTooltip')}
+          aria-label={t('metricsResponderTooltip')}
+          className="ml-1 text-gray-400 hover:text-blue-600 cursor-help"
+        >
+          &#x2139;
+        </span>
       </h3>
 
       {/* Section 1: grouped bar chart */}

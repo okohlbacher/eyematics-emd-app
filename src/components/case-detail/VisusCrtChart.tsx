@@ -68,14 +68,18 @@ export default function VisusCrtChart({
           <YAxis
             yAxisId="visus"
             domain={[0, 1]}
+            tickCount={5}
+            allowDecimals
             tick={{ fontSize: 10 }}
-            label={{ value: 'Visus (dezimal)', angle: -90, position: 'insideLeft', fontSize: 11, fill: '#10b981' }}
+            label={{ value: t('visusYAxisLabel'), angle: -90, position: 'insideLeft', fontSize: 11, fill: '#10b981' }}
           />
           <YAxis
             yAxisId="crt"
             orientation="right"
+            tickCount={5}
+            allowDecimals={false}
             tick={{ fontSize: 10 }}
-            label={{ value: 'CRT (\u00b5m)', angle: -90, position: 'insideRight', fontSize: 11, fill: '#8b5cf6' }}
+            label={{ value: t('crtLegendLabel'), angle: -90, position: 'insideRight', fontSize: 11, fill: '#8b5cf6' }}
           />
           <Tooltip />
           <Legend />
@@ -131,7 +135,7 @@ export default function VisusCrtChart({
             type="monotone"
             dataKey="crt"
             stroke="#8b5cf6"
-            name="CRT (\u00b5m)"
+            name={t('crtLegendLabel')}
             strokeWidth={2}
             dot={(props: Record<string, unknown>) => {
               const { cx, cy, payload } = props as { cx: number; cy: number; payload: { crtMeasured?: boolean } };
