@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { pickCoding } from '../../shared/fhirQueries';
 import { applyFilters } from '../../shared/patientCases';
 import { getTherapyStatus } from '../../shared/qualityPredicates';
+import { safePickCohortFilter } from '../utils/cohortFilterSerialization';
 import QualityCaseDetail from '../components/quality/QualityCaseDetail';
 import QualityCaseList from '../components/quality/QualityCaseList';
 import QualityFlagDialog from '../components/quality/QualityFlagDialog';
@@ -120,7 +121,7 @@ export default function QualityPage() {
     const selectedSearch = savedSearches.find((s) => s.id === selectedCohortId);
     if (!selectedSearch) return cases;
     const settings = getSettings();
-    return applyFilters(cases, selectedSearch.filters, {
+    return applyFilters(cases, safePickCohortFilter(selectedSearch.filters), {
       therapyInterrupterDays: settings.therapyInterrupterDays,
       therapyBreakerDays: settings.therapyBreakerDays,
       crtImplausibleThresholdUm: settings.crtImplausibleThresholdUm,
