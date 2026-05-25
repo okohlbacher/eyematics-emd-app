@@ -55,12 +55,13 @@ export function initDataDb(dataDir: string): void {
     CREATE INDEX IF NOT EXISTS idx_qf_username ON quality_flags(username);
 
     CREATE TABLE IF NOT EXISTS saved_searches (
-      id          TEXT NOT NULL,
-      username    TEXT NOT NULL,
-      name        TEXT NOT NULL,
-      created_at  TEXT NOT NULL,
-      filters     TEXT NOT NULL,
-      updated_at  TEXT NOT NULL,
+      id            TEXT NOT NULL,
+      username      TEXT NOT NULL,
+      name          TEXT NOT NULL,
+      created_at    TEXT NOT NULL,
+      filters       TEXT NOT NULL,
+      quality_params TEXT,
+      updated_at    TEXT NOT NULL,
       PRIMARY KEY (username, id)
     );
 
@@ -98,6 +99,15 @@ export function initDataDb(dataDir: string): void {
       DROP TABLE saved_searches_old;
     `);
     console.log('[dataDb] Migrated saved_searches PK to (username, id)');
+  }
+
+  // Migration: add quality_params column to saved_searches (40-02, QUAL-021)
+  // Idempotent: only runs if the column is absent.
+  const ssInfo2 = db.pragma('table_info(saved_searches)') as Array<{ name: string }>;
+  const hasQualityParams = ssInfo2.some((c) => c.name === 'quality_params');
+  if (!hasQualityParams) {
+    db.exec('ALTER TABLE saved_searches ADD COLUMN quality_params TEXT');
+    console.log('[dataDb] Migrated saved_searches: added quality_params column');
   }
 
   console.log('[dataDb] Opened data database:', dbPath);
@@ -167,13 +177,14 @@ export interface SavedSearchRow {
   name: string;
   created_at: string;
   filters: string; // JSON string
+  quality_params?: string | null; // JSON string[] or NULL; absent/NULL ⇒ all default checks (QUAL-021)
   updated_at: string;
 }
 
 export function getSavedSearches(username: string): SavedSearchRow[] {
   return getDb()
     .prepare(
-      'SELECT id, name, created_at, filters, updated_at FROM saved_searches WHERE username = @username ORDER BY created_at DESC',
+      'SELECT id, name, created_at, filters, quality_params, updated_at FROM saved_searches WHERE username = @username ORDER BY created_at DESC',
     )
     .all({ username }) as SavedSearchRow[];
 }
@@ -182,9 +193,9 @@ export function addSavedSearch(username: string, search: SavedSearchRow): void {
   const now = new Date().toISOString();
   getDb()
     .prepare(
-      'INSERT OR REPLACE INTO saved_searches (id, username, name, created_at, filters, updated_at) VALUES (@id, @username, @name, @created_at, @filters, @updated_at)',
+      'INSERT OR REPLACE INTO saved_searches (id, username, name, created_at, filters, quality_params, updated_at) VALUES (@id, @username, @name, @created_at, @filters, @quality_params, @updated_at)',
     )
-    .run({ username, ...search, updated_at: now });
+    .run({ username, ...search, quality_params: search.quality_params ?? null, updated_at: now });
 }
 
 export function removeSavedSearch(username: string, id: string): void {

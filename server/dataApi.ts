@@ -14,6 +14,7 @@ import crypto from 'node:crypto';
 import type { Request, Response } from 'express';
 import { Router } from 'express';
 
+import { sanitizeQualityParams } from '../shared/qualityParams.js';
 import { sanitizeSavedSearchFilters } from '../shared/savedSearchSanitize.js';
 import type { QualityFlagRow, SavedSearchRow } from './dataDb.js';
 import {
@@ -155,15 +156,29 @@ dataApiRouter.put('/quality-flags', (req: Request, res: Response): void => {
 dataApiRouter.get('/saved-searches', (req: Request, res: Response): void => {
   const username = req.auth!.preferred_username;
   const rows = getSavedSearches(username);
-  const savedSearches: Array<{ id: string; name: string; createdAt: string; filters: unknown }> = [];
+  const savedSearches: Array<{ id: string; name: string; createdAt: string; filters: unknown; qualityParams?: string[] }> = [];
   for (const r of rows) {
     try {
-      savedSearches.push({
+      // Parse quality_params JSON — on parse error treat as undefined and warn (T-40-09 accept)
+      let qualityParams: string[] | undefined;
+      if (r.quality_params != null) {
+        try {
+          qualityParams = JSON.parse(r.quality_params) as string[];
+        } catch {
+          console.warn(`[dataApi] Saved search "${r.id}": corrupt quality_params JSON, treating as unset`);
+          qualityParams = undefined;
+        }
+      }
+      const entry: { id: string; name: string; createdAt: string; filters: unknown; qualityParams?: string[] } = {
         id: r.id,
         name: r.name,
         createdAt: r.created_at,
         filters: JSON.parse(r.filters) as unknown,
-      });
+      };
+      if (qualityParams !== undefined) {
+        entry.qualityParams = qualityParams;
+      }
+      savedSearches.push(entry);
     } catch {
       console.warn(`[dataApi] Skipping saved search "${r.id}": corrupt filters JSON`);
     }
@@ -174,7 +189,7 @@ dataApiRouter.get('/saved-searches', (req: Request, res: Response): void => {
 dataApiRouter.post('/saved-searches', (req: Request, res: Response): void => {
   // F-13 — server owns id/createdAt; filters sanitized; back-compat = old rows unaffected on read.
   const username = req.auth!.preferred_username;
-  const { name, filters } = req.body as Record<string, unknown>;
+  const { name, filters, qualityParams } = req.body as Record<string, unknown>;
 
   if (typeof name !== 'string' || !name.trim()) {
     res.status(400).json({ error: 'name is required' });
@@ -209,26 +224,34 @@ dataApiRouter.post('/saved-searches', (req: Request, res: Response): void => {
     return;
   }
 
+  // Sanitize qualityParams — whitelist against QUALITY_PARAM_KEYS (T-40-07/08)
+  const safeQualityParams = sanitizeQualityParams(qualityParams);
+  const qualityParamsStr = safeQualityParams !== undefined ? JSON.stringify(safeQualityParams) : null;
+
   // Server generates id and createdAt — client-supplied values are ignored (T-40-01)
   const row: SavedSearchRow = {
     id: crypto.randomUUID(),
     name: name.trim(),
     created_at: new Date().toISOString(),
     filters: filtersStr,
+    quality_params: qualityParamsStr,
     updated_at: new Date().toISOString(),
   };
 
   addSavedSearch(username, row);
   invalidateByCohort(row.id);   // Phase 12 / D-09 — drop any cached aggregate for this cohort id (covers replace-in-place)
 
-  res.status(201).json({
-    savedSearch: {
-      id: row.id,
-      name: row.name,
-      createdAt: row.created_at,
-      filters: JSON.parse(row.filters) as unknown,
-    },
-  });
+  const responseSearch: { id: string; name: string; createdAt: string; filters: unknown; qualityParams?: string[] } = {
+    id: row.id,
+    name: row.name,
+    createdAt: row.created_at,
+    filters: JSON.parse(row.filters) as unknown,
+  };
+  if (safeQualityParams !== undefined) {
+    responseSearch.qualityParams = safeQualityParams;
+  }
+
+  res.status(201).json({ savedSearch: responseSearch });
 });
 
 dataApiRouter.delete('/saved-searches/:id', (req: Request, res: Response): void => {
