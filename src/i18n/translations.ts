@@ -428,6 +428,14 @@ const translations = {
   missingCrt: { de: 'Keine CRT dokumentiert', en: 'No CRT documented' },
   missingInjections: { de: 'Keine Injektionen dokumentiert', en: 'No injections documented' },
 
+  // Quality parameter selection (QUAL-021, 40-02) — cohort save flow checklist
+  qualityParamsLabel: { de: 'Qualitätsprüfungen für diese Kohorte', en: 'Quality checks for this cohort' },
+  qualityParamsHint: { de: 'Nur ausgewählte Prüfungen werden für diese Kohorte ausgewertet.', en: 'Only selected checks will be evaluated for this cohort.' },
+  // Per-check labels — reuse existing keys: missingVisus, missingCrt, missingInjections, crtAnomaly, visusAnomaly, visusJump
+  // New key only for crtCritical / visusCritical (canonical key names differ from existing crtAnomaly / visusAnomaly)
+  crtCritical: { de: 'CRT > 400 µm (kritisch)', en: 'CRT > 400 µm (critical)' },
+  visusCritical: { de: 'Visus < 0.1 (kritisch)', en: 'Visual acuity < 0.1 (critical)' },
+
   // Quality search & filter
   qualitySearchPlaceholder: { de: 'Pseudonym suchen...', en: 'Search pseudonym...' },
   qualityFilterStatus: { de: 'Prüfstatus', en: 'Review Status' },
