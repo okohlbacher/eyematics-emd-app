@@ -184,7 +184,10 @@ Plans:
   3. A user can select multiple centers simultaneously in the quality filter; the server still restricts results to the user's authorized centers regardless of what is selected client-side.
   4. The approve/flag-status control in quality case detail is reachable without scrolling past all patient data.
   5. The multi-select center filter component is implemented as a shared component (consumed by both quality and analysis) ready for Phase 42 reuse.
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 41-01-PLAN.md — Shared CenterMultiSelect + multi-select quality center filter; server authorized-center intersection test (QUAL-024)
+- [ ] 41-02-PLAN.md — Time-range filter driving Grundgesamtheit denominator + summary counts; prominent absolute counts (QUAL-022, QUAL-023)
+- [ ] 41-03-PLAN.md — Reposition approve/flag-status control to top of case detail (QUAL-025)
 **UI hint**: yes
 
 ### Phase 42: Analysis Cohort Comparison & Labeling
