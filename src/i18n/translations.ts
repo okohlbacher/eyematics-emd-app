@@ -436,6 +436,10 @@ const translations = {
   crtCritical: { de: 'CRT > 400 µm (kritisch)', en: 'CRT > 400 µm (critical)' },
   visusCritical: { de: 'Visus < 0.1 (kritisch)', en: 'Visual acuity < 0.1 (critical)' },
 
+  // Quality cohort scope selector (QUAL-020, 40-03)
+  qualityCohortScopeLabel: { de: 'Kohorte', en: 'Cohort' },
+  qualityCohortScopeAll: { de: 'Alle Fälle', en: 'All cases' },
+
   // Quality search & filter
   qualitySearchPlaceholder: { de: 'Pseudonym suchen...', en: 'Search pseudonym...' },
   qualityFilterStatus: { de: 'Prüfstatus', en: 'Review Status' },

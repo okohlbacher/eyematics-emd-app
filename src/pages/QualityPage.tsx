@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { pickCoding } from '../../shared/fhirQueries';
+import { applyFilters } from '../../shared/patientCases';
 import { getTherapyStatus } from '../../shared/qualityPredicates';
 import QualityCaseDetail from '../components/quality/QualityCaseDetail';
 import QualityCaseList from '../components/quality/QualityCaseList';
@@ -43,6 +44,7 @@ function SummaryCard({ icon, count, label, total }: { icon: ReactNode; count: nu
 export default function QualityPage() {
   const {
     cases,
+    savedSearches,
     qualityFlags,
     addQualityFlag,
     updateQualityFlag,
@@ -81,6 +83,10 @@ export default function QualityPage() {
     return searchParams.get('crt') === 'implausible' ? 'implausible' : 'all';
   });
   const [showExcluded, setShowExcluded] = useState(true);
+  // Cohort scope selector: 'all' means no scope (global behavior); any other value is a SavedSearch.id.
+  // Placed on-page above the summary cards rather than threaded through QualityCaseList to minimize
+  // QualityCaseList prop churn (no new props on the list component for this feature).
+  const [selectedCohortId, setSelectedCohortId] = useState<string>('all');
   // Auto-open the filter panel when a URL param seeds a non-default filter value
   // so the seeded filter state is immediately visible to the user.
   const [showFilters, setShowFilters] = useState<boolean>(() => {
@@ -106,9 +112,32 @@ export default function QualityPage() {
 
   const dateFmt = getDateLocale(locale);
 
+  // Cohort-scoped base case set: when a cohort is selected, restrict to that cohort's cases
+  // via applyFilters (same options as therapyStatuses below). Otherwise use the full `cases`.
+  // The existing search/status/center/therapy/crt filters are layered on top of this scoped set.
+  const scopedCases = useMemo(() => {
+    if (selectedCohortId === 'all') return cases;
+    const selectedSearch = savedSearches.find((s) => s.id === selectedCohortId);
+    if (!selectedSearch) return cases;
+    const settings = getSettings();
+    return applyFilters(cases, selectedSearch.filters, {
+      therapyInterrupterDays: settings.therapyInterrupterDays,
+      therapyBreakerDays: settings.therapyBreakerDays,
+      crtImplausibleThresholdUm: settings.crtImplausibleThresholdUm,
+    });
+  }, [cases, savedSearches, selectedCohortId]);
+
+  // activeQualityParams for the selected cohort: the raw qualityParams field from the SavedSearch.
+  // QualityCaseDetail receives this and calls resolveQualityParams() to apply the tri-state logic.
+  // When 'all' is selected, pass undefined so all checks run (back-compat fallback).
+  const activeQualityParams = useMemo(() => {
+    if (selectedCohortId === 'all') return undefined;
+    return savedSearches.find((s) => s.id === selectedCohortId)?.qualityParams;
+  }, [savedSearches, selectedCohortId]);
+
   const caseStatus = useMemo(() => {
     const statusMap = new Map<string, QualityStatus>();
-    cases.forEach((c) => {
+    scopedCases.forEach((c) => {
       const flags = qualityFlags.filter((f) => f.caseId === c.id);
       if (reviewedCases.includes(c.id)) {
         statusMap.set(c.id, 'reviewed');
@@ -121,7 +150,7 @@ export default function QualityPage() {
       }
     });
     return statusMap;
-  }, [cases, qualityFlags, reviewedCases]);
+  }, [scopedCases, qualityFlags, reviewedCases]);
 
   const statusCounts = useMemo(() => {
     const counts = { unchecked: 0, in_progress: 0, reviewed: 0 };
@@ -137,17 +166,17 @@ export default function QualityPage() {
       breakerDays: settings.therapyBreakerDays,
     };
     const map = new Map<string, ReturnType<typeof getTherapyStatus>>();
-    cases.forEach((c) => map.set(c.id, getTherapyStatus(c, thresholds)));
+    scopedCases.forEach((c) => map.set(c.id, getTherapyStatus(c, thresholds)));
     return map;
-  }, [cases]);
+  }, [scopedCases]);
 
   const centerNames = useMemo(() => {
-    const names = new Set(cases.map((c) => c.centerName));
+    const names = new Set(scopedCases.map((c) => c.centerName));
     return Array.from(names).sort();
-  }, [cases]);
+  }, [scopedCases]);
 
   const filteredCases = useMemo(() => {
-    return cases.filter((c) => {
+    return scopedCases.filter((c) => {
       if (searchQuery && !c.pseudonym.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (filterStatus !== 'all' && (caseStatus.get(c.id) ?? 'unchecked') !== filterStatus) return false;
       if (filterCenter !== 'all' && c.centerName !== filterCenter) return false;
@@ -161,7 +190,7 @@ export default function QualityPage() {
       if (!showExcluded && excludedCases.includes(c.id)) return false;
       return true;
     });
-  }, [cases, searchQuery, filterStatus, filterCenter, filterTherapy, filterCrt, showExcluded, caseStatus, therapyStatuses, excludedCases]);
+  }, [scopedCases, searchQuery, filterStatus, filterCenter, filterTherapy, filterCrt, showExcluded, caseStatus, therapyStatuses, excludedCases]);
 
   const handleFlag = () => {
     if (!selectedCase || !flagDialog || !errorType) return;
@@ -225,8 +254,30 @@ export default function QualityPage() {
         <p className="text-gray-500 dark:text-gray-400 mt-1">{t('qualitySubtitle')}</p>
       </div>
 
-      {/* Export button */}
-      <div className="flex justify-end mb-2">
+      {/* Export button + cohort scope selector in the same row */}
+      <div className="flex items-center justify-between mb-2">
+        {/* Cohort scope selector — placed on-page (not in QualityCaseList) to avoid prop churn.
+            Restricts the reviewed set to a specific cohort's cases + honors its qualityParams. */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            {t('qualityCohortScopeLabel')}
+          </label>
+          <select
+            value={selectedCohortId}
+            onChange={(e) => {
+              setSelectedCohortId(e.target.value);
+              setSelectedCase(null); // reset detail when scope changes
+            }}
+            className="text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 dark:bg-gray-800 dark:text-white"
+          >
+            <option value="all">{t('qualityCohortScopeAll')}</option>
+            {savedSearches.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <button
           onClick={handleExportCsv}
           disabled={filteredCases.length === 0}
@@ -237,11 +288,11 @@ export default function QualityPage() {
         </button>
       </div>
 
-      {/* Status summary cards */}
+      {/* Status summary cards — counts + percentages reflect the scoped set */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <SummaryCard icon={<Circle className="w-5 h-5 text-gray-300" />} count={statusCounts.unchecked} label={t('unchecked')} total={cases.length} />
-        <SummaryCard icon={<Clock className="w-5 h-5 text-amber-500" />} count={statusCounts.in_progress} label={t('inProgress')} total={cases.length} />
-        <SummaryCard icon={<CheckCircle2 className="w-5 h-5 text-green-500" />} count={statusCounts.reviewed} label={t('reviewed')} total={cases.length} />
+        <SummaryCard icon={<Circle className="w-5 h-5 text-gray-300" />} count={statusCounts.unchecked} label={t('unchecked')} total={scopedCases.length} />
+        <SummaryCard icon={<Clock className="w-5 h-5 text-amber-500" />} count={statusCounts.in_progress} label={t('inProgress')} total={scopedCases.length} />
+        <SummaryCard icon={<CheckCircle2 className="w-5 h-5 text-green-500" />} count={statusCounts.reviewed} label={t('reviewed')} total={scopedCases.length} />
         <SummaryCard icon={<Ban className="w-5 h-5 text-red-400" />} count={excludedCases.length} label={t('excludedCasesCount')} />
       </div>
 
@@ -249,7 +300,7 @@ export default function QualityPage() {
         {/* Case list */}
         <div className="col-span-4">
           <QualityCaseList
-            cases={cases}
+            cases={scopedCases}
             filteredCases={filteredCases}
             selectedCase={selectedCase}
             caseStatus={caseStatus}
@@ -288,6 +339,7 @@ export default function QualityPage() {
               isExcluded={excludedCases.includes(selectedCase.id)}
               isReviewed={reviewedCases.includes(selectedCase.id)}
               dateFmt={dateFmt}
+              activeQualityParams={activeQualityParams}
               onMarkReviewed={handleMarkReviewed}
               onExclude={handleExclude}
               onNavigateToCase={(id) => navigate(`/case/${id}`)}
