@@ -228,7 +228,10 @@ Plans:
   1. `server/authApi.ts` is split into at minimum login, user-admin, TOTP, and session routers; no endpoint URL, response shape, or auth behavior changes; `test:ci` exits 0 with all tests green.
   2. `src/components/outcomes/OutcomesView.tsx` is decomposed into hooks and metric container components; no visible behavior, URL handling, or chart output changes; `test:ci` exits 0 with all tests green.
   3. `knip` reports no new unused exports and `lint` reports 0 warnings after the refactor.
-**Plans**: TBD
+**Plans**: 2 plans (2 waves; run sequentially to bound risk — disjoint files but both large)
+Plans:
+- [ ] 44-01-PLAN.md — TECH-01: split authApi.ts into authHelpers + login/user-admin/totp/session routers; thin authApi re-exports resetLimiter (wave 1)
+- [ ] 44-02-PLAN.md — TECH-02: decompose OutcomesView into useOutcomesRouteState + useOutcomesAggregation hooks + Visus/CRT metric containers (wave 2)
 
 ### Phase 45: UAT Validation & Milestone Close
 **Goal**: All v1.12 changes pass consolidated human UAT and the milestone is audited and closed.
@@ -255,9 +258,9 @@ Plans:
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 3/3 | Complete    | 2026-05-25 |
 | 42. Analysis Cohort Comparison & Labeling | 3/3 | Complete    | 2026-05-25 |
 | 43. Case Navigation, Reference & Chart Clarity | 3/3 | Complete    | 2026-05-25 |
-| 44. Tech-Debt Compaction | 0/0 | Not started | - |
+| 44. Tech-Debt Compaction | 0/2 | Planned     | - |
 | 45. UAT Validation & Milestone Close | 0/0 | Not started | - |
 
 ---
 
-*Last updated: 2026-05-26 — Phase 43 planned (3 plans, 3 waves; sequential by file overlap): Case Navigation, Reference & Chart Clarity (FALL-010/011/012, CHART-01). v1.12 milestone in progress (Phases 37–45).*
+*Last updated: 2026-05-26 — Phase 44 planned (2 plans, 2 waves; sequential to bound risk): Tech-Debt Compaction (TECH-01 authApi split, TECH-02 OutcomesView decomposition) — behavior-preserving, all gates green. v1.12 milestone in progress (Phases 37–45).*
