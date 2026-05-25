@@ -440,6 +440,10 @@ const translations = {
   qualityCohortScopeLabel: { de: 'Kohorte', en: 'Cohort' },
   qualityCohortScopeAll: { de: 'Alle Fälle', en: 'All cases' },
 
+  // Quality time-range filter + population label (QUAL-022, QUAL-023, 41-02)
+  qualityPopulationLabel: { de: 'Grundgesamtheit', en: 'Population' },
+  qualityOfTotal: { de: 'von', en: 'of' },
+
   // Quality search & filter
   qualitySearchPlaceholder: { de: 'Pseudonym suchen...', en: 'Search pseudonym...' },
   qualityFilterStatus: { de: 'Prüfstatus', en: 'Review Status' },

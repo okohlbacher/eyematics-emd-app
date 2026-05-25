@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { pickCoding } from '../../shared/fhirQueries';
 import { applyFilters } from '../../shared/patientCases';
 import { getTherapyStatus } from '../../shared/qualityPredicates';
+import { QualityFilterBar } from '../components/doc-quality/QualityFilterBar';
 import QualityCaseDetail from '../components/quality/QualityCaseDetail';
 import QualityCaseList from '../components/quality/QualityCaseList';
 import QualityFlagDialog from '../components/quality/QualityFlagDialog';
@@ -25,15 +26,21 @@ import type { PatientCase, QualityFlag, QualityStatus } from '../types/fhir';
 import { safePickCohortFilter } from '../utils/cohortFilterSerialization';
 import { getDateLocale } from '../utils/dateFormat';
 import { datedFilename, downloadCsv } from '../utils/download';
+import { cutoffDate, type TimeRange } from '../utils/qualityMetrics';
 
-function SummaryCard({ icon, count, label, total }: { icon: ReactNode; count: number; label: string; total?: number }) {
+function SummaryCard({ icon, count, label, total, ofLabel }: { icon: ReactNode; count: number; label: string; total?: number; ofLabel?: string }) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-3">
       {icon}
       <div>
         <p className="text-xl font-bold dark:text-white">{count}</p>
         {total !== undefined && total > 0 && (
-          <p className="text-xs text-gray-400 dark:text-gray-500">{Math.round((count / total) * 100)}%</p>
+          <>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              {count} / {total}
+            </p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">{Math.round((count / total) * 100)}%{ofLabel ? ` ${ofLabel} ${total}` : ''}</p>
+          </>
         )}
         <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
       </div>
@@ -88,6 +95,9 @@ export default function QualityPage() {
   // Placed on-page above the summary cards rather than threaded through QualityCaseList to minimize
   // QualityCaseList prop churn (no new props on the list component for this feature).
   const [selectedCohortId, setSelectedCohortId] = useState<string>('all');
+  // Time-range filter for Grundgesamtheit (QUAL-022): reuses DocQualityPage pattern.
+  const [timeRange, setTimeRange] = useState<TimeRange>('all');
+
   // Auto-open the filter panel when a URL param seeds a non-default filter value
   // so the seeded filter state is immediately visible to the user.
   const [showFilters, setShowFilters] = useState<boolean>(() => {
@@ -128,6 +138,19 @@ export default function QualityPage() {
     });
   }, [cases, savedSearches, selectedCohortId]);
 
+  // Time-scoped cases for QUAL-022 Grundgesamtheit: a case is INCLUDED when timeRange === 'all'
+  // OR it has at least one observation with effectiveDateTime >= cutoffDate(timeRange).
+  // Note: filterCasesByTimeRange trims observations but does not drop cases — we apply
+  // a case-level inclusion test here so the denominator reflects only active-range cases.
+  const timeScopedCases = useMemo(() => {
+    if (timeRange === 'all') return scopedCases;
+    const cutoff = cutoffDate(timeRange);
+    if (!cutoff) return scopedCases;
+    return scopedCases.filter((c) =>
+      c.observations.some((o) => o.effectiveDateTime && new Date(o.effectiveDateTime) >= cutoff)
+    );
+  }, [scopedCases, timeRange]);
+
   // activeQualityParams for the selected cohort: the raw qualityParams field from the SavedSearch.
   // QualityCaseDetail receives this and calls resolveQualityParams() to apply the tri-state logic.
   // When 'all' is selected, pass undefined so all checks run (back-compat fallback).
@@ -138,7 +161,7 @@ export default function QualityPage() {
 
   const caseStatus = useMemo(() => {
     const statusMap = new Map<string, QualityStatus>();
-    scopedCases.forEach((c) => {
+    timeScopedCases.forEach((c) => {
       const flags = qualityFlags.filter((f) => f.caseId === c.id);
       if (reviewedCases.includes(c.id)) {
         statusMap.set(c.id, 'reviewed');
@@ -151,7 +174,7 @@ export default function QualityPage() {
       }
     });
     return statusMap;
-  }, [scopedCases, qualityFlags, reviewedCases]);
+  }, [timeScopedCases, qualityFlags, reviewedCases]);
 
   const statusCounts = useMemo(() => {
     const counts = { unchecked: 0, in_progress: 0, reviewed: 0 };
@@ -167,17 +190,17 @@ export default function QualityPage() {
       breakerDays: settings.therapyBreakerDays,
     };
     const map = new Map<string, ReturnType<typeof getTherapyStatus>>();
-    scopedCases.forEach((c) => map.set(c.id, getTherapyStatus(c, thresholds)));
+    timeScopedCases.forEach((c) => map.set(c.id, getTherapyStatus(c, thresholds)));
     return map;
-  }, [scopedCases]);
+  }, [timeScopedCases]);
 
   const centerNames = useMemo(() => {
-    const names = new Set(scopedCases.map((c) => c.centerName));
+    const names = new Set(timeScopedCases.map((c) => c.centerName));
     return Array.from(names).sort();
-  }, [scopedCases]);
+  }, [timeScopedCases]);
 
   const filteredCases = useMemo(() => {
-    return scopedCases.filter((c) => {
+    return timeScopedCases.filter((c) => {
       if (searchQuery && !c.pseudonym.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (filterStatus !== 'all' && (caseStatus.get(c.id) ?? 'unchecked') !== filterStatus) return false;
       if (selectedCenters.length > 0 && !selectedCenters.includes(c.centerName)) return false;
@@ -191,7 +214,7 @@ export default function QualityPage() {
       if (!showExcluded && excludedCases.includes(c.id)) return false;
       return true;
     });
-  }, [scopedCases, searchQuery, filterStatus, selectedCenters, filterTherapy, filterCrt, showExcluded, caseStatus, therapyStatuses, excludedCases]);
+  }, [timeScopedCases, searchQuery, filterStatus, selectedCenters, filterTherapy, filterCrt, showExcluded, caseStatus, therapyStatuses, excludedCases]);
 
   const handleFlag = () => {
     if (!selectedCase || !flagDialog || !errorType) return;
@@ -255,6 +278,18 @@ export default function QualityPage() {
         <p className="text-gray-500 dark:text-gray-400 mt-1">{t('qualitySubtitle')}</p>
       </div>
 
+      {/* Time-range filter — QUAL-022: reuses DocQualityPage / QualityFilterBar pattern */}
+      <div className="mb-4">
+        <QualityFilterBar
+          timeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
+          selectedCenter=""
+          onCenterChange={() => undefined}
+          centerOptions={[]}
+          showCenterFilter={false}
+        />
+      </div>
+
       {/* Export button + cohort scope selector in the same row */}
       <div className="flex items-center justify-between mb-2">
         {/* Cohort scope selector — placed on-page (not in QualityCaseList) to avoid prop churn.
@@ -289,11 +324,17 @@ export default function QualityPage() {
         </button>
       </div>
 
-      {/* Status summary cards — counts + percentages reflect the scoped set */}
+      {/* Grundgesamtheit label — QUAL-023: absolute population size always visible */}
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+        <span className="font-medium text-gray-700 dark:text-gray-300">{t('qualityPopulationLabel')}:</span>{' '}
+        {timeScopedCases.length}
+      </p>
+
+      {/* Status summary cards — counts + percentages reflect the time-scoped set */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <SummaryCard icon={<Circle className="w-5 h-5 text-gray-300" />} count={statusCounts.unchecked} label={t('unchecked')} total={scopedCases.length} />
-        <SummaryCard icon={<Clock className="w-5 h-5 text-amber-500" />} count={statusCounts.in_progress} label={t('inProgress')} total={scopedCases.length} />
-        <SummaryCard icon={<CheckCircle2 className="w-5 h-5 text-green-500" />} count={statusCounts.reviewed} label={t('reviewed')} total={scopedCases.length} />
+        <SummaryCard icon={<Circle className="w-5 h-5 text-gray-300" />} count={statusCounts.unchecked} label={t('unchecked')} total={timeScopedCases.length} />
+        <SummaryCard icon={<Clock className="w-5 h-5 text-amber-500" />} count={statusCounts.in_progress} label={t('inProgress')} total={timeScopedCases.length} />
+        <SummaryCard icon={<CheckCircle2 className="w-5 h-5 text-green-500" />} count={statusCounts.reviewed} label={t('reviewed')} total={timeScopedCases.length} />
         <SummaryCard icon={<Ban className="w-5 h-5 text-red-400" />} count={excludedCases.length} label={t('excludedCasesCount')} />
       </div>
 
@@ -301,7 +342,7 @@ export default function QualityPage() {
         {/* Case list */}
         <div className="col-span-4">
           <QualityCaseList
-            cases={scopedCases}
+            cases={timeScopedCases}
             filteredCases={filteredCases}
             selectedCase={selectedCase}
             caseStatus={caseStatus}
