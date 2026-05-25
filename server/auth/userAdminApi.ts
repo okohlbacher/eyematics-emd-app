@@ -10,9 +10,9 @@ import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import { Router } from 'express';
 
+import { getValidCenterIds } from '../constants.js';
 import type { UserRecord } from '../initAuth.js';
 import { loadUsers, modifyUsers } from '../initAuth.js';
-import { getValidCenterIds } from '../constants.js';
 import { revokeByUsername } from '../sessionsDb.js';
 import { generateSecurePassword, VALID_ROLES } from './authHelpers.js';
 

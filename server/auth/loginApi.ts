@@ -12,7 +12,6 @@ import { Router } from 'express';
 import { authenticator } from 'otplib';
 
 import { requireCsrf } from '../authMiddleware.js';
-import type { UserRecord } from '../initAuth.js';
 import { getAuthConfig, loadUsers, modifyUsers } from '../initAuth.js';
 import {
   signAccessToken,
