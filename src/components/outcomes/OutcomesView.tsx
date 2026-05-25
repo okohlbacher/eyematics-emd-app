@@ -10,8 +10,8 @@
  * Phase 13 / METRIC-04: inline metric tab strip (?metric= URL param).
  */
 import { GitCompare,Settings } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { computeCrtTrajectory } from '../../../shared/cohortTrajectory';
 import { useData } from '../../context/DataContext';
@@ -70,6 +70,7 @@ export default function OutcomesView() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale } = useLanguage();
   const { record } = useRecentActivity();
+  const navigate = useNavigate();
 
   // Phase 33: compute filter options once from getSettings() — passed to all applyFilters calls
   // so preset predicates evaluate against configured thresholds rather than applyFilters fallbacks.
@@ -154,6 +155,21 @@ export default function OutcomesView() {
     }
     return { name: null, cases: activeCases };
   }, [activeCases, savedSearches, searchParams, filterOptions]);
+
+  // FALL-010: drill-down handler — resolves scatter patientId (pseudonym) to PatientCase.id
+  // within the already-authorized cohort.cases set; navigates to /case/:id.
+  // Unknown pseudonyms produce no navigation (IDOR gate T-43-03).
+  // Stays self-contained so Phase 44 (TECH-02) can lift it into a hook without rework.
+  const handlePointDrillDown = useCallback(
+    (patientId: string) => {
+      if (!cohort) return;
+      const found = cohort.cases.find((c) => c.pseudonym === patientId);
+      if (found) {
+        navigate(`/case/${found.id}`);
+      }
+    },
+    [cohort, navigate],
+  );
 
   // Record a recent-activity entry when a cohort is active (UX-02).
   // Keyed on primaryCohortId so recording updates when the user switches cohorts.
@@ -526,6 +542,7 @@ export default function OutcomesView() {
               locale={locale as 'de' | 'en'}
               titleKey="outcomesPanelOd"
               cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.od : undefined}
+              onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
             />
             <OutcomesPanel
               panel={aggregate.os}
@@ -538,6 +555,7 @@ export default function OutcomesView() {
               locale={locale as 'de' | 'en'}
               titleKey="outcomesPanelOs"
               cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.os : undefined}
+              onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
             />
             <OutcomesPanel
               panel={aggregate.combined}
@@ -550,6 +568,7 @@ export default function OutcomesView() {
               locale={locale as 'de' | 'en'}
               titleKey="outcomesPanelCombined"
               cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.combined : undefined}
+              onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
             />
           </div>
           <OutcomesDataPreview
@@ -582,6 +601,7 @@ export default function OutcomesView() {
               titleKey="metricsCrtPanelOd"
               metric="crt"
               cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.od : undefined}
+              onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
             />
             <OutcomesPanel
               panel={crtAggregate.os}
@@ -595,6 +615,7 @@ export default function OutcomesView() {
               titleKey="metricsCrtPanelOs"
               metric="crt"
               cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.os : undefined}
+              onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
             />
             <OutcomesPanel
               panel={crtAggregate.combined}
@@ -608,6 +629,7 @@ export default function OutcomesView() {
               titleKey="metricsCrtPanelCombined"
               metric="crt"
               cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.combined : undefined}
+              onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
             />
           </div>
           <OutcomesDataPreview
