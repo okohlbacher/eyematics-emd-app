@@ -14,6 +14,7 @@ import crypto from 'node:crypto';
 import type { Request, Response } from 'express';
 import { Router } from 'express';
 
+import { sanitizeSavedSearchFilters } from '../shared/savedSearchSanitize.js';
 import type { QualityFlagRow, SavedSearchRow } from './dataDb.js';
 import {
   addSavedSearch,
@@ -28,7 +29,6 @@ import {
 } from './dataDb.js';
 import { getCaseToCenter, isBypass } from './fhirApi.js';
 import { invalidateByCohort } from './outcomesAggregateCache.js';
-import { sanitizeSavedSearchFilters } from '../shared/savedSearchSanitize.js';
 
 export const dataApiRouter = Router();
 

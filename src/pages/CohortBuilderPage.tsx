@@ -336,13 +336,12 @@ export default function CohortBuilderPage() {
     // WR-05: persist validFilters (invalid ranges stripped) rather than raw filters,
     // so saved searches never encode a broken visus/age/crt range that bypassed the
     // disabled-button guard (e.g. after CR-02 fix: a restored-but-not-yet-validated range).
-    const s: SavedSearch = {
-      id: crypto.randomUUID(),
-      name: saveName.trim(),
-      createdAt: new Date().toISOString(),
-      filters: { ...validFilters },
-    };
-    addSavedSearch(s);
+    // F-13: server generates id/createdAt; client sends name+filters only and adopts server response.
+    // flaggedCaseIds is a Set on the client — convert to array for wire serialization (RESEARCH Pitfall 2).
+    const wireFilters = validFilters.flaggedCaseIds !== undefined
+      ? { ...validFilters, flaggedCaseIds: Array.from(validFilters.flaggedCaseIds) }
+      : { ...validFilters };
+    addSavedSearch({ name: saveName.trim(), filters: wireFilters });
     setSaveName('');
   };
 

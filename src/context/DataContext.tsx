@@ -31,7 +31,7 @@ interface DataContextType {
   centers: CenterInfo[];
   cases: PatientCase[];
   savedSearches: SavedSearch[];
-  addSavedSearch: (s: SavedSearch) => void;
+  addSavedSearch: (s: Pick<SavedSearch, 'name' | 'filters'>) => void;
   removeSavedSearch: (id: string) => void;
   qualityFlags: QualityFlag[];
   addQualityFlag: (f: QualityFlag) => void;
@@ -136,11 +136,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [cases, excludedCases],
   );
 
-  const addSavedSearch = useCallback((s: SavedSearch) => {
-    setSavedSearches((prev) => [...prev, s]);
-    postJson('/api/data/saved-searches', s).catch((err) =>
-      console.error('[DataProvider] Failed to save search:', err),
-    );
+  // F-13: accepts name+filters only; server generates id/createdAt; adopt server-returned canonical record.
+  const addSavedSearch = useCallback((s: Pick<SavedSearch, 'name' | 'filters'>) => {
+    void postJson<{ savedSearch: SavedSearch }>('/api/data/saved-searches', s)
+      .then(({ savedSearch }) => {
+        setSavedSearches((prev) => [...prev, savedSearch]);
+      })
+      .catch((err) => {
+        console.error('[DataProvider] Failed to save search:', err);
+      });
   }, []);
 
   const removeSavedSearch = useCallback((id: string) => {
