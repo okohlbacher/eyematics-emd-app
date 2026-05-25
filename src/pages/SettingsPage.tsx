@@ -2,6 +2,14 @@ import { CheckCircle, Clock, Download, KeyRound, Loader2, RotateCcw, Save, Serve
 import { MessageSquarePlus } from 'lucide-react';
 import { useEffect,useState } from 'react';
 
+import {
+  PLAUSIBILITY_DEFAULTS,
+  type PlausibilityConfig,
+  THRESHOLD_DEFAULTS,
+  type ThresholdConfig,
+  validatePlausibility,
+  validateThresholds,
+} from '../../shared/thresholdConfig';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { authFetch } from '../services/authHeaders';
@@ -48,6 +56,16 @@ export default function SettingsPage() {
   const [ttlValidationError, setTtlValidationError] = useState<'refreshMin' | 'capMin' | 'capMax' | null>(null);
   const [ttlSaving, setTtlSaving] = useState(false);
 
+  // Clinical thresholds state (CFG-01)
+  const [thresholds, setThresholds] = useState<ThresholdConfig>(THRESHOLD_DEFAULTS);
+  const [thresholdValidationError, setThresholdValidationError] = useState<string | null>(null);
+  const [thresholdSaving, setThresholdSaving] = useState(false);
+
+  // Plausibility ranges state (CFG-02)
+  const [plausibility, setPlausibility] = useState<PlausibilityConfig>(PLAUSIBILITY_DEFAULTS);
+  const [plausibilityValidationError, setPlausibilityValidationError] = useState<string | null>(null);
+  const [plausibilitySaving, setPlausibilitySaving] = useState(false);
+
   const [dataSourceType, setDataSourceType] = useState<DataSourceType>('local');
   const [blazeUrl, setBlazeUrl] = useState('http://localhost:8080/fhir');
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('idle');
@@ -79,6 +97,8 @@ export default function SettingsPage() {
         // validate on load so bad persisted values are flagged immediately (H2)
         const loadedValidation = validateTtl(loadedRefresh, loadedCap);
         setTtlValidationError(loadedValidation === 'ok' ? null : loadedValidation);
+        setThresholds(s.thresholds ?? THRESHOLD_DEFAULTS);
+        setPlausibility(s.plausibility ?? PLAUSIBILITY_DEFAULTS);
       } catch {
         /* ignore — keep defaults */
       }
@@ -199,6 +219,44 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSaveThresholds = async () => {
+    setSaveError(null);
+    const result = validateThresholds(thresholds);
+    if (result !== 'ok') {
+      setThresholdValidationError(t('settingsThresholdValidationError'));
+      return;
+    }
+    setThresholdValidationError(null);
+    setThresholdSaving(true);
+    try {
+      await updateSettings({ thresholds });
+      showSaved();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : t('settingsSaveError'));
+    } finally {
+      setThresholdSaving(false);
+    }
+  };
+
+  const handleSavePlausibility = async () => {
+    setSaveError(null);
+    const result = validatePlausibility(plausibility);
+    if (result !== 'ok') {
+      setPlausibilityValidationError(t('settingsPlausibilityValidationError'));
+      return;
+    }
+    setPlausibilityValidationError(null);
+    setPlausibilitySaving(true);
+    try {
+      await updateSettings({ plausibility });
+      showSaved();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : t('settingsSaveError'));
+    } finally {
+      setPlausibilitySaving(false);
+    }
+  };
+
   const handleReset = async () => {
     setSaveError(null);
     setSaving(true);
@@ -212,6 +270,10 @@ export default function SettingsPage() {
       setValidationError(false);
       setRefreshTtlHours(msToHours(defaults.auth?.refreshTokenTtlMs ?? 28_800_000));
       setAbsoluteCapHours(msToHours(defaults.auth?.refreshAbsoluteCapMs ?? 43_200_000));
+      setThresholds(defaults.thresholds ?? THRESHOLD_DEFAULTS);
+      setPlausibility(defaults.plausibility ?? PLAUSIBILITY_DEFAULTS);
+      setThresholdValidationError(null);
+      setPlausibilityValidationError(null);
       showSaved();
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : t('settingsSaveError'));
@@ -595,6 +657,278 @@ export default function SettingsPage() {
           >
             <RotateCcw className="w-4 h-4" />
             {t('settingsReset')}
+          </button>
+        </div>
+      </div>
+
+      {/* Clinical Thresholds (CFG-01) */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-5">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('settingsThresholdTitle')}</h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* CRT critical */}
+          <div className="space-y-1.5">
+            <label htmlFor="threshold-crt" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('settingsThresholdCriticalCrtUm')}
+            </label>
+            <input
+              id="threshold-crt"
+              type="number"
+              min={1}
+              step={1}
+              value={thresholds.criticalCrtUm}
+              onChange={(e) => {
+                const parsed = parseFloat(e.target.value);
+                setThresholds((prev) => ({ ...prev, criticalCrtUm: isNaN(parsed) ? 0 : parsed }));
+                setThresholdValidationError(null);
+              }}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
+                thresholdValidationError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-400' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
+              }`}
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t('settingsThresholdCriticalCrtUmHint')}</p>
+          </div>
+
+          {/* Visus critical */}
+          <div className="space-y-1.5">
+            <label htmlFor="threshold-visus" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('settingsThresholdCriticalVisus')}
+            </label>
+            <input
+              id="threshold-visus"
+              type="number"
+              min={0.01}
+              max={2}
+              step={0.01}
+              value={thresholds.criticalVisus}
+              onChange={(e) => {
+                const parsed = parseFloat(e.target.value);
+                setThresholds((prev) => ({ ...prev, criticalVisus: isNaN(parsed) ? 0 : parsed }));
+                setThresholdValidationError(null);
+              }}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
+                thresholdValidationError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-400' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
+              }`}
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t('settingsThresholdCriticalVisusHint')}</p>
+          </div>
+
+          {/* IOP critical */}
+          <div className="space-y-1.5">
+            <label htmlFor="threshold-iop" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('settingsThresholdCriticalIopMmHg')}
+            </label>
+            <input
+              id="threshold-iop"
+              type="number"
+              min={1}
+              step={1}
+              value={thresholds.criticalIopMmHg}
+              onChange={(e) => {
+                const parsed = parseFloat(e.target.value);
+                setThresholds((prev) => ({ ...prev, criticalIopMmHg: isNaN(parsed) ? 0 : parsed }));
+                setThresholdValidationError(null);
+              }}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
+                thresholdValidationError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-400' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
+              }`}
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t('settingsThresholdCriticalIopMmHgHint')}</p>
+          </div>
+
+          {/* Visus jump */}
+          <div className="space-y-1.5">
+            <label htmlFor="threshold-visusjump" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('settingsThresholdVisusJump')}
+            </label>
+            <input
+              id="threshold-visusjump"
+              type="number"
+              min={0.01}
+              step={0.01}
+              value={thresholds.visusJump}
+              onChange={(e) => {
+                const parsed = parseFloat(e.target.value);
+                setThresholds((prev) => ({ ...prev, visusJump: isNaN(parsed) ? 0 : parsed }));
+                setThresholdValidationError(null);
+              }}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
+                thresholdValidationError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-400' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
+              }`}
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t('settingsThresholdVisusJumpHint')}</p>
+          </div>
+        </div>
+
+        {thresholdValidationError && (
+          <p className="text-sm text-red-600 font-medium" role="alert">{thresholdValidationError}</p>
+        )}
+
+        <div>
+          <button
+            onClick={() => { void handleSaveThresholds(); }}
+            disabled={thresholdSaving}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {thresholdSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+            {t('save')}
+          </button>
+        </div>
+      </div>
+
+      {/* Plausibility Ranges (CFG-02) */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-5">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('settingsPlausibilityTitle')}</h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Visus min */}
+          <div className="space-y-1.5">
+            <label htmlFor="plausibility-visus-min" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('settingsPlausibilityVisusMin')}
+            </label>
+            <input
+              id="plausibility-visus-min"
+              type="number"
+              min={0}
+              step={0.01}
+              value={plausibility.visusMin}
+              onChange={(e) => {
+                const parsed = parseFloat(e.target.value);
+                setPlausibility((prev) => ({ ...prev, visusMin: isNaN(parsed) ? 0 : parsed }));
+                setPlausibilityValidationError(null);
+              }}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
+                plausibilityValidationError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-400' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
+              }`}
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t('settingsPlausibilityVisusHint')}</p>
+          </div>
+
+          {/* Visus max */}
+          <div className="space-y-1.5">
+            <label htmlFor="plausibility-visus-max" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('settingsPlausibilityVisusMax')}
+            </label>
+            <input
+              id="plausibility-visus-max"
+              type="number"
+              min={0}
+              step={0.01}
+              value={plausibility.visusMax}
+              onChange={(e) => {
+                const parsed = parseFloat(e.target.value);
+                setPlausibility((prev) => ({ ...prev, visusMax: isNaN(parsed) ? 0 : parsed }));
+                setPlausibilityValidationError(null);
+              }}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
+                plausibilityValidationError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-400' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
+              }`}
+            />
+          </div>
+
+          {/* CRT min */}
+          <div className="space-y-1.5">
+            <label htmlFor="plausibility-crt-min" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('settingsPlausibilityCrtMin')}
+            </label>
+            <input
+              id="plausibility-crt-min"
+              type="number"
+              min={0}
+              step={1}
+              value={plausibility.crtMin}
+              onChange={(e) => {
+                const parsed = parseFloat(e.target.value);
+                setPlausibility((prev) => ({ ...prev, crtMin: isNaN(parsed) ? 0 : parsed }));
+                setPlausibilityValidationError(null);
+              }}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
+                plausibilityValidationError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-400' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
+              }`}
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t('settingsPlausibilityCrtHint')}</p>
+          </div>
+
+          {/* CRT max */}
+          <div className="space-y-1.5">
+            <label htmlFor="plausibility-crt-max" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('settingsPlausibilityCrtMax')}
+            </label>
+            <input
+              id="plausibility-crt-max"
+              type="number"
+              min={0}
+              step={1}
+              value={plausibility.crtMax}
+              onChange={(e) => {
+                const parsed = parseFloat(e.target.value);
+                setPlausibility((prev) => ({ ...prev, crtMax: isNaN(parsed) ? 0 : parsed }));
+                setPlausibilityValidationError(null);
+              }}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
+                plausibilityValidationError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-400' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
+              }`}
+            />
+          </div>
+
+          {/* IOP min */}
+          <div className="space-y-1.5">
+            <label htmlFor="plausibility-iop-min" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('settingsPlausibilityIopMin')}
+            </label>
+            <input
+              id="plausibility-iop-min"
+              type="number"
+              min={0}
+              step={1}
+              value={plausibility.iopMin}
+              onChange={(e) => {
+                const parsed = parseFloat(e.target.value);
+                setPlausibility((prev) => ({ ...prev, iopMin: isNaN(parsed) ? 0 : parsed }));
+                setPlausibilityValidationError(null);
+              }}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
+                plausibilityValidationError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-400' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
+              }`}
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t('settingsPlausibilityIopHint')}</p>
+          </div>
+
+          {/* IOP max */}
+          <div className="space-y-1.5">
+            <label htmlFor="plausibility-iop-max" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('settingsPlausibilityIopMax')}
+            </label>
+            <input
+              id="plausibility-iop-max"
+              type="number"
+              min={0}
+              step={1}
+              value={plausibility.iopMax}
+              onChange={(e) => {
+                const parsed = parseFloat(e.target.value);
+                setPlausibility((prev) => ({ ...prev, iopMax: isNaN(parsed) ? 0 : parsed }));
+                setPlausibilityValidationError(null);
+              }}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white ${
+                plausibilityValidationError ? 'border-red-400 bg-red-50 dark:bg-red-900/10 dark:border-red-400' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700'
+              }`}
+            />
+          </div>
+        </div>
+
+        {plausibilityValidationError && (
+          <p className="text-sm text-red-600 font-medium" role="alert">{plausibilityValidationError}</p>
+        )}
+
+        <div>
+          <button
+            onClick={() => { void handleSavePlausibility(); }}
+            disabled={plausibilitySaving}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {plausibilitySaving && <Loader2 className="w-4 h-4 animate-spin" />}
+            {t('save')}
           </button>
         </div>
       </div>
