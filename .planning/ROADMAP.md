@@ -230,7 +230,7 @@ Plans:
   3. `knip` reports no new unused exports and `lint` reports 0 warnings after the refactor.
 **Plans**: 2 plans (2 waves; run sequentially to bound risk — disjoint files but both large)
 Plans:
-- [ ] 44-01-PLAN.md — TECH-01: split authApi.ts into authHelpers + login/user-admin/totp/session routers; thin authApi re-exports resetLimiter (wave 1)
+- [x] 44-01-PLAN.md — TECH-01: split authApi.ts into authHelpers + login/user-admin/totp/session routers; thin authApi re-exports resetLimiter (wave 1)
 - [ ] 44-02-PLAN.md — TECH-02: decompose OutcomesView into useOutcomesRouteState + useOutcomesAggregation hooks + Visus/CRT metric containers (wave 2)
 
 ### Phase 45: UAT Validation & Milestone Close
@@ -258,7 +258,7 @@ Plans:
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 3/3 | Complete    | 2026-05-25 |
 | 42. Analysis Cohort Comparison & Labeling | 3/3 | Complete    | 2026-05-25 |
 | 43. Case Navigation, Reference & Chart Clarity | 3/3 | Complete    | 2026-05-25 |
-| 44. Tech-Debt Compaction | 0/2 | Planned     | - |
+| 44. Tech-Debt Compaction | 1/2 | In Progress|  |
 | 45. UAT Validation & Milestone Close | 0/0 | Not started | - |
 
 ---
