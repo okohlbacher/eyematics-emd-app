@@ -953,6 +953,31 @@ const translations = {
   sessionLastUsed: { de: 'Zuletzt verwendet', en: 'Last used' },
   sessionExpires: { de: 'L\u00e4uft ab', en: 'Expires' },
 
+  // Settings: Clinical thresholds (CFG-01)
+  settingsThresholdTitle: { de: 'Klinische Schwellenwerte', en: 'Clinical thresholds' },
+  settingsThresholdCriticalCrtUm: { de: 'CRT kritischer Schwellenwert (\u00b5m)', en: 'CRT critical threshold (\u00b5m)' },
+  settingsThresholdCriticalCrtUmHint: { de: 'CRT-Werte oberhalb dieses Schwellenwerts gelten als kritisch (Standard: 400 \u00b5m).', en: 'CRT values above this threshold are flagged as critical (default: 400 \u00b5m).' },
+  settingsThresholdCriticalVisus: { de: 'Visus kritischer Schwellenwert', en: 'Visus critical threshold' },
+  settingsThresholdCriticalVisusHint: { de: 'Visus-Werte unterhalb dieses Schwellenwerts gelten als kritisch. Muss im Bereich (0, 2] liegen (Standard: 0,1).', en: 'Visus values below this threshold are flagged as critical. Must be in range (0, 2] (default: 0.1).' },
+  settingsThresholdCriticalIopMmHg: { de: 'IOD kritischer Schwellenwert (mmHg)', en: 'IOP critical threshold (mmHg)' },
+  settingsThresholdCriticalIopMmHgHint: { de: 'IOD-Werte oberhalb dieses Schwellenwerts gelten als kritisch (Standard: 21 mmHg).', en: 'IOP values above this threshold are flagged as critical (default: 21 mmHg).' },
+  settingsThresholdVisusJump: { de: 'Visus-Sprung Schwellenwert', en: 'Visus jump threshold' },
+  settingsThresholdVisusJumpHint: { de: 'Pl\u00f6tzliche Visus\u00e4nderungen oberhalb dieses Werts werden als Sprung markiert (Standard: 0,3).', en: 'Sudden visus changes above this value are flagged as a jump (default: 0.3).' },
+  settingsThresholdValidationError: { de: 'Ung\u00fcltige Schwellenwerte. Bitte Eingaben pr\u00fcfen.', en: 'Invalid threshold values. Please check your inputs.' },
+
+  // Settings: Plausibility ranges (CFG-02)
+  settingsPlausibilityTitle: { de: 'Plausibilit\u00e4tsbereiche', en: 'Plausibility ranges' },
+  settingsPlausibilityVisusMin: { de: 'Visus Minimum', en: 'Visus minimum' },
+  settingsPlausibilityVisusMax: { de: 'Visus Maximum', en: 'Visus maximum' },
+  settingsPlausibilityVisusHint: { de: 'Plausibler Visusbereich (Standard: 0 \u2013 2,0). Minimum muss kleiner als Maximum sein.', en: 'Plausible visus range (default: 0 \u2013 2.0). Minimum must be less than maximum.' },
+  settingsPlausibilityCrtMin: { de: 'CRT Minimum (\u00b5m)', en: 'CRT minimum (\u00b5m)' },
+  settingsPlausibilityCrtMax: { de: 'CRT Maximum (\u00b5m)', en: 'CRT maximum (\u00b5m)' },
+  settingsPlausibilityCrtHint: { de: 'Plausibler CRT-Bereich in \u00b5m (Standard: 100 \u2013 800). Minimum muss kleiner als Maximum sein.', en: 'Plausible CRT range in \u00b5m (default: 100 \u2013 800). Minimum must be less than maximum.' },
+  settingsPlausibilityIopMin: { de: 'IOD Minimum (mmHg)', en: 'IOP minimum (mmHg)' },
+  settingsPlausibilityIopMax: { de: 'IOD Maximum (mmHg)', en: 'IOP maximum (mmHg)' },
+  settingsPlausibilityIopHint: { de: 'Plausibler IOD-Bereich in mmHg (Standard: 5 \u2013 40). Minimum muss kleiner als Maximum sein.', en: 'Plausible IOP range in mmHg (default: 5 \u2013 40). Minimum must be less than maximum.' },
+  settingsPlausibilityValidationError: { de: 'Ung\u00fcltige Plausibilit\u00e4tsbereiche. Bitte Eingaben pr\u00fcfen.', en: 'Invalid plausibility ranges. Please check your inputs.' },
+
   // Session TTL settings (Phase 28 / SESSUI-03)
   settingsSessionTitle: { de: 'Sitzungstoken-G\u00fcltigkeiten', en: 'Session Token Lifetimes' },
   ttlRefreshHours: { de: 'Refresh-Token-G\u00fcltigkeit (Stunden)', en: 'Refresh Token TTL (hours)' },
