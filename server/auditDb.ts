@@ -82,7 +82,7 @@ export function initAuditDb(dataDir: string, retentionDays = 90): void {
       timestamp   TEXT    NOT NULL,
       method      TEXT    NOT NULL,
       path        TEXT    NOT NULL,
-      user        TEXT    NOT NULL DEFAULT 'anonymous',
+      user        TEXT    NOT NULL DEFAULT 'unauthenticated',
       status      INTEGER NOT NULL,
       duration_ms INTEGER NOT NULL,
       body        TEXT,

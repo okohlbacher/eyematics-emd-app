@@ -225,7 +225,7 @@ app.use('/api/audit/events/view-open', express.json({ limit: '16kb' }));
 app.use('/api/outcomes/aggregate', express.json({ limit: '16kb' }));
 app.use('/api/outcomes/aggregate', compression());
 
-// auditMiddleware BEFORE authMiddleware — captures 401 responses with user='anonymous'
+// auditMiddleware BEFORE authMiddleware — captures 401 responses with user='unauthenticated'
 // (req.auth is read at res.finish time, so it resolves correctly for both 200 and 401)
 app.use('/api', auditMiddleware);
 

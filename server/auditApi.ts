@@ -210,7 +210,7 @@ auditApiRouter.post('/events/view-open', (req: Request, res: Response): void => 
     timestamp: new Date().toISOString(),
     method: 'POST',
     path: '/api/audit/events/view-open',
-    user: req.auth?.preferred_username ?? 'anonymous',
+    user: req.auth?.preferred_username ?? 'unauthenticated',
     status: 204,
     duration_ms: 0,
     body: JSON.stringify({ name, cohortHash, filter }),

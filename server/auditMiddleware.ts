@@ -182,8 +182,8 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
 
     const duration = Date.now() - startMs;
     // req.auth is populated by authMiddleware for authenticated requests;
-    // undefined for requests that were rejected (401) — fall back to 'anonymous'
-    const user = req.auth?.preferred_username ?? 'anonymous';
+    // undefined for requests that were rejected (401) — fall back to 'unauthenticated'
+    const user = req.auth?.preferred_username ?? 'unauthenticated';
 
     // Per D-11: mutations log (redacted) body; GETs log query params only
     // Body capture priority (Bug 1 fix):
