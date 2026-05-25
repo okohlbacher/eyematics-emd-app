@@ -111,7 +111,7 @@ Deferred to v1.12: CODEX Tier C (F-01/02/03/09/10/13) + Phase 33 advisory UAT �
 - [x] **Phase 38: Audit Actor Correctness** — Replace `'anonymous'` with `'unauthenticated'` in audit log for 401/unauth requests; keep immutable historical actors for deleted users (AUDIT-01) (completed 2026-05-25)
 - [x] **Phase 39: Configurable Clinical Thresholds + Server/Client Parity** — Move critical/action thresholds and plausibility ranges to `settings.yaml`; expose admin UI in SettingsPage; enforce server/client parity in aggregation (CFG-01, CFG-02, CFG-03) (completed 2026-05-25)
 - [x] **Phase 40: SavedSearch Hardening + Quality Check Configuration** — Server-side SavedSearch provenance (id/createdAt generated server-side, filters sanitized at API boundary); cohort-scoped configurable quality check parameters persisted with the saved cohort (SEC-06, QUAL-020, QUAL-021) (completed 2026-05-25)
-- [ ] **Phase 41: Doc-Quality Correctness, Multi-Select Centers & UX** — Time-filtered Grundgesamtheit denominator; absolute-count discoverability; multi-select center filter (D3, shared with Phase 42); repositioned approve/flag dropdown (QUAL-022, QUAL-023, QUAL-024, QUAL-025)
+- [x] **Phase 41: Doc-Quality Correctness, Multi-Select Centers & UX** — Time-filtered Grundgesamtheit denominator; absolute-count discoverability; multi-select center filter (D3, shared with Phase 42); repositioned approve/flag dropdown (QUAL-022, QUAL-023, QUAL-024, QUAL-025) (completed 2026-05-25)
 - [ ] **Phase 42: Analysis Cohort Comparison & Labeling** — Cohort labels on all comparison plots; Aggregated-tab cohort comparison (diagnosis distribution, age-vs-Visus); active cohort name on `?filters=` direct-load (ANL-010, ANL-011, ANL-012)
 - [ ] **Phase 43: Case Navigation, Reference & Chart Clarity** — Chart-point → case-detail drill-down; cohort reference overlay in case view; self-explanatory CRT/Visus chart labels; axis-tick and responder-tooltip polish (FALL-010, FALL-011, FALL-012, CHART-01)
 - [ ] **Phase 44: Tech-Debt Compaction** — Behavior-preserving: split `authApi.ts` God module; decompose `OutcomesView.tsx`; all gates (test:ci, knip, lint) green with no behavior change (TECH-01, TECH-02)
@@ -186,7 +186,7 @@ Plans:
   5. The multi-select center filter component is implemented as a shared component (consumed by both quality and analysis) ready for Phase 42 reuse.
 **Plans**: 3 plans
 - [x] 41-01-PLAN.md — Shared CenterMultiSelect + multi-select quality center filter; server authorized-center intersection test (QUAL-024)
-- [ ] 41-02-PLAN.md — Time-range filter driving Grundgesamtheit denominator + summary counts; prominent absolute counts (QUAL-022, QUAL-023)
+- [x] 41-02-PLAN.md — Time-range filter driving Grundgesamtheit denominator + summary counts; prominent absolute counts (QUAL-022, QUAL-023)
 - [x] 41-03-PLAN.md — Reposition approve/flag-status control to top of case detail (QUAL-025)
 **UI hint**: yes
 
@@ -246,7 +246,7 @@ Plans:
 | 38. Audit Actor Correctness | 1/1 | Complete    | 2026-05-25 |
 | 39. Configurable Clinical Thresholds + Parity | 3/3 | Complete    | 2026-05-25 |
 | 40. SavedSearch Hardening + Quality Check Config | 3/3 | Complete    | 2026-05-25 |
-| 41. Doc-Quality Correctness, Multi-Select Centers & UX | 2/3 | In Progress|  |
+| 41. Doc-Quality Correctness, Multi-Select Centers & UX | 3/3 | Complete   | 2026-05-25 |
 | 42. Analysis Cohort Comparison & Labeling | 0/0 | Not started | - |
 | 43. Case Navigation, Reference & Chart Clarity | 0/0 | Not started | - |
 | 44. Tech-Debt Compaction | 0/0 | Not started | - |
