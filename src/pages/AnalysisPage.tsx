@@ -12,7 +12,7 @@
  * Both use COHORT_PALETTES[idx] for color consistency with the Trajectories compare plots.
  * Single-cohort mode is unchanged.
  */
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Bar,
@@ -33,6 +33,7 @@ import {
   YAxis,
 } from 'recharts';
 
+import { CenterMultiSelect } from '../components/common/CenterMultiSelect';
 import OutcomesView from '../components/outcomes/OutcomesView';
 import { COHORT_PALETTES } from '../components/outcomes/palette';
 import { CHART_COLORS } from '../config/clinicalThresholds';
@@ -186,18 +187,52 @@ export default function AnalysisPage() {
     });
   }, [crossCohortIds, savedSearches, activeCases]);
 
+  // ---------------------------------------------------------------------------
+  // Phase 42 / SC-4: center multi-select — CLIENT-SIDE NARROWING ONLY.
+  // activeCases already come from the server restricted to authorized centers.
+  // Selecting centers here can only narrow, never widen, server results.
+  // Empty selection = all authorized centers (no narrowing applied).
+  // ---------------------------------------------------------------------------
+
+  // Derive unique center display names from activeCases (the full server-authorized set).
+  const centerOptions: string[] = useMemo(() => {
+    const names = new Set<string>();
+    activeCases.forEach((c) => names.add(c.centerName));
+    return Array.from(names).sort();
+  }, [activeCases]);
+
+  const [selectedCenters, setSelectedCenters] = useState<string[]>([]);
+
+  // Apply center narrowing to the single-cohort view (no effect on cross-cohort
+  // since each cohort operates on activeCases through applyFilters independently;
+  // cross-cohort views are filtered per-cohort below via centeredCrossCohortsActive).
+  const centeredCohort = useMemo(() => {
+    if (selectedCenters.length === 0) return cohort;
+    return cohort.filter((c) => selectedCenters.includes(c.centerName));
+  }, [cohort, selectedCenters]);
+
+  // Cross-cohort narrowing: apply center filter to each cohort's cases.
+  const centeredCrossCohorts = useMemo(() => {
+    if (selectedCenters.length === 0) return crossCohorts;
+    return crossCohorts.map((entry) => ({
+      ...entry,
+      cases: entry.cases.filter((c) => selectedCenters.includes(c.centerName)),
+      patientCount: entry.cases.filter((c) => selectedCenters.includes(c.centerName)).length,
+    }));
+  }, [crossCohorts, selectedCenters]);
+
   const centerDist = useMemo(() => {
     const map = new Map<string, number>();
-    cohort.forEach((c) => {
+    centeredCohort.forEach((c) => {
       const short = getCenterShorthand(c.centerId, c.centerName);
       map.set(short, (map.get(short) ?? 0) + 1);
     });
     return Array.from(map, ([name, count]) => ({ name, count }));
-  }, [cohort]);
+  }, [centeredCohort]);
 
   const diagDist = useMemo(() => {
     const map = new Map<string, { count: number; code: string; system: string | undefined }>();
-    cohort.forEach((c) => {
+    centeredCohort.forEach((c) => {
       c.conditions.forEach((cond) => {
         const system = cond.code.coding[0]?.system;
         const code = cond.code.coding[0]?.code ?? '';
@@ -213,11 +248,11 @@ export default function AnalysisPage() {
       value: count,
       fullText: getCachedFullText(system, code, locale),
     })).sort((a, b) => b.value - a.value);
-  }, [cohort, locale]);
+  }, [centeredCohort, locale]);
 
   const visusTrend = useMemo(() => {
     const byQuarter = new Map<string, number[]>();
-    cohort.forEach((c) => {
+    centeredCohort.forEach((c) => {
       getObservationsByCode(c.observations, LOINC_VISUS).forEach((obs) => {
         if (!obs.effectiveDateTime || !obs.valueQuantity) return;
         const d = new Date(obs.effectiveDateTime);
@@ -234,16 +269,16 @@ export default function AnalysisPage() {
         mean: +(vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(3),
         count: vals.length,
       }));
-  }, [cohort]);
+  }, [centeredCohort]);
 
   const crtDistribution = useMemo(() => {
-    const allCrtObs = cohort.flatMap((c) => getObservationsByCode(c.observations, LOINC_CRT));
+    const allCrtObs = centeredCohort.flatMap((c) => getObservationsByCode(c.observations, LOINC_CRT));
     return computeCrtDistribution(allCrtObs);
-  }, [cohort]);
+  }, [centeredCohort]);
 
   const ageVisusScatter = useMemo(() => {
     // ANL-003: sort by age so X-axis is monotonically increasing
-    return cohort
+    return centeredCohort
       .map((c) => {
         const latest = getObservationsByCode(c.observations, LOINC_VISUS).slice(-1)[0];
         if (!latest?.valueQuantity) return null;
@@ -251,7 +286,7 @@ export default function AnalysisPage() {
       })
       .filter(Boolean)
       .sort((a, b) => a!.age - b!.age) as { age: number; visus: number }[];
-  }, [cohort]);
+  }, [centeredCohort]);
 
   const medianVisus = useMemo(() => {
     if (ageVisusScatter.length === 0) return null;
@@ -261,11 +296,11 @@ export default function AnalysisPage() {
   }, [ageVisusScatter]);
 
   const criticalCount = useMemo(() => {
-    return cohort.filter((c) => {
+    return centeredCohort.filter((c) => {
       const crt = getObservationsByCode(c.observations, LOINC_CRT);
       return crt.some((o) => (o.valueQuantity?.value ?? 0) > 400);
     }).length;
-  }, [cohort]);
+  }, [centeredCohort]);
 
   const tabButton = (id: AnalysisTab, label: string) => {
     const active = tab === id;
@@ -298,7 +333,7 @@ export default function AnalysisPage() {
           </p>
         )}
         <p className="text-gray-500 dark:text-gray-400 mt-1">
-          {cohort.length} {t('casesInCohort')}
+          {centeredCohort.length} {t('casesInCohort')}
           {criticalCount > 0 && (
             <span className="ml-3 text-red-600 font-medium">
               {criticalCount} {t('casesWithCritical')}
@@ -306,6 +341,17 @@ export default function AnalysisPage() {
           )}
         </p>
       </div>
+
+      {/* Center multi-select — SC-4: client-side narrowing only (server is sole authority). */}
+      {centerOptions.length > 1 && (
+        <div className="mb-4 max-w-xs" data-testid="analysis-center-filter">
+          <CenterMultiSelect
+            options={centerOptions}
+            selected={selectedCenters}
+            onChange={setSelectedCenters}
+          />
+        </div>
+      )}
 
       {/* Tab bar */}
       <div
@@ -342,14 +388,14 @@ export default function AnalysisPage() {
             proportionally and scales cleanly to 2–4 cohorts.
             Legend: plain DOM text spans (queryByText-accessible for RTL).
         ---------------------------------------------------------------- */}
-        {isCrossMode && crossCohorts.length >= 2 ? (
+        {isCrossMode && centeredCrossCohorts.length >= 2 ? (
           <>
             {/* Cohort color legend — plain DOM text for RTL queryByText */}
             <ul
               aria-label={t('analysisCompareLegendAriaLabel')}
               className="flex flex-wrap gap-4"
             >
-              {crossCohorts.map((cohort) => (
+              {centeredCrossCohorts.map((cohort) => (
                 <li key={cohort.cohortId} className="flex items-center gap-2 text-sm font-medium text-gray-800 dark:text-gray-200">
                   <span
                     className="w-3 h-3 shrink-0 rounded-sm"
@@ -374,7 +420,7 @@ export default function AnalysisPage() {
                 {t('analysisCompareDiagnosisTitle')}
               </h3>
               <div className="grid grid-cols-2 gap-4">
-                {crossCohorts.map((cohort) => {
+                {centeredCrossCohorts.map((cohort) => {
                   // Compute diagDist for this cohort using the same logic as the single-cohort path
                   const map = new Map<string, { count: number; code: string; system: string | undefined }>();
                   cohort.cases.forEach((c) => {
@@ -453,7 +499,7 @@ export default function AnalysisPage() {
                   <YAxis type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} />
                   <Tooltip cursor={{ strokeDasharray: '3 3' }} />
                   <Legend />
-                  {crossCohorts.map((cohort) => {
+                  {centeredCrossCohorts.map((cohort) => {
                     const cohortScatter = cohort.cases
                       .map((c) => {
                         const latest = getObservationsByCode(c.observations, LOINC_VISUS).slice(-1)[0];

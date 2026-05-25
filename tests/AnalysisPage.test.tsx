@@ -11,7 +11,7 @@
  * Pattern mirrors tests/intervalHistogram.test.tsx:
  *   jsdom + RTL, no jest-dom — use queryByText().not.toBeNull() / .toBeNull()
  */
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { TranslationKey } from '../src/i18n/translations';
@@ -346,6 +346,77 @@ describe('summarizeCohortFilter (ANL-012)', () => {
   it('is deterministic — same input produces same output', () => {
     const filter = { diagnosis: ['E11', 'H35'], ageRange: [40, 80] as [number, number], gender: ['male'] };
     expect(summarizeCohortFilter(filter)).toBe(summarizeCohortFilter(filter));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests: CenterMultiSelect center narrowing (Phase 42 / SC-4)
+// ---------------------------------------------------------------------------
+
+describe('AnalysisPage — CenterMultiSelect center filter (SC-4)', () => {
+  /** Build cases from multiple centers so centerOptions.length > 1 triggers the widget. */
+  function makeCasesMultiCenter(): PatientCase[] {
+    return [
+      {
+        pseudonym: 'P1',
+        birthDate: '1960-01-01',
+        observations: [],
+        procedures: [],
+        conditions: [],
+        centerId: 'CENTER-1',
+        centerName: 'Site A',
+      },
+      {
+        pseudonym: 'P2',
+        birthDate: '1955-06-15',
+        observations: [],
+        procedures: [],
+        conditions: [],
+        centerId: 'CENTER-2',
+        centerName: 'Site B',
+      },
+    ] as unknown as PatientCase[];
+  }
+
+  it('renders center filter widget when activeCases span multiple centers', () => {
+    mockDataContextValue = { activeCases: makeCasesMultiCenter(), savedSearches: [] };
+    setSearchParams({});
+    render(<AnalysisPage />);
+    expect(screen.queryByTestId('analysis-center-filter')).not.toBeNull();
+  });
+
+  it('does not render center filter widget when all activeCases share one center', () => {
+    mockDataContextValue = { activeCases: makeCases(3), savedSearches: [] }; // all centerName: 'Site A'
+    setSearchParams({});
+    render(<AnalysisPage />);
+    expect(screen.queryByTestId('analysis-center-filter')).toBeNull();
+  });
+
+  it('client-side narrowing: clicking a center button narrows visible case count', () => {
+    mockDataContextValue = { activeCases: makeCasesMultiCenter(), savedSearches: [] };
+    setSearchParams({});
+    render(<AnalysisPage />);
+
+    // Before filter: both cases visible (count = 2)
+    expect(screen.queryByText(/^2 /)).not.toBeNull();
+
+    // Click "Site A" center button to narrow to only Site A cases
+    const siteABtn = screen.getByRole('button', { name: 'Site A' });
+    fireEvent.click(siteABtn);
+
+    // After filter: only 1 case visible (Site A has 1 case)
+    expect(screen.queryByText(/^1 /)).not.toBeNull();
+    // 2 cases line is gone
+    expect(screen.queryByText(/^2 /)).toBeNull();
+  });
+
+  it('empty center selection = all cases shown (no narrowing)', () => {
+    mockDataContextValue = { activeCases: makeCasesMultiCenter(), savedSearches: [] };
+    setSearchParams({});
+    render(<AnalysisPage />);
+
+    // Default (empty selection) shows all 2 cases
+    expect(screen.queryByText(/^2 /)).not.toBeNull();
   });
 });
 
