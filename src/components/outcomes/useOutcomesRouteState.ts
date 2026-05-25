@@ -25,9 +25,9 @@ import {
   type AxisMode,
   defaultScatterOn,
   type SpreadMode,
+  type TrajectoryResult,
   type YMetric,
 } from '../../utils/cohortTrajectory';
-import { COHORT_PALETTES } from './palette';
 
 // ---------------------------------------------------------------------------
 // Metric types + constants (METRIC-04) — exported for tab strip + aggregation
@@ -102,7 +102,7 @@ export function useOutcomesRouteState() {
 
   // Phase 12 / AGG-03 / D-13 — server-side routing state.
   const [threshold, setThreshold] = useState<number>(1000);
-  const [serverAggregate, setServerAggregate] = useState<import('../../utils/cohortTrajectory').TrajectoryResult | null>(null);
+  const [serverAggregate, setServerAggregate] = useState<TrajectoryResult | null>(null);
   const [serverLoading, setServerLoading] = useState(false);
 
   // Phase 13 / METRIC-04: active metric derived from URL (D-01).
@@ -327,6 +327,5 @@ export function useOutcomesRouteState() {
     // Also expose activeCases + savedSearches so aggregation hook can use them
     activeCases,
     savedSearches,
-    COHORT_PALETTES,
   };
 }

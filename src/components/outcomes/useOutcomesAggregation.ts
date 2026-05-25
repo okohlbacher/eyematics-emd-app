@@ -16,6 +16,7 @@
 import { useEffect, useMemo } from 'react';
 
 import { computeCrtTrajectory } from '../../../shared/cohortTrajectory';
+import type { PatientCase, SavedSearch } from '../../../shared/types/fhir';
 import { applyFilters } from '../../services/fhirLoader';
 import { type AggregateResponse, postAggregate } from '../../services/outcomesAggregateService';
 import {
@@ -29,6 +30,7 @@ import {
 import type { IntervalCohortSeries } from './IntervalHistogram';
 import type { CohortSeriesEntry } from './OutcomesPanel';
 import { COHORT_PALETTES } from './palette';
+import type { MetricType } from './useOutcomesRouteState';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -37,9 +39,9 @@ import { COHORT_PALETTES } from './palette';
 interface RouteState {
   isCrossMode: boolean;
   crossCohortIds: string[];
-  cohort: { name: string | null; cases: import('../../context/DataContext').PatientCase[] } | null;
+  cohort: { name: string | null; cases: PatientCase[] } | null;
   cohortId: string | null;
-  activeMetric: import('./useOutcomesRouteState').MetricType;
+  activeMetric: MetricType;
   axisMode: AxisMode;
   yMetric: YMetric;
   gridPoints: number;
@@ -50,8 +52,8 @@ interface RouteState {
   setServerAggregate: (v: TrajectoryResult | null) => void;
   serverLoading: boolean;
   setServerLoading: (v: boolean) => void;
-  savedSearches: import('../../context/DataContext').SavedSearch[];
-  activeCases: import('../../context/DataContext').PatientCase[];
+  savedSearches: SavedSearch[];
+  activeCases: PatientCase[];
   filterOptions: {
     therapyInterrupterDays: number;
     therapyBreakerDays: number;
@@ -108,7 +110,7 @@ export function useOutcomesAggregation(state: RouteState) {
   // Phase 13: server routing effect — gated on activeMetric (only visus + crt route).
   useEffect(() => {
     if (activeMetric !== 'visus' && activeMetric !== 'crt') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- clearing server cache when metric switches away; required to avoid stale data. Refactor to derived state is Phase 23 deferred.
+       
       setServerAggregate(null);
       return;
     }
