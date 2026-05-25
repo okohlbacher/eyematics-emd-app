@@ -215,7 +215,7 @@ Plans:
   3. CRT legend label, Visus measurement-type axis/legend, and the interpolation ("open circle") legend wording are self-explanatory without reference to external documentation — wording locked by Phase 37 decision.
   4. Trajectory and analysis charts render all expected axis ticks (A-06 fix); the responder "(i)" tooltip is placed adjacent to the relevant plot element, not in an unrelated page region.
 **Plans**: 3 plans (3 waves; sequential — 43-02 shares translations.ts with 43-01; 43-03 shares VisusCrtChart.tsx + translations.ts)
-- [ ] 43-01-PLAN.md — FALL-012 + CHART-01: i18n CRT/Visus/interpolation labels, Y-axis ticks, responder "(i)" placement (lowest-risk, lands first)
+- [x] 43-01-PLAN.md — FALL-012 + CHART-01: i18n CRT/Visus/interpolation labels, Y-axis ticks, responder "(i)" placement (lowest-risk, lands first)
 - [ ] 43-02-PLAN.md — FALL-010: clickable trajectory points → case-detail drill-down (pseudonym→case-id, IDOR-gated to authorized cohort)
 - [ ] 43-03-PLAN.md — FALL-011: cohort median + IQR reference overlay on the case Visus/CRT trajectory (toggle, reuses aggregate stats)
 **UI hint**: yes
@@ -254,7 +254,7 @@ Plans:
 | 40. SavedSearch Hardening + Quality Check Config | 3/3 | Complete    | 2026-05-25 |
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 3/3 | Complete    | 2026-05-25 |
 | 42. Analysis Cohort Comparison & Labeling | 3/3 | Complete    | 2026-05-25 |
-| 43. Case Navigation, Reference & Chart Clarity | 0/3 | Planned     | - |
+| 43. Case Navigation, Reference & Chart Clarity | 1/3 | In Progress|  |
 | 44. Tech-Debt Compaction | 0/0 | Not started | - |
 | 45. UAT Validation & Milestone Close | 0/0 | Not started | - |
 
