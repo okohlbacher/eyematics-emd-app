@@ -112,7 +112,7 @@ Deferred to v1.12: CODEX Tier C (F-01/02/03/09/10/13) + Phase 33 advisory UAT �
 - [x] **Phase 39: Configurable Clinical Thresholds + Server/Client Parity** — Move critical/action thresholds and plausibility ranges to `settings.yaml`; expose admin UI in SettingsPage; enforce server/client parity in aggregation (CFG-01, CFG-02, CFG-03) (completed 2026-05-25)
 - [x] **Phase 40: SavedSearch Hardening + Quality Check Configuration** — Server-side SavedSearch provenance (id/createdAt generated server-side, filters sanitized at API boundary); cohort-scoped configurable quality check parameters persisted with the saved cohort (SEC-06, QUAL-020, QUAL-021) (completed 2026-05-25)
 - [x] **Phase 41: Doc-Quality Correctness, Multi-Select Centers & UX** — Time-filtered Grundgesamtheit denominator; absolute-count discoverability; multi-select center filter (D3, shared with Phase 42); repositioned approve/flag dropdown (QUAL-022, QUAL-023, QUAL-024, QUAL-025) (completed 2026-05-25)
-- [ ] **Phase 42: Analysis Cohort Comparison & Labeling** — Cohort labels on all comparison plots; Aggregated-tab cohort comparison (diagnosis distribution, age-vs-Visus); active cohort name on `?filters=` direct-load (ANL-010, ANL-011, ANL-012)
+- [x] **Phase 42: Analysis Cohort Comparison & Labeling** — Cohort labels on all comparison plots; Aggregated-tab cohort comparison (diagnosis distribution, age-vs-Visus); active cohort name on `?filters=` direct-load (ANL-010, ANL-011, ANL-012) (completed 2026-05-25)
 - [ ] **Phase 43: Case Navigation, Reference & Chart Clarity** — Chart-point → case-detail drill-down; cohort reference overlay in case view; self-explanatory CRT/Visus chart labels; axis-tick and responder-tooltip polish (FALL-010, FALL-011, FALL-012, CHART-01)
 - [ ] **Phase 44: Tech-Debt Compaction** — Behavior-preserving: split `authApi.ts` God module; decompose `OutcomesView.tsx`; all gates (test:ci, knip, lint) green with no behavior change (TECH-01, TECH-02)
 - [ ] **Phase 45: UAT Validation & Milestone Close** — Consolidated human UAT across all v1.12 changes; audit and close milestone *(process/feedback — no production code)*
@@ -202,7 +202,7 @@ Plans:
 **Plans**: 3 plans (3 waves; sequential — all touch translations.ts, 42-02/42-03 share AnalysisPage.tsx)
 - [x] 42-01-PLAN.md — ANL-010: cohort labels/legend on interval histogram + responder in compare mode (palette colors + names)
 - [x] 42-02-PLAN.md — ANL-011: between-cohort diagnosis-distribution + age-vs-Visus comparison in the Aggregated tab
-- [ ] 42-03-PLAN.md — ANL-012: derived cohort/filter name shown on direct ?filters= load
+- [x] 42-03-PLAN.md — ANL-012: derived cohort/filter name shown on direct ?filters= load
 **UI hint**: yes
 
 ### Phase 43: Case Navigation, Reference & Chart Clarity
@@ -250,7 +250,7 @@ Plans:
 | 39. Configurable Clinical Thresholds + Parity | 3/3 | Complete    | 2026-05-25 |
 | 40. SavedSearch Hardening + Quality Check Config | 3/3 | Complete    | 2026-05-25 |
 | 41. Doc-Quality Correctness, Multi-Select Centers & UX | 3/3 | Complete    | 2026-05-25 |
-| 42. Analysis Cohort Comparison & Labeling | 2/3 | In Progress|  |
+| 42. Analysis Cohort Comparison & Labeling | 3/3 | Complete   | 2026-05-25 |
 | 43. Case Navigation, Reference & Chart Clarity | 0/0 | Not started | - |
 | 44. Tech-Debt Compaction | 0/0 | Not started | - |
 | 45. UAT Validation & Milestone Close | 0/0 | Not started | - |
