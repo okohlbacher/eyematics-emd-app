@@ -107,7 +107,7 @@ Deferred to v1.12: CODEX Tier C (F-01/02/03/09/10/13) + Phase 33 advisory UAT �
 
 ### Phases
 
-- [ ] **Phase 37: UAT Re-test & Spec Lock** — Re-verify the 12 v1.11 fixes; capture per-phase open decisions; lock v1.12 REQ-IDs and acceptance criteria *(process/feedback — no production code)*
+- [x] **Phase 37: UAT Re-test & Spec Lock** — Re-verify the 12 v1.11 fixes; capture per-phase open decisions; lock v1.12 REQ-IDs and acceptance criteria *(process/feedback — no production code)* (completed 2026-05-25)
 - [ ] **Phase 38: Audit Actor Correctness** — Replace `'anonymous'` with `'unauthenticated'` in audit log for 401/unauth requests; keep immutable historical actors for deleted users (AUDIT-01)
 - [ ] **Phase 39: Configurable Clinical Thresholds + Server/Client Parity** — Move critical/action thresholds and plausibility ranges to `settings.yaml`; expose admin UI in SettingsPage; enforce server/client parity in aggregation (CFG-01, CFG-02, CFG-03)
 - [ ] **Phase 40: SavedSearch Hardening + Quality Check Configuration** — Server-side SavedSearch provenance (id/createdAt generated server-side, filters sanitized at API boundary); cohort-scoped configurable quality check parameters persisted with the saved cohort (SEC-06, QUAL-020, QUAL-021)
@@ -230,7 +230,7 @@ Deferred to v1.12: CODEX Tier C (F-01/02/03/09/10/13) + Phase 33 advisory UAT �
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 37. UAT Re-test & Spec Lock | 0/0 | Not started | - |
+| 37. UAT Re-test & Spec Lock | 1/0 | Complete    | 2026-05-25 |
 | 38. Audit Actor Correctness | 0/0 | Not started | - |
 | 39. Configurable Clinical Thresholds + Parity | 0/0 | Not started | - |
 | 40. SavedSearch Hardening + Quality Check Config | 0/0 | Not started | - |
