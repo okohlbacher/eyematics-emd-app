@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: — Quality, Configurability & Analysis Depth
 status: completed
-last_updated: "2026-05-25T22:56:11.617Z"
+last_updated: "2026-05-25T23:09:17.025Z"
 last_activity: 2026-05-25
 progress:
   total_phases: 9
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 16
-  completed_plans: 15
-  percent: 56
+  completed_plans: 17
+  percent: 67
 ---
 
 # Project State
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-05-25 for v1.12)
 ## Current Position
 
 Phase: 43
-Plan: Not started
-Status: Phase 38 Plan 01 complete — audit actor fallback relabeled to 'unauthenticated'
+Plan: 03 complete
+Status: Phase 43 Plan 03 complete — FALL-011 cohort reference overlay on case Visus/CRT trajectory
 Last activity: 2026-05-25
 
-**Progress:** [█████████░] 94%
+**Progress:** [██████████] 100%
 
 ## Milestones Shipped
 
@@ -140,7 +140,9 @@ Last activity: 2026-05-25
 | Phase 34 P04 | 10m | 2 tasks | 4 files |
 | Phase 35 P02 | 8 minutes | 2 tasks | 1 files |
 | Phase 38 P01 | 8 minutes | 2 tasks | 5 files |
+| Phase 43 P03 | ~4 minutes | 2 tasks | 5 files |
 
 ## Decisions
 
 - [Phase ?]: Phase 34 Plan 04: CSS tokens for semantic colors
+- [Phase 43 P03]: FALL-011 — nearest-rank percentile inline (no new helper); cohortReference includes current case in aggregate (same as cohortAvgVisus pattern); IQR as stacked Area pair; toggle off by default

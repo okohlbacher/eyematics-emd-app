@@ -28,7 +28,7 @@
 
 ### FALL — Case view
 - [x] **FALL-010**: A user can drill from a chart data point in the trajectory plots to the corresponding case detail. (FALL-001)
-- [ ] **FALL-011**: The case view can show cohort reference values for comparison against the single case. (FALL-006)
+- [x] **FALL-011**: The case view can show cohort reference values for comparison against the single case. (FALL-006)
 - [x] **FALL-012**: Case-detail chart labels are self-explanatory — CRT legend label, Visus measurement-type (axis/legend), and the interpolation ("open circle") legend wording. (FALL-003)
 - [x] **CHART-01**: Trajectory/analysis chart polish — missing axis ticks rendered (A-06); responder "(i)" tooltip placed adjacent to the plot. (A-06, ANL-002)
 
@@ -66,7 +66,7 @@
 | ANL-011 | Phase 42 | Complete |
 | ANL-012 | Phase 42 | Complete |
 | FALL-010 | Phase 43 | Complete |
-| FALL-011 | Phase 43 | Pending |
+| FALL-011 | Phase 43 | Complete |
 | FALL-012 | Phase 43 | Complete |
 | CHART-01 | Phase 43 | Complete |
 | TECH-01 | Phase 44 | Pending |
