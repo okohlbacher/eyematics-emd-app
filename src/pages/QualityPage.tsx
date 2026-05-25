@@ -75,7 +75,7 @@ export default function QualityPage() {
     // caseStatus==='in_progress' (see caseStatus useMemo below and RESEARCH Pitfall 1).
     return v === 'flagged' ? 'in_progress' : 'all';
   });
-  const [filterCenter, setFilterCenter] = useState<string>('all');
+  const [selectedCenters, setSelectedCenters] = useState<string[]>([]);
   const [filterTherapy, setFilterTherapy] = useState<string>(() => {
     const v = searchParams.get('therapy');
     return v === 'breaker' || v === 'interrupter' ? v : 'all';
@@ -180,7 +180,7 @@ export default function QualityPage() {
     return scopedCases.filter((c) => {
       if (searchQuery && !c.pseudonym.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (filterStatus !== 'all' && (caseStatus.get(c.id) ?? 'unchecked') !== filterStatus) return false;
-      if (filterCenter !== 'all' && c.centerName !== filterCenter) return false;
+      if (selectedCenters.length > 0 && !selectedCenters.includes(c.centerName)) return false;
       if (filterTherapy !== 'all' && therapyStatuses.get(c.id)?.status !== filterTherapy) return false;
       if (filterCrt === 'implausible') {
         const latest = getLatestObservation(c.observations, LOINC_CRT);
@@ -191,7 +191,7 @@ export default function QualityPage() {
       if (!showExcluded && excludedCases.includes(c.id)) return false;
       return true;
     });
-  }, [scopedCases, searchQuery, filterStatus, filterCenter, filterTherapy, filterCrt, showExcluded, caseStatus, therapyStatuses, excludedCases]);
+  }, [scopedCases, searchQuery, filterStatus, selectedCenters, filterTherapy, filterCrt, showExcluded, caseStatus, therapyStatuses, excludedCases]);
 
   const handleFlag = () => {
     if (!selectedCase || !flagDialog || !errorType) return;
@@ -309,7 +309,7 @@ export default function QualityPage() {
             excludedCases={excludedCases}
             searchQuery={searchQuery}
             filterStatus={filterStatus}
-            filterCenter={filterCenter}
+            selectedCenters={selectedCenters}
             filterTherapy={filterTherapy}
             filterCrt={filterCrt}
             showExcluded={showExcluded}
@@ -318,7 +318,7 @@ export default function QualityPage() {
             onSelectCase={setSelectedCase}
             onSearchChange={setSearchQuery}
             onFilterStatusChange={setFilterStatus}
-            onFilterCenterChange={setFilterCenter}
+            onSelectedCentersChange={setSelectedCenters}
             onFilterTherapyChange={setFilterTherapy}
             onFilterCrtChange={setFilterCrt}
             onShowExcludedChange={setShowExcluded}

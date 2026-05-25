@@ -10,6 +10,7 @@ import {
 
 import { useLanguage } from '../../context/LanguageContext';
 import type { PatientCase, QualityStatus } from '../../types/fhir';
+import { CenterMultiSelect } from '../common/CenterMultiSelect';
 
 export interface TherapyStatusEntry {
   status: 'active' | 'interrupter' | 'breaker';
@@ -25,7 +26,7 @@ export interface QualityCaseListProps {
   excludedCases: string[];
   searchQuery: string;
   filterStatus: QualityStatus | 'all';
-  filterCenter: string;
+  selectedCenters: string[];
   filterTherapy: string;
   filterCrt: 'implausible' | 'all';
   showExcluded: boolean;
@@ -34,7 +35,7 @@ export interface QualityCaseListProps {
   onSelectCase: (c: PatientCase) => void;
   onSearchChange: (q: string) => void;
   onFilterStatusChange: (s: QualityStatus | 'all') => void;
-  onFilterCenterChange: (c: string) => void;
+  onSelectedCentersChange: (centers: string[]) => void;
   onFilterTherapyChange: (t: string) => void;
   onFilterCrtChange: (v: 'implausible' | 'all') => void;
   onShowExcludedChange: (v: boolean) => void;
@@ -61,7 +62,7 @@ export default function QualityCaseList({
   excludedCases,
   searchQuery,
   filterStatus,
-  filterCenter,
+  selectedCenters,
   filterTherapy,
   filterCrt,
   showExcluded,
@@ -70,7 +71,7 @@ export default function QualityCaseList({
   onSelectCase,
   onSearchChange,
   onFilterStatusChange,
-  onFilterCenterChange,
+  onSelectedCentersChange,
   onFilterTherapyChange,
   onFilterCrtChange,
   onShowExcludedChange,
@@ -144,21 +145,11 @@ export default function QualityCaseList({
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-0.5">
-                {t('qualityFilterCenter')}
-              </label>
-              <select
-                value={filterCenter}
-                onChange={(e) => onFilterCenterChange(e.target.value)}
-                className="w-full text-xs border border-gray-200 dark:border-gray-600 rounded px-2 py-1 dark:bg-gray-700 dark:text-white"
-              >
-                <option value="all">{t('qualityFilterAll')}</option>
-                {centerNames.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
+              <CenterMultiSelect
+                options={centerNames}
+                selected={selectedCenters}
+                onChange={onSelectedCentersChange}
+              />
             </div>
             <div>
               <label className="block text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-0.5">
