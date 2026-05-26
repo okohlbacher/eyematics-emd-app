@@ -1,14 +1,14 @@
 import yaml from 'js-yaml';
 
-import { authFetch } from './authHeaders';
 import {
   PLAUSIBILITY_DEFAULTS,
-  THRESHOLD_DEFAULTS,
   type PlausibilityConfig,
+  THRESHOLD_DEFAULTS,
   type ThresholdConfig,
 } from '../../shared/thresholdConfig';
+import { authFetch } from './authHeaders';
 
-export type { ThresholdConfig, PlausibilityConfig };
+export type { PlausibilityConfig,ThresholdConfig };
 
 export interface AppSettings {
   twoFactorEnabled: boolean;

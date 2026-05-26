@@ -1,10 +1,10 @@
+import { PLAUSIBILITY_DEFAULTS } from '../../shared/thresholdConfig';
 import {
   getObservationsByCode,
   LOINC_CRT,
   LOINC_IOP,
   LOINC_VISUS,
 } from '../services/fhirLoader';
-import { PLAUSIBILITY_DEFAULTS } from '../../shared/thresholdConfig';
 import { getSettings } from '../services/settingsService';
 import type { PatientCase } from '../types/fhir';
 

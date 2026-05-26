@@ -13,10 +13,11 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import {
   QUALITY_PARAM_KEYS,
-  sanitizeQualityParams,
   resolveQualityParams,
+  sanitizeQualityParams,
 } from '../shared/qualityParams.js';
 
 describe('QUALITY_PARAM_KEYS', () => {

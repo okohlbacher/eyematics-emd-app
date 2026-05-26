@@ -22,9 +22,6 @@ export const QUALITY_PARAM_KEYS = Object.freeze([
   'visusJump',
 ] as const);
 
-/** Union type of the six canonical check keys. */
-export type QualityParamKey = (typeof QUALITY_PARAM_KEYS)[number];
-
 /**
  * Whitelist-sanitize an unknown value into a quality-param selection.
  *

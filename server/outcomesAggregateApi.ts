@@ -33,8 +33,8 @@ import type { AxisMode, Eye, SpreadMode, YMetric } from '../shared/cohortTraject
 import { computeCohortTrajectory, computeCrtTrajectory } from '../shared/cohortTrajectory.js';
 import type { AggregateResponse } from '../shared/outcomesProjection.js';
 import { shapeOutcomesResponse } from '../shared/outcomesProjection.js';
-import { applyFilters, extractPatientCases } from '../shared/patientCases.js';
 import type { ApplyFiltersOptions } from '../shared/patientCases.js';
+import { applyFilters, extractPatientCases } from '../shared/patientCases.js';
 import type { CohortFilter, PatientCase } from '../shared/types/fhir.js';
 import { logAuditEntry } from './auditDb.js';
 import { getSavedSearches } from './dataDb.js';
@@ -45,12 +45,12 @@ import {
   getCachedBundles,
   isBypass,
 } from './fhirApi.js';
-import { getFilterOptions } from './settingsApi.js';
 import { hashCohortId } from './hashCohortId.js';
 import {
   aggregateCacheGet,
   aggregateCacheSet,
 } from './outcomesAggregateCache.js';
+import { getFilterOptions } from './settingsApi.js';
 
 // ---------------------------------------------------------------------------
 // Body validation helpers (D-02) — generic 400 messages (no internal detail)

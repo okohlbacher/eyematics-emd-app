@@ -16,11 +16,11 @@ import yaml from 'js-yaml';
 
 import {
   PLAUSIBILITY_DEFAULTS,
+  type PlausibilityConfig,
   THRESHOLD_DEFAULTS,
+  type ThresholdConfig,
   validatePlausibility,
   validateThresholds,
-  type PlausibilityConfig,
-  type ThresholdConfig,
 } from '../shared/thresholdConfig.js';
 import { resetLimiter } from './authApi.js';
 import type {} from './authMiddleware.js'; // triggers Request.auth augmentation
@@ -206,38 +206,11 @@ export function getAuthSettings(): AuthSettings {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 39 / CFG-03 — threshold settings reader for server-side parity
-// ---------------------------------------------------------------------------
-
-export interface ThresholdSettings {
-  thresholds: ThresholdConfig;
-  plausibility: PlausibilityConfig;
-}
-
-/**
- * Reads `thresholds.*` and `plausibility.*` from settings.yaml at call time
- * (NOT boot-cached) — mirrors getAuthSettings() exactly. Returns defaults
- * for any missing field, including when settings.yaml is unreadable.
- * CFG-03: server uses the same operator-configured values as the client.
- */
-export function getThresholdSettings(): ThresholdSettings {
-  try {
-    const raw = fs.readFileSync(SETTINGS_FILE, 'utf-8');
-    const parsed = yaml.load(raw) as {
-      thresholds?: Partial<ThresholdConfig>;
-      plausibility?: Partial<PlausibilityConfig>;
-    } | null;
-    return {
-      thresholds: { ...THRESHOLD_DEFAULTS, ...(parsed?.thresholds ?? {}) },
-      plausibility: { ...PLAUSIBILITY_DEFAULTS, ...(parsed?.plausibility ?? {}) },
-    };
-  } catch {
-    return { thresholds: THRESHOLD_DEFAULTS, plausibility: PLAUSIBILITY_DEFAULTS };
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Phase 39 / CFG-03 — applyFilters options reader for server-side parity
+//
+// Note: clinical action thresholds (criticalCrt/Visus/Iop, visusJump) are
+// consumed client-side only (quality alerting). The server needs only the
+// applyFilters options below for outcome-aggregation parity (CFG-03).
 // ---------------------------------------------------------------------------
 
 /**
