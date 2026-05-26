@@ -17,7 +17,7 @@ import { EYE_COLORS } from './palette';
 interface CrtMetricContainerProps {
   crtAggregate: TrajectoryResult;
   cohort: { name: string | null; cases: import('../../../shared/types/fhir').PatientCase[] };
-  t: (key: TranslationKey | string) => string;
+  t: (key: TranslationKey) => string;
   locale: 'de' | 'en';
   axisMode: AxisMode;
   yMetric: YMetric;

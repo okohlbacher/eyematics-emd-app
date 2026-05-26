@@ -16,6 +16,8 @@
  *   label     — optional heading; defaults to t('qualityFilterCenter')
  */
 
+import type { ReactElement } from 'react';
+
 import { useLanguage } from '../../context/LanguageContext';
 
 export interface CenterMultiSelectProps {
@@ -30,7 +32,7 @@ export function CenterMultiSelect({
   selected,
   onChange,
   label,
-}: CenterMultiSelectProps): JSX.Element {
+}: CenterMultiSelectProps): ReactElement {
   const { t } = useLanguage();
 
   const heading = label ?? t('qualityFilterCenter');

@@ -2,6 +2,7 @@
 // Phase 22 shim candidate by 22-RESEARCH but per D-15 (reality check) it is
 // not a dedup target — this file holds chart rendering logic. No action
 // required beyond this disposition comment.
+import type { ScatterPointItem } from 'recharts';
 import {
   Area,
   CartesianGrid,
@@ -289,8 +290,9 @@ export default function OutcomesPanel({
               {...(onPointClick
                 ? {
                     cursor: 'pointer',
-                    onClick: (datum: { patientId?: string }) => {
-                      if (datum?.patientId) onPointClick(datum.patientId);
+                    onClick: (datum: ScatterPointItem) => {
+                      const patientId = (datum as unknown as { patientId?: string }).patientId;
+                      if (patientId) onPointClick(patientId);
                     },
                   }
                 : {})}

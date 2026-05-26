@@ -357,7 +357,7 @@ export default function CohortBuilderPage() {
     // to downstream consumers using resolveQualityParams(), preserving back-compat semantics.
     const allChecked = QUALITY_PARAM_KEYS.every((k) => selectedQualityParams.has(k));
     const qualityParamsPayload = allChecked ? undefined : Array.from(selectedQualityParams);
-    addSavedSearch({ name: saveName.trim(), filters: wireFilters, qualityParams: qualityParamsPayload });
+    addSavedSearch({ name: saveName.trim(), filters: wireFilters as CohortFilter, qualityParams: qualityParamsPayload });
     setSaveName('');
   };
 
