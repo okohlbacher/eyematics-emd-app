@@ -25,6 +25,12 @@ export function MetricCard({ label, score, description, patientCount, threshold 
         )}
       </div>
       <div className="text-2xl font-bold">{rounded}%</div>
+      {/* Absolute patient count — prominent, mirrors SummaryCard style */}
+      {patientCount !== undefined && (
+        <div className="text-sm font-medium mt-0.5">
+          {patientCount} {t('docQualityPatients')}
+        </div>
+      )}
       {description && (
         <div className="text-xs mt-1 opacity-75">{description}</div>
       )}
@@ -35,10 +41,9 @@ export function MetricCard({ label, score, description, patientCount, threshold 
           style={{ width: `${Math.min(rounded, 100)}%`, backgroundColor: scoreColor(score) }}
         />
       </div>
-      {/* Threshold marker and absolute count */}
-      <div className="mt-1 flex items-center justify-between text-[10px] opacity-60">
+      {/* Threshold marker */}
+      <div className="mt-1 text-[10px] opacity-60">
         <span>{t('docQualityThreshold')}: {threshold}%</span>
-        {patientCount !== undefined && <span>{patientCount} {t('docQualityPatients')}</span>}
       </div>
     </div>
   );

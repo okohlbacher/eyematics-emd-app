@@ -184,6 +184,14 @@ export default function DocQualityPage() {
         />
       )}
 
+      {/* Grundgesamtheit label — QUAL-023: total patient count always visible */}
+      {selectedCenter === 'all' && centerMetrics.length > 0 && (
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="font-medium text-gray-700 dark:text-gray-300">{t('qualityPopulationLabel')}:</span>{' '}
+          {centerMetrics.reduce((s, m) => s + m.patientCount, 0)}
+        </p>
+      )}
+
       {/* Aggregated summary cards */}
       {selectedCenter === 'all' && centerMetrics.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
