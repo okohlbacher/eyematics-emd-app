@@ -207,7 +207,8 @@ dataSource:
 | [docs/Pflichtenheft.md](docs/Pflichtenheft.md) | Functional specification |
 | [docs/Anforderungsabgleich.md](docs/Anforderungsabgleich.md) | Requirements traceability matrix |
 | [docs/architecture.md](docs/architecture.md) | Architecture documentation |
-| [BOM.md](BOM.md) | Bill of materials & vulnerability scan |
+| [SBOM.md](SBOM.md) | **Software Bill of Materials** — dependencies, versions & licenses. Updated at the end of each phase and before release. |
+| [BOM.md](BOM.md) | Bill of materials & vulnerability scan (historical, v1.9.3 — superseded by SBOM.md) |
 | [ISSUES.md](ISSUES.md) | Security, code quality & duplication review |
 
 ## OCT Image Attribution

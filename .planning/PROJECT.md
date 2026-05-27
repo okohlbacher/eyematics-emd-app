@@ -24,6 +24,8 @@
 
 A production-readiness overhaul of the EyeMatics Clinical Demonstrator (EMD), a React/TypeScript clinical research dashboard for ophthalmological IVOM treatment data. The redesign adds a standalone Express backend, optional Keycloak OIDC authentication (with local credential fallback), server-side audit logging, site-based data restriction, and migrates all persistent state from localStorage to server-side JSON file storage.
 
+> **SBOM policy:** A Software Bill of Materials is maintained at [`SBOM.md`](../SBOM.md) (repo root) and referenced from `README.md`. It **must be updated at the end of each phase and before every release** — whenever `package.json` / `package-lock.json` change. "SBOM current?" is a gate in both the end-of-phase verification and the pre-release checklist.
+
 ## Core Value
 
 Every user sees only the data they are authorized to see, with a tamper-proof audit trail of all access — while maintaining the zero-friction local development experience.
