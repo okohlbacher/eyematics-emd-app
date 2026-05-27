@@ -182,7 +182,7 @@ dataSource:
 | Auth      | JWT (bcrypt, HS256/RS256, optional Keycloak) |
 | Data      | HL7 FHIR R4 (local JSON or Blaze FHIR server) |
 
-> Full dependency list and vulnerability scan: [BOM.md](BOM.md).
+> Full dependency list and licenses: [SBOM.md](SBOM.md).
 
 ## Sites (Test Data)
 
@@ -208,7 +208,6 @@ dataSource:
 | [docs/Anforderungsabgleich.md](docs/Anforderungsabgleich.md) | Requirements traceability matrix |
 | [docs/architecture.md](docs/architecture.md) | Architecture documentation |
 | [SBOM.md](SBOM.md) | **Software Bill of Materials** — dependencies, versions & licenses. Updated at the end of each phase and before release. |
-| [BOM.md](BOM.md) | Bill of materials & vulnerability scan (historical, v1.9.3 — superseded by SBOM.md) |
 | [ISSUES.md](ISSUES.md) | Security, code quality & duplication review |
 
 ## OCT Image Attribution

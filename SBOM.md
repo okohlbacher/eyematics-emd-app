@@ -5,7 +5,7 @@
 **Project license:** MIT
 **Generated:** 2026-05-26 (v1.12 build, pre-release)
 **Format:** Human-readable Markdown SBOM derived from `package.json` + `package-lock.json` (lockfileVersion 3) and per-package `license` fields.
-**Supersedes:** the point-in-time `BOM.md` (v1.9.3, 2026-04-28), which is retained for history only. `SBOM.md` is the canonical, maintained software bill of materials going forward.
+**Replaces:** the earlier point-in-time `BOM.md` (v1.9.3, removed). `SBOM.md` is the canonical, maintained software bill of materials going forward.
 **Runtime:** Node.js ≥ 20 · npm ≥ 10 · ECMAScript modules (`"type": "module"`)
 
 > ⚠️ Research & development prototype — **not a medical device**. No PHI; all shipped data is synthetic.
