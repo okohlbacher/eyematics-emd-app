@@ -20,10 +20,10 @@ result: [pending]
 expected: Changing the time-range filter on the Datenqualität page shrinks/expands the Grundgesamtheit (population denominator) and summary counts accordingly.
 result: [pending]
 
-### 3. Absolute counts discoverable (QUAL-023, Phase 41)
-expected: Absolute counts (not just %) are clearly visible on the Datenqualität overview (population label + count/total on summary cards).
-result: [pending]
-note: Please confirm WHICH page you originally couldn't find them on — main **Datenqualität** vs **Dokumentationsqualität** — so I can fix the right surface if it's still missing.
+### 3. Absolute counts discoverable (QUAL-023, Phase 41 + 45 fix)
+expected: Absolute counts (not just %) are clearly visible on BOTH quality pages (population label + count/total).
+result: FIXED (code) — pending visual confirm
+note: Root cause found — the **Dokumentationsqualität** page (DocQualityPage) only showed % prominently (absolute count was a 10px footnote). Fixed in Phase 45: added a prominent "Grundgesamtheit" population label + made MetricCard's patient count prominent (`fcf756d`). The **Datenqualität** page already had it (Phase 41). Both surfaces now covered, so the "which page" question is moot. Please confirm visually.
 
 ### 4. Approve/flag control placement (QUAL-025, Phase 41)
 expected: The approve/flag-status control is reachable near the top of the quality case detail, above the full patient values table (no long scroll).
@@ -41,22 +41,23 @@ result: [pending]
 expected: CRT legend reads "CRT (µm)"; Visus axis "Visus (Dezimal, bestkorrigiert)"; interpolation legend "Offener Kreis = interpolierter Wert (keine Messung)" — all self-explanatory.
 result: [pending]
 
-### 8. A-06 axis ticks (CHART-01, Phase 43)
-expected: Y-axis numeric tick labels render on the affected case/analysis charts.
-result: [pending]
-note: **Screenshot needed** — the original v1.10 report said "Screenshot benötigt." Please send the screenshot of the chart with missing ticks so I can confirm the exact chart and whether the best-effort tickCount fix resolved it.
+### 8. A-06 axis ticks (CHART-01, Phase 43 + 45 fix)
+expected: Y-axis numeric tick labels render on all case/analysis charts.
+result: FIXED (broad) — pending screenshot to confirm exact chart
+note: Phase 45 applied explicit `tickCount={5}` to numeric axes across 7 more chart components (`6b606a9`) — CenterComparisonChart, CenterDetailPanel, DistributionCharts ×3, ClinicalParametersRow, OutcomesPanel, IntervalHistogram, ResponderView — so ticks no longer drop on tight layouts (VisusCrtChart already had it). Still **please send the original screenshot** so I can confirm the exact chart you flagged is among these and looks right.
 
 ### 9. PROT-001 audit actor (Phase 38)
-expected: No "anonymous" actor in the audit log for failed-auth requests (now "unauthenticated").
-result: [pending]
-note: If you still see "anonymous" tied to **deleted users** (not failed logins), that's a separate path needing a follow-up fix.
+expected: No "anonymous" actor in the audit log; deleted users retain their historical username.
+result: RESOLVED (code analysis) — pending visual confirm
+note: Traced the full path — there is NO deleted-user→anonymous route. Deleting a user calls `revokeByUsername()` synchronously (userAdminApi.ts:172-179, PROT-001 v1.10), so their JWTs can't be reused; past audit entries are append-only/immutable (auditDb.ts) and keep the real username; the only `anonymous`→`unauthenticated` fallback is the 401/unauth path (auditMiddleware.ts:186). So a deleted user cannot appear as anonymous. Please just confirm the live log matches.
 
 ## Summary
 
 total: 9
-passed: 0
+code_resolved_pending_visual: 3   (#3 QUAL-023, #8 A-06, #9 PROT-001)
+pending_visual_only: 6            (#1,#2,#4,#5,#6,#7 — verified in code+tests, await visual sign-off)
 issues: 0
-pending: 9
+See `.planning/v1.12-UAT-FEEDBACK.md` for the full per-issue resolution report.
 
 ## Gaps
 
