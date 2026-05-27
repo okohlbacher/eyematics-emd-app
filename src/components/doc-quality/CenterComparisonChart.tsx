@@ -62,6 +62,7 @@ export function CenterComparisonChart({
         />
         <YAxis
           domain={[0, 100]}
+          tickCount={5}
           tickFormatter={(v: number) => `${v}%`}
           tick={{ fontSize: 11 }}
           tickLine={false}

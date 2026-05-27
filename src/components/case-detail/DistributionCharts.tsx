@@ -45,7 +45,7 @@ export default function DistributionCharts({
           <BarChart data={visusDistribution}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="range" tick={{ fontSize: 9 }} />
-            <YAxis allowDecimals={false} tick={{ fontSize: 10 }} label={{ value: t('frequency'), angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} />
+            <YAxis allowDecimals={false} tickCount={5} tick={{ fontSize: 10 }} label={{ value: t('frequency'), angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} />
             <Tooltip />
             <Bar dataKey="count" fill="#10b981" name={t('measurements')} radius={[3, 3, 0, 0]} />
           </BarChart>
@@ -61,7 +61,7 @@ export default function DistributionCharts({
           <BarChart data={crtDistribution}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="range" tick={{ fontSize: 9 }} />
-            <YAxis allowDecimals={false} tick={{ fontSize: 10 }} label={{ value: t('frequency'), angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} />
+            <YAxis allowDecimals={false} tickCount={5} tick={{ fontSize: 10 }} label={{ value: t('frequency'), angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} />
             <Tooltip />
             <ReferenceLine x=">400" stroke="#ef4444" strokeDasharray="3 3" />
             <Bar dataKey="count" fill="#8b5cf6" name={t('measurements')} radius={[3, 3, 0, 0]}>
@@ -82,8 +82,8 @@ export default function DistributionCharts({
           <ResponsiveContainer width="100%" height={180}>
             <ScatterChart>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="visus" name="Visus" type="number" domain={[0, 1]} tick={{ fontSize: 9 }} label={{ value: 'Visus', position: 'insideBottom', offset: -2, fontSize: 10 }} />
-              <YAxis dataKey="crt" name="CRT" unit=" \u00b5m" tick={{ fontSize: 9 }} label={{ value: 'CRT (\u00b5m)', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} />
+              <XAxis dataKey="visus" name="Visus" type="number" domain={[0, 1]} tickCount={5} tick={{ fontSize: 9 }} label={{ value: 'Visus', position: 'insideBottom', offset: -2, fontSize: 10 }} />
+              <YAxis dataKey="crt" name="CRT" unit=" \u00b5m" tickCount={5} tick={{ fontSize: 9 }} label={{ value: 'CRT (\u00b5m)', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} />
               <Tooltip
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;

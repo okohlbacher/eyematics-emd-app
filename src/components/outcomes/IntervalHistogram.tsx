@@ -219,6 +219,7 @@ export default function IntervalHistogram({ cases, t, locale: _locale, cohortSer
                   }}
                 />
                 <YAxis
+                  tickCount={5}
                   tick={{ fontSize: 11 }}
                   label={{
                     value: t('metricsIntervalYAxis'),
@@ -291,6 +292,7 @@ export default function IntervalHistogram({ cases, t, locale: _locale, cohortSer
                   }}
                 />
                 <YAxis
+                  tickCount={5}
                   tick={{ fontSize: 11 }}
                   label={{
                     value: t('metricsIntervalYAxis'),

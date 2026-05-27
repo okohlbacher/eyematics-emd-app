@@ -120,6 +120,7 @@ export function CenterDetailPanel({ metrics, onBack }: CenterDetailPanelProps) {
             <XAxis dataKey="name" hide />
             <YAxis
               domain={[0, 100]}
+              tickCount={5}
               tickFormatter={(v: number) => `${v}%`}
               tick={{ fontSize: 11 }}
               tickLine={false}

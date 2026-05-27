@@ -102,7 +102,7 @@ function CohortResponderPanel({ series, thresholdLetters, t }: CohortResponderPa
           <BarChart data={barData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="eye" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+            <YAxis tickCount={5} tick={{ fontSize: 10 }} allowDecimals={false} />
             <Tooltip />
             <Legend wrapperStyle={{ fontSize: 11 }} />
             <Bar dataKey="responder" fill={BUCKET_COLORS.responder} name={t('metricsResponderBucketResponder')} />
@@ -257,6 +257,7 @@ export default function ResponderView({ cases, thresholdLetters, t, locale: _loc
               label={{ value: t('metricsResponderBarXAxis'), position: 'insideBottom', offset: -4, fontSize: 11, fill: '#6b7280' }}
             />
             <YAxis
+              tickCount={5}
               tick={{ fontSize: 11 }}
               label={{ value: t('metricsResponderBarYAxis'), angle: -90, position: 'insideLeft', fontSize: 11, fill: '#6b7280' }}
               allowDecimals={false}
@@ -283,10 +284,12 @@ export default function ResponderView({ cases, thresholdLetters, t, locale: _loc
             <XAxis
               dataKey="x"
               type="number"
+              tickCount={5}
               tick={{ fontSize: 11 }}
               label={{ value: 'Tage', position: 'insideBottom', offset: -4, fontSize: 11, fill: '#6b7280' }}
             />
             <YAxis
+              tickCount={5}
               tick={{ fontSize: 11 }}
               label={{ value: t('metricsPreviewColDeltaVisusLetters'), angle: -90, position: 'insideLeft', fontSize: 11, fill: '#6b7280' }}
             />

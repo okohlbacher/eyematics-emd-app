@@ -210,6 +210,7 @@ export default function OutcomesPanel({
           <XAxis
             dataKey="x"
             type="number"
+            tickCount={5}
             tick={{ fontSize: 11, fill: chartColors.axisTick }}
             stroke={chartColors.grid}
             label={{
@@ -220,7 +221,7 @@ export default function OutcomesPanel({
               offset: -4,
             }}
           />
-          <YAxis tick={{ fontSize: 11, fill: chartColors.axisTick }} stroke={chartColors.grid} domain={yDomain(yMetric, panel.medianGrid, metric)} />
+          <YAxis tickCount={5} tick={{ fontSize: 11, fill: chartColors.axisTick }} stroke={chartColors.grid} domain={yDomain(yMetric, panel.medianGrid, metric)} />
           <Tooltip
             content={
               <OutcomesTooltip
