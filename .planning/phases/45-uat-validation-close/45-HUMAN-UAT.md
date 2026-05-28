@@ -49,7 +49,7 @@ note: Phase 45 applied explicit `tickCount={5}` to numeric axes across 7 more ch
 ### 9. PROT-001 audit actor (Phase 38)
 expected: No "anonymous" actor in the audit log; deleted users retain their historical username.
 result: RESOLVED (code analysis) — pending visual confirm
-note: Traced the full path — there is NO deleted-user→anonymous route. Deleting a user calls `revokeByUsername()` synchronously (userAdminApi.ts:172-179, PROT-001 v1.10), so their JWTs can't be reused; past audit entries are append-only/immutable (auditDb.ts) and keep the real username; the only `anonymous`→`unauthenticated` fallback is the 401/unauth path (auditMiddleware.ts:186). So a deleted user cannot appear as anonymous. Please just confirm the live log matches.
+note: AUDIT-02 added (2026-05-27) — login rows now show the attempted username, not 'unauthenticated' (your finding). Separately: there is NO deleted-user→anonymous route. Deleting a user calls `revokeByUsername()` synchronously (userAdminApi.ts:172-179, PROT-001 v1.10), so their JWTs can't be reused; past audit entries are append-only/immutable (auditDb.ts) and keep the real username; the only `anonymous`→`unauthenticated` fallback is the 401/unauth path (auditMiddleware.ts:186). So a deleted user cannot appear as anonymous. Please just confirm the live log matches.
 
 ## Summary
 

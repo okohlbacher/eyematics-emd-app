@@ -7,6 +7,7 @@
 
 ### AUDIT — Audit / Protocol correctness
 - [x] **AUDIT-01**: Unauthenticated/401 requests are recorded in the audit log with actor `unauthenticated` (not `anonymous`); deleted users retain their immutable historical actor on past entries. (PROT-001)
+- [x] **AUDIT-02**: Login audit rows (`POST /api/auth/login`) are attributed to the **attempted username** (from the request body) rather than the generic `unauthenticated`, so the log shows who logged in and who was targeted on failed attempts. Authenticated identity still takes precedence (no spoofing); requests with no username fall back to `unauthenticated`. (Phase 45 UAT — user finding 2026-05-27)
 
 ### CFG — Configurable clinical thresholds
 - [x] **CFG-01**: Admins can view and edit the critical/action clinical thresholds (CRT critical, Visus critical, IOP critical, Visus-jump, therapy interrupter/breaker days) in the Settings UI; values persist to `config/settings.yaml`. (ANL-004, F-02)
@@ -52,6 +53,7 @@
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
 | AUDIT-01 | Phase 38 | Complete |
+| AUDIT-02 | Phase 45 (UAT) | Complete |
 | CFG-01 | Phase 39 | Complete |
 | CFG-02 | Phase 39 | Complete |
 | CFG-03 | Phase 39 | Complete |
