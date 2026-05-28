@@ -15,6 +15,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  ZAxis,
 } from 'recharts';
 
 import { useThemeSafe } from '../../context/ThemeContext';
@@ -204,6 +205,11 @@ export default function OutcomesPanel({
       <ResponsiveContainer width="100%" height={320}>
         <ComposedChart data={panel.medianGrid}>
           <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+          {/* FALL-010 fix: Recharts v3 collapses <Scatter> symbols to zero size unless a
+              ZAxis range is present, leaving the drill-down points invisible and unclickable.
+              A constant range gives every symbol a uniform, visible, hittable size (~Recharts
+              default of 64 px²). No dataKey — scatterPoints carry no z dimension. */}
+          <ZAxis range={[64, 64]} />
           {yMetric !== 'absolute' && (
             <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="5 5" />
           )}
