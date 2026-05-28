@@ -29,9 +29,10 @@ note: Root cause found — the **Dokumentationsqualität** page (DocQualityPage)
 expected: The approve/flag-status control is reachable near the top of the quality case detail, above the full patient values table (no long scroll).
 result: [pending]
 
-### 5. Chart→case drill-down (FALL-010, Phase 43)
+### 5. Chart→case drill-down (FALL-010, Phase 43 + 45 fix)
 expected: Single-clicking a data point in a "Verläufe" trajectory plot navigates to that patient's case detail (pointer cursor on hover); only works within your authorized cohort.
-result: [pending]
+result: BUG FOUND + FIXED (code) — pending final visual confirm
+note: In-app UAT revealed the scatter drill-down points were invisible and unclickable — Recharts v3 collapses <Scatter> symbols to zero size without a ZAxis range. Fixed by adding `<ZAxis range={[64,64]}>` (OutcomesPanel.tsx). Please confirm points are now visible and clicking one opens the case detail.
 
 ### 6. Cohort reference overlay (FALL-011, Phase 43)
 expected: The optional toggle in case detail overlays the cohort median line + IQR band on the Visus/CRT trajectory, with correct date alignment and clean rendering.
@@ -54,8 +55,8 @@ note: AUDIT-02 added (2026-05-27) — login rows now show the attempted username
 ## Summary
 
 total: 9
-code_resolved_pending_visual: 3   (#3 QUAL-023, #8 A-06, #9 PROT-001)
-pending_visual_only: 6            (#1,#2,#4,#5,#6,#7 — verified in code+tests, await visual sign-off)
+code_resolved_pending_visual: 4   (#3 QUAL-023, #5 FALL-010 drill-down [bug fixed], #8 A-06, #9 PROT-001)
+pending_visual_only: 5            (#1,#2,#4,#6,#7 — verified in code+tests, await visual sign-off)
 issues: 0
 See `.planning/v1.12-UAT-FEEDBACK.md` for the full per-issue resolution report.
 
