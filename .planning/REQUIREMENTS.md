@@ -40,13 +40,14 @@
 - [x] **TECH-01**: `server/authApi.ts` is split into cohesive routers (login / user-admin / totp / session) with no behavior change; tests green. (F-09)
 - [x] **TECH-02**: `src/components/outcomes/OutcomesView.tsx` is decomposed into hooks + metric containers with no behavior change; tests green. (F-10)
 
-## Future Requirements (deferred)
-- Per-site / per-cohort clinical thresholds (threshold-snapshot provenance) — deferred from D1.
-- QUAL-004 imputation / auto-suggest missing values.
+## Future Requirements (deferred → planted as seeds for the next milestone)
+- Per-site / per-cohort clinical thresholds (threshold-snapshot provenance) — deferred from D1. → `SEED-001`
+- QUAL-004 imputation / auto-suggest missing values. → `SEED-002`
+- Hunt the rare flaky test (Q-FLAKE, ~2–3%) — v1.13 quick win. → `SEED-004`
 
 ## Out of Scope
-- **F-03** Keycloak dead-path removal — blocked by KEYCLK-01 / M7 (no live Keycloak instance).
-- Real Keycloak OIDC redirect flow (KEYCLK-01) — blocked by M7.
+- **F-03** Keycloak dead-path removal — blocked by KEYCLK-01 / M7 (no live Keycloak instance). → `SEED-003`
+- Real Keycloak OIDC redirect flow (KEYCLK-01) — blocked by M7. → `SEED-003`
 
 ## Traceability
 
