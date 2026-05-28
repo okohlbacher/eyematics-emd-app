@@ -175,13 +175,42 @@ describe('auditMiddleware', () => {
     expect(loggedEntries[0].query).toBe('{"limit":"50"}');
   });
 
-  it('records actor unauthenticated for requests with no auth (401)', () => {
-    const req = mockReq({ originalUrl: '/api/auth/login', method: 'POST', auth: undefined, body: { username: 'x', password: 'y' } });
+  it('records actor unauthenticated for a true no-auth request (401)', () => {
+    const req = mockReq({ originalUrl: '/api/fhir/bundles', method: 'GET', auth: undefined });
     const res = mockRes();
     auditMiddleware(req, res, vi.fn());
     (res as unknown as { _emit: (e: string) => void })._emit('finish');
     expect(loggedEntries[0]).toBeDefined();
     expect(loggedEntries[0].user).toBe('unauthenticated');
+  });
+
+  // AUDIT-02: login rows are attributed to the attempted username (from body),
+  // since req.auth is empty during login. Aids brute-force / targeting visibility.
+  it('records the attempted username as actor on /api/auth/login', () => {
+    const req = mockReq({ originalUrl: '/api/auth/login', method: 'POST', auth: undefined, body: { username: 'bob', password: 'y' } });
+    const res = mockRes();
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries[0].user).toBe('bob');
+    // password still redacted in body
+    expect(JSON.stringify(loggedEntries[0].body)).not.toContain('"y"');
+  });
+
+  it('falls back to unauthenticated on /api/auth/login with no username', () => {
+    const req = mockReq({ originalUrl: '/api/auth/login', method: 'POST', auth: undefined, body: { password: 'y' } });
+    const res = mockRes();
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries[0].user).toBe('unauthenticated');
+  });
+
+  it('authenticated identity wins over body username (no spoofing)', () => {
+    const req = mockReq({ originalUrl: '/api/auth/login', method: 'POST', body: { username: 'attacker', password: 'y' } });
+    // mockReq default auth = admin
+    const res = mockRes();
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries[0].user).toBe('admin');
   });
 
   it('records the real username for authenticated requests', () => {

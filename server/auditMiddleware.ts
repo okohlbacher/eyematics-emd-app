@@ -90,6 +90,17 @@ export const SKIP_AUDIT_IF_STATUS: Record<string, Set<number>> = {
 };
 
 /**
+ * AUDIT-02: paths where the actor should be taken from the attempted username
+ * (request body) when no authenticated identity is present. A login/verify
+ * request carries no token yet, so `req.auth` is empty — but the audit row is
+ * far more useful showing WHO logged in / WHO was targeted on a failed attempt.
+ */
+// Only /login carries the username in its body. /verify (2FA step 2) sends
+// {challengeToken, otp} — the username is encoded in the token, not the body —
+// so it stays 'unauthenticated'; the preceding /login row already records who.
+const LOGIN_ACTOR_PATHS = new Set(['/api/auth/login']);
+
+/**
  * Field names that must never appear in plaintext in the audit database.
  */
 const REDACT_FIELDS = new Set(['password', 'otp', 'challengeToken', 'generatedPassword']);
@@ -181,9 +192,22 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
     if (SKIP_AUDIT_IF_STATUS[urlPath]?.has(res.statusCode)) return;
 
     const duration = Date.now() - startMs;
-    // req.auth is populated by authMiddleware for authenticated requests;
-    // undefined for requests that were rejected (401) — fall back to 'unauthenticated'
-    const user = req.auth?.preferred_username ?? 'unauthenticated';
+    // Actor resolution:
+    //   1. Authenticated requests → preferred_username (from authMiddleware).
+    //   2. Login/verify rows carry no token yet (req.auth empty), but the attempted
+    //      username is in the body — attribute the row to it so the audit log shows
+    //      WHO logged in / WHO was targeted on a failed attempt (AUDIT-02 / brute-force
+    //      visibility). Safe: audit is admin-only and the body already holds the value;
+    //      the public 401 stays generic (no enumeration). Length-bounded to curb log abuse.
+    //   3. Otherwise (true unauthenticated request) → 'unauthenticated'.
+    let user = req.auth?.preferred_username;
+    if (!user && LOGIN_ACTOR_PATHS.has(urlPath)) {
+      const attempted = (req.body as { username?: unknown } | undefined)?.username;
+      if (typeof attempted === 'string' && attempted.trim()) {
+        user = attempted.trim().slice(0, 64);
+      }
+    }
+    user = user ?? 'unauthenticated';
 
     // Per D-11: mutations log (redacted) body; GETs log query params only
     // Body capture priority (Bug 1 fix):
