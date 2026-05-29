@@ -4,6 +4,39 @@ Living retrospective across milestones. Each milestone gets a section. Cross-mil
 
 ---
 
+## Milestone: v1.12 — Quality, Configurability & Analysis Depth
+
+**Shipped:** 2026-05-28 (tech_debt close — UAT visual sign-offs pending)
+**Phases:** 9 (37–45) | **Plans:** ~20 | **Tests:** 619→1093
+
+### What Was Built
+Audit actor correctness + login-username attribution (AUDIT-01/02); configurable clinical thresholds & plausibility ranges with server/client parity (CFG-01/02/03); server-owned SavedSearch provenance + cohort-scoped configurable quality checks (SEC-06, QUAL-020/021); doc-quality correctness, multi-select centers, distinct-patient counts (QUAL-022/023/024/025); analysis cohort comparison & labeling (ANL-010/011/012); chart→case drill-down, cohort reference overlay, chart clarity (FALL-010/011/012, CHART-01); authApi + OutcomesView decomposition (TECH-01/02).
+
+### What Worked
+- The mostly-autonomous build (38–44) with per-phase plan-check → execute → code-review → verify caught real bugs early (e.g. the 40-02 SavedSearch crash blocker).
+- The **adversarial review at close** was the highest-value step: it found 3 latent bugs that passing tests + happy-path verification missed — FALL-011 overlay rendered nothing on real data, QUAL-023 double-counted patients, FALL-010 drill-down points were invisible (Recharts v3). None were caught by unit tests.
+- Planting backlog as seeds + a developer→tester response doc gave a clean hand-off.
+
+### What Was Inefficient
+- **`npm run build` was not in the per-phase gate** — 4 type errors (`tsc -b`) slipped past `tsc --noEmit` + vitest and were only caught at close. **Lesson: add `npm run build` to per-phase verification.**
+- Several "fixed" UI items were only happy-path tested; the real bugs needed the adversarial pass. Visual/integration assertions for Recharts components are weak under the test mocks.
+- A rare (~3%) flaky test was observed but never reproduced/identified (→ SEED-004).
+
+### Patterns Established
+- Adversarial self-review before declaring UAT items "closed."
+- Developer→tester response doc (`v1.12-DEV-RESPONSE-TO-UAT.md`) with per-issue verification steps + open questions.
+- Client-narrowing filters with server staying the sole authorization authority (CenterMultiSelect).
+
+### Key Lessons
+- Passing tests + a green happy path ≠ correct; adversarial review and real-data thinking catch what mocks hide.
+- Add the real build (`tsc -b`) to the gate — vitest/esbuild does not typecheck.
+- When in-app UAT finds a bug (drill-down), treat the whole class (charts) — the broad fix surfaced more.
+
+### Cost Observations
+- Heaviest spend: the autonomous 7-phase build + multiple adversarial review/fix passes. Sequential-on-main execution (no worktrees) chosen to avoid the documented stale-worktree merge hazard; fixer subagents using worktrees left 19 stale ones to prune.
+
+---
+
 ## Milestone: v1.11 — UAT Fixes, Data Completeness & Quality Closure
 
 **Shipped:** 2026-05-24
