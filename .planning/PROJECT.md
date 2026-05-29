@@ -1,6 +1,6 @@
 # EMD Backend Redesign
 
-## Status: v1.12 In Progress — Quality, Configurability & Analysis Depth (Phases 37–45) · v1.11 shipped 2026-05-24
+## Status: v1.12 Shipped — Quality, Configurability & Analysis Depth (Phases 37–45, 2026-05-28) · 1093/1093 tests · UAT visual sign-offs pending (tech_debt close)
 
 **Latest shipped milestone:** v1.11 — UAT Fixes, Data Completeness & Quality Closure (Phases 32–36), shipped 2026-05-24. Delivered User Management & Auth Hardening (Phase 32), Cohort Builder UX (Phase 33), Data Completeness (Phase 34), V&V Backfill (Phase 35), and Architecture Review & Compaction (Phase 36). CODEX adversarial review applied Tier A + Tier B compaction (net −240 LOC); Tier C deferred to v1.12. 901/901 tests green at close.
 
@@ -213,7 +213,7 @@ Every user sees only the data they are authorized to see, with a tamper-proof au
 
 **Archive:** [`.planning/milestones/v1.6-ROADMAP.md`](milestones/v1.6-ROADMAP.md), [`.planning/milestones/v1.6-REQUIREMENTS.md`](milestones/v1.6-REQUIREMENTS.md)
 
-## Current Milestone: v1.12 — Quality, Configurability & Analysis Depth
+## Shipped Milestone: v1.12 — Quality, Configurability & Analysis Depth (CLOSED 2026-05-28)
 
 **Goal:** Close the verified-open v1.10 UAT feedback (reconciled against shipped v1.11) plus the CODEX Tier-C deferrals — deepening the quality module, making clinical thresholds configurable, improving analysis comparison & case navigation, and hardening audit/saved-search correctness.
 
@@ -356,4 +356,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-24 — milestone v1.11 (UAT Fixes, Data Completeness & Quality Closure) closed. All 5 phases (32–36) complete; 901/901 tests green. CODEX architecture review Tier A + Tier B applied (net −240 LOC); Tier C deferred to v1.12. KEYCLK-01 remains in Backlog.*
+*Last updated: 2026-05-28 — milestone v1.12 (Quality, Configurability & Analysis Depth) closed. Phases 37–45; 1093/1093 tests; build/lint/knip green. Closed as tech_debt: UAT visual sign-offs + Q1–Q3 pending; backlog → seeds SEED-001..004. KEYCLK-01 remains blocked (M7).*

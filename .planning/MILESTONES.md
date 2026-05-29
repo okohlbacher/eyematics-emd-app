@@ -1,5 +1,32 @@
 # Milestones
 
+## v1.12 Quality, Configurability & Analysis Depth (Shipped: 2026-05-29)
+
+**Phases completed:** 9 phases, 18 plans, 18 tasks
+
+**Key accomplishments:**
+
+- Audit actor fallback relabeled from 'anonymous' to 'unauthenticated' across middleware, schema DEFAULT, and view-open handler; regression tests enforce both unauthenticated and authenticated actor labels
+- Settings-backed clinical threshold accessors via shared/thresholdConfig.ts, extended AppSettings + settings.yaml, server getThresholdSettings, and PUT schema validation for thresholds/plausibility (CFG-01/02/03).
+- Added Clinical thresholds and Plausibility ranges admin form sections to SettingsPage, wired to shared validators and updateSettings, with full DE/EN i18n coverage (CFG-01, CFG-02).
+- Server aggregation now injects operator-configured applyFilters options (therapyInterrupterDays, therapyBreakerDays, crtImplausibleThresholdUm) from settings.yaml at request time, with threshold values keyed in the aggregate cache, closing the F-01 parity gap (CFG-03).
+- Server now owns SavedSearch provenance (crypto.randomUUID + ISO timestamp) and sanitizes incoming filters through a shared wire-form whitelist before persistence, eliminating client-spoofing and arbitrary-object-injection surfaces
+- Per-cohort quality-parameter selection (six check keys) persists with SavedSearch through the F-13 sanitized path; old records back-compat via tri-state undefined=all/[]=none/subset
+- QualityPage can scope the review to a selected cohort/subcohort (via applyFilters) and honor that cohort's qualityParams (resolveQualityParams; fallback all when absent). Live Phase 39 thresholds reused unchanged.
+- Chip-style multi-select center filter replacing single-select dropdown in QualityPage, locked with server no-escalation intersection test and shared for Phase 42 reuse
+- Time-range state on QualityPage drives Grundgesamtheit denominator + all counts via case-level inclusion test; SummaryCards now show "N / total" sublabel for always-visible absolute counts.
+- Per-flag status selects (open/acknowledged/resolved) duplicated into the QualityCaseDetail header card so reviewers reach approve/flag controls without scrolling past the full values table.
+- Per-cohort palette-colored labels and legend on interval histogram and responder view in cross-cohort compare mode, using COHORT_PALETTES consistent with Visus/CRT panels.
+- Per-cohort palette-colored comparison of diagnosis distribution (small-multiple pies) and age-vs-Visus scatter in the Aggregated tab, using COHORT_PALETTES consistent with the Trajectories compare plots.
+- `summarizeCohortFilter` helper + `displayCohortName` memo in AnalysisPage showing "Gefilterte Kohorte [· summary]" or a ?name= value on direct ?filters= deep-links
+- i18n-driven CRT/Visus/interpolation labels with explicit Y-axis tick counts and plot-adjacent responder info affordance.
+- Recharts scatter points in trajectory panels now navigate to the corresponding case detail via a pseudonym-to-case-id IDOR-gated lookup within the user's authorized cohort.
+- Mechanical extraction of 1,176-line auth monolith into five focused modules (authHelpers + loginApi + userAdminApi + totpApi + sessionApi) mounted by a 34-line thin aggregator — strictly behavior-preserving.
+- Mechanical extraction of 785-line OutcomesView god-component into useOutcomesRouteState hook + useOutcomesAggregation hook + VisusMetricContainer + CrtMetricContainer, leaving a 240-line slim orchestrator — strictly behavior-preserving with all 1086 tests green.
+- fcf756d
+
+---
+
 ## v1.11 — UAT Fixes, Data Completeness & Quality Closure (Shipped: 2026-05-24)
 
 **Phases completed:** 5 phases (32–36), 16 plans

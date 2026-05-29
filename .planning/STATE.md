@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: — Quality, Configurability & Analysis Depth
-status: completed
-last_updated: "2026-05-25T23:43:08.353Z"
-last_activity: 2026-05-25
+status: Awaiting next milestone
+last_updated: "2026-05-29T15:27:37.795Z"
+last_activity: 2026-05-29 — Milestone v1.12 completed and archived
 progress:
   total_phases: 9
   completed_phases: 7
   total_plans: 18
-  completed_plans: 19
+  completed_plans: 20
   percent: 78
 ---
 
@@ -24,12 +24,10 @@ See: .planning/PROJECT.md (updated 2026-05-25 for v1.12)
 
 ## Current Position
 
-Phase: 45
-Plan: Not started
-Status: Phase 43 Plan 03 complete — FALL-011 cohort reference overlay on case Visus/CRT trajectory
-Last activity: 2026-05-25
-
-**Progress:** [██████████] 100%
+Phase: Milestone v1.12 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-05-29 — Milestone v1.12 completed and archived
 
 ## Milestones Shipped
 
@@ -128,7 +126,7 @@ Last activity: 2026-05-25
 
 ## Operator Next Steps
 
-- Phase 38 Plan 01 complete. Continue with next Phase 38 plan or advance to Phase 39.
+- Start the next milestone with /gsd-new-milestone
 
 ## Performance Metrics
 
