@@ -18,12 +18,13 @@ result: [pending]
 
 ### 2. Time-filtered Grundgesamtheit (QUAL-022, Phase 41)
 expected: Changing the time-range filter on the Datenqualität page shrinks/expands the Grundgesamtheit (population denominator) and summary counts accordingly.
-result: [pending]
+result: [pending] — + OPEN QUESTION (Q2)
+note: The filter scopes WHICH cases count toward Grundgesamtheit (cases active in the window); per-case anomaly assessment still uses each case's full visit history (safer clinical default). Open question for you: should anomaly detection itself be restricted to the windowed visits? See v1.12-DEV-RESPONSE-TO-UAT.md Q2.
 
 ### 3. Absolute counts discoverable (QUAL-023, Phase 41 + 45 fix)
 expected: Absolute counts (not just %) are clearly visible on BOTH quality pages (population label + count/total).
 result: FIXED (code) — pending visual confirm
-note: Root cause found — the **Dokumentationsqualität** page (DocQualityPage) only showed % prominently (absolute count was a 10px footnote). Fixed in Phase 45: added a prominent "Grundgesamtheit" population label + made MetricCard's patient count prominent (`fcf756d`). The **Datenqualität** page already had it (Phase 41). Both surfaces now covered, so the "which page" question is moot. Please confirm visually.
+note: Root cause found — the **Dokumentationsqualität** page (DocQualityPage) only showed % prominently (absolute count was a 10px footnote). Fixed in Phase 45: added a prominent "Grundgesamtheit" population label + made MetricCard's patient count prominent (`fcf756d`). The **Datenqualität** page already had it (Phase 41). Adversarial review (2026-05-28) further fixed a double-count: Grundgesamtheit now counts DISTINCT patients, not summed per-center case counts (`73caca0`). Both surfaces covered. Please confirm visually.
 
 ### 4. Approve/flag control placement (QUAL-025, Phase 41)
 expected: The approve/flag-status control is reachable near the top of the quality case detail, above the full patient values table (no long scroll).
@@ -34,9 +35,10 @@ expected: Single-clicking a data point in a "Verläufe" trajectory plot navigate
 result: BUG FOUND + FIXED (code) — pending final visual confirm
 note: In-app UAT revealed the scatter drill-down points were invisible and unclickable — Recharts v3 collapses <Scatter> symbols to zero size without a ZAxis range. Fixed by adding `<ZAxis range={[64,64]}>` (OutcomesPanel.tsx). Please confirm points are now visible and clicking one opens the case detail.
 
-### 6. Cohort reference overlay (FALL-011, Phase 43)
+### 6. Cohort reference overlay (FALL-011, Phase 43 + 45 adversarial fix)
 expected: The optional toggle in case detail overlays the cohort median line + IQR band on the Visus/CRT trajectory, with correct date alignment and clean rendering.
-result: [pending]
+result: BUG FOUND + FIXED (code) — pending visual confirm
+note: Adversarial review (2026-05-28) found the overlay rendered NOTHING on real data — it (a) included the index patient in its own reference band and (b) matched cohort data by exact calendar date. Fixed (`b65ffc7`): index patient excluded + cohort aggregated by month so the band/median actually render. Please toggle it on and confirm the band appears.
 
 ### 7. Chart label clarity (FALL-012, Phase 43)
 expected: CRT legend reads "CRT (µm)"; Visus axis "Visus (Dezimal, bestkorrigiert)"; interpolation legend "Offener Kreis = interpolierter Wert (keine Messung)" — all self-explanatory.
