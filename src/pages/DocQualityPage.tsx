@@ -77,6 +77,16 @@ export default function DocQualityPage() {
     [centerMetrics]
   );
 
+  // QUAL-023 / WR-02: distinct-patient population. Per-center metric.patientCount
+  // is a CASE count, so summing it across centers double-counts patients seen at
+  // multiple sites (and counts two cases of one patient as two). Dedupe by patient
+  // identity (pseudonym) so "Grundgesamtheit" reflects unique patients, not cases.
+  // 0-safe: empty cases → Set size 0.
+  const distinctPatientCount = useMemo(
+    () => new Set(cases.map((c) => c.pseudonym)).size,
+    [cases]
+  );
+
   const detailMetrics = useMemo(
     () =>
       selectedCenter === 'all'
@@ -188,7 +198,7 @@ export default function DocQualityPage() {
       {selectedCenter === 'all' && centerMetrics.length > 0 && (
         <p className="text-sm text-gray-500 dark:text-gray-400">
           <span className="font-medium text-gray-700 dark:text-gray-300">{t('qualityPopulationLabel')}:</span>{' '}
-          {centerMetrics.reduce((s, m) => s + m.patientCount, 0)}
+          {distinctPatientCount}
         </p>
       )}
 
@@ -199,25 +209,25 @@ export default function DocQualityPage() {
             label={t('docQualityCompleteness')}
             score={average(centerMetrics, 'completeness')}
             description={t('docQualityCompletenessAvg')}
-            patientCount={centerMetrics.reduce((s, m) => s + m.patientCount, 0)}
+            patientCount={distinctPatientCount}
           />
           <MetricCard
             label={t('docQualityDataCompleteness')}
             score={average(centerMetrics, 'dataCompleteness')}
             description={t('docQualityDataCompletenessAvg')}
-            patientCount={centerMetrics.reduce((s, m) => s + m.patientCount, 0)}
+            patientCount={distinctPatientCount}
           />
           <MetricCard
             label={t('docQualityPlausibility')}
             score={average(centerMetrics, 'plausibility')}
             description={t('docQualityPlausibilityAvg')}
-            patientCount={centerMetrics.reduce((s, m) => s + m.patientCount, 0)}
+            patientCount={distinctPatientCount}
           />
           <MetricCard
             label={t('docQualityOverall')}
             score={average(centerMetrics, 'overall')}
             description={t('docQualityOverallAvg')}
-            patientCount={centerMetrics.reduce((s, m) => s + m.patientCount, 0)}
+            patientCount={distinctPatientCount}
           />
         </div>
       )}
