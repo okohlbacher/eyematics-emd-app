@@ -153,6 +153,24 @@ function tryParseJson(str: string): unknown {
   }
 }
 
+/**
+ * AUDIT-02 / WR-06: sanitize an untrusted attempted-username before it becomes
+ * the audit actor. Strips control / non-printable characters (C0 + C1 controls,
+ * DEL, line/paragraph separators) to prevent log-injection (forged newlines) and
+ * display corruption, then trims surrounding whitespace and caps length at 64.
+ *
+ * Returns '' when nothing printable remains, so callers can fall back to
+ * 'unauthenticated'. The "attacker can supply another user's name on a failed
+ * attempt" behaviour is BY DESIGN (it is the *attempted* username) — only the
+ * characters are sanitized, not the value semantics.
+ */
+function sanitizeActor(raw: string): string {
+  return raw
+    .replace(/[\p{Cc}\p{Zl}\p{Zp}]/gu, '')
+    .trim()
+    .slice(0, 64);
+}
+
 // ---------------------------------------------------------------------------
 // Middleware
 // ---------------------------------------------------------------------------
@@ -203,8 +221,15 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
     let user = req.auth?.preferred_username;
     if (!user && LOGIN_ACTOR_PATHS.has(urlPath)) {
       const attempted = (req.body as { username?: unknown } | undefined)?.username;
-      if (typeof attempted === 'string' && attempted.trim()) {
-        user = attempted.trim().slice(0, 64);
+      if (typeof attempted === 'string') {
+        // WR-06: the actor here is the ATTEMPTED (untrusted) username from the
+        // request body, recorded so the audit log shows WHO was targeted on a
+        // failed login (brute-force visibility). Strip non-printable/control
+        // characters (C0/C1 controls, DEL, line/paragraph separators) BEFORE
+        // trimming + length-capping, so newlines/control bytes cannot inject
+        // forged lines or corrupt the audit display. Length bound curbs abuse.
+        const sanitized = sanitizeActor(attempted);
+        if (sanitized) user = sanitized;
       }
     }
     user = user ?? 'unauthenticated';

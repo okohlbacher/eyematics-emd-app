@@ -196,6 +196,36 @@ describe('auditMiddleware', () => {
     expect(JSON.stringify(loggedEntries[0].body)).not.toContain('"y"');
   });
 
+  // WR-06: control characters / newlines in the attempted username must be
+  // stripped before it is stored as the audit actor (log-injection hardening).
+  it('strips control chars and newlines from the attempted username actor (WR-06)', () => {
+    const req = mockReq({
+      originalUrl: '/api/auth/login',
+      method: 'POST',
+      auth: undefined,
+      body: { username: 'ad\nmin\t', password: 'y' },
+    });
+    const res = mockRes();
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    // newline + tab removed → contiguous printable run, no injected line break
+    expect(loggedEntries[0].user).toBe('admin');
+    expect(loggedEntries[0].user).not.toContain('\n');
+  });
+
+  it('falls back to unauthenticated when attempted username is only control chars (WR-06)', () => {
+    const req = mockReq({
+      originalUrl: '/api/auth/login',
+      method: 'POST',
+      auth: undefined,
+      body: { username: '\n\t ', password: 'y' },
+    });
+    const res = mockRes();
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries[0].user).toBe('unauthenticated');
+  });
+
   it('falls back to unauthenticated on /api/auth/login with no username', () => {
     const req = mockReq({ originalUrl: '/api/auth/login', method: 'POST', auth: undefined, body: { password: 'y' } });
     const res = mockRes();
