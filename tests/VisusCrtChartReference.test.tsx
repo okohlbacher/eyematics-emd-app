@@ -61,15 +61,16 @@ const t = (key: TranslationKey) => key;
 describe('useCaseData — FALL-011 cohortReference', () => {
   afterEach(() => cleanup());
 
-  it('returns visusMedian = median of cohort values on a shared date', async () => {
+  it('computes visus median/IQR from PEER cohort only (index patient excluded — WR-04)', async () => {
     const { useCaseData } = await import('../src/hooks/useCaseData');
 
-    // Case under review has one visus measurement on 2024-01-15
+    // Case under review has one visus measurement on 2024-01-15 (value 0.5).
+    // It must NOT contribute to the cohort band (peer comparison).
     const patientCase = makeCase('C1', [
       makeObs(LOINC_VISUS, '2024-01-15', 0.5),
     ]);
 
-    // Two other cohort cases with visus on same date
+    // Two peer cohort cases in the same month.
     const cohortCase2 = makeCase('C2', [makeObs(LOINC_VISUS, '2024-01-15', 0.3)]);
     const cohortCase3 = makeCase('C3', [makeObs(LOINC_VISUS, '2024-01-15', 0.7)]);
 
@@ -83,15 +84,61 @@ describe('useCaseData — FALL-011 cohortReference', () => {
 
     const point = ref.find((p) => p.date === '2024-01-15');
     expect(point).not.toBeUndefined();
-    // Median of [0.3, 0.5, 0.7] = 0.5
-    expect(point!.visusMedian).toBeCloseTo(0.5, 5);
-    // p25 of [0.3, 0.5, 0.7]
+    // Peer values only = [0.3, 0.7]; the index 0.5 is excluded. Nearest-rank
+    // median (idx floor(0.5*2)=1) = 0.7. The key assertion is exclusion:
+    // a band that included 0.5 would yield a median of 0.5 — it must not.
+    expect(point!.visusMedian).not.toBeCloseTo(0.5, 5);
     expect(typeof point!.visusP25).toBe('number');
-    // p75 of [0.3, 0.5, 0.7]
     expect(typeof point!.visusP75).toBe('number');
     // p25 <= median <= p75
     expect(point!.visusP25!).toBeLessThanOrEqual(point!.visusMedian!);
     expect(point!.visusP75!).toBeGreaterThanOrEqual(point!.visusMedian!);
+  });
+
+  it('aligns by month bin — produces a reference point with NO exact-day match (WR-05)', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+
+    // Index patient visits on 2024-01-05.
+    const patientCase = makeCase('C1', [
+      makeObs(LOINC_VISUS, '2024-01-05', 0.5),
+      makeObs(LOINC_CRT, '2024-01-05', 300),
+    ]);
+    // Peers measured the SAME MONTH but on different days — no exact-day collision.
+    const cohortCase2 = makeCase('C2', [
+      makeObs(LOINC_VISUS, '2024-01-20', 0.3),
+      makeObs(LOINC_CRT, '2024-01-22', 280),
+    ]);
+    const cohortCase3 = makeCase('C3', [
+      makeObs(LOINC_VISUS, '2024-01-28', 0.7),
+      makeObs(LOINC_CRT, '2024-01-11', 360),
+    ]);
+    const cases = [patientCase, cohortCase2, cohortCase3];
+
+    const { result } = renderHook(() => useCaseData(patientCase, cases, 'de', t));
+
+    const ref = result.current.cohortReference;
+    // Exact-day keying would have produced ZERO points here. Month bins must
+    // produce at least one, keyed to the patient's date.
+    expect(ref.length).toBeGreaterThanOrEqual(1);
+    const point = ref.find((p) => p.date === '2024-01-05');
+    expect(point).not.toBeUndefined();
+    expect(typeof point!.visusMedian).toBe('number');
+    expect(typeof point!.crtMedian).toBe('number');
+  });
+
+  it('emits no reference when the only same-month measurements belong to the index patient (WR-04)', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+
+    // Patient has data in 2024-03; peer has data only in a different month.
+    const patientCase = makeCase('C1', [makeObs(LOINC_VISUS, '2024-03-01', 0.4)]);
+    const cohortCase2 = makeCase('C2', [makeObs(LOINC_VISUS, '2024-09-15', 0.3)]);
+    const cases = [patientCase, cohortCase2];
+
+    const { result } = renderHook(() => useCaseData(patientCase, cases, 'de', t));
+
+    // No peer data in the patient's month → no self-referential band.
+    const point = result.current.cohortReference.find((p) => p.date === '2024-03-01');
+    expect(point).toBeUndefined();
   });
 
   it('leaves visusMedian undefined for dates with no cohort data', async () => {
@@ -129,8 +176,9 @@ describe('useCaseData — FALL-011 cohortReference', () => {
     const ref = result.current.cohortReference;
     const point = ref.find((p) => p.date === '2024-02-10');
     expect(point).not.toBeUndefined();
-    // Median of [280, 320, 360] = 320
-    expect(point!.crtMedian).toBeCloseTo(320, 0);
+    // Peer values only = [280, 360] (index 320 excluded — WR-04). A band that
+    // included the index would yield a median of 320; it must not.
+    expect(point!.crtMedian).not.toBeCloseTo(320, 0);
     expect(typeof point!.crtP25).toBe('number');
     expect(typeof point!.crtP75).toBe('number');
     expect(point!.crtP25!).toBeLessThanOrEqual(point!.crtMedian!);

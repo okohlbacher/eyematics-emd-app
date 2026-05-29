@@ -280,48 +280,59 @@ export function useCaseData(
     [iopObs],
   );
 
-  // FALL-011: date-aligned cohort median + IQR reference series.
-  // For each date in the current case's combinedData, gather all cohort visus/crt
-  // values on that date (across all cases, including the current case) and compute
-  // median / p25 / p75. Dates with no cohort observations are omitted.
+  // FALL-011: cohort median + IQR reference series, aligned to the patient's dates.
+  //
+  // WR-04: the index/current patient is EXCLUDED from the cohort buckets so the
+  //   band is a true peer comparison (a patient is never compared against a band
+  //   that includes itself).
+  // WR-05: cohort values are bucketed by MONTH ('YYYY-MM'), not exact day. Clinical
+  //   visit dates rarely collide to the day across patients, so exact-date keying
+  //   produced an empty overlay on realistic data. Each patient date now resolves
+  //   its reference from the matching month bin, so the band/median render across
+  //   the chart's date x-domain whenever the cohort has measurements in the
+  //   patient's month span — even with no exact-day matches.
   const cohortReference = useMemo((): CohortReferencePoint[] => {
     if (!combinedData.length || !cases.length) return [];
 
-    // Build per-date buckets from the full cohort (all cases, including the current case).
-    const visusByDate = new Map<string, number[]>();
-    const crtByDate = new Map<string, number[]>();
+    // Build per-month buckets from the PEER cohort only (exclude the current case).
+    const visusByMonth = new Map<string, number[]>();
+    const crtByMonth = new Map<string, number[]>();
 
     for (const c of cases) {
+      if (patientCase && c.id === patientCase.id) continue; // WR-04: exclude index patient
       for (const o of getObservationsByCode(c.observations, LOINC_VISUS)) {
-        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
-        if (!d) continue;
+        const m = o.effectiveDateTime?.substring(0, 7) ?? ''; // YYYY-MM
+        if (!m) continue;
         const val = o.valueQuantity?.value;
         if (val == null) continue;
-        const bucket = visusByDate.get(d) ?? [];
+        const bucket = visusByMonth.get(m) ?? [];
         bucket.push(val);
-        visusByDate.set(d, bucket);
+        visusByMonth.set(m, bucket);
       }
       for (const o of getObservationsByCode(c.observations, LOINC_CRT)) {
-        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
-        if (!d) continue;
+        const m = o.effectiveDateTime?.substring(0, 7) ?? ''; // YYYY-MM
+        if (!m) continue;
         const val = o.valueQuantity?.value;
         if (val == null) continue;
-        const bucket = crtByDate.get(d) ?? [];
+        const bucket = crtByMonth.get(m) ?? [];
         bucket.push(val);
-        crtByDate.set(d, bucket);
+        crtByMonth.set(m, bucket);
       }
     }
 
     return combinedData
       .map((point): CohortReferencePoint | null => {
         const d = point.date;
-        const visusVals = visusByDate.get(d);
-        const crtVals = crtByDate.get(d);
+        const month = d.substring(0, 7); // YYYY-MM
+        const visusVals = visusByMonth.get(month);
+        const crtVals = crtByMonth.get(month);
 
         const hasVisus = visusVals && visusVals.length > 0;
         const hasCrt = crtVals && crtVals.length > 0;
         if (!hasVisus && !hasCrt) return null;
 
+        // Emit the reference keyed by the patient's exact date so the overlay
+        // series share the chart's category x-domain (dataKey="date").
         const ref: CohortReferencePoint = { date: d };
 
         if (hasVisus) {
@@ -340,7 +351,7 @@ export function useCaseData(
         return ref;
       })
       .filter((p): p is CohortReferencePoint => p !== null);
-  }, [combinedData, cases]);
+  }, [combinedData, cases, patientCase]);
 
   return {
     cohortAvgVisus,
