@@ -11,7 +11,7 @@
  * receives all state values as arguments rather than owning its own state, so call
  * order is preserved and there are no conditional hook calls.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useData } from '../../context/DataContext';
@@ -32,6 +32,22 @@ import {
 // ---------------------------------------------------------------------------
 // Metric types + constants (METRIC-04) — exported for tab strip + aggregation
 // ---------------------------------------------------------------------------
+
+// A6 (perf): above this distinct-patient count the per-patient line layer
+// defaults OFF (thousands of <Line> SVG nodes otherwise dominate render cost).
+// The toggle remains available as opt-in; an explicit user choice overrides the
+// derived default. Distinct pseudonyms — not case count — drives this since the
+// per-patient layer draws one line per patient.
+export const PER_PATIENT_DEFAULT_OFF_THRESHOLD = 100;
+
+/** Distinct-patient count for a cohort's cases (one pseudonym = one patient). */
+export function distinctPatientCount(cases: { pseudonym?: string }[]): number {
+  const set = new Set<string>();
+  for (const c of cases) {
+    if (typeof c.pseudonym === 'string' && c.pseudonym) set.add(c.pseudonym);
+  }
+  return set.size;
+}
 
 export type MetricType = 'visus' | 'crt' | 'interval' | 'responder';
 export const VALID_METRICS = new Set<MetricType>(['visus', 'crt', 'interval', 'responder']);
@@ -99,6 +115,27 @@ export function useOutcomesRouteState() {
   const [layers, setLayers] = useState<LayerState>({
     median: true, perPatient: true, scatter: true, spreadBand: true,
   });
+
+  // A6 (perf): tracks whether the user has explicitly toggled the per-patient
+  // layer. Once they have, the large-cohort default never overrides their choice.
+  const perPatientUserOverriddenRef = useRef(false);
+  // True when the large-cohort default forced perPatient OFF (drives the notice).
+  const [perPatientDefaultedOff, setPerPatientDefaultedOff] = useState(false);
+
+  // A6: a setLayers wrapper for the per-patient layer that records the explicit
+  // user override so the derived default no longer applies on later cohort changes.
+  const setLayersWithOverride = useCallback(
+    (updater: (L: LayerState) => LayerState) => {
+      setLayers((prev) => {
+        const next = updater(prev);
+        if (next.perPatient !== prev.perPatient) {
+          perPatientUserOverriddenRef.current = true;
+        }
+        return next;
+      });
+    },
+    [],
+  );
 
   // Phase 12 / AGG-03 / D-13 — server-side routing state.
   const [threshold, setThreshold] = useState<number>(1000);
@@ -179,6 +216,20 @@ export function useOutcomesRouteState() {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- derive-from-cohort-size on cohort change; cohort is async-loaded so lifting to useMemo would require parent reshuffle. Deferred.
       setLayers((L) => ({ ...L, scatter: false }));
     }
+  }, [cohort]);
+
+  // A6 (perf): default the per-patient layer OFF for large cohorts (>100 distinct
+  // patients) BEFORE aggregation/render — the server request and the panel render
+  // both key off layers.perPatient, so this derived default must land before they
+  // run (it does: this hook runs before useOutcomesAggregation, and the effect's
+  // setLayers schedules a re-render that re-evaluates aggregation with the new
+  // value). An explicit user toggle (perPatientUserOverriddenRef) wins permanently.
+  useEffect(() => {
+    if (!cohort) return;
+    if (perPatientUserOverriddenRef.current) return;
+    const large = distinctPatientCount(cohort.cases) > PER_PATIENT_DEFAULT_OFF_THRESHOLD;
+    setPerPatientDefaultedOff(large);
+    setLayers((L) => (L.perPatient === !large ? L : { ...L, perPatient: !large }));
   }, [cohort]);
 
   // Audit beacon (Phase 11 / CRREV-01) — fire-and-forget POST, once per mount.
@@ -317,6 +368,10 @@ export function useOutcomesRouteState() {
     spreadMode,
     layers,
     setLayers,
+    // A6: wrapper that records explicit user toggles (so the large-cohort default
+    // stops overriding); + flag for the "defaulted off" notice near the layer toggle.
+    setLayersWithOverride,
+    perPatientDefaultedOff,
     threshold,
     serverAggregate,
     setServerAggregate,

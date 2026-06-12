@@ -24,6 +24,8 @@ interface Props {
   setGridPoints: (v: number) => void;
   layers: LayerState;
   setLayers: (updater: (L: LayerState) => LayerState) => void;
+  /** A6: true when the per-patient layer default was forced off for a large cohort. */
+  perPatientDefaultedOff?: boolean;
   thresholdLetters: number;
   setThresholdLetters: (n: number) => void;
   patientCount: number;
@@ -55,6 +57,7 @@ export default function OutcomesSettingsDrawer({
   setGridPoints,
   layers,
   setLayers,
+  perPatientDefaultedOff = false,
   thresholdLetters,
   setThresholdLetters,
   patientCount,
@@ -196,6 +199,11 @@ export default function OutcomesSettingsDrawer({
               {isCrossMode && (
                 <p className="text-xs text-gray-500 italic mt-2" data-testid="perpatient-suppressed-note">
                   {t('outcomesComparePerPatientSuppressed')}
+                </p>
+              )}
+              {!isCrossMode && perPatientDefaultedOff && !layers.perPatient && (
+                <p className="text-xs text-gray-500 italic mt-2" data-testid="perpatient-large-cohort-note">
+                  {t('outcomesLayerPerPatientLargeCohort')}
                 </p>
               )}
               {patientCount > 30 && (

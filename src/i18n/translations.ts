@@ -738,6 +738,7 @@ const translations = {
   outcomesSectionLayers: { de: 'Anzeigeebenen', en: 'Display layers' },
   outcomesLayerMedian: { de: 'Median', en: 'Median' },
   outcomesLayerPerPatient: { de: 'Individuelle Kurven', en: 'Per-patient curves' },
+  outcomesLayerPerPatientLargeCohort: { de: 'Einzelverläufe bei großen Kohorten standardmäßig ausgeblendet', en: 'Per-patient curves hidden by default for large cohorts' },
   outcomesLayerScatter: { de: 'Streupunkte', en: 'Scatter' },
   outcomesLayerSpreadBand: { de: 'Streuband (IQR)', en: 'Spread band (IQR)' },
   outcomesSettingsScatterAdvisory: { de: 'Streupunkte bei Kohorten > 30 Patient:innen standardmäßig aus (Performance)', en: 'Scatter disabled by default for cohorts > 30 patients (performance)' },

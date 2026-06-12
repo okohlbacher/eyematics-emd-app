@@ -2,7 +2,7 @@
 // Phase 22 shim candidate by 22-RESEARCH but per D-15 (reality check) it is
 // not a dedup target — this file holds chart rendering logic. No action
 // required beyond this disposition comment.
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import type { ScatterPointItem } from 'recharts';
 import {
   Area,
@@ -112,6 +112,30 @@ export default function OutcomesPanel({
   // every render. The chart onClick then navigates to ref.current. This is the
   // exact pipeline the tester can see working (the tooltip shows the pseudonym).
   const activePatientIdRef = useRef<string | null>(null);
+
+  // A6 (perf): memoize per-patient <Line> data arrays. These were rebuilt inline
+  // inside the render .map() on EVERY render, producing fresh object identities
+  // that defeat Recharts' internal series memoization (it re-diffs every series on
+  // each render). With ~200 patients × up to 6 panels this dominated render cost.
+  // Keying the memo on panel.patients (stable across renders that don't change the
+  // cohort) lets Recharts skip unchanged series. id/sparse are hoisted out so the
+  // consuming <Line> keeps its stable key + opacity without rebuilding the array.
+  // MUST sit above the early return below to satisfy Rules of Hooks (WR-01).
+  const perPatientSeries = useMemo(
+    () =>
+      panel.patients
+        .filter((p) => !p.excluded && p.measurements.length >= 2)
+        .map((p) => ({
+          id: p.id,
+          sparse: p.sparse,
+          data: p.measurements.map((m) => ({
+            ...m,
+            __series: 'perPatient' as const,
+            pseudonym: p.pseudonym,
+          })),
+        })),
+    [panel.patients],
+  );
   const chartColors = {
     grid:         isDark ? '#374151' : '#e5e7eb', // gray-700 / gray-200
     axisTick:     isDark ? '#9ca3af' : '#6b7280', // gray-400 / gray-500
@@ -307,16 +331,10 @@ export default function OutcomesPanel({
           )}
 
           {!isCrossMode && layers.perPatient &&
-            panel.patients
-              .filter((p) => !p.excluded && p.measurements.length >= 2)
-              .map((p) => (
+            perPatientSeries.map((p) => (
                 <Line
                   key={p.id}
-                  data={p.measurements.map((m) => ({
-                    ...m,
-                    __series: 'perPatient' as const,
-                    pseudonym: p.pseudonym,
-                  }))}
+                  data={p.data}
                   dataKey="y"
                   type="linear"
                   stroke={SERIES_STYLES.perPatient.color}
