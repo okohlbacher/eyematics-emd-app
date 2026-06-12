@@ -22,13 +22,34 @@ vi.mock('recharts', async (importOriginal) => {
         <svg>{children}</svg>
       </div>
     ),
-    ComposedChart: ({ children }: { children: any }) => (
-      <g data-testid="recharts-composed-chart">{children}</g>
+    // Extended mock: exposes chart-level onClick as a data-* flag and an
+    // imperatively-invokable click handler so A1 v2 (controlled-tooltip ref) can
+    // be exercised. Recharts 3.8.1 passes a MouseHandlerDataParam (no activePayload),
+    // so we invoke onClick with an empty object to match real behavior.
+    ComposedChart: ({ children, onClick }: { children: any; onClick?: (e: any) => void }) => (
+      <g
+        data-testid="recharts-composed-chart"
+        data-has-chart-onclick={onClick ? 'true' : 'false'}
+        onClick={() => {
+          if (onClick) onClick({});
+        }}
+      >
+        {children}
+      </g>
     ),
     CartesianGrid: () => null,
     XAxis: () => null,
     YAxis: () => null,
-    Tooltip: () => null,
+    // Extended mock: renders the Tooltip `content` (a function in A1 v2) so its
+    // ref-capturing side effect runs. We expose a control to drive the active
+    // payload via data attributes set by the test through a global hook.
+    Tooltip: ({ content }: { content?: any }) => {
+      if (typeof content !== 'function') return null;
+      const state = (globalThis as any).__tooltipState ?? { active: false, payload: [] };
+      // Render the content function output (also triggers the ref side effect).
+      const node = content(state);
+      return <div data-testid="recharts-tooltip">{node}</div>;
+    },
     Legend: () => null,
     ReferenceLine: () => null,
     Area: ({ fill, stroke, legendType }: any) => (
@@ -186,6 +207,99 @@ describe('OutcomesPanel — onPointClick (FALL-010)', () => {
     const img = screen.getByRole('img');
     const label = img.getAttribute('aria-label') ?? '';
     expect(label).toContain('outcomesDrillDownHint');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 1b (A1 v2): chart-level onClick + controlled-tooltip ref navigation
+// ---------------------------------------------------------------------------
+
+describe('OutcomesPanel — chart-level onClick + tooltip ref (FALL-010 A1 v2)', () => {
+  afterEach(() => {
+    cleanup();
+    delete (globalThis as any).__tooltipState;
+  });
+
+  it('wires chart-level onClick when onPointClick is provided', () => {
+    const onPointClick = vi.fn();
+    const { container } = render(
+      <OutcomesPanel
+        {...defaultProps}
+        panel={buildPanelWithScatter()}
+        onPointClick={onPointClick}
+      />,
+    );
+    const chart = container.querySelector('[data-testid="recharts-composed-chart"]');
+    expect(chart).not.toBeNull();
+    expect(chart!.getAttribute('data-has-chart-onclick')).toBe('true');
+  });
+
+  it('does NOT wire chart-level onClick when onPointClick is absent', () => {
+    const { container } = render(
+      <OutcomesPanel
+        {...defaultProps}
+        panel={buildPanelWithScatter()}
+      />,
+    );
+    const chart = container.querySelector('[data-testid="recharts-composed-chart"]');
+    expect(chart).not.toBeNull();
+    expect(chart!.getAttribute('data-has-chart-onclick')).toBe('false');
+  });
+
+  it('navigates via ref when tooltip has an active scatter payload, then chart is clicked', () => {
+    const onPointClick = vi.fn();
+    // Simulate the tooltip pipeline reporting an active scatter point.
+    (globalThis as any).__tooltipState = {
+      active: true,
+      payload: [
+        // A median entry (no patientId) followed by the scatter entry.
+        { payload: { x: 10, y: 0.3 } },
+        { payload: { x: 10, y: 0.5, patientId: 'PSN-2' } },
+      ],
+    };
+    const { container } = render(
+      <OutcomesPanel
+        {...defaultProps}
+        panel={buildPanelWithScatter()}
+        onPointClick={onPointClick}
+      />,
+    );
+    const chart = container.querySelector('[data-testid="recharts-composed-chart"]');
+    chart!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(onPointClick).toHaveBeenCalledWith('PSN-2');
+  });
+
+  it('does NOT navigate on chart click when tooltip has no active scatter payload (empty ref)', () => {
+    const onPointClick = vi.fn();
+    (globalThis as any).__tooltipState = { active: false, payload: [] };
+    const { container } = render(
+      <OutcomesPanel
+        {...defaultProps}
+        panel={buildPanelWithScatter()}
+        onPointClick={onPointClick}
+      />,
+    );
+    const chart = container.querySelector('[data-testid="recharts-composed-chart"]');
+    chart!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(onPointClick).not.toHaveBeenCalled();
+  });
+
+  it('does NOT navigate when active payload has only non-scatter entries (no patientId)', () => {
+    const onPointClick = vi.fn();
+    (globalThis as any).__tooltipState = {
+      active: true,
+      payload: [{ payload: { x: 10, y: 0.3, n: 2 } }],
+    };
+    const { container } = render(
+      <OutcomesPanel
+        {...defaultProps}
+        panel={buildPanelWithScatter()}
+        onPointClick={onPointClick}
+      />,
+    );
+    const chart = container.querySelector('[data-testid="recharts-composed-chart"]');
+    chart!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(onPointClick).not.toHaveBeenCalled();
   });
 });
 

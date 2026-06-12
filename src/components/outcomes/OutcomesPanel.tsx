@@ -2,6 +2,7 @@
 // Phase 22 shim candidate by 22-RESEARCH but per D-15 (reality check) it is
 // not a dedup target — this file holds chart rendering logic. No action
 // required beyond this disposition comment.
+import { useRef } from 'react';
 import type { ScatterPointItem } from 'recharts';
 import {
   Area,
@@ -100,6 +101,17 @@ export default function OutcomesPanel({
 }: Props) {
   const { effectiveTheme } = useThemeSafe();
   const isDark = effectiveTheme === 'dark';
+
+  // FALL-010 (A1 v2): controlled-tooltip ref for drill-down navigation.
+  //
+  // Recharts 3.8.1 chart-level onClick receives MouseHandlerDataParam
+  // (activeIndex/activeLabel/activeCoordinate/...) WITHOUT an activePayload, so
+  // the click event itself cannot tell us which scatter point was hit. Instead we
+  // tap the SAME nearest-point pipeline that drives the visible tooltip: the custom
+  // Tooltip content stashes the active scatter entry's patientId into this ref on
+  // every render. The chart onClick then navigates to ref.current. This is the
+  // exact pipeline the tester can see working (the tooltip shows the pseudonym).
+  const activePatientIdRef = useRef<string | null>(null);
   const chartColors = {
     grid:         isDark ? '#374151' : '#e5e7eb', // gray-700 / gray-200
     axisTick:     isDark ? '#9ca3af' : '#6b7280', // gray-400 / gray-500
@@ -203,7 +215,22 @@ export default function OutcomesPanel({
       />
 
       <ResponsiveContainer width="100%" height={320}>
-        <ComposedChart data={panel.medianGrid}>
+        <ComposedChart
+          data={panel.medianGrid}
+          {...(onPointClick
+            ? {
+                // FALL-010 (A1 v2): chart-level click navigates to the patientId the
+                // controlled tooltip last stashed. Recharts 3.8.1 does not pass an
+                // activePayload here, so we read it from activePatientIdRef. A click
+                // with no active scatter point (empty plot area) leaves the ref null
+                // → no-op.
+                onClick: () => {
+                  const patientId = activePatientIdRef.current;
+                  if (patientId) onPointClick(patientId);
+                },
+              }
+            : {})}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
           {/* FALL-010 fix: Recharts v3 collapses <Scatter> symbols to zero size unless a
               ZAxis range is present, leaving the drill-down points invisible and unclickable.
@@ -229,16 +256,36 @@ export default function OutcomesPanel({
           />
           <YAxis tickCount={5} tick={{ fontSize: 11, fill: chartColors.axisTick }} stroke={chartColors.grid} domain={yDomain(yMetric, panel.medianGrid, metric)} />
           <Tooltip
-            content={
-              <OutcomesTooltip
-                yMetric={yMetric}
-                axisMode={axisMode}
-                layers={layers}
-                t={t}
-                locale={locale}
-                valueLabelKey={valueLabelKey}
-              />
-            }
+            content={(props: { active?: boolean; payload?: ReadonlyArray<{ payload?: Record<string, unknown> }> }) => {
+              // FALL-010 (A1 v2): on every tooltip render, capture the active scatter
+              // entry's patientId into the ref so the chart-level onClick can navigate.
+              // The scatter payload entries carry `patientId`; median/per-patient entries
+              // do not. When no scatter entry is active (tooltip off, or hovering a
+              // non-scatter series), reset to null so a click becomes a no-op.
+              if (onPointClick) {
+                const scatterEntry = props.active && Array.isArray(props.payload)
+                  ? props.payload.find(
+                      (e) => typeof e?.payload?.patientId === 'string',
+                    )
+                  : undefined;
+                activePatientIdRef.current = scatterEntry
+                  ? (scatterEntry.payload!.patientId as string)
+                  : null;
+              }
+              // Preserve the existing tooltip visual output unchanged.
+              return (
+                <OutcomesTooltip
+                  active={props.active}
+                  payload={props.payload as never}
+                  yMetric={yMetric}
+                  axisMode={axisMode}
+                  layers={layers}
+                  t={t}
+                  locale={locale}
+                  valueLabelKey={valueLabelKey}
+                />
+              );
+            }}
             contentStyle={{ backgroundColor: chartColors.tooltipBg, color: chartColors.tooltipText, border: `1px solid ${chartColors.tooltipBorder}` }}
             labelStyle={{ color: chartColors.tooltipText }}
             itemStyle={{ color: chartColors.tooltipText }}
@@ -285,6 +332,26 @@ export default function OutcomesPanel({
                 />
               ))}
 
+          {!isCrossMode && layers.median && (
+            <Line
+              data={panel.medianGrid}
+              dataKey="y"
+              type="linear"
+              stroke={seriesColor}
+              strokeWidth={SERIES_STYLES.median.strokeWidth}
+              dot={false}
+              isAnimationActive={false}
+              // Give the median line a human-readable legend label so the
+              // sole remaining legend chip reads "Median" instead of "y".
+              name={t('outcomesLayerMedian')}
+            />
+          )}
+
+          {/* FALL-010 (A1 v2): render Scatter AFTER the median/IQR series so the
+              drill-down points sit ON TOP of the median line (previously the median
+              <Line> rendered last and overlaid the tiny scatter symbols, stealing
+              clicks in-browser). The symbol-level onClick is kept as belt-and-braces
+              alongside the chart-level ref-mediated handler. */}
           {!isCrossMode && layers.scatter && (
             <Scatter
               data={panel.scatterPoints}
@@ -303,21 +370,6 @@ export default function OutcomesPanel({
                     },
                   }
                 : {})}
-            />
-          )}
-
-          {!isCrossMode && layers.median && (
-            <Line
-              data={panel.medianGrid}
-              dataKey="y"
-              type="linear"
-              stroke={seriesColor}
-              strokeWidth={SERIES_STYLES.median.strokeWidth}
-              dot={false}
-              isAnimationActive={false}
-              // Give the median line a human-readable legend label so the
-              // sole remaining legend chip reads "Median" instead of "y".
-              name={t('outcomesLayerMedian')}
             />
           )}
 
