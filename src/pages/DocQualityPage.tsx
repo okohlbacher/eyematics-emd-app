@@ -77,15 +77,17 @@ export default function DocQualityPage() {
     [centerMetrics]
   );
 
-  // QUAL-023 / WR-02: distinct-patient population. Per-center metric.patientCount
-  // is a CASE count, so summing it across centers double-counts patients seen at
-  // multiple sites (and counts two cases of one patient as two). Dedupe by patient
-  // identity (pseudonym) so "Grundgesamtheit" reflects unique patients, not cases.
+  // QUAL-023 / WR-02: distinct-patient population scoped to the selected time window.
+  // Semantics: Grundgesamtheit = distinct pseudonyms IN WINDOW.
+  // filterCasesByTimeRange drops cases with 0 observations in the window, so the
+  // resulting set represents only patients active in the chosen period.
+  // Per-center metric.patientCount = case count IN WINDOW (same filtering applied
+  // inside buildCenterMetrics via filterCasesByTimeRange).
   // 0-safe: empty cases → Set size 0.
-  const distinctPatientCount = useMemo(
-    () => new Set(cases.map((c) => c.pseudonym)).size,
-    [cases]
-  );
+  const distinctPatientCount = useMemo(() => {
+    const windowCases = filterCasesByTimeRange(cases, timeRange);
+    return new Set(windowCases.map((c) => c.pseudonym)).size;
+  }, [cases, timeRange]);
 
   const detailMetrics = useMemo(
     () =>

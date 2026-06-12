@@ -109,13 +109,23 @@ export function filterCasesByTimeRange(
   const cutoff = cutoffDate(range);
   if (!cutoff) return cases;
 
-  return cases.map((c) => {
-    const obs = c.observations.filter((o) => {
-      if (!o.effectiveDateTime) return false;
-      return new Date(o.effectiveDateTime) >= cutoff;
-    });
-    return { ...c, observations: obs };
-  });
+  // Trim observations to those within the window, then drop cases with zero
+  // observations remaining.
+  // Semantics:
+  //   - Grundgesamtheit = distinct pseudonyms IN WINDOW
+  //   - per-center patientCount = case count IN WINDOW (cases with ≥1 obs in window)
+  // Cases with observations only outside the window are excluded from metric
+  // computation and patientCount so that scores and denominators reflect the
+  // chosen time range rather than the full history.
+  return cases
+    .map((c) => {
+      const obs = c.observations.filter((o) => {
+        if (!o.effectiveDateTime) return false;
+        return new Date(o.effectiveDateTime) >= cutoff;
+      });
+      return { ...c, observations: obs };
+    })
+    .filter((c) => c.observations.length > 0);
 }
 
 export function computeMetrics(
