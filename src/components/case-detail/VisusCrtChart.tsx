@@ -3,7 +3,7 @@ import {
   CartesianGrid,
   Legend,
   Line,
-  LineChart,
+  ComposedChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -91,7 +91,11 @@ export default function VisusCrtChart({
         </p>
       )}
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={combinedData}>
+        {/* ComposedChart, not LineChart: Recharts 3.x only renders the chart type's
+            own graphical items — <Area> children inside <LineChart> produce no
+            geometry at all (live-browser verified), so the FALL-011 IQR bands
+            silently vanished. ComposedChart supports mixed Line+Area natively. */}
+        <ComposedChart data={combinedData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" tick={{ fontSize: 10 }} />
           <YAxis
@@ -263,7 +267,7 @@ export default function VisusCrtChart({
               />
             </>
           )}
-        </LineChart>
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );

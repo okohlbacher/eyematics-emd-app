@@ -277,6 +277,11 @@ vi.mock('recharts', async (importOriginal) => {
       </div>
     ),
 
+    // VisusCrtChart renders a ComposedChart (Recharts 3.x won't draw <Area>
+    // inside <LineChart>); keep LineChart stubbed too for other consumers.
+    ComposedChart: ({ children }: { children: any }) => (
+      <div data-testid="recharts-composed-chart">{children}</div>
+    ),
     LineChart: ({ children }: { children: any }) => (
       <g data-testid="recharts-line-chart">{children}</g>
     ),

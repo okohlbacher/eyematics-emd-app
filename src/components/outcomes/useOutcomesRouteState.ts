@@ -119,6 +119,11 @@ export function useOutcomesRouteState() {
   // A6 (perf): tracks whether the user has explicitly toggled the per-patient
   // layer. Once they have, the large-cohort default never overrides their choice.
   const perPatientUserOverriddenRef = useRef(false);
+  // FALL-010 (live-browser find): same pattern for the scatter layer — the D-37
+  // default-off effect below used to refire on every cohort identity change and
+  // instantly revert the user's toggle, making scatter impossible to enable for
+  // cohorts above the default threshold (and drill-down points unreachable).
+  const scatterUserOverriddenRef = useRef(false);
   // True when the large-cohort default forced perPatient OFF (drives the notice).
   const [perPatientDefaultedOff, setPerPatientDefaultedOff] = useState(false);
 
@@ -130,6 +135,9 @@ export function useOutcomesRouteState() {
         const next = updater(prev);
         if (next.perPatient !== prev.perPatient) {
           perPatientUserOverriddenRef.current = true;
+        }
+        if (next.scatter !== prev.scatter) {
+          scatterUserOverriddenRef.current = true;
         }
         return next;
       });
@@ -210,11 +218,14 @@ export function useOutcomesRouteState() {
     });
   }, [primaryCohortId]); // eslint-disable-line react-hooks/exhaustive-deps -- record/t/cohort are stable per primaryCohortId change
 
-  // D-37 default-scatter-off once cohort size known
+  // D-37 default-scatter-off once cohort size known. FALL-010: a derived
+  // DEFAULT, not a clamp — once the user explicitly toggles scatter, never
+  // override their choice again (mirrors the A6 perPatient override pattern).
   useEffect(() => {
+    if (scatterUserOverriddenRef.current) return;
     if (cohort && !defaultScatterOn(cohort.cases.length)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- derive-from-cohort-size on cohort change; cohort is async-loaded so lifting to useMemo would require parent reshuffle. Deferred.
-      setLayers((L) => ({ ...L, scatter: false }));
+      setLayers((L) => (L.scatter ? { ...L, scatter: false } : L));
     }
   }, [cohort]);
 

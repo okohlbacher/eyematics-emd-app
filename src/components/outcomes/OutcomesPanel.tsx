@@ -16,7 +16,6 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  ZAxis,
 } from 'recharts';
 
 import { useThemeSafe } from '../../context/ThemeContext';
@@ -256,11 +255,6 @@ export default function OutcomesPanel({
             : {})}
         >
           <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
-          {/* FALL-010 fix: Recharts v3 collapses <Scatter> symbols to zero size unless a
-              ZAxis range is present, leaving the drill-down points invisible and unclickable.
-              A constant range gives every symbol a uniform, visible, hittable size (~Recharts
-              default of 64 px²). No dataKey — scatterPoints carry no z dimension. */}
-          <ZAxis range={[64, 64]} />
           {yMetric !== 'absolute' && (
             <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="5 5" />
           )}
@@ -373,9 +367,29 @@ export default function OutcomesPanel({
           {!isCrossMode && layers.scatter && (
             <Scatter
               data={panel.scatterPoints}
+              // FALL-010 root cause (live-browser): without an explicit dataKey the
+              // Scatter never resolves its y coordinate (the YAxis carries no dataKey
+              // in this composed chart — the Lines each declare their own), so every
+              // symbol rendered with cx/cy=null, i.e. no geometry at all.
+              dataKey="y"
               fill={seriesColor}
               fillOpacity={SERIES_STYLES.scatter.fillOpacity}
               isAnimationActive={false}
+              // FALL-010 (live-browser verified): Recharts 3.8.1 renders EMPTY
+              // recharts-shape groups for Scatter even with a ZAxis range — the
+              // symbols never get geometry. An explicit shape bypasses the
+              // ZAxis/size mechanism entirely: always-visible r=4 circle with an
+              // oversized transparent r=10 hit halo for reliable clicking.
+              shape={(props: unknown) => {
+                const { cx, cy } = props as { cx?: number; cy?: number };
+                if (cx == null || cy == null) return <g />;
+                return (
+                  <g>
+                    <circle cx={cx} cy={cy} r={10} fill="transparent" />
+                    <circle cx={cx} cy={cy} r={4} fill={seriesColor} fillOpacity={SERIES_STYLES.scatter.fillOpacity} stroke={seriesColor} strokeWidth={1} />
+                  </g>
+                );
+              }}
               // Suppress legend chip — scatter points are an aggregate overlay.
               legendType="none"
               // FALL-010: drill-down — only wired when caller provides the callback.
