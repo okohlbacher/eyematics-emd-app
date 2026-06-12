@@ -187,6 +187,82 @@ describe('useCaseData — FALL-011 cohortReference', () => {
 });
 
 // ---------------------------------------------------------------------------
+// A4 v2: interpolation goes to SEPARATE keys (visusInterp/crtInterp), only
+// between measured neighbours, never onto .visus/.crt, and never leaks into
+// visusCrtScatter.
+// ---------------------------------------------------------------------------
+
+describe('useCaseData — A4 v2 interpolation (separate dataKeys)', () => {
+  afterEach(() => cleanup());
+
+  it('interpolates a between-neighbour gap onto visusInterp, not .visus', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+
+    // Visus measured on day 1 and day 3; CRT measured on day 2 (so a middle row
+    // exists with no visus measurement but measured visus neighbours on both sides).
+    const patientCase = makeCase('C1', [
+      makeObs(LOINC_VISUS, '2024-01-01', 0.4),
+      makeObs(LOINC_CRT, '2024-01-02', 300),
+      makeObs(LOINC_VISUS, '2024-01-03', 0.8),
+    ]);
+    const { result } = renderHook(() => useCaseData(patientCase, [patientCase], 'de', t));
+
+    const rows = result.current.combinedDataWithReference;
+    const mid = rows.find((r) => r.date === '2024-01-02')!;
+    // Interpolated value present on the SEPARATE key.
+    expect(mid.visusInterp).toBeCloseTo(0.6, 5); // midpoint of 0.4 and 0.8
+    // Real measurement key stays empty — no fabricated pair.
+    expect(mid.visus).toBeUndefined();
+    expect(result.current.hasInterpolatedPoints).toBe(true);
+  });
+
+  it('does NOT interpolate edge gaps (only one measured neighbour)', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+
+    // Visus only on the last day; CRT on the first two — the first two rows have
+    // no visus neighbour BEFORE them, so no interpolation.
+    const patientCase = makeCase('C1', [
+      makeObs(LOINC_CRT, '2024-01-01', 300),
+      makeObs(LOINC_CRT, '2024-01-02', 310),
+      makeObs(LOINC_VISUS, '2024-01-03', 0.8),
+    ]);
+    const { result } = renderHook(() => useCaseData(patientCase, [patientCase], 'de', t));
+
+    const rows = result.current.combinedDataWithReference;
+    expect(rows.find((r) => r.date === '2024-01-01')!.visusInterp).toBeUndefined();
+    expect(rows.find((r) => r.date === '2024-01-02')!.visusInterp).toBeUndefined();
+  });
+
+  it('keeps visusCrtScatter free of interpolated (fabricated) pairs', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+
+    const patientCase = makeCase('C1', [
+      makeObs(LOINC_VISUS, '2024-01-01', 0.4),
+      makeObs(LOINC_CRT, '2024-01-02', 300),
+      makeObs(LOINC_VISUS, '2024-01-03', 0.8),
+    ]);
+    const { result } = renderHook(() => useCaseData(patientCase, [patientCase], 'de', t));
+
+    // Only the rows where BOTH .visus and .crt are real measurements qualify —
+    // here that is zero rows. The interpolated middle row must NOT appear.
+    const scatter = result.current.visusCrtScatter;
+    expect(scatter.find((p) => p.date === '2024-01-02')).toBeUndefined();
+    expect(scatter.length).toBe(0);
+  });
+
+  it('sets hasInterpolatedPoints=false when there are no between-neighbour gaps', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+
+    const patientCase = makeCase('C1', [
+      makeObs(LOINC_VISUS, '2024-01-01', 0.4),
+      makeObs(LOINC_CRT, '2024-01-01', 300),
+    ]);
+    const { result } = renderHook(() => useCaseData(patientCase, [patientCase], 'de', t));
+    expect(result.current.hasInterpolatedPoints).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Task 2: VisusCrtChart renders reference overlay
 // ---------------------------------------------------------------------------
 
@@ -217,13 +293,14 @@ vi.mock('recharts', async (importOriginal) => {
 
     ReferenceLine: () => null,
 
-    Area: ({ fill, stroke, name, legendType }: any) => (
+    Area: ({ fill, stroke, name, legendType, dataKey }: any) => (
       <g
         data-testid="recharts-area"
         data-fill={fill}
         data-stroke={stroke}
         data-name={name ?? ''}
         data-legend-type={legendType ?? ''}
+        data-data-key={dataKey ?? ''}
       />
     ),
 
@@ -241,38 +318,44 @@ vi.mock('recharts', async (importOriginal) => {
 });
 
 import VisusCrtChart from '../src/components/case-detail/VisusCrtChart';
-import type { CohortReferencePoint } from '../src/hooks/useCaseData';
+import type { CombinedDataPoint } from '../src/hooks/useCaseData';
 
 const tStub = (key: TranslationKey): string => key;
 
-const combinedData = [
+// A3 v2: SINGLE merged data array — the cohort reference fields (median + the
+// [p25, p75] band tuples) live ON the patient rows. No separate cohortReference
+// prop / no per-series `data` prop.
+const mergedData: CombinedDataPoint[] = [
+  {
+    date: '2024-01-01',
+    visus: 0.5,
+    crt: 300,
+    visusMeasured: true,
+    crtMeasured: true,
+    visusMedian: 0.45,
+    visusBand: [0.3, 0.6],
+    crtMedian: 310,
+    crtBand: [280, 340],
+  },
+  {
+    date: '2024-02-01',
+    visus: 0.6,
+    crt: 280,
+    visusMeasured: true,
+    crtMeasured: true,
+    visusMedian: 0.48,
+    visusBand: [0.32, 0.62],
+    crtMedian: 305,
+    crtBand: [275, 335],
+  },
+];
+
+const plainData: CombinedDataPoint[] = [
   { date: '2024-01-01', visus: 0.5, crt: 300, visusMeasured: true, crtMeasured: true },
   { date: '2024-02-01', visus: 0.6, crt: 280, visusMeasured: true, crtMeasured: true },
 ];
 
-const cohortReference: CohortReferencePoint[] = [
-  {
-    date: '2024-01-01',
-    visusMedian: 0.45,
-    visusP25: 0.3,
-    visusP75: 0.6,
-    crtMedian: 310,
-    crtP25: 280,
-    crtP75: 340,
-  },
-  {
-    date: '2024-02-01',
-    visusMedian: 0.48,
-    visusP25: 0.32,
-    visusP75: 0.62,
-    crtMedian: 305,
-    crtP25: 275,
-    crtP75: 335,
-  },
-];
-
 const baseChartProps = {
-  combinedData,
   cohortAvgVisus: 0.5,
   cohortAvgCrt: 300,
   highlightDate: null,
@@ -282,69 +365,54 @@ const baseChartProps = {
   visusObs: [],
 };
 
-describe('VisusCrtChart — FALL-011 reference overlay', () => {
+describe('VisusCrtChart — FALL-011 reference overlay (A3 v2 merged single array)', () => {
   afterEach(() => cleanup());
 
-  it('renders cohort median lines when showCohortReference=true and cohortReference has data', () => {
+  it('renders cohort median lines reading from the merged row dataKeys', () => {
     const { container } = render(
-      <VisusCrtChart
-        {...baseChartProps}
-        showCohortReference={true}
-        cohortReference={cohortReference}
-      />,
+      <VisusCrtChart {...baseChartProps} combinedData={mergedData} showCohortReference={true} />,
     );
 
-    // There should be a Line with name "cohortReferenceMedian" (from t key) for visus
     const allLines = Array.from(container.querySelectorAll('[data-testid="recharts-line"]'));
-    const medianLine = allLines.find(
-      (el) => el.getAttribute('data-data-key') === 'visusMedian',
-    );
+    const medianLine = allLines.find((el) => el.getAttribute('data-data-key') === 'visusMedian');
     expect(medianLine).not.toBeNull();
   });
 
-  it('renders IQR band areas when showCohortReference=true', () => {
+  it('renders translucent range-Area IQR bands (visusBand/crtBand) — no white paint-over', () => {
     const { container } = render(
-      <VisusCrtChart
-        {...baseChartProps}
-        showCohortReference={true}
-        cohortReference={cohortReference}
-      />,
+      <VisusCrtChart {...baseChartProps} combinedData={mergedData} showCohortReference={true} />,
     );
 
-    const areas = container.querySelectorAll('[data-testid="recharts-area"]');
-    expect(areas.length).toBeGreaterThan(0);
+    const areas = Array.from(container.querySelectorAll('[data-testid="recharts-area"]'));
+    const bandKeys = areas.map((el) => el.getAttribute('data-data-key'));
+    expect(bandKeys).toContain('visusBand');
+    expect(bandKeys).toContain('crtBand');
+    // No Area should be a white (#ffffff) paint-over mask.
+    const whiteMask = areas.find((el) => el.getAttribute('data-fill') === '#ffffff');
+    expect(whiteMask).toBeUndefined();
   });
 
   it('does NOT render cohort median lines or IQR areas when showCohortReference=false', () => {
     const { container } = render(
-      <VisusCrtChart
-        {...baseChartProps}
-        showCohortReference={false}
-        cohortReference={cohortReference}
-      />,
+      <VisusCrtChart {...baseChartProps} combinedData={mergedData} showCohortReference={false} />,
     );
 
     const allLines = Array.from(container.querySelectorAll('[data-testid="recharts-line"]'));
-    const medianLine = allLines.find(
-      (el) => el.getAttribute('data-data-key') === 'visusMedian',
-    );
+    const medianLine = allLines.find((el) => el.getAttribute('data-data-key') === 'visusMedian');
     expect(medianLine).toBeUndefined();
 
     const areas = container.querySelectorAll('[data-testid="recharts-area"]');
     expect(areas.length).toBe(0);
   });
 
-  it('renders without crash when cohortReference is empty and showCohortReference=true', () => {
+  it('renders without crash + no overlay when rows carry no reference fields', () => {
     const { container } = render(
-      <VisusCrtChart
-        {...baseChartProps}
-        showCohortReference={true}
-        cohortReference={[]}
-      />,
+      <VisusCrtChart {...baseChartProps} combinedData={plainData} showCohortReference={true} />,
     );
-    // No crash; normal patient lines still render
+    // No band areas (no reference fields present), but patient lines still render.
+    const areas = container.querySelectorAll('[data-testid="recharts-area"]');
+    expect(areas.length).toBe(0);
     const lines = container.querySelectorAll('[data-testid="recharts-line"]');
-    // At least the two patient lines (visus, crt) should render
     expect(lines.length).toBeGreaterThanOrEqual(2);
   });
 });

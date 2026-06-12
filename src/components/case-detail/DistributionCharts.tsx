@@ -82,8 +82,8 @@ export default function DistributionCharts({
           <ResponsiveContainer width="100%" height={180}>
             <ScatterChart>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="visus" name="Visus" type="number" domain={[0, 1]} tickCount={5} tick={{ fontSize: 9 }} label={{ value: 'Visus', position: 'insideBottom', offset: -2, fontSize: 10 }} />
-              <YAxis dataKey="crt" name="CRT" unit=" \u00b5m" tickCount={5} tick={{ fontSize: 9 }} label={{ value: 'CRT (\u00b5m)', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} />
+              <XAxis dataKey="visus" name="Visus" type="number" domain={[0, 1]} tickCount={5} tick={{ fontSize: 9 }} label={{ value: t('scatterVisusAxisLabel'), position: 'insideBottom', offset: -2, fontSize: 10 }} />
+              <YAxis dataKey="crt" name="CRT" unit=" \u00b5m" tickCount={5} tick={{ fontSize: 9 }} label={{ value: t('scatterCrtAxisLabel'), angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} />
               <Tooltip
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;

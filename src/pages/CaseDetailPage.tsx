@@ -46,7 +46,8 @@ export default function CaseDetailPage() {
   const {
     cohortAvgVisus,
     cohortAvgCrt,
-    cohortReference,
+    combinedDataWithReference,
+    hasInterpolatedPoints,
     visusObs,
     crtObs,
     iopObs,
@@ -63,7 +64,6 @@ export default function CaseDetailPage() {
     eyeLaterality,
     diabetesCond,
     crtData,
-    combinedData,
     visusDistribution,
     crtDistribution,
     visusCrtScatter,
@@ -145,7 +145,7 @@ export default function CaseDetailPage() {
             </label>
           </div>
           <VisusCrtChart
-            combinedData={combinedData}
+            combinedData={combinedDataWithReference}
             cohortAvgVisus={cohortAvgVisus}
             cohortAvgCrt={cohortAvgCrt}
             highlightDate={highlightDate}
@@ -154,7 +154,7 @@ export default function CaseDetailPage() {
             t={t}
             visusObs={visusObs}
             showCohortReference={showCohortReference}
-            cohortReference={cohortReference}
+            hasInterpolatedPoints={hasInterpolatedPoints}
           />
         </div>
 

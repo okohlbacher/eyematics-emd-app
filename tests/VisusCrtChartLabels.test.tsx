@@ -64,6 +64,7 @@ afterEach(() => cleanup());
 const deStrings: Partial<Record<TranslationKey, string>> = {
   crtLegendLabel: 'CRT (µm)',
   visusYAxisLabel: 'Visus (Dezimal, bestkorrigiert)',
+  visusShortLabel: 'Visus',
   interpolatedHint: 'Offener Kreis = interpolierter Wert (keine Messung)',
   visusAndCrt: 'Visusverlauf und Netzhautdicke (CRT)',
   critical: 'Kritisch',
@@ -85,7 +86,7 @@ const minimalProps = {
   visusObs: [],
 };
 
-describe('VisusCrtChart — FALL-012 i18n labels', () => {
+describe('VisusCrtChart — FALL-012 / A4 i18n labels', () => {
   it('renders CRT legend label from t("crtLegendLabel")', () => {
     const { container } = render(<VisusCrtChart {...minimalProps} />);
     // The CRT Line exposes its `name` prop as data-name.
@@ -95,19 +96,37 @@ describe('VisusCrtChart — FALL-012 i18n labels', () => {
     expect(crtLine).not.toBeNull();
   });
 
-  it('renders Visus Y-axis label from t("visusYAxisLabel")', () => {
+  it('uses the SHORT Visus Y-axis label (A4: full text moved to caption)', () => {
     const { container } = render(<VisusCrtChart {...minimalProps} />);
-    // Find the YAxis whose data-label matches the locked Visus wording.
     const yaxes = container.querySelectorAll('[data-testid="recharts-yaxis"]');
     const visusAxis = Array.from(yaxes).find(
-      (el) => el.getAttribute('data-label') === 'Visus (Dezimal, bestkorrigiert)',
+      (el) => el.getAttribute('data-label') === 'Visus',
     );
     expect(visusAxis).not.toBeNull();
+    // The long wording must NOT be the axis label anymore.
+    const longAxis = Array.from(yaxes).find(
+      (el) => el.getAttribute('data-label') === 'Visus (Dezimal, bestkorrigiert)',
+    );
+    expect(longAxis).toBeUndefined();
   });
 
-  it('renders interpolation note from t("interpolatedHint") with locked wording', () => {
+  it('renders the full Visus description in the caption line', () => {
     render(<VisusCrtChart {...minimalProps} />);
-    const el = screen.queryByText('Offener Kreis = interpolierter Wert (keine Messung)');
+    const el = screen.queryByText(/Visus \(Dezimal, bestkorrigiert\)/);
     expect(el).not.toBeNull();
+  });
+
+  it('shows the interpolation hint only when interpolated points exist', () => {
+    const { rerender } = render(
+      <VisusCrtChart {...minimalProps} hasInterpolatedPoints={false} />,
+    );
+    expect(
+      screen.queryByText(/Offener Kreis = interpolierter Wert/),
+    ).toBeNull();
+
+    rerender(<VisusCrtChart {...minimalProps} hasInterpolatedPoints={true} />);
+    expect(
+      screen.queryByText(/Offener Kreis = interpolierter Wert/),
+    ).not.toBeNull();
   });
 });

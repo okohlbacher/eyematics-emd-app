@@ -12,20 +12,15 @@ import {
 } from 'recharts';
 
 import { CRITICAL_CRT_THRESHOLD } from '../../config/clinicalThresholds';
-import type { CohortReferencePoint } from '../../hooks/useCaseData';
+import type { CombinedDataPoint } from '../../hooks/useCaseData';
 import type { TranslationKey } from '../../i18n/translations';
 import type { Observation } from '../../types/fhir';
 import { translateClinical } from '../../utils/clinicalTerms';
 
-interface CombinedDataPoint {
-  date: string;
-  visus?: number;
-  crt?: number;
-  visusMeasured?: boolean;
-  crtMeasured?: boolean;
-}
-
 export interface VisusCrtChartProps {
+  /** A3 v2: single merged data array — patient rows already carry the cohort
+   *  reference fields (visusMedian/crtMedian, visusBand/crtBand) and the
+   *  interpolation keys (visusInterp/crtInterp). No per-series `data` props. */
   combinedData: CombinedDataPoint[];
   cohortAvgVisus: number;
   cohortAvgCrt: number;
@@ -36,8 +31,8 @@ export interface VisusCrtChartProps {
   visusObs: Observation[];
   /** FALL-011: toggle the cohort reference overlay on/off (default off). */
   showCohortReference?: boolean;
-  /** FALL-011: date-aligned cohort median + IQR reference series. */
-  cohortReference?: CohortReferencePoint[];
+  /** A4 v2: show the interpolation caption only when interpolated points exist. */
+  hasInterpolatedPoints?: boolean;
 }
 
 export default function VisusCrtChart({
@@ -50,15 +45,40 @@ export default function VisusCrtChart({
   t,
   visusObs,
   showCohortReference = false,
-  cohortReference = [],
+  hasInterpolatedPoints = false,
 }: VisusCrtChartProps) {
-  const hasReference = showCohortReference && cohortReference.length > 0;
+  const hasReference =
+    showCohortReference &&
+    combinedData.some((d) => d.visusBand != null || d.crtBand != null || d.visusMedian != null || d.crtMedian != null);
+
+  // A4 v2: open-circle dot renderer for the interpolated (display-only) series.
+  const interpDot = (color: string) => (props: Record<string, unknown>) => {
+    const { cx, cy, value } = props as { cx?: number; cy?: number; value?: number };
+    if (cx == null || cy == null || value == null) return <circle key={`i-${cx}-${cy}`} r={0} />;
+    return (
+      <circle
+        key={`i-${cx}-${cy}`}
+        cx={cx}
+        cy={cy}
+        r={3}
+        fill="#fff"
+        stroke={color}
+        strokeWidth={2}
+        strokeDasharray="2 1"
+      />
+    );
+  };
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
       <h3 className="font-semibold text-gray-900 mb-1">
         {t('visusAndCrt')}
       </h3>
-      <p className="text-xs text-gray-400 mb-1">{t('interpolatedHint')}</p>
+      {/* A4 v2: full Visus axis description + interpolation hint (only when relevant). */}
+      <p className="text-xs text-gray-400 mb-1">
+        {t('visusYAxisLabel')}
+        {hasInterpolatedPoints && <span className="ml-2">· {t('interpolatedHint')}</span>}
+      </p>
       {/* N05.07: Visus type, correction, measurement method */}
       {visusObs[0]?.method && (
         <p className="text-xs text-gray-500 mb-3">
@@ -80,7 +100,7 @@ export default function VisusCrtChart({
             tickCount={5}
             allowDecimals
             tick={{ fontSize: 10 }}
-            label={{ value: t('visusYAxisLabel'), angle: -90, position: 'insideLeft', fontSize: 11, fill: '#10b981' }}
+            label={{ value: t('visusShortLabel'), angle: -90, position: 'insideLeft', fontSize: 11, fill: '#10b981' }}
           />
           <YAxis
             yAxisId="crt"
@@ -123,57 +143,40 @@ export default function VisusCrtChart({
               label={{ value: new Date(highlightDate).toLocaleDateString(dateFmt), position: 'top', fontSize: 10, fill: '#f59e0b' }}
             />
           )}
-          {/* FALL-011: cohort reference overlay — rendered before patient lines so patient stays on top */}
+          {/* FALL-011 (A3 v2): cohort reference overlay. One translucent RANGE
+              Area per metric ([p25, p75] tuple) — NO white paint-over. Reads
+              dataKeys from the single merged data array (no own `data` prop) so
+              axis-domain distortion is structurally impossible. Rendered before
+              patient lines so the patient series stays on top. */}
           {hasReference && (
             <>
-              {/* Visus IQR band */}
+              {/* Visus IQR range band */}
               <Area
                 yAxisId="visus"
-                data={cohortReference}
-                dataKey="visusP75"
+                dataKey="visusBand"
                 stroke="none"
                 fill="#10b981"
-                fillOpacity={0.08}
+                fillOpacity={0.15}
                 legendType="none"
                 name={t('cohortReferenceBand')}
                 connectNulls
+                isAnimationActive={false}
               />
-              <Area
-                yAxisId="visus"
-                data={cohortReference}
-                dataKey="visusP25"
-                stroke="none"
-                fill="#ffffff"
-                fillOpacity={1}
-                legendType="none"
-                connectNulls
-              />
-              {/* CRT IQR band */}
+              {/* CRT IQR range band */}
               <Area
                 yAxisId="crt"
-                data={cohortReference}
-                dataKey="crtP75"
+                dataKey="crtBand"
                 stroke="none"
                 fill="#8b5cf6"
-                fillOpacity={0.08}
+                fillOpacity={0.15}
                 legendType="none"
                 connectNulls
-              />
-              <Area
-                yAxisId="crt"
-                data={cohortReference}
-                dataKey="crtP25"
-                stroke="none"
-                fill="#ffffff"
-                fillOpacity={1}
-                legendType="none"
-                connectNulls
+                isAnimationActive={false}
               />
               {/* Visus median line */}
               <Line
                 yAxisId="visus"
                 type="monotone"
-                data={cohortReference}
                 dataKey="visusMedian"
                 stroke="#6ee7b7"
                 strokeWidth={1.5}
@@ -186,7 +189,6 @@ export default function VisusCrtChart({
               <Line
                 yAxisId="crt"
                 type="monotone"
-                data={cohortReference}
                 dataKey="crtMedian"
                 stroke="#c4b5fd"
                 strokeWidth={1.5}
@@ -198,6 +200,7 @@ export default function VisusCrtChart({
               />
             </>
           )}
+          {/* Measured Visus curve — values on .visus are always real measurements. */}
           <Line
             yAxisId="visus"
             type="monotone"
@@ -206,14 +209,13 @@ export default function VisusCrtChart({
             name="Visus"
             strokeWidth={2}
             dot={(props: Record<string, unknown>) => {
-              const { cx, cy, payload } = props as { cx: number; cy: number; payload: { visusMeasured?: boolean } };
-              if (cx == null || cy == null) return <circle key={`v-${cx}`} />;
-              return payload?.visusMeasured
-                ? <circle key={`v-${cx}`} cx={cx} cy={cy} r={4} fill="#10b981" stroke="#fff" strokeWidth={1} />
-                : <circle key={`v-${cx}`} cx={cx} cy={cy} r={3} fill="#fff" stroke="#10b981" strokeWidth={2} strokeDasharray="2 1" />;
+              const { cx, cy } = props as { cx?: number; cy?: number };
+              if (cx == null || cy == null) return <circle key={`v-${cx}-${cy}`} r={0} />;
+              return <circle key={`v-${cx}-${cy}`} cx={cx} cy={cy} r={4} fill="#10b981" stroke="#fff" strokeWidth={1} />;
             }}
             connectNulls
           />
+          {/* Measured CRT curve — values on .crt are always real measurements. */}
           <Line
             yAxisId="crt"
             type="monotone"
@@ -222,14 +224,45 @@ export default function VisusCrtChart({
             name={t('crtLegendLabel')}
             strokeWidth={2}
             dot={(props: Record<string, unknown>) => {
-              const { cx, cy, payload } = props as { cx: number; cy: number; payload: { crtMeasured?: boolean } };
-              if (cx == null || cy == null) return <circle key={`c-${cx}`} />;
-              return payload?.crtMeasured
-                ? <circle key={`c-${cx}`} cx={cx} cy={cy} r={4} fill="#8b5cf6" stroke="#fff" strokeWidth={1} />
-                : <circle key={`c-${cx}`} cx={cx} cy={cy} r={3} fill="#fff" stroke="#8b5cf6" strokeWidth={2} strokeDasharray="2 1" />;
+              const { cx, cy } = props as { cx?: number; cy?: number };
+              if (cx == null || cy == null) return <circle key={`c-${cx}-${cy}`} r={0} />;
+              return <circle key={`c-${cx}-${cy}`} cx={cx} cy={cy} r={4} fill="#8b5cf6" stroke="#fff" strokeWidth={1} />;
             }}
             connectNulls
           />
+          {/* A4 v2: interpolated display-only markers. Stroke transparent so the
+              measured monotone curve is untouched — only open-circle dots show
+              where a metric was interpolated between measured neighbours. */}
+          {hasInterpolatedPoints && (
+            <>
+              <Line
+                yAxisId="visus"
+                type="monotone"
+                dataKey="visusInterp"
+                stroke="#10b981"
+                strokeOpacity={0}
+                name={t('interpolatedSeriesLabel')}
+                legendType="none"
+                dot={interpDot('#10b981')}
+                activeDot={false}
+                connectNulls={false}
+                isAnimationActive={false}
+              />
+              <Line
+                yAxisId="crt"
+                type="monotone"
+                dataKey="crtInterp"
+                stroke="#8b5cf6"
+                strokeOpacity={0}
+                name={t('interpolatedSeriesLabel')}
+                legendType="none"
+                dot={interpDot('#8b5cf6')}
+                activeDot={false}
+                connectNulls={false}
+                isAnimationActive={false}
+              />
+            </>
+          )}
         </LineChart>
       </ResponsiveContainer>
     </div>

@@ -13,6 +13,26 @@ import type { PatientCase } from '../types/fhir';
 import { getEyeLabel, translateClinical } from '../utils/clinicalTerms';
 import { computeCrtDistribution, computeVisusDistribution } from '../utils/distributionBins';
 
+/** A single row of the Visus/CRT trend chart's merged data array. */
+export interface CombinedDataPoint {
+  date: string;
+  visus?: number;
+  crt?: number;
+  visusMeasured?: boolean;
+  crtMeasured?: boolean;
+  /** A4 v2: linearly interpolated display-only values (NOT real measurements).
+   *  Kept on separate keys so derived data (scatter/correlation) never ingests
+   *  fabricated pairs — those read .visus/.crt only. */
+  visusInterp?: number;
+  crtInterp?: number;
+  /** FALL-011 (A3 v2): cohort reference folded onto the patient's row. */
+  visusMedian?: number;
+  crtMedian?: number;
+  /** Range tuples [p25, p75] for the translucent IQR band Areas. */
+  visusBand?: [number, number];
+  crtBand?: [number, number];
+}
+
 /** Per-date cohort percentile reference (FALL-011). */
 export interface CohortReferencePoint {
   date: string;
@@ -151,11 +171,8 @@ export function useCaseData(
   );
 
   // Combined dual-axis data: merge visus + CRT by date
-  const combinedData = useMemo(() => {
-    const dateMap = new Map<
-      string,
-      { date: string; visus?: number; crt?: number; visusMeasured?: boolean; crtMeasured?: boolean }
-    >();
+  const combinedData = useMemo((): CombinedDataPoint[] => {
+    const dateMap = new Map<string, CombinedDataPoint>();
     visusObs.forEach((o) => {
       const d = o.effectiveDateTime?.substring(0, 10) ?? '';
       const entry = dateMap.get(d) ?? { date: d };
@@ -170,8 +187,50 @@ export function useCaseData(
       entry.crtMeasured = true;
       dateMap.set(d, entry);
     });
-    return Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+    const rows = Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+
+    // A4 v2: linear interpolation for display-only open-circle markers.
+    // For a metric missing on a row but with measured neighbours BOTH before
+    // AND after, write the linear interpolation onto a SEPARATE key
+    // (visusInterp/crtInterp) — never onto .visus/.crt, so visusCrtScatter and
+    // all derived data stay free of fabricated pairs. Edge gaps (only one side
+    // present) are NOT interpolated.
+    const interpolate = (
+      metric: 'visus' | 'crt',
+      interpKey: 'visusInterp' | 'crtInterp',
+    ) => {
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i][metric] != null) continue;
+        // find previous measured neighbour
+        let prev = -1;
+        for (let j = i - 1; j >= 0; j--) {
+          if (rows[j][metric] != null) { prev = j; break; }
+        }
+        // find next measured neighbour
+        let next = -1;
+        for (let j = i + 1; j < rows.length; j++) {
+          if (rows[j][metric] != null) { next = j; break; }
+        }
+        if (prev === -1 || next === -1) continue; // edge gap — skip
+        const prevVal = rows[prev][metric]!;
+        const nextVal = rows[next][metric]!;
+        const span = new Date(rows[next].date).getTime() - new Date(rows[prev].date).getTime();
+        const offset = new Date(rows[i].date).getTime() - new Date(rows[prev].date).getTime();
+        const frac = span > 0 ? offset / span : 0.5;
+        rows[i][interpKey] = prevVal + (nextVal - prevVal) * frac;
+      }
+    };
+    interpolate('visus', 'visusInterp');
+    interpolate('crt', 'crtInterp');
+
+    return rows;
   }, [visusObs, crtObs]);
+
+  // A4 v2: hint/markers only when interpolated points actually exist.
+  const hasInterpolatedPoints = useMemo(
+    () => combinedData.some((d) => d.visusInterp != null || d.crtInterp != null),
+    [combinedData],
+  );
 
   const visusDistribution = useMemo(() => computeVisusDistribution(visusObs), [visusObs]);
   const crtDistribution = useMemo(() => computeCrtDistribution(crtObs), [crtObs]);
@@ -353,10 +412,38 @@ export function useCaseData(
       .filter((p): p is CohortReferencePoint => p !== null);
   }, [combinedData, cases, patientCase]);
 
+  // FALL-011 (A3 v2): fold the cohort reference fields onto the patient's
+  // combinedData rows by date, producing a SINGLE data array for the chart.
+  // Reference Areas/Lines then read their dataKeys from this array with no own
+  // `data` prop — axis-domain distortion becomes structurally impossible.
+  //
+  // The IQR bands are stored as range tuples ([p25, p75]) so they can be drawn
+  // with a single translucent range-Area each (no white paint-over masking).
+  const combinedDataWithReference = useMemo((): CombinedDataPoint[] => {
+    if (!cohortReference.length) return combinedData;
+    const refByDate = new Map(cohortReference.map((r) => [r.date, r]));
+    return combinedData.map((point) => {
+      const ref = refByDate.get(point.date);
+      if (!ref) return point;
+      const merged: CombinedDataPoint = { ...point };
+      if (ref.visusMedian != null) merged.visusMedian = ref.visusMedian;
+      if (ref.visusP25 != null && ref.visusP75 != null) {
+        merged.visusBand = [ref.visusP25, ref.visusP75];
+      }
+      if (ref.crtMedian != null) merged.crtMedian = ref.crtMedian;
+      if (ref.crtP25 != null && ref.crtP75 != null) {
+        merged.crtBand = [ref.crtP25, ref.crtP75];
+      }
+      return merged;
+    });
+  }, [combinedData, cohortReference]);
+
   return {
     cohortAvgVisus,
     cohortAvgCrt,
     cohortReference,
+    combinedDataWithReference,
+    hasInterpolatedPoints,
     visusObs,
     crtObs,
     iopObs,
