@@ -91,3 +91,16 @@
 - A4(3): is linear interpolation between neighbors clinically acceptable for *display-only* markers (matches existing `connectNulls` visual)?
 - A2: excluding zero-obs-in-window cases changes per-center scores — intended (tester directive) but flags any test relying on static counts.
 - A6: is defaulting perPatient OFF above a threshold acceptable UX, or must we keep current default and only memoize?
+
+---
+
+# REVISION v2 (after adversarial plan review — Codex 0.137 + Vibe 2.14, both converged; see PLAN-REVIEW-*.md)
+
+**Codex: plan "not sound as written" — 5 TOP CHANGES. Vibe: "Codex RIGHT on all 5" + 3 additions. All adopted:**
+
+- **A1 (REPLACED):** Recharts 3.8.1 chart-level `onClick` does NOT receive `activePayload` (verified in node_modules middleware/types). New approach: **controlled-tooltip ref** — a custom `Tooltip content` component stashes the active scatter payload's `patientId` in a ref (this is the exact pipeline the tester can see working); chart-level `onClick` navigates to `ref.current`. Additionally fix z-order (scatter renders after/above median lines) and keep the symbol-level onClick as belt-and-braces. No-payload click = no-op.
+- **A3 (REFOCUSED):** real culprit = the **white paint-over band** (`<Area fill="#ffffff" fillOpacity={1}>`) masking the plot. Replace with a proper range band (Recharts range-Area `dataKey → [p25, p75]`, translucent fill) — no white overpaint. Keep the single-merged-data-array change as structural hygiene. Browser repro before/after stays mandatory.
+- **A4 (HARDENED):** interpolated values go into **separate dataKeys** (`visusInterp`/`crtInterp`) rendered as a dot-only series — the measured monotone curve is untouched (Vibe's curve-shape concern), and `visusCrtScatter`/derived data can't ingest fabricated pairs (Codex's leak trap) since they read `.visus`/`.crt`. Tooltip marks interpolated points; hint conditional on their existence.
+- **A5 (TIGHTENED):** **current signing key ONLY** (access/challenge tokens never had dual-key per initAuth policy; only refresh does), enforce `typ: 'access'`, reject refresh/challenge tokens, `sanitizeActor`, and a **max expired age of 24h** (Vibe) to limit audit spoofing with old stolen tokens. Documented as "expired signed-claim attribution", not authenticated identity. Drop the previous-key test.
+- **A2 (CLARIFIED):** freeze time in tests (`cutoffDate` uses `new Date()`); document semantics — Grundgesamtheit = distinct pseudonyms **in window**, per-center `patientCount` = case count **in window**.
+- **A6 (ORDERED):** (1) memoize per-patient line data arrays first (rebuilt inline each render — lowest-risk measured win); (2) threshold default `perPatient: false` for cohorts >100 patients computed in `useOutcomesRouteState` BEFORE aggregation/render (server request depends on the layer); opt-in toggle preserved + notice. NO scatter sampling (breaks drill-down coverage).
