@@ -175,3 +175,43 @@ export function verifyChallengeToken(token: string): ChallengePayload {
   }
   return payload;
 }
+
+// ---------------------------------------------------------------------------
+// Expired-signed-claim attribution (A5 — audit expired-session 401 rows)
+//
+// Access and challenge tokens are CURRENT-KEY ONLY (initAuth policy D-12).
+// Only refresh tokens have dual-key. This helper is deliberately current-key
+// only to match that policy.
+// ---------------------------------------------------------------------------
+
+/**
+ * Attempt to verify an ACCESS token while ignoring expiry — for audit attribution
+ * of expired-session 401 rows ONLY.
+ *
+ * Security constraints (A5 v2):
+ * - Current signing key ONLY (no previous-key fallback — access tokens are current-key
+ *   per initAuth D-12 policy; only refresh tokens use dual-key).
+ * - HS256 pin enforced via ALGS.
+ * - `typ: 'access'` enforced — refresh and challenge tokens are rejected.
+ * - Returns null on any failure (bad signature, wrong typ, malformed token).
+ *
+ * IMPORTANT: The returned payload is "expired signed-claim attribution", NOT
+ * authenticated identity. Callers MUST NOT grant any privileges based on this result.
+ * Forged or too-old tokens (caller's responsibility to check exp delta) return null
+ * or are ignored by the caller.
+ */
+export function verifyAccessTokenIgnoringExpiry(token: string): AccessPayload | null {
+  try {
+    const payload = jwt.verify(token, getJwtSecret(), {
+      algorithms: ALGS,
+      ignoreExpiration: true,
+    }) as AccessPayload;
+    // Reject refresh tokens, challenge tokens, and any other non-access typ.
+    if (payload.typ !== 'access') {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}

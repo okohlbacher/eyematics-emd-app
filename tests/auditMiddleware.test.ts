@@ -8,6 +8,7 @@
  */
 
 import type { NextFunction, Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock auditDb to capture logged entries
@@ -22,6 +23,14 @@ vi.mock('../server/auditDb.js', () => ({
       user: entry.user as string,
     });
   }),
+}));
+
+// Provide a stable in-process JWT secret so verifyAccessTokenIgnoringExpiry works
+// without a real data directory. Using vi.mock keeps initAuth from hitting disk.
+const TEST_JWT_SECRET = 'audit-test-secret-a5-hotfix-32bytes!!';
+vi.mock('../server/initAuth.js', () => ({
+  getJwtSecret: () => TEST_JWT_SECRET,
+  getJwtSecrets: () => ({ current: TEST_JWT_SECRET }),
 }));
 
 import { auditMiddleware } from '../server/auditMiddleware.js';
@@ -399,5 +408,174 @@ describe('Phase 20 status-conditional skip — /api/auth/refresh', () => {
     expect(stored).not.toContain('should-be-redacted-on-logout');
     const parsed = JSON.parse(stored);
     expect(parsed.password).toBe('[REDACTED]');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// A5: Expired signed-claim attribution for 401 audit rows
+// ---------------------------------------------------------------------------
+
+/**
+ * Sign a real access token using the test secret. iatOverride / expOverride allow
+ * crafting tokens with specific iat/exp values for the 24 h cap tests.
+ */
+function signTestAccessToken(opts: {
+  preferred_username?: string;
+  typ?: string;
+  expiredSecondsAgo?: number; // positive = expired N seconds ago
+  expiredHoursAgo?: number;   // positive = expired N hours ago
+}): string {
+  const nowS = Math.floor(Date.now() / 1000);
+  const expiredAgo = opts.expiredHoursAgo !== undefined
+    ? opts.expiredHoursAgo * 3600
+    : (opts.expiredSecondsAgo ?? 60);
+  const exp = nowS - expiredAgo;
+  const iat = exp - 900; // issued 15 min before expiry
+  return jwt.sign(
+    {
+      sub: 'u1',
+      preferred_username: opts.preferred_username ?? 'alice',
+      role: 'viewer',
+      centers: [],
+      typ: opts.typ ?? 'access',
+      iat,
+      exp,
+    },
+    TEST_JWT_SECRET,
+    { algorithm: 'HS256', noTimestamp: true },
+  );
+}
+
+describe('A5 — expired signed-claim attribution for 401 audit rows', () => {
+  // Helper: craft a 401 request with an Authorization header and no req.auth
+  function make401Req(authHeader: string | undefined): Request {
+    return {
+      originalUrl: '/api/fhir/bundles',
+      method: 'GET',
+      query: {},
+      body: undefined,
+      _capturedBody: undefined,
+      auth: undefined,
+      headers: authHeader !== undefined ? { authorization: authHeader } : {},
+    } as unknown as Request;
+  }
+
+  function make401Res(): Response & { _emit: (e: string) => void } {
+    const handlers: Record<string, (() => void)[]> = {};
+    return {
+      statusCode: 401,
+      on: (event: string, handler: () => void) => { (handlers[event] ??= []).push(handler); },
+      _emit: (event: string) => { (handlers[event] ?? []).forEach((h) => h()); },
+    } as unknown as Response & { _emit: (e: string) => void };
+  }
+
+  it('attributes 401 to username when token is expired but signature is valid and within 24 h', () => {
+    const token = signTestAccessToken({ preferred_username: 'alice', expiredSecondsAgo: 30 });
+    const req = make401Req(`Bearer ${token}`);
+    const res = make401Res();
+    auditMiddleware(req, res, vi.fn());
+    res._emit('finish');
+    expect(loggedEntries).toHaveLength(1);
+    expect(loggedEntries[0].user).toBe('alice');
+  });
+
+  it('stays unauthenticated when token signature is invalid', () => {
+    const token = signTestAccessToken({ preferred_username: 'eve', expiredSecondsAgo: 10 });
+    // Corrupt the signature (last 4 chars → 'XXXX')
+    const tampered = token.slice(0, -4) + 'XXXX';
+    const req = make401Req(`Bearer ${tampered}`);
+    const res = make401Res();
+    auditMiddleware(req, res, vi.fn());
+    res._emit('finish');
+    expect(loggedEntries).toHaveLength(1);
+    expect(loggedEntries[0].user).toBe('unauthenticated');
+  });
+
+  it('stays unauthenticated when token typ is refresh (not access)', () => {
+    const token = signTestAccessToken({ preferred_username: 'bob', typ: 'refresh', expiredSecondsAgo: 5 });
+    const req = make401Req(`Bearer ${token}`);
+    const res = make401Res();
+    auditMiddleware(req, res, vi.fn());
+    res._emit('finish');
+    expect(loggedEntries).toHaveLength(1);
+    expect(loggedEntries[0].user).toBe('unauthenticated');
+  });
+
+  it('stays unauthenticated when token typ is challenge (not access)', () => {
+    const token = signTestAccessToken({ preferred_username: 'carol', typ: 'challenge', expiredSecondsAgo: 5 });
+    const req = make401Req(`Bearer ${token}`);
+    const res = make401Res();
+    auditMiddleware(req, res, vi.fn());
+    res._emit('finish');
+    expect(loggedEntries).toHaveLength(1);
+    expect(loggedEntries[0].user).toBe('unauthenticated');
+  });
+
+  it('stays unauthenticated when token expired more than 24 h ago', () => {
+    const token = signTestAccessToken({ preferred_username: 'dave', expiredHoursAgo: 25 });
+    const req = make401Req(`Bearer ${token}`);
+    const res = make401Res();
+    auditMiddleware(req, res, vi.fn());
+    res._emit('finish');
+    expect(loggedEntries).toHaveLength(1);
+    expect(loggedEntries[0].user).toBe('unauthenticated');
+  });
+
+  it('stays unauthenticated when no Authorization header is present on a 401', () => {
+    const req = make401Req(undefined);
+    const res = make401Res();
+    auditMiddleware(req, res, vi.fn());
+    res._emit('finish');
+    expect(loggedEntries).toHaveLength(1);
+    expect(loggedEntries[0].user).toBe('unauthenticated');
+  });
+
+  it('does NOT apply expired-claim attribution on non-401 responses', () => {
+    const token = signTestAccessToken({ preferred_username: 'frank', expiredSecondsAgo: 10 });
+    // req.auth absent but status 200 — should not attribute via expired claim
+    const req = {
+      originalUrl: '/api/fhir/bundles',
+      method: 'GET',
+      query: {},
+      body: undefined,
+      _capturedBody: undefined,
+      auth: undefined,
+      headers: { authorization: `Bearer ${token}` },
+    } as unknown as Request;
+    const handlers: Record<string, (() => void)[]> = {};
+    const res = {
+      statusCode: 200,
+      on: (event: string, handler: () => void) => { (handlers[event] ??= []).push(handler); },
+      _emit: (event: string) => { (handlers[event] ?? []).forEach((h) => h()); },
+    } as unknown as Response & { _emit: (e: string) => void };
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries).toHaveLength(1);
+    // No req.auth, no login path, not 401 → unauthenticated (not the token username)
+    expect(loggedEntries[0].user).toBe('unauthenticated');
+  });
+
+  it('login-actor path takes precedence over expired-claim attribution on /api/auth/login 401', () => {
+    // Login endpoint: body username wins (existing AUDIT-02 behaviour), not the Bearer token.
+    const token = signTestAccessToken({ preferred_username: 'token-user', expiredSecondsAgo: 5 });
+    const req = {
+      originalUrl: '/api/auth/login',
+      method: 'POST',
+      query: {},
+      body: { username: 'body-user', password: 'x' },
+      _capturedBody: undefined,
+      auth: undefined,
+      headers: { authorization: `Bearer ${token}` },
+    } as unknown as Request;
+    const handlers: Record<string, (() => void)[]> = {};
+    const res = {
+      statusCode: 401,
+      on: (event: string, handler: () => void) => { (handlers[event] ??= []).push(handler); },
+      _emit: (event: string) => { (handlers[event] ?? []).forEach((h) => h()); },
+    } as unknown as Response & { _emit: (e: string) => void };
+    auditMiddleware(req, res, vi.fn());
+    (res as unknown as { _emit: (e: string) => void })._emit('finish');
+    expect(loggedEntries).toHaveLength(1);
+    expect(loggedEntries[0].user).toBe('body-user');
   });
 });

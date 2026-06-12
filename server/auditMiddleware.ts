@@ -21,6 +21,7 @@ import crypto from 'node:crypto';
 import type { NextFunction,Request, Response } from 'express';
 
 import { logAuditEntry } from './auditDb.js';
+import { verifyAccessTokenIgnoringExpiry } from './jwtUtil.js';
 
 // Type augmentation in server/types.d.ts (F-17: single source of truth)
 
@@ -232,6 +233,38 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
         if (sanitized) user = sanitized;
       }
     }
+
+    // A5: Expired signed-claim attribution — attribute 401 audit rows to the
+    // token username when:
+    //   - The response is 401 (session rejected)
+    //   - req.auth is absent (auth middleware did not authenticate the request)
+    //   - An Authorization: Bearer <token> header is present
+    //   - The token has a valid HS256 signature against the CURRENT key (current-key
+    //     only; access tokens never had dual-key per initAuth D-12 policy)
+    //   - The token's typ is 'access' (refresh/challenge tokens are rejected)
+    //   - The token expired within the last 24 h (limits audit spoofing with
+    //     old stolen tokens — Vibe A5 v2 constraint)
+    //
+    // This is NOT authenticated identity. The 401 status already conveys failure.
+    // Forged tokens (bad signature) and too-old tokens stay 'unauthenticated'.
+    // NO row suppression — audit completeness is preserved.
+    if (!user && res.statusCode === 401) {
+      const MAX_EXPIRED_AGE_S = 24 * 60 * 60; // 24 hours in seconds
+      const authHeader = req.headers['authorization'];
+      if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.slice(7);
+        const payload = verifyAccessTokenIgnoringExpiry(token);
+        if (payload !== null) {
+          const nowS = Math.floor(Date.now() / 1000);
+          const expiredAgeS = nowS - payload.exp;
+          if (expiredAgeS <= MAX_EXPIRED_AGE_S) {
+            const sanitized = sanitizeActor(payload.preferred_username);
+            if (sanitized) user = sanitized;
+          }
+        }
+      }
+    }
+
     user = user ?? 'unauthenticated';
 
     // Per D-11: mutations log (redacted) body; GETs log query params only
