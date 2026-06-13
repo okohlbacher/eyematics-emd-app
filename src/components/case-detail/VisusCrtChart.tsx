@@ -1,9 +1,9 @@
 import {
   Area,
   CartesianGrid,
+  ComposedChart,
   Legend,
   Line,
-  ComposedChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -50,6 +50,52 @@ export default function VisusCrtChart({
   const hasReference =
     showCohortReference &&
     combinedData.some((d) => d.visusBand != null || d.crtBand != null || d.visusMedian != null || d.crtMedian != null);
+
+  // F4: custom tooltip — the default <Tooltip /> lists every series under the
+  // hovered date, including the cohort-overlay reference series (visusBand/crtBand
+  // render as raw [p25,p75] arrays, plus visusMedian/crtMedian/visusInterp/crtInterp).
+  // On a single-patient chart that is clinically confusing, so we show ONLY the
+  // measured Visus and CRT for the hovered date (plus the date label) and exclude
+  // every reference/interpolation dataKey. Styling mirrors the chart's light card.
+  const renderTooltip = (props: {
+    active?: boolean;
+    label?: unknown;
+    payload?: ReadonlyArray<{ dataKey?: unknown; value?: unknown; color?: string }>;
+  }) => {
+    if (!props.active || !Array.isArray(props.payload) || props.payload.length === 0) {
+      return null;
+    }
+    const measured = props.payload.filter(
+      (e) => e.dataKey === 'visus' || e.dataKey === 'crt',
+    );
+    if (measured.length === 0) return null;
+    const dateLabel =
+      props.label != null
+        ? new Date(String(props.label)).toLocaleDateString(dateFmt)
+        : '';
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm">
+        {dateLabel && (
+          <div className="text-xs font-semibold text-gray-700 mb-1">{dateLabel}</div>
+        )}
+        {measured.map((e) => {
+          const isVisus = e.dataKey === 'visus';
+          const name = isVisus ? 'Visus' : t('crtLegendLabel');
+          const value =
+            typeof e.value === 'number'
+              ? isVisus
+                ? e.value.toFixed(2)
+                : `${e.value.toFixed(0)} µm`
+              : '–';
+          return (
+            <div key={String(e.dataKey)} className="text-xs text-gray-600">
+              <span style={{ color: e.color }}>{name}</span>: {value}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   // A4 v2: open-circle dot renderer for the interpolated (display-only) series.
   const interpDot = (color: string) => (props: Record<string, unknown>) => {
@@ -114,7 +160,7 @@ export default function VisusCrtChart({
             tick={{ fontSize: 10 }}
             label={{ value: t('crtLegendLabel'), angle: -90, position: 'insideRight', fontSize: 11, fill: '#8b5cf6' }}
           />
-          <Tooltip />
+          <Tooltip content={renderTooltip} />
           <Legend />
           <ReferenceLine
             yAxisId="visus"
