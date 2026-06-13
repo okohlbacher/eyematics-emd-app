@@ -31,3 +31,21 @@ Two independent adversarial reviewers on `git diff 7541e85..HEAD`: **Codex 0.137
 - A5 blocks token-type confusion (`typ:'access'`), forged tokens (signature), current-key only (D-12), NaN-safe on missing `exp`.
 - A1 no-active-point click = true no-op.
 - `tsc` clean; 1126 tests green.
+
+---
+
+## Resolution (2026-06-13) — all 8 fixes applied + live-verified
+
+Fixes landed in 5 commits (d5cc5ed F1+F2, 0389b39 F3, b86fb68 F4, 904d395 F5+F6, 08cea33 F7+F8). Gates: **build OK · test:ci 1129/1129 · lint 0**.
+
+**Live-browser re-verification (Vite preview, admin/local):**
+- **A1 drill-down** ✓ — clicking a scatter point navigates to `/case/pat-uka-005`. Scatter renders (83 symbols/panel via the custom shape: r=4 dot + r=10 hit halo).
+- **F3 (the wedge fix)** ✓ — on the 245-patient cohort the "Einzelverläufe ausgeblendet" notice (per-patient auto-off) **survives** Visus→CRT→Visus metric-tab switches; pre-fix it re-enabled all per-patient lines and the notice went stale.
+- **A2** ✓ (prior round) — DocQuality Grundgesamtheit 245↔53 with the time range.
+- **A3** ✓ (prior round) — IQR band + median render, X-axis domain unchanged.
+- **F4** — custom tooltip in place; no band/median/interp keys leak (synthetic hover can't fully exercise Recharts' pointer pipeline; structurally confirmed + unit-covered).
+- **A5 (F1/F2)**, **F5/F6**, **F7/F8** — unit-covered; no UI surface to drive.
+
+**Deferred (noted, not in this batch):** Codex #1 (effect-driven first-render perPatient cost — corrected post-first-render), #7 (Keycloak expired-token attribution — provider inactive), #8 (audit actor-type column), #9 (bidi-control stripping). All recorded for a future hardening pass / SEED-003.
+
+**Verdict: SAFE TO SHIP** (hotfix batch A1–A6 + review fixes F1–F8).
