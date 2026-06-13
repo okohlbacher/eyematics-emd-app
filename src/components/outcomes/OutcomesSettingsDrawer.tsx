@@ -24,6 +24,10 @@ interface Props {
   setGridPoints: (v: number) => void;
   layers: LayerState;
   setLayers: (updater: (L: LayerState) => LayerState) => void;
+  /** F3: reset display layers to the cohort-derived defaults (re-derives the
+   *  large-cohort per-patient auto-off instead of forcing perPatient ON / marking
+   *  a user override). Wired to the "reset defaults" button below. */
+  onResetLayersDefaults: () => void;
   /** A6: true when the per-patient layer default was forced off for a large cohort. */
   perPatientDefaultedOff?: boolean;
   thresholdLetters: number;
@@ -57,6 +61,7 @@ export default function OutcomesSettingsDrawer({
   setGridPoints,
   layers,
   setLayers,
+  onResetLayersDefaults,
   perPatientDefaultedOff = false,
   thresholdLetters,
   setThresholdLetters,
@@ -84,12 +89,11 @@ export default function OutcomesSettingsDrawer({
     setAxisMode('days');
     setYMetric('absolute');
     setGridPoints(120);
-    setLayers(() => ({
-      median: true,
-      perPatient: true,
-      scatter: patientCount <= 30,
-      spreadBand: true,
-    }));
+    // F3: delegate the display-layer reset to the route-state owner so it
+    // re-derives the large-cohort per-patient default (>100 distinct patients →
+    // OFF) instead of forcing perPatient ON. This keeps the >100 auto-off from
+    // being permanently defeated by the reset button.
+    onResetLayersDefaults();
   };
 
   return (

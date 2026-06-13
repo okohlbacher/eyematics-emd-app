@@ -257,6 +257,7 @@ export default function OutcomesView() {
         setGridPoints={s.setGridPoints}
         layers={s.layers}
         setLayers={s.setLayersWithOverride}
+        onResetLayersDefaults={s.resetLayersToDefaults}
         perPatientDefaultedOff={s.perPatientDefaultedOff}
         thresholdLetters={s.thresholdLetters}
         setThresholdLetters={s.setThresholdLetters}

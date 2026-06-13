@@ -275,20 +275,51 @@ export function useOutcomesRouteState() {
   // Phase 16 / Pitfall 6: bypass server routing in cross-cohort mode.
   const cohortId = searchParams.get('cohort');
 
+  // A6 (F3): re-derive the large-cohort per-patient default from the CURRENT cohort
+  // rather than forcing perPatient ON. A reset (metric switch or the drawer's
+  // "reset defaults" button) must NOT defeat the >100-distinct-patient auto-off —
+  // it resets to the DERIVED default, not to true. Also resets the override ref so
+  // the cohort-change effect can keep deriving (the reset itself is not a user
+  // toggle of the checkbox). The notice flag is kept in sync.
+  const derivePerPatientDefaultOn = useCallback((): boolean => {
+    const large =
+      cohort != null &&
+      distinctPatientCount(cohort.cases) > PER_PATIENT_DEFAULT_OFF_THRESHOLD;
+    setPerPatientDefaultedOff(large);
+    return !large;
+  }, [cohort]);
+
   // Phase 13 / METRIC-04: metric change handler (preserves cohort/filter params).
   const resetToMetricDefaults = (m: MetricType) => {
     if (m === 'visus' || m === 'crt') {
       setYMetric('delta');
       setAxisMode('days');
+      // F3: a metric switch resets to defaults — re-derive perPatient from cohort
+      // size (NOT force-true) and clear the override so a large cohort keeps
+      // per-patient OFF and the notice accurate.
+      perPatientUserOverriddenRef.current = false;
       setLayers({
         median: true,
-        perPatient: true,
+        perPatient: derivePerPatientDefaultOn(),
         scatter: defaultScatterOn(cohort?.cases.length ?? 0),
         spreadBand: true,
       });
     }
     // interval / responder: no reset needed — they ignore yMetric/axisMode/layers.
   };
+
+  // F3: the Settings "reset defaults" button routes through here instead of the
+  // override-marking setLayersWithOverride. Re-derives the large-cohort per-patient
+  // default and clears the override ref, so reset respects the >100 auto-off.
+  const resetLayersToDefaults = useCallback(() => {
+    perPatientUserOverriddenRef.current = false;
+    setLayers(() => ({
+      median: true,
+      perPatient: derivePerPatientDefaultOn(),
+      scatter: defaultScatterOn(cohort?.cases.length ?? 0),
+      spreadBand: true,
+    }));
+  }, [cohort, derivePerPatientDefaultOn]);
 
   const handleMetricChange = (m: MetricType) => {
     setSearchParams((p) => {
@@ -382,6 +413,9 @@ export function useOutcomesRouteState() {
     // A6: wrapper that records explicit user toggles (so the large-cohort default
     // stops overriding); + flag for the "defaulted off" notice near the layer toggle.
     setLayersWithOverride,
+    // F3: reset-to-defaults that re-derives the large-cohort per-patient default
+    // (drawer "reset defaults" button) instead of marking a user override.
+    resetLayersToDefaults,
     perPatientDefaultedOff,
     threshold,
     serverAggregate,
