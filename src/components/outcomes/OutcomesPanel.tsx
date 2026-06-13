@@ -2,7 +2,7 @@
 // Phase 22 shim candidate by 22-RESEARCH but per D-15 (reality check) it is
 // not a dedup target — this file holds chart rendering logic. No action
 // required beyond this disposition comment.
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { ScatterPointItem } from 'recharts';
 import {
   Area,
@@ -112,6 +112,23 @@ export default function OutcomesPanel({
   // exact pipeline the tester can see working (the tooltip shows the pseudonym).
   const activePatientIdRef = useRef<string | null>(null);
 
+  // F7 (defensive): clear the stashed drill-down target when the panel's
+  // underlying patient set CHANGES (e.g. a cohort switch). Without this, a stale
+  // within-cohort pseudonym left in the ref from a prior cohort's hover could fire
+  // on a chart click after the switch without a fresh hover. The IDOR gate in the
+  // drill-down handler still rejects unknown ids, so this is defense-in-depth.
+  //
+  // Skip the FIRST run: on mount the tooltip pipeline may already have stashed a
+  // target during this same render pass, and clearing it here would clobber a
+  // legitimate hover. Only subsequent cohort changes reset the ref.
+  const patientsRef = useRef(panel.patients);
+  useEffect(() => {
+    if (patientsRef.current !== panel.patients) {
+      patientsRef.current = panel.patients;
+      activePatientIdRef.current = null;
+    }
+  }, [panel.patients]);
+
   // A6 (perf): memoize per-patient <Line> data arrays. These were rebuilt inline
   // inside the render .map() on EVERY render, producing fresh object identities
   // that defeat Recharts' internal series memoization (it re-diffs every series on
@@ -122,18 +139,24 @@ export default function OutcomesPanel({
   // MUST sit above the early return below to satisfy Rules of Hooks (WR-01).
   const perPatientSeries = useMemo(
     () =>
-      panel.patients
-        .filter((p) => !p.excluded && p.measurements.length >= 2)
-        .map((p) => ({
-          id: p.id,
-          sparse: p.sparse,
-          data: p.measurements.map((m) => ({
-            ...m,
-            __series: 'perPatient' as const,
-            pseudonym: p.pseudonym,
-          })),
-        })),
-    [panel.patients],
+      // F8 (A6 perf): skip building the per-patient <Line> data arrays entirely
+      // when the layer is hidden — they were built unconditionally even when
+      // layers.perPatient was false, which is the exact cost the A6 auto-off was
+      // meant to avoid on large cohorts.
+      !layers.perPatient
+        ? []
+        : panel.patients
+            .filter((p) => !p.excluded && p.measurements.length >= 2)
+            .map((p) => ({
+              id: p.id,
+              sparse: p.sparse,
+              data: p.measurements.map((m) => ({
+                ...m,
+                __series: 'perPatient' as const,
+                pseudonym: p.pseudonym,
+              })),
+            })),
+    [panel.patients, layers.perPatient],
   );
   const chartColors = {
     grid:         isDark ? '#374151' : '#e5e7eb', // gray-700 / gray-200
