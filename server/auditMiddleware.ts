@@ -242,8 +242,9 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
     //   - The token has a valid HS256 signature against the CURRENT key (current-key
     //     only; access tokens never had dual-key per initAuth D-12 policy)
     //   - The token's typ is 'access' (refresh/challenge tokens are rejected)
-    //   - The token expired within the last 24 h (limits audit spoofing with
-    //     old stolen tokens — Vibe A5 v2 constraint)
+    //   - The token expired within the last 24h (not future-dated) — limits audit
+    //     spoofing with old stolen tokens AND ensures a still-valid (non-expired)
+    //     token is never attributed here — Vibe A5 v2 constraint
     //
     // This is NOT authenticated identity. The 401 status already conveys failure.
     // Forged tokens (bad signature) and too-old tokens stay 'unauthenticated'.
@@ -257,7 +258,17 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
         if (payload !== null) {
           const nowS = Math.floor(Date.now() / 1000);
           const expiredAgeS = nowS - payload.exp;
-          if (expiredAgeS <= MAX_EXPIRED_AGE_S) {
+          // F2: bound BOTH ends — a non-expired token has a negative age and must
+          // NOT attribute (e.g. a still-valid Bearer hitting /api/auth/refresh,
+          // which bypasses Bearer auth). Only genuinely expired (>=0) tokens within
+          // the last 24h are attributed. F1: guard the claim type before sanitizing —
+          // a signature-valid token missing preferred_username must fall back to
+          // 'unauthenticated', never throw inside this unwrapped finish handler.
+          if (
+            expiredAgeS >= 0 &&
+            expiredAgeS <= MAX_EXPIRED_AGE_S &&
+            typeof payload.preferred_username === 'string'
+          ) {
             const sanitized = sanitizeActor(payload.preferred_username);
             if (sanitized) user = sanitized;
           }
