@@ -30,6 +30,11 @@ function buildCenterMetrics(
   const results: CenterMetrics[] = [];
   casesByCenter.forEach((centerCases, centerId) => {
     const filtered = filterCasesByTimeRange(centerCases, timeRange);
+    // F5: a center with no in-window cases must NOT appear in the list/dropdown
+    // and must NOT drag the KPI averages toward zero. filterCasesByTimeRange drops
+    // cases with no in-window observations, so an empty result means "inactive in
+    // this window" — skip it entirely. 0-safe: empty centerCases also skip here.
+    if (filtered.length === 0) return;
     const centerLabel = getCenterShorthand(
       centerId,
       centerCases[0]?.centerName ?? centerId

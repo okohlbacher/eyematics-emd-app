@@ -140,8 +140,9 @@ export default function QualityPage() {
 
   // Time-scoped cases for QUAL-022 Grundgesamtheit: a case is INCLUDED when timeRange === 'all'
   // OR it has at least one observation with effectiveDateTime >= cutoffDate(timeRange).
-  // Note: filterCasesByTimeRange trims observations but does not drop cases — we apply
-  // a case-level inclusion test here so the denominator reflects only active-range cases.
+  // Note: filterCasesByTimeRange now also drops cases with no in-window observations
+  // (A2); we keep an equivalent case-level inclusion test here so the denominator
+  // reflects only active-range cases without trimming each case's observations.
   const timeScopedCases = useMemo(() => {
     if (timeRange === 'all') return scopedCases;
     const cutoff = cutoffDate(timeRange);
