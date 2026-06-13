@@ -1,0 +1,21 @@
+NEEDS WORK
+
+1. **[BLOCKER]** [src/components/outcomes/useOutcomesRouteState.ts](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/src/components/outcomes/useOutcomesRouteState.ts:115): A6 default-off is effect-driven, so first render still starts with `perPatient: true`. `useEffect` at [line 238](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/src/components/outcomes/useOutcomesRouteState.ts:238) runs after render, while aggregation can already post with `includePerPatient: layers.perPatient` at [useOutcomesAggregation.ts:131](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/src/components/outcomes/useOutcomesAggregation.ts:131). Large cohorts can still pay the initial per-patient render/server-compute cost.
+
+2. **[BLOCKER]** [server/auditMiddleware.ts](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/server/auditMiddleware.ts:258): A5 accepts future-expiring tokens because `expiredAgeS <= 86400` does not require `expiredAgeS >= 0`. A valid non-expired Bearer token can attribute a 401 public-auth refresh failure, because `/api/auth/refresh` bypasses Bearer auth and can return 401 at [loginApi.ts:273](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/server/auth/loginApi.ts:273).
+
+3. **[WARNING]** [src/components/outcomes/OutcomesPanel.tsx](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/src/components/outcomes/OutcomesPanel.tsx:123): `perPatientSeries` is built unconditionally even when `layers.perPatient` is false. The DOM lines are gated at [line 327](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/src/components/outcomes/OutcomesPanel.tsx:327), but the large array/object duplication still happens for hidden layers.
+
+4. **[WARNING]** [src/components/outcomes/OutcomesSettingsDrawer.tsx](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/src/components/outcomes/OutcomesSettingsDrawer.tsx:83): reset defaults sets `perPatient: true` regardless of the >100 distinct-patient default, then the parent wrapper marks that as a user override at [useOutcomesRouteState.ts:136](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/src/components/outcomes/useOutcomesRouteState.ts:136). This can permanently disable the large-cohort auto-off behavior.
+
+5. **[WARNING]** [src/components/outcomes/OutcomesPanel.tsx](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/src/components/outcomes/OutcomesPanel.tsx:113): `activePatientIdRef` is not reset on scatter-off or panel/cohort changes, while chart-level `onClick` remains installed whenever `onPointClick` exists at [line 243](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/src/components/outcomes/OutcomesPanel.tsx:243). IDOR is still gated by cohort, but stale within-cohort navigation is possible.
+
+6. **[WARNING]** [src/pages/DocQualityPage.tsx](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/src/pages/DocQualityPage.tsx:31): centers with zero in-window cases are still pushed as 0-score metrics, and averages include them at [line 42](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/src/pages/DocQualityPage.tsx:42). No NaN/crash, but aggregate scores can be dragged down by centers with no active denominator.
+
+7. **[WARNING]** [server/auditMiddleware.ts](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/server/auditMiddleware.ts:253): A5 only verifies local HS256 tokens via [jwtUtil.ts:203](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/server/jwtUtil.ts:203). Keycloak mode is supported in auth middleware, but expired Keycloak access tokens will never be attributed.
+
+8. **[INFO]** [server/auditMiddleware.ts](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/server/auditMiddleware.ts:222): authenticated actors and expired-signed-claim actors are both persisted as the same `user` field. The comment says “not authenticated identity,” but the audit row does not preserve that distinction.
+
+9. **[INFO]** [server/auditMiddleware.ts](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/server/auditMiddleware.ts:168): `sanitizeActor` strips Cc/Zl/Zp but not Unicode format/bidi controls. Newline injection is covered; visual spoofing via format controls is not.
+
+10. **[INFO]** [src/pages/QualityPage.tsx](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/src/pages/QualityPage.tsx:141): stale comment still says `filterCasesByTimeRange` “does not drop cases,” which now contradicts [qualityMetrics.ts:120](/Users/kohlbach/Claude/EyeMatics-EDM-UX/emd-app/src/utils/qualityMetrics.ts:120).
