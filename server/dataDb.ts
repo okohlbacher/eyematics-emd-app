@@ -204,6 +204,30 @@ export function removeSavedSearch(username: string, id: string): void {
     .run({ username, id });
 }
 
+/**
+ * Update only the quality_params of an existing saved search owned by `username`.
+ *
+ * Ownership is enforced by the `WHERE username = @username AND id = @id` scope —
+ * a user can never mutate another user's row (C2). Returns the number of rows
+ * changed so the caller can distinguish "updated" (1) from "not found / not
+ * owned" (0). updated_at is bumped; created_at/filters/name are left untouched.
+ *
+ * @param qualityParams JSON string[] or NULL (NULL ⇒ all default checks, QUAL-021).
+ */
+export function updateSavedSearchQualityParams(
+  username: string,
+  id: string,
+  qualityParams: string | null,
+): number {
+  const now = new Date().toISOString();
+  const info = getDb()
+    .prepare(
+      'UPDATE saved_searches SET quality_params = @quality_params, updated_at = @updated_at WHERE username = @username AND id = @id',
+    )
+    .run({ username, id, quality_params: qualityParams, updated_at: now });
+  return info.changes;
+}
+
 // ---------------------------------------------------------------------------
 // 4. Excluded Cases
 // ---------------------------------------------------------------------------

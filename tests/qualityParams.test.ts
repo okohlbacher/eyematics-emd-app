@@ -15,6 +15,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  canonicalizeQualityParams,
   QUALITY_PARAM_KEYS,
   resolveQualityParams,
   sanitizeQualityParams,
@@ -109,5 +110,29 @@ describe('resolveQualityParams', () => {
 
   it('returns all keys when selection is the full list', () => {
     expect(resolveQualityParams([...QUALITY_PARAM_KEYS])).toEqual([...QUALITY_PARAM_KEYS]);
+  });
+});
+
+describe('canonicalizeQualityParams', () => {
+  it('passes undefined through unchanged (back-compat unset)', () => {
+    expect(canonicalizeQualityParams(undefined)).toBeUndefined();
+  });
+
+  it('collapses a full selection (all keys) to undefined', () => {
+    expect(canonicalizeQualityParams([...QUALITY_PARAM_KEYS])).toBeUndefined();
+  });
+
+  it('preserves a proper subset', () => {
+    const subset = ['missingVisus', 'crtCritical'];
+    expect(canonicalizeQualityParams(subset)).toEqual(subset);
+  });
+
+  it('preserves the explicit-empty selection [] (distinct from undefined)', () => {
+    expect(canonicalizeQualityParams([])).toEqual([]);
+  });
+
+  it('round-trips with resolveQualityParams: all-checked ⇒ undefined ⇒ all-checked', () => {
+    const canonical = canonicalizeQualityParams([...QUALITY_PARAM_KEYS]);
+    expect(resolveQualityParams(canonical)).toEqual([...QUALITY_PARAM_KEYS]);
   });
 });

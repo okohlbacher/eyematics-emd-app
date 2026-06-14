@@ -50,6 +50,28 @@ export function sanitizeQualityParams(raw: unknown): string[] | undefined {
 }
 
 /**
+ * Canonicalize a sanitized selection for persistence (QUAL-021 D2 back-compat).
+ *
+ * Collapses a selection that contains ALL known keys down to `undefined`, so that
+ * a "user checked everything" cohort is byte-for-byte indistinguishable from an
+ * old record that never stored qualityParams (both resolve to all checks via
+ * resolveQualityParams). A proper subset (incl. []) is returned unchanged.
+ *
+ * Used by BOTH the create and update saved-search paths and by the client edit
+ * flow so the tri-state round-trips identically (D-01: cross-boundary helper).
+ *
+ * Input MUST already be sanitized (sanitizeQualityParams): de-duplicated and
+ * whitelisted. "Contains all keys" is therefore a length === KEY_COUNT check.
+ */
+export function canonicalizeQualityParams(
+  selection: string[] | undefined,
+): string[] | undefined {
+  if (selection === undefined) return undefined;
+  if (selection.length === QUALITY_PARAM_KEYS.length) return undefined;
+  return selection;
+}
+
+/**
  * Resolve an effective quality-check key set from a stored selection.
  *
  * Implements the tri-state: undefined ⇒ all QUALITY_PARAM_KEYS (back-compat);

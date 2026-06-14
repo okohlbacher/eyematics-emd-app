@@ -33,6 +33,8 @@ vi.mock('../server/initAuth.js', () => ({
 // ---------------------------------------------------------------------------
 
 const addSavedSearchSpy = vi.fn();
+// C2: spy returns 1 (one row changed) by default — the route treats 0 as 404.
+const updateSavedSearchQualityParamsSpy = vi.fn(() => 1);
 
 vi.mock('../server/dataDb.js', () => ({
   getQualityFlags: vi.fn(() => []),
@@ -40,6 +42,7 @@ vi.mock('../server/dataDb.js', () => ({
   getSavedSearches: vi.fn(() => []),
   addSavedSearch: addSavedSearchSpy,
   removeSavedSearch: vi.fn(),
+  updateSavedSearchQualityParams: updateSavedSearchQualityParamsSpy,
   getExcludedCases: vi.fn(() => []),
   setExcludedCases: vi.fn(),
   getReviewedCases: vi.fn(() => []),
@@ -247,5 +250,116 @@ describe('POST /saved-searches — F-13 server-owned provenance + filter sanitiz
     expect(savedSearch.id.length).toBeGreaterThan(0);
     expect(typeof savedSearch.createdAt).toBe('string');
     expect(new Date(savedSearch.createdAt).getTime()).not.toBeNaN();
+  });
+});
+
+describe('PATCH /saved-searches/:id — C2 in-place qualityParams update', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    updateSavedSearchQualityParamsSpy.mockReturnValue(1);
+  });
+
+  // Helper to read the (username, id, jsonOrNull) args the route passed to the DB layer.
+  function lastUpdateArgs(): [string, string, string | null] {
+    return updateSavedSearchQualityParamsSpy.mock.calls[0] as unknown as [string, string, string | null];
+  }
+
+  // (a) Ownership — the route always scopes the DB write by the AUTHENTICATED username,
+  // never a client-supplied value. The DB layer's WHERE username=@username clause means a
+  // user can only ever touch their own row; this asserts the route feeds the token identity.
+  it('(a) scopes the DB update by the authenticated username (no client trust)', async () => {
+    const app = buildApp();
+    const token = makeToken('forscher1', 'researcher', ['org-uka']);
+
+    const res = await request(app)
+      .patch('/data/saved-searches/cohort-1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ qualityParams: ['missingVisus'] });
+
+    expect(res.status).toBe(200);
+    const [username, id] = lastUpdateArgs();
+    expect(username).toBe('forscher1');
+    expect(id).toBe('cohort-1');
+  });
+
+  // (a2) Cross-user — when the DB reports 0 rows changed (row not owned / not found),
+  // the route returns 404 (the row is invisible to this user), NOT 403/200.
+  it('(a2) returns 404 when the row is not owned by the caller (0 rows changed)', async () => {
+    updateSavedSearchQualityParamsSpy.mockReturnValue(0);
+    const app = buildApp();
+    const token = makeToken('attacker', 'researcher', ['org-uka']);
+
+    const res = await request(app)
+      .patch('/data/saved-searches/someone-elses-cohort')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ qualityParams: ['missingVisus'] });
+
+    expect(res.status).toBe(404);
+  });
+
+  // (b) Unknown qualityParams keys are stripped before persistence.
+  it('(b) strips unknown qualityParams keys before persistence', async () => {
+    const app = buildApp();
+    const token = makeToken('forscher1', 'researcher', ['org-uka']);
+
+    const res = await request(app)
+      .patch('/data/saved-searches/cohort-1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ qualityParams: ['missingVisus', 'evilKey', '__proto__'] });
+
+    expect(res.status).toBe(200);
+    const [, , json] = lastUpdateArgs();
+    expect(json).not.toBeNull();
+    const persisted = JSON.parse(json as string) as string[];
+    expect(persisted).toEqual(['missingVisus']);
+  });
+
+  // (c) Canonicalization — all six keys ⇒ stored as NULL (back-compat with undefined).
+  it('(c) all keys checked canonicalizes to NULL (back-compat)', async () => {
+    const app = buildApp();
+    const token = makeToken('forscher1', 'researcher', ['org-uka']);
+
+    const allKeys = ['missingVisus', 'missingCrt', 'missingInjections', 'crtCritical', 'visusCritical', 'visusJump'];
+    const res = await request(app)
+      .patch('/data/saved-searches/cohort-1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ qualityParams: allKeys });
+
+    expect(res.status).toBe(200);
+    const [, , json] = lastUpdateArgs();
+    expect(json).toBeNull();
+    // Response omits qualityParams for the canonical-all case (matches addSavedSearch).
+    const { savedSearch } = res.body as { savedSearch: { qualityParams?: string[] } };
+    expect(savedSearch.qualityParams).toBeUndefined();
+  });
+
+  // (c2) Empty selection [] is preserved (distinct from undefined/all).
+  it('(c2) empty selection persists as [] (explicit no-checks)', async () => {
+    const app = buildApp();
+    const token = makeToken('forscher1', 'researcher', ['org-uka']);
+
+    const res = await request(app)
+      .patch('/data/saved-searches/cohort-1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ qualityParams: [] });
+
+    expect(res.status).toBe(200);
+    const [, , json] = lastUpdateArgs();
+    expect(json).toBe('[]');
+  });
+
+  // (c3) Absent/non-array qualityParams ⇒ NULL (all default checks, back-compat).
+  it('(c3) absent qualityParams stores NULL (all default checks)', async () => {
+    const app = buildApp();
+    const token = makeToken('forscher1', 'researcher', ['org-uka']);
+
+    const res = await request(app)
+      .patch('/data/saved-searches/cohort-1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({});
+
+    expect(res.status).toBe(200);
+    const [, , json] = lastUpdateArgs();
+    expect(json).toBeNull();
   });
 });

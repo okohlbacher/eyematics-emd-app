@@ -14,7 +14,7 @@ import crypto from 'node:crypto';
 import type { Request, Response } from 'express';
 import { Router } from 'express';
 
-import { sanitizeQualityParams } from '../shared/qualityParams.js';
+import { canonicalizeQualityParams, sanitizeQualityParams } from '../shared/qualityParams.js';
 import { sanitizeSavedSearchFilters } from '../shared/savedSearchSanitize.js';
 import type { QualityFlagRow, SavedSearchRow } from './dataDb.js';
 import {
@@ -27,6 +27,7 @@ import {
   setExcludedCases,
   setQualityFlags,
   setReviewedCases,
+  updateSavedSearchQualityParams,
 } from './dataDb.js';
 import { getCaseToCenter, isBypass } from './fhirApi.js';
 import { invalidateByCohort } from './outcomesAggregateCache.js';
@@ -260,6 +261,43 @@ dataApiRouter.delete('/saved-searches/:id', (req: Request, res: Response): void 
   removeSavedSearch(username, String(req.params.id ?? ''));
   invalidateByCohort(String(req.params.id ?? ''));   // Phase 12 / D-09 — drop cached aggregate on delete
   res.json({ message: 'Saved search deleted' });
+});
+
+// C2 — update an existing cohort's quality-check selection IN PLACE.
+// The qualityParams checklist moved from Kohortenbildung to the Datenqualität tab,
+// where it edits the selected cohort directly. Ownership is enforced exactly like
+// the sibling routes: the DB layer scopes every statement by @username, so a user
+// can only ever touch their OWN rows (cross-user PATCH returns 404, not 403, since
+// the row is invisible). Auth (typ:'access') + audit are applied globally on /api.
+dataApiRouter.patch('/saved-searches/:id', (req: Request, res: Response): void => {
+  const username = req.auth!.preferred_username;
+  const id = String(req.params.id ?? '');
+  if (!id) {
+    res.status(400).json({ error: 'id is required' });
+    return;
+  }
+
+  // qualityParams may be absent/undefined/null (⇒ all default checks, back-compat)
+  // or a string[] subset. Sanitize against QUALITY_PARAM_KEYS (rejects unknown keys
+  // by stripping them, T-40-07/08), then canonicalize all-keys ⇒ undefined so the
+  // stored form matches addSavedSearch's create-path semantics (QUAL-021 D2).
+  const { qualityParams } = req.body as Record<string, unknown>;
+  const safeQualityParams = canonicalizeQualityParams(sanitizeQualityParams(qualityParams));
+  const qualityParamsStr = safeQualityParams !== undefined ? JSON.stringify(safeQualityParams) : null;
+
+  const changed = updateSavedSearchQualityParams(username, id, qualityParamsStr);
+  if (changed === 0) {
+    res.status(404).json({ error: 'Saved search not found' });
+    return;
+  }
+
+  invalidateByCohort(id);   // Phase 12 / D-09 — params change can affect cached aggregates for this cohort
+
+  const responseSearch: { id: string; qualityParams?: string[] } = { id };
+  if (safeQualityParams !== undefined) {
+    responseSearch.qualityParams = safeQualityParams;
+  }
+  res.json({ savedSearch: responseSearch });
 });
 
 // ---------------------------------------------------------------------------

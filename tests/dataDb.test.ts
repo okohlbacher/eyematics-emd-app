@@ -21,6 +21,7 @@ import {
   setExcludedCases,
   setQualityFlags,
   setReviewedCases,
+  updateSavedSearchQualityParams,
 } from '../server/dataDb';
 
 let tmpDir: string;
@@ -140,6 +141,38 @@ describe('dataDb', () => {
       addSavedSearch('user2', { ...search, name: 'Different' });
       expect(getSavedSearches('user1')[0].name).toBe('My Search');
       expect(getSavedSearches('user2')[0].name).toBe('Different');
+    });
+
+    // C2 — updateSavedSearchQualityParams
+    it('updates quality_params in place and returns 1 row changed', () => {
+      addSavedSearch('user1', search);
+      const changed = updateSavedSearchQualityParams('user1', 's1', '["missingVisus"]');
+      expect(changed).toBe(1);
+      const result = getSavedSearches('user1');
+      expect(result[0].quality_params).toBe('["missingVisus"]');
+      // name/created_at/filters are untouched
+      expect(result[0].name).toBe('My Search');
+      expect(result[0].created_at).toBe('2026-01-01T00:00:00Z');
+    });
+
+    it('sets quality_params to NULL (all default checks / back-compat)', () => {
+      addSavedSearch('user1', { ...search, quality_params: '["missingVisus"]' });
+      updateSavedSearchQualityParams('user1', 's1', null);
+      expect(getSavedSearches('user1')[0].quality_params).toBeNull();
+    });
+
+    it('cannot update another user\'s search (ownership / IDOR) — 0 rows changed', () => {
+      addSavedSearch('user1', search);
+      // user2 attempts to mutate user1's row id
+      const changed = updateSavedSearchQualityParams('user2', 's1', '["missingVisus"]');
+      expect(changed).toBe(0);
+      // user1's row is unchanged
+      expect(getSavedSearches('user1')[0].quality_params == null).toBe(true);
+    });
+
+    it('returns 0 for a non-existent id', () => {
+      const changed = updateSavedSearchQualityParams('user1', 'no-such-id', '[]');
+      expect(changed).toBe(0);
     });
   });
 
