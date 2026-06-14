@@ -32,6 +32,7 @@ interface DataContextType {
   cases: PatientCase[];
   savedSearches: SavedSearch[];
   addSavedSearch: (s: Pick<SavedSearch, 'name' | 'filters'> & { qualityParams?: string[] }) => void;
+  updateSavedSearchQualityParams: (id: string, qualityParams: string[] | undefined) => void;
   removeSavedSearch: (id: string) => void;
   qualityFlags: QualityFlag[];
   addQualityFlag: (f: QualityFlag) => void;
@@ -66,6 +67,16 @@ async function putJson<T>(url: string, body: unknown): Promise<T> {
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   const resp = await authFetch(url, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) throw new Error(`${url}: ${resp.status}`);
+  return resp.json() as Promise<T>;
+}
+
+async function patchJson<T>(url: string, body: unknown): Promise<T> {
+  const resp = await authFetch(url, {
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
@@ -147,6 +158,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
+  // C2: update an existing cohort's quality-check selection in place (edited on the
+  // Datenqualität tab). The server sanitizes + canonicalizes (all keys ⇒ undefined,
+  // QUAL-021 D2); we adopt the server-returned canonical qualityParams so local state
+  // matches persistence exactly. `undefined` qualityParams ⇒ all default checks.
+  const updateSavedSearchQualityParams = useCallback((id: string, qualityParams: string[] | undefined) => {
+    void patchJson<{ savedSearch: { id: string; qualityParams?: string[] } }>(
+      `/api/data/saved-searches/${id}`,
+      { qualityParams },
+    )
+      .then(({ savedSearch }) => {
+        setSavedSearches((prev) =>
+          prev.map((s) =>
+            s.id === id ? { ...s, qualityParams: savedSearch.qualityParams } : s,
+          ),
+        );
+      })
+      .catch((err) => {
+        console.error('[DataProvider] Failed to update cohort quality params:', err);
+      });
+  }, []);
+
   const removeSavedSearch = useCallback((id: string) => {
     setSavedSearches((prev) => prev.filter((s) => s.id !== id));
     deleteJson(`/api/data/saved-searches/${id}`).catch((err) =>
@@ -223,6 +255,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     cases,
     savedSearches,
     addSavedSearch,
+    updateSavedSearchQualityParams,
     removeSavedSearch,
     qualityFlags,
     addQualityFlag,
@@ -236,7 +269,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     reloadData,
   }), [
     loading, error, bundles, centers, cases,
-    savedSearches, addSavedSearch, removeSavedSearch,
+    savedSearches, addSavedSearch, updateSavedSearchQualityParams, removeSavedSearch,
     qualityFlags, addQualityFlag, updateQualityFlag,
     excludedCases, toggleExcludeCase, activeCases,
     reviewedCases, markCaseReviewed, unmarkCaseReviewed,
