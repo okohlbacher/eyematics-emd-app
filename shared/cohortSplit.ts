@@ -233,7 +233,6 @@ export function roundFor(attribute: RangeSplitAttribute): (n: number) => number 
 
 function formatFor(attribute: RangeSplitAttribute): (n: number) => string {
   const r = roundFor(attribute);
-  if (attribute === 'visus') return (n) => String(r(n));
   return (n) => String(r(n));
 }
 
@@ -331,8 +330,17 @@ function rangeGroups(
 
   const bins = binsFromCutPoints(cuts, attribute, fmt);
   const key = rangeFilterKey(attribute);
+  // If the parent itself constrains this same attribute, the child must be the
+  // INTERSECTION (parent ∩ bin), not an override — otherwise the persisted child
+  // filter would discard the parent's bound and later evaluate against the full
+  // dataset (preview count is right because parentCohort is pre-filtered, but the
+  // saved object would diverge). C3 review HIGH-1.
+  const parentRange = parentFilter[key] as [number, number] | undefined;
   return bins.map((bin) => {
-    const range = rangeFilterForBin(bin, attribute);
+    const [binLo, binHi] = rangeFilterForBin(bin, attribute);
+    const range: [number, number] = parentRange
+      ? [Math.max(binLo, parentRange[0]), Math.min(binHi, parentRange[1])]
+      : [binLo, binHi];
     const filter: CohortFilter = { ...parentFilter, [key]: range };
     const count = applyFilters(parentCohort, filter, filterOptions).length;
     return { label: bin.label, filter, count };
@@ -372,11 +380,22 @@ export function buildChildName(
   subLabel: string,
   isTaken: (candidate: string) => boolean,
 ): string {
-  const base = `${parentName.trim()}:${subLabel.trim()}`;
+  // The sub segment must not contain a colon (it would break the single-colon
+  // `Parent:Sub` subcohort convention → parseSubcohortName throws, the cohort is
+  // no longer recognised as a subcohort) and must not be empty. Data/i18n-driven
+  // labels (center, diagnosis, an empty gender) are the open surface. C3 review HIGH-2.
+  const sub = sanitizeSubLabel(subLabel);
+  const base = `${parentName.trim()}:${sub}`;
   if (!isTaken(base)) return base;
   for (let n = 2; n < 1000; n++) {
-    const candidate = `${parentName.trim()}:${subLabel.trim()} (${n})`;
+    const candidate = `${parentName.trim()}:${sub} (${n})`;
     if (!isTaken(candidate)) return candidate;
   }
   throw new Error('buildChildName: exhausted collision suffixes');
+}
+
+/** Make a label safe as the `Sub` segment of a `Parent:Sub` subcohort name. */
+function sanitizeSubLabel(label: string): string {
+  const cleaned = label.trim().replace(/:/g, '–'); // colon → en-dash (breaks the convention)
+  return cleaned === '' ? 'unbekannt' : cleaned;
 }

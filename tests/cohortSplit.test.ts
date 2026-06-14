@@ -160,6 +160,15 @@ describe('buildChildName', () => {
     // still exactly one colon ⇒ valid subcohort name
     expect(name.split(':').length).toBe(2);
   });
+  it('sanitizes a colon in the sub-label so the name stays single-colon (HIGH-2)', () => {
+    const name = buildChildName('C1', 'Klinik: Süd', () => false);
+    expect(name.split(':').length).toBe(2); // exactly one colon
+    expect(name).toBe('C1:Klinik– Süd');
+  });
+  it('replaces an empty sub-label with a placeholder (no Parent: empty-sub)', () => {
+    const name = buildChildName('C1', '   ', () => false);
+    expect(name).toBe('C1:unbekannt');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -244,6 +253,27 @@ describe('computeSplitGroups — range cut points', () => {
     expect(groups[1].count).toBe(2);
     // [70,+inf): 70yo + 80yo
     expect(groups[2].count).toBe(2);
+  });
+
+  it('intersects bins with a parent that constrains the same attribute (HIGH-1)', () => {
+    // Parent restricts ageRange [40,60]; split by age cut [80].
+    const cases = [
+      makeCase('a', { birthDate: birthForAge(45) }),
+      makeCase('b', { birthDate: birthForAge(55) }),
+      makeCase('c', { birthDate: birthForAge(90) }), // outside parent [40,60]
+    ];
+    const groups = computeSplitGroups({
+      parentCases: cases,
+      parentFilter: { ageRange: [40, 60] },
+      spec: { kind: 'range', attribute: 'age', mode: 'cutpoints', cutPoints: [80] },
+    });
+    // The persisted child filter must be the INTERSECTION, not the raw bin.
+    // Lower bin (-inf,80) ∩ [40,60] = [40,59]; upper bin [80,+inf) ∩ [40,60] = [80,60] (empty).
+    expect(groups[0].filter.ageRange![0]).toBe(40);
+    expect(groups[0].filter.ageRange![1]).toBe(60);
+    expect(groups[0].count).toBe(2); // 45 + 55, the 90yo excluded by the parent bound
+    // upper bin is empty after intersection (no case in parent ∩ [80,+inf))
+    expect(groups[1].count).toBe(0);
   });
 
   it('visus continuous cut point [0.5]: value exactly on cut lands in the UPPER bin', () => {
