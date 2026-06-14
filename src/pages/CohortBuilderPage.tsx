@@ -18,7 +18,6 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { QUALITY_PARAM_KEYS, resolveQualityParams } from '../../shared/qualityParams';
 import Badge from '../components/primitives/Badge';
 import Button from '../components/primitives/Button';
 import { useData } from '../context/DataContext';
@@ -76,14 +75,9 @@ export default function CohortBuilderPage() {
   const [showSaved, setShowSaved] = useState(false);
   const [saveName, setSaveName] = useState('');
 
-  /**
-   * Per-cohort quality-parameter selection for the save flow (QUAL-021).
-   * Default: all keys checked — matches "undefined ⇒ all default checks" back-compat semantics.
-   * A Set is used for O(1) toggle and membership tests; converted to array on save.
-   */
-  const [selectedQualityParams, setSelectedQualityParams] = useState<Set<string>>(
-    () => new Set(QUALITY_PARAM_KEYS),
-  );
+  // C2: the per-cohort quality-check selection moved to the Datenqualität tab
+  // (QualityPage), where it is edited in place on the selected cohort. New cohorts
+  // are created with default qualityParams (undefined ⇒ all checks, back-compat).
 
   const [savedSort, setSavedSort] = useState<SortField>('date');
 
@@ -351,22 +345,15 @@ export default function CohortBuilderPage() {
     const wireFilters = validFilters.flaggedCaseIds !== undefined
       ? { ...validFilters, flaggedCaseIds: Array.from(validFilters.flaggedCaseIds) }
       : { ...validFilters };
-    // QUAL-021 D2: send qualityParams as undefined when all keys are checked (canonical "all" ⇒ back-compat
-    // with old records that have no qualityParams). Send the explicit subset otherwise.
-    // This ensures an old-format GET response (no qualityParams) and a new "all checked" record are indistinguishable
-    // to downstream consumers using resolveQualityParams(), preserving back-compat semantics.
-    const allChecked = QUALITY_PARAM_KEYS.every((k) => selectedQualityParams.has(k));
-    const qualityParamsPayload = allChecked ? undefined : Array.from(selectedQualityParams);
-    addSavedSearch({ name: saveName.trim(), filters: wireFilters as CohortFilter, qualityParams: qualityParamsPayload });
+    // C2: new cohorts are created with default qualityParams (omitted ⇒ undefined ⇒ all
+    // default checks, back-compat). The user tunes the checks on the Datenqualität tab.
+    addSavedSearch({ name: saveName.trim(), filters: wireFilters as CohortFilter });
     setSaveName('');
   };
 
   const handleLoadSearch = (s: SavedSearch) => {
     setFilters(s.filters);
-    // QUAL-021: restore qualityParams from saved cohort.
-    // resolveQualityParams maps undefined (old records) → all keys (back-compat).
-    // The effective set is always a valid selection to show in the checklist.
-    setSelectedQualityParams(new Set(resolveQualityParams(s.qualityParams)));
+    // C2: qualityParams are no longer edited here — they live on the Datenqualität tab.
     setShowSaved(false);
   };
 
@@ -867,49 +854,6 @@ export default function CohortBuilderPage() {
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
                 {t('saveCohortLabel')}
               </p>
-
-              {/* QUAL-021: quality-parameter selection checklist */}
-              <div className="mb-3">
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
-                  {t('qualityParamsLabel')}
-                </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">
-                  {t('qualityParamsHint')}
-                </p>
-                <div className="flex flex-col gap-1">
-                  {QUALITY_PARAM_KEYS.map((key) => {
-                    // Map canonical key → i18n key for label.
-                    // missingVisus, missingCrt, missingInjections, visusJump reuse existing keys.
-                    // crtCritical, visusCritical use new keys (crtAnomaly/visusAnomaly are similar but
-                    // these are the canonical key names for the checks, so we have dedicated translations).
-                    const labelKey = key as Parameters<typeof t>[0];
-                    return (
-                      <label
-                        key={key}
-                        className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedQualityParams.has(key)}
-                          onChange={(e) => {
-                            setSelectedQualityParams((prev) => {
-                              const next = new Set(prev);
-                              if (e.target.checked) {
-                                next.add(key);
-                              } else {
-                                next.delete(key);
-                              }
-                              return next;
-                            });
-                          }}
-                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
-                        />
-                        {t(labelKey)}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
 
               <div className="flex gap-2">
                 <input
