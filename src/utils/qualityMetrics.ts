@@ -125,20 +125,23 @@ function isIopInRange(v: number): boolean {
  * never throws and never silently drops everything.
  */
 export function cutoffDate(range: TimeRange): Date | null {
+  // Observation `effectiveDateTime` values are date-only 'YYYY-MM-DD' (UTC
+  // midnight). Parse every bound in UTC to match — parsing in local time skews
+  // boundary-day inclusion by the timezone offset in non-UTC zones.
   if (isCustomTimeRange(range)) {
     if (!range.from) return null;
-    const d = new Date(range.from);
+    const d = new Date(`${range.from}T00:00:00Z`);
     return Number.isNaN(d.getTime()) ? null : d;
   }
   const now = new Date();
   if (range === '3m') {
-    return new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 3, now.getUTCDate()));
   }
   if (range === '6m') {
-    return new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 6, now.getUTCDate()));
   }
   if (range === '1y') {
-    return new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+    return new Date(Date.UTC(now.getUTCFullYear() - 1, now.getUTCMonth(), now.getUTCDate()));
   }
   return null;
 }
@@ -159,11 +162,12 @@ export function timeRangeWindow(
   if (isCustomTimeRange(range)) {
     if (!range.from || !range.to) return null;
     // Custom bounds come from <input type="date"> as 'YYYY-MM-DD' (calendar days).
-    // Parse in local time (consistent with cutoffDate) and make the range
-    // inclusive: from = start of the 'from' day, to = end of the 'to' day, so an
-    // observation timestamped any time on the end date is included.
-    const from = new Date(`${range.from}T00:00:00`);
-    const to = new Date(`${range.to}T23:59:59.999`);
+    // Parse in UTC to match the observation timestamps (date-only/UTC), and make
+    // the range inclusive: from = start of the 'from' day, to = end of the 'to'
+    // day, so an observation timestamped any time on either boundary day is
+    // included regardless of the viewer's timezone.
+    const from = new Date(`${range.from}T00:00:00Z`);
+    const to = new Date(`${range.to}T23:59:59.999Z`);
     if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return null;
     if (from.getTime() > to.getTime()) return null; // guard: from>to
     return { from, to };

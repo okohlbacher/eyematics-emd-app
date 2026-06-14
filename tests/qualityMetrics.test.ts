@@ -59,11 +59,11 @@ describe('filterCasesByTimeRange — A2 window-scoped case semantics', () => {
   it('cutoffDate("6m") returns ~6 months before frozen now', () => {
     const cutoff = cutoffDate('6m');
     expect(cutoff).not.toBeNull();
-    // Frozen now = 2026-06-01; 6m cutoff = local 2025-12-01.
-    // Use getFullYear/getMonth/getDate (local calendar) to avoid timezone offset in toISOString().
-    expect(cutoff!.getFullYear()).toBe(2025);
-    expect(cutoff!.getMonth()).toBe(11); // 0-indexed → December
-    expect(cutoff!.getDate()).toBe(1);
+    // Frozen now = 2026-06-01Z; 6m cutoff = UTC 2025-12-01 (bounds parsed in UTC
+    // to match date-only observation timestamps; assert in UTC so the test is TZ-independent).
+    expect(cutoff!.getUTCFullYear()).toBe(2025);
+    expect(cutoff!.getUTCMonth()).toBe(11); // 0-indexed → December
+    expect(cutoff!.getUTCDate()).toBe(1);
   });
 
   it('cutoffDate("all") returns null (no cutoff)', () => {
@@ -165,10 +165,10 @@ describe('B1 — cutoffDate / timeRangeWindow new ranges', () => {
   it('cutoffDate("3m") returns ~3 months before frozen now', () => {
     const cutoff = cutoffDate('3m');
     expect(cutoff).not.toBeNull();
-    // Frozen now = 2026-06-01; 3m cutoff = local 2026-03-01.
-    expect(cutoff!.getFullYear()).toBe(2026);
-    expect(cutoff!.getMonth()).toBe(2); // 0-indexed → March
-    expect(cutoff!.getDate()).toBe(1);
+    // Frozen now = 2026-06-01Z; 3m cutoff = UTC 2026-03-01 (assert in UTC, TZ-independent).
+    expect(cutoff!.getUTCFullYear()).toBe(2026);
+    expect(cutoff!.getUTCMonth()).toBe(2); // 0-indexed → March
+    expect(cutoff!.getUTCDate()).toBe(1);
   });
 
   it('timeRangeWindow("all") returns null (no window)', () => {
@@ -178,7 +178,7 @@ describe('B1 — cutoffDate / timeRangeWindow new ranges', () => {
   it('timeRangeWindow(preset) has from=cutoff and to≈now', () => {
     const w = timeRangeWindow('6m');
     expect(w).not.toBeNull();
-    expect(w!.from.getMonth()).toBe(11); // Dec 2025
+    expect(w!.from.getUTCMonth()).toBe(11); // Dec 2025 (UTC cutoff)
     expect(w!.to.getTime()).toBe(FROZEN_NOW.getTime());
   });
 
@@ -191,16 +191,18 @@ describe('B1 — cutoffDate / timeRangeWindow new ranges', () => {
   it('custom range: both bounds applied (inclusive from start-of-day / to end-of-day)', () => {
     const w = timeRangeWindow({ from: '2026-01-01', to: '2026-03-01' });
     expect(w).not.toBeNull();
-    // Parsed in local time: from = start of day, to = end of day (inclusive).
-    expect(w!.from.getTime()).toBe(new Date('2026-01-01T00:00:00').getTime());
-    expect(w!.to.getTime()).toBe(new Date('2026-03-01T23:59:59.999').getTime());
+    // Parsed in UTC (matching date-only observation timestamps): from = start of
+    // day, to = end of day (inclusive).
+    expect(w!.from.getTime()).toBe(new Date('2026-01-01T00:00:00Z').getTime());
+    expect(w!.to.getTime()).toBe(new Date('2026-03-01T23:59:59.999Z').getTime());
   });
 
-  it('custom range: an observation timestamped on the `to` day is included (end-of-day inclusive)', () => {
-    const c = makeCase('c', ['2026-03-01T14:30:00']); // afternoon of the end date
+  it('custom range: an observation on either boundary day is included (TZ-independent, UTC)', () => {
+    // Date-only timestamps like the real data (UTC midnight) on both bounds.
+    const c = makeCase('c', ['2026-01-01', '2026-03-01']);
     const result = filterCasesByTimeRange([c], { from: '2026-01-01', to: '2026-03-01' });
     expect(result).toHaveLength(1);
-    expect(result[0]!.observations).toHaveLength(1);
+    expect(result[0]!.observations).toHaveLength(2);
   });
 
   it('custom range with from>to is rejected (null → no window)', () => {
