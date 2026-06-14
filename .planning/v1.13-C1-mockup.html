@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C1 Mockup — Datenqualität: Fallprüfung (Rework)</title>
+<style>
+  :root{
+    --gray-50:#f9fafb; --gray-100:#f3f4f6; --gray-200:#e5e7eb; --gray-300:#d1d5db;
+    --gray-400:#9ca3af; --gray-500:#6b7280; --gray-600:#4b5563; --gray-700:#374151;
+    --gray-900:#111827; --white:#fff;
+    --red-50:#fef2f2; --red-200:#fecaca; --red-600:#dc2626;
+    --amber-50:#fffbeb; --amber-200:#fde68a; --amber-600:#d97706; --amber-800:#92400e;
+    --green-50:#f0fdf4; --green-200:#bbf7d0; --green-600:#16a34a; --green-700:#15803d;
+    --blue-50:#eff6ff; --blue-200:#bfdbfe; --blue-600:#2563eb; --blue-700:#1d4ed8;
+  }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:var(--gray-50);color:var(--gray-900);margin:0;padding:32px;font-size:14px;line-height:1.5}
+  .wrap{max-width:980px;margin:0 auto}
+  h1{font-size:22px;font-weight:700;margin:0}
+  .sub{color:var(--gray-500);margin:4px 0 24px}
+  .card{background:var(--white);border:1px solid var(--gray-200);border-radius:12px;padding:20px;margin-bottom:16px}
+  .row-between{display:flex;align-items:center;justify-content:space-between}
+  .muted{color:var(--gray-500)}
+  .xs{font-size:12px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:500}
+  .b-grey{background:var(--gray-100);color:var(--gray-600)}
+  .b-green{background:var(--green-50);color:var(--green-700)}
+  .b-amber{background:var(--amber-50);color:var(--amber-600)}
+  .b-blue{background:var(--blue-50);color:var(--blue-700)}
+  .b-red{background:var(--red-50);color:var(--red-600)}
+  .b-dashed{border:1px dashed var(--amber-200)}
+  .btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;border-radius:8px;
+       padding:5px 10px;border:1px solid var(--gray-300);background:var(--white);color:var(--gray-700);cursor:pointer}
+  .btn:hover{background:var(--gray-50)}
+  .btn-green{border-color:var(--green-200);color:var(--green-700)}
+  .btn-green:hover{background:var(--green-50)}
+  .btn-blue{border-color:var(--blue-200);color:var(--blue-700)}
+  .btn-blue:hover{background:var(--blue-50)}
+  .btn-red{border-color:var(--red-200);color:var(--red-600)}
+  .btn-red:hover{background:var(--red-50)}
+  .btn-icon{padding:5px 7px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;color:var(--gray-600);font-size:13px;margin-top:8px}
+  .meta b{color:var(--gray-900);font-weight:600}
+  .progress{font-size:13px}
+  .progress b{color:var(--green-700)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead th{background:var(--gray-50);text-align:left;font-size:11px;font-weight:600;
+           text-transform:uppercase;letter-spacing:.03em;color:var(--gray-500);padding:8px 12px}
+  thead th.r{text-align:right} thead th.c{text-align:center}
+  tbody td{padding:10px 12px;border-top:1px solid var(--gray-100);vertical-align:middle}
+  td.r{text-align:right} td.c{text-align:center}
+  tr.anom{background:var(--amber-50)}
+  .subrow td{border-top:none;padding-top:0;padding-bottom:10px}
+  .anomtag{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--amber-800);
+           background:var(--amber-50);border:1px solid var(--amber-200);border-radius:6px;padding:2px 8px}
+  .anomtag.miss{color:var(--red-600);background:var(--red-50);border-color:var(--red-200)}
+  .actions{display:inline-flex;gap:6px;justify-content:flex-end}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--gray-200);margin-bottom:14px}
+  .tab{padding:8px 12px;font-weight:500;font-size:14px;border-bottom:2px solid transparent;color:var(--gray-500);cursor:pointer}
+  .tab.active{border-color:var(--blue-600);color:var(--blue-600)}
+  .chips{display:flex;gap:8px;margin-bottom:12px;align-items:center}
+  .chip{font-size:12px;border:1px solid var(--gray-200);border-radius:999px;padding:3px 12px;cursor:pointer;color:var(--gray-600);background:var(--white)}
+  .chip.active{background:var(--gray-900);color:#fff;border-color:var(--gray-900)}
+  .chip .ct{opacity:.7}
+  .footer-act{margin-top:14px;display:flex;justify-content:flex-end}
+  .collapse-head{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+  .tip{position:relative;display:inline-flex;align-items:center}
+  .tip .i{width:14px;height:14px;border-radius:50%;background:var(--gray-200);color:var(--gray-600);
+          font-size:10px;display:inline-flex;align-items:center;justify-content:center;cursor:help;margin-left:4px}
+  .tip .bubble{visibility:hidden;opacity:0;transition:.1s;position:absolute;bottom:130%;left:50%;transform:translateX(-50%);
+       background:var(--gray-900);color:#fff;font-size:11px;font-weight:400;padding:7px 9px;border-radius:6px;width:220px;z-index:5;line-height:1.4}
+  .tip:hover .bubble,.tip:focus-within .bubble{visibility:visible;opacity:1}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--gray-600);margin-top:6px}
+  .note{font-size:12px;color:var(--gray-500);font-style:italic}
+  .struck{text-decoration:line-through;color:var(--gray-400)}
+  details>summary{list-style:none} details>summary::-webkit-details-marker{display:none}
+  .annot{background:#fff7ed;border:1px dashed var(--amber-200);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--amber-800);margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Datenqualität — Fallprüfung</h1>
+  <p class="sub">Prüfen und beurteilen Sie die Messwerte direkt in der Liste.</p>
+
+  <div class="annot">
+    <b>Mockup (C1-Rework)</b> — vorher: 4 Karten, doppelte Bestätigen-Steuerung (oben + unten), Auffälligkeiten in separater Karte.
+    Nachher: 1 Prüf-Karte mit Inline-Aktionen je Zeile, Auffälligkeiten/fehlende Daten inline, Status-Vokabular mit Definitionen, eingeklapptes Prüfprotokoll.
+  </div>
+
+  <!-- HEADER STRIP -->
+  <div class="card">
+    <div class="row-between">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-weight:600">PAT-2024-0317</span>
+        <span class="badge b-red">⃠ Ausgeschlossen?</span>
+      </div>
+      <div class="progress">Fortschritt: <b>3</b> / 5 beurteilt</div>
+    </div>
+    <div class="meta">
+      <span><b>67</b> J.</span>
+      <span>Diagnose: <b>nAMD (H35.32)</b></span>
+      <span>Zentrum: <b>Universitätsklinikum Tübingen</b></span>
+      <span>Therapie: <b style="color:var(--amber-600)">Unterbrecher (98 d)</b></span>
+      <span>Messwerte gesamt: <b>5</b></span>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn btn-red">⃠ Von Analysen ausschließen</button>
+      <button class="btn" style="border:none;color:var(--blue-600)">Vollständige Fallansicht →</button>
+    </div>
+  </div>
+
+  <!-- CARD A: REVIEW TABLE -->
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active">Zu prüfende Messwerte</div>
+      <div class="tab">🖼 OCT <span class="badge b-grey" style="margin-left:4px">2</span></div>
+    </div>
+
+    <div class="chips">
+      <span class="chip active">Alle <span class="ct">5</span></span>
+      <span class="chip">Nur auffällige <span class="ct">3</span></span>
+      <span class="chip">Offen <span class="ct">2</span></span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Parameter</th><th>Datum</th><th class="r">Wert</th>
+          <th class="c">Status</th><th class="c">Aktion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- normal, already confirmed -->
+        <tr>
+          <td>Visus (logMAR)</td>
+          <td class="muted">2024-01-12</td>
+          <td class="r mono">0.30</td>
+          <td class="c"><span class="badge b-green" aria-label="Status: bestätigt">✓ bestätigt</span></td>
+          <td class="c"><div class="actions"><button class="btn btn-icon" title="Zurücksetzen" aria-label="Status zurücksetzen Visus 2024-01-12">↺</button></div></td>
+        </tr>
+
+        <!-- anomaly: Visus too low, still open -> auffällig -->
+        <tr class="anom">
+          <td>Visus (logMAR)</td>
+          <td class="muted">2024-03-04</td>
+          <td class="r mono">0.05</td>
+          <td class="c"><span class="badge b-amber" aria-label="Status: auffällig">⚠ auffällig</span></td>
+          <td class="c"><div class="actions">
+            <button class="btn btn-green" aria-label="Bestätigen Visus 2024-03-04">✓ Bestätigen</button>
+            <button class="btn btn-blue" aria-label="Im Quellsystem korrigiert Visus 2024-03-04">↑ Behoben</button>
+            <button class="btn btn-red btn-icon" title="Fehler melden" aria-label="Fehler melden Visus 2024-03-04">⚑</button>
+          </div></td>
+        </tr>
+        <tr class="anom subrow">
+          <td colspan="5"><span class="anomtag">⚠ auffällig: Visus &lt; 0.1</span></td>
+        </tr>
+
+        <!-- anomaly: CRT too high, marked Behoben (corrected upstream) -->
+        <tr class="anom">
+          <td>CRT</td>
+          <td class="muted">2024-03-04</td>
+          <td class="r mono"><span class="struck">612 µm</span></td>
+          <td class="c"><span class="badge b-blue" aria-label="Status: Behoben, im Quellsystem korrigiert">↑ Behoben</span></td>
+          <td class="c"><div class="actions"><button class="btn btn-icon" title="Zurücksetzen" aria-label="Status zurücksetzen CRT 2024-03-04">↺</button></div></td>
+        </tr>
+        <tr class="anom subrow">
+          <td colspan="5">
+            <span class="anomtag">⚠ auffällig: CRT &gt; 400 µm</span>
+            <span class="note" style="margin-left:8px">im Quellsystem korrigiert — Wert im Quell-EHR berichtigt</span>
+          </td>
+        </tr>
+
+        <!-- normal, still open -->
+        <tr>
+          <td>CRT</td>
+          <td class="muted">2024-01-12</td>
+          <td class="r mono">280 µm</td>
+          <td class="c"><span class="badge b-grey" aria-label="Status: offen">○ Offen</span></td>
+          <td class="c"><div class="actions">
+            <button class="btn btn-green" aria-label="Bestätigen CRT 2024-01-12">✓ Bestätigen</button>
+            <button class="btn btn-red btn-icon" title="Fehler melden" aria-label="Fehler melden CRT 2024-01-12">⚑</button>
+          </div></td>
+        </tr>
+
+        <!-- missing data: synthetic row -->
+        <tr class="anom">
+          <td>IVOM (Injektionen)</td>
+          <td class="muted">—</td>
+          <td class="r mono">—</td>
+          <td class="c"><span class="badge b-amber b-dashed" aria-label="Status: fehlt">⚠ fehlt</span></td>
+          <td class="c"><div class="actions">
+            <button class="btn btn-blue" aria-label="Im Quellsystem korrigiert IVOM">↑ Behoben</button>
+            <button class="btn btn-red btn-icon" title="Fehler melden" aria-label="Fehler melden IVOM">⚑</button>
+          </div></td>
+        </tr>
+        <tr class="anom subrow">
+          <td colspan="5"><span class="anomtag miss">⚠ fehlt: Keine Injektionen dokumentiert</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="footer-act">
+      <button class="btn btn-green">✓ Alle sichtbaren (unbeurteilten, unauffälligen) als bestätigt</button>
+    </div>
+
+    <!-- status legend with tooltips -->
+    <div class="legend" style="margin-top:14px;border-top:1px solid var(--gray-100);padding-top:10px">
+      <span class="tip"><span class="badge b-grey">○ Offen</span>
+        <span class="i" tabindex="0">i<span class="bubble">Noch nicht geprüft.</span></span></span>
+      <span class="tip"><span class="badge b-green">✓ bestätigt</span>
+        <span class="i" tabindex="0">i<span class="bubble">Wert wurde als korrekt bestätigt.</span></span></span>
+      <span class="tip"><span class="badge b-amber">⚠ auffällig</span>
+        <span class="i" tabindex="0">i<span class="bubble">Vom System als auffällig erkannt (Schwellenwert über-/unterschritten oder Wert fehlt) – noch nicht beurteilt.</span></span></span>
+      <span class="tip"><span class="badge b-blue">↑ Behoben</span>
+        <span class="i" tabindex="0">i<span class="bubble">Im Quellsystem korrigiert – der Wert wurde direkt im Quell-EHR berichtigt. Der Demonstrator selbst ändert keine Daten.</span></span></span>
+    </div>
+  </div>
+
+  <!-- CARD B: collapsed case status + audit log -->
+  <div class="card">
+    <details>
+      <summary class="collapse-head">
+        <span style="font-weight:600">Fallstatus &amp; Prüfprotokoll <span class="badge b-grey" style="margin-left:6px">2 Einträge</span></span>
+        <span class="muted xs">aufklappen ▾</span>
+      </summary>
+      <div style="margin-top:14px">
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <button class="btn btn-green">✓ Als geprüft markieren</button>
+        </div>
+        <div style="font-size:12px">
+          <div style="display:flex;justify-content:space-between;padding:8px 10px;background:var(--gray-50);border-radius:8px;margin-bottom:6px">
+            <span><b>Visus (2024-03-04)</b> — als korrekt bestätigt</span>
+            <span class="muted">gemeldet von admin · 14.06.2026</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 10px;background:var(--gray-50);border-radius:8px">
+            <span><b>CRT (2024-03-04)</b> — im Quellsystem korrigiert</span>
+            <span class="muted">gemeldet von admin · 14.06.2026</span>
+          </div>
+        </div>
+        <p class="note" style="margin-top:10px">Nur-Lese-Protokoll. Beurteilung erfolgt ausschließlich oben in der Messwert-Liste.</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+</body>
+</html>
