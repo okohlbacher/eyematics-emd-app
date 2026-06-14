@@ -37,6 +37,8 @@ interface DataContextType {
   qualityFlags: QualityFlag[];
   addQualityFlag: (f: QualityFlag) => void;
   updateQualityFlag: (caseId: string, flaggedAt: string, status: QualityFlag['status']) => void;
+  /** Remove a flag for a (caseId, parameter) pair — used by the inline "Zurücksetzen" action. */
+  removeQualityFlagByParameter: (caseId: string, parameter: string) => void;
   excludedCases: string[];
   toggleExcludeCase: (caseId: string) => void;
   activeCases: PatientCase[];
@@ -214,6 +216,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const removeQualityFlagByParameter = useCallback((caseId: string, parameter: string) => {
+    setQualityFlags((prev) => {
+      const next = prev.filter((f) => !(f.caseId === caseId && f.parameter === parameter));
+      if (next.length === prev.length) return prev; // nothing to remove
+      putJson('/api/data/quality-flags', { qualityFlags: next }).catch((err) =>
+        console.error('[DataProvider] Failed to remove quality flag:', err),
+      );
+      return next;
+    });
+  }, []);
+
   const toggleExcludeCase = useCallback((caseId: string) => {
     setExcludedCases((prev) => {
       const next = prev.includes(caseId)
@@ -260,6 +273,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     qualityFlags,
     addQualityFlag,
     updateQualityFlag,
+    removeQualityFlagByParameter,
     excludedCases,
     toggleExcludeCase,
     activeCases,
@@ -270,7 +284,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }), [
     loading, error, bundles, centers, cases,
     savedSearches, addSavedSearch, updateSavedSearchQualityParams, removeSavedSearch,
-    qualityFlags, addQualityFlag, updateQualityFlag,
+    qualityFlags, addQualityFlag, updateQualityFlag, removeQualityFlagByParameter,
     excludedCases, toggleExcludeCase, activeCases,
     reviewedCases, markCaseReviewed, unmarkCaseReviewed,
     reloadData,

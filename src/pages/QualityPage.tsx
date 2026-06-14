@@ -8,7 +8,10 @@ import { applyFilters } from '../../shared/patientCases';
 import { canonicalizeQualityParams, resolveQualityParams } from '../../shared/qualityParams';
 import { getTherapyStatus } from '../../shared/qualityPredicates';
 import { QualityFilterBar } from '../components/doc-quality/QualityFilterBar';
-import QualityCaseDetail from '../components/quality/QualityCaseDetail';
+import QualityCaseDetail, {
+  CONFIRMED_ERROR_TYPE,
+  CORRECTED_ERROR_TYPE,
+} from '../components/quality/QualityCaseDetail';
 import QualityCaseList from '../components/quality/QualityCaseList';
 import QualityFlagDialog from '../components/quality/QualityFlagDialog';
 import { QualityParamsChecklist } from '../components/quality/QualityParamsChecklist';
@@ -59,6 +62,7 @@ export default function QualityPage() {
     qualityFlags,
     addQualityFlag,
     updateQualityFlag,
+    removeQualityFlagByParameter,
     excludedCases,
     toggleExcludeCase,
     reviewedCases,
@@ -239,6 +243,40 @@ export default function QualityPage() {
     setFlagDialog(null);
     setErrorType('');
   };
+
+  // C1 inline verdicts — map the three UI actions onto the existing wire status model
+  // (no new persistence path): Bestätigen → acknowledged, Behoben → resolved. A positive
+  // verdict on a row with no pre-existing flag CREATES a flag (with a sentinel errorType)
+  // so the verdict persists through the same addQualityFlag/updateQualityFlag endpoint.
+  const setRowVerdict = (
+    caseId: string,
+    parameter: string,
+    status: QualityFlag['status'],
+    fallbackErrorType: string,
+  ) => {
+    const existing = qualityFlags.find((f) => f.caseId === caseId && f.parameter === parameter);
+    if (existing) {
+      updateQualityFlag(caseId, existing.flaggedAt, status);
+    } else {
+      addQualityFlag({
+        caseId,
+        parameter,
+        errorType: fallbackErrorType,
+        flaggedAt: new Date().toISOString(),
+        flaggedBy: user?.username ?? 'unknown',
+        status,
+      });
+    }
+  };
+
+  const handleConfirmRow = (caseId: string, parameter: string) =>
+    setRowVerdict(caseId, parameter, 'acknowledged', CONFIRMED_ERROR_TYPE);
+
+  const handleCorrectRow = (caseId: string, parameter: string) =>
+    setRowVerdict(caseId, parameter, 'resolved', CORRECTED_ERROR_TYPE);
+
+  const handleResetRow = (caseId: string, parameter: string) =>
+    removeQualityFlagByParameter(caseId, parameter);
 
   const handleExclude = (caseId: string) => toggleExcludeCase(caseId);
 
@@ -422,9 +460,9 @@ export default function QualityPage() {
               onExclude={handleExclude}
               onNavigateToCase={(id) => navigate(`/case/${id}`)}
               onOpenFlagDialog={(parameter, value) => setFlagDialog({ parameter, value })}
-              onUpdateFlagStatus={(caseId, flaggedAt, status) =>
-                updateQualityFlag(caseId, flaggedAt, status as QualityFlag['status'])
-              }
+              onConfirmRow={handleConfirmRow}
+              onCorrectRow={handleCorrectRow}
+              onResetRow={handleResetRow}
             />
           )}
         </div>
