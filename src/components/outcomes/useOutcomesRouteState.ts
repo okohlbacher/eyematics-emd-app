@@ -107,7 +107,9 @@ export function useOutcomesRouteState() {
 
   // Session-only toggle state (D-24).
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [compareOpen, setCompareOpen] = useState(false);
+  // C3: the cohort-split wizard navigates here with ?compare=open so the compare
+  // drawer auto-opens on the freshly created sub-cohorts. Read once at mount.
+  const [compareOpen, setCompareOpen] = useState(() => searchParams.get('compare') === 'open');
   const [axisMode, setAxisMode] = useState<AxisMode>('days');
   const [yMetric, setYMetric] = useState<YMetric>('delta');
   const [gridPoints, setGridPoints] = useState<number>(120);

@@ -12,6 +12,7 @@ import {
   Save,
   Search,
   Sliders,
+  SplitSquareHorizontal,
   Table2,
   Trash2,
 } from 'lucide-react';
@@ -22,7 +23,7 @@ import Badge from '../components/primitives/Badge';
 import Button from '../components/primitives/Button';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
-import { isDuplicateName, parseSubcohortName } from '../services/cohortNames';
+import { isDuplicateName, isSubcohortName, parseSubcohortName } from '../services/cohortNames';
 import {
   applyFilters,
   getAge,
@@ -39,6 +40,7 @@ import { safePickCohortFilter } from '../utils/cohortFilterSerialization';
 import { formatDate } from '../utils/dateFormat';
 import { datedFilename,downloadCsv, downloadJson } from '../utils/download';
 import AdvancedFilterDialog from './AdvancedFilterDialog';
+import CohortSplitDialog from './CohortSplitDialog';
 
 type SortField = 'date' | 'name';
 
@@ -80,6 +82,10 @@ export default function CohortBuilderPage() {
   // are created with default qualityParams (undefined ⇒ all checks, back-compat).
 
   const [savedSort, setSavedSort] = useState<SortField>('date');
+
+  // C3: bulk "Kohorte aufteilen" wizard state (alongside the manual single-subcohort action).
+  const [splitParent, setSplitParent] = useState<SavedSearch | null>(null);
+  const [showSplitDialog, setShowSplitDialog] = useState(false);
 
   // COH-02: persist filter changes to sessionStorage on every update
   useEffect(() => {
@@ -457,6 +463,23 @@ export default function CohortBuilderPage() {
                   </p>
                 </div>
                 <div className="flex gap-2">
+                  {/* Bulk-split parent must be a plain cohort (the dialog's parent
+                      picker only offers non-subcohorts) — hide the trigger on
+                      subcohort rows so the displayed parent always matches. */}
+                  {!isSubcohortName(s.name) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSplitParent(s);
+                        setShowSplitDialog(true);
+                      }}
+                      className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
+                      title={t('cohortSplitBulk')}
+                      aria-label={t('cohortSplitBulk')}
+                    >
+                      <SplitSquareHorizontal className="w-4 h-4" />
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => {
@@ -501,6 +524,22 @@ export default function CohortBuilderPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* C3: bulk cohort-split wizard (alongside the manual single-subcohort action).
+          Conditionally mounted so it truly remounts on each open — the useState
+          initializers re-seed parentId from the freshly-passed `parent` /
+          loaded `savedSearches` (returning null from render does NOT reset state). */}
+      {showSplitDialog && (
+        <CohortSplitDialog
+          open={showSplitDialog}
+          parent={splitParent}
+          savedSearches={savedSearches}
+          activeCases={activeCases}
+          centers={centers}
+          addSavedSearch={addSavedSearch}
+          onClose={() => setShowSplitDialog(false)}
+        />
       )}
 
       <div className="grid grid-cols-12 gap-6">
