@@ -191,9 +191,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const addQualityFlag = useCallback((f: QualityFlag) => {
     setQualityFlags((prev) => {
       const next = [...prev, f];
-      putJson('/api/data/quality-flags', { qualityFlags: next }).catch((err) =>
-        console.error('[DataProvider] Failed to save quality flags:', err),
-      );
+      // Adopt the server response so optimistically-created flags acquire their
+      // server-minted id + server-owned flaggedAt/flaggedBy. Without this, a flag
+      // created this session stays id-less and a follow-up PUT would re-mint its
+      // id and re-stamp provenance (C1 review HIGH-1).
+      putJson<{ qualityFlags: QualityFlag[] }>('/api/data/quality-flags', { qualityFlags: next })
+        .then((res) => setQualityFlags(res.qualityFlags))
+        .catch((err) => console.error('[DataProvider] Failed to save quality flags:', err));
       return next;
     });
   }, []);
@@ -209,9 +213,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
           ? { ...f, status }
           : f
       );
-      putJson('/api/data/quality-flags', { qualityFlags: next }).catch((err) =>
-        console.error('[DataProvider] Failed to update quality flags:', err),
-      );
+      putJson<{ qualityFlags: QualityFlag[] }>('/api/data/quality-flags', { qualityFlags: next })
+        .then((res) => setQualityFlags(res.qualityFlags))
+        .catch((err) => console.error('[DataProvider] Failed to update quality flags:', err));
       return next;
     });
   }, []);
@@ -220,9 +224,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setQualityFlags((prev) => {
       const next = prev.filter((f) => !(f.caseId === caseId && f.parameter === parameter));
       if (next.length === prev.length) return prev; // nothing to remove
-      putJson('/api/data/quality-flags', { qualityFlags: next }).catch((err) =>
-        console.error('[DataProvider] Failed to remove quality flag:', err),
-      );
+      putJson<{ qualityFlags: QualityFlag[] }>('/api/data/quality-flags', { qualityFlags: next })
+        .then((res) => setQualityFlags(res.qualityFlags))
+        .catch((err) => console.error('[DataProvider] Failed to remove quality flag:', err));
       return next;
     });
   }, []);
