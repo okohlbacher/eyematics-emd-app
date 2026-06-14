@@ -217,6 +217,7 @@ export default function DocQualityPage() {
             score={average(centerMetrics, 'completeness')}
             description={t('docQualityCompletenessAvg')}
             patientCount={distinctPatientCount}
+            tooltip={t('docQualityCompletenessTooltip')}
           />
           <MetricCard
             label={t('docQualityDataCompleteness')}

@@ -9,7 +9,12 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('../src/context/LanguageContext', () => ({
+  useLanguage: () => ({ t: (k: string) => k, locale: 'en' }),
+}));
+
 import { CustomTooltip } from '../src/components/doc-quality/CustomTooltip';
+import { MetricCard } from '../src/components/doc-quality/MetricCard';
 import ErrorBoundary from '../src/components/ErrorBoundary';
 
 afterEach(cleanup);
@@ -106,5 +111,23 @@ describe('CustomTooltip', () => {
     expect(screen.getByText('86%')).toBeDefined(); // Math.round(85.7)
     expect(screen.getByText('Plausibility:')).toBeDefined();
     expect(screen.getByText('92%')).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MetricCard — B2 definition tooltip wiring (label-only, no computation)
+// ---------------------------------------------------------------------------
+
+describe('MetricCard tooltip (B2)', () => {
+  it('renders an accessible info tooltip when tooltip prop is provided', () => {
+    render(<MetricCard label="Documentation Completeness" score={75} tooltip="defn text" />);
+    const tip = screen.queryByLabelText('defn text');
+    expect(tip).not.toBeNull();
+    expect(tip?.getAttribute('title')).toBe('defn text');
+  });
+
+  it('renders no tooltip icon when tooltip prop is omitted', () => {
+    render(<MetricCard label="Plausibility" score={90} />);
+    expect(screen.queryByRole('img')).toBeNull();
   });
 });

@@ -554,7 +554,7 @@ const translations = {
   navDocQuality: { de: 'Dokumentationsqualität', en: 'Documentation Quality' },
   docQualityTitle: { de: 'Dokumentationsqualität', en: 'Documentation Quality' },
   docQualitySubtitle: { de: 'Benchmarking der Dokumentationsqualität über alle Zentren', en: 'Documentation quality benchmarking across all centers' },
-  docQualityCompleteness: { de: 'Vollzähligkeit', en: 'Completeness' },
+  docQualityCompleteness: { de: 'Dokumentations-Vollständigkeit', en: 'Documentation Completeness' },
   docQualityDataCompleteness: { de: 'Vollständigkeit', en: 'Data Completeness' },
   docQualityPlausibility: { de: 'Plausibilität', en: 'Plausibility' },
   docQualityOverall: { de: 'Gesamtbewertung', en: 'Overall Score' },
@@ -662,11 +662,17 @@ const translations = {
   correlationVisusCrt: { de: 'Visus vs. CRT', en: 'Visus vs. CRT' },
 
   // DocQuality metric descriptions (m-02)
-  docQualityCompletenessAvg: { de: 'Vollzähligkeit (Ø)', en: 'Completeness (avg)' },
+  docQualityCompletenessAvg: { de: 'Dokumentations-Vollständigkeit (Ø)', en: 'Documentation Completeness (avg)' },
   docQualityDataCompletenessAvg: { de: 'Vollständigkeit (Ø)', en: 'Data Completeness (avg)' },
   docQualityPlausibilityAvg: { de: 'Plausibilität (Ø)', en: 'Plausibility (avg)' },
   docQualityOverallAvg: { de: 'Gesamtbewertung (Ø)', en: 'Overall Score (avg)' },
   docQualityCompletenessDesc: { de: '% Patienten mit allen Pflichtfeldern', en: '% patients with all required fields' },
+  // B2: definition tooltip — disambiguates documentation completeness from the
+  // landing-page consent rate (Einwilligungsquote).
+  docQualityCompletenessTooltip: {
+    de: 'Dokumentations-Vollständigkeit: Anteil der Patient:innen mit vollständig dokumentierten Pflichtangaben (Geburtsdatum, Geschlecht, Diagnose, Messwert). Nicht zu verwechseln mit der Einwilligungsquote auf der Startseite, die den Anteil einwilligender Patient:innen misst.',
+    en: 'Documentation completeness: share of patients whose required fields (birth date, sex, diagnosis, measurement) are fully documented. Not to be confused with the consent rate (Einwilligungsquote) on the start page, which measures the share of consenting patients.',
+  },
   docQualityDataCompletenessDesc: { de: '% Beobachtungen mit Wert', en: '% observations with value' },
   docQualityPlausibilityDesc: { de: '% Werte im Plausibilitätsbereich', en: '% values in plausible range' },
   docQualityOverallDesc: { de: 'Gewichteter Gesamtscore', en: 'Weighted overall score' },
@@ -938,10 +944,17 @@ const translations = {
   },
 
   // Phase 34 \u2014 Datenvollz\u00e4hligkeit card (DASH-01)
-  datenvollstaendigkeitCaption: { de: 'DATENVOLLZ\u00c4HLIGKEIT', en: 'DATA COMPLETENESS' },
-  datenvollstaendigkeitLabel: { de: 'Datenvollz\u00e4hligkeit', en: 'Data completeness' },
+  // B2: renamed to "Einwilligungsquote" \u2014 this metric measures consent rate
+  // (consented / total patients), distinct from documentation completeness on
+  // the DocQuality page. i18n key kept stable (D-05): label change only.
+  datenvollstaendigkeitCaption: { de: 'EINWILLIGUNGSQUOTE', en: 'CONSENT RATE' },
+  datenvollstaendigkeitLabel: { de: 'Einwilligungsquote', en: 'Consent rate' },
   datenvollstaendigkeitPatients: { de: '{n} / {m} Patienten', en: '{n} / {m} patients' },
-  datenvollstaendigkeitAriaLabel: { de: 'Datenvollz\u00e4hligkeit: {pct}%', en: 'Data completeness: {pct}%' },
+  datenvollstaendigkeitAriaLabel: { de: 'Einwilligungsquote: {pct}%', en: 'Consent rate: {pct}%' },
+  datenvollstaendigkeitTooltip: {
+    de: 'Einwilligungsquote: Anteil der Patient:innen mit erteilter Einwilligung an allen erfassten Patient:innen. Nicht zu verwechseln mit der Dokumentations-Vollst\u00e4ndigkeit auf der Seite \u201eDokumentationsqualit\u00e4t\u201c, die misst, wie vollst\u00e4ndig die Daten dokumentiert sind.',
+    en: 'Consent rate: share of patients who have given consent among all recorded patients. Not to be confused with documentation completeness on the \u201cDocumentation Quality\u201d page, which measures how completely the data is documented.',
+  },
 
   // Phase 33 \u2014 COH-01 validation
   cohortValidationAgeNonNumeric: { de: 'Ung\u00fcltige Eingabe: nur Zahlen \u2265 0 erlaubt', en: 'Invalid input: numbers \u2265 0 only' },

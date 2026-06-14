@@ -195,3 +195,26 @@ describe('Datenvollzähligkeit card — card presence and percentage (Plan 04)',
     expect(progressbar?.getAttribute('aria-valuenow')).toBe('70');
   });
 });
+
+describe('B2 — Einwilligungsquote rename + definition tooltip', () => {
+  it('renders the new CONSENT RATE caption (was DATA COMPLETENESS)', () => {
+    setupMocks(7);
+    renderLanding();
+    expect(translate('datenvollstaendigkeitCaption', 'en')).toBe('CONSENT RATE');
+    expect(screen.queryByText('CONSENT RATE')).not.toBeNull();
+  });
+
+  it('no longer renders the old DATA COMPLETENESS caption on the landing card', () => {
+    setupMocks(7);
+    renderLanding();
+    expect(screen.queryByText('DATA COMPLETENESS')).toBeNull();
+  });
+
+  it('renders the definition tooltip as an accessible info icon', () => {
+    setupMocks(7);
+    renderLanding();
+    const tip = screen.queryByLabelText(translate('datenvollstaendigkeitTooltip', 'en'));
+    expect(tip).not.toBeNull();
+    expect(tip?.getAttribute('title')).toBe(translate('datenvollstaendigkeitTooltip', 'en'));
+  });
+});

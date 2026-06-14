@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { Badge, Button, SectionHead, Tile } from '../components/primitives';
+import { Badge, Button, InfoTooltip, SectionHead, Tile } from '../components/primitives';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -187,8 +187,9 @@ export default function LandingPage() {
               />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[var(--color-ink-3)] mb-1">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.12em] uppercase text-[var(--color-ink-3)] mb-1">
                 {t('datenvollstaendigkeitCaption')}
+                <InfoTooltip text={t('datenvollstaendigkeitTooltip')} />
               </div>
               <div className="flex items-baseline gap-3">
                 <span

@@ -2,6 +2,7 @@ import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 import { useLanguage } from '../../context/LanguageContext';
 import { scoreBgClass, scoreColor, scoreIconColor } from '../../utils/qualityMetrics';
+import { InfoTooltip } from '../primitives';
 
 export interface MetricCardProps {
   label: string;
@@ -9,15 +10,20 @@ export interface MetricCardProps {
   description?: string;
   patientCount?: number;
   threshold?: number;
+  /** Optional definition tooltip shown next to the label (B2 disambiguation). */
+  tooltip?: string;
 }
 
-export function MetricCard({ label, score, description, patientCount, threshold = 80 }: MetricCardProps) {
+export function MetricCard({ label, score, description, patientCount, threshold = 80, tooltip }: MetricCardProps) {
   const { t } = useLanguage();
   const rounded = Math.round(score);
   return (
     <div className={`rounded-xl border p-4 ${scoreBgClass(score)}`}>
       <div className="flex items-center justify-between mb-1">
-        <span className="text-sm font-medium">{label}</span>
+        <span className="inline-flex items-center gap-1 text-sm font-medium">
+          {label}
+          {tooltip && <InfoTooltip text={tooltip} />}
+        </span>
         {score > 80 ? (
           <CheckCircle2 className={`w-4 h-4 ${scoreIconColor(score)}`} />
         ) : (
