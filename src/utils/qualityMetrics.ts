@@ -33,7 +33,31 @@ export const QUALITY_CATEGORY_COLORS: Record<QualityCategory, string> = {
 // Types
 // ---------------------------------------------------------------------------
 
-export type TimeRange = '6m' | '1y' | 'all';
+/**
+ * Time-range selection for the Dokumentationsqualität / Datenqualität views.
+ *
+ * Presets ('3m' | '6m' | '1y') select a rolling window ending "now"; 'all'
+ * disables windowing. A custom range carries explicit ISO date bounds
+ * (`from`/`to`, inclusive) so the user can inspect an arbitrary period.
+ *
+ * B1: ALL doc-quality metrics are computed from observations inside the
+ * selected window only — numerator AND denominator are clipped to the same
+ * window (see filterCasesByTimeRange), so a shorter window does not
+ * artificially deflate the scores.
+ */
+export type TimeRangePreset = '3m' | '6m' | '1y' | 'all';
+export interface CustomTimeRange {
+  /** Inclusive lower bound, ISO date string (yyyy-mm-dd or full ISO). */
+  from: string;
+  /** Inclusive upper bound, ISO date string. */
+  to: string;
+}
+export type TimeRange = TimeRangePreset | CustomTimeRange;
+
+/** Narrowing helper: true when the range is an explicit custom {from,to}. */
+export function isCustomTimeRange(range: TimeRange): range is CustomTimeRange {
+  return typeof range === 'object' && range !== null;
+}
 
 export interface CenterMetrics {
   centerId: string;
@@ -91,8 +115,25 @@ function isIopInRange(v: number): boolean {
 // Metric calculation
 // ---------------------------------------------------------------------------
 
+/**
+ * Lower bound (inclusive) of a time range, or null when the range is 'all'
+ * (no lower bound) — preserved for back-compat callers (e.g. QualityPage's
+ * case-level inclusion test).
+ *
+ * For a custom range this returns the `from` bound. Invalid/empty `from`
+ * yields null (treated as "no lower bound") so a half-specified custom range
+ * never throws and never silently drops everything.
+ */
 export function cutoffDate(range: TimeRange): Date | null {
+  if (isCustomTimeRange(range)) {
+    if (!range.from) return null;
+    const d = new Date(range.from);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
   const now = new Date();
+  if (range === '3m') {
+    return new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+  }
   if (range === '6m') {
     return new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
   }
@@ -102,12 +143,41 @@ export function cutoffDate(range: TimeRange): Date | null {
   return null;
 }
 
+/**
+ * Resolve a TimeRange into concrete `{from, to}` Date bounds (both inclusive),
+ * or null when the range is 'all' / has no usable bounds (→ no windowing).
+ *
+ * - presets: from = rolling cutoff, to = now (open-ended upper bound is fine
+ *   since data never lies in the future, but we set it explicitly for symmetry).
+ * - custom: from/to parsed from ISO strings. A from>to or unparseable pair is
+ *   rejected (returns null → window disabled) so the caller never produces an
+ *   empty/NaN result from a malformed range.
+ */
+export function timeRangeWindow(
+  range: TimeRange
+): { from: Date; to: Date } | null {
+  if (isCustomTimeRange(range)) {
+    if (!range.from || !range.to) return null;
+    const from = new Date(range.from);
+    const to = new Date(range.to);
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return null;
+    if (from.getTime() > to.getTime()) return null; // guard: from>to
+    return { from, to };
+  }
+  const cutoff = cutoffDate(range);
+  if (!cutoff) return null; // 'all'
+  return { from: cutoff, to: new Date() };
+}
+
 export function filterCasesByTimeRange(
   cases: PatientCase[],
   range: TimeRange
 ): PatientCase[] {
-  const cutoff = cutoffDate(range);
-  if (!cutoff) return cases;
+  const window = timeRangeWindow(range);
+  if (!window) return cases;
+  const { from, to } = window;
+  const fromMs = from.getTime();
+  const toMs = to.getTime();
 
   // Trim observations to those within the window, then drop cases with zero
   // observations remaining.
@@ -116,12 +186,15 @@ export function filterCasesByTimeRange(
   //   - per-center patientCount = case count IN WINDOW (cases with ≥1 obs in window)
   // Cases with observations only outside the window are excluded from metric
   // computation and patientCount so that scores and denominators reflect the
-  // chosen time range rather than the full history.
+  // chosen time range rather than the full history. Both numerator (complete
+  // patients) and denominator (active patients) shrink with the window → a
+  // perfectly-documented short window reads ~100%, not artificially low (B1).
   return cases
     .map((c) => {
       const obs = c.observations.filter((o) => {
         if (!o.effectiveDateTime) return false;
-        return new Date(o.effectiveDateTime) >= cutoff;
+        const t = new Date(o.effectiveDateTime).getTime();
+        return t >= fromMs && t <= toMs;
       });
       return { ...c, observations: obs };
     })

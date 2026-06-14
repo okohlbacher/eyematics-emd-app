@@ -5,8 +5,10 @@ import {
   computeMetrics,
   cutoffDate,
   filterCasesByTimeRange,
+  isCustomTimeRange,
   QUALITY_CATEGORY_COLORS,
   type QualityCategory,
+  timeRangeWindow,
 } from '../src/utils/qualityMetrics';
 
 // ---------------------------------------------------------------------------
@@ -133,6 +135,155 @@ describe('filterCasesByTimeRange — A2 window-scoped case semantics', () => {
     const windowed = filterCasesByTimeRange([outsideCase, insideCase], '6m');
     const windowedMetrics = computeMetrics(windowed);
     expect(windowedMetrics.patientCount).toBe(1);
+  });
+});
+
+/** A fully-documented patient (birthDate, gender, ≥1 condition) used to assert
+ *  completeness reads ~100% when every windowed patient is complete. */
+function makeCompleteCase(id: string, obsDates: string[]): PatientCase {
+  return {
+    ...makeCase(id, obsDates),
+    conditions: [
+      { id: `cond-${id}`, code: { coding: [{ system: 'http://snomed', code: '1', display: 'x' }] } },
+    ] as PatientCase['conditions'],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// B1 — 3m preset, custom from/to range, windowed metric denominator
+// ---------------------------------------------------------------------------
+
+describe('B1 — cutoffDate / timeRangeWindow new ranges', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(FROZEN_NOW);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('cutoffDate("3m") returns ~3 months before frozen now', () => {
+    const cutoff = cutoffDate('3m');
+    expect(cutoff).not.toBeNull();
+    // Frozen now = 2026-06-01; 3m cutoff = local 2026-03-01.
+    expect(cutoff!.getFullYear()).toBe(2026);
+    expect(cutoff!.getMonth()).toBe(2); // 0-indexed → March
+    expect(cutoff!.getDate()).toBe(1);
+  });
+
+  it('timeRangeWindow("all") returns null (no window)', () => {
+    expect(timeRangeWindow('all')).toBeNull();
+  });
+
+  it('timeRangeWindow(preset) has from=cutoff and to≈now', () => {
+    const w = timeRangeWindow('6m');
+    expect(w).not.toBeNull();
+    expect(w!.from.getMonth()).toBe(11); // Dec 2025
+    expect(w!.to.getTime()).toBe(FROZEN_NOW.getTime());
+  });
+
+  it('isCustomTimeRange distinguishes preset strings from {from,to}', () => {
+    expect(isCustomTimeRange('6m')).toBe(false);
+    expect(isCustomTimeRange('all')).toBe(false);
+    expect(isCustomTimeRange({ from: '2026-01-01', to: '2026-03-01' })).toBe(true);
+  });
+
+  it('custom range: both bounds applied (inclusive from/to)', () => {
+    const w = timeRangeWindow({ from: '2026-01-01', to: '2026-03-01' });
+    expect(w).not.toBeNull();
+    expect(w!.from.getTime()).toBe(new Date('2026-01-01').getTime());
+    expect(w!.to.getTime()).toBe(new Date('2026-03-01').getTime());
+  });
+
+  it('custom range with from>to is rejected (null → no window)', () => {
+    expect(timeRangeWindow({ from: '2026-05-01', to: '2026-01-01' })).toBeNull();
+  });
+
+  it('custom range with empty/missing bound is rejected (null → no window)', () => {
+    expect(timeRangeWindow({ from: '', to: '2026-01-01' })).toBeNull();
+    expect(timeRangeWindow({ from: '2026-01-01', to: '' })).toBeNull();
+  });
+
+  it('custom range with unparseable date is rejected (null → no window)', () => {
+    expect(timeRangeWindow({ from: 'not-a-date', to: '2026-01-01' })).toBeNull();
+  });
+});
+
+describe('B1 — filterCasesByTimeRange with new ranges', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(FROZEN_NOW);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('3m preset: only cases with obs in the last 3 months survive', () => {
+    const inside = makeCase('inside', ['2026-04-15T00:00:00Z']); // within 3m of 2026-06-01
+    const outside = makeCase('outside', ['2026-01-15T00:00:00Z']); // before 2026-03-01 cutoff
+    const result = filterCasesByTimeRange([inside, outside], '3m');
+    expect(result.map((c) => c.id)).toEqual(['inside']);
+  });
+
+  it('custom range: clips to BOTH bounds (obs after `to` are excluded)', () => {
+    const c = makeCase('c', [
+      '2025-12-15T00:00:00Z', // before from
+      '2026-02-01T00:00:00Z', // inside
+      '2026-05-01T00:00:00Z', // after to
+    ]);
+    const result = filterCasesByTimeRange([c], { from: '2026-01-01', to: '2026-03-01' });
+    expect(result).toHaveLength(1);
+    expect(result[0]!.observations).toHaveLength(1);
+    expect(result[0]!.observations[0]!.effectiveDateTime).toBe('2026-02-01T00:00:00Z');
+  });
+
+  it('malformed custom range (from>to): returns cases unwindowed (0-safe, no empty collapse)', () => {
+    const c = makeCase('c', ['2026-02-01T00:00:00Z']);
+    const result = filterCasesByTimeRange([c], { from: '2026-05-01', to: '2026-01-01' });
+    // window disabled → all cases returned untrimmed (never silently zero)
+    expect(result).toHaveLength(1);
+    expect(result[0]!.observations).toHaveLength(1);
+  });
+});
+
+describe('B1 — windowed completeness denominator (the NF bug)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(FROZEN_NOW);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('a perfectly-documented SHORT window reads ~100% completeness, not artificially low', () => {
+    // Two fully-documented patients: one only active long ago, one active recently.
+    const oldPatient = makeCompleteCase('old', ['2015-01-01T00:00:00Z']);
+    const recentPatient = makeCompleteCase('recent', ['2026-04-01T00:00:00Z']);
+
+    // Full history: both patients present, both complete → 100%.
+    const allWindowed = filterCasesByTimeRange([oldPatient, recentPatient], 'all');
+    expect(computeMetrics(allWindowed).completeness).toBe(100);
+    expect(computeMetrics(allWindowed).patientCount).toBe(2);
+
+    // 3m window: only the recent patient is active. Denominator SHRINKS to 1
+    // (not held at 2), and since that patient is fully documented → still ~100%.
+    const shortWindowed = filterCasesByTimeRange([oldPatient, recentPatient], '3m');
+    const shortMetrics = computeMetrics(shortWindowed);
+    expect(shortMetrics.patientCount).toBe(1); // denominator shrank with the window
+    expect(shortMetrics.completeness).toBe(100); // NOT 50% — the core NF fix
+  });
+
+  it('no NaN / 0-safe when the window has no active patients', () => {
+    const oldPatient = makeCompleteCase('old', ['2010-01-01T00:00:00Z']);
+    const windowed = filterCasesByTimeRange([oldPatient], '3m');
+    expect(windowed).toHaveLength(0);
+    const m = computeMetrics(windowed);
+    expect(m.patientCount).toBe(0);
+    expect(m.completeness).toBe(0);
+    expect(Number.isNaN(m.completeness)).toBe(false);
+    expect(Number.isNaN(m.dataCompleteness)).toBe(false);
+    expect(Number.isNaN(m.plausibility)).toBe(false);
+    expect(Number.isNaN(m.overall)).toBe(false);
   });
 });
 

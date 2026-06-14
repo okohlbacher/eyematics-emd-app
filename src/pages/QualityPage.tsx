@@ -26,7 +26,7 @@ import type { PatientCase, QualityFlag, QualityStatus } from '../types/fhir';
 import { safePickCohortFilter } from '../utils/cohortFilterSerialization';
 import { getDateLocale } from '../utils/dateFormat';
 import { datedFilename, downloadCsv } from '../utils/download';
-import { cutoffDate, type TimeRange } from '../utils/qualityMetrics';
+import { type TimeRange, timeRangeWindow } from '../utils/qualityMetrics';
 
 function SummaryCard({ icon, count, label, total, ofLabel }: { icon: ReactNode; count: number; label: string; total?: number; ofLabel?: string }) {
   return (
@@ -139,16 +139,22 @@ export default function QualityPage() {
   }, [cases, savedSearches, selectedCohortId]);
 
   // Time-scoped cases for QUAL-022 Grundgesamtheit: a case is INCLUDED when timeRange === 'all'
-  // OR it has at least one observation with effectiveDateTime >= cutoffDate(timeRange).
-  // Note: filterCasesByTimeRange now also drops cases with no in-window observations
-  // (A2); we keep an equivalent case-level inclusion test here so the denominator
-  // reflects only active-range cases without trimming each case's observations.
+  // (or a malformed custom range) OR it has ≥1 observation inside the resolved
+  // [from,to] window (B1: custom ranges carry an upper bound too — timeRangeWindow
+  // resolves presets and custom ranges to concrete bounds). We keep a case-level
+  // inclusion test here (rather than trimming observations) so the denominator
+  // reflects only active-range cases without mutating each case's observations.
   const timeScopedCases = useMemo(() => {
-    if (timeRange === 'all') return scopedCases;
-    const cutoff = cutoffDate(timeRange);
-    if (!cutoff) return scopedCases;
+    const window = timeRangeWindow(timeRange);
+    if (!window) return scopedCases; // 'all' or malformed custom range → no windowing
+    const fromMs = window.from.getTime();
+    const toMs = window.to.getTime();
     return scopedCases.filter((c) =>
-      c.observations.some((o) => o.effectiveDateTime && new Date(o.effectiveDateTime) >= cutoff)
+      c.observations.some((o) => {
+        if (!o.effectiveDateTime) return false;
+        const t = new Date(o.effectiveDateTime).getTime();
+        return t >= fromMs && t <= toMs;
+      })
     );
   }, [scopedCases, timeRange]);
 
