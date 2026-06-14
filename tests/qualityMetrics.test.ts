@@ -188,11 +188,19 @@ describe('B1 — cutoffDate / timeRangeWindow new ranges', () => {
     expect(isCustomTimeRange({ from: '2026-01-01', to: '2026-03-01' })).toBe(true);
   });
 
-  it('custom range: both bounds applied (inclusive from/to)', () => {
+  it('custom range: both bounds applied (inclusive from start-of-day / to end-of-day)', () => {
     const w = timeRangeWindow({ from: '2026-01-01', to: '2026-03-01' });
     expect(w).not.toBeNull();
-    expect(w!.from.getTime()).toBe(new Date('2026-01-01').getTime());
-    expect(w!.to.getTime()).toBe(new Date('2026-03-01').getTime());
+    // Parsed in local time: from = start of day, to = end of day (inclusive).
+    expect(w!.from.getTime()).toBe(new Date('2026-01-01T00:00:00').getTime());
+    expect(w!.to.getTime()).toBe(new Date('2026-03-01T23:59:59.999').getTime());
+  });
+
+  it('custom range: an observation timestamped on the `to` day is included (end-of-day inclusive)', () => {
+    const c = makeCase('c', ['2026-03-01T14:30:00']); // afternoon of the end date
+    const result = filterCasesByTimeRange([c], { from: '2026-01-01', to: '2026-03-01' });
+    expect(result).toHaveLength(1);
+    expect(result[0]!.observations).toHaveLength(1);
   });
 
   it('custom range with from>to is rejected (null → no window)', () => {

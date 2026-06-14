@@ -158,8 +158,12 @@ export function timeRangeWindow(
 ): { from: Date; to: Date } | null {
   if (isCustomTimeRange(range)) {
     if (!range.from || !range.to) return null;
-    const from = new Date(range.from);
-    const to = new Date(range.to);
+    // Custom bounds come from <input type="date"> as 'YYYY-MM-DD' (calendar days).
+    // Parse in local time (consistent with cutoffDate) and make the range
+    // inclusive: from = start of the 'from' day, to = end of the 'to' day, so an
+    // observation timestamped any time on the end date is included.
+    const from = new Date(`${range.from}T00:00:00`);
+    const to = new Date(`${range.to}T23:59:59.999`);
     if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return null;
     if (from.getTime() > to.getTime()) return null; // guard: from>to
     return { from, to };
