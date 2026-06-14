@@ -431,6 +431,15 @@ const translations = {
   // Quality parameter selection (QUAL-021, 40-02) — cohort save flow checklist
   qualityParamsLabel: { de: 'Qualitätsprüfungen für diese Kohorte', en: 'Quality checks for this cohort' },
   qualityParamsHint: { de: 'Nur ausgewählte Prüfungen werden für diese Kohorte ausgewertet.', en: 'Only selected checks will be evaluated for this cohort.' },
+  // C2: explanatory hint shown where the checklist now lives (Datenqualität tab). NF: "what they do" was unclear.
+  qualityParamsDescription: {
+    de: 'Diese Prüfungen markieren mögliche Datenqualitätsprobleme (z. B. fehlende Messwerte oder kritische Werte) in den Fällen der ausgewählten Kohorte. Nur angehakte Prüfungen werden ausgewertet; die Auswahl wird mit der Kohorte gespeichert.',
+    en: 'These checks flag possible data-quality issues (e.g. missing measurements or critical values) in the selected cohort’s cases. Only ticked checks are evaluated; the selection is stored with the cohort.',
+  },
+  qualityParamsSelectCohortHint: {
+    de: 'Wählen Sie oben eine Kohorte, um deren Qualitätsprüfungen zu konfigurieren.',
+    en: 'Select a cohort above to configure its quality checks.',
+  },
   // Per-check labels — reuse existing keys: missingVisus, missingCrt, missingInjections, crtAnomaly, visusAnomaly, visusJump
   // New key only for crtCritical / visusCritical (canonical key names differ from existing crtAnomaly / visusAnomaly)
   crtCritical: { de: 'CRT > 400 µm (kritisch)', en: 'CRT > 400 µm (critical)' },

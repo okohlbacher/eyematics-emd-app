@@ -128,6 +128,9 @@ const savedSearches = [
   },
 ];
 
+// C2: stable spy so the edit-persist test can assert what QualityPage forwarded.
+const updateSavedSearchQualityParamsSpy = vi.fn();
+
 // DataContext mock factory
 function makeDataMock() {
   return {
@@ -139,6 +142,7 @@ function makeDataMock() {
     bundles: [],
     savedSearches,
     addSavedSearch: vi.fn(),
+    updateSavedSearchQualityParams: updateSavedSearchQualityParamsSpy,
     removeSavedSearch: vi.fn(),
     qualityFlags: [],
     addQualityFlag: vi.fn(),
@@ -316,5 +320,48 @@ describe('QualityPage — cohort scope restricts case list', () => {
     // Both saved search names should be available as options
     expect(screen.queryByText('Visus Only Cohort')).not.toBeNull();
     expect(screen.queryByText('No Params Cohort')).not.toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// C2 — quality-check checklist relocated to the Datenqualität tab (edit-in-place)
+// (LanguageContext mock returns the i18n key as the label text)
+// ---------------------------------------------------------------------------
+describe('C2 — qualityParams checklist on QualityPage', () => {
+  it('shows a select-a-cohort hint and no checkboxes in the "all cases" scope', () => {
+    renderQualityPage();
+    expect(screen.queryByText('qualityParamsSelectCohortHint')).not.toBeNull();
+    expect(screen.queryByLabelText('missingVisus')).toBeNull();
+  });
+
+  it('renders the explanatory description label', () => {
+    renderQualityPage();
+    expect(screen.queryByText('qualityParamsDescription')).not.toBeNull();
+  });
+
+  it('reflects the SELECTED cohort\'s params (only missingVisus checked)', () => {
+    renderQualityPage();
+    const cohortSelect = screen.queryAllByRole('combobox')[0] as HTMLSelectElement;
+    fireEvent.change(cohortSelect, { target: { value: 'cohort-vis-only' } });
+
+    const visus = screen.getByLabelText('missingVisus') as HTMLInputElement;
+    const crt = screen.getByLabelText('missingCrt') as HTMLInputElement;
+    expect(visus.checked).toBe(true);
+    expect(crt.checked).toBe(false);
+  });
+
+  it('toggling a check calls updateSavedSearchQualityParams with the canonical subset', () => {
+    updateSavedSearchQualityParamsSpy.mockClear();
+    renderQualityPage();
+    const cohortSelect = screen.queryAllByRole('combobox')[0] as HTMLSelectElement;
+    fireEvent.change(cohortSelect, { target: { value: 'cohort-vis-only' } });
+
+    // Turn ON missingCrt → new selection is [missingVisus, missingCrt] (canonical order)
+    fireEvent.click(screen.getByLabelText('missingCrt'));
+
+    expect(updateSavedSearchQualityParamsSpy).toHaveBeenCalledWith(
+      'cohort-vis-only',
+      ['missingVisus', 'missingCrt'],
+    );
   });
 });

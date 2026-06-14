@@ -5,11 +5,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { pickCoding } from '../../shared/fhirQueries';
 import { applyFilters } from '../../shared/patientCases';
+import { canonicalizeQualityParams, resolveQualityParams } from '../../shared/qualityParams';
 import { getTherapyStatus } from '../../shared/qualityPredicates';
 import { QualityFilterBar } from '../components/doc-quality/QualityFilterBar';
 import QualityCaseDetail from '../components/quality/QualityCaseDetail';
 import QualityCaseList from '../components/quality/QualityCaseList';
 import QualityFlagDialog from '../components/quality/QualityFlagDialog';
+import { QualityParamsChecklist } from '../components/quality/QualityParamsChecklist';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -53,6 +55,7 @@ export default function QualityPage() {
   const {
     cases,
     savedSearches,
+    updateSavedSearchQualityParams,
     qualityFlags,
     addQualityFlag,
     updateQualityFlag,
@@ -329,6 +332,32 @@ export default function QualityPage() {
           <Download className="w-4 h-4" />
           {t('exportCsv')}
         </button>
+      </div>
+
+      {/* C2 — quality-check selection, relocated here from Kohortenbildung.
+          Edits the SELECTED cohort's qualityParams in place and persists via DataContext.
+          Shown only when a specific cohort is in scope (the "all cases" view has no
+          cohort to attach a selection to). */}
+      <div className="mb-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+          {t('qualityParamsLabel')}
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+          {t('qualityParamsDescription')}
+        </p>
+        {selectedCohortId === 'all' ? (
+          <p className="text-xs italic text-gray-400 dark:text-gray-500">
+            {t('qualityParamsSelectCohortHint')}
+          </p>
+        ) : (
+          <QualityParamsChecklist
+            selected={resolveQualityParams(activeQualityParams)}
+            onChange={(next) => {
+              // Canonicalize all-keys ⇒ undefined (back-compat) before persisting (D2).
+              updateSavedSearchQualityParams(selectedCohortId, canonicalizeQualityParams(next));
+            }}
+          />
+        )}
       </div>
 
       {/* Grundgesamtheit label — QUAL-023: absolute population size always visible */}
