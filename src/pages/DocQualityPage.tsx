@@ -16,6 +16,7 @@ import {
   type CenterMetrics,
   computeMetrics,
   filterCasesByTimeRange,
+  isCustomTimeRange,
   type TimeRange,
 } from '../utils/qualityMetrics';
 
@@ -149,7 +150,13 @@ export default function DocQualityPage() {
               {t('docQualitySubtitle')}
               {timeRange !== 'all' && (
                 <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                  {timeRange === '6m' ? t('docQualityLast6Months') : t('docQualityLastYear')}
+                  {isCustomTimeRange(timeRange)
+                    ? `${timeRange.from || '…'} – ${timeRange.to || '…'}`
+                    : timeRange === '3m'
+                      ? t('docQualityLast3Months')
+                      : timeRange === '6m'
+                        ? t('docQualityLast6Months')
+                        : t('docQualityLastYear')}
                 </span>
               )}
             </p>
@@ -224,6 +231,7 @@ export default function DocQualityPage() {
             score={average(centerMetrics, 'dataCompleteness')}
             description={t('docQualityDataCompletenessAvg')}
             patientCount={distinctPatientCount}
+            tooltip={t('docQualityDataCompletenessTooltip')}
           />
           <MetricCard
             label={t('docQualityPlausibility')}
