@@ -83,7 +83,7 @@ export default function DistributionCharts({
             <ScatterChart>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="visus" name="Visus" type="number" domain={[0, 1]} tickCount={5} tick={{ fontSize: 9 }} label={{ value: t('scatterVisusAxisLabel'), position: 'insideBottom', offset: -2, fontSize: 10 }} />
-              <YAxis dataKey="crt" name="CRT" unit=" \u00b5m" tickCount={5} tick={{ fontSize: 9 }} label={{ value: t('scatterCrtAxisLabel'), angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} />
+              <YAxis dataKey="crt" name="CRT" unit=" µm" tickCount={5} tick={{ fontSize: 9 }} label={{ value: t('scatterCrtAxisLabel'), angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} />
               <Tooltip
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
@@ -92,7 +92,7 @@ export default function DistributionCharts({
                     <div className="bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-xs">
                       <p className="text-gray-500">{d.date}</p>
                       <p>Visus: <strong>{d.visus.toFixed(2)}</strong></p>
-                      <p>CRT: <strong>{d.crt} \u00b5m</strong></p>
+                      <p>CRT: <strong>{d.crt} µm</strong></p>
                     </div>
                   );
                 }}
