@@ -555,14 +555,18 @@ const translations = {
   docQualityTitle: { de: 'Dokumentationsqualität', en: 'Documentation Quality' },
   docQualitySubtitle: { de: 'Benchmarking der Dokumentationsqualität über alle Zentren', en: 'Documentation quality benchmarking across all centers' },
   docQualityCompleteness: { de: 'Dokumentations-Vollständigkeit', en: 'Documentation Completeness' },
-  docQualityDataCompleteness: { de: 'Vollständigkeit', en: 'Data Completeness' },
+  docQualityDataCompleteness: { de: 'Messwert-Vollständigkeit', en: 'Measurement Completeness' },
   docQualityPlausibility: { de: 'Plausibilität', en: 'Plausibility' },
   docQualityOverall: { de: 'Gesamtbewertung', en: 'Overall Score' },
   docQualityAllCenters: { de: 'Alle Zentren', en: 'All Centers' },
   docQualityTimeRange: { de: 'Zeitraum', en: 'Time Range' },
+  docQualityLast3Months: { de: 'Letzte 3 Monate', en: 'Last 3 Months' },
   docQualityLast6Months: { de: 'Letzte 6 Monate', en: 'Last 6 Months' },
   docQualityLastYear: { de: 'Letztes Jahr', en: 'Last Year' },
   docQualityAllTime: { de: 'Gesamter Zeitraum', en: 'All Time' },
+  docQualityCustomRange: { de: 'Benutzerdefiniert', en: 'Custom' },
+  docQualityFrom: { de: 'Von', en: 'From' },
+  docQualityTo: { de: 'Bis', en: 'To' },
   docQualityExport: { de: 'Bericht exportieren', en: 'Export Report' },
   docQualityCenterDetail: { de: 'Zentrumsdetails', en: 'Center Details' },
   docQualityPatients: { de: 'Patienten', en: 'Patients' },
@@ -663,7 +667,7 @@ const translations = {
 
   // DocQuality metric descriptions (m-02)
   docQualityCompletenessAvg: { de: 'Dokumentations-Vollständigkeit (Ø)', en: 'Documentation Completeness (avg)' },
-  docQualityDataCompletenessAvg: { de: 'Vollständigkeit (Ø)', en: 'Data Completeness (avg)' },
+  docQualityDataCompletenessAvg: { de: 'Messwert-Vollständigkeit (Ø)', en: 'Measurement Completeness (avg)' },
   docQualityPlausibilityAvg: { de: 'Plausibilität (Ø)', en: 'Plausibility (avg)' },
   docQualityOverallAvg: { de: 'Gesamtbewertung (Ø)', en: 'Overall Score (avg)' },
   docQualityCompletenessDesc: { de: '% Patienten mit allen Pflichtfeldern', en: '% patients with all required fields' },
@@ -674,6 +678,13 @@ const translations = {
     en: 'Documentation completeness: share of patients whose required fields (birth date, sex, diagnosis, measurement) are fully documented. Not to be confused with the consent rate (Einwilligungsquote) on the start page, which measures the share of consenting patients.',
   },
   docQualityDataCompletenessDesc: { de: '% Beobachtungen mit Wert', en: '% observations with value' },
+  // B1: definition tooltip — disambiguates measurement-value completeness
+  // (share of observations carrying a numeric value) from the patient-level
+  // Dokumentations-Vollständigkeit (required fields per patient).
+  docQualityDataCompletenessTooltip: {
+    de: 'Messwert-Vollständigkeit: Anteil der Beobachtungen im gewählten Zeitraum, die einen Messwert enthalten (nicht leer). Bezieht sich auf einzelne Messungen — nicht zu verwechseln mit der Dokumentations-Vollständigkeit, die vollständige Pflichtangaben je Patient:in misst.',
+    en: 'Measurement completeness: share of observations in the selected period that carry a numeric value (not empty). Measured per observation — not to be confused with Documentation completeness, which measures complete required fields per patient.',
+  },
   docQualityPlausibilityDesc: { de: '% Werte im Plausibilitätsbereich', en: '% values in plausible range' },
   docQualityOverallDesc: { de: 'Gewichteter Gesamtscore', en: 'Weighted overall score' },
   docQualityPlausibilityRanges: { de: 'Plausibilitätsbereiche', en: 'Plausibility Ranges' },
