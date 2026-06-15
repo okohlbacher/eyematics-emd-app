@@ -562,6 +562,18 @@ export default function OutcomesPanel({
                   strokeOpacity={p.sparse ? SERIES_STYLES.perPatient.opacitySparse : SERIES_STYLES.perPatient.opacityDense}
                   dot={false}
                   isAnimationActive={false}
+                  // J1b (v1.15-p4): click a patient's trajectory LINE → that patient's
+                  // case, alongside the scatter-point click. Same drill-down handler +
+                  // IDOR gate (onPointClick → handlePointDrillDown resolves the
+                  // pseudonym within cohort.cases). Only wired in single-cohort mode
+                  // (onPointClick is undefined in cross-mode) and only while the
+                  // per-patient layer is shown (this branch). p.id is the pseudonym.
+                  {...(onPointClick
+                    ? {
+                        cursor: 'pointer',
+                        onClick: () => onPointClick(p.id),
+                      }
+                    : {})}
                   // CRITICAL: without legendType="none", every patient produces a
                   // legend chip (icon "-o-" + dataKey "y"). With 300+ patients the
                   // Recharts <Legend> overflows and tiles the panel. See
