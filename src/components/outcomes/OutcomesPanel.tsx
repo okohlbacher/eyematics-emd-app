@@ -30,6 +30,31 @@ type LayerState = {
   spreadBand: boolean;
 };
 
+// I2 (v1.14-p4): cap the number of scatter symbols rendered PER PANEL. Each rendered
+// point draws two SVG circles (r=10 hit halo + r=4 dot); a 245-cohort yields ~7k
+// points × 2 = ~14k nodes per panel and three panels (OD/OS/combined). Above this cap
+// we even-stride downsample so the cloud stays visually faithful (uniform coverage,
+// not a truncated prefix) while keeping DOM nodes — and therefore enable-scatter
+// responsiveness — bounded. The downsampled-out points are logged, never silently
+// dropped; drill-down/hover still works on every RENDERED point.
+const SCATTER_RENDER_CAP = 1500;
+
+/**
+ * Even-stride downsample to at most `cap` items. Deterministic and order-preserving:
+ * picks indices 0, step, 2·step, … so the retained sample spans the whole range
+ * (uniform coverage) rather than a truncated head. Returns the input unchanged when
+ * it already fits.
+ */
+function downsampleScatter<T>(points: readonly T[], cap: number): T[] {
+  if (points.length <= cap) return points as T[];
+  const step = points.length / cap;
+  const out: T[] = [];
+  for (let i = 0; i < cap; i++) {
+    out.push(points[Math.floor(i * step)]);
+  }
+  return out;
+}
+
 export interface CohortSeriesEntry {
   cohortId: string;
   cohortName: string;
@@ -209,6 +234,24 @@ export default function OutcomesPanel({
             })),
     [panel.patients, layers.perPatient],
   );
+  // I2 (v1.14-p4): downsample the scatter cloud to a bounded node count when the
+  // layer is on for a large cohort. Memoized on panel.scatterPoints so it only
+  // recomputes when the cohort/aggregate changes (NOT on hover — the imperative
+  // highlight deliberately avoids re-rendering this layer). Skipped entirely when the
+  // layer is hidden so a hidden layer costs nothing. What was dropped is logged once
+  // per (re)compute — no silent truncation.
+  const scatterRenderPoints = useMemo(() => {
+    if (!layers.scatter) return [];
+    const all = panel.scatterPoints;
+    const shown = downsampleScatter(all, SCATTER_RENDER_CAP);
+    if (shown.length < all.length) {
+      console.info(
+        `[OutcomesPanel] scatter downsampled for eye=${eye}: rendering ${shown.length} of ${all.length} points (cap=${SCATTER_RENDER_CAP}, even-stride). Drill-down/hover available on rendered points.`,
+      );
+    }
+    return shown;
+  }, [layers.scatter, panel.scatterPoints, eye]);
+
   const chartColors = {
     grid:         isDark ? '#374151' : '#e5e7eb', // gray-700 / gray-200
     axisTick:     isDark ? '#9ca3af' : '#6b7280', // gray-400 / gray-500
@@ -443,7 +486,7 @@ export default function OutcomesPanel({
               alongside the chart-level ref-mediated handler. */}
           {!isCrossMode && layers.scatter && (
             <Scatter
-              data={panel.scatterPoints}
+              data={scatterRenderPoints}
               // FALL-010 root cause (live-browser): without an explicit dataKey the
               // Scatter never resolves its y coordinate (the YAxis carries no dataKey
               // in this composed chart — the Lines each declare their own), so every
