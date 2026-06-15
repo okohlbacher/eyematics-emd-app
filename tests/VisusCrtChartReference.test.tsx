@@ -95,48 +95,64 @@ describe('useCaseData — FALL-011 cohortReference', () => {
     expect(point!.visusP75!).toBeGreaterThanOrEqual(point!.visusMedian!);
   });
 
-  it('aligns by month bin — produces a reference point with NO exact-day match (WR-05)', async () => {
+  it('aligns peers by RELATIVE month-since-their-own-baseline, not calendar month (J3c)', async () => {
     const { useCaseData } = await import('../src/hooks/useCaseData');
 
-    // Index patient visits on 2024-01-05.
+    // Index patient: baseline 2024-01-05, follow-up ~3 months later.
     const patientCase = makeCase('C1', [
       makeObs(LOINC_VISUS, '2024-01-05', 0.5),
       makeObs(LOINC_CRT, '2024-01-05', 300),
+      makeObs(LOINC_VISUS, '2024-04-05', 0.6),
+      makeObs(LOINC_CRT, '2024-04-05', 280),
     ]);
-    // Peers measured the SAME MONTH but on different days — no exact-day collision.
+    // Peers start in a DIFFERENT calendar period, but each has a baseline visit
+    // and a ~3-month follow-up — so they align to the index patient on the
+    // RELATIVE axis (month 0 and month ~3) despite no calendar overlap.
     const cohortCase2 = makeCase('C2', [
-      makeObs(LOINC_VISUS, '2024-01-20', 0.3),
-      makeObs(LOINC_CRT, '2024-01-22', 280),
+      makeObs(LOINC_VISUS, '2023-06-01', 0.3),
+      makeObs(LOINC_CRT, '2023-06-01', 320),
+      makeObs(LOINC_VISUS, '2023-09-01', 0.4),
+      makeObs(LOINC_CRT, '2023-09-01', 300),
     ]);
     const cohortCase3 = makeCase('C3', [
-      makeObs(LOINC_VISUS, '2024-01-28', 0.7),
-      makeObs(LOINC_CRT, '2024-01-11', 360),
+      makeObs(LOINC_VISUS, '2022-11-10', 0.7),
+      makeObs(LOINC_CRT, '2022-11-10', 360),
+      makeObs(LOINC_VISUS, '2023-02-10', 0.8),
+      makeObs(LOINC_CRT, '2023-02-10', 330),
     ]);
     const cases = [patientCase, cohortCase2, cohortCase3];
 
     const { result } = renderHook(() => useCaseData(patientCase, cases, 'de', t));
 
     const ref = result.current.cohortReference;
-    // Exact-day keying would have produced ZERO points here. Month bins must
-    // produce at least one, keyed to the patient's date.
-    expect(ref.length).toBeGreaterThanOrEqual(1);
-    const point = ref.find((p) => p.date === '2024-01-05');
-    expect(point).not.toBeUndefined();
-    expect(typeof point!.visusMedian).toBe('number');
-    expect(typeof point!.crtMedian).toBe('number');
+    // Calendar-month keying would yield ZERO matches (no overlap). Relative-month
+    // alignment must produce a reference at both the baseline and the follow-up.
+    expect(ref.length).toBeGreaterThanOrEqual(2);
+    const base = ref.find((p) => p.date === '2024-01-05');
+    const follow = ref.find((p) => p.date === '2024-04-05');
+    expect(base).not.toBeUndefined();
+    expect(follow).not.toBeUndefined();
+    expect(typeof base!.visusMedian).toBe('number');
+    expect(typeof follow!.crtMedian).toBe('number');
+    // relMonths carried on the reference point.
+    expect(base!.relMonths).toBe(0);
   });
 
-  it('emits no reference when the only same-month measurements belong to the index patient (WR-04)', async () => {
+  it('emits no reference when peers have no data at the index patient\'s relative month (J3c)', async () => {
     const { useCaseData } = await import('../src/hooks/useCaseData');
 
-    // Patient has data in 2024-03; peer has data only in a different month.
+    // Index patient has a single baseline visit (relMonths 0). The only peer has
+    // its baseline AND a follow-up — but we look up bucket 0 for the index, and
+    // the peer also has bucket 0, so they WOULD align. To get NO reference we
+    // give the peer ONLY a late follow-up (so its own baseline is that late
+    // visit → still bucket 0). Instead, exclude the peer entirely: a lone index
+    // patient (no peers) yields no band.
     const patientCase = makeCase('C1', [makeObs(LOINC_VISUS, '2024-03-01', 0.4)]);
-    const cohortCase2 = makeCase('C2', [makeObs(LOINC_VISUS, '2024-09-15', 0.3)]);
-    const cases = [patientCase, cohortCase2];
+    const cases = [patientCase];
 
     const { result } = renderHook(() => useCaseData(patientCase, cases, 'de', t));
 
-    // No peer data in the patient's month → no self-referential band.
+    // Only the index patient → no peer cohort → no self-referential band (WR-04).
     const point = result.current.cohortReference.find((p) => p.date === '2024-03-01');
     expect(point).toBeUndefined();
   });
@@ -263,6 +279,115 @@ describe('useCaseData — A4 v2 interpolation (separate dataKeys)', () => {
 });
 
 // ---------------------------------------------------------------------------
+// J3c: relative-time axis (months since the patient's first visit) + J3d
+// overlays on the change-from-baseline / distribution / scatter datasets.
+// ---------------------------------------------------------------------------
+
+describe('useCaseData — J3c relative-time axis', () => {
+  afterEach(() => cleanup());
+
+  it('keys combinedData rows on relMonths since the first observation', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+    // Baseline 2024-01-01; second visit ~3 months later; third ~6 months later.
+    const patientCase = makeCase('C1', [
+      makeObs(LOINC_VISUS, '2024-01-01', 0.5),
+      makeObs(LOINC_VISUS, '2024-04-01', 0.6),
+      makeObs(LOINC_VISUS, '2024-07-01', 0.7),
+    ]);
+    const { result } = renderHook(() => useCaseData(patientCase, [patientCase], 'de', t));
+    const rows = result.current.combinedData;
+    expect(rows[0].relMonths).toBe(0);
+    // ~3 and ~6 months (30.4375 days/month → rounded to one decimal).
+    expect(rows[1].relMonths).toBeGreaterThanOrEqual(2.9);
+    expect(rows[1].relMonths).toBeLessThanOrEqual(3.1);
+    expect(rows[2].relMonths).toBeGreaterThanOrEqual(5.9);
+    expect(rows[2].relMonths).toBeLessThanOrEqual(6.1);
+  });
+
+  it('toRelMonths maps an absolute date onto the relative axis (IVI/highlight remap)', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+    const patientCase = makeCase('C1', [
+      makeObs(LOINC_VISUS, '2024-01-01', 0.5),
+      makeObs(LOINC_VISUS, '2024-04-01', 0.6),
+    ]);
+    const { result } = renderHook(() => useCaseData(patientCase, [patientCase], 'de', t));
+    expect(result.current.toRelMonths('2024-01-01')).toBe(0);
+    const rel = result.current.toRelMonths('2024-04-01');
+    expect(rel).not.toBeNull();
+    expect(rel!).toBeGreaterThanOrEqual(2.9);
+    expect(rel!).toBeLessThanOrEqual(3.1);
+    expect(result.current.toRelMonths(null)).toBeNull();
+  });
+});
+
+describe('useCaseData — J3d cohort overlays on the other plots', () => {
+  afterEach(() => cleanup());
+
+  it('adds cohort percent-change median + IQR aligned by relative month', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+    // Index: baseline 0.5 then 0.6 (+20%) at ~3 months.
+    const patientCase = makeCase('C1', [
+      makeObs(LOINC_VISUS, '2024-01-01', 0.5),
+      makeObs(LOINC_VISUS, '2024-04-01', 0.6),
+    ]);
+    // Peers: each with a baseline + a ~3-month follow-up (different calendar
+    // dates, but aligned on the relative axis). Their +% changes seed the band.
+    const peer2 = makeCase('C2', [
+      makeObs(LOINC_VISUS, '2023-05-01', 0.4),
+      makeObs(LOINC_VISUS, '2023-08-01', 0.5), // +25%
+    ]);
+    const peer3 = makeCase('C3', [
+      makeObs(LOINC_VISUS, '2022-09-01', 0.6),
+      makeObs(LOINC_VISUS, '2022-12-01', 0.66), // +10%
+    ]);
+    const cases = [patientCase, peer2, peer3];
+    const { result } = renderHook(() => useCaseData(patientCase, cases, 'de', t));
+    const rows = result.current.baselineChangeWithReference;
+    const follow = rows.find((r) => r.date === '2024-04-01')!;
+    expect(follow).not.toBeUndefined();
+    expect(typeof follow.visusChangeMedian).toBe('number');
+    expect(Array.isArray(follow.visusChangeBand)).toBe(true);
+    // Baseline month: peers' change is ~0% (band brackets zero).
+    const base = rows.find((r) => r.date === '2024-01-01')!;
+    expect(base.relMonths).toBe(0);
+  });
+
+  it('computes cohort distribution percentages excluding the index patient', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+    const patientCase = makeCase('C1', [makeObs(LOINC_VISUS, '2024-01-01', 0.5)]);
+    const peer2 = makeCase('C2', [
+      makeObs(LOINC_VISUS, '2024-01-01', 0.1),
+      makeObs(LOINC_VISUS, '2024-02-01', 0.3),
+    ]);
+    const cases = [patientCase, peer2];
+    const { result } = renderHook(() => useCaseData(patientCase, cases, 'de', t));
+    const dist = result.current.visusDistributionWithCohort;
+    const totalPct = dist.reduce((s, b) => s + (b.cohortPct ?? 0), 0);
+    // Two peer measurements → percentages sum to ~100.
+    expect(totalPct).toBeGreaterThanOrEqual(99);
+    expect(totalPct).toBeLessThanOrEqual(101);
+  });
+
+  it('builds a cohort Visus-vs-CRT cloud from peer same-day pairs (index excluded)', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+    const patientCase = makeCase('C1', [
+      makeObs(LOINC_VISUS, '2024-01-01', 0.5),
+      makeObs(LOINC_CRT, '2024-01-01', 300),
+    ]);
+    const peer2 = makeCase('C2', [
+      makeObs(LOINC_VISUS, '2024-01-01', 0.4),
+      makeObs(LOINC_CRT, '2024-01-01', 320),
+    ]);
+    const cases = [patientCase, peer2];
+    const { result } = renderHook(() => useCaseData(patientCase, cases, 'de', t));
+    const cloud = result.current.cohortVisusCrtScatter;
+    // One peer same-day pair; the index patient's pair must be excluded.
+    expect(cloud.length).toBe(1);
+    expect(cloud[0]).toEqual({ visus: 0.4, crt: 320 });
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Task 2: VisusCrtChart renders reference overlay
 // ---------------------------------------------------------------------------
 
@@ -287,7 +412,9 @@ vi.mock('recharts', async (importOriginal) => {
     ),
 
     CartesianGrid: () => null,
-    XAxis: () => null,
+    XAxis: ({ dataKey, type }: any) => (
+      <g data-testid="recharts-xaxis" data-data-key={dataKey ?? ''} data-type={type ?? ''} />
+    ),
 
     YAxis: ({ label }: any) => (
       <g data-testid="recharts-yaxis" data-label={label?.value ?? ''} />
@@ -296,7 +423,9 @@ vi.mock('recharts', async (importOriginal) => {
     Tooltip: () => null,
     Legend: () => null,
 
-    ReferenceLine: () => null,
+    ReferenceLine: ({ x, label }: any) => (
+      <g data-testid="recharts-refline" data-x={x != null ? String(x) : ''} data-label={label?.value ?? ''} />
+    ),
 
     Area: ({ fill, stroke, name, legendType, dataKey }: any) => (
       <g
@@ -333,6 +462,7 @@ const tStub = (key: TranslationKey): string => key;
 const mergedData: CombinedDataPoint[] = [
   {
     date: '2024-01-01',
+    relMonths: 0,
     visus: 0.5,
     crt: 300,
     visusMeasured: true,
@@ -344,6 +474,7 @@ const mergedData: CombinedDataPoint[] = [
   },
   {
     date: '2024-02-01',
+    relMonths: 1,
     visus: 0.6,
     crt: 280,
     visusMeasured: true,
@@ -356,8 +487,8 @@ const mergedData: CombinedDataPoint[] = [
 ];
 
 const plainData: CombinedDataPoint[] = [
-  { date: '2024-01-01', visus: 0.5, crt: 300, visusMeasured: true, crtMeasured: true },
-  { date: '2024-02-01', visus: 0.6, crt: 280, visusMeasured: true, crtMeasured: true },
+  { date: '2024-01-01', relMonths: 0, visus: 0.5, crt: 300, visusMeasured: true, crtMeasured: true },
+  { date: '2024-02-01', relMonths: 1, visus: 0.6, crt: 280, visusMeasured: true, crtMeasured: true },
 ];
 
 const baseChartProps = {
@@ -368,6 +499,8 @@ const baseChartProps = {
   locale: 'de',
   t: tStub,
   visusObs: [],
+  // J3c: relative-time mapper stub (these render tests don't exercise highlight/IVI).
+  toRelMonths: () => null,
 };
 
 describe('VisusCrtChart — FALL-011 reference overlay (A3 v2 merged single array)', () => {
@@ -419,5 +552,39 @@ describe('VisusCrtChart — FALL-011 reference overlay (A3 v2 merged single arra
     expect(areas.length).toBe(0);
     const lines = container.querySelectorAll('[data-testid="recharts-line"]');
     expect(lines.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('keys the X axis on relMonths as a numeric axis (J3c)', () => {
+    const { container } = render(
+      <VisusCrtChart {...baseChartProps} combinedData={mergedData} />,
+    );
+    const xAxis = container.querySelector('[data-testid="recharts-xaxis"]');
+    expect(xAxis?.getAttribute('data-data-key')).toBe('relMonths');
+    expect(xAxis?.getAttribute('data-type')).toBe('number');
+  });
+
+  it('maps IVI markers + the highlight onto the relative axis (J3c)', () => {
+    // toRelMonths maps 2024-03-01 → 6 (highlight) and the IVI date → 2.
+    const toRelMonths = (d: string | null | undefined) => {
+      const day = d?.substring(0, 10);
+      return day === '2024-03-01' ? 6 : day === '2024-02-01' ? 2 : null;
+    };
+    const injections = [
+      { resourceType: 'Procedure', id: 'ivi-1', status: 'completed', code: { coding: [] }, performedDateTime: '2024-02-01T09:00:00Z' },
+    ] as any;
+    const { container } = render(
+      <VisusCrtChart
+        {...baseChartProps}
+        combinedData={mergedData}
+        injections={injections}
+        toRelMonths={toRelMonths}
+        highlightDate="2024-03-01"
+      />,
+    );
+    const reflines = Array.from(container.querySelectorAll('[data-testid="recharts-refline"]'));
+    const xs = reflines.map((el) => el.getAttribute('data-x'));
+    // IVI marker mapped to relative month 2, highlight mapped to relative month 6.
+    expect(xs).toContain('2');
+    expect(xs).toContain('6');
   });
 });

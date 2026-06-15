@@ -90,8 +90,8 @@ const deStrings: Partial<Record<TranslationKey, string>> = {
 
 // Data with cohort-reference fields so the overlay renders (I3a/I3b).
 const refData = [
-  { date: '2024-01-01', visus: 0.5, crt: 300, visusMedian: 0.5, crtMedian: 300, visusBand: [0.4, 0.6], crtBand: [280, 320] },
-  { date: '2024-02-01', visus: 0.6, crt: 290, visusMedian: 0.55, crtMedian: 295, visusBand: [0.45, 0.65], crtBand: [275, 315] },
+  { date: '2024-01-01', relMonths: 0, visus: 0.5, crt: 300, visusMedian: 0.5, crtMedian: 300, visusBand: [0.4, 0.6], crtBand: [280, 320] },
+  { date: '2024-02-01', relMonths: 1, visus: 0.6, crt: 290, visusMedian: 0.55, crtMedian: 295, visusBand: [0.45, 0.65], crtBand: [275, 315] },
 ];
 
 const dataName = (els: Element[], name: string) =>
@@ -101,8 +101,8 @@ const tDE = (key: TranslationKey): string => deStrings[key] ?? key;
 
 const minimalProps = {
   combinedData: [
-    { date: '2024-01-01', visus: 0.5, crt: 300, visusMeasured: true, crtMeasured: true },
-    { date: '2024-02-01', visus: 0.6, crt: undefined, visusMeasured: false, crtMeasured: false },
+    { date: '2024-01-01', relMonths: 0, visus: 0.5, crt: 300, visusMeasured: true, crtMeasured: true },
+    { date: '2024-02-01', relMonths: 1, visus: 0.6, crt: undefined, visusMeasured: false, crtMeasured: false },
   ],
   cohortAvgVisus: 0.55,
   cohortAvgCrt: 290,
@@ -111,6 +111,9 @@ const minimalProps = {
   locale: 'de',
   t: tDE,
   visusObs: [],
+  // J3c: relative-time mapper (absolute date → months-since-baseline). Tests
+  // don't exercise the highlight/IVI mapping, so a no-op-ish stub suffices.
+  toRelMonths: () => null,
 };
 
 describe('VisusCrtChart — FALL-012 / A4 i18n labels', () => {
