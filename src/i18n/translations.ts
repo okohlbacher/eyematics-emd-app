@@ -810,6 +810,9 @@ const translations = {
   // Cohort Outcome Trajectories (Phase 08 — OUTCOME-01..12)
   outcomesTitle: { de: 'Outcomes', en: 'Outcomes' },
   outcomesServerComputingLabel: { de: 'Berechnung auf Server\u2026', en: 'Computing on server\u2026' },
+  // I2 (v1.14-p4): client-path "computing/rendering" status so the tab never looks
+  // frozen with no feedback while the heavy trajectory/scatter work mounts.
+  outcomesClientComputingLabel: { de: 'Verl\u00e4ufe werden berechnet\u2026', en: 'Computing trajectories\u2026' },
   outcomesTitleWithCohort: { de: 'Outcomes: {cohortName}', en: 'Outcomes: {cohortName}' },
   outcomesSubtitleSaved: { de: 'Gespeicherte Kohorte · {count} Patient:innen', en: 'Saved cohort · {count} patients' },
   outcomesSubtitleAdhoc: { de: 'Ad-hoc-Filter · {count} Patient:innen', en: 'Ad-hoc filter · {count} patients' },

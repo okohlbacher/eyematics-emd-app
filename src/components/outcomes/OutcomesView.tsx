@@ -20,6 +20,7 @@
  * mirrors the original OutcomesView exactly.
  */
 import { GitCompare, Settings } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import type { TranslationKey } from '../../i18n/translations';
 import CohortCompareDrawer from './CohortCompareDrawer';
@@ -37,10 +38,55 @@ import {
 } from './useOutcomesRouteState';
 import VisusMetricContainer from './VisusMetricContainer';
 
+// I2 (v1.14-p4): above this cohort case-count the CLIENT-side panel render is heavy
+// enough to visibly block the tab, so we show a status indicator on the first paint
+// and defer mounting the panels one frame so the "computing/rendering" status is
+// actually painted first (the tab never looks frozen with no feedback). Below this,
+// the render is fast enough that the deferral would only add a perceptible flash.
+const CLIENT_RENDER_STATUS_THRESHOLD_CASES = 50;
+
 export default function OutcomesView() {
   // WR-01 / Pitfall 3: both hooks called unconditionally before any return.
   const s = useOutcomesRouteState();
   const a = useOutcomesAggregation(s);
+
+  // I2 (v1.14-p4): client-path loading/status. The server path already shows a
+  // role="status" indicator while the fetch is in flight; the default 1000-patient
+  // server threshold means typical cohorts (e.g. 245) run CLIENT-side with the heavy
+  // synchronous panel render and no feedback at all — the "system unresponsive while
+  // loading" symptom (NF A1/A6). We bridge that with a two-pass mount: on the first
+  // paint of a large client-side cohort we render ONLY the status, then flip
+  // `clientRenderReady` in a layout-after-paint effect so the heavy panels mount on
+  // the next frame, after the status has painted.
+  const isClientHeavyMetric =
+    !a.routeServerSide &&
+    (s.activeMetric === 'visus' || s.activeMetric === 'crt') &&
+    !!s.cohort &&
+    s.cohort.cases.length > CLIENT_RENDER_STATUS_THRESHOLD_CASES;
+  // Re-arm the deferral whenever the heavy inputs change (cohort, metric, layers) so
+  // switching to a fresh large cohort shows the status again rather than painting the
+  // prior panels then swapping. Keyed on the same identities the panels read.
+  const clientRenderKey = `${s.cohortId ?? ''}|${s.activeMetric}|${s.layers.scatter}|${s.layers.perPatient}`;
+  // The KEY for which the deferred panel render is armed (set only inside the timer
+  // callback — never synchronously in the effect body, so no setState-in-effect
+  // cascade). Readiness is derived by comparing this to the current key, so a key
+  // change instantly reverts to "not ready" (status shown) with no extra render.
+  //
+  // We defer with setTimeout(0), NOT requestAnimationFrame: rAF is throttled to ~0 Hz
+  // in a backgrounded/hidden tab, which would leave the status as a PERMANENT spinner
+  // and the panels never mounting. A macrotask always fires (subject only to the
+  // ~clamped minimum delay), so the status reliably paints once and then clears.
+  const [armedRenderKey, setArmedRenderKey] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isClientHeavyMetric) return;
+    // Yields to the event loop so the status placeholder is painted before the heavy
+    // panel subtree mounts synchronously on the next task.
+    const timer = setTimeout(() => setArmedRenderKey(clientRenderKey), 0);
+    return () => clearTimeout(timer);
+  }, [clientRenderKey, isClientHeavyMetric]);
+  // Effective readiness: non-heavy paths render immediately; the heavy path waits
+  // until the deferral has armed for the CURRENT key (status painted first).
+  const clientRenderReady = !isClientHeavyMetric || armedRenderKey === clientRenderKey;
 
   const renderTabStrip = () => (
     <nav
@@ -95,6 +141,24 @@ export default function OutcomesView() {
             data-testid="outcomes-server-computing"
           >
             {s.t('outcomesServerComputingLabel')}
+          </span>
+        </div>
+      );
+    }
+
+    // I2 (v1.14-p4): client-path computing/rendering status — shown on the first
+    // paint of a large client-side cohort while the heavy panel subtree is deferred
+    // one frame (see clientRenderReady). Prevents the "system unresponsive while
+    // loading" symptom on cohorts below the server threshold.
+    if (isClientHeavyMetric && !clientRenderReady) {
+      return (
+        <div className="flex items-center gap-2 py-8 justify-center text-gray-500 text-sm italic">
+          <span
+            role="status"
+            aria-live="polite"
+            data-testid="outcomes-client-computing"
+          >
+            {s.t('outcomesClientComputingLabel')}
           </span>
         </div>
       );
