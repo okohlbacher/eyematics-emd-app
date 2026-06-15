@@ -194,7 +194,6 @@ function renderCaseDetail(activeQualityParams?: string[]) {
       onNavigateToCase={vi.fn()}
       onOpenFlagDialog={vi.fn()}
       onConfirmRow={vi.fn()}
-      onCorrectRow={vi.fn()}
       onResetRow={vi.fn()}
     />,
   );
