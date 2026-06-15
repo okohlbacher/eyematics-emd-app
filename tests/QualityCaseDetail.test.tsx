@@ -89,7 +89,6 @@ const baseProps = {
   onNavigateToCase: vi.fn(),
   onOpenFlagDialog: vi.fn(),
   onConfirmRow: vi.fn(),
-  onCorrectRow: vi.fn(),
   onResetRow: vi.fn(),
 };
 
@@ -117,12 +116,14 @@ describe('QualityCaseDetail — C1 inline review rework', () => {
     expect(onConfirmRow).toHaveBeenCalledWith('case-001', 'Visual acuity (2024-01-12)', expect.any(String));
   });
 
-  it('clicking Behoben fires onCorrectRow', () => {
-    const onCorrectRow = vi.fn();
-    render(<QualityCaseDetail {...baseProps} onCorrectRow={onCorrectRow} />);
-    const btn = screen.getByLabelText('correctedUpstream Visual acuity 2024-01-12');
-    fireEvent.click(btn);
-    expect(onCorrectRow).toHaveBeenCalledWith('case-001', 'Visual acuity (2024-01-12)', expect.any(String));
+  it('J6b: the "Behoben" (corrected-upstream) action is GONE — only Bestätigen + Fehler melden remain', () => {
+    render(<QualityCaseDetail {...baseProps} />);
+    // No Behoben/corrected-upstream action button anywhere (its aria-label used
+    // t('correctedUpstream'), which has been removed from the row actions).
+    expect(screen.queryByLabelText('correctedUpstream Visual acuity 2024-01-12')).toBeNull();
+    // The two remaining actions are still present on the normal row.
+    expect(screen.queryByLabelText('confirmValue Visual acuity 2024-01-12')).not.toBeNull();
+    expect(screen.queryByLabelText('reportError Visual acuity 2024-01-12')).not.toBeNull();
   });
 
   it('renders the anomalous Visus row inline with an auffällig status pill', () => {
@@ -145,8 +146,9 @@ describe('QualityCaseDetail — C1 inline review rework', () => {
       caseId: 'case-001', parameter: 'Visual acuity (2024-01-12)', errorType: CORRECTED_ERROR_TYPE,
       flaggedAt: '2024-03-10T10:00:00Z', flaggedBy: 'r1', status: 'resolved',
     }]} />);
-    // statusResolved appears in the row and the legend → getAll.
-    expect(screen.getAllByLabelText('status: statusResolved').length).toBeGreaterThan(1);
+    // J6b: the resolved legend entry was removed, so the pill now appears ONLY
+    // on the (pre-existing) resolved row, not in the legend → exactly one.
+    expect(screen.getAllByLabelText('status: statusResolved').length).toBe(1);
     expect(screen.queryByText('correctedUpstreamNote')).not.toBeNull();
     const struck = document.querySelector('.line-through');
     expect(struck).not.toBeNull();
@@ -182,12 +184,14 @@ describe('QualityCaseDetail — C1 inline review rework', () => {
     expect(onResetRow).toHaveBeenCalledWith('case-001', 'Visual acuity (2024-01-12)');
   });
 
-  it('exposes the four status definitions as tooltips (legend)', () => {
+  it('exposes the three settable status definitions as tooltips (J6b: no resolved entry)', () => {
     render(<QualityCaseDetail {...baseProps} />);
     expect(screen.queryByLabelText('tipStatusOpen')).not.toBeNull();
     expect(screen.queryByLabelText('tipStatusConfirmed')).not.toBeNull();
     expect(screen.queryByLabelText('tipStatusAnomalous')).not.toBeNull();
-    expect(screen.queryByLabelText('tipStatusResolved')).not.toBeNull();
+    // J6b: "Behoben"/resolved is no longer a status a reviewer can set, so its
+    // legend tooltip is gone.
+    expect(screen.queryByLabelText('tipStatusResolved')).toBeNull();
   });
 
   it('the filter chips show anomaly count and filter the table', () => {
@@ -206,6 +210,21 @@ describe('QualityCaseDetail — C1 inline review rework', () => {
     const btn = screen.getByText('markAsReviewed');
     fireEvent.click(btn);
     expect(onMarkReviewed).toHaveBeenCalledWith('case-001');
+  });
+
+  it('J6a: the status/annotation pills live in a fixed-width column (table-fixed + colgroup) so actions do not reflow', () => {
+    render(<QualityCaseDetail {...baseProps} />);
+    // table-fixed + an explicit colgroup pin the Status + Aktion column widths,
+    // so a changing status pill cannot re-size the column or shift the buttons.
+    const table = document.querySelector('table.table-fixed');
+    expect(table).not.toBeNull();
+    const cols = table!.querySelectorAll('colgroup col');
+    // Five columns: Parameter (flex) + Datum + Wert + Status + Aktion.
+    expect(cols.length).toBe(5);
+    // The Status column (4th) carries a fixed width class.
+    expect(cols[3].getAttribute('class')).toMatch(/\bw-/);
+    // The Aktion column (5th) is also pinned.
+    expect(cols[4].getAttribute('class')).toMatch(/\bw-/);
   });
 
   it('the audit log is read-only (no select editor) and lists flags', () => {

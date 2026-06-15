@@ -78,8 +78,6 @@ export interface QualityCaseDetailProps {
   onOpenFlagDialog: (parameter: string, value: string) => void;
   /** Confirm a row as correct → persists a QualityFlag (acknowledged, errorType "confirmed"). */
   onConfirmRow: (caseId: string, parameter: string, value: string) => void;
-  /** Mark a row corrected upstream → persists/updates a QualityFlag to status "resolved". */
-  onCorrectRow: (caseId: string, parameter: string, value: string) => void;
   /** Revert a row's verdict back to "open" (deletes the flag, returns the row to needs-review). */
   onResetRow: (caseId: string, parameter: string) => void;
 }
@@ -100,7 +98,6 @@ export default function QualityCaseDetail({
   onNavigateToCase,
   onOpenFlagDialog,
   onConfirmRow,
-  onCorrectRow,
   onResetRow,
 }: QualityCaseDetailProps) {
   const { locale, t } = useLanguage();
@@ -317,15 +314,10 @@ export default function QualityCaseDetail({
             <Check className="w-3.5 h-3.5" /> {t('confirmValue')}
           </button>
         )}
-        {/* Behoben — distinct blue + up-arrow + full self-explanatory label (NF point 3). */}
-        <button
-          onClick={() => onCorrectRow(selectedCase.id, row.paramKey, row.value)}
-          aria-label={`${t('correctedUpstream')} ${subj}`}
-          title={t('correctedUpstream')}
-          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border border-blue-200 text-blue-700 hover:bg-blue-50"
-        >
-          <ArrowUpRight className="w-3.5 h-3.5" /> {t('correctedUpstreamShort')}
-        </button>
+        {/* J6b: the "Behoben" (corrected-upstream) action was removed — the site
+            is not planning to access the Quellsystem, so a reviewer can no longer
+            SET resolved. The wire `resolved` status + CORRECTED_ERROR_TYPE sentinel
+            stay untouched (D-05); pre-existing resolved rows still render below. */}
         <button
           onClick={() => onOpenFlagDialog(row.paramKey, row.value)}
           aria-label={`${t('reportError')} ${subj}`}
@@ -482,13 +474,25 @@ export default function QualityCaseDetail({
               ))}
             </div>
 
-            <table className="w-full text-sm">
+            {/* J6a: table-fixed + an explicit colgroup pins the Status and Aktion
+                columns to stable widths. The status/annotation pills now live in a
+                dedicated fixed-width column, so changing a row's status (open →
+                bestätigt → auffällig, etc.) never re-sizes the column and the action
+                buttons never shift. Parameter takes the remaining flexible width. */}
+            <table className="w-full text-sm table-fixed">
+              <colgroup>
+                <col />
+                <col className="w-24" />
+                <col className="w-24" />
+                <col className="w-36" />
+                <col className="w-48" />
+              </colgroup>
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
                   <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{t('parameter')}</th>
                   <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{t('date')}</th>
                   <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">{t('value')}</th>
-                  <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">{t('status')}</th>
+                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{t('status')}</th>
                   <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">{t('action')}</th>
                 </tr>
               </thead>
@@ -506,8 +510,10 @@ export default function QualityCaseDetail({
                       <td className={`px-3 py-2 border-t border-gray-100 dark:border-gray-700 text-right font-mono align-top ${verdict === 'resolved' ? 'line-through text-gray-400' : ''}`}>
                         {row.value || '—'}
                       </td>
-                      <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 text-center align-top">{statusPill(verdict)}</td>
-                      <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 text-center align-top">{rowActions(row, verdict)}</td>
+                      {/* J6a: fixed-width status column — left-aligned + nowrap so a
+                          longer/shorter pill never changes the column width. */}
+                      <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 text-left align-top whitespace-nowrap">{statusPill(verdict)}</td>
+                      <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 text-center align-top whitespace-nowrap">{rowActions(row, verdict)}</td>
                       {/* Inline reason sub-row + corrected-upstream note (amber card relocated, NF point 2). */}
                       {(row.reason || verdict === 'resolved' || note) && (
                         <td colSpan={5} className="px-3 pb-2 pt-0">
@@ -556,7 +562,9 @@ export default function QualityCaseDetail({
               <span className="inline-flex items-center gap-1">{statusPill('open')}<InfoTooltip text={t('tipStatusOpen')} /></span>
               <span className="inline-flex items-center gap-1">{statusPill('confirmed')}<InfoTooltip text={t('tipStatusConfirmed')} /></span>
               <span className="inline-flex items-center gap-1">{statusPill('anomalous')}<InfoTooltip text={t('tipStatusAnomalous')} /></span>
-              <span className="inline-flex items-center gap-1">{statusPill('resolved')}<InfoTooltip text={t('tipStatusResolved')} /></span>
+              {/* J6b: no "Behoben"/resolved legend entry — the action was removed,
+                  so resolved is no longer a status a reviewer can set. Existing
+                  resolved rows still render their pill inline (kept in statusPill). */}
             </div>
           </>
         ) : (

@@ -10,7 +10,6 @@ import { getTherapyStatus } from '../../shared/qualityPredicates';
 import { QualityFilterBar } from '../components/doc-quality/QualityFilterBar';
 import QualityCaseDetail, {
   CONFIRMED_ERROR_TYPE,
-  CORRECTED_ERROR_TYPE,
 } from '../components/quality/QualityCaseDetail';
 import QualityCaseList from '../components/quality/QualityCaseList';
 import QualityFlagDialog from '../components/quality/QualityFlagDialog';
@@ -272,8 +271,9 @@ export default function QualityPage() {
   const handleConfirmRow = (caseId: string, parameter: string) =>
     setRowVerdict(caseId, parameter, 'acknowledged', CONFIRMED_ERROR_TYPE);
 
-  const handleCorrectRow = (caseId: string, parameter: string) =>
-    setRowVerdict(caseId, parameter, 'resolved', CORRECTED_ERROR_TYPE);
+  // J6b: handleCorrectRow / onCorrectRow removed — the "Behoben" UI action is gone.
+  // setRowVerdict still supports 'resolved' on the wire (D-05), but nothing in the
+  // UI now invokes it; existing resolved flags continue to load and render.
 
   const handleResetRow = (caseId: string, parameter: string) =>
     removeQualityFlagByParameter(caseId, parameter);
@@ -461,7 +461,6 @@ export default function QualityPage() {
               onNavigateToCase={(id) => navigate(`/case/${id}`)}
               onOpenFlagDialog={(parameter, value) => setFlagDialog({ parameter, value })}
               onConfirmRow={handleConfirmRow}
-              onCorrectRow={handleCorrectRow}
               onResetRow={handleResetRow}
             />
           )}

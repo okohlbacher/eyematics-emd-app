@@ -362,8 +362,9 @@ const translations = {
     en: 'Corrected upstream – the value was fixed directly in the source EHR. The demonstrator itself does not change any data.',
   },
   confirmValue: { de: 'Bestätigen', en: 'Confirm' },
-  correctedUpstream: { de: 'Im Quellsystem korrigiert', en: 'Corrected upstream' },
-  correctedUpstreamShort: { de: 'Behoben', en: 'Corrected' },
+  // J6b: the "Behoben" action was removed; its button labels (correctedUpstream /
+  // correctedUpstreamShort) are gone. correctedUpstreamNote + logCorrectedUpstream
+  // are KEPT — pre-existing resolved rows/log entries still render them.
   correctedUpstreamNote: {
     de: 'im Quellsystem korrigiert — Wert im Quell-EHR berichtigt',
     en: 'corrected upstream — value fixed in the source EHR',
