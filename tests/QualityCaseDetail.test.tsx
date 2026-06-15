@@ -218,3 +218,65 @@ describe('QualityCaseDetail — C1 inline review rework', () => {
     expect(within(log).queryByText(/logConfirmed/)).not.toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// I6a (v1.14-p2): the reviewer's note (errorType) must remain visible after a
+// confirm (status acknowledged) and on resolved rows; the confirmed/corrected
+// sentinels must never display as a fake user note.
+// ---------------------------------------------------------------------------
+
+describe('QualityCaseDetail — I6a annotation persistence + sentinel suppression', () => {
+  const NOTE = 'visusImplausiblyLow';
+
+  it('shows the reviewer note while the flag is still open', () => {
+    render(<QualityCaseDetail {...baseProps} caseFlags={[{
+      caseId: 'case-001', parameter: 'Visual acuity (2024-01-12)', errorType: NOTE,
+      flaggedAt: '2024-03-10T10:00:00Z', flaggedBy: 'r1', status: 'open',
+    }]} />);
+    expect(screen.queryByText(NOTE)).not.toBeNull();
+  });
+
+  it('still shows the reviewer note after Bestätigen (status acknowledged)', () => {
+    render(<QualityCaseDetail {...baseProps} caseFlags={[{
+      caseId: 'case-001', parameter: 'Visual acuity (2024-01-12)', errorType: NOTE,
+      flaggedAt: '2024-03-10T10:00:00Z', flaggedBy: 'r1', status: 'acknowledged',
+    }]} />);
+    // The note must NOT disappear once the row is confirmed.
+    expect(screen.queryByText(NOTE)).not.toBeNull();
+  });
+
+  it('still shows the reviewer note on a resolved row', () => {
+    render(<QualityCaseDetail {...baseProps} caseFlags={[{
+      caseId: 'case-001', parameter: 'Visual acuity (2024-01-12)', errorType: NOTE,
+      flaggedAt: '2024-03-10T10:00:00Z', flaggedBy: 'r1', status: 'resolved',
+    }]} />);
+    expect(screen.queryByText(NOTE)).not.toBeNull();
+  });
+
+  it('confirming a clean row shows NO sentinel text (confirmed)', () => {
+    render(<QualityCaseDetail {...baseProps} caseFlags={[{
+      caseId: 'case-001', parameter: 'Visual acuity (2024-01-12)', errorType: CONFIRMED_ERROR_TYPE,
+      flaggedAt: '2024-03-10T10:00:00Z', flaggedBy: 'r1', status: 'acknowledged',
+    }]} />);
+    // The sentinel 'confirmed' must never render as a user note (row or log).
+    expect(screen.queryByText(CONFIRMED_ERROR_TYPE)).toBeNull();
+  });
+
+  it('a resolved clean row shows NO sentinel text (corrected)', () => {
+    render(<QualityCaseDetail {...baseProps} caseFlags={[{
+      caseId: 'case-001', parameter: 'Visual acuity (2024-01-12)', errorType: CORRECTED_ERROR_TYPE,
+      flaggedAt: '2024-03-10T10:00:00Z', flaggedBy: 'r1', status: 'resolved',
+    }]} />);
+    expect(screen.queryByText(CORRECTED_ERROR_TYPE)).toBeNull();
+  });
+
+  it('the read-only audit log includes the real note (sentinels suppressed)', () => {
+    render(<QualityCaseDetail {...baseProps} caseFlags={[{
+      caseId: 'case-001', parameter: 'Visual acuity (2024-01-12)', errorType: NOTE,
+      flaggedAt: '2024-03-10T10:00:00Z', flaggedBy: 'r1', status: 'acknowledged',
+    }]} />);
+    const log = screen.getByText('caseStatusAndLog').closest('details') as HTMLElement;
+    // The note text is appended to the log entry ("… · visusImplausiblyLow").
+    expect(within(log).queryByText(new RegExp(NOTE))).not.toBeNull();
+  });
+});

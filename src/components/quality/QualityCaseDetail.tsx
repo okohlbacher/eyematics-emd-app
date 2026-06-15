@@ -345,6 +345,19 @@ export default function QualityCaseDetail({
     return t('logFlagged');
   };
 
+  // I6a (v1.14-p2): the reviewer's reported errorType note is preserved across a
+  // confirm (status-only update), but previously only rendered while the flag was
+  // still 'open'. Surface the real note for acknowledged/resolved rows too — and
+  // suppress the CONFIRMED_ERROR_TYPE / CORRECTED_ERROR_TYPE sentinels (which are
+  // wire/DB markers a verdict writes, NOT user notes) so they never display as a
+  // fake annotation. Returns null when there is no displayable note.
+  const displayNote = (flag: QualityFlag | undefined): string | null => {
+    const note = flag?.errorType?.trim();
+    if (!note) return null;
+    if (note === CONFIRMED_ERROR_TYPE || note === CORRECTED_ERROR_TYPE) return null;
+    return note;
+  };
+
   return (
     <div className="space-y-4">
       {/* Header strip — condensed meta + case-level actions (no duplicate approve control). */}
@@ -483,7 +496,8 @@ export default function QualityCaseDetail({
                 {visibleRows.map((row) => {
                   const flag = flagFor(row.paramKey);
                   const verdict = verdictOf(row, flag);
-                  const flagged = flag?.status === 'open';
+                  // I6a: real (non-sentinel) reviewer note, shown regardless of status.
+                  const note = displayNote(flag);
                   const highlight = verdict === 'anomalous' || verdict === 'missing';
                   return (
                     <tr key={row.paramKey} className={highlight ? 'bg-amber-50/60 dark:bg-amber-900/10' : ''}>
@@ -495,7 +509,7 @@ export default function QualityCaseDetail({
                       <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 text-center align-top">{statusPill(verdict)}</td>
                       <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 text-center align-top">{rowActions(row, verdict)}</td>
                       {/* Inline reason sub-row + corrected-upstream note (amber card relocated, NF point 2). */}
-                      {(row.reason || verdict === 'resolved' || flagged) && (
+                      {(row.reason || verdict === 'resolved' || note) && (
                         <td colSpan={5} className="px-3 pb-2 pt-0">
                           <div className="flex flex-wrap items-center gap-2">
                             {row.reason && (
@@ -508,9 +522,12 @@ export default function QualityCaseDetail({
                                 {row.missing ? t('statusMissing') : t('statusAnomalous')}: {row.reason}
                               </span>
                             )}
-                            {flagged && flag && (
+                            {/* I6a: show the real reviewer note for open AND
+                                acknowledged/resolved rows; sentinels are suppressed
+                                by displayNote so a confirmed clean row shows nothing. */}
+                            {note && (
                               <span className="inline-flex items-center gap-1 text-xs rounded-md px-2 py-0.5 border text-red-600 bg-red-50 border-red-200">
-                                <Flag className="w-3 h-3" /> {flag.errorType}
+                                <Flag className="w-3 h-3" /> {note}
                               </span>
                             )}
                             {verdict === 'resolved' && (
@@ -584,6 +601,11 @@ export default function QualityCaseDetail({
                   >
                     <span className="dark:text-gray-200">
                       <span className="font-medium">{f.parameter}</span> — {logVerb(f)}
+                      {/* I6a: include the real reviewer note in the read-only audit
+                          log too, suppressing the confirmed/corrected sentinels. */}
+                      {displayNote(f) && (
+                        <span className="text-gray-600 dark:text-gray-300"> · {displayNote(f)}</span>
+                      )}
                     </span>
                     <span className="text-gray-500 dark:text-gray-400">
                       {t('reportedBy')} {f.flaggedBy} · {new Date(f.flaggedAt).toLocaleDateString(dateFmt)}
