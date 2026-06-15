@@ -156,17 +156,86 @@ export default function OutcomesPanel({
   //     all ~14k scatter nodes — the exact perf regression A6/I2 must prevent.
   const hoveredDatumRef = useRef<{ patientId: string } | null>(null);
 
+  // J1a (v1.15-p4): IMPERATIVE hover tooltip — follows the HOVERED scatter point.
+  //
+  // The Recharts axis <Tooltip> resolves its content by NEAREST X, so on a scatter
+  // hover it shows whichever point is closest on the x-axis, not the one under the
+  // cursor (the tester's "Pop-up still shows the closest point on the x axis").
+  // We render our own tooltip element and populate + position it in the SAME pointer
+  // enter/leave handlers that already set hoveredDatumRef + the imperative highlight.
+  // It is updated via direct DOM writes (textContent/style) — NEVER React state — so
+  // a hover does NOT re-render the ~14k-node scatter layer (preserves the I1 perf
+  // win). The axis tooltip is restricted to non-scatter series below so the user no
+  // longer sees the nearest-x scatter pop-up.
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  // Latest formatting context for the imperative tooltip. Refs (not deps) so the
+  // memoized enter handler stays stable while always reading current labels/units.
+  // Written during render below (a "latest value" cache — read only inside handlers).
+  const hoverFmtRef = useRef<{ xLabel: string; valueLabel: string; valueUnit: string }>(
+    { xLabel: '', valueLabel: '', valueUnit: '' },
+  );
+  const formatHoverTooltip = useCallback(
+    (p: { patientId?: string; x?: number; y?: number }): string => {
+      const fmt = hoverFmtRef.current;
+      const xPart =
+        typeof p.x === 'number'
+          ? `${fmt.xLabel}: ${axisMode === 'days' ? `${Math.round(p.x)} d` : `#${Math.round(p.x)}`}`
+          : '';
+      const yPart =
+        typeof p.y === 'number'
+          ? `${fmt.valueLabel}: ${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(p.y)}${fmt.valueUnit ? ` ${fmt.valueUnit}` : ''}`
+          : '';
+      return [p.patientId ?? '', xPart, yPart].filter(Boolean).join('\n');
+    },
+    [axisMode, locale],
+  );
+
+  const showHoverTooltip = useCallback(
+    (clientX: number, clientY: number, p: { patientId?: string; x?: number; y?: number }) => {
+      const el = tooltipRef.current;
+      const container = containerRef.current;
+      if (!el || !container) return;
+      const rect = container.getBoundingClientRect();
+      el.textContent = formatHoverTooltip(p);
+      // Offset a little from the cursor; clamp within the container.
+      const left = Math.max(0, Math.min(clientX - rect.left + 12, rect.width - 8));
+      const top = Math.max(0, clientY - rect.top + 12);
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
+      el.style.display = 'block';
+    },
+    [formatHoverTooltip],
+  );
+  const hideHoverTooltip = useCallback(() => {
+    const el = tooltipRef.current;
+    if (el) el.style.display = 'none';
+  }, []);
+
   const handlePointEnter = useCallback(
-    (e: { currentTarget: Element }, patientId: string) => {
-      hoveredDatumRef.current = { patientId };
+    (
+      e: { currentTarget: Element; clientX?: number; clientY?: number },
+      point: { patientId: string; x?: number; y?: number },
+    ) => {
+      hoveredDatumRef.current = { patientId: point.patientId };
       const dot = e.currentTarget.nextElementSibling; // the r=4 visible dot
       if (dot) {
         dot.setAttribute('r', '6');
         dot.setAttribute('fill-opacity', '1');
         dot.setAttribute('stroke-width', '2');
       }
+      // J1a: show the hovered-point tooltip at the cursor. clientX/Y come from the
+      // SVG pointer event; fall back to the hovered circle's centre if absent.
+      let cx = e.clientX;
+      let cy = e.clientY;
+      if (cx == null || cy == null) {
+        const r = (e.currentTarget as Element).getBoundingClientRect();
+        cx = r.left + r.width / 2;
+        cy = r.top + r.height / 2;
+      }
+      showHoverTooltip(cx, cy, point);
     },
-    [],
+    [showHoverTooltip],
   );
   const handlePointLeave = useCallback(
     (e: { currentTarget: Element }, patientId: string) => {
@@ -182,8 +251,9 @@ export default function OutcomesPanel({
         dot.setAttribute('fill-opacity', String(SERIES_STYLES.scatter.fillOpacity));
         dot.setAttribute('stroke-width', '1');
       }
+      hideHoverTooltip();
     },
-    [],
+    [hideHoverTooltip],
   );
 
   // F7 (defensive): clear the stashed drill-down target when the panel's
@@ -204,6 +274,22 @@ export default function OutcomesPanel({
       hoveredDatumRef.current = null;
     }
   }, [panel.patients]);
+
+  // J1a: keep the imperative-tooltip formatting context current (mirrors
+  // OutcomesTooltip's label/unit logic). Synced in an effect (not during render) so
+  // the hover handlers read the latest labels without re-creating on every render.
+  useEffect(() => {
+    const valLabelKey = metric === 'crt'
+      ? (yMetric === 'absolute' ? 'metricsCrtYAxisAbsolute' : yMetric === 'delta' ? 'metricsCrtYAxisDelta' : 'metricsCrtYAxisDeltaPercent')
+      : undefined;
+    hoverFmtRef.current = {
+      xLabel: axisMode === 'days' ? t('outcomesTooltipDay') : t('outcomesTooltipTreatmentIndex'),
+      valueLabel: t('outcomesTooltipLogmar'),
+      valueUnit: valLabelKey
+        ? t(valLabelKey)
+        : yMetric === 'absolute' ? 'logMAR' : yMetric === 'delta' ? 'Δ logMAR' : '%',
+    };
+  }, [axisMode, yMetric, metric, t]);
 
   // A6 (perf): memoize per-patient <Line> data arrays. These were rebuilt inline
   // inside the render .map() on EVERY render, producing fresh object identities
@@ -321,8 +407,9 @@ export default function OutcomesPanel({
 
   return (
     <div
+      ref={containerRef}
       data-testid={`outcomes-panel-${eye}`}
-      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
+      className="relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
       role="img"
       aria-label={
         onPointClick
@@ -330,6 +417,18 @@ export default function OutcomesPanel({
           : `${t(titleKey)} — ${panel.summary.patientCount} ${t('outcomesCardPatients')}`
       }
     >
+      {/* J1a: imperative hover tooltip — populated + positioned by the scatter
+          enter/leave handlers (DOM writes, no React state → no scatter re-render).
+          Follows the HOVERED point, replacing the axis tooltip's nearest-x pop-up
+          for scatter points. Hidden until a point is entered. */}
+      <div
+        ref={tooltipRef}
+        data-testid={`outcomes-hover-tooltip-${eye}`}
+        role="tooltip"
+        aria-hidden="true"
+        className="pointer-events-none absolute z-10 hidden whitespace-pre rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-lg"
+        style={{ display: 'none' }}
+      />
       <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t(titleKey)}</h3>
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
 
@@ -400,17 +499,24 @@ export default function OutcomesPanel({
               // The scatter payload entries carry `patientId`; median/per-patient entries
               // do not. When no scatter entry is active (tooltip off, or hovering a
               // non-scatter series), reset to null so a click becomes a no-op.
+              const scatterEntry = props.active && Array.isArray(props.payload)
+                ? props.payload.find(
+                    (e) => typeof e?.payload?.patientId === 'string',
+                  )
+                : undefined;
               if (onPointClick) {
-                const scatterEntry = props.active && Array.isArray(props.payload)
-                  ? props.payload.find(
-                      (e) => typeof e?.payload?.patientId === 'string',
-                    )
-                  : undefined;
+                // FALL-010: keep capturing the nearest-x scatter patientId as the
+                // CLICK fallback (used only when no point is actually hovered).
                 activePatientIdRef.current = scatterEntry
                   ? (scatterEntry.payload!.patientId as string)
                   : null;
               }
-              // Preserve the existing tooltip visual output unchanged.
+              // J1a (v1.15-p4): the axis tooltip resolves by NEAREST X. For a SCATTER
+              // hover that means the wrong point — so suppress the axis pop-up when a
+              // scatter entry is active; the imperative hover tooltip (driven by the
+              // point physically under the cursor) shows the correct point instead.
+              // Non-scatter series (median / per-patient line) keep the axis tooltip.
+              if (scatterEntry) return null;
               return (
                 <OutcomesTooltip
                   active={props.active}
@@ -510,11 +616,15 @@ export default function OutcomesPanel({
                 const { cx, cy, payload } = props as {
                   cx?: number;
                   cy?: number;
-                  payload?: { patientId?: string };
+                  payload?: { patientId?: string; x?: number; y?: number };
                 };
                 if (cx == null || cy == null) return <g />;
                 const patientId = payload?.patientId;
-                const wired = onPointClick && patientId != null;
+                // J1a: wire the per-point hover (tooltip + highlight) whenever the
+                // point carries a patientId — independent of drill-down. The click
+                // ref is harmless without onPointClick; the chart onClick only acts
+                // on it when onPointClick is provided.
+                const hoverable = patientId != null;
                 return (
                   <g>
                     <circle
@@ -522,8 +632,17 @@ export default function OutcomesPanel({
                       cy={cy}
                       r={10}
                       fill="transparent"
-                      onMouseEnter={wired ? (e) => handlePointEnter(e, patientId!) : undefined}
-                      onMouseLeave={wired ? (e) => handlePointLeave(e, patientId!) : undefined}
+                      onMouseEnter={
+                        hoverable
+                          ? (e) =>
+                              handlePointEnter(e, {
+                                patientId: patientId!,
+                                x: payload?.x,
+                                y: payload?.y,
+                              })
+                          : undefined
+                      }
+                      onMouseLeave={hoverable ? (e) => handlePointLeave(e, patientId!) : undefined}
                     />
                     {/* r=4 dot. pointerEvents:none so the r=10 halo is the sole hit
                         target (no sibling-occlusion flicker when over the centre).
