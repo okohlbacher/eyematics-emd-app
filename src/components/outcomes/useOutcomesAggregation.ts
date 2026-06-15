@@ -13,7 +13,7 @@
  * The order relative to the original OutcomesView hook sequence is preserved
  * because these memos/effects ran after all state and before the render return.
  */
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { computeCrtTrajectory } from '../../../shared/cohortTrajectory';
 import type { PatientCase, SavedSearch } from '../../../shared/types/fhir';
@@ -27,6 +27,11 @@ import {
   type TrajectoryResult,
   type YMetric,
 } from '../../utils/cohortTrajectory';
+import {
+  computeTrajectoryAsync,
+  computeTrajectorySync,
+  workerAvailable,
+} from './cohortTrajectoryClient';
 import type { IntervalCohortSeries } from './IntervalHistogram';
 import type { CohortSeriesEntry } from './OutcomesPanel';
 import { COHORT_PALETTES } from './palette';
@@ -93,6 +98,14 @@ export function useOutcomesAggregation(state: RouteState) {
     cohort && cohortId && cohort.cases.length > threshold
   );
 
+  // J2 (v1.15-p4): above this client-side cohort case-count, run the aggregation
+  // in a Web Worker (off-main-thread) so the controls (layer toggles, Einstellungen,
+  // metric tabs) stay interactive while the cohort aggregates. Matches the
+  // CLIENT_RENDER_STATUS_THRESHOLD_CASES in OutcomesView so the existing client-
+  // computing status covers the worker-compute window too. At/below this the
+  // synchronous memo is instant — worker round-trip overhead would only add latency.
+  const CLIENT_WORKER_THRESHOLD_CASES = 50;
+
   /** Project server AggregateResponse back to the PanelResult shape the panels consume. */
   function panelFromServer(r: AggregateResponse): PanelResult {
     return {
@@ -158,6 +171,61 @@ export function useOutcomesAggregation(state: RouteState) {
     return () => { cancelled = true; };
   }, [activeMetric, routeServerSide, cohortId, axisMode, yMetric, gridPoints, spreadMode, layers.perPatient, layers.scatter]); // eslint-disable-line react-hooks/exhaustive-deps -- setServerAggregate/setServerLoading are stable setState refs; including would cause loop
 
+  // J2 (v1.15-p4): off-main-thread CLIENT aggregation.
+  //
+  // For a HEAVY client-side cohort (not server-routed, visus/crt, > threshold) we
+  // run computeCohortTrajectory/computeCrtTrajectory in a Web Worker so the main
+  // thread stays free for the UI. The result lands in `workerResult` keyed on the
+  // exact inputs; the aggregate memos below read it when the key matches and return
+  // null otherwise (the OutcomesView client-computing status shows meanwhile).
+  //
+  // At/below the threshold — and whenever no real Worker exists (jsdom/SSR) — the
+  // memos compute synchronously as before, so small cohorts and tests are unaffected.
+  const clientWorkerMetric: 'visus' | 'crt' | null =
+    !routeServerSide && (activeMetric === 'visus' || activeMetric === 'crt')
+      ? activeMetric
+      : null;
+  const isClientWorkerHeavy =
+    clientWorkerMetric !== null &&
+    workerAvailable() &&
+    !!cohort &&
+    cohort.cases.length > CLIENT_WORKER_THRESHOLD_CASES;
+  // Key identifies the exact aggregation inputs — a change supersedes any in-flight
+  // worker response (matched by id; stale ids are ignored in the client wrapper).
+  const workerKey = isClientWorkerHeavy
+    ? `${clientWorkerMetric}|${cohortId ?? ''}|${cohort!.cases.length}|${axisMode}|${yMetric}|${gridPoints}|${spreadMode}`
+    : null;
+  const [workerResult, setWorkerResult] = useState<{ key: string; result: TrajectoryResult } | null>(null);
+  const workerReqKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isClientWorkerHeavy || !workerKey || !cohort) return;
+    // Avoid re-dispatching for an already-satisfied or in-flight key.
+    if (workerResult?.key === workerKey || workerReqKeyRef.current === workerKey) return;
+    workerReqKeyRef.current = workerKey;
+    let cancelled = false;
+    const input = { cases: cohort.cases, axisMode, yMetric, gridPoints, spreadMode };
+    computeTrajectoryAsync(clientWorkerMetric!, input)
+      .then((result) => {
+        if (!cancelled) setWorkerResult({ key: workerKey, result });
+      })
+      .catch((err) => {
+        // Mirror the server-path fallback: on worker failure, aggregate synchronously
+        // on the main thread so the user still sees plots (D-03 throw-only upstream).
+        console.warn('[OutcomesView] Worker aggregate failed — falling back to sync compute', err);
+        if (!cancelled) {
+          try {
+            setWorkerResult({ key: workerKey, result: computeTrajectorySync(clientWorkerMetric!, input) });
+          } catch {
+            /* leave null — the memo will compute synchronously on next render */
+          }
+        }
+      });
+    return () => { cancelled = true; };
+  }, [isClientWorkerHeavy, workerKey, clientWorkerMetric, cohort, axisMode, yMetric, gridPoints, spreadMode, workerResult]);
+
+  // Resolve the fresh worker result for the CURRENT key (null if heavy + not ready).
+  const freshWorkerResult = workerKey && workerResult?.key === workerKey ? workerResult.result : null;
+
   // D-26: single memoized aggregate keyed on all 5 inputs — feeds BOTH cards AND panels.
   // Hoisted above early-return guards to satisfy Rules of Hooks (WR-01).
   // Phase 12 / AGG-03: prefers server result when routeServerSide is active.
@@ -166,6 +234,10 @@ export function useOutcomesAggregation(state: RouteState) {
       if (routeServerSide && serverAggregate) return serverAggregate;
       if (routeServerSide && serverLoading) return null;
       if (!cohort || cohort.cases.length === 0) return null;
+      // J2: heavy client cohort → use the worker result; null while it is computing
+      // (OutcomesView shows the client-computing status). Never block the main thread
+      // with a synchronous compute for the heavy path.
+      if (isClientWorkerHeavy && activeMetric === 'visus') return freshWorkerResult;
       return computeCohortTrajectory({
         cases: cohort.cases,
         axisMode,
@@ -174,7 +246,7 @@ export function useOutcomesAggregation(state: RouteState) {
         spreadMode,
       });
     },
-    [routeServerSide, serverAggregate, serverLoading, cohort, axisMode, yMetric, gridPoints, spreadMode],
+    [routeServerSide, serverAggregate, serverLoading, cohort, axisMode, yMetric, gridPoints, spreadMode, isClientWorkerHeavy, activeMetric, freshWorkerResult],
   );
 
   // Phase 13 / METRIC-01: CRT aggregate memo.
@@ -184,6 +256,8 @@ export function useOutcomesAggregation(state: RouteState) {
       if (routeServerSide && serverAggregate) return serverAggregate;
       if (routeServerSide && serverLoading) return null;
       if (!cohort || cohort.cases.length === 0) return null;
+      // J2: heavy client cohort → worker result (null while computing).
+      if (isClientWorkerHeavy) return freshWorkerResult;
       return computeCrtTrajectory({
         cases: cohort.cases,
         axisMode,
@@ -192,7 +266,7 @@ export function useOutcomesAggregation(state: RouteState) {
         spreadMode,
       });
     },
-    [activeMetric, routeServerSide, serverAggregate, serverLoading, cohort, axisMode, yMetric, gridPoints, spreadMode],
+    [activeMetric, routeServerSide, serverAggregate, serverLoading, cohort, axisMode, yMetric, gridPoints, spreadMode, isClientWorkerHeavy, freshWorkerResult],
   );
 
   // Phase 16 / XCOHORT-01..04: per-cohort aggregate memo.
@@ -238,5 +312,10 @@ export function useOutcomesAggregation(state: RouteState) {
     });
   }, [isCrossMode, crossCohortIds, savedSearches, activeCases, filterOptions]);
 
-  return { routeServerSide, aggregate, crtAggregate, crossCohortAggregates, crossCohortCaseSeries };
+  // J2: true while a heavy client cohort is being aggregated in the worker and the
+  // result for the current key has not arrived yet — OutcomesView keeps the client-
+  // computing status visible (no bare white/empty cards) until it lands.
+  const clientWorkerPending = isClientWorkerHeavy && freshWorkerResult === null;
+
+  return { routeServerSide, aggregate, crtAggregate, crossCohortAggregates, crossCohortCaseSeries, clientWorkerPending };
 }

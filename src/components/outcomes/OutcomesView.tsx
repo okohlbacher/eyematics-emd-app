@@ -150,7 +150,10 @@ export default function OutcomesView() {
     // paint of a large client-side cohort while the heavy panel subtree is deferred
     // one frame (see clientRenderReady). Prevents the "system unresponsive while
     // loading" symptom on cohorts below the server threshold.
-    if (isClientHeavyMetric && !clientRenderReady) {
+    // J2 (v1.15-p4): keep the status up until BOTH (a) the deferred-render gate has
+    // armed AND (b) the worker aggregation for a heavy cohort has landed — otherwise
+    // a heavy worker cohort would flash an empty-state card while the worker runs.
+    if (isClientHeavyMetric && (!clientRenderReady || a.clientWorkerPending)) {
       return (
         <div className="flex items-center gap-2 py-8 justify-center text-gray-500 text-sm italic">
           <span
