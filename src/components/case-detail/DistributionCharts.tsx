@@ -65,7 +65,7 @@ export default function DistributionCharts({
             {/* J3d: cohort distribution overlay (% of cohort per bin), drawn behind
                 the patient bars on its own right axis so scales don't distort. */}
             {showCohortReference && (
-              <Bar yAxisId="cohort" dataKey="cohortPct" fill="#10b981" fillOpacity={0.18} name={t('cohortReferenceDistribution')} radius={[3, 3, 0, 0]} />
+              <Bar yAxisId="cohort" dataKey="cohortPct" fill="#9ca3af" fillOpacity={0.35} stroke="#6b7280" strokeDasharray="2 2" name={t('cohortReferenceDistribution')} radius={[3, 3, 0, 0]} />
             )}
             <Bar yAxisId="count" dataKey="count" fill="#10b981" name={t('measurements')} radius={[3, 3, 0, 0]} />
           </BarChart>
@@ -89,7 +89,7 @@ export default function DistributionCharts({
             {showCohortReference && <Legend />}
             <ReferenceLine yAxisId="count" x=">400" stroke="#ef4444" strokeDasharray="3 3" />
             {showCohortReference && (
-              <Bar yAxisId="cohort" dataKey="cohortPct" fill="#8b5cf6" fillOpacity={0.18} name={t('cohortReferenceDistribution')} radius={[3, 3, 0, 0]} />
+              <Bar yAxisId="cohort" dataKey="cohortPct" fill="#9ca3af" fillOpacity={0.35} stroke="#6b7280" strokeDasharray="2 2" name={t('cohortReferenceDistribution')} radius={[3, 3, 0, 0]} />
             )}
             <Bar yAxisId="count" dataKey="count" fill="#8b5cf6" name={t('measurements')} radius={[3, 3, 0, 0]}>
               {crtDistribution.map((entry, idx) => (
