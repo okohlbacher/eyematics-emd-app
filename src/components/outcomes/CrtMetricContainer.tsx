@@ -12,7 +12,9 @@ import OutcomesDataPreview from './OutcomesDataPreview';
 import OutcomesEmptyState from './OutcomesEmptyState';
 import type { CohortSeriesEntry } from './OutcomesPanel';
 import OutcomesPanel from './OutcomesPanel';
+import { PanelPlaceholder, PROGRESSIVE_PANEL_THRESHOLD_CASES } from './OutcomesPanelProgressive';
 import { EYE_COLORS } from './palette';
+import { useProgressivePanels } from './useProgressivePanels';
 
 interface CrtMetricContainerProps {
   crtAggregate: TrajectoryResult;
@@ -39,54 +41,74 @@ export default function CrtMetricContainer({
   crossCohortAggregates,
   handlePointDrillDown,
 }: CrtMetricContainerProps) {
+  // J2 (v1.15-p4): progressive panel staging — see VisusMetricContainer. Hook runs
+  // before the early return below (the guard never changes between renders for a
+  // given crtAggregate).
+  const progressiveActive =
+    !isCrossMode && cohort.cases.length > PROGRESSIVE_PANEL_THRESHOLD_CASES;
+  const stageKey = `crt|${cohort.cases.length}|${axisMode}|${yMetric}|${layers.perPatient}|${layers.scatter}|${layers.median}|${layers.spreadBand}`;
+  const mountedPanels = useProgressivePanels(3, progressiveActive, stageKey);
+
   if (!crtAggregate || crtAggregate.od.summary.measurementCount + crtAggregate.os.summary.measurementCount === 0) {
     return <OutcomesEmptyState variant="no-crt" t={t as (key: TranslationKey) => string} />;
   }
   return (
     <>
       <div className="mt-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <OutcomesPanel
-          panel={crtAggregate.od}
-          eye="od"
-          color={EYE_COLORS.OD}
-          axisMode={axisMode}
-          yMetric={yMetric}
-          layers={layers}
-          t={t as (key: string) => string}
-          locale={locale as 'de' | 'en'}
-          titleKey="metricsCrtPanelOd"
-          metric="crt"
-          cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.od : undefined}
-          onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
-        />
-        <OutcomesPanel
-          panel={crtAggregate.os}
-          eye="os"
-          color={EYE_COLORS.OS}
-          axisMode={axisMode}
-          yMetric={yMetric}
-          layers={layers}
-          t={t as (key: string) => string}
-          locale={locale as 'de' | 'en'}
-          titleKey="metricsCrtPanelOs"
-          metric="crt"
-          cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.os : undefined}
-          onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
-        />
-        <OutcomesPanel
-          panel={crtAggregate.combined}
-          eye="combined"
-          color={EYE_COLORS['OD+OS']}
-          axisMode={axisMode}
-          yMetric={yMetric}
-          layers={layers}
-          t={t as (key: string) => string}
-          locale={locale as 'de' | 'en'}
-          titleKey="metricsCrtPanelCombined"
-          metric="crt"
-          cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.combined : undefined}
-          onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
-        />
+        {mountedPanels >= 1 ? (
+          <OutcomesPanel
+            panel={crtAggregate.od}
+            eye="od"
+            color={EYE_COLORS.OD}
+            axisMode={axisMode}
+            yMetric={yMetric}
+            layers={layers}
+            t={t as (key: string) => string}
+            locale={locale as 'de' | 'en'}
+            titleKey="metricsCrtPanelOd"
+            metric="crt"
+            cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.od : undefined}
+            onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
+          />
+        ) : (
+          <PanelPlaceholder eye="od" titleKey="metricsCrtPanelOd" t={t} />
+        )}
+        {mountedPanels >= 2 ? (
+          <OutcomesPanel
+            panel={crtAggregate.os}
+            eye="os"
+            color={EYE_COLORS.OS}
+            axisMode={axisMode}
+            yMetric={yMetric}
+            layers={layers}
+            t={t as (key: string) => string}
+            locale={locale as 'de' | 'en'}
+            titleKey="metricsCrtPanelOs"
+            metric="crt"
+            cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.os : undefined}
+            onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
+          />
+        ) : (
+          <PanelPlaceholder eye="os" titleKey="metricsCrtPanelOs" t={t} />
+        )}
+        {mountedPanels >= 3 ? (
+          <OutcomesPanel
+            panel={crtAggregate.combined}
+            eye="combined"
+            color={EYE_COLORS['OD+OS']}
+            axisMode={axisMode}
+            yMetric={yMetric}
+            layers={layers}
+            t={t as (key: string) => string}
+            locale={locale as 'de' | 'en'}
+            titleKey="metricsCrtPanelCombined"
+            metric="crt"
+            cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.combined : undefined}
+            onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
+          />
+        ) : (
+          <PanelPlaceholder eye="combined" titleKey="metricsCrtPanelCombined" t={t} />
+        )}
       </div>
       <OutcomesDataPreview
         activeMetric="crt"
