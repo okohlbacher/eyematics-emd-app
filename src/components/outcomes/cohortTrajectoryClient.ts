@@ -67,6 +67,11 @@ function getWorker(): Worker {
       const err = new Error(e.message || 'cohortTrajectory worker error');
       for (const [, entry] of pending) entry.reject(err);
       pending.clear();
+      // Review #3: discard the (possibly poisoned) instance so the NEXT call
+      // reconstructs a fresh worker instead of reusing a dead one that would
+      // never resolve.
+      worker?.terminate();
+      worker = null;
     };
   }
   return worker;

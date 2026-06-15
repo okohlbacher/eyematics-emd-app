@@ -571,7 +571,15 @@ export default function OutcomesPanel({
                   {...(onPointClick
                     ? {
                         cursor: 'pointer',
-                        onClick: () => onPointClick(p.id),
+                        // J1b + review #5: set hoveredDatumRef to THIS line's patient
+                        // before navigating, so if Recharts also fires the chart-level
+                        // onClick on the same click it resolves to the SAME patient
+                        // (idempotent) rather than the nearest-x scatter fallback —
+                        // no wrong-patient double-navigation regardless of handler order.
+                        onClick: () => {
+                          hoveredDatumRef.current = { patientId: p.id };
+                          onPointClick(p.id);
+                        },
                       }
                     : {})}
                   // CRITICAL: without legendType="none", every patient produces a
