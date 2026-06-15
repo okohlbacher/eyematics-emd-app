@@ -61,7 +61,7 @@ function isAnalysisTab(v: string | null): v is AnalysisTab {
 }
 
 export default function AnalysisPage() {
-  const { activeCases, savedSearches } = useData();
+  const { activeCases, savedSearches, loading } = useData();
   const [searchParams, setSearchParams] = useSearchParams();
   const { locale, t } = useLanguage();
   const { record } = useRecentActivity();
@@ -370,7 +370,21 @@ export default function AnalysisPage() {
           aria-labelledby="analysis-tab-trajectories-button"
           data-testid="analysis-tab-trajectories"
         >
-          <OutcomesView />
+          {/* I2 review (cold-load): only mount OutcomesView once data has loaded.
+              Its layer defaults are derived synchronously at mount from the cohort
+              size; mounting while cases are still [] would default scatter/per-patient
+              ON and then paint the heavy ~14k-circle layer once before the
+              cohort-change effect strips it. Gating on `loading` lets the lazy
+              initializer see the real cohort, so the first render is already light. */}
+          {loading ? (
+            <div className="flex items-center gap-2 py-8 justify-center text-gray-500 text-sm italic">
+              <span role="status" aria-live="polite" data-testid="analysis-trajectories-loading">
+                {t('outcomesClientComputingLabel')}
+              </span>
+            </div>
+          ) : (
+            <OutcomesView />
+          )}
         </section>
       ) : (
         <section

@@ -397,6 +397,10 @@ export function useOutcomesRouteState() {
   // default and clears the override ref, so reset respects the >100 auto-off.
   const resetLayersToDefaults = useCallback(() => {
     perPatientUserOverriddenRef.current = false;
+    // I2 review (HIGH): also clear the scatter override, else "reset defaults"
+    // resets the value but leaves scatter pinned out of the auto-derive effect
+    // (it would never re-derive on a later cohort switch).
+    scatterUserOverriddenRef.current = false;
     setLayers(() => ({
       median: true,
       perPatient: derivePerPatientDefaultOn(),
