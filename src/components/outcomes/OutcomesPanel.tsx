@@ -2,7 +2,7 @@
 // Phase 22 shim candidate by 22-RESEARCH but per D-15 (reality check) it is
 // not a dedup target — this file holds chart rendering logic. No action
 // required beyond this disposition comment.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { ScatterPointItem } from 'recharts';
 import {
   Area,
@@ -122,22 +122,44 @@ export default function OutcomesPanel({
   //   - `hoveredDatumRef` drives the CLICK. It is a ref (not state) so updating it
   //     on pointer enter/leave does NOT re-render the ~14k-node scatter layer; the
   //     chart-level onClick reads it synchronously. This makes wrong-patient
-  //     drill-down impossible: the click resolves to the euclidean-nearest point
-  //     (the halo under the cursor), never the axis-tooltip's nearest-x entry.
-  //   - `hoveredPatientId` drives the HIGHLIGHT. State is required to repaint the
-  //     emphasised point, but it only changes on enter/leave TRANSITIONS (not on
-  //     every mousemove), so the repaint cost is bounded.
-  const hoveredDatumRef = useRef<{ patientId: string; x: number; y: number } | null>(null);
-  const [hoveredPatientId, setHoveredPatientId] = useState<string | null>(null);
+  //     drill-down impossible: the click resolves to the point under the cursor
+  //     (the halo we entered), never the axis-tooltip's nearest-x entry.
+  //   - The HIGHLIGHT is applied IMPERATIVELY to the hovered dot's SVG element
+  //     (grow r + opacity on enter, revert on leave). This deliberately avoids
+  //     React state: a state-driven highlight would re-render OutcomesPanel on
+  //     every hover transition and Recharts would re-invoke the custom shape for
+  //     all ~14k scatter nodes — the exact perf regression A6/I2 must prevent.
+  const hoveredDatumRef = useRef<{ patientId: string } | null>(null);
 
-  const handlePointEnter = useCallback((datum: { patientId: string; x: number; y: number }) => {
-    hoveredDatumRef.current = datum;
-    setHoveredPatientId(datum.patientId);
-  }, []);
-  const handlePointLeave = useCallback(() => {
-    hoveredDatumRef.current = null;
-    setHoveredPatientId(null);
-  }, []);
+  const handlePointEnter = useCallback(
+    (e: { currentTarget: Element }, patientId: string) => {
+      hoveredDatumRef.current = { patientId };
+      const dot = e.currentTarget.nextElementSibling; // the r=4 visible dot
+      if (dot) {
+        dot.setAttribute('r', '6');
+        dot.setAttribute('fill-opacity', '1');
+        dot.setAttribute('stroke-width', '2');
+      }
+    },
+    [],
+  );
+  const handlePointLeave = useCallback(
+    (e: { currentTarget: Element }, patientId: string) => {
+      // Only clear the click target if THIS point is still the hovered one — guards
+      // the leave-after-enter ordering when moving between overlapping r=10 halos,
+      // so the drill-down never silently falls back to nearest-x.
+      if (hoveredDatumRef.current?.patientId === patientId) {
+        hoveredDatumRef.current = null;
+      }
+      const dot = e.currentTarget.nextElementSibling;
+      if (dot) {
+        dot.setAttribute('r', '4');
+        dot.setAttribute('fill-opacity', String(SERIES_STYLES.scatter.fillOpacity));
+        dot.setAttribute('stroke-width', '1');
+      }
+    },
+    [],
+  );
 
   // F7 (defensive): clear the stashed drill-down target when the panel's
   // underlying patient set CHANGES (e.g. a cohort switch). Without this, a stale
@@ -153,9 +175,8 @@ export default function OutcomesPanel({
     if (patientsRef.current !== panel.patients) {
       patientsRef.current = panel.patients;
       activePatientIdRef.current = null;
-      // I1: also drop any stale hovered datum/highlight from the prior cohort.
+      // I1: also drop any stale hovered datum from the prior cohort.
       hoveredDatumRef.current = null;
-      setHoveredPatientId(null);
     }
   }, [panel.patients]);
 
@@ -446,16 +467,11 @@ export default function OutcomesPanel({
                 const { cx, cy, payload } = props as {
                   cx?: number;
                   cy?: number;
-                  payload?: { x: number; y: number; patientId?: string };
+                  payload?: { patientId?: string };
                 };
                 if (cx == null || cy == null) return <g />;
                 const patientId = payload?.patientId;
-                const isHovered =
-                  patientId != null && patientId === hoveredPatientId;
-                const enterHandler =
-                  onPointClick && patientId != null
-                    ? () => handlePointEnter({ patientId, x: payload!.x, y: payload!.y })
-                    : undefined;
+                const wired = onPointClick && patientId != null;
                 return (
                   <g>
                     <circle
@@ -463,17 +479,22 @@ export default function OutcomesPanel({
                       cy={cy}
                       r={10}
                       fill="transparent"
-                      onMouseEnter={enterHandler}
-                      onMouseLeave={onPointClick ? handlePointLeave : undefined}
+                      onMouseEnter={wired ? (e) => handlePointEnter(e, patientId!) : undefined}
+                      onMouseLeave={wired ? (e) => handlePointLeave(e, patientId!) : undefined}
                     />
+                    {/* r=4 dot. pointerEvents:none so the r=10 halo is the sole hit
+                        target (no sibling-occlusion flicker when over the centre).
+                        The highlight is applied imperatively in the enter/leave
+                        handlers — never via state — to avoid re-rendering the layer. */}
                     <circle
                       cx={cx}
                       cy={cy}
-                      r={isHovered ? 6 : 4}
+                      r={4}
                       fill={seriesColor}
-                      fillOpacity={isHovered ? 1 : SERIES_STYLES.scatter.fillOpacity}
+                      fillOpacity={SERIES_STYLES.scatter.fillOpacity}
                       stroke={seriesColor}
-                      strokeWidth={isHovered ? 2 : 1}
+                      strokeWidth={1}
+                      style={{ pointerEvents: 'none' }}
                     />
                   </g>
                 );
