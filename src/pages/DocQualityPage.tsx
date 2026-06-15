@@ -9,7 +9,11 @@ import { MetricCard } from '../components/doc-quality/MetricCard';
 import { QualityFilterBar } from '../components/doc-quality/QualityFilterBar';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
-import { getCenterShorthand } from '../services/fhirLoader';
+import {
+  countRawPatients,
+  countRawPatientsByCenter,
+  getCenterShorthand,
+} from '../services/fhirLoader';
 import type { PatientCase } from '../types/fhir';
 import { datedFilename, downloadCsv } from '../utils/download';
 import {
@@ -26,7 +30,8 @@ import {
 
 function buildCenterMetrics(
   casesByCenter: Map<string, PatientCase[]>,
-  timeRange: TimeRange
+  timeRange: TimeRange,
+  rawByCenter: Map<string, number>,
 ): CenterMetrics[] {
   const results: CenterMetrics[] = [];
   casesByCenter.forEach((centerCases, centerId) => {
@@ -40,7 +45,15 @@ function buildCenterMetrics(
       centerId,
       centerCases[0]?.centerName ?? centerId
     );
-    results.push({ centerId, centerLabel, ...computeMetrics(filtered) });
+    // I5: per-centre Vollzähligkeit denominator = this centre's FULL registered
+    // patient count incl. stubs (not windowed). Fall back to the clinical case
+    // count if the raw count is missing, so the metric is never NaN.
+    const rawTotal = rawByCenter.get(centerId) ?? centerCases.length;
+    results.push({
+      centerId,
+      centerLabel,
+      ...computeMetrics(filtered, rawTotal),
+    });
   });
   return results.sort((a, b) => b.overall - a.overall);
 }
@@ -57,7 +70,7 @@ function average(metrics: CenterMetrics[], key: keyof CenterMetrics): number {
 // ---------------------------------------------------------------------------
 
 export default function DocQualityPage() {
-  const { cases, loading } = useData();
+  const { cases, bundles, loading } = useData();
   const { t } = useLanguage();
 
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
@@ -73,9 +86,16 @@ export default function DocQualityPage() {
     return map;
   }, [cases]);
 
+  // I5: raw (stub-inclusive) registration totals — the Vollzähligkeit
+  // denominators. Per-centre map for the breakdown, global total for the
+  // aggregate card. NOT windowed (full registration). Derived from `bundles`,
+  // keyed by Patient.meta.source = centerId (same mapping as the cases).
+  const rawByCenter = useMemo(() => countRawPatientsByCenter(bundles), [bundles]);
+  const rawTotal = useMemo(() => countRawPatients(bundles), [bundles]);
+
   const centerMetrics = useMemo(
-    () => buildCenterMetrics(casesByCenter, timeRange),
-    [casesByCenter, timeRange]
+    () => buildCenterMetrics(casesByCenter, timeRange, rawByCenter),
+    [casesByCenter, timeRange, rawByCenter]
   );
 
   const centerOptions = useMemo(
@@ -94,6 +114,17 @@ export default function DocQualityPage() {
     const windowCases = filterCasesByTimeRange(cases, timeRange);
     return new Set(windowCases.map((c) => c.pseudonym)).size;
   }, [cases, timeRange]);
+
+  // I5: aggregate Vollzähligkeit = distinct patients active in window (numerator)
+  // / global raw registered total incl. stubs (denominator, NOT windowed). This
+  // matches the landing-page definition exactly when timeRange === 'all'
+  // (active==registered clinical set): distinctPatientCount === cases.length and
+  // rawTotal === countRawPatients(bundles). Computed directly (NOT averaged over
+  // centres) so it stays consistent with the landing number. 0-safe + clamped.
+  const aggregateVollzaehligkeit = useMemo(
+    () => (rawTotal > 0 ? Math.min(100, (distinctPatientCount / rawTotal) * 100) : 0),
+    [distinctPatientCount, rawTotal]
+  );
 
   const detailMetrics = useMemo(
     () =>
@@ -221,7 +252,7 @@ export default function DocQualityPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard
             label={t('docQualityCompleteness')}
-            score={average(centerMetrics, 'completeness')}
+            score={aggregateVollzaehligkeit}
             description={t('docQualityCompletenessAvg')}
             patientCount={distinctPatientCount}
             tooltip={t('docQualityCompletenessTooltip')}
@@ -238,12 +269,14 @@ export default function DocQualityPage() {
             score={average(centerMetrics, 'plausibility')}
             description={t('docQualityPlausibilityAvg')}
             patientCount={distinctPatientCount}
+            tooltip={t('docQualityPlausibilityTooltip')}
           />
           <MetricCard
             label={t('docQualityOverall')}
             score={average(centerMetrics, 'overall')}
             description={t('docQualityOverallAvg')}
             patientCount={distinctPatientCount}
+            tooltip={t('docQualityOverallTooltip')}
           />
         </div>
       )}

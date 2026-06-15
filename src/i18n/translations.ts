@@ -638,8 +638,8 @@ const translations = {
   navDocQuality: { de: 'Dokumentationsqualität', en: 'Documentation Quality' },
   docQualityTitle: { de: 'Dokumentationsqualität', en: 'Documentation Quality' },
   docQualitySubtitle: { de: 'Benchmarking der Dokumentationsqualität über alle Zentren', en: 'Documentation quality benchmarking across all centers' },
-  docQualityCompleteness: { de: 'Dokumentations-Vollständigkeit', en: 'Documentation Completeness' },
-  docQualityDataCompleteness: { de: 'Messwert-Vollständigkeit', en: 'Measurement Completeness' },
+  docQualityCompleteness: { de: 'Vollzähligkeit', en: 'Completeness' },
+  docQualityDataCompleteness: { de: 'Vollständigkeit', en: 'Data Completeness' },
   docQualityPlausibility: { de: 'Plausibilität', en: 'Plausibility' },
   docQualityOverall: { de: 'Gesamtbewertung', en: 'Overall Score' },
   docQualityAllCenters: { de: 'Alle Zentren', en: 'All Centers' },
@@ -750,27 +750,35 @@ const translations = {
   correlationVisusCrt: { de: 'Visus vs. CRT', en: 'Visus vs. CRT' },
 
   // DocQuality metric descriptions (m-02)
-  docQualityCompletenessAvg: { de: 'Dokumentations-Vollständigkeit (Ø)', en: 'Documentation Completeness (avg)' },
-  docQualityDataCompletenessAvg: { de: 'Messwert-Vollständigkeit (Ø)', en: 'Measurement Completeness (avg)' },
+  docQualityCompletenessAvg: { de: 'Vollzähligkeit', en: 'Completeness' },
+  docQualityDataCompletenessAvg: { de: 'Vollständigkeit (Ø)', en: 'Data Completeness (avg)' },
   docQualityPlausibilityAvg: { de: 'Plausibilität (Ø)', en: 'Plausibility (avg)' },
   docQualityOverallAvg: { de: 'Gesamtbewertung (Ø)', en: 'Overall Score (avg)' },
-  docQualityCompletenessDesc: { de: '% Patienten mit allen Pflichtfeldern', en: '% patients with all required fields' },
-  // B2: definition tooltip — disambiguates documentation completeness from the
-  // landing-page consent rate (Einwilligungsquote).
+  docQualityCompletenessDesc: { de: 'Im System / registriert gesamt', en: 'In system / total registered' },
+  // I5 (v1.14): Vollzähligkeit — patients active in the selected window over the
+  // full registered population incl. stubs (same definition as the landing page).
   docQualityCompletenessTooltip: {
-    de: 'Dokumentations-Vollständigkeit: Anteil der Patient:innen mit vollständig dokumentierten Pflichtangaben (Geburtsdatum, Geschlecht, Diagnose, Messwert). Nicht zu verwechseln mit der Einwilligungsquote auf der Startseite, die den Anteil einwilligender Patient:innen misst.',
-    en: 'Documentation completeness: share of patients whose required fields (birth date, sex, diagnosis, measurement) are fully documented. Not to be confused with the consent rate (Einwilligungsquote) on the start page, which measures the share of consenting patients.',
+    de: 'Vollzähligkeit: Anteil der im gewählten Zeitraum aktiven Patient:innen (mit ≥1 Messwert) an allen registrierten Patient:innen (inkl. noch ohne Messwerte). Gleiche Definition wie auf der Startseite. Zähler folgt dem Zeitfilter, Nenner ist die vollständige Registrierung.',
+    en: 'Completeness (Vollzähligkeit): share of patients active in the selected period (≥1 measurement) among all registered patients (incl. those without measurements yet). Same definition as on the start page. The numerator follows the time filter; the denominator is the full registration.',
   },
   docQualityDataCompletenessDesc: { de: '% Beobachtungen mit Wert', en: '% observations with value' },
-  // B1: definition tooltip — disambiguates measurement-value completeness
-  // (share of observations carrying a numeric value) from the patient-level
-  // Dokumentations-Vollständigkeit (required fields per patient).
+  // I5: Vollständigkeit — share of observations carrying a numeric value. Distinct
+  // from Vollzähligkeit (patient coverage over the full registered population).
   docQualityDataCompletenessTooltip: {
-    de: 'Messwert-Vollständigkeit: Anteil der Beobachtungen im gewählten Zeitraum, die einen Messwert enthalten (nicht leer). Bezieht sich auf einzelne Messungen — nicht zu verwechseln mit der Dokumentations-Vollständigkeit, die vollständige Pflichtangaben je Patient:in misst.',
-    en: 'Measurement completeness: share of observations in the selected period that carry a numeric value (not empty). Measured per observation — not to be confused with Documentation completeness, which measures complete required fields per patient.',
+    de: 'Vollständigkeit: Anteil der Beobachtungen im gewählten Zeitraum, die einen Messwert enthalten (nicht leer). Bezieht sich auf einzelne Messungen — nicht zu verwechseln mit der Vollzähligkeit, die die Patientenabdeckung über die gesamte registrierte Population misst.',
+    en: 'Data completeness: share of observations in the selected period that carry a numeric value (not empty). Measured per observation — not to be confused with Completeness (Vollzähligkeit), which measures patient coverage over the full registered population.',
   },
   docQualityPlausibilityDesc: { de: '% Werte im Plausibilitätsbereich', en: '% values in plausible range' },
+  // I5: definition tooltips added to all four cards.
+  docQualityPlausibilityTooltip: {
+    de: 'Plausibilität: Anteil der Messwerte (Visus, CRT, Augeninnendruck) im gewählten Zeitraum, die innerhalb der definierten Plausibilitätsbereiche liegen.',
+    en: 'Plausibility: share of measured values (visual acuity, CRT, intraocular pressure) in the selected period that fall within the defined plausibility ranges.',
+  },
   docQualityOverallDesc: { de: 'Gewichteter Gesamtscore', en: 'Weighted overall score' },
+  docQualityOverallTooltip: {
+    de: 'Gesamtbewertung: gewichteter Gesamtscore aus Vollzähligkeit (40 %), Vollständigkeit (30 %) und Plausibilität (30 %).',
+    en: 'Overall score: weighted total of Completeness (40%), Data completeness (30%) and Plausibility (30%).',
+  },
   docQualityPlausibilityRanges: { de: 'Plausibilitätsbereiche', en: 'Plausibility Ranges' },
   docQualityParameter: { de: 'Parameter', en: 'Parameter' },
   docQualityRange: { de: 'Bereich', en: 'Range' },
@@ -1039,16 +1047,17 @@ const translations = {
   },
 
   // Phase 34 \u2014 Datenvollz\u00e4hligkeit card (DASH-01)
-  // B2: renamed to "Einwilligungsquote" \u2014 this metric measures consent rate
-  // (consented / total patients), distinct from documentation completeness on
-  // the DocQuality page. i18n key kept stable (D-05): label change only.
-  datenvollstaendigkeitCaption: { de: 'EINWILLIGUNGSQUOTE', en: 'CONSENT RATE' },
-  datenvollstaendigkeitLabel: { de: 'Einwilligungsquote', en: 'Consent rate' },
+  // I5 (v1.14): reverted from "Einwilligungsquote" back to "Datenvollz\u00e4hligkeit"
+  // / "Vollz\u00e4hligkeit" \u2014 the metric (cases in system / total registered incl.
+  // stubs) is now mirrored on the DocQuality page under the same name. i18n key
+  // kept stable (D-05): label change only.
+  datenvollstaendigkeitCaption: { de: 'DATENVOLLZ\u00c4HLIGKEIT', en: 'DATA COMPLETENESS' },
+  datenvollstaendigkeitLabel: { de: 'Vollz\u00e4hligkeit', en: 'Completeness' },
   datenvollstaendigkeitPatients: { de: '{n} / {m} Patienten', en: '{n} / {m} patients' },
-  datenvollstaendigkeitAriaLabel: { de: 'Einwilligungsquote: {pct}%', en: 'Consent rate: {pct}%' },
+  datenvollstaendigkeitAriaLabel: { de: 'Datenvollz\u00e4hligkeit: {pct}%', en: 'Data completeness: {pct}%' },
   datenvollstaendigkeitTooltip: {
-    de: 'Einwilligungsquote: Anteil der Patient:innen mit erteilter Einwilligung an allen erfassten Patient:innen. Nicht zu verwechseln mit der Dokumentations-Vollst\u00e4ndigkeit auf der Seite \u201eDokumentationsqualit\u00e4t\u201c, die misst, wie vollst\u00e4ndig die Daten dokumentiert sind.',
-    en: 'Consent rate: share of patients who have given consent among all recorded patients. Not to be confused with documentation completeness on the \u201cDocumentation Quality\u201d page, which measures how completely the data is documented.',
+    de: 'Vollz\u00e4hligkeit: Anteil der Patient:innen mit Daten im System an allen registrierten Patient:innen (inkl. noch ohne Messwerte). Dieselbe Definition wird auf der Seite \u201eDokumentationsqualit\u00e4t\u201c verwendet.',
+    en: 'Completeness: share of patients with data in the system among all registered patients (incl. those without measurements yet). The same definition is used on the \u201cDocumentation Quality\u201d page.',
   },
 
   // Phase 33 \u2014 COH-01 validation
