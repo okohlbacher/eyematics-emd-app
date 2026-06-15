@@ -3,10 +3,11 @@ import { ArrowLeft, Syringe, TrendingDown, TrendingUp } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useNavigate,useParams } from 'react-router-dom';
 import {
+  Area,
   CartesianGrid,
+  ComposedChart,
   Legend,
   Line,
-  LineChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -64,10 +65,13 @@ export default function CaseDetailPage() {
     eyeLaterality,
     diabetesCond,
     crtData,
-    visusDistribution,
-    crtDistribution,
+    visusDistributionWithCohort,
+    crtDistributionWithCohort,
     visusCrtScatter,
+    cohortVisusCrtScatter,
     baselineData,
+    baselineChangeWithReference,
+    toRelMonths,
     totalEncounters,
     hasCriticalValues,
     criticalCrtCount,
@@ -155,6 +159,8 @@ export default function CaseDetailPage() {
             visusObs={visusObs}
             showCohortReference={showCohortReference}
             hasInterpolatedPoints={hasInterpolatedPoints}
+            injections={injections}
+            toRelMonths={toRelMonths}
           />
         </div>
 
@@ -209,26 +215,67 @@ export default function CaseDetailPage() {
             {t('baselineChange')}
           </h3>
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={baselineData}>
+            {/* J3c: relative-time X axis (months since first visit). J3d: cohort
+                change-from-baseline overlay (median + IQR), gated on the same
+                "Kohorten-Referenz anzeigen" toggle. ComposedChart so the IQR
+                Areas render alongside the patient lines. */}
+            <ComposedChart data={baselineChangeWithReference}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+              <XAxis
+                dataKey="relMonths"
+                type="number"
+                domain={['dataMin', 'dataMax']}
+                tickFormatter={(v: number) => `${Number.isInteger(v) ? v : v.toFixed(1)} ${t('relativeTimeUnitShort')}`}
+                tick={{ fontSize: 10 }}
+                label={{ value: t('relativeTimeAxisLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: '#9ca3af' }}
+              />
               <YAxis tick={{ fontSize: 10 }} label={{ value: '%', position: 'insideLeft', fontSize: 11 }} />
               <Tooltip formatter={(v: unknown) => typeof v === 'number' ? `${v}%` : String(v)} />
               <Legend />
               <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
-              {/* FALL-003: synchronise event highlight with absolute chart */}
-              {highlightDate && (
-                <ReferenceLine
-                  x={highlightDate}
-                  stroke="#f59e0b"
-                  strokeWidth={2}
-                  strokeDasharray="4 2"
-                  label={{ value: new Date(highlightDate).toLocaleDateString(dateFmt), position: 'top', fontSize: 10, fill: '#f59e0b' }}
-                />
+              {/* FALL-003: synchronise event highlight, mapped onto the relative axis */}
+              {(() => {
+                const hr = toRelMonths(highlightDate);
+                return hr != null ? (
+                  <ReferenceLine
+                    x={hr}
+                    stroke="#f59e0b"
+                    strokeWidth={2}
+                    strokeDasharray="4 2"
+                    label={{ value: highlightDate ? new Date(highlightDate).toLocaleDateString(dateFmt) : '', position: 'top', fontSize: 10, fill: '#f59e0b' }}
+                  />
+                ) : null;
+              })()}
+              {showCohortReference && (
+                <>
+                  <Area
+                    type="monotone"
+                    dataKey="visusChangeBand"
+                    stroke="none"
+                    fill="#10b981"
+                    fillOpacity={0.12}
+                    name={t('cohortReferenceBand')}
+                    legendType="rect"
+                    connectNulls
+                    isAnimationActive={false}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="crtChangeBand"
+                    stroke="none"
+                    fill="#8b5cf6"
+                    fillOpacity={0.12}
+                    legendType="none"
+                    connectNulls
+                    isAnimationActive={false}
+                  />
+                  <Line type="monotone" dataKey="visusChangeMedian" stroke="#6ee7b7" strokeWidth={1.5} strokeDasharray="4 3" name={t('cohortReferenceMedianChange')} dot={false} connectNulls />
+                  <Line type="monotone" dataKey="crtChangeMedian" stroke="#c4b5fd" strokeWidth={1.5} strokeDasharray="4 3" legendType="none" dot={false} connectNulls />
+                </>
               )}
               <Line type="monotone" dataKey="visusChange" stroke="#10b981" name="Visus %" strokeWidth={2} dot={{ r: 3 }} connectNulls />
               <Line type="monotone" dataKey="crtChange" stroke="#8b5cf6" name="CRT %" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       )}
@@ -236,9 +283,11 @@ export default function CaseDetailPage() {
       {/* N05.31/N05.32: Value distribution histograms + N05.35: Parameter correlation */}
       {(visusObs.length > 2 || crtObs.length > 2) && (
         <DistributionCharts
-          visusDistribution={visusDistribution}
-          crtDistribution={crtDistribution}
+          visusDistribution={visusDistributionWithCohort}
+          crtDistribution={crtDistributionWithCohort}
           visusCrtScatter={visusCrtScatter}
+          cohortVisusCrtScatter={cohortVisusCrtScatter}
+          showCohortReference={showCohortReference}
           t={t}
         />
       )}

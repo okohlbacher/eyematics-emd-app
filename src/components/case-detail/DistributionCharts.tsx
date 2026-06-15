@@ -3,6 +3,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Legend,
   ReferenceLine,
   ResponsiveContainer,
   Scatter,
@@ -21,10 +22,18 @@ interface ScatterPoint {
   date: string;
 }
 
+/** J3d: distribution bins carry an optional cohort percentage per bin so the
+ *  cohort distribution can be overlaid behind the patient's counts. */
+type CohortDistributionBin = DistributionBin & { cohortPct?: number };
+
 export interface DistributionChartsProps {
-  visusDistribution: DistributionBin[];
-  crtDistribution: DistributionBin[];
+  visusDistribution: CohortDistributionBin[];
+  crtDistribution: CohortDistributionBin[];
   visusCrtScatter: ScatterPoint[];
+  /** J3d: cohort Visus-vs-CRT cloud drawn behind the patient's points. */
+  cohortVisusCrtScatter?: Array<{ visus: number; crt: number }>;
+  /** J3d: gate all cohort overlays on the same toggle as the trajectory chart. */
+  showCohortReference?: boolean;
   t: (key: TranslationKey) => string;
 }
 
@@ -32,6 +41,8 @@ export default function DistributionCharts({
   visusDistribution,
   crtDistribution,
   visusCrtScatter,
+  cohortVisusCrtScatter = [],
+  showCohortReference = false,
   t,
 }: DistributionChartsProps) {
   return (
@@ -45,9 +56,18 @@ export default function DistributionCharts({
           <BarChart data={visusDistribution}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="range" tick={{ fontSize: 9 }} />
-            <YAxis allowDecimals={false} tickCount={5} tick={{ fontSize: 10 }} label={{ value: t('frequency'), angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} />
+            <YAxis yAxisId="count" allowDecimals={false} tickCount={5} tick={{ fontSize: 10 }} label={{ value: t('frequency'), angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} />
+            {showCohortReference && (
+              <YAxis yAxisId="cohort" orientation="right" tickCount={5} tick={{ fontSize: 9, fill: '#9ca3af' }} unit="%" />
+            )}
             <Tooltip />
-            <Bar dataKey="count" fill="#10b981" name={t('measurements')} radius={[3, 3, 0, 0]} />
+            {showCohortReference && <Legend />}
+            {/* J3d: cohort distribution overlay (% of cohort per bin), drawn behind
+                the patient bars on its own right axis so scales don't distort. */}
+            {showCohortReference && (
+              <Bar yAxisId="cohort" dataKey="cohortPct" fill="#10b981" fillOpacity={0.18} name={t('cohortReferenceDistribution')} radius={[3, 3, 0, 0]} />
+            )}
+            <Bar yAxisId="count" dataKey="count" fill="#10b981" name={t('measurements')} radius={[3, 3, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -61,10 +81,17 @@ export default function DistributionCharts({
           <BarChart data={crtDistribution}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="range" tick={{ fontSize: 9 }} />
-            <YAxis allowDecimals={false} tickCount={5} tick={{ fontSize: 10 }} label={{ value: t('frequency'), angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} />
+            <YAxis yAxisId="count" allowDecimals={false} tickCount={5} tick={{ fontSize: 10 }} label={{ value: t('frequency'), angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }} />
+            {showCohortReference && (
+              <YAxis yAxisId="cohort" orientation="right" tickCount={5} tick={{ fontSize: 9, fill: '#9ca3af' }} unit="%" />
+            )}
             <Tooltip />
-            <ReferenceLine x=">400" stroke="#ef4444" strokeDasharray="3 3" />
-            <Bar dataKey="count" fill="#8b5cf6" name={t('measurements')} radius={[3, 3, 0, 0]}>
+            {showCohortReference && <Legend />}
+            <ReferenceLine yAxisId="count" x=">400" stroke="#ef4444" strokeDasharray="3 3" />
+            {showCohortReference && (
+              <Bar yAxisId="cohort" dataKey="cohortPct" fill="#8b5cf6" fillOpacity={0.18} name={t('cohortReferenceDistribution')} radius={[3, 3, 0, 0]} />
+            )}
+            <Bar yAxisId="count" dataKey="count" fill="#8b5cf6" name={t('measurements')} radius={[3, 3, 0, 0]}>
               {crtDistribution.map((entry, idx) => (
                 <Cell key={idx} fill={entry.range === '>400' ? '#ef4444' : '#8b5cf6'} />
               ))}
@@ -97,7 +124,12 @@ export default function DistributionCharts({
                   );
                 }}
               />
-              <Scatter data={visusCrtScatter} fill="#f59e0b" />
+              {showCohortReference && <Legend />}
+              {/* J3d: cohort Visus-vs-CRT cloud behind the patient's points. */}
+              {showCohortReference && cohortVisusCrtScatter.length > 0 && (
+                <Scatter data={cohortVisusCrtScatter} fill="#94a3b8" fillOpacity={0.25} name={t('cohortReferenceScatter')} isAnimationActive={false} />
+              )}
+              <Scatter data={visusCrtScatter} fill="#f59e0b" name={t('measurements')} />
             </ScatterChart>
           </ResponsiveContainer>
         ) : (
