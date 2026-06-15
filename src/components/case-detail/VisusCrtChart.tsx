@@ -120,11 +120,12 @@ export default function VisusCrtChart({
       <h3 className="font-semibold text-gray-900 mb-1">
         {t('visusAndCrt')}
       </h3>
-      {/* A4 v2: full Visus axis description + interpolation hint (only when relevant). */}
-      <p className="text-xs text-gray-400 mb-1">
-        {t('visusYAxisLabel')}
-        {hasInterpolatedPoints && <span className="ml-2">· {t('interpolatedHint')}</span>}
-      </p>
+      {/* I4: the full Visus label "Visus (Dezimal, bestkorrigiert)" now lives in
+          the chart legend (measured-Visus line name), so the redundant under-title
+          caption is dropped. The interpolation hint stays, shown only when relevant. */}
+      {hasInterpolatedPoints && (
+        <p className="text-xs text-gray-400 mb-1">{t('interpolatedHint')}</p>
+      )}
       {/* N05.07: Visus type, correction, measurement method */}
       {visusObs[0]?.method && (
         <p className="text-xs text-gray-500 mb-3">
@@ -200,14 +201,15 @@ export default function VisusCrtChart({
               patient lines so the patient series stays on top. */}
           {hasReference && (
             <>
-              {/* Visus IQR range band */}
+              {/* Visus IQR range band — single legend entry labels the shaded
+                  p25–p75 band (I3b). The CRT band reuses the same meaning, so it
+                  stays out of the legend to avoid a duplicate IQR entry. */}
               <Area
                 yAxisId="visus"
                 dataKey="visusBand"
                 stroke="none"
                 fill="#10b981"
                 fillOpacity={0.15}
-                legendType="none"
                 name={t('cohortReferenceBand')}
                 connectNulls
                 isAnimationActive={false}
@@ -223,7 +225,7 @@ export default function VisusCrtChart({
                 connectNulls
                 isAnimationActive={false}
               />
-              {/* Visus median line */}
+              {/* Visus median line — distinct legend name (I3a). */}
               <Line
                 yAxisId="visus"
                 type="monotone"
@@ -231,11 +233,12 @@ export default function VisusCrtChart({
                 stroke="#6ee7b7"
                 strokeWidth={1.5}
                 strokeDasharray="4 3"
-                name={t('cohortReferenceMedian')}
+                name={t('cohortReferenceMedianVisus')}
                 dot={false}
                 connectNulls
               />
-              {/* CRT median line */}
+              {/* CRT median line — distinct legend name; both cohort medians now
+                  appear in the legend (I3a), only while the overlay is enabled. */}
               <Line
                 yAxisId="crt"
                 type="monotone"
@@ -243,8 +246,7 @@ export default function VisusCrtChart({
                 stroke="#c4b5fd"
                 strokeWidth={1.5}
                 strokeDasharray="4 3"
-                name={t('cohortReferenceMedian')}
-                legendType="none"
+                name={t('cohortReferenceMedianCrt')}
                 dot={false}
                 connectNulls
               />
@@ -256,7 +258,7 @@ export default function VisusCrtChart({
             type="monotone"
             dataKey="visus"
             stroke="#10b981"
-            name="Visus"
+            name={t('visusYAxisLabel')}
             strokeWidth={2}
             dot={(props: Record<string, unknown>) => {
               const { cx, cy } = props as { cx?: number; cy?: number };

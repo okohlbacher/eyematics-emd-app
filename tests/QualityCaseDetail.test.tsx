@@ -110,6 +110,9 @@ describe('QualityCaseDetail — C1 inline review rework', () => {
     render(<QualityCaseDetail {...baseProps} onConfirmRow={onConfirmRow} />);
     // The normal Visus row exposes a "Bestätigen ‹param› ‹date›" labelled button.
     const btn = screen.getByLabelText('confirmValue Visual acuity 2024-01-12');
+    // I6b: the Bestätigen action now has a hover title (reusing confirmValue),
+    // matching the Behoben / Fehler-melden buttons.
+    expect(btn.getAttribute('title')).toBe('confirmValue');
     fireEvent.click(btn);
     expect(onConfirmRow).toHaveBeenCalledWith('case-001', 'Visual acuity (2024-01-12)', expect.any(String));
   });

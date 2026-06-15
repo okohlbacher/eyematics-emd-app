@@ -1136,7 +1136,8 @@ const translations = {
 
   // ---- FALL-011: Cohort reference overlay (case-detail Visus/CRT chart) ----
   cohortReferenceToggle: { de: 'Kohorten-Referenz anzeigen', en: 'Show cohort reference' },
-  cohortReferenceMedian: { de: 'Kohorten-Median', en: 'Cohort median' },
+  cohortReferenceMedianVisus: { de: 'Kohorten-Median Visus', en: 'Cohort median visual acuity' },
+  cohortReferenceMedianCrt: { de: 'Kohorten-Median CRT', en: 'Cohort median CRT' },
   cohortReferenceBand: { de: 'Kohorten-IQR (25.\u201375. Perzentil)', en: 'Cohort IQR (25th\u201375th percentile)' },
 } as const;
 

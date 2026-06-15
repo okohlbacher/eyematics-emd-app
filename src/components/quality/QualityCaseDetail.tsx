@@ -311,6 +311,7 @@ export default function QualityCaseDetail({
           <button
             onClick={() => onConfirmRow(selectedCase.id, row.paramKey, row.value)}
             aria-label={`${t('confirmValue')} ${subj}`}
+            title={t('confirmValue')}
             className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border border-green-200 text-green-700 hover:bg-green-50"
           >
             <Check className="w-3.5 h-3.5" /> {t('confirmValue')}

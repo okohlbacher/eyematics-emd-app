@@ -48,11 +48,21 @@ vi.mock('recharts', async (importOriginal) => {
     Legend: () => null,
     ReferenceLine: () => null,
 
-    // Expose Line name as data-name attr for assertion.
-    Line: ({ name }: any) => (
+    // Expose Line name + legendType as data-* attrs for assertion.
+    Line: ({ name, legendType }: any) => (
       <g
         data-testid="recharts-line"
         data-name={name ?? ''}
+        data-legendtype={legendType ?? ''}
+      />
+    ),
+
+    // Expose Area name + legendType for the cohort IQR band assertions (I3b).
+    Area: ({ name, legendType }: any) => (
+      <g
+        data-testid="recharts-area"
+        data-name={name ?? ''}
+        data-legendtype={legendType ?? ''}
       />
     ),
   };
@@ -73,7 +83,19 @@ const deStrings: Partial<Record<TranslationKey, string>> = {
   interpolatedHint: 'Offener Kreis = interpolierter Wert (keine Messung)',
   visusAndCrt: 'Visusverlauf und Netzhautdicke (CRT)',
   critical: 'Kritisch',
+  cohortReferenceMedianVisus: 'Kohorten-Median Visus',
+  cohortReferenceMedianCrt: 'Kohorten-Median CRT',
+  cohortReferenceBand: 'Kohorten-IQR (25.–75. Perzentil)',
 };
+
+// Data with cohort-reference fields so the overlay renders (I3a/I3b).
+const refData = [
+  { date: '2024-01-01', visus: 0.5, crt: 300, visusMedian: 0.5, crtMedian: 300, visusBand: [0.4, 0.6], crtBand: [280, 320] },
+  { date: '2024-02-01', visus: 0.6, crt: 290, visusMedian: 0.55, crtMedian: 295, visusBand: [0.45, 0.65], crtBand: [275, 315] },
+];
+
+const dataName = (els: Element[], name: string) =>
+  els.find((el) => el.getAttribute('data-name') === name);
 
 const tDE = (key: TranslationKey): string => deStrings[key] ?? key;
 
@@ -101,7 +123,7 @@ describe('VisusCrtChart — FALL-012 / A4 i18n labels', () => {
     expect(crtLine).not.toBeNull();
   });
 
-  it('uses the SHORT Visus Y-axis label (A4: full text moved to caption)', () => {
+  it('uses the SHORT Visus Y-axis label (A4/I4: full text lives in the legend)', () => {
     const { container } = render(<VisusCrtChart {...minimalProps} />);
     const yaxes = container.querySelectorAll('[data-testid="recharts-yaxis"]');
     const visusAxis = Array.from(yaxes).find(
@@ -115,10 +137,51 @@ describe('VisusCrtChart — FALL-012 / A4 i18n labels', () => {
     expect(longAxis).toBeUndefined();
   });
 
-  it('renders the full Visus description in the caption line', () => {
-    render(<VisusCrtChart {...minimalProps} />);
-    const el = screen.queryByText(/Visus \(Dezimal, bestkorrigiert\)/);
-    expect(el).not.toBeNull();
+  it('renders the full Visus description as the measured-Visus legend name (I4)', () => {
+    const { container } = render(<VisusCrtChart {...minimalProps} />);
+    // I4: the full "Visus (Dezimal, bestkorrigiert)" label moved from the
+    // under-title caption into the chart legend (measured-Visus Line `name`).
+    const visusLine = Array.from(
+      container.querySelectorAll('[data-testid="recharts-line"]'),
+    ).find((el) => el.getAttribute('data-name') === 'Visus (Dezimal, bestkorrigiert)');
+    expect(visusLine).not.toBeUndefined();
+    // The redundant caption text must no longer render outside the legend.
+    expect(screen.queryByText(/Visus \(Dezimal, bestkorrigiert\)/)).toBeNull();
+  });
+
+  it('shows BOTH cohort median lines in the legend with distinct names (I3a)', () => {
+    const { container } = render(
+      <VisusCrtChart {...minimalProps} combinedData={refData} showCohortReference />,
+    );
+    const lines = Array.from(container.querySelectorAll('[data-testid="recharts-line"]'));
+    const visusMedian = dataName(lines, 'Kohorten-Median Visus');
+    const crtMedian = dataName(lines, 'Kohorten-Median CRT');
+    expect(visusMedian).not.toBeUndefined();
+    expect(crtMedian).not.toBeUndefined();
+    // Both medians are legend-visible (no legendType="none").
+    expect(visusMedian?.getAttribute('data-legendtype')).not.toBe('none');
+    expect(crtMedian?.getAttribute('data-legendtype')).not.toBe('none');
+  });
+
+  it('labels the cohort reference band as IQR in the legend (I3b)', () => {
+    const { container } = render(
+      <VisusCrtChart {...minimalProps} combinedData={refData} showCohortReference />,
+    );
+    const areas = Array.from(container.querySelectorAll('[data-testid="recharts-area"]'));
+    const iqrBand = dataName(areas, 'Kohorten-IQR (25.–75. Perzentil)');
+    expect(iqrBand).not.toBeUndefined();
+    expect(iqrBand?.getAttribute('data-legendtype')).not.toBe('none');
+  });
+
+  it('does NOT show cohort median/band legend entries when overlay is off (I3a)', () => {
+    const { container } = render(
+      <VisusCrtChart {...minimalProps} combinedData={refData} showCohortReference={false} />,
+    );
+    const lines = Array.from(container.querySelectorAll('[data-testid="recharts-line"]'));
+    const areas = Array.from(container.querySelectorAll('[data-testid="recharts-area"]'));
+    expect(dataName(lines, 'Kohorten-Median Visus')).toBeUndefined();
+    expect(dataName(lines, 'Kohorten-Median CRT')).toBeUndefined();
+    expect(dataName(areas, 'Kohorten-IQR (25.–75. Perzentil)')).toBeUndefined();
   });
 
   it('shows the interpolation hint only when interpolated points exist', () => {
