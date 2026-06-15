@@ -173,6 +173,25 @@ describe('VisusCrtChart — FALL-012 / A4 i18n labels', () => {
     expect(iqrBand?.getAttribute('data-legendtype')).not.toBe('none');
   });
 
+  it('renders the IQR legend entry as a shaded RECT swatch, not a line (J3a)', () => {
+    const { container } = render(
+      <VisusCrtChart {...minimalProps} combinedData={refData} showCohortReference />,
+    );
+    // J3a: the IQR band's legend icon must read as a filled rectangle (shaded
+    // range), so legendType="rect" — the tester saw the default line icon as
+    // "an additional line".
+    const areas = Array.from(container.querySelectorAll('[data-testid="recharts-area"]'));
+    const iqrBand = dataName(areas, 'Kohorten-IQR (25.–75. Perzentil)');
+    expect(iqrBand?.getAttribute('data-legendtype')).toBe('rect');
+
+    // The two cohort MEDIAN entries stay line-typed (default, not "rect").
+    const lines = Array.from(container.querySelectorAll('[data-testid="recharts-line"]'));
+    const visusMedian = dataName(lines, 'Kohorten-Median Visus');
+    const crtMedian = dataName(lines, 'Kohorten-Median CRT');
+    expect(visusMedian?.getAttribute('data-legendtype')).not.toBe('rect');
+    expect(crtMedian?.getAttribute('data-legendtype')).not.toBe('rect');
+  });
+
   it('does NOT show cohort median/band legend entries when overlay is off (I3a)', () => {
     const { container } = render(
       <VisusCrtChart {...minimalProps} combinedData={refData} showCohortReference={false} />,

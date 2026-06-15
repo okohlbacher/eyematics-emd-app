@@ -211,6 +211,10 @@ export default function VisusCrtChart({
                 fill="#10b981"
                 fillOpacity={0.15}
                 name={t('cohortReferenceBand')}
+                /* J3a: render the IQR legend entry as a filled rectangle (shaded
+                   range swatch), NOT the default line icon — the tester read the
+                   line swatch as "an additional line" rather than a shaded band. */
+                legendType="rect"
                 connectNulls
                 isAnimationActive={false}
               />
