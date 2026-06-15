@@ -64,10 +64,15 @@ export interface CenterMetrics {
   centerLabel: string;
   patientCount: number;
   observationCount: number;
-  completeness: number;   // Vollzähligkeit  – % patients with all required fields
+  // I5 (v1.14): `completeness` now carries VOLLZÄHLIGKEIT, not required-fields
+  // completeness. Vollzähligkeit = patients active in the selected window
+  // (numerator, windowed) / all registered patients incl. stubs (denominator,
+  // NOT windowed). Wire/CSV/chart key kept as `completeness` (D-05 — no wire
+  // contract rename); only the user-facing label + computation changed.
+  completeness: number;     // Vollzähligkeit – active-in-window / raw registered total
   dataCompleteness: number; // Vollständigkeit – % observations with non-null values
-  plausibility: number;  // Plausibilität   – % observations in plausible ranges
-  overall: number;       // weighted average
+  plausibility: number;     // Plausibilität   – % observations in plausible ranges
+  overall: number;          // weighted average
 }
 
 // ---------------------------------------------------------------------------
@@ -209,32 +214,47 @@ export function filterCasesByTimeRange(
     .filter((c) => c.observations.length > 0);
 }
 
+/**
+ * Compute the quality metrics for a set of (already window-filtered) cases.
+ *
+ * @param cases     window-filtered cases (numerator population: patients active
+ *                  in the selected window — see filterCasesByTimeRange).
+ * @param rawTotal  Vollzähligkeit DENOMINATOR: the FULL registered patient count
+ *                  incl. stubs, NOT windowed (per-centre raw total for a centre,
+ *                  global raw total for the aggregate). Stubs have no
+ *                  observations and therefore never appear in `cases`, so
+ *                  windowing only the numerator (cases) while holding the
+ *                  denominator at the full registration count is what keeps
+ *                  Vollzähligkeit meaningful: as the window shrinks the
+ *                  numerator drops but the denominator does NOT, so the metric
+ *                  falls — it does NOT collapse toward ~100% (the B1 trap).
+ *                  Defaults to cases.length, which reproduces the all-time
+ *                  landing definition (active==registered) when the caller has
+ *                  no separate raw total.
+ */
 export function computeMetrics(
-  cases: PatientCase[]
+  cases: PatientCase[],
+  rawTotal: number = cases.length,
 ): Omit<CenterMetrics, 'centerId' | 'centerLabel'> {
   const patientCount = cases.length;
+
+  // --- Vollzähligkeit (Completeness key) ---
+  // numerator = patientCount (active in window); denominator = rawTotal (full
+  // registration, incl. stubs, not windowed). Clamp to 100 so a malformed
+  // numerator>denominator never exceeds the bar. 0-safe: rawTotal 0 → 0.
+  const completeness =
+    rawTotal > 0 ? Math.min(100, (patientCount / rawTotal) * 100) : 0;
 
   if (patientCount === 0) {
     return {
       patientCount: 0,
       observationCount: 0,
-      completeness: 0,
+      completeness,
       dataCompleteness: 0,
       plausibility: 0,
-      overall: 0,
+      overall: completeness * 0.4,
     };
   }
-
-  // --- Vollzähligkeit (Completeness) ---
-  // A patient is "complete" if they have birthDate, gender, >=1 condition, >=1 observation
-  const completePatients = cases.filter(
-    (c) =>
-      c.birthDate !== '' &&
-      c.gender !== 'unknown' &&
-      c.conditions.length >= 1 &&
-      c.observations.length >= 1
-  ).length;
-  const completeness = (completePatients / patientCount) * 100;
 
   // --- Vollständigkeit (Data completeness) ---
   // % of observations that have a non-null valueQuantity.value
@@ -282,7 +302,13 @@ export function computeMetrics(
   const plausibility =
     checkableCount === 0 ? 100 : (plausibleCount / checkableCount) * 100;
 
-  // --- Overall score (weighted average: 40% completeness, 30% dataCompleteness, 30% plausibility) ---
+  // --- Overall score (Gesamtbewertung) ---
+  // I5 (v1.14): the weighting is UNCHANGED (Vollzähligkeit 0.4 +
+  // Vollständigkeit 0.3 + Plausibilität 0.3). The first weight previously
+  // applied to required-fields completeness; it now applies to Vollzähligkeit,
+  // which replaced that metric. Keeping the same weights means Vollzähligkeit
+  // inherits the dominant 40% (sensible: data coverage is the headline KPI),
+  // and the sum stays 1.0 so Gesamtbewertung remains a 0–100 score. 0-safe.
   const overall =
     completeness * 0.4 + dataCompleteness * 0.3 + plausibility * 0.3;
 

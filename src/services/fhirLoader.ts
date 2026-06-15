@@ -101,6 +101,38 @@ export function countRawPatients(bundles: FhirBundle[]): number {
   );
 }
 
+/**
+ * I5 (v1.14): Per-centre raw Patient counts (INCLUDES stubs).
+ *
+ * Groups every Patient resource by its managing centre. A Patient — stub or
+ * clinical — carries its centre as `meta.source` (the Organization id); this is
+ * the SAME mapping `extractPatientCases` (`centerId: pat.meta?.source`) and
+ * `extractCenters` (`p.meta?.source === org.id`) already use, so the per-centre
+ * raw denominator is consistent with the clinical (stub-excluded) per-centre
+ * numerators derived elsewhere.
+ *
+ * This is the per-centre Vollzähligkeit denominator: the full registered
+ * population per centre, NOT windowed. Sum of the map values equals
+ * countRawPatients(bundles).
+ *
+ * Limitation: a raw Patient with no `meta.source` is keyed under '' (the same
+ * fallback extractPatientCases uses for centerId). In the current data every
+ * Patient carries meta.source, so this only matters for malformed bundles.
+ */
+export function countRawPatientsByCenter(
+  bundles: FhirBundle[],
+): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const b of bundles) {
+    for (const e of b.entry) {
+      if (e.resource.resourceType !== 'Patient') continue;
+      const centerId = e.resource.meta?.source ?? '';
+      counts.set(centerId, (counts.get(centerId) ?? 0) + 1);
+    }
+  }
+  return counts;
+}
+
 // extractPatientCases, getAge — re-exported from shared/patientCases above (M1 fix).
 
 /**
