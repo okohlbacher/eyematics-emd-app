@@ -29,6 +29,11 @@ import {
   type TrajectoryResult,
   type YMetric,
 } from '../../utils/cohortTrajectory';
+import {
+  type PersistedOutcomesViewState,
+  readPersistedViewState,
+  writePersistedViewState,
+} from './outcomesViewStatePersist';
 
 // ---------------------------------------------------------------------------
 // Metric types + constants (METRIC-04) — exported for tab strip + aggregation
@@ -163,34 +168,61 @@ export function useOutcomesRouteState() {
     return withPrimary.slice(0, 4);
   }, [rawCohortsParam, primaryCohortId, savedSearches]);
 
+  // J2 (v1.15-p4): persisted trajectory view state for the mount-time cohort, read
+  // ONCE at mount (lazy initializer). Used to seed the session-only toggles below so
+  // leaving Analyse and returning restores the view instead of resetting it. The lazy
+  // initializer reads the mount-time ?cohort= id directly from searchParams (a value,
+  // not a ref) so the restore targets the correct per-cohort bucket.
+  const [persisted] = useState<PersistedOutcomesViewState | null>(() =>
+    readPersistedViewState(searchParams.get('cohort')),
+  );
+
   // Session-only toggle state (D-24).
   const [drawerOpen, setDrawerOpen] = useState(false);
   // C3: the cohort-split wizard navigates here with ?compare=open so the compare
   // drawer auto-opens on the freshly created sub-cohorts. Read once at mount.
   const [compareOpen, setCompareOpen] = useState(() => searchParams.get('compare') === 'open');
-  const [axisMode, setAxisMode] = useState<AxisMode>('days');
-  const [yMetric, setYMetric] = useState<YMetric>('delta');
-  const [gridPoints, setGridPoints] = useState<number>(120);
-  const [spreadMode] = useState<SpreadMode>('iqr');
+  // J2: seed axis/y/grid/spread from the persisted view state when present (an
+  // explicit user choice survives navigation), else the original defaults.
+  const [axisMode, setAxisMode] = useState<AxisMode>(() => persisted?.axisMode ?? 'days');
+  const [yMetric, setYMetric] = useState<YMetric>(() => persisted?.yMetric ?? 'delta');
+  const [gridPoints, setGridPoints] = useState<number>(() => persisted?.gridPoints ?? 120);
+  const [spreadMode] = useState<SpreadMode>(() => persisted?.spreadMode ?? 'iqr');
   // I2 (v1.14-p4): derive the size-based layer defaults BEFORE the first render so a
   // large cohort never paints scatter (~14k SVG circles) on first paint and then
   // strips it in a post-render effect (the old freeze). The lazy initializer resolves
   // the initial cohort synchronously from the same URL params + data the cohort memo
   // uses below, then derives scatter/per-patient from its size. Later cohort changes
   // are still handled by the override-guarded effects further down.
+  // J2 (v1.15-p4): compose the persisted EXPLICIT layer choices ON TOP of the
+  // size-derived defaults — a persisted choice wins, an absent one derives from
+  // size (constraint: persistence layers on top of, not instead of, the derived
+  // defaults; no F3 wedge). Per-layer persistence means a never-toggled cohort
+  // still gets the correct size-derived defaults.
   const [layers, setLayers] = useState<LayerState>(() => {
     const initialCohort = resolveCohort(searchParams, activeCases, savedSearches, filterOptions);
-    return deriveDefaultLayers(initialCohort?.cases ?? []);
+    const derived = deriveDefaultLayers(initialCohort?.cases ?? []);
+    const p = persisted?.layers;
+    if (!p) return derived;
+    return {
+      median: p.median ?? derived.median,
+      perPatient: p.perPatient ?? derived.perPatient,
+      scatter: p.scatter ?? derived.scatter,
+      spreadBand: p.spreadBand ?? derived.spreadBand,
+    };
   });
 
   // A6 (perf): tracks whether the user has explicitly toggled the per-patient
   // layer. Once they have, the large-cohort default never overrides their choice.
-  const perPatientUserOverriddenRef = useRef(false);
+  // J2: re-arm from persistence so a RESTORED explicit per-patient choice is treated
+  // as an override (the size-derived auto-off effect must not clobber it on mount).
+  const perPatientUserOverriddenRef = useRef(persisted?.layers?.perPatient !== undefined);
   // FALL-010 (live-browser find): same pattern for the scatter layer — the D-37
   // default-off effect below used to refire on every cohort identity change and
   // instantly revert the user's toggle, making scatter impossible to enable for
   // cohorts above the default threshold (and drill-down points unreachable).
-  const scatterUserOverriddenRef = useRef(false);
+  // J2: likewise re-arm from a restored explicit scatter choice.
+  const scatterUserOverriddenRef = useRef(persisted?.layers?.scatter !== undefined);
   // True when the large-cohort default forced perPatient OFF (drives the notice).
   // I2 (v1.14-p4): seed from the initial cohort size so the notice is accurate on the
   // FIRST render too (matches the lazy layers initializer above).
@@ -204,16 +236,27 @@ export function useOutcomesRouteState() {
     (updater: (L: LayerState) => LayerState) => {
       setLayers((prev) => {
         const next = updater(prev);
+        const explicit: Partial<LayerState> = {};
         if (next.perPatient !== prev.perPatient) {
           perPatientUserOverriddenRef.current = true;
+          explicit.perPatient = next.perPatient;
         }
         if (next.scatter !== prev.scatter) {
           scatterUserOverriddenRef.current = true;
+          explicit.scatter = next.scatter;
+        }
+        if (next.median !== prev.median) explicit.median = next.median;
+        if (next.spreadBand !== prev.spreadBand) explicit.spreadBand = next.spreadBand;
+        // J2: persist ONLY the layers the user explicitly toggled (keyed per cohort),
+        // so the choice survives navigation while never-toggled layers keep deriving
+        // from cohort size on a fresh visit.
+        if (Object.keys(explicit).length > 0) {
+          writePersistedViewState(searchParams.get('cohort'), { layers: explicit });
         }
         return next;
       });
     },
-    [],
+    [searchParams],
   );
 
   // Phase 12 / AGG-03 / D-13 — server-side routing state.
@@ -407,7 +450,34 @@ export function useOutcomesRouteState() {
       scatter: defaultScatterOn(cohort?.cases.length ?? 0),
       spreadBand: true,
     }));
-  }, [cohort, derivePerPatientDefaultOn]);
+    // J2: a deliberate reset clears the persisted layer choices so the cohort
+    // returns to its pure size-derived defaults on the next visit too.
+    writePersistedViewState(searchParams.get('cohort'), { layers: {} });
+  }, [cohort, derivePerPatientDefaultOn, searchParams]);
+
+  // J2 (v1.15-p4): persisting wrappers for the explicit axis/y/grid choices so they
+  // survive navigation (keyed per cohort). The drawer routes through these.
+  const setAxisModePersist = useCallback(
+    (v: AxisMode) => {
+      setAxisMode(v);
+      writePersistedViewState(searchParams.get('cohort'), { axisMode: v });
+    },
+    [searchParams],
+  );
+  const setYMetricPersist = useCallback(
+    (v: YMetric) => {
+      setYMetric(v);
+      writePersistedViewState(searchParams.get('cohort'), { yMetric: v });
+    },
+    [searchParams],
+  );
+  const setGridPointsPersist = useCallback(
+    (v: number) => {
+      setGridPoints(v);
+      writePersistedViewState(searchParams.get('cohort'), { gridPoints: v });
+    },
+    [searchParams],
+  );
 
   const handleMetricChange = (m: MetricType) => {
     setSearchParams((p) => {
@@ -415,6 +485,9 @@ export function useOutcomesRouteState() {
       return p;
     });
     resetToMetricDefaults(m);
+    // J2: persist the active metric (belt-and-braces — the URL already carries it,
+    // but a return via the nav menu without the query restores it from here too).
+    writePersistedViewState(searchParams.get('cohort'), { metric: m });
   };
 
   const handleMetricKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, current: MetricType) => {
@@ -494,11 +567,12 @@ export function useOutcomesRouteState() {
     compareOpen,
     setCompareOpen,
     axisMode,
-    setAxisMode,
+    // J2: persisting wrappers so an explicit axis/y/grid choice survives navigation.
+    setAxisMode: setAxisModePersist,
     yMetric,
-    setYMetric,
+    setYMetric: setYMetricPersist,
     gridPoints,
-    setGridPoints,
+    setGridPoints: setGridPointsPersist,
     spreadMode,
     layers,
     setLayers,

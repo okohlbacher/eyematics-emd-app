@@ -41,6 +41,12 @@ if (typeof globalThis.BroadcastChannel === 'undefined') {
   (globalThis as unknown as { BroadcastChannel: typeof MockBroadcastChannel }).BroadcastChannel = MockBroadcastChannel;
 }
 
-beforeEach(() => { MockBroadcastChannel._reset(); });
+beforeEach(() => {
+  MockBroadcastChannel._reset();
+  // J2 (v1.15-p4): the outcomes view persists explicit toggle choices in
+  // sessionStorage (keyed per cohort). Clear it between tests so a persisted choice
+  // from one test never leaks into another that renders the same cohort id.
+  try { globalThis.sessionStorage?.clear(); } catch { /* node env — no sessionStorage */ }
+});
 
 export { MockBroadcastChannel };
