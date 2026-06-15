@@ -196,18 +196,18 @@ describe('Datenvollzähligkeit card — card presence and percentage (Plan 04)',
   });
 });
 
-describe('B2 — Einwilligungsquote rename + definition tooltip', () => {
-  it('renders the new CONSENT RATE caption (was DATA COMPLETENESS)', () => {
+describe('I5 (v1.14) — Vollzähligkeit label reverted + definition tooltip', () => {
+  it('renders the DATA COMPLETENESS caption (reverted from CONSENT RATE)', () => {
     setupMocks(7);
     renderLanding();
-    expect(translate('datenvollstaendigkeitCaption', 'en')).toBe('CONSENT RATE');
-    expect(screen.queryByText('CONSENT RATE')).not.toBeNull();
+    expect(translate('datenvollstaendigkeitCaption', 'en')).toBe('DATA COMPLETENESS');
+    expect(screen.queryByText('DATA COMPLETENESS')).not.toBeNull();
   });
 
-  it('no longer renders the old DATA COMPLETENESS caption on the landing card', () => {
+  it('no longer renders the v1.13 CONSENT RATE caption on the landing card', () => {
     setupMocks(7);
     renderLanding();
-    expect(screen.queryByText('DATA COMPLETENESS')).toBeNull();
+    expect(screen.queryByText('CONSENT RATE')).toBeNull();
   });
 
   it('renders the definition tooltip as an accessible info icon', () => {

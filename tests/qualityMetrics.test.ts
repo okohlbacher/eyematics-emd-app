@@ -256,7 +256,7 @@ describe('B1 — filterCasesByTimeRange with new ranges', () => {
   });
 });
 
-describe('B1 — windowed completeness denominator (the NF bug)', () => {
+describe('I5 (v1.14) — Vollzähligkeit = active-in-window / full registered total', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(FROZEN_NOW);
@@ -265,31 +265,56 @@ describe('B1 — windowed completeness denominator (the NF bug)', () => {
     vi.useRealTimers();
   });
 
-  it('a perfectly-documented SHORT window reads ~100% completeness, not artificially low', () => {
-    // Two fully-documented patients: one only active long ago, one active recently.
-    const oldPatient = makeCompleteCase('old', ['2015-01-01T00:00:00Z']);
-    const recentPatient = makeCompleteCase('recent', ['2026-04-01T00:00:00Z']);
-
-    // Full history: both patients present, both complete → 100%.
-    const allWindowed = filterCasesByTimeRange([oldPatient, recentPatient], 'all');
+  it('aggregate matches the landing definition when unfiltered (active==registered)', () => {
+    // 2 active patients, raw registered total = 4 (2 stubs not in cases).
+    const a = makeCompleteCase('a', ['2026-04-01T00:00:00Z']);
+    const b = makeCompleteCase('b', ['2026-05-01T00:00:00Z']);
+    const allWindowed = filterCasesByTimeRange([a, b], 'all');
+    // rawTotal default (=cases.length) reproduces the all-time landing number
+    // when there are no stubs: 2/2 = 100%.
     expect(computeMetrics(allWindowed).completeness).toBe(100);
-    expect(computeMetrics(allWindowed).patientCount).toBe(2);
-
-    // 3m window: only the recent patient is active. Denominator SHRINKS to 1
-    // (not held at 2), and since that patient is fully documented → still ~100%.
-    const shortWindowed = filterCasesByTimeRange([oldPatient, recentPatient], '3m');
-    const shortMetrics = computeMetrics(shortWindowed);
-    expect(shortMetrics.patientCount).toBe(1); // denominator shrank with the window
-    expect(shortMetrics.completeness).toBe(100); // NOT 50% — the core NF fix
+    // With stubs (rawTotal=4): 2 active / 4 registered = 50% — the landing formula.
+    expect(computeMetrics(allWindowed, 4).completeness).toBe(50);
   });
 
-  it('no NaN / 0-safe when the window has no active patients', () => {
+  it('does NOT collapse to ~100% as the window shrinks (numerator windowed, denominator full)', () => {
+    // Two fully-documented patients: one active long ago, one active recently.
+    const oldPatient = makeCompleteCase('old', ['2015-01-01T00:00:00Z']);
+    const recentPatient = makeCompleteCase('recent', ['2026-04-01T00:00:00Z']);
+    // Full registered total stays 2 regardless of the window (NOT windowed).
+    const rawTotal = 2;
+
+    // 'all' window: both active → 2/2 = 100%.
+    const allWindowed = filterCasesByTimeRange([oldPatient, recentPatient], 'all');
+    expect(computeMetrics(allWindowed, rawTotal).patientCount).toBe(2);
+    expect(computeMetrics(allWindowed, rawTotal).completeness).toBe(100);
+
+    // 3m window: only the recent patient is active. Numerator shrinks to 1,
+    // denominator stays 2 → 50%. This is the B1 no-collapse guarantee: the
+    // metric FALLS instead of staying pinned at ~100%.
+    const shortWindowed = filterCasesByTimeRange([oldPatient, recentPatient], '3m');
+    const shortMetrics = computeMetrics(shortWindowed, rawTotal);
+    expect(shortMetrics.patientCount).toBe(1); // numerator (active-in-window) shrank
+    expect(shortMetrics.completeness).toBe(50); // denominator held full → 50%, NOT 100%
+  });
+
+  it('clamps to 100% when the numerator exceeds the denominator', () => {
+    const a = makeCompleteCase('a', ['2026-04-01T00:00:00Z']);
+    const b = makeCompleteCase('b', ['2026-05-01T00:00:00Z']);
+    const windowed = filterCasesByTimeRange([a, b], 'all');
+    // Malformed: rawTotal=1 but 2 active → clamp to 100, never >100.
+    expect(computeMetrics(windowed, 1).completeness).toBe(100);
+  });
+
+  it('no NaN / 0-safe when the window has no active patients or rawTotal is 0', () => {
     const oldPatient = makeCompleteCase('old', ['2010-01-01T00:00:00Z']);
     const windowed = filterCasesByTimeRange([oldPatient], '3m');
     expect(windowed).toHaveLength(0);
-    const m = computeMetrics(windowed);
+    const m = computeMetrics(windowed, 5);
     expect(m.patientCount).toBe(0);
-    expect(m.completeness).toBe(0);
+    expect(m.completeness).toBe(0); // 0 active / 5 registered = 0
+    // rawTotal=0 path is also 0-safe (no division by zero).
+    expect(computeMetrics(windowed, 0).completeness).toBe(0);
     expect(Number.isNaN(m.completeness)).toBe(false);
     expect(Number.isNaN(m.dataCompleteness)).toBe(false);
     expect(Number.isNaN(m.plausibility)).toBe(false);

@@ -13,7 +13,11 @@ import { describe, expect, it } from 'vitest';
 
 import { extractPatientCases } from '../shared/patientCases';
 import type { FhirBundle } from '../shared/types/fhir';
-import { countRawPatients, extractCenters } from '../src/services/fhirLoader';
+import {
+  countRawPatients,
+  countRawPatientsByCenter,
+  extractCenters,
+} from '../src/services/fhirLoader';
 
 // ---------------------------------------------------------------------------
 // Minimal in-memory fixture bundle
@@ -100,5 +104,29 @@ describe('D-09: countRawPatients denominator', () => {
   it('takes only bundles parameter — no center filter', () => {
     // Signature check: countRawPatients accepts bundles[] with no second arg
     expect(countRawPatients.length).toBe(1);
+  });
+});
+
+describe('I5 (v1.14): countRawPatientsByCenter — per-centre raw denominator', () => {
+  it('groups ALL Patients (incl. stubs) by Patient.meta.source = centerId', () => {
+    const byCenter = countRawPatientsByCenter([bundle]);
+    // org-test has 2 raw Patients (clinical pat-full-001 + stub pat-stub-001).
+    expect(byCenter.get('org-test')).toBe(2);
+  });
+
+  it('per-centre counts sum to the global countRawPatients total', () => {
+    const byCenter = countRawPatientsByCenter([bundle]);
+    const sum = [...byCenter.values()].reduce((a, b) => a + b, 0);
+    expect(sum).toBe(countRawPatients([bundle]));
+  });
+
+  it('keys a Patient with no meta.source under the empty-string centre', () => {
+    const orphan: FhirBundle = {
+      resourceType: 'Bundle',
+      type: 'collection',
+      entry: [{ resource: { resourceType: 'Patient', id: 'pat-orphan' } }],
+    };
+    const byCenter = countRawPatientsByCenter([orphan]);
+    expect(byCenter.get('')).toBe(1);
   });
 });
