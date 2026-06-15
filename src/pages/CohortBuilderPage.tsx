@@ -353,7 +353,12 @@ export default function CohortBuilderPage() {
       : { ...validFilters };
     // C2: new cohorts are created with default qualityParams (omitted ⇒ undefined ⇒ all
     // default checks, back-compat). The user tunes the checks on the Datenqualität tab.
-    addSavedSearch({ name: saveName.trim(), filters: wireFilters as CohortFilter });
+    // J7 (v1.15-p3): addSavedSearch now resolves the server record (so the split flow
+    // can collect new ids); this single-save path is fire-and-forget, so we swallow +
+    // log a rejection here rather than leaving an unhandled promise.
+    addSavedSearch({ name: saveName.trim(), filters: wireFilters as CohortFilter }).catch(
+      (err) => console.error('[CohortBuilderPage] Failed to save search:', err),
+    );
     setSaveName('');
   };
 

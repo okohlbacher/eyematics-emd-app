@@ -31,7 +31,9 @@ interface DataContextType {
   centers: CenterInfo[];
   cases: PatientCase[];
   savedSearches: SavedSearch[];
-  addSavedSearch: (s: Pick<SavedSearch, 'name' | 'filters'> & { qualityParams?: string[] }) => void;
+  addSavedSearch: (
+    s: Pick<SavedSearch, 'name' | 'filters'> & { qualityParams?: string[] },
+  ) => Promise<SavedSearch>;
   updateSavedSearchQualityParams: (id: string, qualityParams: string[] | undefined) => void;
   removeSavedSearch: (id: string) => void;
   qualityFlags: QualityFlag[];
@@ -150,15 +152,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
   );
 
   // F-13: accepts name+filters+qualityParams; server generates id/createdAt; adopt server-returned canonical record.
-  const addSavedSearch = useCallback((s: Pick<SavedSearch, 'name' | 'filters'> & { qualityParams?: string[] }) => {
-    void postJson<{ savedSearch: SavedSearch }>('/api/data/saved-searches', s)
-      .then(({ savedSearch }) => {
-        setSavedSearches((prev) => [...prev, savedSearch]);
-      })
-      .catch((err) => {
-        console.error('[DataProvider] Failed to save search:', err);
-      });
-  }, []);
+  // J7 (v1.15-p3): resolves the server-assigned record so callers that need the new
+  // id (the cohort-split flow → pre-select children in compare) can await it. Existing
+  // fire-and-forget callers can ignore the returned promise. Rejection propagates to
+  // the awaiter (throw-only, D-03); state is only updated on success.
+  const addSavedSearch = useCallback(
+    async (
+      s: Pick<SavedSearch, 'name' | 'filters'> & { qualityParams?: string[] },
+    ): Promise<SavedSearch> => {
+      const { savedSearch } = await postJson<{ savedSearch: SavedSearch }>(
+        '/api/data/saved-searches',
+        s,
+      );
+      setSavedSearches((prev) => [...prev, savedSearch]);
+      return savedSearch;
+    },
+    [],
+  );
 
   // C2: update an existing cohort's quality-check selection in place (edited on the
   // Datenqualität tab). The server sanitizes + canonicalizes (all keys ⇒ undefined,
