@@ -69,8 +69,11 @@ vi.mock('recharts', async (importOriginal) => {
         data-legend-type={legendType}
       />
     ),
-    // Extended mock: exposes onClick + cursor as data-* attributes
-    Scatter: ({ onClick, cursor, style }: any) => (
+    // Extended mock: exposes onClick + cursor as data-* attributes, and renders
+    // the custom `shape` for each datum so I1's per-point hover hit-halo
+    // (onMouseEnter/onMouseLeave) is reachable from tests. Each shape group is
+    // tagged with its patientId so a test can drive hover on a specific point.
+    Scatter: ({ onClick, cursor, style, shape, data }: any) => (
       <g
         data-testid="recharts-scatter"
         data-has-onclick={onClick ? 'true' : 'false'}
@@ -79,7 +82,15 @@ vi.mock('recharts', async (importOriginal) => {
           // Simulate recharts invoking onClick with a datum carrying patientId
           if (onClick) onClick({ patientId: 'PSN-1' }, 0, {} as any);
         }}
-      />
+      >
+        {typeof shape === 'function' && Array.isArray(data)
+          ? data.map((d: any, i: number) => (
+              <g key={i} data-testid={`scatter-shape-${d.patientId}`}>
+                {shape({ cx: 5, cy: 5, payload: d })}
+              </g>
+            ))
+          : null}
+      </g>
     ),
   };
 });
@@ -300,6 +311,95 @@ describe('OutcomesPanel — chart-level onClick + tooltip ref (FALL-010 A1 v2)',
     const chart = container.querySelector('[data-testid="recharts-composed-chart"]');
     chart!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(onPointClick).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 1c (I1 v1.14-p2): hovered-datum drives highlight + click, NOT nearest-x
+// ---------------------------------------------------------------------------
+
+import { fireEvent } from '@testing-library/react';
+
+describe('OutcomesPanel — hovered datum drives click (I1 v1.14-p2)', () => {
+  afterEach(() => {
+    cleanup();
+    delete (globalThis as any).__tooltipState;
+  });
+
+  it('chart click navigates to the HOVERED point, NOT the axis-tooltip nearest-x point', () => {
+    const onPointClick = vi.fn();
+    // The axis tooltip reports PSN-1 as the nearest-x active entry...
+    (globalThis as any).__tooltipState = {
+      active: true,
+      payload: [{ payload: { x: 10, y: 0.5, patientId: 'PSN-1' } }],
+    };
+    const { container } = render(
+      <OutcomesPanel
+        {...defaultProps}
+        panel={buildPanelWithScatter()}
+        onPointClick={onPointClick}
+      />,
+    );
+    // ...but the user's cursor is over PSN-2's hit-halo.
+    const halo = container.querySelector(
+      '[data-testid="scatter-shape-PSN-2"] circle',
+    );
+    expect(halo).not.toBeNull();
+    fireEvent.mouseEnter(halo!);
+    const chart = container.querySelector('[data-testid="recharts-composed-chart"]');
+    chart!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    // The hovered datum (PSN-2) must win over the nearest-x tooltip ref (PSN-1).
+    expect(onPointClick).toHaveBeenCalledWith('PSN-2');
+    expect(onPointClick).not.toHaveBeenCalledWith('PSN-1');
+  });
+
+  it('after mouse leaves the point, chart click falls back to the nearest-x tooltip ref', () => {
+    const onPointClick = vi.fn();
+    (globalThis as any).__tooltipState = {
+      active: true,
+      payload: [{ payload: { x: 10, y: 0.5, patientId: 'PSN-1' } }],
+    };
+    const { container } = render(
+      <OutcomesPanel
+        {...defaultProps}
+        panel={buildPanelWithScatter()}
+        onPointClick={onPointClick}
+      />,
+    );
+    const halo = container.querySelector(
+      '[data-testid="scatter-shape-PSN-2"] circle',
+    );
+    fireEvent.mouseEnter(halo!);
+    fireEvent.mouseLeave(halo!);
+    const chart = container.querySelector('[data-testid="recharts-composed-chart"]');
+    chart!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    // No point hovered → fall back to nearest-x tooltip ref (PSN-1).
+    expect(onPointClick).toHaveBeenCalledWith('PSN-1');
+  });
+
+  it('highlights the hovered point (enlarged radius) and only that point', () => {
+    const onPointClick = vi.fn();
+    const { container } = render(
+      <OutcomesPanel
+        {...defaultProps}
+        panel={buildPanelWithScatter()}
+        onPointClick={onPointClick}
+      />,
+    );
+    const halo2 = container.querySelector(
+      '[data-testid="scatter-shape-PSN-2"] circle',
+    );
+    fireEvent.mouseEnter(halo2!);
+    // The hovered point's visible circle grows to r=6; the other stays r=4.
+    const p2Circles = container.querySelectorAll(
+      '[data-testid="scatter-shape-PSN-2"] circle',
+    );
+    const p1Circles = container.querySelectorAll(
+      '[data-testid="scatter-shape-PSN-1"] circle',
+    );
+    // visible circle is the 2nd circle in each shape group (1st = transparent halo)
+    expect(p2Circles[1].getAttribute('r')).toBe('6');
+    expect(p1Circles[1].getAttribute('r')).toBe('4');
   });
 });
 

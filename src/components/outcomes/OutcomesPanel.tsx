@@ -2,7 +2,7 @@
 // Phase 22 shim candidate by 22-RESEARCH but per D-15 (reality check) it is
 // not a dedup target — this file holds chart rendering logic. No action
 // required beyond this disposition comment.
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ScatterPointItem } from 'recharts';
 import {
   Area,
@@ -112,6 +112,33 @@ export default function OutcomesPanel({
   // exact pipeline the tester can see working (the tooltip shows the pseudonym).
   const activePatientIdRef = useRef<string | null>(null);
 
+  // I1 (v1.14-p2): explicit hovered-scatter-datum tracking.
+  //
+  // The axis-level Tooltip above resolves the active entry by NEAREST X, not by
+  // the point physically under the cursor. Using that pipeline for the drill-down
+  // click can navigate to the WRONG patient when several scatter points share an
+  // x-band. To fix both the visual highlight AND the click target, we track the
+  // datum whose hand-drawn hit-halo the pointer is actually over:
+  //   - `hoveredDatumRef` drives the CLICK. It is a ref (not state) so updating it
+  //     on pointer enter/leave does NOT re-render the ~14k-node scatter layer; the
+  //     chart-level onClick reads it synchronously. This makes wrong-patient
+  //     drill-down impossible: the click resolves to the euclidean-nearest point
+  //     (the halo under the cursor), never the axis-tooltip's nearest-x entry.
+  //   - `hoveredPatientId` drives the HIGHLIGHT. State is required to repaint the
+  //     emphasised point, but it only changes on enter/leave TRANSITIONS (not on
+  //     every mousemove), so the repaint cost is bounded.
+  const hoveredDatumRef = useRef<{ patientId: string; x: number; y: number } | null>(null);
+  const [hoveredPatientId, setHoveredPatientId] = useState<string | null>(null);
+
+  const handlePointEnter = useCallback((datum: { patientId: string; x: number; y: number }) => {
+    hoveredDatumRef.current = datum;
+    setHoveredPatientId(datum.patientId);
+  }, []);
+  const handlePointLeave = useCallback(() => {
+    hoveredDatumRef.current = null;
+    setHoveredPatientId(null);
+  }, []);
+
   // F7 (defensive): clear the stashed drill-down target when the panel's
   // underlying patient set CHANGES (e.g. a cohort switch). Without this, a stale
   // within-cohort pseudonym left in the ref from a prior cohort's hover could fire
@@ -126,6 +153,9 @@ export default function OutcomesPanel({
     if (patientsRef.current !== panel.patients) {
       patientsRef.current = panel.patients;
       activePatientIdRef.current = null;
+      // I1: also drop any stale hovered datum/highlight from the prior cohort.
+      hoveredDatumRef.current = null;
+      setHoveredPatientId(null);
     }
   }, [panel.patients]);
 
@@ -265,13 +295,16 @@ export default function OutcomesPanel({
           data={panel.medianGrid}
           {...(onPointClick
             ? {
-                // FALL-010 (A1 v2): chart-level click navigates to the patientId the
-                // controlled tooltip last stashed. Recharts 3.8.1 does not pass an
-                // activePayload here, so we read it from activePatientIdRef. A click
-                // with no active scatter point (empty plot area) leaves the ref null
-                // → no-op.
+                // I1 (v1.14-p2): chart-level click navigates to the HOVERED scatter
+                // datum (the hit-halo physically under the cursor) when one exists,
+                // so the click always opens the point the user is pointing at — never
+                // a different point that merely shares its x-band. Only when no point
+                // is hovered (e.g. a click in empty plot area where Recharts still
+                // fires the chart onClick) do we fall back to the axis-tooltip's
+                // nearest-x patientId. A click with neither is a no-op.
                 onClick: () => {
-                  const patientId = activePatientIdRef.current;
+                  const patientId =
+                    hoveredDatumRef.current?.patientId ?? activePatientIdRef.current;
                   if (patientId) onPointClick(patientId);
                 },
               }
@@ -403,13 +436,45 @@ export default function OutcomesPanel({
               // symbols never get geometry. An explicit shape bypasses the
               // ZAxis/size mechanism entirely: always-visible r=4 circle with an
               // oversized transparent r=10 hit halo for reliable clicking.
+              //
+              // I1 (v1.14-p2): the r=10 halo is also the per-point HOVER hit target.
+              // Its pointer-enter/leave record the hovered datum (ref → click target,
+              // state → highlight) so the highlighted/clicked point is the one under
+              // the cursor, not the axis-tooltip's nearest-x entry. The point keeps a
+              // larger radius + full opacity while hovered.
               shape={(props: unknown) => {
-                const { cx, cy } = props as { cx?: number; cy?: number };
+                const { cx, cy, payload } = props as {
+                  cx?: number;
+                  cy?: number;
+                  payload?: { x: number; y: number; patientId?: string };
+                };
                 if (cx == null || cy == null) return <g />;
+                const patientId = payload?.patientId;
+                const isHovered =
+                  patientId != null && patientId === hoveredPatientId;
+                const enterHandler =
+                  onPointClick && patientId != null
+                    ? () => handlePointEnter({ patientId, x: payload!.x, y: payload!.y })
+                    : undefined;
                 return (
                   <g>
-                    <circle cx={cx} cy={cy} r={10} fill="transparent" />
-                    <circle cx={cx} cy={cy} r={4} fill={seriesColor} fillOpacity={SERIES_STYLES.scatter.fillOpacity} stroke={seriesColor} strokeWidth={1} />
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={10}
+                      fill="transparent"
+                      onMouseEnter={enterHandler}
+                      onMouseLeave={onPointClick ? handlePointLeave : undefined}
+                    />
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={isHovered ? 6 : 4}
+                      fill={seriesColor}
+                      fillOpacity={isHovered ? 1 : SERIES_STYLES.scatter.fillOpacity}
+                      stroke={seriesColor}
+                      strokeWidth={isHovered ? 2 : 1}
+                    />
                   </g>
                 );
               }}
