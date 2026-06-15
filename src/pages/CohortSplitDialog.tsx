@@ -39,9 +39,16 @@ export interface CohortSplitDialogProps {
   savedSearches: SavedSearch[];
   activeCases: PatientCase[];
   centers: CenterInfo[];
-  addSavedSearch: (s: Pick<SavedSearch, 'name' | 'filters'> & { qualityParams?: string[] }) => void;
+  addSavedSearch: (
+    s: Pick<SavedSearch, 'name' | 'filters'> & { qualityParams?: string[] },
+  ) => Promise<SavedSearch>;
   onClose: () => void;
 }
+
+// J7 (v1.15-p3): the compare drawer caps the comparison at 4 cohorts (mirrors the
+// slice(0, 4) cap in useOutcomesRouteState). If a split produces more sub-cohorts than
+// this, we pre-select the first N and log the rest rather than silently dropping them.
+const COMPARE_LIMIT = 4;
 
 const CATEGORICAL_ATTRS: SplitAttribute[] = ['gender', 'diagnosis', 'center'];
 const RANGE_ATTRS: RangeSplitAttribute[] = ['age', 'visus', 'crt'];
@@ -168,28 +175,56 @@ export default function CohortSplitDialog({
   const skippedCount = preview.groups.length - nonEmptyGroups.length;
   const canConfirm = !!selectedParent && nonEmptyGroups.length >= 2 && !preview.error;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedParent || !canConfirm) return;
     // Persist children via the SAME path as manual subcohorts (addSavedSearch).
     // Collision check accumulates names created in THIS batch too, so two groups
-    // that normalise identically still get distinct suffixes.
+    // that normalise identically still get distinct suffixes. Children are created
+    // in order so the resolved id list keeps the preview/group order.
     const existingNames = savedSearches.map((s) => s.name);
     const createdNames: string[] = [];
+    const creations: Promise<SavedSearch>[] = [];
     for (const g of nonEmptyGroups) {
       const name = buildChildName(selectedParent.name, g.label, (candidate) =>
         isDuplicateName(candidate, [...existingNames, ...createdNames]),
       );
       createdNames.push(name);
       const filters: CohortFilter = g.filter;
-      addSavedSearch({ name, filters, qualityParams: selectedParent.qualityParams });
+      creations.push(addSavedSearch({ name, filters, qualityParams: selectedParent.qualityParams }));
     }
     onClose();
-    // Open compare on the freshly created children. addSavedSearch resolves server
-    // ids asynchronously, so we cannot pass child ids in the URL synchronously.
-    // Instead we navigate to the Outcomes trajectories tab for the PARENT with
-    // ?compare=open, which auto-opens the compare drawer; the new sub-cohorts
-    // appear there (grouped under the parent) ready to be checked for comparison.
-    navigate(`/analysis?tab=trajectories&cohort=${encodeURIComponent(selectedParent.id)}&compare=open`);
+
+    // J7 (v1.15-p3): pre-select the freshly created SUB-cohorts in compare, parent
+    // optional/unlocked. addSavedSearch now resolves the server-assigned record, so we
+    // await all children to collect their real ids (no name-matching race). On failure,
+    // fall back to the previous parent-anchored navigation so the flow still lands on
+    // the trajectories tab with the drawer open.
+    let createdIds: string[];
+    try {
+      const created = await Promise.all(creations);
+      createdIds = created.map((c) => c.id);
+    } catch (err: unknown) {
+      console.error('[CohortSplitDialog] Failed to create sub-cohorts; falling back to parent route:', err);
+      navigate(`/analysis?tab=trajectories&cohort=${encodeURIComponent(selectedParent.id)}&compare=open`);
+      return;
+    }
+
+    // Cap at the compare limit: select the first N, LOG (do not silently drop) the rest.
+    // The parent is intentionally NOT included and NOT passed as ?cohort= — so no cohort
+    // is locked as "primary"; the user can add the parent (and remove any sub-cohort)
+    // freely in the drawer.
+    const selectedIds = createdIds.slice(0, COMPARE_LIMIT);
+    if (createdIds.length > COMPARE_LIMIT) {
+      const droppedNames = createdNames.slice(COMPARE_LIMIT);
+      console.log(
+        `[CohortSplitDialog] Split produced ${createdIds.length} sub-cohorts; compare is capped at ${COMPARE_LIMIT}. ` +
+          `Pre-selected the first ${COMPARE_LIMIT}; not auto-selected: ${droppedNames.join(', ')} ` +
+          '(add them manually in the compare drawer).',
+      );
+    }
+
+    const cohortsParam = selectedIds.map((id) => encodeURIComponent(id)).join(',');
+    navigate(`/analysis?tab=trajectories&cohorts=${cohortsParam}&compare=open`);
   };
 
   if (!open) return null;
@@ -400,7 +435,14 @@ export default function CohortSplitDialog({
               <Button variant="ghost" size="sm" onClick={onClose}>
                 {t('cohortSplitCancel')}
               </Button>
-              <Button variant="accent" size="sm" onClick={handleConfirm} disabled={!canConfirm}>
+              <Button
+                variant="accent"
+                size="sm"
+                onClick={() => {
+                  void handleConfirm();
+                }}
+                disabled={!canConfirm}
+              >
                 {t('cohortSplitConfirm')}
               </Button>
             </div>

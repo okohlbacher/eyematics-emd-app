@@ -74,6 +74,55 @@ describe('CohortCompareDrawer (Wave 0 scaffold)', () => {
     fireEvent.click(screen.getByText(/outcomesCompareReset/i));
     expect(onReset).toHaveBeenCalled();
   });
+
+  // J7 (v1.15-p3): the cohort-split flow opens compare with sub-cohorts pre-selected
+  // and NO primary (primaryCohortId === null). Nothing must be locked — every selected
+  // entry stays deselectable, and the (unselected) parent stays addable.
+  it('J7: with no primary, all pre-selected sub-cohorts are checked but NOT disabled (deselectable)', () => {
+    const onChange = vi.fn();
+    render(
+      <CohortCompareDrawer
+        open
+        onClose={vi.fn()}
+        savedSearches={savedSearches}
+        patientCounts={{ p1: 42, p2: 17, p3: 8, p4: 5, p5: 3 }}
+        primaryCohortId={null}
+        selectedIds={['p2', 'p3']}
+        onChange={onChange}
+        onReset={vi.fn()}
+        t={(k) => k}
+      />,
+    );
+    const b = screen.getByLabelText(/Cohort B \(N=17 patients\)/i) as HTMLInputElement;
+    expect(b.checked).toBe(true);
+    expect(b.disabled).toBe(false);
+    // Deselecting a pre-selected sub-cohort fires onChange with it removed.
+    fireEvent.click(b);
+    expect(onChange).toHaveBeenCalledWith(['p3']);
+  });
+
+  it('J7: with no primary, an unselected cohort (the parent) is addable (not disabled)', () => {
+    const onChange = vi.fn();
+    render(
+      <CohortCompareDrawer
+        open
+        onClose={vi.fn()}
+        savedSearches={savedSearches}
+        patientCounts={{ p1: 42, p2: 17, p3: 8, p4: 5, p5: 3 }}
+        primaryCohortId={null}
+        selectedIds={['p2', 'p3']}
+        onChange={onChange}
+        onReset={vi.fn()}
+        t={(k) => k}
+      />,
+    );
+    // p1 stands in for the (unselected) parent — addable, not locked.
+    const a = screen.getByLabelText(/Cohort A \(N=42 patients\)/i) as HTMLInputElement;
+    expect(a.checked).toBe(false);
+    expect(a.disabled).toBe(false);
+    fireEvent.click(a);
+    expect(onChange).toHaveBeenCalledWith(['p2', 'p3', 'p1']);
+  });
 });
 
 // ---------------------------------------------------------------------------

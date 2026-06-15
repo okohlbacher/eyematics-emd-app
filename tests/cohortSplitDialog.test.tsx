@@ -6,7 +6,7 @@
  * calls addSavedSearch once per non-empty group with `Parent:<label>` names and
  * child filters intersecting the parent, and navigates to the compare route.
  */
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -82,7 +82,24 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-function renderDialog(addSavedSearch = vi.fn()) {
+// J7 (v1.15-p3): addSavedSearch now resolves the server-assigned record. The default
+// mock mints a deterministic id per created child (in call order) so the dialog can
+// collect the new ids and pre-select them in compare.
+function makeAddSavedSearch() {
+  let n = 0;
+  return vi.fn((s: Pick<SavedSearch, 'name' | 'filters'> & { qualityParams?: string[] }) => {
+    n += 1;
+    return Promise.resolve({
+      id: `child-${n}`,
+      name: s.name,
+      filters: s.filters,
+      qualityParams: s.qualityParams,
+      createdAt: '2024-01-02T00:00:00Z',
+    } as SavedSearch);
+  });
+}
+
+function renderDialog(addSavedSearch = makeAddSavedSearch()) {
   render(
     <MemoryRouter>
       <CohortSplitDialog
@@ -111,7 +128,7 @@ describe('CohortSplitDialog', () => {
     expect(screen.queryByText('C1:Male')).not.toBeNull();
   });
 
-  it('confirm creates one child per non-empty group with intersected filters and navigates to compare', () => {
+  it('confirm creates one child per non-empty group with intersected filters and pre-selects the SUB-cohorts in compare', async () => {
     const addSavedSearch = renderDialog();
     const confirm = screen.getByRole('button', { name: t('cohortSplitConfirm', 'en') });
     fireEvent.click(confirm);
@@ -125,10 +142,62 @@ describe('CohortSplitDialog', () => {
       expect(c.filters.centers).toEqual(['org-a']);
       expect(c.filters.gender?.length).toBe(1);
     });
-    // compare auto-opens on the parent route
-    expect(navigateMock).toHaveBeenCalledTimes(1);
-    expect(navigateMock.mock.calls[0][0]).toContain('compare=open');
-    expect(navigateMock.mock.calls[0][0]).toContain('cohort=cohort-1');
+
+    // J7: compare auto-opens with the freshly-created SUB-cohort ids pre-selected
+    // (?cohorts=child-1,child-2) and NO ?cohort= primary — so nothing is locked and the
+    // parent is optional (addable/removable in the drawer).
+    await waitFor(() => expect(navigateMock).toHaveBeenCalledTimes(1));
+    const url = navigateMock.mock.calls[0][0] as string;
+    expect(url).toContain('compare=open');
+    expect(url).toContain('cohorts=child-1,child-2');
+    // No locked-primary parent in the URL.
+    expect(/[?&]cohort=/.test(url)).toBe(false);
+  });
+
+  it('caps the pre-selection at the compare limit (first 4) and logs the rest rather than dropping silently', async () => {
+    // A categorical split on center across 5 centers yields 5 non-empty sub-cohorts;
+    // compare caps at 4, so the dialog pre-selects the first 4 and logs the 5th.
+    const centerIds = ['c1', 'c2', 'c3', 'c4', 'c5'];
+    const manyCenterCases = centerIds.map((cid, i) => {
+      const c = makeCase(`p${i}`, i % 2 === 0 ? 'female' : 'male');
+      return { ...c, centerId: cid, centerName: cid } as PatientCase;
+    });
+    const parentAll: SavedSearch = {
+      id: 'cohort-all',
+      name: 'CALL',
+      createdAt: '2024-01-01T00:00:00Z',
+      filters: {},
+    };
+    const addSavedSearch = makeAddSavedSearch();
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    render(
+      <MemoryRouter>
+        <CohortSplitDialog
+          open
+          parent={parentAll}
+          savedSearches={[parentAll]}
+          activeCases={manyCenterCases}
+          centers={centerIds.map((cid) => ({ id: cid, name: cid, city: '', state: '', patientCount: 1, lastUpdated: '' }))}
+          addSavedSearch={addSavedSearch}
+          onClose={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    const attrSelect = screen.getByLabelText(t('cohortSplitAttribute', 'en'));
+    fireEvent.change(attrSelect, { target: { value: 'center' } });
+    const confirm = screen.getByRole('button', { name: t('cohortSplitConfirm', 'en') });
+    fireEvent.click(confirm);
+
+    // All 5 children are CREATED (creation is not capped) ...
+    expect(addSavedSearch).toHaveBeenCalledTimes(5);
+    // ... but only the first 4 ids are pre-selected in compare.
+    await waitFor(() => expect(navigateMock).toHaveBeenCalledTimes(1));
+    const url = navigateMock.mock.calls[0][0] as string;
+    expect(url).toContain('cohorts=child-1,child-2,child-3,child-4');
+    expect(url).not.toContain('child-5');
+    // The dropped sub-cohort is logged (not silently discarded).
+    expect(logSpy.mock.calls.some((c) => String(c[0]).includes('capped at 4'))).toBe(true);
+    logSpy.mockRestore();
   });
 
   it('switching to age + custom cut points previews 3 bins', () => {

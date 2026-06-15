@@ -439,9 +439,13 @@ export function useOutcomesRouteState() {
   // Phase 16: drawer onChange + onReset handlers.
   const handleCompareChange = (nextIds: string[]) => {
     setSearchParams((p) => {
-      // If no primary is set in the URL, promote the first selection to primary
-      // so single-selection clicks in the drawer produce visible state.
-      const primary = primaryCohortId ?? nextIds[0] ?? null;
+      // J7 (v1.15-p3): only KEEP an already-locked primary (the ?cohort= the view was
+      // opened with). Do NOT promote nextIds[0] to a new locked primary — the cohort-
+      // split flow opens compare with ?cohorts= and NO ?cohort=, and the sub-cohorts
+      // must all stay freely deselectable (nothing force-locked). When a primary
+      // already exists it is preserved + kept selected (the single-cohort→compare flow
+      // it was opened from is unchanged).
+      const primary = primaryCohortId ?? null;
       const ensured = primary && !nextIds.includes(primary) ? [primary, ...nextIds] : nextIds;
       const capped = ensured.slice(0, 4);
       if (capped.length >= 2) {
