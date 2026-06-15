@@ -13,7 +13,7 @@
  * The order relative to the original OutcomesView hook sequence is preserved
  * because these memos/effects ran after all state and before the render return.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { computeCrtTrajectory } from '../../../shared/cohortTrajectory';
 import type { PatientCase, SavedSearch } from '../../../shared/types/fhir';
@@ -196,12 +196,18 @@ export function useOutcomesAggregation(state: RouteState) {
     ? `${clientWorkerMetric}|${cohortId ?? ''}|${cohort!.cases.length}|${axisMode}|${yMetric}|${gridPoints}|${spreadMode}`
     : null;
   const [workerResult, setWorkerResult] = useState<{ key: string; result: TrajectoryResult } | null>(null);
-  const workerReqKeyRef = useRef<string | null>(null);
   useEffect(() => {
     if (!isClientWorkerHeavy || !workerKey || !cohort) return;
-    // Avoid re-dispatching for an already-satisfied or in-flight key.
-    if (workerResult?.key === workerKey || workerReqKeyRef.current === workerKey) return;
-    workerReqKeyRef.current = workerKey;
+    // Avoid re-dispatching once the result for THIS key has landed.
+    //
+    // NOTE: deliberately NO ref-based "in-flight" guard here. Under React 18
+    // StrictMode the effect is mounted → cleaned up → re-mounted in dev; an
+    // in-flight ref keyed on workerKey would make the cleanup cancel the first
+    // request while the ref blocks the second from dispatching — so NOTHING ever
+    // resolves (the status spins forever). Instead we let the second mount dispatch
+    // a fresh request; the client wrapper round-trips a request id so the stale
+    // (cancelled) first response is ignored, and the second resolves normally.
+    if (workerResult?.key === workerKey) return;
     let cancelled = false;
     const input = { cases: cohort.cases, axisMode, yMetric, gridPoints, spreadMode };
     computeTrajectoryAsync(clientWorkerMetric!, input)
