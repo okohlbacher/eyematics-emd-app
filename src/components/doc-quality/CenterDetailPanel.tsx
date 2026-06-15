@@ -11,15 +11,11 @@ import {
 } from 'recharts';
 
 import { useLanguage } from '../../context/LanguageContext';
-import {
-  LOINC_CRT,
-  LOINC_IOP,
-  LOINC_VISUS,
-} from '../../services/fhirLoader';
 import type { CenterMetrics } from '../../utils/qualityMetrics';
 import { QUALITY_CATEGORY_COLORS } from '../../utils/qualityMetrics';
 import { CustomTooltip } from './CustomTooltip';
 import { MetricCard } from './MetricCard';
+import { PlausibilityRangesTable } from './PlausibilityRangesTable';
 
 // ---------------------------------------------------------------------------
 // CenterDetailPanel
@@ -86,21 +82,29 @@ export function CenterDetailPanel({ metrics, onBack }: CenterDetailPanelProps) {
           label={t('docQualityCompleteness')}
           score={metrics.completeness}
           description={t('docQualityCompletenessDesc')}
+          patientCount={metrics.patientCount}
+          tooltip={t('docQualityCompletenessTooltip')}
         />
         <MetricCard
           label={t('docQualityDataCompleteness')}
           score={metrics.dataCompleteness}
           description={t('docQualityDataCompletenessDesc')}
+          patientCount={metrics.patientCount}
+          tooltip={t('docQualityDataCompletenessTooltip')}
         />
         <MetricCard
           label={t('docQualityPlausibility')}
           score={metrics.plausibility}
           description={t('docQualityPlausibilityDesc')}
+          patientCount={metrics.patientCount}
+          tooltip={t('docQualityPlausibilityTooltip')}
         />
         <MetricCard
           label={t('docQualityOverall')}
           score={metrics.overall}
           description={t('docQualityOverallDesc')}
+          patientCount={metrics.patientCount}
+          tooltip={t('docQualityOverallTooltip')}
         />
       </div>
 
@@ -152,44 +156,8 @@ export function CenterDetailPanel({ metrics, onBack }: CenterDetailPanelProps) {
         </ResponsiveContainer>
       </div>
 
-      {/* Plausibility reference table */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">
-          {t('docQualityPlausibilityRanges')}
-        </h3>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-100">
-              <th className="text-left px-3 py-2 font-medium text-gray-600">
-                {t('docQualityParameter')}
-              </th>
-              <th className="text-left px-3 py-2 font-medium text-gray-600">
-                {t('docQualityRange')}
-              </th>
-              <th className="text-left px-3 py-2 font-medium text-gray-600">
-                LOINC
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            <tr>
-              <td className="px-3 py-2 text-gray-800">Visus</td>
-              <td className="px-3 py-2 text-gray-600">0 – 2.0</td>
-              <td className="px-3 py-2 text-gray-400 font-mono text-xs">{LOINC_VISUS}</td>
-            </tr>
-            <tr>
-              <td className="px-3 py-2 text-gray-800">CRT</td>
-              <td className="px-3 py-2 text-gray-600">100 – 800 µm</td>
-              <td className="px-3 py-2 text-gray-400 font-mono text-xs">{LOINC_CRT}</td>
-            </tr>
-            <tr>
-              <td className="px-3 py-2 text-gray-800">IOP</td>
-              <td className="px-3 py-2 text-gray-600">5 – 40 mmHg</td>
-              <td className="px-3 py-2 text-gray-400 font-mono text-xs">{LOINC_IOP}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      {/* Plausibility reference table (global ranges, shared with main view — J5a) */}
+      <PlausibilityRangesTable />
     </div>
   );
 }

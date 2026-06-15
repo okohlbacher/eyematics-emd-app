@@ -6,6 +6,7 @@ import { CenterComparisonChart } from '../components/doc-quality/CenterCompariso
 import { CenterDetailPanel } from '../components/doc-quality/CenterDetailPanel';
 import { CenterTable } from '../components/doc-quality/CenterTable';
 import { MetricCard } from '../components/doc-quality/MetricCard';
+import { PlausibilityRangesTable } from '../components/doc-quality/PlausibilityRangesTable';
 import { QualityFilterBar } from '../components/doc-quality/QualityFilterBar';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -301,6 +302,12 @@ export default function DocQualityPage() {
           metrics={centerMetrics}
           onSelectCenter={setSelectedCenter}
         />
+      )}
+
+      {/* Global plausibility ranges — J5a: collapsible (collapsed by default),
+          same global config as the per-centre detail panel. */}
+      {selectedCenter === 'all' && centerMetrics.length > 0 && (
+        <PlausibilityRangesTable collapsible />
       )}
 
       {/* Center detail view */}
