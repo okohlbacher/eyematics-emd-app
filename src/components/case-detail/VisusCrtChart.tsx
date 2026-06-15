@@ -14,13 +14,15 @@ import {
 import { CRITICAL_CRT_THRESHOLD } from '../../config/clinicalThresholds';
 import type { CombinedDataPoint } from '../../hooks/useCaseData';
 import type { TranslationKey } from '../../i18n/translations';
-import type { Observation } from '../../types/fhir';
+import type { Observation, Procedure } from '../../types/fhir';
 import { translateClinical } from '../../utils/clinicalTerms';
 
 export interface VisusCrtChartProps {
   /** A3 v2: single merged data array — patient rows already carry the cohort
    *  reference fields (visusMedian/crtMedian, visusBand/crtBand) and the
-   *  interpolation keys (visusInterp/crtInterp). No per-series `data` props. */
+   *  interpolation keys (visusInterp/crtInterp). No per-series `data` props.
+   *  J3c: each row carries `relMonths` (months since the patient's first visit);
+   *  the X axis is keyed on it, with `date` retained for the tooltip. */
   combinedData: CombinedDataPoint[];
   cohortAvgVisus: number;
   cohortAvgCrt: number;
@@ -33,6 +35,10 @@ export interface VisusCrtChartProps {
   showCohortReference?: boolean;
   /** A4 v2: show the interpolation caption only when interpolated points exist. */
   hasInterpolatedPoints?: boolean;
+  /** J3c: IVI injections, rendered as markers on the relative-time axis. */
+  injections?: Procedure[];
+  /** J3c: map an absolute date onto the relative-time (months-since-baseline) axis. */
+  toRelMonths: (date: string | null | undefined) => number | null;
 }
 
 export default function VisusCrtChart({
@@ -46,7 +52,19 @@ export default function VisusCrtChart({
   visusObs,
   showCohortReference = false,
   hasInterpolatedPoints = false,
+  injections = [],
+  toRelMonths,
 }: VisusCrtChartProps) {
+  // J3c: the highlighted visit and IVI injections live as absolute dates; map
+  // them onto the relative-month axis so the ReferenceLines land at the right x.
+  const highlightRel = toRelMonths(highlightDate);
+  const injectionMarkers = injections
+    .map((inj) => ({
+      rel: toRelMonths(inj.performedDateTime),
+      date: inj.performedDateTime?.substring(0, 10) ?? '',
+    }))
+    .filter((m): m is { rel: number; date: string } => m.rel != null);
+  const fmtRelTick = (v: number) => `${Number.isInteger(v) ? v : v.toFixed(1)} ${t('relativeTimeUnitShort')}`;
   const hasReference =
     showCohortReference &&
     combinedData.some((d) => d.visusBand != null || d.crtBand != null || d.visusMedian != null || d.crtMedian != null);
@@ -60,7 +78,7 @@ export default function VisusCrtChart({
   const renderTooltip = (props: {
     active?: boolean;
     label?: unknown;
-    payload?: ReadonlyArray<{ dataKey?: unknown; value?: unknown; color?: string }>;
+    payload?: ReadonlyArray<{ dataKey?: unknown; value?: unknown; color?: string; payload?: CombinedDataPoint }>;
   }) => {
     if (!props.active || !Array.isArray(props.payload) || props.payload.length === 0) {
       return null;
@@ -69,14 +87,24 @@ export default function VisusCrtChart({
       (e) => e.dataKey === 'visus' || e.dataKey === 'crt',
     );
     if (measured.length === 0) return null;
-    const dateLabel =
-      props.label != null
-        ? new Date(String(props.label)).toLocaleDateString(dateFmt)
+    // J3c: the X label is now the relative-month offset. Show BOTH the relative
+    // offset AND the calendar date (read off the row's retained `date`) so no
+    // information is lost.
+    const row = props.payload.find((e) => e.payload?.date)?.payload;
+    const relMonths = props.label != null ? Number(props.label) : row?.relMonths;
+    const relLabel =
+      relMonths != null && !Number.isNaN(relMonths)
+        ? `${Number.isInteger(relMonths) ? relMonths : relMonths.toFixed(1)} ${t('relativeTimeUnitShort')}`
         : '';
+    const dateLabel = row?.date ? new Date(row.date).toLocaleDateString(dateFmt) : '';
     return (
       <div className="bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm">
-        {dateLabel && (
-          <div className="text-xs font-semibold text-gray-700 mb-1">{dateLabel}</div>
+        {(relLabel || dateLabel) && (
+          <div className="text-xs font-semibold text-gray-700 mb-1">
+            {relLabel}
+            {relLabel && dateLabel && <span className="font-normal text-gray-400"> · {dateLabel}</span>}
+            {!relLabel && dateLabel}
+          </div>
         )}
         {measured.map((e) => {
           const isVisus = e.dataKey === 'visus';
@@ -144,7 +172,18 @@ export default function VisusCrtChart({
             silently vanished. ComposedChart supports mixed Line+Area natively. */}
         <ComposedChart data={combinedData}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+          {/* J3c: relative-time X axis — months since the patient's first visit.
+              Numeric type so the spacing reflects actual elapsed time (not just
+              ordinal visit index), and so the cohort overlay + IVI markers align
+              by their own relative offset. Ticks read e.g. "0 Mon", "3 Mon". */}
+          <XAxis
+            dataKey="relMonths"
+            type="number"
+            domain={['dataMin', 'dataMax']}
+            tickFormatter={fmtRelTick}
+            tick={{ fontSize: 10 }}
+            label={{ value: t('relativeTimeAxisLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: '#9ca3af' }}
+          />
           <YAxis
             yAxisId="visus"
             domain={[0, 1]}
@@ -184,14 +223,28 @@ export default function VisusCrtChart({
             strokeDasharray="3 3"
             label={{ value: t('critical'), fontSize: 9, fill: '#ef4444' }}
           />
-          {highlightDate && (
+          {/* J3c: IVI injection markers on the relative-time axis. Each injection's
+              absolute date is mapped to its months-since-baseline offset so the
+              markers line up with the trajectory. */}
+          {injectionMarkers.map((m) => (
+            <ReferenceLine
+              key={`ivi-${m.date}`}
+              yAxisId="visus"
+              x={m.rel}
+              stroke="#3b82f6"
+              strokeWidth={1}
+              strokeDasharray="2 2"
+              label={{ value: 'IVI', position: 'insideBottom', fontSize: 8, fill: '#3b82f6' }}
+            />
+          ))}
+          {highlightRel != null && (
             <ReferenceLine
               yAxisId="visus"
-              x={highlightDate}
+              x={highlightRel}
               stroke="#f59e0b"
               strokeWidth={2}
               strokeDasharray="4 2"
-              label={{ value: new Date(highlightDate).toLocaleDateString(dateFmt), position: 'top', fontSize: 10, fill: '#f59e0b' }}
+              label={{ value: highlightDate ? new Date(highlightDate).toLocaleDateString(dateFmt) : '', position: 'top', fontSize: 10, fill: '#f59e0b' }}
             />
           )}
           {/* FALL-011 (A3 v2): cohort reference overlay. One translucent RANGE

@@ -13,9 +13,25 @@ import type { PatientCase } from '../types/fhir';
 import { getEyeLabel, translateClinical } from '../utils/clinicalTerms';
 import { computeCrtDistribution, computeVisusDistribution } from '../utils/distributionBins';
 
+/** Average days per month used to convert an absolute date span to relative
+ *  months-since-baseline (J3c relative-time axis). */
+const DAYS_PER_MONTH = 30.4375;
+const MS_PER_DAY = 86_400_000;
+
+/** Months between two ISO dates (YYYY-MM-DD), rounded to one decimal so distinct
+ *  visits stay distinct on the relative axis while remaining readable. */
+function monthsBetween(baseline: string, date: string): number {
+  if (!baseline || !date) return 0;
+  const days = (new Date(date).getTime() - new Date(baseline).getTime()) / MS_PER_DAY;
+  return Math.round((days / DAYS_PER_MONTH) * 10) / 10;
+}
+
 /** A single row of the Visus/CRT trend chart's merged data array. */
 export interface CombinedDataPoint {
   date: string;
+  /** J3c: months since the patient's first observation (relative-time X axis).
+   *  The chart keys its X dimension on this; `date` is retained for the tooltip. */
+  relMonths: number;
   visus?: number;
   crt?: number;
   visusMeasured?: boolean;
@@ -33,15 +49,33 @@ export interface CombinedDataPoint {
   crtBand?: [number, number];
 }
 
-/** Per-date cohort percentile reference (FALL-011). */
+/** Per-relative-month cohort percentile reference (FALL-011 + J3c).
+ *  Keyed by the relative month bucket (months since each peer's own baseline),
+ *  aligned onto the index patient's relative axis. `date` is the index patient's
+ *  calendar date that resolves to this bucket (retained for tooltips). */
 export interface CohortReferencePoint {
   date: string;
+  relMonths: number;
   visusMedian?: number;
   visusP25?: number;
   visusP75?: number;
   crtMedian?: number;
   crtP25?: number;
   crtP75?: number;
+}
+
+/** A row of the Change-from-Baseline chart (J3c relative axis + J3d overlay). */
+export interface BaselineChangePoint {
+  date: string;
+  relMonths: number;
+  visusChange?: number;
+  crtChange?: number;
+  /** J3d: cohort percent-change median + IQR band ([p25, p75]) at this relative
+   *  month bucket. Each peer's change is measured from its OWN baseline value. */
+  visusChangeMedian?: number;
+  visusChangeBand?: [number, number];
+  crtChangeMedian?: number;
+  crtChangeBand?: [number, number];
 }
 
 /** Nearest-rank percentile (0-based fraction, 0 = min, 1 = max). */
@@ -170,22 +204,55 @@ export function useCaseData(
     [crtObs],
   );
 
-  // Combined dual-axis data: merge visus + CRT by date
+  // J3c: the patient's baseline = earliest visus/crt observation date. All
+  // relative-time offsets (chart X axis, IVI markers, date highlight) are
+  // measured in months since this date.
+  const baselineDate = useMemo(() => {
+    const dates: string[] = [];
+    for (const o of visusObs) {
+      const d = o.effectiveDateTime?.substring(0, 10);
+      if (d) dates.push(d);
+    }
+    for (const o of crtObs) {
+      const d = o.effectiveDateTime?.substring(0, 10);
+      if (d) dates.push(d);
+    }
+    if (!dates.length) return '';
+    return dates.reduce((min, d) => (d < min ? d : min), dates[0]);
+  }, [visusObs, crtObs]);
+
+  // J3c: map an absolute date (e.g. an IVI/event date or the highlighted visit)
+  // onto the chart's relative-month axis. Returns null when there is no baseline.
+  const toRelMonths = useMemo(
+    () => (date: string | null | undefined): number | null => {
+      if (!date || !baselineDate) return null;
+      return monthsBetween(baselineDate, date.substring(0, 10));
+    },
+    [baselineDate],
+  );
+
+  // Combined dual-axis data: merge visus + CRT by date, keyed on the relative
+  // month offset since baseline (J3c). `date` is retained per row for tooltips.
   const combinedData = useMemo((): CombinedDataPoint[] => {
     const dateMap = new Map<string, CombinedDataPoint>();
+    const ensure = (d: string): CombinedDataPoint => {
+      const existing = dateMap.get(d);
+      if (existing) return existing;
+      const entry: CombinedDataPoint = { date: d, relMonths: monthsBetween(baselineDate, d) };
+      dateMap.set(d, entry);
+      return entry;
+    };
     visusObs.forEach((o) => {
       const d = o.effectiveDateTime?.substring(0, 10) ?? '';
-      const entry = dateMap.get(d) ?? { date: d };
+      const entry = ensure(d);
       entry.visus = o.valueQuantity?.value;
       entry.visusMeasured = true;
-      dateMap.set(d, entry);
     });
     crtObs.forEach((o) => {
       const d = o.effectiveDateTime?.substring(0, 10) ?? '';
-      const entry = dateMap.get(d) ?? { date: d };
+      const entry = ensure(d);
       entry.crt = o.valueQuantity?.value;
       entry.crtMeasured = true;
-      dateMap.set(d, entry);
     });
     const rows = Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
@@ -224,7 +291,7 @@ export function useCaseData(
     interpolate('crt', 'crtInterp');
 
     return rows;
-  }, [visusObs, crtObs]);
+  }, [visusObs, crtObs, baselineDate]);
 
   // A4 v2: hint/markers only when interpolated points actually exist.
   const hasInterpolatedPoints = useMemo(
@@ -235,6 +302,43 @@ export function useCaseData(
   const visusDistribution = useMemo(() => computeVisusDistribution(visusObs), [visusObs]);
   const crtDistribution = useMemo(() => computeCrtDistribution(crtObs), [crtObs]);
 
+  // J3d: peer-cohort observations (index patient excluded) for the distribution +
+  // scatter overlays. Reuses the same exclusion rule as cohortReference (WR-04).
+  const peerVisusObs = useMemo(
+    () =>
+      cases
+        .filter((c) => !patientCase || c.id !== patientCase.id)
+        .flatMap((c) => getObservationsByCode(c.observations, LOINC_VISUS)),
+    [cases, patientCase],
+  );
+  const peerCrtObs = useMemo(
+    () =>
+      cases
+        .filter((c) => !patientCase || c.id !== patientCase.id)
+        .flatMap((c) => getObservationsByCode(c.observations, LOINC_CRT)),
+    [cases, patientCase],
+  );
+
+  // J3d: fold the cohort distribution onto the patient's bins as a cohort
+  // percentage per bin (own scale → comparable to the patient's small counts).
+  const visusDistributionWithCohort = useMemo(() => {
+    const cohort = computeVisusDistribution(peerVisusObs);
+    const total = cohort.reduce((s, b) => s + b.count, 0);
+    return visusDistribution.map((bin, i) => ({
+      ...bin,
+      cohortPct: total ? +((cohort[i].count / total) * 100).toFixed(1) : 0,
+    }));
+  }, [visusDistribution, peerVisusObs]);
+
+  const crtDistributionWithCohort = useMemo(() => {
+    const cohort = computeCrtDistribution(peerCrtObs);
+    const total = cohort.reduce((s, b) => s + b.count, 0);
+    return crtDistribution.map((bin, i) => ({
+      ...bin,
+      cohortPct: total ? +((cohort[i].count / total) * 100).toFixed(1) : 0,
+    }));
+  }, [crtDistribution, peerCrtObs]);
+
   const visusCrtScatter = useMemo(
     () =>
       combinedData
@@ -243,31 +347,129 @@ export function useCaseData(
     [combinedData],
   );
 
-  const baselineData = useMemo(() => {
+  // J3d: cohort Visus-vs-CRT cloud (peer same-day visus+crt pairs), capped to keep
+  // the scatter render light. Drawn behind the patient's points.
+  const cohortVisusCrtScatter = useMemo(() => {
+    const COHORT_SCATTER_CAP = 400;
+    const pairs: Array<{ visus: number; crt: number }> = [];
+    for (const c of cases) {
+      if (patientCase && c.id === patientCase.id) continue;
+      const byDate = new Map<string, { visus?: number; crt?: number }>();
+      for (const o of getObservationsByCode(c.observations, LOINC_VISUS)) {
+        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
+        const v = o.valueQuantity?.value;
+        if (d && v != null) (byDate.get(d) ?? byDate.set(d, {}).get(d)!).visus = v;
+      }
+      for (const o of getObservationsByCode(c.observations, LOINC_CRT)) {
+        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
+        const v = o.valueQuantity?.value;
+        if (d && v != null) (byDate.get(d) ?? byDate.set(d, {}).get(d)!).crt = v;
+      }
+      for (const { visus, crt } of byDate.values()) {
+        if (visus != null && crt != null) pairs.push({ visus, crt });
+      }
+    }
+    if (pairs.length <= COHORT_SCATTER_CAP) return pairs;
+    // Even downsample to the cap.
+    const step = pairs.length / COHORT_SCATTER_CAP;
+    const out: Array<{ visus: number; crt: number }> = [];
+    for (let i = 0; i < pairs.length; i += step) out.push(pairs[Math.floor(i)]);
+    return out;
+  }, [cases, patientCase]);
+
+  const baselineData = useMemo((): BaselineChangePoint[] => {
     if (visusObs.length < 2) return [];
     const baselineVisus = visusObs[0]?.valueQuantity?.value ?? 0;
     const baselineCrt = crtObs[0]?.valueQuantity?.value ?? 0;
-    const dateMap = new Map<string, { date: string; visusChange?: number; crtChange?: number }>();
+    const dateMap = new Map<string, BaselineChangePoint>();
+    const ensure = (d: string): BaselineChangePoint => {
+      const existing = dateMap.get(d);
+      if (existing) return existing;
+      const entry: BaselineChangePoint = { date: d, relMonths: monthsBetween(baselineDate, d) };
+      dateMap.set(d, entry);
+      return entry;
+    };
     visusObs.forEach((o) => {
       const d = o.effectiveDateTime?.substring(0, 10) ?? '';
       const val = o.valueQuantity?.value ?? 0;
-      const entry = dateMap.get(d) ?? { date: d };
+      const entry = ensure(d);
       entry.visusChange = baselineVisus
         ? +((((val - baselineVisus) / baselineVisus) * 100).toFixed(1))
         : 0;
-      dateMap.set(d, entry);
     });
     crtObs.forEach((o) => {
       const d = o.effectiveDateTime?.substring(0, 10) ?? '';
       const val = o.valueQuantity?.value ?? 0;
-      const entry = dateMap.get(d) ?? { date: d };
+      const entry = ensure(d);
       entry.crtChange = baselineCrt
         ? +((((val - baselineCrt) / baselineCrt) * 100).toFixed(1))
         : 0;
-      dateMap.set(d, entry);
     });
     return Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
-  }, [visusObs, crtObs]);
+  }, [visusObs, crtObs, baselineDate]);
+
+  // J3d: cohort percent-change-from-baseline reference, bucketed by months since
+  // EACH peer's own baseline (same relative-time alignment as cohortReference).
+  // Each peer's change at a visit = % change from that peer's first measured value.
+  const baselineChangeWithReference = useMemo((): BaselineChangePoint[] => {
+    if (!baselineData.length || !cases.length) return baselineData;
+
+    const visusChangeByRelMonth = new Map<number, number[]>();
+    const crtChangeByRelMonth = new Map<number, number[]>();
+
+    for (const c of cases) {
+      if (patientCase && c.id === patientCase.id) continue; // exclude index patient
+      const pv = getObservationsByCode(c.observations, LOINC_VISUS);
+      const pc = getObservationsByCode(c.observations, LOINC_CRT);
+      const peerDates: string[] = [];
+      for (const o of pv) { const d = o.effectiveDateTime?.substring(0, 10); if (d) peerDates.push(d); }
+      for (const o of pc) { const d = o.effectiveDateTime?.substring(0, 10); if (d) peerDates.push(d); }
+      if (!peerDates.length) continue;
+      const peerBaseline = peerDates.reduce((min, d) => (d < min ? d : min), peerDates[0]);
+
+      const sortedV = [...pv].sort((a, b) => (a.effectiveDateTime ?? '').localeCompare(b.effectiveDateTime ?? ''));
+      const sortedC = [...pc].sort((a, b) => (a.effectiveDateTime ?? '').localeCompare(b.effectiveDateTime ?? ''));
+      const baseV = sortedV[0]?.valueQuantity?.value ?? 0;
+      const baseC = sortedC[0]?.valueQuantity?.value ?? 0;
+
+      for (const o of sortedV) {
+        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
+        const val = o.valueQuantity?.value;
+        if (!d || val == null || !baseV) continue;
+        const bucket = Math.round(monthsBetween(peerBaseline, d));
+        const arr = visusChangeByRelMonth.get(bucket) ?? [];
+        arr.push(((val - baseV) / baseV) * 100);
+        visusChangeByRelMonth.set(bucket, arr);
+      }
+      for (const o of sortedC) {
+        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
+        const val = o.valueQuantity?.value;
+        if (!d || val == null || !baseC) continue;
+        const bucket = Math.round(monthsBetween(peerBaseline, d));
+        const arr = crtChangeByRelMonth.get(bucket) ?? [];
+        arr.push(((val - baseC) / baseC) * 100);
+        crtChangeByRelMonth.set(bucket, arr);
+      }
+    }
+
+    return baselineData.map((point) => {
+      const bucket = Math.round(point.relMonths);
+      const vVals = visusChangeByRelMonth.get(bucket);
+      const cVals = crtChangeByRelMonth.get(bucket);
+      const merged: BaselineChangePoint = { ...point };
+      if (vVals && vVals.length) {
+        const sorted = [...vVals].sort((a, b) => a - b);
+        merged.visusChangeMedian = +percentile(sorted, 0.5).toFixed(1);
+        merged.visusChangeBand = [+percentile(sorted, 0.25).toFixed(1), +percentile(sorted, 0.75).toFixed(1)];
+      }
+      if (cVals && cVals.length) {
+        const sorted = [...cVals].sort((a, b) => a - b);
+        merged.crtChangeMedian = +percentile(sorted, 0.5).toFixed(1);
+        merged.crtChangeBand = [+percentile(sorted, 0.25).toFixed(1), +percentile(sorted, 0.75).toFixed(1)];
+      }
+      return merged;
+    });
+  }, [baselineData, cases, patientCase]);
 
   const totalEncounters =
     (patientCase?.observations.length ?? 0) + (patientCase?.procedures.length ?? 0);
@@ -339,60 +541,78 @@ export function useCaseData(
     [iopObs],
   );
 
-  // FALL-011: cohort median + IQR reference series, aligned to the patient's dates.
+  // FALL-011 + J3c: cohort median + IQR reference series, aligned to the
+  // patient's RELATIVE-time axis (months since the patient's first visit).
   //
   // WR-04: the index/current patient is EXCLUDED from the cohort buckets so the
   //   band is a true peer comparison (a patient is never compared against a band
   //   that includes itself).
-  // WR-05: cohort values are bucketed by MONTH ('YYYY-MM'), not exact day. Clinical
-  //   visit dates rarely collide to the day across patients, so exact-date keying
-  //   produced an empty overlay on realistic data. Each patient date now resolves
-  //   its reference from the matching month bin, so the band/median render across
-  //   the chart's date x-domain whenever the cohort has measurements in the
-  //   patient's month span — even with no exact-day matches.
+  // J3c (relative aggregation): each peer is bucketed by months since THAT peer's
+  //   OWN baseline (its earliest visus/crt date) — NOT by absolute calendar month.
+  //   This is the clinically-correct comparison the tester asked for: peers are
+  //   aligned to their own start-of-treatment, then compared at the same elapsed
+  //   time. Buckets are integer months (round of the relative offset) so visits
+  //   that fall in the same month-since-baseline aggregate together; each index
+  //   patient row resolves its reference from the bucket matching round(relMonths).
   const cohortReference = useMemo((): CohortReferencePoint[] => {
     if (!combinedData.length || !cases.length) return [];
 
-    // Build per-month buckets from the PEER cohort only (exclude the current case).
-    const visusByMonth = new Map<string, number[]>();
-    const crtByMonth = new Map<string, number[]>();
+    // Build per-relative-month buckets from the PEER cohort only.
+    const visusByRelMonth = new Map<number, number[]>();
+    const crtByRelMonth = new Map<number, number[]>();
 
     for (const c of cases) {
       if (patientCase && c.id === patientCase.id) continue; // WR-04: exclude index patient
-      for (const o of getObservationsByCode(c.observations, LOINC_VISUS)) {
-        const m = o.effectiveDateTime?.substring(0, 7) ?? ''; // YYYY-MM
-        if (!m) continue;
-        const val = o.valueQuantity?.value;
-        if (val == null) continue;
-        const bucket = visusByMonth.get(m) ?? [];
-        bucket.push(val);
-        visusByMonth.set(m, bucket);
+      const peerVisus = getObservationsByCode(c.observations, LOINC_VISUS);
+      const peerCrt = getObservationsByCode(c.observations, LOINC_CRT);
+      // This peer's own baseline = earliest of its visus/crt observation dates.
+      const peerDates: string[] = [];
+      for (const o of peerVisus) {
+        const d = o.effectiveDateTime?.substring(0, 10);
+        if (d) peerDates.push(d);
       }
-      for (const o of getObservationsByCode(c.observations, LOINC_CRT)) {
-        const m = o.effectiveDateTime?.substring(0, 7) ?? ''; // YYYY-MM
-        if (!m) continue;
+      for (const o of peerCrt) {
+        const d = o.effectiveDateTime?.substring(0, 10);
+        if (d) peerDates.push(d);
+      }
+      if (!peerDates.length) continue;
+      const peerBaseline = peerDates.reduce((min, d) => (d < min ? d : min), peerDates[0]);
+
+      for (const o of peerVisus) {
+        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
+        if (!d) continue;
         const val = o.valueQuantity?.value;
         if (val == null) continue;
-        const bucket = crtByMonth.get(m) ?? [];
-        bucket.push(val);
-        crtByMonth.set(m, bucket);
+        const bucket = Math.round(monthsBetween(peerBaseline, d));
+        const arr = visusByRelMonth.get(bucket) ?? [];
+        arr.push(val);
+        visusByRelMonth.set(bucket, arr);
+      }
+      for (const o of peerCrt) {
+        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
+        if (!d) continue;
+        const val = o.valueQuantity?.value;
+        if (val == null) continue;
+        const bucket = Math.round(monthsBetween(peerBaseline, d));
+        const arr = crtByRelMonth.get(bucket) ?? [];
+        arr.push(val);
+        crtByRelMonth.set(bucket, arr);
       }
     }
 
     return combinedData
       .map((point): CohortReferencePoint | null => {
-        const d = point.date;
-        const month = d.substring(0, 7); // YYYY-MM
-        const visusVals = visusByMonth.get(month);
-        const crtVals = crtByMonth.get(month);
+        const bucket = Math.round(point.relMonths);
+        const visusVals = visusByRelMonth.get(bucket);
+        const crtVals = crtByRelMonth.get(bucket);
 
         const hasVisus = visusVals && visusVals.length > 0;
         const hasCrt = crtVals && crtVals.length > 0;
         if (!hasVisus && !hasCrt) return null;
 
-        // Emit the reference keyed by the patient's exact date so the overlay
-        // series share the chart's category x-domain (dataKey="date").
-        const ref: CohortReferencePoint = { date: d };
+        // Emit the reference keyed by the patient's relative month so the overlay
+        // series share the chart's numeric x-domain (dataKey="relMonths").
+        const ref: CohortReferencePoint = { date: point.date, relMonths: point.relMonths };
 
         if (hasVisus) {
           const sorted = [...visusVals].sort((a, b) => a - b);
@@ -463,8 +683,13 @@ export function useCaseData(
     combinedData,
     visusDistribution,
     crtDistribution,
+    visusDistributionWithCohort,
+    crtDistributionWithCohort,
     visusCrtScatter,
+    cohortVisusCrtScatter,
     baselineData,
+    baselineChangeWithReference,
+    toRelMonths,
     totalEncounters,
     hasCriticalValues,
     criticalCrtCount,
