@@ -26,9 +26,21 @@ function monthsBetween(baseline: string, date: string): number {
   return Math.round((days / DAYS_PER_MONTH) * 10) / 10;
 }
 
+/** v1.18 WS-B M6: an ISO date (YYYY-MM-DD) as epoch milliseconds, for the linear
+ *  time X-axis. Returns 0 for an empty/invalid date so a row never carries NaN. */
+function dateToMs(date: string): number {
+  if (!date) return 0;
+  const ms = new Date(date).getTime();
+  return Number.isNaN(ms) ? 0 : ms;
+}
+
 /** A single row of the Visus/CRT trend chart's merged data array. */
 export interface CombinedDataPoint {
   date: string;
+  /** v1.18 WS-B M6: the row's calendar date as epoch milliseconds. The date axis
+   *  is now a TIME/linear axis (type="number", scale="time") keyed on this so tick
+   *  spacing is proportional to elapsed time, not to the row index. */
+  dateMs: number;
   /** J3c: months since the patient's first observation (relative-time X axis).
    *  The chart keys its X dimension on this; `date` is retained for the tooltip. */
   relMonths: number;
@@ -67,6 +79,8 @@ export interface CohortReferencePoint {
 /** A row of the Change-from-Baseline chart (J3c relative axis + J3d overlay). */
 export interface BaselineChangePoint {
   date: string;
+  /** v1.18 WS-B M6: calendar date as epoch ms for the linear time axis. */
+  dateMs: number;
   relMonths: number;
   visusChange?: number;
   crtChange?: number;
@@ -82,6 +96,12 @@ export interface BaselineChangePoint {
  *  median + IQR band aggregated by relative time since each peer's own baseline. */
 export interface IopDataPoint {
   date: string;
+  /** v1.18 WS-B M6: calendar date as epoch ms for the linear time axis. */
+  dateMs: number;
+  /** v1.18 WS-B M7: months since the patient's first IOP measurement, so the IOD
+   *  chart can switch to the relative "Monate seit Erstvisite" axis with the
+   *  cohort-reference toggle, exactly like Visus/CRT (L5). */
+  relMonths: number;
   iop: number;
   /** K3b: cohort IOP median at this row's relative-month bucket. */
   iopMedian?: number;
@@ -240,7 +260,7 @@ export function useCaseData(
     const ensure = (d: string): CombinedDataPoint => {
       const existing = dateMap.get(d);
       if (existing) return existing;
-      const entry: CombinedDataPoint = { date: d, relMonths: monthsBetween(baselineDate, d) };
+      const entry: CombinedDataPoint = { date: d, dateMs: dateToMs(d), relMonths: monthsBetween(baselineDate, d) };
       dateMap.set(d, entry);
       return entry;
     };
@@ -400,7 +420,7 @@ export function useCaseData(
     const ensure = (d: string): BaselineChangePoint => {
       const existing = dateMap.get(d);
       if (existing) return existing;
-      const entry: BaselineChangePoint = { date: d, relMonths: monthsBetween(baselineDate, d) };
+      const entry: BaselineChangePoint = { date: d, dateMs: dateToMs(d), relMonths: monthsBetween(baselineDate, d) };
       dateMap.set(d, entry);
       return entry;
     };
@@ -549,14 +569,22 @@ export function useCaseData(
     return Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
   }, [visusObs, crtObs, injections, octImages, t]);
 
-  const iopData = useMemo(
-    () =>
-      iopObs.map((o) => ({
-        date: o.effectiveDateTime?.substring(0, 10) ?? '',
+  const iopData = useMemo((): IopDataPoint[] => {
+    // M7: relMonths is computed against the patient's earliest IOP date so the
+    // IOD chart can switch to the relative axis (months since first visit) under
+    // the cohort-reference toggle, exactly like Visus/CRT (L5). iopObs is
+    // date-sorted by getObservationsByCode, so [0] is the earliest measurement.
+    const iopBaseline = iopObs[0]?.effectiveDateTime?.substring(0, 10) ?? '';
+    return iopObs.map((o) => {
+      const date = o.effectiveDateTime?.substring(0, 10) ?? '';
+      return {
+        date,
+        dateMs: dateToMs(date),
+        relMonths: monthsBetween(iopBaseline, date),
         iop: o.valueQuantity?.value ?? 0,
-      })),
-    [iopObs],
-  );
+      };
+    });
+  }, [iopObs]);
 
   // K3b: cohort IOP reference (median + IQR), aggregated by months-since-each-
   // peer's-own-baseline (same relative-time alignment + index-exclusion as
