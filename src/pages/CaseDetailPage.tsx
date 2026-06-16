@@ -83,7 +83,7 @@ export default function CaseDetailPage() {
     criticalIopCount,
     octImages,
     encounterTimeline,
-    iopData,
+    iopDataWithReference,
   } = useCaseData(patientCase, cases, locale, t);
 
   const handleOctTimelineClick = (octIdx: number) => {
@@ -312,7 +312,8 @@ export default function CaseDetailPage() {
       {/* Clinical parameters row: IOP + Refraction + HbA1c */}
       <ClinicalParametersRow
         iopObs={iopObs}
-        iopData={iopData}
+        iopData={iopDataWithReference}
+        showCohortReference={showCohortReference}
         refractionObs={refractionObs}
         hba1cObs={hba1cObs}
         diabetesCond={diabetesCond}

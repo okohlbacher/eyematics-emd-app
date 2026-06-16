@@ -78,6 +78,17 @@ export interface BaselineChangePoint {
   crtChangeBand?: [number, number];
 }
 
+/** A row of the IOP (Augeninnendruck) chart. K3b: optionally carries the cohort
+ *  median + IQR band aggregated by relative time since each peer's own baseline. */
+export interface IopDataPoint {
+  date: string;
+  iop: number;
+  /** K3b: cohort IOP median at this row's relative-month bucket. */
+  iopMedian?: number;
+  /** K3b: cohort IOP IQR [p25, p75] at this row's relative-month bucket. */
+  iopBand?: [number, number];
+}
+
 /** Nearest-rank percentile (0-based fraction, 0 = min, 1 = max). */
 function percentile(sorted: number[], p: number): number {
   if (sorted.length === 0) return 0;
@@ -539,6 +550,57 @@ export function useCaseData(
     [iopObs],
   );
 
+  // K3b: cohort IOP reference (median + IQR), aggregated by months-since-each-
+  // peer's-own-baseline (same relative-time alignment + index-exclusion as
+  // cohortReference, WR-04) and mapped back onto the index patient's IOP dates
+  // (calendar-date axis per K3c). Folded onto each iopData row as iopMedian +
+  // iopBand ([p25, p75]) so the IOP chart reads them as extra dataKeys.
+  const iopDataWithReference = useMemo((): IopDataPoint[] => {
+    if (!iopData.length || !cases.length) return iopData;
+
+    // The index patient's baseline for bucketing its own rows = earliest IOP date.
+    const indexBaseline = iopData
+      .map((d) => d.date)
+      .filter(Boolean)
+      .reduce((min, d) => (!min || d < min ? d : min), '');
+
+    const iopByRelMonth = new Map<number, number[]>();
+    for (const c of cases) {
+      if (patientCase && c.id === patientCase.id) continue; // WR-04: exclude index
+      const peerIop = getObservationsByCode(c.observations, LOINC_IOP);
+      const peerDates: string[] = [];
+      for (const o of peerIop) {
+        const d = o.effectiveDateTime?.substring(0, 10);
+        if (d) peerDates.push(d);
+      }
+      if (!peerDates.length) continue;
+      const peerBaseline = peerDates.reduce((min, d) => (d < min ? d : min), peerDates[0]);
+      for (const o of peerIop) {
+        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
+        const val = o.valueQuantity?.value;
+        if (!d || val == null) continue;
+        const bucket = Math.round(monthsBetween(peerBaseline, d));
+        const arr = iopByRelMonth.get(bucket) ?? [];
+        arr.push(val);
+        iopByRelMonth.set(bucket, arr);
+      }
+    }
+
+    if (!iopByRelMonth.size) return iopData;
+
+    return iopData.map((row) => {
+      const bucket = Math.round(monthsBetween(indexBaseline, row.date));
+      const vals = iopByRelMonth.get(bucket);
+      if (!vals || !vals.length) return row;
+      const sorted = [...vals].sort((a, b) => a - b);
+      return {
+        ...row,
+        iopMedian: +percentile(sorted, 0.5).toFixed(1),
+        iopBand: [+percentile(sorted, 0.25).toFixed(1), +percentile(sorted, 0.75).toFixed(1)] as [number, number],
+      };
+    });
+  }, [iopData, cases, patientCase]);
+
   // FALL-011 + J3c: cohort median + IQR reference series, aligned to the
   // patient's RELATIVE-time axis (months since the patient's first visit).
   //
@@ -695,5 +757,6 @@ export function useCaseData(
     octImages,
     encounterTimeline,
     iopData,
+    iopDataWithReference,
   };
 }

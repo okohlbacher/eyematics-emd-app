@@ -379,6 +379,50 @@ describe('useCaseData — J3d cohort overlays on the other plots', () => {
     expect(totalPct).toBeLessThanOrEqual(101);
   });
 
+  it('K3b: adds cohort IOP median + IQR aligned by relative month (index excluded)', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+    const LOINC_IOP = '56844-4';
+    // Index: IOP baseline + a ~3-month follow-up.
+    const patientCase = makeCase('C1', [
+      makeObs(LOINC_IOP, '2024-01-01', 16),
+      makeObs(LOINC_IOP, '2024-04-01', 18),
+    ]);
+    // Peers: each with a baseline + ~3-month follow-up at different calendar dates;
+    // they align onto the index patient's relative axis (month 0 and month ~3).
+    const peer2 = makeCase('C2', [
+      makeObs(LOINC_IOP, '2023-05-01', 14),
+      makeObs(LOINC_IOP, '2023-08-01', 20),
+    ]);
+    const peer3 = makeCase('C3', [
+      makeObs(LOINC_IOP, '2022-09-01', 12),
+      makeObs(LOINC_IOP, '2022-12-01', 22),
+    ]);
+    const cases = [patientCase, peer2, peer3];
+    const { result } = renderHook(() => useCaseData(patientCase, cases, 'de', t));
+    const rows = result.current.iopDataWithReference;
+    const base = rows.find((r) => r.date === '2024-01-01')!;
+    const follow = rows.find((r) => r.date === '2024-04-01')!;
+    expect(base).not.toBeUndefined();
+    expect(follow).not.toBeUndefined();
+    // Reference present on the patient's IOP date rows.
+    expect(typeof base.iopMedian).toBe('number');
+    expect(Array.isArray(base.iopBand)).toBe(true);
+    // Index value (16/18) excluded — peer-only median at month 0 is median(14,12)≈13.
+    expect(base.iopMedian).not.toBe(16);
+    expect(base.iopBand![0]).toBeLessThanOrEqual(base.iopMedian!);
+    expect(base.iopBand![1]).toBeGreaterThanOrEqual(base.iopMedian!);
+  });
+
+  it('K3b: no IOP reference when there are no peers (lone index, WR-04)', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+    const LOINC_IOP = '56844-4';
+    const patientCase = makeCase('C1', [makeObs(LOINC_IOP, '2024-01-01', 16)]);
+    const { result } = renderHook(() => useCaseData(patientCase, [patientCase], 'de', t));
+    const rows = result.current.iopDataWithReference;
+    expect(rows[0].iopMedian).toBeUndefined();
+    expect(rows[0].iopBand).toBeUndefined();
+  });
+
   it('builds a cohort Visus-vs-CRT cloud from peer same-day pairs (index excluded)', async () => {
     const { useCaseData } = await import('../src/hooks/useCaseData');
     const patientCase = makeCase('C1', [

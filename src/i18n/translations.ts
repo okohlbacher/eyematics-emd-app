@@ -1165,6 +1165,9 @@ const translations = {
 
   // ---- J3d: cohort overlay on the change-from-baseline + distribution + scatter plots ----
   cohortReferenceMedianChange: { de: 'Kohorten-Median \u00c4nderung', en: 'Cohort median change' },
+  // K3b: IOP (Augeninnendruck) cohort overlay legend entries.
+  cohortReferenceMedianIop: { de: 'Kohorten-Median IOD', en: 'Cohort median IOP' },
+  cohortReferenceBandIop: { de: 'Kohorten-IQR IOD (25.\u201375. Perz.)', en: 'Cohort IQR IOP (25th\u201375th pct)' },
   cohortReferenceDistribution: { de: 'Kohorten-Verteilung', en: 'Cohort distribution' },
   cohortReferenceScatter: { de: 'Kohorte', en: 'Cohort' },
 } as const;
