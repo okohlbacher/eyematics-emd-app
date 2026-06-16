@@ -1152,6 +1152,9 @@ const translations = {
   cohortReferenceMedianVisus: { de: 'Kohorten-Median Visus', en: 'Cohort median visual acuity' },
   cohortReferenceMedianCrt: { de: 'Kohorten-Median CRT', en: 'Cohort median CRT' },
   cohortReferenceBand: { de: 'Kohorten-IQR (25.\u201375. Perzentil)', en: 'Cohort IQR (25th\u201375th percentile)' },
+  // K3a: distinct legend swatches so each dual-axis IQR band is explained.
+  cohortReferenceBandVisus: { de: 'Kohorten-IQR Visus (25.\u201375. Perz.)', en: 'Cohort IQR visual acuity (25th\u201375th pct)' },
+  cohortReferenceBandCrt: { de: 'Kohorten-IQR CRT (25.\u201375. Perz.)', en: 'Cohort IQR CRT (25th\u201375th pct)' },
 
   // ---- J3c: relative-time axis (months since the patient's first visit) ----
   relativeTimeAxisLabel: { de: 'Monate seit Erstvisite', en: 'Months since first visit' },

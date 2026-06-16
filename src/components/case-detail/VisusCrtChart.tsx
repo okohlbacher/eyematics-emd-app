@@ -251,16 +251,16 @@ export default function VisusCrtChart({
               patient lines so the patient series stays on top. */}
           {hasReference && (
             <>
-              {/* Visus IQR range band — single legend entry labels the shaded
-                  p25–p75 band (I3b). The CRT band reuses the same meaning, so it
-                  stays out of the legend to avoid a duplicate IQR entry. */}
+              {/* Visus IQR range band — its own rect legend swatch (J3a). K3a:
+                  the swatch is now Visus-specific so the two dual-axis IQR bands
+                  are each explained in the legend. */}
               <Area
                 yAxisId="visus"
                 dataKey="visusBand"
                 stroke="none"
                 fill="#10b981"
                 fillOpacity={0.15}
-                name={t('cohortReferenceBand')}
+                name={t('cohortReferenceBandVisus')}
                 /* J3a: render the IQR legend entry as a filled rectangle (shaded
                    range swatch), NOT the default line icon — the tester read the
                    line swatch as "an additional line" rather than a shaded band. */
@@ -268,14 +268,16 @@ export default function VisusCrtChart({
                 connectNulls
                 isAnimationActive={false}
               />
-              {/* CRT IQR range band */}
+              {/* CRT IQR range band — K3a: previously legendType="none" left the
+                  CRT band unexplained. Now it carries its own rect legend swatch. */}
               <Area
                 yAxisId="crt"
                 dataKey="crtBand"
                 stroke="none"
                 fill="#8b5cf6"
                 fillOpacity={0.15}
-                legendType="none"
+                name={t('cohortReferenceBandCrt')}
+                legendType="rect"
                 connectNulls
                 isAnimationActive={false}
               />
