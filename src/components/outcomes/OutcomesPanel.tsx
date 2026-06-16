@@ -273,6 +273,14 @@ export default function OutcomesPanel({
     });
   }, [isCrossMode, cohortSeries, panel, layers, scatterRenderPoints, seriesColor, t, perPatientSeries]);
 
+  // M1 (review LOW): a trace-set rebuild (layer toggle, eye/metric/data change)
+  // makes PlotlyChart purge+redraw, resetting all line widths to natural — so any
+  // stored emphasis index is now stale and points at a possibly-different trace.
+  // Clear it on rebuild so a later plotly_unhover can't restyle the wrong trace.
+  useEffect(() => {
+    emphasizedRef.current = null;
+  }, [traces]);
+
   const [yMin, yMax] = yDomain(yMetric, panel.medianGrid, metric);
 
   const layout = useMemo<PlotlyLayout>(

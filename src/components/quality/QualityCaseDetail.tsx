@@ -521,7 +521,7 @@ export default function QualityCaseDetail({
                   const highlight = verdict === 'anomalous' || verdict === 'missing';
                   return (
                     <tr key={row.paramKey} className={highlight ? 'bg-amber-50/60 dark:bg-amber-900/10' : ''}>
-                      <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 align-top">{row.label}</td>
+                      <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 align-top break-words">{row.label}</td>
                       <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 align-top">{row.date || '—'}</td>
                       <td className={`px-3 py-2 border-t border-gray-100 dark:border-gray-700 text-right font-mono align-top ${verdict === 'resolved' ? 'line-through text-gray-400' : ''}`}>
                         {row.value || '—'}

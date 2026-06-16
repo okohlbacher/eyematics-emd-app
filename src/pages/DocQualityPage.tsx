@@ -20,7 +20,6 @@ import { datedFilename, downloadCsv } from '../utils/download';
 import {
   type CenterMetrics,
   computeMetrics,
-  countRawPatientsInWindow,
   filterCasesByTimeRange,
   isCustomTimeRange,
   type TimeRange,
@@ -93,18 +92,15 @@ export default function DocQualityPage() {
   // aggregate card. NOT windowed (full registration). Derived from `bundles`,
   // keyed by Patient.meta.source = centerId (same mapping as the cases).
   const rawByCenter = useMemo(() => countRawPatientsByCenter(bundles), [bundles]);
-  const rawTotalAll = useMemo(() => countRawPatients(bundles), [bundles]);
-
-  // M14 (v1.18): the Vollzähligkeit denominator must follow the time-range
-  // filter. With no window ('all') it stays the full registered total
-  // (countRawPatients → landing parity, I5 invariant). With a window active it
-  // restricts to the registered patients with ≥1 observation in the window, so
-  // the absolute count and the completeness % reflect the chosen range instead
-  // of staying pinned at the full dataset. 0-safe: null → fall back to all.
-  const rawTotal = useMemo(() => {
-    const windowed = countRawPatientsInWindow(bundles, timeRange);
-    return windowed ?? rawTotalAll;
-  }, [bundles, timeRange, rawTotalAll]);
+  // M14 (v1.18, round-6 decision): the Vollzähligkeit DENOMINATOR is always the full
+  // registered total (incl. stubs), NOT windowed. The tester's complaint was that the
+  // displayed *count* didn't restrict to the range — that's the NUMERATOR
+  // (distinctPatientCount, below), which does follow the window. Windowing the
+  // denominator too would shrink it in lockstep and make the % jump toward ~100% for
+  // any window (review H1), contradicting the "of all registered patients" meaning.
+  // Keeping the denominator fixed makes the % a coverage reading that DROPS as the
+  // window narrows (e.g. 14% all-time → ~4% for one year), which is the intended sense.
+  const rawTotal = useMemo(() => countRawPatients(bundles), [bundles]);
 
   const centerMetrics = useMemo(
     () => buildCenterMetrics(casesByCenter, timeRange, rawByCenter),
@@ -128,11 +124,11 @@ export default function DocQualityPage() {
     return new Set(windowCases.map((c) => c.pseudonym)).size;
   }, [cases, timeRange]);
 
-  // I5 / M14: aggregate Vollzähligkeit = distinct patients active in window
-  // (numerator) / registered total (denominator). The denominator is windowed
-  // too (M14, v1.18): with no window it is the full registered total incl. stubs
-  // (landing parity); with a window active it restricts to patients registered
-  // in that window so both the count and the % track the filter. When
+  // I5 / M14 (round-6): aggregate Vollzähligkeit = distinct patients active in the
+  // window (numerator, follows the filter) / full registered total (denominator,
+  // NOT windowed — incl. stubs, landing parity). Narrowing the window lowers the
+  // numerator only, so the % reads as coverage of the registered population in the
+  // period and DROPS as the range tightens (rather than jumping to ~100%). When
   // timeRange === 'all' this matches the landing-page definition exactly
   // (distinctPatientCount === cases.length, rawTotal === countRawPatients).
   // Computed directly (NOT averaged over centres) so it stays consistent with

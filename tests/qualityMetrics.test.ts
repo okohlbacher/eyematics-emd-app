@@ -1,9 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { FhirBundle, PatientCase } from '../src/types/fhir';
+import type { PatientCase } from '../src/types/fhir';
 import {
   computeMetrics,
-  countRawPatientsInWindow,
   cutoffDate,
   filterCasesByTimeRange,
   isCustomTimeRange,
@@ -349,87 +348,5 @@ describe('QUALITY_CATEGORY_COLORS', () => {
     const values = Object.values(QUALITY_CATEGORY_COLORS);
     const unique = new Set(values);
     expect(unique.size).toBe(values.length);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// M14 (v1.18) — Vollzähligkeit denominator follows the time-range filter
-// ---------------------------------------------------------------------------
-
-/** Build a minimal bundle with `patientCount` Patient stubs and one Observation
- *  per supplied date (subject = Patient/p<i>), so the windowed denominator can
- *  be exercised against real bundle resources. */
-function makeBundle(patientIds: string[], obs: Array<{ patientId: string; date: string }>): FhirBundle {
-  return {
-    resourceType: 'Bundle',
-    type: 'collection',
-    entry: [
-      ...patientIds.map((id) => ({ resource: { resourceType: 'Patient', id } })),
-      ...obs.map((o, i) => ({
-        resource: {
-          resourceType: 'Observation',
-          id: `obs-${i}`,
-          status: 'final',
-          subject: { reference: `Patient/${o.patientId}` },
-          code: { coding: [{ system: 'http://loinc.org', code: 'LP267955-5' }] },
-          effectiveDateTime: o.date,
-        },
-      })),
-    ],
-  } as unknown as FhirBundle;
-}
-
-describe('M14 — countRawPatientsInWindow restricts the denominator to the range', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(FROZEN_NOW);
-  });
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it('range="all" returns null (caller falls back to the full registered total)', () => {
-    const bundle = makeBundle(['p1', 'p2', 'p3'], [
-      { patientId: 'p1', date: '2026-05-01T00:00:00Z' },
-    ]);
-    expect(countRawPatientsInWindow([bundle], 'all')).toBeNull();
-  });
-
-  it('windowed range counts only patients with an observation inside the window', () => {
-    // p1 active recently (inside 3m of 2026-06-01), p2 active long ago (outside),
-    // p3 a pure stub (no observations). Full registered total = 3, but the 3m
-    // window must count ONLY p1 — NOT the full dataset (the M14 bug).
-    const bundle = makeBundle(['p1', 'p2', 'p3'], [
-      { patientId: 'p1', date: '2026-05-01T00:00:00Z' },
-      { patientId: 'p2', date: '2018-01-01T00:00:00Z' },
-    ]);
-    expect(countRawPatientsInWindow([bundle], '3m')).toBe(1);
-    // The all-time total (what the bug pinned to) would be 3 — assert we differ.
-    expect(countRawPatientsInWindow([bundle], '3m')).not.toBe(3);
-  });
-
-  it('counts each active patient once even with multiple in-window observations', () => {
-    const bundle = makeBundle(['p1', 'p2'], [
-      { patientId: 'p1', date: '2026-04-01T00:00:00Z' },
-      { patientId: 'p1', date: '2026-05-01T00:00:00Z' },
-      { patientId: 'p2', date: '2026-05-15T00:00:00Z' },
-    ]);
-    expect(countRawPatientsInWindow([bundle], '3m')).toBe(2);
-  });
-
-  it('custom range clips to both bounds', () => {
-    const bundle = makeBundle(['p1', 'p2', 'p3'], [
-      { patientId: 'p1', date: '2025-12-15T00:00:00Z' }, // before from
-      { patientId: 'p2', date: '2026-02-01T00:00:00Z' }, // inside
-      { patientId: 'p3', date: '2026-05-01T00:00:00Z' }, // after to
-    ]);
-    expect(countRawPatientsInWindow([bundle], { from: '2026-01-01', to: '2026-03-01' })).toBe(1);
-  });
-
-  it('0-safe: no in-window observations yields 0 (not the full total)', () => {
-    const bundle = makeBundle(['p1', 'p2'], [
-      { patientId: 'p1', date: '2010-01-01T00:00:00Z' },
-    ]);
-    expect(countRawPatientsInWindow([bundle], '3m')).toBe(0);
   });
 });

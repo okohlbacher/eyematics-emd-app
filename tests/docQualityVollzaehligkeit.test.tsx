@@ -4,8 +4,10 @@
  *
  * Covers the label reverts (Vollzähligkeit / Vollständigkeit) and the
  * presence + distinctness of definition tooltips on all four metric cards.
- * The windowed Vollzähligkeit computation itself is covered in
- * qualityMetrics.test.ts (the no-collapse assertion).
+ * Per the M14 round-6 decision the Vollzähligkeit % keeps the FULL registered
+ * total as its denominator (the count restricts to the window, the denominator
+ * does not), so the "present / total registered" tooltip wording below stays
+ * accurate.
  */
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';

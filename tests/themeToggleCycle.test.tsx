@@ -1,72 +1,55 @@
 // @vitest-environment jsdom
 /**
- * M11 (v1.18): the theme cycle must never produce a step whose appearance
- * equals the current effective appearance — a click is never a visual no-op.
- *
- * From System-resolving-to-light the next step goes straight to Dark (skipping
- * the redundant explicit Light); from System-resolving-to-dark it goes straight
- * to Light. All three modes remain reachable via the appropriate states.
+ * M11 (v1.18, round-6 decision): the theme toggle uses the CANONICAL cycle
+ * Light → Dark → System → Light. Chosen over a "skip-the-redundant-step" rule
+ * because the latter stranded a mode (System became unreachable under a dark OS).
+ * Every mode must be reachable by clicking from any state, under either OS
+ * resolution. One adjacency per OS is a visual no-op (System next to the matching
+ * explicit mode); that is the accepted trade-off for guaranteed reachability.
  */
 import { describe, expect, it } from 'vitest';
 
 import { nextTheme } from '../src/components/themeCycle';
 import type { Theme } from '../src/context/ThemeContext';
 
-/** Appearance a mode renders as, mirroring the toggle's own resolution. */
-function appearance(theme: Theme, systemTheme: 'light' | 'dark'): 'light' | 'dark' {
-  return theme === 'system' ? systemTheme : theme;
-}
-
-describe('M11 — nextTheme never produces a visually identical step', () => {
+describe('M11 — canonical theme cycle (all modes reachable)', () => {
   const modes: Theme[] = ['light', 'dark', 'system'];
   const resolutions: Array<'light' | 'dark'> = ['light', 'dark'];
 
-  it('the next step always changes the effective appearance', () => {
+  it('cycles Light → Dark → System → Light', () => {
+    expect(nextTheme('light')).toBe('dark');
+    expect(nextTheme('dark')).toBe('system');
+    expect(nextTheme('system')).toBe('light');
+  });
+
+  it('is independent of the OS resolution (canonical order)', () => {
     for (const sys of resolutions) {
-      for (const theme of modes) {
-        const next = nextTheme(theme, sys);
-        expect(appearance(next, sys)).not.toBe(appearance(theme, sys));
-      }
+      expect(nextTheme('light', sys)).toBe('dark');
+      expect(nextTheme('dark', sys)).toBe('system');
+      expect(nextTheme('system', sys)).toBe('light');
     }
   });
 
-  it('System resolving to light skips the redundant Light step → goes to Dark', () => {
-    expect(nextTheme('system', 'light')).toBe('dark');
-  });
-
-  it('System resolving to dark skips the redundant Dark step → goes to Light', () => {
-    expect(nextTheme('system', 'dark')).toBe('light');
-  });
-
-  it('Light always advances to Dark (different appearance under either OS resolution)', () => {
-    expect(nextTheme('light', 'light')).toBe('dark');
-    expect(nextTheme('light', 'dark')).toBe('dark');
-  });
-
-  it('Dark advances to System when System would look light, else to Light', () => {
-    // OS light: System looks light ≠ dark → reachable as the next step.
-    expect(nextTheme('dark', 'light')).toBe('system');
-    // OS dark: System would look dark (no-op) → skip to explicit Light.
-    expect(nextTheme('dark', 'dark')).toBe('light');
-  });
-
-  it('every mode is the next target from some (theme, OS) combination', () => {
-    const targets = new Set<Theme>();
+  it('reaches ALL three modes by repeated clicking from EVERY start, under EITHER OS', () => {
     for (const sys of resolutions) {
-      for (const theme of modes) {
-        targets.add(nextTheme(theme, sys));
+      for (const start of modes) {
+        const seen = new Set<Theme>();
+        let cur = start;
+        for (let i = 0; i < 3; i++) {
+          cur = nextTheme(cur, sys);
+          seen.add(cur);
+        }
+        // Three clicks from any start must visit all three modes (no trap state).
+        expect(seen.has('light')).toBe(true);
+        expect(seen.has('dark')).toBe(true);
+        expect(seen.has('system')).toBe(true);
       }
     }
-    expect(targets.has('light')).toBe(true);
-    expect(targets.has('dark')).toBe(true);
-    expect(targets.has('system')).toBe(true);
   });
 
   it('never returns the same mode it was given', () => {
-    for (const sys of resolutions) {
-      for (const theme of modes) {
-        expect(nextTheme(theme, sys)).not.toBe(theme);
-      }
+    for (const theme of modes) {
+      expect(nextTheme(theme)).not.toBe(theme);
     }
   });
 });
