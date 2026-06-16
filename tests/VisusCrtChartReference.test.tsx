@@ -650,17 +650,17 @@ describe('VisusCrtChart — FALL-011 reference overlay (A3 v2 merged single arra
     expect(lines.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('K3c: keys the X axis on the calendar date (category axis, not relMonths)', () => {
+  it('K3c/M6: keys the X axis on the linear calendar-time axis (dateMs, numeric) when the overlay is off', () => {
     const { container } = render(
       <VisusCrtChart {...baseChartProps} combinedData={mergedData} />,
     );
     const xAxis = container.querySelector('[data-testid="recharts-xaxis"]');
-    expect(xAxis?.getAttribute('data-data-key')).toBe('date');
-    // Category (default) axis — not the numeric relMonths axis.
-    expect(xAxis?.getAttribute('data-type')).not.toBe('number');
+    // M6: the calendar axis is a linear TIME axis keyed on epoch-ms.
+    expect(xAxis?.getAttribute('data-data-key')).toBe('dateMs');
+    expect(xAxis?.getAttribute('data-type')).toBe('number');
   });
 
-  it('K3c: IVI markers + the highlight are date-keyed (not relative-month)', () => {
+  it('K3c/M6: IVI markers + the highlight resolve to epoch-ms on the linear calendar axis', () => {
     const injections = [
       { resourceType: 'Procedure', id: 'ivi-1', status: 'completed', code: { coding: [] }, performedDateTime: '2024-01-01T09:00:00Z' },
     ] as any;
@@ -674,9 +674,11 @@ describe('VisusCrtChart — FALL-011 reference overlay (A3 v2 merged single arra
     );
     const reflines = Array.from(container.querySelectorAll('[data-testid="recharts-refline"]'));
     const xs = reflines.map((el) => el.getAttribute('data-x'));
-    // IVI marker keyed to its calendar date; highlight keyed to its calendar date.
-    expect(xs).toContain('2024-01-01');
-    expect(xs).toContain('2024-02-01');
+    // M6: markers/highlight are keyed to epoch-ms (resolved from the row's dateMs,
+    // or parsed from the ISO date when the fixture omits it) — NOT the ISO string.
+    expect(xs).toContain(String(new Date('2024-01-01').getTime()));
+    expect(xs).toContain(String(new Date('2024-02-01').getTime()));
+    expect(xs).not.toContain('2024-01-01');
   });
 
   it('K3d: a highlighted injection emphasises its marker and fires onInjectionClick', () => {
@@ -694,7 +696,8 @@ describe('VisusCrtChart — FALL-011 reference overlay (A3 v2 merged single arra
       />,
     );
     const reflines = Array.from(container.querySelectorAll('[data-testid="recharts-refline"]'));
-    const iviMarker = reflines.find((el) => el.getAttribute('data-x') === '2024-01-01');
+    // M6: the marker's x is the injection date as epoch-ms.
+    const iviMarker = reflines.find((el) => el.getAttribute('data-x') === String(new Date('2024-01-01').getTime()));
     expect(iviMarker).not.toBeUndefined();
   });
 });
