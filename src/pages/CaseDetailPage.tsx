@@ -1,6 +1,6 @@
 /** Case detail page — EMDREQ-FALL-001 to FALL-006 (single case analysis, clinical parameters, cohort comparison). */
 import { ArrowLeft, Syringe, TrendingDown, TrendingUp } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate,useParams } from 'react-router-dom';
 import {
   Area,
@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 
 import AnamnesisFindings from '../components/case-detail/AnamnesisFindings';
+import { caseChartColors } from '../components/case-detail/chartTheme';
 import ClinicalParametersRow from '../components/case-detail/ClinicalParametersRow';
 import DistributionCharts from '../components/case-detail/DistributionCharts';
 import MedicationCard from '../components/case-detail/MedicationCard';
@@ -25,6 +26,7 @@ import OctViewer from '../components/OctViewer';
 import { InfoTooltip } from '../components/primitives';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useThemeSafe } from '../context/ThemeContext';
 import { useCaseData } from '../hooks/useCaseData';
 import { SNOMED_EYE_RIGHT } from '../services/fhirLoader';
 import { getDateLocale } from '../utils/dateFormat';
@@ -34,6 +36,9 @@ export default function CaseDetailPage() {
   const { cases } = useData();
   const navigate = useNavigate();
   const { locale, t } = useLanguage();
+  // L11b: theme-aware chart colours for the inline baseline-change ComposedChart.
+  const { effectiveTheme } = useThemeSafe();
+  const chartColors = caseChartColors(effectiveTheme === 'dark');
 
   // Case view is audit-logged server-side via the /api/* requests
   const octViewerRef = useRef<HTMLDivElement>(null);
@@ -49,11 +54,15 @@ export default function CaseDetailPage() {
 
   // Review M1: highlight state is per-case — clear it when navigating to another
   // case so a highlighted visit/injection date from the previous patient can't leak
-  // onto (or render an orphan line in) the next one.
-  useEffect(() => {
+  // onto (or render an orphan line in) the next one. Reset during render on caseId
+  // change (React-recommended over setState-in-effect) so the cleared state is used
+  // in the same render and no cascading effect re-render occurs.
+  const [prevCaseId, setPrevCaseId] = useState(caseId);
+  if (caseId !== prevCaseId) {
+    setPrevCaseId(caseId);
     setHighlightDate(null);
     setHighlightInjectionDate(null);
-  }, [caseId]);
+  }
 
   const patientCase = cases.find((c) => c.id === caseId);
   const dateFmt = getDateLocale(locale);
@@ -143,6 +152,8 @@ export default function CaseDetailPage() {
         highlightDate={highlightDate}
         onHighlightDate={setHighlightDate}
         onOctTimelineClick={handleOctTimelineClick}
+        highlightInjectionDate={highlightInjectionDate}
+        onInjectionClick={toggleInjectionHighlight}
       />
 
       {/* Combined chart + injections row */}
@@ -249,33 +260,61 @@ export default function CaseDetailPage() {
             <InfoTooltip text={t('baselineChangePlotInfo')} />
           </h3>
           <ResponsiveContainer width="100%" height={200}>
-            {/* K3c (revert of v1.15-p5): calendar-date X axis. J3d: cohort
-                change-from-baseline overlay (median + IQR), aggregated by relative
-                time since each peer's own baseline but mapped onto the patient's
-                dates upstream; gated on the same "Kohorten-Referenz anzeigen"
-                toggle. ComposedChart so the IQR Areas render alongside the lines.
-                K-bl2: each metric's %-change is now anchored to its OWN baseline. */}
+            {/* L5: dynamic X axis tied to the cohort-overlay toggle — calendar-date
+                axis when off, relative "Monate seit Erstvisite" axis when on, so the
+                relative-time-aligned cohort change band shares the patient's axis.
+                J3d: cohort change-from-baseline overlay (median + IQR), aggregated
+                by relative time since each peer's own baseline. ComposedChart so the
+                IQR Areas render alongside the lines. K-bl2: each metric's %-change
+                is anchored to its OWN baseline. L11b: theme-aware chart colours. */}
             <ComposedChart data={baselineChangeWithReference}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={(d: string) => (d ? new Date(d).toLocaleDateString(dateFmt, { month: '2-digit', year: '2-digit' }) : '')}
-                tick={{ fontSize: 10 }}
-              />
-              <YAxis tick={{ fontSize: 10 }} label={{ value: '%', position: 'insideLeft', fontSize: 11 }} />
-              <Tooltip formatter={(v: unknown) => typeof v === 'number' ? `${v}%` : String(v)} />
-              <Legend />
-              <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
-              {/* FALL-003: synchronise event highlight on the calendar-date axis */}
-              {highlightDate && (
-                <ReferenceLine
-                  x={highlightDate}
-                  stroke="#f59e0b"
-                  strokeWidth={2}
-                  strokeDasharray="4 2"
-                  label={{ value: new Date(highlightDate).toLocaleDateString(dateFmt), position: 'top', fontSize: 10, fill: '#f59e0b' }}
+              <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+              {showCohortReference ? (
+                <XAxis
+                  dataKey="relMonths"
+                  type="number"
+                  domain={['dataMin', 'dataMax']}
+                  tickFormatter={(m: number) => String(m)}
+                  tick={{ fontSize: 10, fill: chartColors.axisTick }}
+                  stroke={chartColors.grid}
+                  label={{ value: t('relativeMonthsAxisLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: chartColors.axisLabel }}
+                />
+              ) : (
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(d: string) => (d ? new Date(d).toLocaleDateString(dateFmt, { month: '2-digit', year: '2-digit' }) : '')}
+                  tick={{ fontSize: 10, fill: chartColors.axisTick }}
+                  stroke={chartColors.grid}
                 />
               )}
+              <YAxis tick={{ fontSize: 10, fill: chartColors.axisTick }} stroke={chartColors.grid} label={{ value: '%', position: 'insideLeft', fontSize: 11, fill: chartColors.axisLabel }} />
+              <Tooltip
+                formatter={(v: unknown) => typeof v === 'number' ? `${v}%` : String(v)}
+                contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: 8 }}
+                labelStyle={{ color: chartColors.tooltipHeading }}
+                itemStyle={{ color: chartColors.tooltipText }}
+                labelFormatter={(label: unknown) => {
+                  if (showCohortReference) return `${label} ${t('relativeMonthsAxisLabel')}`;
+                  return typeof label === 'string' && label ? new Date(label).toLocaleDateString(dateFmt) : String(label ?? '');
+                }}
+              />
+              <Legend wrapperStyle={{ fontSize: 12, color: chartColors.legend }} />
+              <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
+              {/* FALL-003 / L5: synchronise the event highlight on the active axis. */}
+              {highlightDate && (() => {
+                const refRow = baselineChangeWithReference.find((r) => r.date === highlightDate);
+                const hx = showCohortReference ? refRow?.relMonths : highlightDate;
+                if (hx == null) return null;
+                return (
+                  <ReferenceLine
+                    x={hx}
+                    stroke="#f59e0b"
+                    strokeWidth={2}
+                    strokeDasharray="4 2"
+                    label={{ value: new Date(highlightDate).toLocaleDateString(dateFmt), position: 'top', fontSize: 10, fill: '#f59e0b' }}
+                  />
+                );
+              })()}
               {showCohortReference && (
                 <>
                   <Area
