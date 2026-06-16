@@ -331,6 +331,7 @@ const translations = {
   date: { de: 'Datum', en: 'Date' },
   value: { de: 'Wert', en: 'Value' },
   action: { de: 'Aktion', en: 'Action' },
+  annotation: { de: 'Annotation', en: 'Annotation' },
   reviewResults: { de: 'Prüfergebnisse', en: 'Review Results' },
   reportedBy: { de: 'gemeldet von', en: 'reported by' },
   flagErrorTitle: { de: 'Fehler kennzeichnen', en: 'Flag Error' },

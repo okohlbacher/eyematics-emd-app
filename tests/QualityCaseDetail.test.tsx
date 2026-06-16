@@ -219,12 +219,31 @@ describe('QualityCaseDetail — C1 inline review rework', () => {
     const table = document.querySelector('table.table-fixed');
     expect(table).not.toBeNull();
     const cols = table!.querySelectorAll('colgroup col');
-    // Five columns: Parameter (flex) + Datum + Wert + Status + Aktion.
+    // Five columns: Parameter (flex) + Datum + Wert + Annotation + Aktion.
     expect(cols.length).toBe(5);
-    // The Status column (4th) carries a fixed width class.
+    // The annotation/status column (4th) carries a fixed width class.
     expect(cols[3].getAttribute('class')).toMatch(/\bw-/);
     // The Aktion column (5th) is also pinned.
     expect(cols[4].getAttribute('class')).toMatch(/\bw-/);
+  });
+
+  it('K6: the annotation/status column has a header label and a tightened (w-28) width', () => {
+    render(<QualityCaseDetail {...baseProps} />);
+    // K6: the 4th column now carries an explicit "Annotation" header (was empty
+    // per the tester) — the mocked t() echoes the key, so assert on the key.
+    const headers = Array.from(document.querySelectorAll('thead th')).map(
+      (th) => th.textContent,
+    );
+    expect(headers).toEqual(['parameter', 'date', 'value', 'annotation', 'action']);
+    // K6: the column was reduced from w-36 to w-28 (snug to the pill) while
+    // staying fixed-width so the Aktion buttons still cannot reflow.
+    const table = document.querySelector('table.table-fixed');
+    const cols = table!.querySelectorAll('colgroup col');
+    expect(cols[3].getAttribute('class')).toContain('w-28');
+    expect(cols[3].getAttribute('class')).not.toContain('w-36');
+    // The anomaly/missing sub-row spans the full (still 5-column) table.
+    const spanned = document.querySelector('tbody td[colspan]');
+    expect(spanned?.getAttribute('colspan')).toBe('5');
   });
 
   it('the audit log is read-only (no select editor) and lists flags', () => {
