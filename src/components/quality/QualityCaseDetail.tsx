@@ -474,11 +474,13 @@ export default function QualityCaseDetail({
               ))}
             </div>
 
-            {/* J6a: table-fixed + an explicit colgroup pins the Status and Aktion
-                columns to stable widths. The status/annotation pills now live in a
-                dedicated fixed-width column, so changing a row's status (open →
-                bestätigt → auffällig, etc.) never re-sizes the column and the action
-                buttons never shift. Parameter takes the remaining flexible width. */}
+            {/* J6a + v1.17 WS-4 (L9): table-fixed + an explicit colgroup pins the
+                Status, Annotation and Aktion columns to stable widths. The status
+                pills live in their own fixed-width "Status" column; a SEPARATE
+                "Annotation" column on the right carries the per-row flag/anomaly
+                content (e.g. "Duplikat" or an implausible-value reason). Changing a
+                row's status never re-sizes a column and the action buttons never
+                shift. Parameter takes the remaining flexible width. */}
             <table className="w-full text-sm table-fixed">
               <colgroup>
                 <col />
@@ -486,12 +488,17 @@ export default function QualityCaseDetail({
                 <col className="w-24" />
                 <col className="w-28" />
                 <col className="w-48" />
+                <col className="w-28" />
               </colgroup>
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
                   <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{t('parameter')}</th>
                   <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{t('date')}</th>
                   <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">{t('value')}</th>
+                  {/* L9: the status-pill column gets its OWN "Status" header back
+                      (it was wrongly relabelled "Annotation" in v1.16). */}
+                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{t('status')}</th>
+                  {/* L9: NEW separate Annotation column on the right. */}
                   <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{t('annotation')}</th>
                   <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">{t('action')}</th>
                 </tr>
@@ -513,18 +520,22 @@ export default function QualityCaseDetail({
                       {/* J6a: fixed-width status column — left-aligned + nowrap so a
                           longer/shorter pill never changes the column width. */}
                       <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 text-left align-top whitespace-nowrap">{statusPill(verdict)}</td>
-                      <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 text-center align-top whitespace-nowrap">{rowActions(row, verdict)}</td>
-                      {/* Inline reason sub-row + corrected-upstream note (amber card relocated, NF point 2). */}
-                      {(row.reason || verdict === 'resolved' || note) && (
-                        <td colSpan={5} className="px-3 pb-2 pt-0">
-                          <div className="flex flex-wrap items-center gap-2">
+                      {/* v1.17 WS-4 (L9): SEPARATE Annotation column — the per-row
+                          flag/anomaly CONTENT (system reason, the reviewer's flagged
+                          annotation e.g. "Duplikat"/implausible value, and the
+                          corrected-upstream note). Em-dash when the row has none.
+                          Lives in its own fixed-width column so the amber/red badges
+                          wrap WITHIN the column and never reflow the action buttons. */}
+                      <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 align-top text-xs">
+                        {(row.reason || note || verdict === 'resolved') ? (
+                          <div className="flex flex-wrap items-center gap-1.5">
                             {row.reason && (
-                              <span className={`inline-flex items-center gap-1 text-xs rounded-md px-2 py-0.5 border ${
+                              <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 border ${
                                 row.missing
-                                  ? 'text-red-600 bg-red-50 border-red-200'
-                                  : 'text-amber-800 bg-amber-50 border-amber-200'
+                                  ? 'text-red-600 bg-red-50 border-red-200 dark:text-red-300 dark:bg-red-900/30 dark:border-red-800'
+                                  : 'text-amber-800 bg-amber-50 border-amber-200 dark:text-amber-200 dark:bg-amber-900/30 dark:border-amber-800'
                               }`}>
-                                <AlertCircle className="w-3 h-3" />
+                                <AlertCircle className="w-3 h-3 shrink-0" />
                                 {row.missing ? t('statusMissing') : t('statusAnomalous')}: {row.reason}
                               </span>
                             )}
@@ -532,16 +543,19 @@ export default function QualityCaseDetail({
                                 acknowledged/resolved rows; sentinels are suppressed
                                 by displayNote so a confirmed clean row shows nothing. */}
                             {note && (
-                              <span className="inline-flex items-center gap-1 text-xs rounded-md px-2 py-0.5 border text-red-600 bg-red-50 border-red-200">
-                                <Flag className="w-3 h-3" /> {note}
+                              <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 border text-red-600 bg-red-50 border-red-200 dark:text-red-300 dark:bg-red-900/30 dark:border-red-800">
+                                <Flag className="w-3 h-3 shrink-0" /> {note}
                               </span>
                             )}
                             {verdict === 'resolved' && (
-                              <span className="text-xs italic text-gray-500 dark:text-gray-400">{t('correctedUpstreamNote')}</span>
+                              <span className="italic text-gray-500 dark:text-gray-400">{t('correctedUpstreamNote')}</span>
                             )}
                           </div>
-                        </td>
-                      )}
+                        ) : (
+                          <span className="text-gray-400 dark:text-gray-500">{t('annotationNone')}</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 text-center align-top whitespace-nowrap">{rowActions(row, verdict)}</td>
                     </tr>
                   );
                 })}
