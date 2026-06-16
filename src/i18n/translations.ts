@@ -1164,13 +1164,6 @@ const translations = {
   cohortReferenceBandVisus: { de: 'Kohorten-IQR Visus (25.\u201375. Perz.)', en: 'Cohort IQR visual acuity (25th\u201375th pct)' },
   cohortReferenceBandCrt: { de: 'Kohorten-IQR CRT (25.\u201375. Perz.)', en: 'Cohort IQR CRT (25th\u201375th pct)' },
 
-  // ---- J3c: relative-time axis (months since the patient's first visit) ----
-  relativeTimeAxisLabel: { de: 'Monate seit Erstvisite', en: 'Months since first visit' },
-  relativeTimeUnitShort: { de: 'Mon', en: 'mo' },
-  relativeTimeBaseline: { de: 'Baseline', en: 'Baseline' },
-  // tooltip: "3,2 Mon (15.04.2024)" \u2014 relative offset + absolute date
-  relativeTimeTooltipMonths: { de: 'Monat', en: 'Month' },
-
   // ---- J3d: cohort overlay on the change-from-baseline + distribution + scatter plots ----
   cohortReferenceMedianChange: { de: 'Kohorten-Median \u00c4nderung', en: 'Cohort median change' },
   // K3b: IOP (Augeninnendruck) cohort overlay legend entries.
