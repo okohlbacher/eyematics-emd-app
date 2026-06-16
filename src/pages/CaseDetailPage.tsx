@@ -1,6 +1,6 @@
 /** Case detail page — EMDREQ-FALL-001 to FALL-006 (single case analysis, clinical parameters, cohort comparison). */
 import { ArrowLeft, Syringe, TrendingDown, TrendingUp } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate,useParams } from 'react-router-dom';
 import {
   Area,
@@ -46,6 +46,14 @@ export default function CaseDetailPage() {
   const [showCohortReference, setShowCohortReference] = useState(false);
   const toggleInjectionHighlight = (date: string) =>
     setHighlightInjectionDate((prev) => (prev === date ? null : date));
+
+  // Review M1: highlight state is per-case — clear it when navigating to another
+  // case so a highlighted visit/injection date from the previous patient can't leak
+  // onto (or render an orphan line in) the next one.
+  useEffect(() => {
+    setHighlightDate(null);
+    setHighlightInjectionDate(null);
+  }, [caseId]);
 
   const patientCase = cases.find((c) => c.id === caseId);
   const dateFmt = getDateLocale(locale);

@@ -406,6 +406,25 @@ export default function OutcomesPanel({
     }
   }, []);
 
+  // Review (v1.16-A): keep the canvas aligned with the container when it resizes
+  // WITHOUT a data change (sidebar collapse, browser resize). The Recharts
+  // ResponsiveContainer re-lays-out and re-runs the scatter shape on resize, but the
+  // buffer-reset guard is keyed on the point-set identity — so a pure resize would
+  // re-collect points onto the stale box and the canvas would drift from the SVG.
+  // Clearing the pass ref forces that re-render's shape pass to reset the buffer and
+  // recapture the box at the new size; the redraw is scheduled defensively too.
+  useEffect(() => {
+    if (!SCATTER_CANVAS_MODE) return;
+    const wrap = chartWrapRef.current;
+    if (!wrap || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => {
+      canvasPassRef.current = null;
+      scheduleCanvasDraw();
+    });
+    ro.observe(wrap);
+    return () => ro.disconnect();
+  }, [scheduleCanvasDraw]);
+
   // F7 (defensive): clear the stashed drill-down target when the panel's
   // underlying patient set CHANGES (e.g. a cohort switch). Without this, a stale
   // within-cohort pseudonym left in the ref from a prior cohort's hover could fire
@@ -424,9 +443,10 @@ export default function OutcomesPanel({
     }
   }, [panel.patients]);
 
-  // J1a: keep the imperative-tooltip formatting context current (mirrors
-  // OutcomesTooltip's label/unit logic). Synced in an effect (not during render) so
-  // the hover handlers read the latest labels without re-creating on every render.
+  // J1a: keep the imperative-tooltip formatting context current (the label/unit logic
+  // that used to live in the now-removed OutcomesTooltip is inlined here). Synced in an
+  // effect (not during render) so the hover handlers read the latest labels without
+  // re-creating on every render.
   useEffect(() => {
     const valLabelKey = metric === 'crt'
       ? (yMetric === 'absolute' ? 'metricsCrtYAxisAbsolute' : yMetric === 'delta' ? 'metricsCrtYAxisDelta' : 'metricsCrtYAxisDeltaPercent')
