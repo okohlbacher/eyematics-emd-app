@@ -39,11 +39,25 @@ interface PlotlyChartProps {
   fallback?: React.ReactNode;
   /** data-testid for the live Plotly container (browser path). */
   testId?: string;
+  /**
+   * M1 (v1.18 WS-A): imperative restyle handle. PlotlyChart assigns
+   * `{ restyle }` here once Plotly has drawn, so the caller can emphasise/restore a
+   * SINGLE trace (e.g. bump line width on hover) via `Plotly.restyle` — never a full
+   * redraw. Null between draws / in the jsdom fallback.
+   */
+  handleRef?: React.MutableRefObject<PlotlyImperativeHandle | null>;
+}
+
+/** Imperative handle exposed by PlotlyChart for cheap single-trace restyles. */
+export interface PlotlyImperativeHandle {
+  /** Restyle one (or more) traces in place — thin wrapper over Plotly.restyle. */
+  restyle: (update: Record<string, unknown>, traceIndices: number[]) => void;
 }
 
 type PlotlyModule = {
   react: (el: HTMLElement, data: unknown, layout: unknown, config: unknown) => Promise<unknown>;
   purge: (el: HTMLElement) => void;
+  restyle: (el: HTMLElement, update: Record<string, unknown>, traceIndices?: number[]) => Promise<unknown>;
   Plots: { resize: (el: HTMLElement) => void };
 };
 
@@ -58,6 +72,7 @@ export default function PlotlyChart({
   style,
   fallback,
   testId,
+  handleRef,
 }: PlotlyChartProps) {
   const elRef = useRef<HTMLDivElement | null>(null);
   // Latest handlers in refs so the Plotly event listeners (attached once per redraw)
@@ -119,6 +134,18 @@ export default function PlotlyChart({
         elev.on('plotly_unhover', () => unhoverRef.current?.());
       }
 
+      // M1 (v1.18 WS-A): publish the imperative restyle handle now that Plotly has
+      // drawn into `el`. Single-trace restyle only (caller bumps one line's width on
+      // hover) — never a relayout/redraw.
+      if (handleRef) {
+        handleRef.current = {
+          restyle: (update, traceIndices) => {
+            if (disposed || !elRef.current) return;
+            void Plotly.restyle(el, update, traceIndices);
+          },
+        };
+      }
+
       if (typeof ResizeObserver !== 'undefined') {
         resizeObserver = new ResizeObserver(() => {
           if (!disposed && elRef.current) plotly?.Plots.resize(el);
@@ -135,11 +162,13 @@ export default function PlotlyChart({
     return () => {
       disposed = true;
       resizeObserver?.disconnect();
+      // M1: drop the imperative handle so a stale restyle can't target a purged div.
+      if (handleRef) handleRef.current = null;
       // `el` is captured from this effect run (the node we drew into) — use it rather
       // than elRef.current, which may have changed by cleanup time.
       if (plotly) plotly.purge(el);
     };
-  }, [data, layout, config, renderable]);
+  }, [data, layout, config, renderable, handleRef]);
 
   if (!renderable) {
     return <>{fallback}</>;
