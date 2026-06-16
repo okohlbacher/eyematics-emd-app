@@ -131,7 +131,7 @@ describe('OutcomesPanel — cross-cohort mode (Phase 16)', () => {
     expect(median!.getAttribute('data-name') ?? '').toMatch(/Cohort A \(N=42 patients\)/);
   });
 
-  it('XCOHORT-02: per-patient lines are suppressed in cross-cohort mode even when layers.perPatient is true', () => {
+  it('M3: single-cohort per-patient markers are never emitted in cross mode (cross uses its own testids)', () => {
     const { container } = render(
       <OutcomesPanel
         {...defaultProps}
@@ -140,21 +140,93 @@ describe('OutcomesPanel — cross-cohort mode (Phase 16)', () => {
         cohortSeries={[seriesA, seriesB]}
       />,
     );
-    // No per-patient markers in cross mode; only the 2 cohort medians.
+    // The single-cohort `outcomes-perpatient-${id}` markers must not appear in cross mode.
     expect(container.querySelectorAll('[data-testid^="outcomes-perpatient-"]').length).toBe(0);
     expect(container.querySelectorAll('[data-testid="outcomes-trace-median"]').length).toBe(2);
   });
 
-  it('XCOHORT-02: scatter is suppressed in cross-cohort mode even when layers.scatter is true', () => {
+  it('M3: scatter toggle ON renders one cross-cohort scatter cloud per cohort (in cohort colour)', () => {
+    // Cohort series WITH scatter points so the opt-in layer has something to draw.
+    const a: CohortSeriesEntry = {
+      ...seriesA,
+      panel: {
+        patients: [],
+        scatterPoints: [{ x: 0, y: 0.3, patientId: 'A-1' }, { x: 30, y: 0.35, patientId: 'A-2' }],
+        medianGrid: [{ x: 0, y: 0.3, p25: 0.2, p75: 0.4, n: 42 }],
+        summary: { patientCount: 42, measurementCount: 84, excludedCount: 0 },
+      } as unknown as PanelResult,
+    };
+    const b: CohortSeriesEntry = {
+      ...seriesB,
+      panel: {
+        patients: [],
+        scatterPoints: [{ x: 0, y: 0.5, patientId: 'B-1' }],
+        medianGrid: [{ x: 0, y: 0.5, p25: 0.4, p75: 0.6, n: 17 }],
+        summary: { patientCount: 17, measurementCount: 17, excludedCount: 0 },
+      } as unknown as PanelResult,
+    };
     const { container } = render(
       <OutcomesPanel
         {...defaultProps}
-        panel={buildPanel(10)}
+        panel={buildPanelNoPatients(0)}
         layers={{ ...defaultProps.layers, scatter: true }}
-        cohortSeries={[seriesA, seriesB]}
+        cohortSeries={[a, b]}
       />,
     );
-    expect(container.querySelector('[data-testid="outcomes-scatter-od"]')).toBeNull();
+    const aMarker = container.querySelector('[data-testid="outcomes-cross-scatter-a"]');
+    const bMarker = container.querySelector('[data-testid="outcomes-cross-scatter-b"]');
+    expect(aMarker).not.toBeNull();
+    expect(bMarker).not.toBeNull();
+    expect(aMarker!.getAttribute('data-count')).toBe('2');
+    expect(bMarker!.getAttribute('data-count')).toBe('1');
+    // Each cohort's scatter is drawn in its own colour.
+    expect(aMarker!.getAttribute('data-color')).toContain('4, 120, 87'); // #047857 → rgba
+  });
+
+  it('M3: scatter toggle OFF emits no cross-cohort scatter clouds', () => {
+    const a: CohortSeriesEntry = {
+      ...seriesA,
+      panel: {
+        patients: [],
+        scatterPoints: [{ x: 0, y: 0.3, patientId: 'A-1' }],
+        medianGrid: [{ x: 0, y: 0.3, p25: 0.2, p75: 0.4, n: 42 }],
+        summary: { patientCount: 42, measurementCount: 42, excludedCount: 0 },
+      } as unknown as PanelResult,
+    };
+    const { container } = render(
+      <OutcomesPanel
+        {...defaultProps}
+        panel={buildPanelNoPatients(0)}
+        layers={{ ...defaultProps.layers, scatter: false }}
+        cohortSeries={[a, seriesB]}
+      />,
+    );
+    expect(container.querySelectorAll('[data-testid^="outcomes-cross-scatter-"]').length).toBe(0);
+  });
+
+  it('M3: per-patient toggle ON renders cross-cohort per-patient lines per cohort (in cohort colour)', () => {
+    const a: CohortSeriesEntry = {
+      ...seriesA,
+      panel: {
+        patients: [
+          { id: 'pa', pseudonym: 'A-PSN', excluded: false, sparse: false, measurements: [{ x: 0, y: 0.3 }, { x: 30, y: 0.4 }] },
+        ],
+        scatterPoints: [],
+        medianGrid: [{ x: 0, y: 0.3, p25: 0.2, p75: 0.4, n: 42 }],
+        summary: { patientCount: 42, measurementCount: 84, excludedCount: 0 },
+      } as unknown as PanelResult,
+    };
+    const { container } = render(
+      <OutcomesPanel
+        {...defaultProps}
+        panel={buildPanelNoPatients(0)}
+        layers={{ ...defaultProps.layers, perPatient: true }}
+        cohortSeries={[a, seriesB]}
+      />,
+    );
+    const line = container.querySelector('[data-testid="outcomes-cross-perpatient-a-A-PSN"]');
+    expect(line).not.toBeNull();
+    expect(line!.getAttribute('data-color')).toBe('#047857');
   });
 
   it('VIS-04: single-cohort per-patient line color is #9ca3af', () => {

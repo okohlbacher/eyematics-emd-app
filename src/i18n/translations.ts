@@ -920,7 +920,11 @@ const translations = {
   outcomesCompareOpenDrawer: { de: 'Kohorten vergleichen', en: 'Compare cohorts' },
   outcomesCrossMode: { de: '{count} Kohorten verglichen', en: '{count} cohorts compared' },
   outcomesCompareReset: { de: 'Einzelne Kohorte anzeigen', en: 'Reset to single cohort' },
-  outcomesComparePerPatientSuppressed: { de: 'Einzelkurven sind im Vergleichsmodus ausgeblendet.', en: 'Per-patient lines are suppressed in comparison mode.' },
+  // --- v1.18 WS-A (outcomes Plotly round-6) keys ---
+  // M3: per-patient + scatter layers are now opt-in (each cohort in its own colour)
+  // in compare mode, replacing the old "suppressed in comparison mode" note.
+  outcomesCompareLayersOptIn: { de: 'Streupunkte und Einzelkurven werden im Vergleichsmodus je Kohorte in ihrer Farbe angezeigt.', en: 'Scatter points and per-patient lines render per cohort in its colour in comparison mode.' },
+  // --- end v1.18 WS-A keys ---
   // FALL-010: drill-down hint shown in aria-label when scatter points are clickable
   outcomesDrillDownHint: { de: 'Datenpunkt anklicken, um den Fall zu öffnen', en: 'Click a data point to open the case' },
 

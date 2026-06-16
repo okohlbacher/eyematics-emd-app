@@ -185,7 +185,9 @@ export default function OutcomesSettingsDrawer({
                   ['spreadBand', 'outcomesLayerSpreadBand'],
                 ] as const
               )
-                .filter(([key]) => !(isCrossMode && key === 'perPatient'))
+                // M3 (v1.18 WS-A): the per-patient + scatter layers now render in
+                // compare mode too (each cohort in its own colour), so the toggles are
+                // no longer filtered out in cross mode.
                 .map(([key, labelKey]) => (
                   <label key={key} className="flex items-center gap-2 text-sm">
                     <input
@@ -201,8 +203,8 @@ export default function OutcomesSettingsDrawer({
                   </label>
                 ))}
               {isCrossMode && (
-                <p className="text-xs text-gray-500 italic mt-2" data-testid="perpatient-suppressed-note">
-                  {t('outcomesComparePerPatientSuppressed')}
+                <p className="text-xs text-gray-500 italic mt-2" data-testid="compare-layers-note">
+                  {t('outcomesCompareLayersOptIn')}
                 </p>
               )}
               {!isCrossMode && perPatientDefaultedOff && !layers.perPatient && (
