@@ -742,7 +742,6 @@ const translations = {
   criticalCrtCount: { de: '{0}× CRT > 400 µm', en: '{0}× CRT > 400 µm' },
   criticalVisusCount: { de: '{0}× Visus < 0.1', en: '{0}× Visus < 0.1' },
   criticalIopCount: { de: '{0}× IOD > 21 mmHg', en: '{0}× IOP > 21 mmHg' },
-  interpolatedHint: { de: 'Offener Kreis = interpolierter Wert (keine Messung)', en: 'Open circle = interpolated value (no measurement)' },
   crtLegendLabel: { de: 'CRT (µm)', en: 'CRT (µm)' },
   visusYAxisLabel: { de: 'Visus (Dezimal, bestkorrigiert)', en: 'Visual acuity (decimal, best-corrected)' },
   visusShortLabel: { de: 'Visus', en: 'Visus' },
@@ -1167,7 +1166,6 @@ const translations = {
   cohortReferenceToggle: { de: 'Kohorten-Referenz anzeigen', en: 'Show cohort reference' },
   cohortReferenceMedianVisus: { de: 'Kohorten-Median Visus', en: 'Cohort median visual acuity' },
   cohortReferenceMedianCrt: { de: 'Kohorten-Median CRT', en: 'Cohort median CRT' },
-  cohortReferenceBand: { de: 'Kohorten-IQR (25.\u201375. Perzentil)', en: 'Cohort IQR (25th\u201375th percentile)' },
   // K3a: distinct legend swatches so each dual-axis IQR band is explained.
   cohortReferenceBandVisus: { de: 'Kohorten-IQR Visus (25.\u201375. Perz.)', en: 'Cohort IQR visual acuity (25th\u201375th pct)' },
   cohortReferenceBandCrt: { de: 'Kohorten-IQR CRT (25.\u201375. Perz.)', en: 'Cohort IQR CRT (25th\u201375th pct)' },
@@ -1186,8 +1184,8 @@ const translations = {
     en: 'The cohort reference aggregates the comparison group by relative time since each patient\'s own first visit (not by calendar date). Per relative month, the median and IQR (25th–75th percentile) are computed across the peers; the current patient is excluded. These reference values are mapped onto the current patient\'s calendar dates (same elapsed treatment time).',
   },
   visusCrtPlotInfo: {
-    de: 'Verlauf der gemessenen Sehschärfe (Visus, linke Achse) und der zentralen Netzhautdicke (CRT, rechte Achse) über die Kalenderdaten der Visiten. Offene Kreise sind interpolierte Anzeigewerte (keine Messung).',
-    en: 'Trajectory of measured visual acuity (Visus, left axis) and central retinal thickness (CRT, right axis) over the visit calendar dates. Open circles are interpolated display values (not measurements).',
+    de: 'Verlauf der gemessenen Sehschärfe (Visus, linke Achse) und der zentralen Netzhautdicke (CRT, rechte Achse) über die Kalenderdaten der Visiten.',
+    en: 'Trajectory of measured visual acuity (Visus, left axis) and central retinal thickness (CRT, right axis) over the visit calendar dates.',
   },
   baselineChangePlotInfo: {
     de: 'Relative prozentuale Änderung gegenüber dem Ausgangswert — Visus bezogen auf den ersten Visus-Wert, CRT bezogen auf den ersten CRT-Wert (je eigener Ausgangswert).',
@@ -1211,6 +1209,17 @@ const translations = {
     de: 'Kohorten-Overlay aktiv: Das schattierte Band ist der IQR (25.–75. Perzentil) des Augeninnendrucks der Vergleichsgruppe, die gestrichelte Linie der Kohorten-Median — aggregiert nach relativer Zeit seit der jeweils ersten Visite jedes Peers.',
     en: 'Cohort overlay active: the shaded band is the comparison group\'s IOP interquartile range (IQR, 25th–75th percentile) and the dashed line is the cohort median — aggregated by relative time since each peer\'s own first visit.',
   },
+
+  // ==== v1.18 WS-B (per-patient case-detail charts — UAT round 6) ====
+  // M8: distribution-histogram tooltip — make the cohort overlay's units explicit.
+  ofCohort: { de: 'der Kohorte', en: 'of the cohort' },
+  // M5: distinct legend entries so the unified baseline-change legend shows a
+  // Visus AND a CRT IQR-band entry plus per-metric median lines (was a single
+  // generic band entry with the CRT band/median hidden via legendType="none").
+  cohortReferenceBandVisusChange: { de: 'Kohorten-IQR Visus-Änderung (25.–75. Perz.)', en: 'Cohort IQR Visus change (25th–75th pct)' },
+  cohortReferenceBandCrtChange: { de: 'Kohorten-IQR CRT-Änderung (25.–75. Perz.)', en: 'Cohort IQR CRT change (25th–75th pct)' },
+  cohortReferenceMedianVisusChange: { de: 'Kohorten-Median Visus-Änderung', en: 'Cohort median Visus change' },
+  cohortReferenceMedianCrtChange: { de: 'Kohorten-Median CRT-Änderung', en: 'Cohort median CRT change' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

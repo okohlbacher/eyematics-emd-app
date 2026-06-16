@@ -5,7 +5,7 @@
  * Tests:
  * 1. CRT legend label reads "CRT (µm)" from t('crtLegendLabel').
  * 2. Visus Y-axis label reads "Visus (Dezimal, bestkorrigiert)" from t('visusYAxisLabel').
- * 3. Interpolation note reads "Offener Kreis = interpolierter Wert (keine Messung)" from t('interpolatedHint').
+ * 3. M9 (v1.18): the leftover "Offene Kreise" interpolation explanation is gone.
  *
  * Pattern: recharts mock (expose label/name as data-* attrs) + no jest-dom RTL assertions.
  */
@@ -80,20 +80,19 @@ const deStrings: Partial<Record<TranslationKey, string>> = {
   crtLegendLabel: 'CRT (µm)',
   visusYAxisLabel: 'Visus (Dezimal, bestkorrigiert)',
   visusShortLabel: 'Visus',
-  interpolatedHint: 'Offener Kreis = interpolierter Wert (keine Messung)',
   visusAndCrt: 'Visusverlauf und Netzhautdicke (CRT)',
   critical: 'Kritisch',
   cohortReferenceMedianVisus: 'Kohorten-Median Visus',
   cohortReferenceMedianCrt: 'Kohorten-Median CRT',
-  cohortReferenceBand: 'Kohorten-IQR (25.–75. Perzentil)',
   cohortReferenceBandVisus: 'Kohorten-IQR Visus (25.–75. Perz.)',
   cohortReferenceBandCrt: 'Kohorten-IQR CRT (25.–75. Perz.)',
 };
 
 // Data with cohort-reference fields so the overlay renders (I3a/I3b).
+// M6: rows carry dateMs (epoch-ms) for the linear time axis.
 const refData = [
-  { date: '2024-01-01', relMonths: 0, visus: 0.5, crt: 300, visusMedian: 0.5, crtMedian: 300, visusBand: [0.4, 0.6], crtBand: [280, 320] },
-  { date: '2024-02-01', relMonths: 1, visus: 0.6, crt: 290, visusMedian: 0.55, crtMedian: 295, visusBand: [0.45, 0.65], crtBand: [275, 315] },
+  { date: '2024-01-01', dateMs: Date.parse('2024-01-01'), relMonths: 0, visus: 0.5, crt: 300, visusMedian: 0.5, crtMedian: 300, visusBand: [0.4, 0.6], crtBand: [280, 320] },
+  { date: '2024-02-01', dateMs: Date.parse('2024-02-01'), relMonths: 1, visus: 0.6, crt: 290, visusMedian: 0.55, crtMedian: 295, visusBand: [0.45, 0.65], crtBand: [275, 315] },
 ];
 
 const dataName = (els: Element[], name: string) =>
@@ -103,8 +102,8 @@ const tDE = (key: TranslationKey): string => deStrings[key] ?? key;
 
 const minimalProps = {
   combinedData: [
-    { date: '2024-01-01', relMonths: 0, visus: 0.5, crt: 300, visusMeasured: true, crtMeasured: true },
-    { date: '2024-02-01', relMonths: 1, visus: 0.6, crt: undefined, visusMeasured: false, crtMeasured: false },
+    { date: '2024-01-01', dateMs: Date.parse('2024-01-01'), relMonths: 0, visus: 0.5, crt: 300, visusMeasured: true, crtMeasured: true },
+    { date: '2024-02-01', dateMs: Date.parse('2024-02-01'), relMonths: 1, visus: 0.6, crt: undefined, visusMeasured: false, crtMeasured: false },
   ],
   cohortAvgVisus: 0.55,
   cohortAvgCrt: 290,
@@ -211,17 +210,12 @@ describe('VisusCrtChart — FALL-012 / A4 i18n labels', () => {
     expect(dataName(areas, 'Kohorten-IQR CRT (25.–75. Perz.)')).toBeUndefined();
   });
 
-  it('shows the interpolation hint only when interpolated points exist', () => {
-    const { rerender } = render(
-      <VisusCrtChart {...minimalProps} hasInterpolatedPoints={false} />,
-    );
-    expect(
-      screen.queryByText(/Offener Kreis = interpolierter Wert/),
-    ).toBeNull();
-
-    rerender(<VisusCrtChart {...minimalProps} hasInterpolatedPoints={true} />);
-    expect(
-      screen.queryByText(/Offener Kreis = interpolierter Wert/),
-    ).not.toBeNull();
+  // M9 (v1.18): the open-circle interpolated marker series was removed in v1.17;
+  // the leftover "Offene Kreise / open circle" explanation must no longer render.
+  it('M9: never renders the leftover open-circle / interpolation explanation', () => {
+    render(<VisusCrtChart {...minimalProps} />);
+    expect(screen.queryByText(/Offener Kreis/)).toBeNull();
+    expect(screen.queryByText(/open circle/i)).toBeNull();
+    expect(screen.queryByText(/interpoliert/i)).toBeNull();
   });
 });

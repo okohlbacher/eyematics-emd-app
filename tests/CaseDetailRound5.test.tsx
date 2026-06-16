@@ -60,8 +60,8 @@ afterEach(() => cleanup());
 const t = (key: TranslationKey): string => key;
 
 const refData: CombinedDataPoint[] = [
-  { date: '2024-01-01', relMonths: 0, visus: 0.5, crt: 300, visusMeasured: true, crtMeasured: true, visusMedian: 0.45, crtMedian: 310, visusBand: [0.3, 0.6], crtBand: [280, 340] },
-  { date: '2024-04-01', relMonths: 3, visus: 0.6, crt: 280, visusMeasured: true, crtMeasured: true, visusMedian: 0.48, crtMedian: 305, visusBand: [0.32, 0.62], crtBand: [275, 335] },
+  { date: '2024-01-01', dateMs: Date.parse('2024-01-01'), relMonths: 0, visus: 0.5, crt: 300, visusMeasured: true, crtMeasured: true, visusMedian: 0.45, crtMedian: 310, visusBand: [0.3, 0.6], crtBand: [280, 340] },
+  { date: '2024-04-01', dateMs: Date.parse('2024-04-01'), relMonths: 3, visus: 0.6, crt: 280, visusMeasured: true, crtMeasured: true, visusMedian: 0.48, crtMedian: 305, visusBand: [0.32, 0.62], crtBand: [275, 335] },
 ];
 
 const baseChartProps = {
@@ -84,13 +84,14 @@ describe('VisusCrtChart — L5 dynamic X axis tied to the cohort overlay', () =>
     expect(xAxis?.getAttribute('data-type')).toBe('number');
   });
 
-  it('keys the X axis on the calendar date when the overlay is OFF', () => {
+  it('M6: keys the X axis on the linear calendar-time axis (dateMs, numeric) when the overlay is OFF', () => {
     const { container } = render(
       <VisusCrtChart {...baseChartProps} combinedData={refData} showCohortReference={false} />,
     );
     const xAxis = container.querySelector('[data-testid="recharts-xaxis"]');
-    expect(xAxis?.getAttribute('data-data-key')).toBe('date');
-    expect(xAxis?.getAttribute('data-type')).not.toBe('number');
+    // M6: the calendar axis is now a linear TIME axis keyed on epoch-ms.
+    expect(xAxis?.getAttribute('data-data-key')).toBe('dateMs');
+    expect(xAxis?.getAttribute('data-type')).toBe('number');
   });
 
   it('L5: IVI markers + highlight use relMonths values when the overlay is ON', () => {
@@ -117,12 +118,12 @@ describe('VisusCrtChart — L5 dynamic X axis tied to the cohort overlay', () =>
 
   it('L7/L8: renders no separate interpolated marker series (no open circles)', () => {
     const interpData: CombinedDataPoint[] = [
-      { date: '2024-01-01', relMonths: 0, visus: 0.4, visusMeasured: true },
-      { date: '2024-02-01', relMonths: 1, visusInterp: 0.6 },
-      { date: '2024-03-01', relMonths: 2, visus: 0.8, visusMeasured: true },
+      { date: '2024-01-01', dateMs: Date.parse('2024-01-01'), relMonths: 0, visus: 0.4, visusMeasured: true },
+      { date: '2024-02-01', dateMs: Date.parse('2024-02-01'), relMonths: 1, visusInterp: 0.6 },
+      { date: '2024-03-01', dateMs: Date.parse('2024-03-01'), relMonths: 2, visus: 0.8, visusMeasured: true },
     ];
     const { container } = render(
-      <VisusCrtChart {...baseChartProps} combinedData={interpData} hasInterpolatedPoints />,
+      <VisusCrtChart {...baseChartProps} combinedData={interpData} />,
     );
     const lineKeys = Array.from(container.querySelectorAll('[data-testid="recharts-line"]'))
       .map((el) => el.getAttribute('data-data-key'));
@@ -133,8 +134,8 @@ describe('VisusCrtChart — L5 dynamic X axis tied to the cohort overlay', () =>
 
 describe('ClinicalParametersRow — L4d IOD overlay is a LINE + band (not a bar)', () => {
   const iopData: IopDataPoint[] = [
-    { date: '2024-01-01', iop: 16, iopMedian: 13, iopBand: [12, 14] },
-    { date: '2024-04-01', iop: 18, iopMedian: 15, iopBand: [13, 17] },
+    { date: '2024-01-01', dateMs: Date.parse('2024-01-01'), relMonths: 0, iop: 16, iopMedian: 13, iopBand: [12, 14] },
+    { date: '2024-04-01', dateMs: Date.parse('2024-04-01'), relMonths: 3, iop: 18, iopMedian: 15, iopBand: [13, 17] },
   ];
   const baseProps = {
     iopObs: [],
@@ -167,6 +168,27 @@ describe('ClinicalParametersRow — L4d IOD overlay is a LINE + band (not a bar)
       .map((el) => el.getAttribute('data-data-key'));
     expect(lineKeys).toContain('iopMedian');
     expect(areaKeys).toContain('iopBand');
+  });
+
+  // M7 (v1.18): the IOD chart switches calendar ↔ relative with the overlay,
+  // exactly like Visus/CRT (L5). Overlay ON → numeric relMonths axis.
+  it('M7: keys the IOD X axis on relMonths (numeric) when the overlay is ON', () => {
+    const { container } = render(
+      <ClinicalParametersRow {...baseProps} iopData={iopData} showCohortReference />,
+    );
+    const xAxis = container.querySelector('[data-testid="recharts-xaxis"]');
+    expect(xAxis?.getAttribute('data-data-key')).toBe('relMonths');
+    expect(xAxis?.getAttribute('data-type')).toBe('number');
+  });
+
+  // M6 + M7: overlay OFF → linear calendar-TIME axis keyed on epoch-ms.
+  it('M6/M7: keys the IOD X axis on the linear calendar-time axis (dateMs, numeric) when the overlay is OFF', () => {
+    const { container } = render(
+      <ClinicalParametersRow {...baseProps} iopData={iopData} showCohortReference={false} />,
+    );
+    const xAxis = container.querySelector('[data-testid="recharts-xaxis"]');
+    expect(xAxis?.getAttribute('data-data-key')).toBe('dateMs');
+    expect(xAxis?.getAttribute('data-type')).toBe('number');
   });
 });
 
@@ -232,5 +254,61 @@ describe('PatientHeader — L6 injections clickable in the top timeline strip', 
     expect(onInjectionClick).toHaveBeenCalledWith('2024-03-01');
     // stopPropagation: the node-level visit highlight must NOT fire.
     expect(onHighlightDate).not.toHaveBeenCalled();
+  });
+});
+
+describe('PatientHeader — M4 cohort-reference toggle in the header', () => {
+  const baseProps = {
+    pseudonym: 'P-1',
+    birthDate: '1960-01-01',
+    gender: 'male',
+    centerName: 'Center A',
+    eyeLaterality: 'OD',
+    totalEncounters: 3,
+    primaryDiagnoses: [],
+    adverseEvents: [],
+    hasCriticalValues: false,
+    criticalCrtCount: 0,
+    criticalVisusCount: 0,
+    criticalIopCount: 0,
+    encounterTimeline: [],
+    dateFmt: 'de-DE',
+    locale: 'de',
+    t,
+    highlightDate: null,
+    onHighlightDate: () => {},
+    onOctTimelineClick: () => {},
+  };
+
+  it('M4: renders the cohort-reference toggle when onToggleCohortReference is provided', () => {
+    const { getByLabelText } = render(
+      <PatientHeader
+        {...baseProps}
+        showCohortReference={false}
+        onToggleCohortReference={() => {}}
+      />,
+    );
+    // The toggle (aria-labelled via t('cohortReferenceToggle')) lives in the header.
+    const checkbox = getByLabelText('cohortReferenceToggle') as HTMLInputElement;
+    expect(checkbox).not.toBeNull();
+    expect(checkbox.checked).toBe(false);
+  });
+
+  it('M4: fires onToggleCohortReference with the new value when toggled', () => {
+    const onToggle = vi.fn();
+    const { getByLabelText } = render(
+      <PatientHeader
+        {...baseProps}
+        showCohortReference={false}
+        onToggleCohortReference={onToggle}
+      />,
+    );
+    fireEvent.click(getByLabelText('cohortReferenceToggle'));
+    expect(onToggle).toHaveBeenCalledWith(true);
+  });
+
+  it('M4: omits the toggle entirely when no handler is provided', () => {
+    const { queryByLabelText } = render(<PatientHeader {...baseProps} />);
+    expect(queryByLabelText('cohortReferenceToggle')).toBeNull();
   });
 });

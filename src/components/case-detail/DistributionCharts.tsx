@@ -1,3 +1,4 @@
+import type React from 'react';
 import {
   Bar,
   BarChart,
@@ -52,6 +53,60 @@ export default function DistributionCharts({
   const isDark = effectiveTheme === 'dark';
   const colors = caseChartColors(isDark);
   const legendStyle = { fontSize: 12, color: colors.legend };
+
+  // M8 (v1.18): histogram totals so the patient's per-bin count can also be shown
+  // as a relative percentage of all the patient's measurements — making the units
+  // unambiguous against the cohort overlay (which is a percentage of the cohort).
+  const visusTotal = visusDistribution.reduce((s, b) => s + b.count, 0);
+  const crtTotal = crtDistribution.reduce((s, b) => s + b.count, 0);
+
+  // M8: custom histogram tooltip. Disambiguates the two series:
+  //   • patient bars: absolute COUNT + its share of all patient measurements (%).
+  //   • cohort overlay: explicitly a PERCENTAGE of the cohort.
+  const makeHistogramTooltip = (patientTotal: number) =>
+    (props: {
+      active?: boolean;
+      label?: unknown;
+      payload?: ReadonlyArray<{ dataKey?: unknown; value?: unknown; color?: string }>;
+    }) => {
+      if (!props.active || !Array.isArray(props.payload) || props.payload.length === 0) return null;
+      const rows: Array<{ key: string; node: React.ReactNode }> = [];
+      for (const e of props.payload) {
+        const key = String(e.dataKey ?? '');
+        if (typeof e.value !== 'number') continue;
+        if (key === 'count') {
+          const pct = patientTotal > 0 ? Math.round((e.value / patientTotal) * 1000) / 10 : 0;
+          rows.push({
+            key,
+            node: (
+              <>
+                <span style={{ color: e.color }}>{t('measurements')}</span>: {e.value} ({pct}%)
+              </>
+            ),
+          });
+        } else if (key === 'cohortPct') {
+          rows.push({
+            key,
+            node: (
+              <>
+                <span style={{ color: e.color }}>{t('cohortReferenceDistribution')}</span>: {e.value}% {t('ofCohort')}
+              </>
+            ),
+          });
+        }
+      }
+      if (rows.length === 0) return null;
+      const label = props.label != null ? String(props.label) : '';
+      return (
+        <div className="rounded-lg shadow-lg px-3 py-2 text-xs border" style={{ background: colors.tooltipBg, borderColor: colors.tooltipBorder }}>
+          {label && <div className="font-semibold mb-1" style={{ color: colors.tooltipHeading }}>{label}</div>}
+          {rows.map((r) => (
+            <div key={r.key} style={{ color: colors.tooltipText }}>{r.node}</div>
+          ))}
+        </div>
+      );
+    };
+
   return (
     <div className="grid grid-cols-12 gap-6 mb-6">
       {/* Visus distribution histogram */}
@@ -67,7 +122,8 @@ export default function DistributionCharts({
             {showCohortReference && (
               <YAxis yAxisId="cohort" orientation="right" tickCount={5} tick={{ fontSize: 9, fill: colors.axisTick }} stroke={colors.grid} unit="%" />
             )}
-            <Tooltip contentStyle={{ background: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: 8 }} labelStyle={{ color: colors.tooltipHeading }} itemStyle={{ color: colors.tooltipText }} />
+            {/* M8: custom tooltip — patient count + relative %, cohort as a %. */}
+            <Tooltip content={makeHistogramTooltip(visusTotal)} />
             {showCohortReference && <Legend wrapperStyle={legendStyle} />}
             {/* J3d: cohort distribution overlay (% of cohort per bin), drawn behind
                 the patient bars on its own right axis so scales don't distort. */}
@@ -92,7 +148,8 @@ export default function DistributionCharts({
             {showCohortReference && (
               <YAxis yAxisId="cohort" orientation="right" tickCount={5} tick={{ fontSize: 9, fill: colors.axisTick }} stroke={colors.grid} unit="%" />
             )}
-            <Tooltip contentStyle={{ background: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: 8 }} labelStyle={{ color: colors.tooltipHeading }} itemStyle={{ color: colors.tooltipText }} />
+            {/* M8: custom tooltip — patient count + relative %, cohort as a %. */}
+            <Tooltip content={makeHistogramTooltip(crtTotal)} />
             {showCohortReference && <Legend wrapperStyle={legendStyle} />}
             <ReferenceLine yAxisId="count" x=">400" stroke="#ef4444" strokeDasharray="3 3" />
             {showCohortReference && (

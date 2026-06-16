@@ -5,6 +5,7 @@ import {
   Calendar,
   Eye,
   FileWarning,
+  Layers,
   ScanEye,
   Stethoscope,
   Syringe,
@@ -17,6 +18,7 @@ import type { TranslationKey } from '../../i18n/translations';
 import { getAge, SNOMED_EYE_RIGHT } from '../../services/fhirLoader';
 import { useDiagnosisDisplay } from '../../services/terminology';
 import type { Condition } from '../../types/fhir';
+import { InfoTooltip } from '../primitives';
 
 interface TimelineEvent {
   type: 'visus' | 'crt' | 'injection' | 'oct';
@@ -57,6 +59,12 @@ export interface PatientHeaderProps {
    *  strip — toggles the same temporary injection highlight used by the IVI list
    *  and the trajectory plot marker. */
   onInjectionClick?: (date: string) => void;
+  /** M4 (v1.18): the cohort-reference overlay toggle now lives in the header. It
+   *  governs ALL case-detail plots (Visus/CRT, baseline-change, IOD,
+   *  distributions), so it is a prominent header-level control. Optional so the
+   *  header still renders standalone in tests that don't exercise the toggle. */
+  showCohortReference?: boolean;
+  onToggleCohortReference?: (next: boolean) => void;
 }
 
 /**
@@ -121,6 +129,8 @@ export default function PatientHeader({
   onOctTimelineClick,
   highlightInjectionDate = null,
   onInjectionClick,
+  showCohortReference = false,
+  onToggleCohortReference,
 }: PatientHeaderProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
@@ -158,6 +168,30 @@ export default function PatientHeader({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* M4 (v1.18): cohort-reference overlay toggle — a prominent header
+              control because it governs ALL case-detail plots (Visus/CRT,
+              baseline-change, IOD, distributions), not a single chart. */}
+          {onToggleCohortReference && (
+            <label
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer select-none border transition-colors ${
+                showCohortReference
+                  ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700'
+                  : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:bg-indigo-50 dark:hover:bg-gray-600'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              <input
+                type="checkbox"
+                className="w-3.5 h-3.5 cursor-pointer"
+                checked={showCohortReference}
+                onChange={(e) => onToggleCohortReference(e.target.checked)}
+                aria-label={t('cohortReferenceToggle')}
+              />
+              {t('cohortReferenceToggle')}
+              {/* K-bl1: explain how the cohort overlay is aggregated. */}
+              <InfoTooltip text={t('cohortAggregationInfo')} />
+            </label>
+          )}
           {adverseEvents.length > 0 && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 rounded-lg text-sm font-medium">
               <FileWarning className="w-4 h-4" />
