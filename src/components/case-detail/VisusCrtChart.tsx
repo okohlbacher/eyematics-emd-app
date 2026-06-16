@@ -46,8 +46,6 @@ export interface VisusCrtChartProps {
   visusObs: Observation[];
   /** FALL-011: toggle the cohort reference overlay on/off (default off). */
   showCohortReference?: boolean;
-  /** A4 v2: show the interpolation caption only when interpolated points exist. */
-  hasInterpolatedPoints?: boolean;
   /** IVI injections, rendered as markers on whichever axis is active (L5). */
   injections?: Procedure[];
   /** The date of the currently-highlighted injection (emphasises its marker). */
@@ -66,7 +64,6 @@ export default function VisusCrtChart({
   t,
   visusObs,
   showCohortReference = false,
-  hasInterpolatedPoints = false,
   injections = [],
   highlightInjectionDate = null,
   onInjectionClick,
@@ -92,20 +89,32 @@ export default function VisusCrtChart({
     return row ? row.relMonths : null;
   };
 
+  // M6: on the calendar axis (now a linear TIME axis keyed on epoch-ms) a date
+  // marker's x must be epoch milliseconds, not the ISO string. Resolve via the
+  // matching row's `dateMs` (falling back to a direct parse for injection dates
+  // that may not have a measurement row — though the hook seeds those too).
+  const msForDate = (iso: string): number | null => {
+    const row = combinedData.find((d) => d.date === iso);
+    if (row?.dateMs) return row.dateMs;
+    const ms = new Date(iso).getTime();
+    return Number.isNaN(ms) ? null : ms;
+  };
+
+  // M6/L5: a date-keyed marker's x — relative-month bucket on the relative axis,
+  // epoch-ms on the linear calendar axis.
+  const xForDate = (iso: string): number | null =>
+    useRelativeAxis ? relMonthsForDate(iso) : msForDate(iso);
+
   const injectionMarkers = injections
     .map((inj) => inj.performedDateTime?.substring(0, 10) ?? '')
     .filter((d) => d !== '')
     .map((date) => ({
       date,
-      x: useRelativeAxis ? relMonthsForDate(date) : date,
+      x: xForDate(date),
     }))
-    .filter((m): m is { date: string; x: string | number } => m.x != null);
+    .filter((m): m is { date: string; x: number } => m.x != null);
 
-  const highlightX = highlightDate
-    ? useRelativeAxis
-      ? relMonthsForDate(highlightDate)
-      : highlightDate
-    : null;
+  const highlightX = highlightDate ? xForDate(highlightDate) : null;
 
   // F4 + L4c: custom tooltip — unified across the absolute and relative plots.
   // Shows the patient's measured Visus/CRT AND (when the overlay is active) the
@@ -216,9 +225,6 @@ export default function VisusCrtChart({
           }
         />
       </h3>
-      {hasInterpolatedPoints && (
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">{t('interpolatedHint')}</p>
-      )}
       {/* N05.07: Visus type, correction, measurement method */}
       {visusObs[0]?.method && (
         <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
@@ -233,9 +239,11 @@ export default function VisusCrtChart({
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart data={combinedData}>
           <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-          {/* L5: dynamic X axis. Overlay OFF → calendar-date category axis.
-              Overlay ON → numeric relative-month axis ("Monate seit Erstvisite")
-              so the relative-time-aligned cohort band shares the patient's axis. */}
+          {/* L5/M6: dynamic X axis. Overlay OFF → linear calendar-TIME axis keyed
+              on epoch-ms (type="number", scale="time") so tick spacing is
+              proportional to elapsed time, NOT the row index. Overlay ON → numeric
+              relative-month axis ("Monate seit Erstvisite") so the
+              relative-time-aligned cohort band shares the patient's axis. */}
           {useRelativeAxis ? (
             <XAxis
               dataKey="relMonths"
@@ -248,8 +256,11 @@ export default function VisusCrtChart({
             />
           ) : (
             <XAxis
-              dataKey="date"
-              tickFormatter={(d: string) => (d ? new Date(d).toLocaleDateString(dateFmt, { month: '2-digit', year: '2-digit' }) : '')}
+              dataKey="dateMs"
+              type="number"
+              scale="time"
+              domain={['dataMin', 'dataMax']}
+              tickFormatter={(ms: number) => (ms ? new Date(ms).toLocaleDateString(dateFmt, { month: '2-digit', year: '2-digit' }) : '')}
               tick={{ fontSize: 10, fill: colors.axisTick }}
               stroke={colors.grid}
             />
