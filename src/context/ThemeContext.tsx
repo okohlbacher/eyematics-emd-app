@@ -17,7 +17,10 @@ function readStored(): Theme {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw === 'light' || raw === 'dark' || raw === 'system') return raw;
   } catch { /* ignore */ }
-  return 'light';
+  // L11a (v1.17): default to following the OS preference (prefers-color-scheme)
+  // rather than forcing light — the tester's system was light but the app started
+  // on a fixed theme out of sync with it. An explicit toggle still persists 'light'/'dark'.
+  return 'system';
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
