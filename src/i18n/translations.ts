@@ -332,6 +332,11 @@ const translations = {
   value: { de: 'Wert', en: 'Value' },
   action: { de: 'Aktion', en: 'Action' },
   annotation: { de: 'Annotation', en: 'Annotation' },
+  // --- v1.17 WS-4 (L9): quality-review case table — restore the Status column
+  // header and add a SEPARATE "Annotation" column on the right carrying the per-row
+  // flag/anomaly content. annotationNone is the em-dash placeholder for rows with no
+  // annotation. (the `annotation` and `status` keys above are reused for the headers.)
+  annotationNone: { de: '—', en: '—' },
   reviewResults: { de: 'Prüfergebnisse', en: 'Review Results' },
   reportedBy: { de: 'gemeldet von', en: 'reported by' },
   flagErrorTitle: { de: 'Fehler kennzeichnen', en: 'Flag Error' },
