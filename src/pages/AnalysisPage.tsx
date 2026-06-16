@@ -35,10 +35,11 @@ import {
 
 import { CenterMultiSelect } from '../components/common/CenterMultiSelect';
 import OutcomesView from '../components/outcomes/OutcomesView';
-import { COHORT_PALETTES } from '../components/outcomes/palette';
+import { COHORT_PALETTES, rechartsTheme } from '../components/outcomes/palette';
 import { CHART_COLORS } from '../config/clinicalThresholds';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useThemeSafe } from '../context/ThemeContext';
 import { useRecentActivity } from '../hooks/useRecentActivity';
 import {
   applyFilters,
@@ -65,6 +66,10 @@ export default function AnalysisPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { locale, t } = useLanguage();
   const { record } = useRecentActivity();
+  // M12 (v1.18 WS-A): theme-aware Recharts tokens so the aggregate-tab charts
+  // (center/diagnosis/trend/CRT/age-vs-visus + compare layout) restyle for dark mode.
+  const { effectiveTheme } = useThemeSafe();
+  const ct = rechartsTheme(effectiveTheme === 'dark');
 
   // Tab selection via ?tab=aggregate|trajectories (default: aggregate).
   const tab: AnalysisTab = useMemo(() => {
@@ -508,11 +513,11 @@ export default function AnalysisPage() {
               </h3>
               <ResponsiveContainer width="100%" height={300}>
                 <ScatterChart>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" dataKey="age" name={t('age')} unit=" J." domain={['dataMin', 'dataMax']} />
-                  <YAxis type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} />
-                  <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                  <Legend />
+                  <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
+                  <XAxis type="number" dataKey="age" name={t('age')} unit=" J." domain={['dataMin', 'dataMax']} tick={{ fill: ct.axisTick }} stroke={ct.axisTick} />
+                  <YAxis type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} tick={{ fill: ct.axisTick }} stroke={ct.axisTick} />
+                  <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: ct.tooltipBg, border: `1px solid ${ct.tooltipBorder}`, borderRadius: 6, color: ct.tooltipText }} itemStyle={{ color: ct.tooltipText }} labelStyle={{ color: ct.tooltipText }} />
+                  <Legend wrapperStyle={{ color: ct.legend }} />
                   {centeredCrossCohorts.map((cohort) => {
                     const cohortScatter = cohort.cases
                       .map((c) => {
@@ -545,10 +550,10 @@ export default function AnalysisPage() {
               </h3>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={centerDist}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: ct.axisTick }} stroke={ct.axisTick} />
+                  <YAxis tick={{ fill: ct.axisTick }} stroke={ct.axisTick} />
+                  <Tooltip contentStyle={{ backgroundColor: ct.tooltipBg, border: `1px solid ${ct.tooltipBorder}`, borderRadius: 6, color: ct.tooltipText }} itemStyle={{ color: ct.tooltipText }} labelStyle={{ color: ct.tooltipText }} cursor={{ fill: ct.grid, fillOpacity: 0.3 }} />
                   <Bar dataKey="count" fill="#3b82f6" name={t('cases')} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -625,14 +630,17 @@ export default function AnalysisPage() {
               </h3>
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={visusTrend}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="quarter" tick={{ fontSize: 11 }} />
-                  <YAxis domain={[0, 1]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
+                  <XAxis dataKey="quarter" tick={{ fontSize: 11, fill: ct.axisTick }} stroke={ct.axisTick} />
+                  <YAxis domain={[0, 1]} tick={{ fill: ct.axisTick }} stroke={ct.axisTick} />
                   <Tooltip
                     formatter={(v: unknown) => typeof v === 'number' ? v.toFixed(3) : String(v)}
                     labelFormatter={(l) => `${t('quarter')}: ${l}`}
+                    contentStyle={{ backgroundColor: ct.tooltipBg, border: `1px solid ${ct.tooltipBorder}`, borderRadius: 6, color: ct.tooltipText }}
+                    itemStyle={{ color: ct.tooltipText }}
+                    labelStyle={{ color: ct.tooltipText }}
                   />
-                  <Legend />
+                  <Legend wrapperStyle={{ color: ct.legend }} />
                   <Line
                     type="monotone"
                     dataKey="mean"
@@ -652,10 +660,10 @@ export default function AnalysisPage() {
               </h3>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={crtDistribution}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="range" />
-                  <YAxis />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
+                  <XAxis dataKey="range" tick={{ fill: ct.axisTick }} stroke={ct.axisTick} />
+                  <YAxis tick={{ fill: ct.axisTick }} stroke={ct.axisTick} />
+                  <Tooltip contentStyle={{ backgroundColor: ct.tooltipBg, border: `1px solid ${ct.tooltipBorder}`, borderRadius: 6, color: ct.tooltipText }} itemStyle={{ color: ct.tooltipText }} labelStyle={{ color: ct.tooltipText }} cursor={{ fill: ct.grid, fillOpacity: 0.3 }} />
                   <Bar dataKey="count" fill="#8b5cf6" name={t('measurements')} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -668,10 +676,10 @@ export default function AnalysisPage() {
               </h3>
               <ResponsiveContainer width="100%" height={280}>
                 <ScatterChart>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" dataKey="age" name={t('age')} unit=" J." domain={['dataMin', 'dataMax']} />
-                  <YAxis type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} />
-                  <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
+                  <XAxis type="number" dataKey="age" name={t('age')} unit=" J." domain={['dataMin', 'dataMax']} tick={{ fill: ct.axisTick }} stroke={ct.axisTick} />
+                  <YAxis type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} tick={{ fill: ct.axisTick }} stroke={ct.axisTick} />
+                  <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: ct.tooltipBg, border: `1px solid ${ct.tooltipBorder}`, borderRadius: 6, color: ct.tooltipText }} itemStyle={{ color: ct.tooltipText }} labelStyle={{ color: ct.tooltipText }} />
                   <Scatter data={ageVisusScatter} fill="#f59e0b" />
                   {medianVisus !== null && (
                     <ReferenceLine

@@ -69,6 +69,44 @@ export const DARK_COHORT_PALETTES: readonly string[] = [
   '#f0abfc', // fuchsia-300
 ] as const;
 
+/**
+ * M12 (v1.18 WS-A): theme-aware Recharts chart tokens for the NON-Plotly outcomes
+ * charts (ResponderView, IntervalHistogram) and AnalysisPage. Mirrors the
+ * grid/axis/legend colours OutcomesPanel resolves for Plotly so all charts restyle
+ * consistently in dark mode. Light values reproduce the prior hard-coded defaults.
+ */
+export interface RechartsTheme {
+  grid: string;
+  axisTick: string;
+  axisLabel: string;
+  legend: string;
+  tooltipBg: string;
+  tooltipBorder: string;
+  tooltipText: string;
+}
+
+export function rechartsTheme(isDark: boolean): RechartsTheme {
+  return isDark
+    ? {
+        grid: '#374151',       // gray-700
+        axisTick: '#9ca3af',   // gray-400
+        axisLabel: '#9ca3af',
+        legend: '#d1d5db',     // gray-300
+        tooltipBg: '#1f2937',  // gray-800
+        tooltipBorder: '#374151',
+        tooltipText: '#f3f4f6', // gray-100
+      }
+    : {
+        grid: '#e5e7eb',       // gray-200 (Recharts default-ish)
+        axisTick: '#6b7280',   // gray-500
+        axisLabel: '#6b7280',
+        legend: '#374151',     // gray-700
+        tooltipBg: '#ffffff',
+        tooltipBorder: '#e5e7eb',
+        tooltipText: '#111827', // gray-900
+      };
+}
+
 /** Relative luminance per WCAG 2.1 (sRGB). `hex` is 6-digit `#rrggbb`. */
 export function relativeLuminance(hex: string): number {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
