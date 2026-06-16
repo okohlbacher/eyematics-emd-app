@@ -16,7 +16,7 @@ import {
 } from 'recharts';
 
 import AnamnesisFindings from '../components/case-detail/AnamnesisFindings';
-import { caseChartColors } from '../components/case-detail/chartTheme';
+import { caseChartColors, IQR_FILL_OPACITY } from '../components/case-detail/chartTheme';
 import ClinicalParametersRow from '../components/case-detail/ClinicalParametersRow';
 import DistributionCharts from '../components/case-detail/DistributionCharts';
 import MedicationCard from '../components/case-detail/MedicationCard';
@@ -71,7 +71,6 @@ export default function CaseDetailPage() {
     cohortAvgVisus,
     cohortAvgCrt,
     combinedDataWithReference,
-    hasInterpolatedPoints,
     visusObs,
     crtObs,
     iopObs,
@@ -113,6 +112,48 @@ export default function CaseDetailPage() {
     baselineChangeWithReference.some(
       (r) => r.visusChangeMedian != null || r.visusChangeBand != null || r.crtChangeMedian != null || r.crtChangeBand != null,
     );
+
+  // M5 (v1.18): unify the baseline-change legend with VisusCrtChart's custom
+  // renderLegend — the IQR band swatch is drawn at the TRUE fill colour +
+  // IQR_FILL_OPACITY (not an opaque rect), both the Visus and CRT IQR band entries
+  // are shown, and everything else uses a line glyph. Mirrors VisusCrtChart so the
+  // two stacked figures read identically.
+  const renderBaselineLegend = (props: {
+    payload?: ReadonlyArray<{ value?: unknown; color?: string; dataKey?: unknown }>;
+  }) => {
+    if (!Array.isArray(props.payload)) return null;
+    return (
+      <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs mt-1" style={{ color: chartColors.legend }}>
+        {props.payload.map((entry, i) => {
+          const key = String(entry.dataKey ?? '');
+          const isBand = key === 'visusChangeBand' || key === 'crtChangeBand';
+          return (
+            <li key={`${key}-${i}`} className="flex items-center gap-1.5">
+              {isBand ? (
+                <span
+                  aria-hidden
+                  style={{
+                    display: 'inline-block',
+                    width: 14,
+                    height: 10,
+                    background: entry.color,
+                    opacity: IQR_FILL_OPACITY,
+                    border: `1px solid ${entry.color}`,
+                  }}
+                />
+              ) : (
+                <span
+                  aria-hidden
+                  style={{ display: 'inline-block', width: 14, height: 0, borderTop: `2px solid ${entry.color}` }}
+                />
+              )}
+              <span>{String(entry.value ?? '')}</span>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
 
   const handleOctTimelineClick = (octIdx: number) => {
     setOctSelectedIdx(octIdx);
@@ -164,26 +205,16 @@ export default function CaseDetailPage() {
         onOctTimelineClick={handleOctTimelineClick}
         highlightInjectionDate={highlightInjectionDate}
         onInjectionClick={toggleInjectionHighlight}
+        showCohortReference={showCohortReference}
+        onToggleCohortReference={setShowCohortReference}
       />
 
       {/* Combined chart + injections row */}
       <div className="grid grid-cols-12 gap-6 mb-6">
         <div className="col-span-8">
-          {/* FALL-011: cohort reference overlay toggle */}
-          <div className="flex justify-end mb-1">
-            <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                className="w-3.5 h-3.5 cursor-pointer"
-                checked={showCohortReference}
-                onChange={(e) => setShowCohortReference(e.target.checked)}
-                aria-label={t('cohortReferenceToggle')}
-              />
-              {t('cohortReferenceToggle')}
-              {/* K-bl1: explain how the cohort overlay is aggregated. */}
-              <InfoTooltip text={t('cohortAggregationInfo')} />
-            </label>
-          </div>
+          {/* M4 (v1.18): the cohort-reference toggle now lives in the patient
+              header — it governs ALL case-detail plots, so it is a prominent
+              header-level control rather than sitting above one chart. */}
           <VisusCrtChart
             combinedData={combinedDataWithReference}
             cohortAvgVisus={cohortAvgVisus}
@@ -194,7 +225,6 @@ export default function CaseDetailPage() {
             t={t}
             visusObs={visusObs}
             showCohortReference={showCohortReference}
-            hasInterpolatedPoints={hasInterpolatedPoints}
             injections={injections}
             highlightInjectionDate={highlightInjectionDate}
             onInjectionClick={toggleInjectionHighlight}
@@ -266,8 +296,16 @@ export default function CaseDetailPage() {
               <TrendingDown className="w-4 h-4 text-red-600" />
             )}
             {t('baselineChange')}
-            {/* K-bl1: explain the per-metric baseline change plot. */}
-            <InfoTooltip text={t('baselineChangePlotInfo')} />
+            {/* K-bl1 + M13: explain the per-metric baseline change plot; when the
+                cohort overlay is active, append the overlay note (IQR band +
+                relative-time alignment), mirroring VisusCrtChart's L10 note. */}
+            <InfoTooltip
+              text={
+                baselineRelativeAxis
+                  ? `${t('baselineChangePlotInfo')} ${t('cohortOverlayInfoVisusCrt')}`
+                  : t('baselineChangePlotInfo')
+              }
+            />
           </h3>
           <ResponsiveContainer width="100%" height={200}>
             {/* L5: dynamic X axis tied to the cohort-overlay toggle — calendar-date
@@ -291,8 +329,11 @@ export default function CaseDetailPage() {
                 />
               ) : (
                 <XAxis
-                  dataKey="date"
-                  tickFormatter={(d: string) => (d ? new Date(d).toLocaleDateString(dateFmt, { month: '2-digit', year: '2-digit' }) : '')}
+                  dataKey="dateMs"
+                  type="number"
+                  scale="time"
+                  domain={['dataMin', 'dataMax']}
+                  tickFormatter={(ms: number) => (ms ? new Date(ms).toLocaleDateString(dateFmt, { month: '2-digit', year: '2-digit' }) : '')}
                   tick={{ fontSize: 10, fill: chartColors.axisTick }}
                   stroke={chartColors.grid}
                 />
@@ -335,12 +376,15 @@ export default function CaseDetailPage() {
                   </div>
                 );
               }} />
-              <Legend wrapperStyle={{ fontSize: 12, color: chartColors.legend }} />
+              {/* M5: unified custom legend (IQR band swatch at true fill colour). */}
+              <Legend content={renderBaselineLegend} />
               <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
-              {/* FALL-003 / L5: synchronise the event highlight on the active axis. */}
+              {/* FALL-003 / L5 / M6: synchronise the event highlight on the active
+                  axis — relMonths on the relative axis, epoch-ms on the linear
+                  calendar-time axis. */}
               {highlightDate && (() => {
                 const refRow = baselineChangeWithReference.find((r) => r.date === highlightDate);
-                const hx = baselineRelativeAxis ? refRow?.relMonths : highlightDate;
+                const hx = baselineRelativeAxis ? refRow?.relMonths : refRow?.dateMs;
                 if (hx == null) return null;
                 return (
                   <ReferenceLine
@@ -354,13 +398,18 @@ export default function CaseDetailPage() {
               })()}
               {showCohortReference && (
                 <>
+                  {/* M5: both IQR bands carry a name + legendType="rect" so the
+                      unified legend shows a Visus AND a CRT band entry (the CRT
+                      band was previously legendType="none"), and the fill opacity
+                      matches VisusCrtChart (IQR_FILL_OPACITY) so the swatch is
+                      faithful across both figures. */}
                   <Area
                     type="monotone"
                     dataKey="visusChangeBand"
                     stroke="none"
                     fill="#10b981"
-                    fillOpacity={0.12}
-                    name={t('cohortReferenceBand')}
+                    fillOpacity={IQR_FILL_OPACITY}
+                    name={t('cohortReferenceBandVisusChange')}
                     legendType="rect"
                     connectNulls
                     isAnimationActive={false}
@@ -370,13 +419,14 @@ export default function CaseDetailPage() {
                     dataKey="crtChangeBand"
                     stroke="none"
                     fill="#8b5cf6"
-                    fillOpacity={0.12}
-                    legendType="none"
+                    fillOpacity={IQR_FILL_OPACITY}
+                    name={t('cohortReferenceBandCrtChange')}
+                    legendType="rect"
                     connectNulls
                     isAnimationActive={false}
                   />
-                  <Line type="monotone" dataKey="visusChangeMedian" stroke="#6ee7b7" strokeWidth={1.5} strokeDasharray="4 3" name={t('cohortReferenceMedianChange')} dot={false} connectNulls />
-                  <Line type="monotone" dataKey="crtChangeMedian" stroke="#c4b5fd" strokeWidth={1.5} strokeDasharray="4 3" legendType="none" dot={false} connectNulls />
+                  <Line type="monotone" dataKey="visusChangeMedian" stroke="#6ee7b7" strokeWidth={1.5} strokeDasharray="4 3" name={t('cohortReferenceMedianVisusChange')} dot={false} connectNulls />
+                  <Line type="monotone" dataKey="crtChangeMedian" stroke="#c4b5fd" strokeWidth={1.5} strokeDasharray="4 3" name={t('cohortReferenceMedianCrtChange')} dot={false} connectNulls />
                 </>
               )}
               <Line type="monotone" dataKey="visusChange" stroke="#10b981" name="Visus %" strokeWidth={2} dot={{ r: 3 }} connectNulls />
