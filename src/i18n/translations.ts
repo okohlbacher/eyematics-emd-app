@@ -746,7 +746,6 @@ const translations = {
   crtLegendLabel: { de: 'CRT (µm)', en: 'CRT (µm)' },
   visusYAxisLabel: { de: 'Visus (Dezimal, bestkorrigiert)', en: 'Visual acuity (decimal, best-corrected)' },
   visusShortLabel: { de: 'Visus', en: 'Visus' },
-  interpolatedSeriesLabel: { de: 'Interpoliert (keine Messung)', en: 'Interpolated (no measurement)' },
   scatterVisusAxisLabel: { de: 'Visus (dezimal)', en: 'Visus (decimal)' },
   scatterCrtAxisLabel: { de: 'CRT (µm)', en: 'CRT (µm)' },
   distributionTitle: { de: 'Werteverteilung', en: 'Value Distribution' },
@@ -1201,7 +1200,7 @@ const translations = {
   // L10: overlay-specific addendum appended to the plot info tooltips when the
   // cohort overlay is active — explains the IQR band + relative-time alignment.
   cohortOverlayInfoVisusCrt: {
-    de: 'Kohorten-Overlay aktiv: Das schattierte Band ist der Interquartilsbereich (IQR, 25.–75. Perzentil) der Vergleichsgruppe, die gestrichelte Linie der Kohorten-Median. Die X-Achse wechselt auf „Monate seit Erstvisite", sodass alle Peers an ihrer jeweils eigenen Erstvisite ausgerichtet und bei gleicher verstrichener Behandlungszeit verglichen werden.',
+    de: 'Kohorten-Overlay aktiv: Das schattierte Band ist der Interquartilsbereich (IQR, 25.–75. Perzentil) der Vergleichsgruppe, die gestrichelte Linie der Kohorten-Median. Die X-Achse wechselt auf „Monate seit Erstvisite“, sodass alle Peers an ihrer jeweils eigenen Erstvisite ausgerichtet und bei gleicher verstrichener Behandlungszeit verglichen werden.',
     en: 'Cohort overlay active: the shaded band is the comparison group\'s interquartile range (IQR, 25th–75th percentile) and the dashed line is the cohort median. The X-axis switches to "months since first visit", so all peers are aligned to their own first visit and compared at the same elapsed treatment time.',
   },
   cohortOverlayInfoIop: {

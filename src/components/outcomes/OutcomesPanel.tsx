@@ -27,6 +27,7 @@ import {
   buildSingleCohortTraces,
   downsampleScatter,
   type LayerState,
+  resolveDrillDownId,
   SCATTER_RENDER_CAP,
   type ScatterDatum,
 } from './plotlyTraces';
@@ -301,10 +302,8 @@ export default function OutcomesPanel({
   const handlePlotlyClick = useCallback(
     (raw: unknown) => {
       if (!onPointClick) return;
-      const e = raw as PlotlyMouseEvent;
-      const pt = e.points?.[0];
-      const pid = pt?.customdata;
-      if (typeof pid === 'string' && knownPatientIds.has(pid)) onPointClick(pid);
+      const pid = resolveDrillDownId(raw, knownPatientIds);
+      if (pid) onPointClick(pid);
     },
     [onPointClick, knownPatientIds],
   );

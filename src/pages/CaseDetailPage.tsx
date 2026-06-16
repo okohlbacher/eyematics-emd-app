@@ -104,6 +104,16 @@ export default function CaseDetailPage() {
     iopDataWithReference,
   } = useCaseData(patientCase, cases, locale, t);
 
+  // L5 (consistency): switch the baseline-change chart to the relative axis only when
+  // the cohort overlay is on AND reference rows actually exist — matching VisusCrtChart's
+  // guard, so the two stacked charts never disagree (one on a relative axis with no band
+  // while the other stays on calendar dates).
+  const baselineRelativeAxis =
+    showCohortReference &&
+    baselineChangeWithReference.some(
+      (r) => r.visusChangeMedian != null || r.visusChangeBand != null || r.crtChangeMedian != null || r.crtChangeBand != null,
+    );
+
   const handleOctTimelineClick = (octIdx: number) => {
     setOctSelectedIdx(octIdx);
     octViewerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -269,7 +279,7 @@ export default function CaseDetailPage() {
                 is anchored to its OWN baseline. L11b: theme-aware chart colours. */}
             <ComposedChart data={baselineChangeWithReference}>
               <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
-              {showCohortReference ? (
+              {baselineRelativeAxis ? (
                 <XAxis
                   dataKey="relMonths"
                   type="number"
@@ -288,22 +298,49 @@ export default function CaseDetailPage() {
                 />
               )}
               <YAxis tick={{ fontSize: 10, fill: chartColors.axisTick }} stroke={chartColors.grid} label={{ value: '%', position: 'insideLeft', fontSize: 11, fill: chartColors.axisLabel }} />
-              <Tooltip
-                formatter={(v: unknown) => typeof v === 'number' ? `${v}%` : String(v)}
-                contentStyle={{ background: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: 8 }}
-                labelStyle={{ color: chartColors.tooltipHeading }}
-                itemStyle={{ color: chartColors.tooltipText }}
-                labelFormatter={(label: unknown) => {
-                  if (showCohortReference) return `${label} ${t('relativeMonthsAxisLabel')}`;
-                  return typeof label === 'string' && label ? new Date(label).toLocaleDateString(dateFmt) : String(label ?? '');
-                }}
-              />
+              {/* L4c: custom tooltip whitelisting the measured changes + cohort
+                  medians (numbers only) so the IQR band tuples (visusChangeBand /
+                  crtChangeBand = [p25,p75]) never leak into the tooltip as raw
+                  "12,14" strings — mirrors the VisusCrtChart tooltip. */}
+              <Tooltip content={(props: {
+                active?: boolean;
+                payload?: ReadonlyArray<{ dataKey?: unknown; value?: unknown; color?: string; payload?: { date?: string; relMonths?: number } }>;
+              }) => {
+                if (!props.active || !Array.isArray(props.payload) || props.payload.length === 0) return null;
+                const names: Record<string, string> = {
+                  visusChange: 'Visus %',
+                  crtChange: 'CRT %',
+                  visusChangeMedian: t('cohortReferenceMedianChange'),
+                  crtChangeMedian: t('cohortReferenceMedianChange'),
+                };
+                const rows: Array<{ key: string; name: string; color?: string; text: string }> = [];
+                for (const e of props.payload) {
+                  const key = String(e.dataKey ?? '');
+                  if (typeof e.value !== 'number' || !(key in names)) continue;
+                  rows.push({ key, name: names[key], color: e.color, text: `${e.value}%` });
+                }
+                if (rows.length === 0) return null;
+                const ref = props.payload.find((e) => e.payload)?.payload;
+                const label = baselineRelativeAxis
+                  ? (ref?.relMonths != null ? `${ref.relMonths} ${t('relativeMonthsAxisLabel')}` : '')
+                  : (ref?.date ? new Date(ref.date).toLocaleDateString(dateFmt) : '');
+                return (
+                  <div className="rounded-lg shadow-lg px-3 py-2 text-xs border" style={{ background: chartColors.tooltipBg, borderColor: chartColors.tooltipBorder }}>
+                    {label && <div className="font-semibold mb-1" style={{ color: chartColors.tooltipHeading }}>{label}</div>}
+                    {rows.map((r) => (
+                      <div key={r.key} style={{ color: chartColors.tooltipText }}>
+                        <span style={{ color: r.color }}>{r.name}</span>: {r.text}
+                      </div>
+                    ))}
+                  </div>
+                );
+              }} />
               <Legend wrapperStyle={{ fontSize: 12, color: chartColors.legend }} />
               <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
               {/* FALL-003 / L5: synchronise the event highlight on the active axis. */}
               {highlightDate && (() => {
                 const refRow = baselineChangeWithReference.find((r) => r.date === highlightDate);
-                const hx = showCohortReference ? refRow?.relMonths : highlightDate;
+                const hx = baselineRelativeAxis ? refRow?.relMonths : highlightDate;
                 if (hx == null) return null;
                 return (
                   <ReferenceLine

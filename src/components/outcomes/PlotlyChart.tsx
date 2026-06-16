@@ -98,13 +98,26 @@ export default function PlotlyChart({
       const elev = el as unknown as {
         on: (ev: string, cb: (e: unknown) => void) => void;
         removeAllListeners?: (ev: string) => void;
+        __emdListenersBound?: boolean;
       };
-      elev.removeAllListeners?.('plotly_click');
-      elev.removeAllListeners?.('plotly_hover');
-      elev.removeAllListeners?.('plotly_unhover');
-      elev.on('plotly_click', (e) => clickRef.current?.(e));
-      elev.on('plotly_hover', (e) => hoverRef.current?.(e));
-      elev.on('plotly_unhover', () => unhoverRef.current?.());
+      // HIGH-1 (review): the graph div is normally an EventEmitter, so we clear the
+      // three listeners before re-adding them on each redraw. Do NOT optional-chain
+      // that away — if removeAllListeners is ever absent (Plotly major bump / partial
+      // bundle), silently skipping it would STACK a new listener on every redraw.
+      // Fall back to a one-time bind in that case so listeners can never accumulate.
+      if (typeof elev.removeAllListeners === 'function') {
+        elev.removeAllListeners('plotly_click');
+        elev.removeAllListeners('plotly_hover');
+        elev.removeAllListeners('plotly_unhover');
+        elev.on('plotly_click', (e) => clickRef.current?.(e));
+        elev.on('plotly_hover', (e) => hoverRef.current?.(e));
+        elev.on('plotly_unhover', () => unhoverRef.current?.());
+      } else if (!elev.__emdListenersBound) {
+        elev.__emdListenersBound = true;
+        elev.on('plotly_click', (e) => clickRef.current?.(e));
+        elev.on('plotly_hover', (e) => hoverRef.current?.(e));
+        elev.on('plotly_unhover', () => unhoverRef.current?.());
+      }
 
       if (typeof ResizeObserver !== 'undefined') {
         resizeObserver = new ResizeObserver(() => {
@@ -112,7 +125,12 @@ export default function PlotlyChart({
         });
         resizeObserver.observe(el);
       }
-    })();
+    })().catch((err) => {
+      // HIGH-2 (review): a Plotly.react rejection (bad trace shape, or WebGL context
+      // loss/exhaustion — realistic with 3 panels remounting on cohort/metric switches)
+      // would otherwise be an unhandled rejection and a silently blank panel. Surface it.
+      if (!disposed) console.error('[PlotlyChart] render failed', err);
+    });
 
     return () => {
       disposed = true;

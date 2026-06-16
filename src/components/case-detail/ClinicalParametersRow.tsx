@@ -99,6 +99,36 @@ export default function ClinicalParametersRow({
     );
   };
 
+  // L4c: custom tooltip whitelisting the measured IOP + cohort median (numbers only)
+  // so the IQR band tuple (iopBand = [p25,p75]) never leaks into the tooltip as a raw
+  // "12,14" string — mirrors the VisusCrtChart tooltip. Excludes iopBand.
+  const renderIopTooltip = (props: {
+    active?: boolean;
+    payload?: ReadonlyArray<{ dataKey?: unknown; value?: unknown; color?: string; payload?: { date?: string } }>;
+  }) => {
+    if (!props.active || !Array.isArray(props.payload) || props.payload.length === 0) return null;
+    const rows: Array<{ key: string; name: string; color?: string; text: string }> = [];
+    for (const e of props.payload) {
+      const key = String(e.dataKey ?? '');
+      if (typeof e.value !== 'number') continue;
+      if (key === 'iop') rows.push({ key, name: t('iop'), color: e.color, text: `${e.value} mmHg` });
+      else if (key === 'iopMedian') rows.push({ key, name: t('cohortReferenceMedianIop'), color: e.color, text: `${e.value} mmHg` });
+    }
+    if (rows.length === 0) return null;
+    const rawDate = props.payload.find((e) => e.payload?.date)?.payload?.date ?? '';
+    const label = rawDate ? new Date(rawDate).toLocaleDateString(dateFmt) : '';
+    return (
+      <div className="rounded-lg shadow-lg px-3 py-2 text-xs border" style={{ background: colors.tooltipBg, borderColor: colors.tooltipBorder }}>
+        {label && <div className="font-semibold mb-1" style={{ color: colors.tooltipHeading }}>{label}</div>}
+        {rows.map((r) => (
+          <div key={r.key} style={{ color: colors.tooltipText }}>
+            <span style={{ color: r.color }}>{r.name}</span>: {r.text}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="grid grid-cols-12 gap-6 mb-6">
       {/* IOP chart (N05.06) */}
@@ -133,13 +163,7 @@ export default function ClinicalParametersRow({
                 stroke={colors.grid}
               />
               <YAxis domain={[0, 30]} tickCount={5} tick={{ fontSize: 10, fill: colors.axisTick }} stroke={colors.grid} />
-              <Tooltip
-                formatter={(v: unknown) => (typeof v === 'number' ? `${v} mmHg` : String(v))}
-                contentStyle={{ background: colors.tooltipBg, border: `1px solid ${colors.tooltipBorder}`, borderRadius: 8 }}
-                labelStyle={{ color: colors.tooltipHeading }}
-                itemStyle={{ color: colors.tooltipText }}
-                labelFormatter={(d: unknown) => (typeof d === 'string' && d ? new Date(d).toLocaleDateString(dateFmt) : String(d ?? ''))}
-              />
+              <Tooltip content={renderIopTooltip} />
               {hasIopReference && <Legend content={renderIopLegend} />}
               <ReferenceLine y={CRITICAL_IOP_THRESHOLD()} stroke="#ef4444" strokeDasharray="3 3" label={{ value: String(CRITICAL_IOP_THRESHOLD()), fontSize: 9, fill: '#ef4444' }} />
               {hasIopReference && (

@@ -48,6 +48,19 @@ export function downsampleScatter<T>(points: readonly T[], cap: number): T[] {
  */
 export const SCATTER_RENDER_CAP = 6000;
 
+/**
+ * IDOR gate (security boundary): given a raw Plotly click event, return the navigable
+ * patientId ONLY if its `customdata` is a string AND a pseudonym known to this panel.
+ * Returns null for anything else — an unknown/crafted `customdata`, a non-string, a
+ * stale trace, or a missing point. Extracted as a pure function so the gate itself
+ * (not a reimplementation) can be unit-tested against a hostile customdata.
+ */
+export function resolveDrillDownId(raw: unknown, knownPatientIds: ReadonlySet<string>): string | null {
+  const e = raw as { points?: ReadonlyArray<{ customdata?: unknown }> } | null | undefined;
+  const pid = e?.points?.[0]?.customdata;
+  return typeof pid === 'string' && knownPatientIds.has(pid) ? pid : null;
+}
+
 export interface TraceColors {
   /** logMAR / CRT series colour (eye- or cohort-resolved). */
   series: string;
