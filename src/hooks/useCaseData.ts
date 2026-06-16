@@ -386,10 +386,16 @@ export function useCaseData(
     return out;
   }, [cases, patientCase]);
 
+  // K-bl2 (per-metric baseline anchor): the Visus %-change is anchored to the
+  // FIRST VISUS value and the CRT %-change to the FIRST CRT value — each metric to
+  // its OWN baseline, never a single shared first-visit baseline. visusObs/crtObs
+  // are date-sorted by getObservationsByCode, so [0] is each metric's earliest
+  // measurement. The two metrics are independent: a metric with <2 measurements
+  // simply contributes no change series, but does not suppress the other.
   const baselineData = useMemo((): BaselineChangePoint[] => {
-    if (visusObs.length < 2) return [];
-    const baselineVisus = visusObs[0]?.valueQuantity?.value ?? 0;
-    const baselineCrt = crtObs[0]?.valueQuantity?.value ?? 0;
+    if (visusObs.length < 2 && crtObs.length < 2) return [];
+    const baselineVisus = visusObs[0]?.valueQuantity?.value;
+    const baselineCrt = crtObs[0]?.valueQuantity?.value;
     const dateMap = new Map<string, BaselineChangePoint>();
     const ensure = (d: string): BaselineChangePoint => {
       const existing = dateMap.get(d);
@@ -398,22 +404,24 @@ export function useCaseData(
       dateMap.set(d, entry);
       return entry;
     };
-    visusObs.forEach((o) => {
-      const d = o.effectiveDateTime?.substring(0, 10) ?? '';
-      const val = o.valueQuantity?.value ?? 0;
-      const entry = ensure(d);
-      entry.visusChange = baselineVisus
-        ? +((((val - baselineVisus) / baselineVisus) * 100).toFixed(1))
-        : 0;
-    });
-    crtObs.forEach((o) => {
-      const d = o.effectiveDateTime?.substring(0, 10) ?? '';
-      const val = o.valueQuantity?.value ?? 0;
-      const entry = ensure(d);
-      entry.crtChange = baselineCrt
-        ? +((((val - baselineCrt) / baselineCrt) * 100).toFixed(1))
-        : 0;
-    });
+    // Visus %-change vs the FIRST VISUS baseline only.
+    if (visusObs.length >= 2 && baselineVisus) {
+      visusObs.forEach((o) => {
+        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
+        const val = o.valueQuantity?.value;
+        if (!d || val == null) return;
+        ensure(d).visusChange = +((((val - baselineVisus) / baselineVisus) * 100).toFixed(1));
+      });
+    }
+    // CRT %-change vs the FIRST CRT baseline only (independent of Visus).
+    if (crtObs.length >= 2 && baselineCrt) {
+      crtObs.forEach((o) => {
+        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
+        const val = o.valueQuantity?.value;
+        if (!d || val == null) return;
+        ensure(d).crtChange = +((((val - baselineCrt) / baselineCrt) * 100).toFixed(1));
+      });
+    }
     return Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
   }, [visusObs, crtObs, baselineDate]);
 

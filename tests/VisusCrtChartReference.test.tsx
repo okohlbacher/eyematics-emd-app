@@ -363,6 +363,49 @@ describe('useCaseData — J3d cohort overlays on the other plots', () => {
     expect(base.relMonths).toBe(0);
   });
 
+  it('K-bl2: anchors Visus %-change to first VISUS and CRT %-change to first CRT', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+    // Visus first measured on 2024-01-01 (0.4); CRT first measured LATER on
+    // 2024-02-01 (300). A shared single first-visit baseline would anchor CRT to
+    // the 2024-01-01 row (where CRT is absent) — per-metric anchoring must use
+    // each metric's OWN first value.
+    const patientCase = makeCase('C1', [
+      makeObs(LOINC_VISUS, '2024-01-01', 0.4),
+      makeObs(LOINC_CRT, '2024-02-01', 300),
+      makeObs(LOINC_VISUS, '2024-03-01', 0.5), // +25% vs 0.4
+      makeObs(LOINC_CRT, '2024-04-01', 270),   // -10% vs 300
+    ]);
+    const { result } = renderHook(() => useCaseData(patientCase, [patientCase], 'de', t));
+    const rows = result.current.baselineData;
+
+    // Visus baseline row = its own first date; change there is 0.
+    const visusBaseRow = rows.find((r) => r.date === '2024-01-01')!;
+    expect(visusBaseRow.visusChange).toBe(0);
+    // CRT baseline row = CRT's own first date (a DIFFERENT date); change there is 0.
+    const crtBaseRow = rows.find((r) => r.date === '2024-02-01')!;
+    expect(crtBaseRow.crtChange).toBe(0);
+    // Later Visus change anchored to first VISUS (0.4): (0.5-0.4)/0.4 = +25%.
+    expect(rows.find((r) => r.date === '2024-03-01')!.visusChange).toBeCloseTo(25, 1);
+    // Later CRT change anchored to first CRT (300): (270-300)/300 = -10%.
+    expect(rows.find((r) => r.date === '2024-04-01')!.crtChange).toBeCloseTo(-10, 1);
+  });
+
+  it('K-bl2: a metric with <2 measurements does not suppress the other metric', async () => {
+    const { useCaseData } = await import('../src/hooks/useCaseData');
+    // Only ONE Visus, but multiple CRT → CRT change still computed.
+    const patientCase = makeCase('C1', [
+      makeObs(LOINC_VISUS, '2024-01-01', 0.4),
+      makeObs(LOINC_CRT, '2024-01-01', 300),
+      makeObs(LOINC_CRT, '2024-02-01', 330), // +10% vs 300
+    ]);
+    const { result } = renderHook(() => useCaseData(patientCase, [patientCase], 'de', t));
+    const rows = result.current.baselineData;
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.find((r) => r.date === '2024-02-01')!.crtChange).toBeCloseTo(10, 1);
+    // No Visus change series (only one Visus measurement).
+    expect(rows.find((r) => r.date === '2024-02-01')!.visusChange).toBeUndefined();
+  });
+
   it('computes cohort distribution percentages excluding the index patient', async () => {
     const { useCaseData } = await import('../src/hooks/useCaseData');
     const patientCase = makeCase('C1', [makeObs(LOINC_VISUS, '2024-01-01', 0.5)]);
