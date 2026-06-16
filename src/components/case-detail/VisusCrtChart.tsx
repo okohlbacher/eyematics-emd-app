@@ -16,6 +16,7 @@ import type { CombinedDataPoint } from '../../hooks/useCaseData';
 import type { TranslationKey } from '../../i18n/translations';
 import type { Observation, Procedure } from '../../types/fhir';
 import { translateClinical } from '../../utils/clinicalTerms';
+import { InfoTooltip } from '../primitives';
 
 export interface VisusCrtChartProps {
   /** A3 v2: single merged data array — patient rows already carry the cohort
@@ -137,8 +138,10 @@ export default function VisusCrtChart({
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <h3 className="font-semibold text-gray-900 mb-1">
+      <h3 className="font-semibold text-gray-900 mb-1 flex items-center gap-1.5">
         {t('visusAndCrt')}
+        {/* K-bl1: short explanation of what the trajectory shows. */}
+        <InfoTooltip text={t('visusCrtPlotInfo')} />
       </h3>
       {/* I4: the full Visus label "Visus (Dezimal, bestkorrigiert)" now lives in
           the chart legend (measured-Visus line name), so the redundant under-title

@@ -18,6 +18,7 @@ import type { IopDataPoint } from '../../hooks/useCaseData';
 import type { TranslationKey } from '../../i18n/translations';
 import type { Condition, Observation } from '../../types/fhir';
 import { translateClinical } from '../../utils/clinicalTerms';
+import { InfoTooltip } from '../primitives';
 
 export interface ClinicalParametersRowProps {
   iopObs: Observation[];
@@ -56,6 +57,8 @@ export default function ClinicalParametersRow({
         <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
           <Eye className="w-4 h-4" />
           {t('iop')} {eyeLaterality && <span className="text-xs text-gray-400">({eyeLaterality})</span>}
+          {/* K-bl1: short explanation of the IOP plot (+ cohort overlay note). */}
+          <InfoTooltip text={t('iopPlotInfo')} />
         </h3>
         {iopObs.length > 0 && (
           <p className="text-xs text-gray-400 mb-3">

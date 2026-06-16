@@ -22,6 +22,7 @@ import MedicationCard from '../components/case-detail/MedicationCard';
 import PatientHeader from '../components/case-detail/PatientHeader';
 import VisusCrtChart from '../components/case-detail/VisusCrtChart';
 import OctViewer from '../components/OctViewer';
+import { InfoTooltip } from '../components/primitives';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useCaseData } from '../hooks/useCaseData';
@@ -150,6 +151,8 @@ export default function CaseDetailPage() {
                 aria-label={t('cohortReferenceToggle')}
               />
               {t('cohortReferenceToggle')}
+              {/* K-bl1: explain how the cohort overlay is aggregated. */}
+              <InfoTooltip text={t('cohortAggregationInfo')} />
             </label>
           </div>
           <VisusCrtChart
@@ -234,6 +237,8 @@ export default function CaseDetailPage() {
               <TrendingDown className="w-4 h-4 text-red-600" />
             )}
             {t('baselineChange')}
+            {/* K-bl1: explain the per-metric baseline change plot. */}
+            <InfoTooltip text={t('baselineChangePlotInfo')} />
           </h3>
           <ResponsiveContainer width="100%" height={200}>
             {/* K3c (revert of v1.15-p5): calendar-date X axis. J3d: cohort
