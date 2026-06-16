@@ -61,6 +61,12 @@ export default function ClinicalParametersRow({
   const hasIopReference =
     showCohortReference && iopData.some((d) => d.iopMedian != null || d.iopBand != null);
 
+  // M7 (v1.18): the IOD chart now switches calendar ↔ relative ("Monate seit
+  // Erstvisite") exactly like Visus/CRT (L5) — relative axis when the cohort
+  // overlay is active so the relative-time-aligned cohort band shares the
+  // patient's axis; the linear calendar-time axis (M6) otherwise.
+  const useIopRelativeAxis = hasIopReference;
+
   // L4b: custom legend so the IQR band swatch reproduces the rendered band colour
   // (semi-transparent fill), not the opaque patient series colour.
   const renderIopLegend = (props: {
@@ -104,7 +110,7 @@ export default function ClinicalParametersRow({
   // "12,14" string — mirrors the VisusCrtChart tooltip. Excludes iopBand.
   const renderIopTooltip = (props: {
     active?: boolean;
-    payload?: ReadonlyArray<{ dataKey?: unknown; value?: unknown; color?: string; payload?: { date?: string } }>;
+    payload?: ReadonlyArray<{ dataKey?: unknown; value?: unknown; color?: string; payload?: { date?: string; relMonths?: number } }>;
   }) => {
     if (!props.active || !Array.isArray(props.payload) || props.payload.length === 0) return null;
     const rows: Array<{ key: string; name: string; color?: string; text: string }> = [];
@@ -115,8 +121,16 @@ export default function ClinicalParametersRow({
       else if (key === 'iopMedian') rows.push({ key, name: t('cohortReferenceMedianIop'), color: e.color, text: `${e.value} mmHg` });
     }
     if (rows.length === 0) return null;
-    const rawDate = props.payload.find((e) => e.payload?.date)?.payload?.date ?? '';
-    const label = rawDate ? new Date(rawDate).toLocaleDateString(dateFmt) : '';
+    // M7: the label adapts to the active axis — "X Monate seit Erstvisite" on the
+    // relative axis, the calendar date otherwise (mirrors VisusCrtChart's L4c).
+    const ref = props.payload.find((e) => e.payload)?.payload;
+    const label = useIopRelativeAxis
+      ? ref?.relMonths != null
+        ? `${ref.relMonths} ${t('relativeMonthsAxisLabel')}`
+        : ''
+      : ref?.date
+        ? new Date(ref.date).toLocaleDateString(dateFmt)
+        : '';
     return (
       <div className="rounded-lg shadow-lg px-3 py-2 text-xs border" style={{ background: colors.tooltipBg, borderColor: colors.tooltipBorder }}>
         {label && <div className="font-semibold mb-1" style={{ color: colors.tooltipHeading }}>{label}</div>}
@@ -149,19 +163,34 @@ export default function ClinicalParametersRow({
           <p className="text-sm text-gray-400 dark:text-gray-500">{t('noData')}</p>
         ) : (
           <ResponsiveContainer width="100%" height={180}>
-            {/* L4d: the IOD overlay is now a cohort median LINE + IQR band over the
-                patient's IOP LINE (was a bar plot), consistent with Visus/CRT. The
-                reference values are aggregated by relative time since each peer's
-                own baseline (index excluded) and mapped onto the patient's IOP
-                dates (calendar-date axis per K3c). */}
+            {/* L4d: the IOD overlay is a cohort median LINE + IQR band over the
+                patient's IOP LINE (was a bar plot), consistent with Visus/CRT.
+                M7: the X axis now switches calendar ↔ relative with the overlay
+                toggle (like Visus/CRT, L5); the calendar variant is a linear
+                TIME axis keyed on epoch-ms (M6) so spacing tracks elapsed time. */}
             <ComposedChart data={iopData}>
               <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-              <XAxis
-                dataKey="date"
-                tickFormatter={(d: string) => (d ? new Date(d).toLocaleDateString(dateFmt, { month: '2-digit', year: '2-digit' }) : '')}
-                tick={{ fontSize: 9, fill: colors.axisTick }}
-                stroke={colors.grid}
-              />
+              {useIopRelativeAxis ? (
+                <XAxis
+                  dataKey="relMonths"
+                  type="number"
+                  domain={['dataMin', 'dataMax']}
+                  tickFormatter={(m: number) => String(m)}
+                  tick={{ fontSize: 9, fill: colors.axisTick }}
+                  stroke={colors.grid}
+                  label={{ value: t('relativeMonthsAxisLabel'), position: 'insideBottom', offset: -2, fontSize: 9, fill: colors.axisLabel }}
+                />
+              ) : (
+                <XAxis
+                  dataKey="dateMs"
+                  type="number"
+                  scale="time"
+                  domain={['dataMin', 'dataMax']}
+                  tickFormatter={(ms: number) => (ms ? new Date(ms).toLocaleDateString(dateFmt, { month: '2-digit', year: '2-digit' }) : '')}
+                  tick={{ fontSize: 9, fill: colors.axisTick }}
+                  stroke={colors.grid}
+                />
+              )}
               <YAxis domain={[0, 30]} tickCount={5} tick={{ fontSize: 10, fill: colors.axisTick }} stroke={colors.grid} />
               <Tooltip content={renderIopTooltip} />
               {hasIopReference && <Legend content={renderIopLegend} />}
