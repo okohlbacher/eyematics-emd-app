@@ -27,9 +27,10 @@ import {
   computeIntervalDistribution,
   type IntervalEye,
 } from '../../../shared/intervalMetric';
+import { useThemeSafe } from '../../context/ThemeContext';
 import type { TranslationKey } from '../../i18n/translations';
 import type { PatientCase } from '../../types/fhir';
-import { EYE_COLORS } from './palette';
+import { EYE_COLORS, rechartsTheme } from './palette';
 
 /** Cross-cohort series entry for the interval histogram — mirrors OutcomesPanel.CohortSeriesEntry
  *  but carries raw cases instead of a pre-computed PanelResult, so the histogram can
@@ -66,6 +67,9 @@ function eyeLabelKey(eye: IntervalEye): TranslationKey {
 
 export default function IntervalHistogram({ cases, t, locale: _locale, cohortSeries }: Props) {
   const [eye, setEye] = useState<IntervalEye>('combined');
+  // M12 (v1.18 WS-A): theme-aware Recharts tokens (test-safe via useThemeSafe).
+  const { effectiveTheme } = useThemeSafe();
+  const ct = rechartsTheme(effectiveTheme === 'dark');
 
   // Determine if we are in cross-cohort mode.
   const isCrossMode = Boolean(cohortSeries && cohortSeries.length >= 2);
@@ -206,36 +210,40 @@ export default function IntervalHistogram({ cases, t, locale: _locale, cohortSer
             </div>
             <ResponsiveContainer width="100%" height={320}>
               <BarChart data={crossData.rows}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
                 <XAxis
                   dataKey="label"
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 11, fill: ct.axisTick }}
+                  stroke={ct.axisTick}
                   label={{
                     value: t('metricsIntervalXAxis'),
                     position: 'insideBottom',
                     offset: -4,
                     fontSize: 11,
-                    fill: '#6b7280',
+                    fill: ct.axisLabel,
                   }}
                 />
                 <YAxis
                   tickCount={5}
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 11, fill: ct.axisTick }}
+                  stroke={ct.axisTick}
                   label={{
                     value: t('metricsIntervalYAxis'),
                     angle: -90,
                     position: 'insideLeft',
                     fontSize: 11,
-                    fill: '#6b7280',
+                    fill: ct.axisLabel,
                   }}
                   allowDecimals={false}
                 />
                 <Tooltip
-                  contentStyle={{ fontSize: 12, borderRadius: 6, border: '1px solid #e5e7eb' }}
+                  contentStyle={{ fontSize: 12, borderRadius: 6, border: `1px solid ${ct.tooltipBorder}`, backgroundColor: ct.tooltipBg, color: ct.tooltipText }}
+                  itemStyle={{ color: ct.tooltipText }}
+                  labelStyle={{ color: ct.tooltipText }}
                 />
                 {/* Recharts Legend renders cohort name + color swatch automatically from Bar name= */}
                 <Legend
-                  wrapperStyle={{ fontSize: 12 }}
+                  wrapperStyle={{ fontSize: 12, color: ct.legend }}
                   aria-label={t('metricsIntervalCohortLegendAriaLabel')}
                 />
                 {cohortSeries!.map((s) => (
@@ -279,32 +287,36 @@ export default function IntervalHistogram({ cases, t, locale: _locale, cohortSer
             </p>
             <ResponsiveContainer width="100%" height={320}>
               <BarChart data={distribution!.bins}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
                 <XAxis
                   dataKey="label"
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 11, fill: ct.axisTick }}
+                  stroke={ct.axisTick}
                   label={{
                     value: t('metricsIntervalXAxis'),
                     position: 'insideBottom',
                     offset: -4,
                     fontSize: 11,
-                    fill: '#6b7280',
+                    fill: ct.axisLabel,
                   }}
                 />
                 <YAxis
                   tickCount={5}
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 11, fill: ct.axisTick }}
+                  stroke={ct.axisTick}
                   label={{
                     value: t('metricsIntervalYAxis'),
                     angle: -90,
                     position: 'insideLeft',
                     fontSize: 11,
-                    fill: '#6b7280',
+                    fill: ct.axisLabel,
                   }}
                   allowDecimals={false}
                 />
                 <Tooltip
-                  contentStyle={{ fontSize: 12, borderRadius: 6, border: '1px solid #e5e7eb' }}
+                  contentStyle={{ fontSize: 12, borderRadius: 6, border: `1px solid ${ct.tooltipBorder}`, backgroundColor: ct.tooltipBg, color: ct.tooltipText }}
+                  itemStyle={{ color: ct.tooltipText }}
+                  labelStyle={{ color: ct.tooltipText }}
                 />
                 <Bar dataKey="count" fill={activeColor} fillOpacity={0.85} />
               </BarChart>

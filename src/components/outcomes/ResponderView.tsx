@@ -31,9 +31,11 @@ import { computeCohortTrajectory } from '../../../shared/cohortTrajectory';
 import {
   classifyResponders,
 } from '../../../shared/responderMetric';
+import { useThemeSafe } from '../../context/ThemeContext';
 import type { TranslationKey } from '../../i18n/translations';
 import type { PatientCase } from '../../types/fhir';
 import type { IntervalCohortSeries } from './IntervalHistogram';
+import { rechartsTheme } from './palette';
 
 interface Props {
   cases: PatientCase[];
@@ -58,9 +60,10 @@ interface CohortResponderPanelProps {
   series: IntervalCohortSeries;
   thresholdLetters: number;
   t: (key: TranslationKey) => string;
+  ct: ReturnType<typeof rechartsTheme>;
 }
 
-function CohortResponderPanel({ series, thresholdLetters, t }: CohortResponderPanelProps) {
+function CohortResponderPanel({ series, thresholdLetters, t, ct }: CohortResponderPanelProps) {
   const odB = useMemo(() => classifyResponders(series.cases, thresholdLetters, 'od'), [series.cases, thresholdLetters]);
   const osB = useMemo(() => classifyResponders(series.cases, thresholdLetters, 'os'), [series.cases, thresholdLetters]);
   const combB = useMemo(() => classifyResponders(series.cases, thresholdLetters, 'combined'), [series.cases, thresholdLetters]);
@@ -100,11 +103,11 @@ function CohortResponderPanel({ series, thresholdLetters, t }: CohortResponderPa
       ) : (
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={barData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="eye" tick={{ fontSize: 10 }} />
-            <YAxis tickCount={5} tick={{ fontSize: 10 }} allowDecimals={false} />
-            <Tooltip />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
+            <XAxis dataKey="eye" tick={{ fontSize: 10, fill: ct.axisTick }} stroke={ct.axisTick} />
+            <YAxis tickCount={5} tick={{ fontSize: 10, fill: ct.axisTick }} stroke={ct.axisTick} allowDecimals={false} />
+            <Tooltip contentStyle={{ backgroundColor: ct.tooltipBg, border: `1px solid ${ct.tooltipBorder}`, borderRadius: 6, color: ct.tooltipText }} itemStyle={{ color: ct.tooltipText }} labelStyle={{ color: ct.tooltipText }} />
+            <Legend wrapperStyle={{ fontSize: 11, color: ct.legend }} />
             <Bar dataKey="responder" fill={BUCKET_COLORS.responder} name={t('metricsResponderBucketResponder')} />
             <Bar dataKey="partial" fill={BUCKET_COLORS.partial} name={t('metricsResponderBucketPartial')} />
             <Bar dataKey="nonResponder" fill={BUCKET_COLORS.nonResponder} name={t('metricsResponderBucketNonResponder')} />
@@ -119,6 +122,10 @@ function CohortResponderPanel({ series, thresholdLetters, t }: CohortResponderPa
 // ResponderView — main export
 // ---------------------------------------------------------------------------
 export default function ResponderView({ cases, thresholdLetters, t, locale: _locale, cohortSeries }: Props) {
+  // M12 (v1.18 WS-A): theme-aware Recharts tokens (axes/grid/legend/tooltip restyle
+  // for dark mode). useThemeSafe is test-safe (light default outside ThemeProvider).
+  const { effectiveTheme } = useThemeSafe();
+  const ct = rechartsTheme(effectiveTheme === 'dark');
   // Determine if we are in cross-cohort mode.
   const isCrossMode = Boolean(cohortSeries && cohortSeries.length >= 2);
   const odBuckets = useMemo(() => classifyResponders(cases, thresholdLetters, 'od'), [cases, thresholdLetters]);
@@ -180,6 +187,7 @@ export default function ResponderView({ cases, thresholdLetters, t, locale: _loc
               series={series}
               thresholdLetters={thresholdLetters}
               t={t}
+              ct={ct}
             />
           ))}
         </div>
@@ -250,20 +258,22 @@ export default function ResponderView({ cases, thresholdLetters, t, locale: _loc
       <div data-testid="responder-bar-section">
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={barData}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
             <XAxis
               dataKey="eye"
-              tick={{ fontSize: 11 }}
-              label={{ value: t('metricsResponderBarXAxis'), position: 'insideBottom', offset: -4, fontSize: 11, fill: '#6b7280' }}
+              tick={{ fontSize: 11, fill: ct.axisTick }}
+              stroke={ct.axisTick}
+              label={{ value: t('metricsResponderBarXAxis'), position: 'insideBottom', offset: -4, fontSize: 11, fill: ct.axisLabel }}
             />
             <YAxis
               tickCount={5}
-              tick={{ fontSize: 11 }}
-              label={{ value: t('metricsResponderBarYAxis'), angle: -90, position: 'insideLeft', fontSize: 11, fill: '#6b7280' }}
+              tick={{ fontSize: 11, fill: ct.axisTick }}
+              stroke={ct.axisTick}
+              label={{ value: t('metricsResponderBarYAxis'), angle: -90, position: 'insideLeft', fontSize: 11, fill: ct.axisLabel }}
               allowDecimals={false}
             />
-            <Tooltip />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Tooltip contentStyle={{ backgroundColor: ct.tooltipBg, border: `1px solid ${ct.tooltipBorder}`, borderRadius: 6, color: ct.tooltipText }} itemStyle={{ color: ct.tooltipText }} labelStyle={{ color: ct.tooltipText }} />
+            <Legend wrapperStyle={{ fontSize: 12, color: ct.legend }} />
             <Bar dataKey="responder" fill={BUCKET_COLORS.responder} name={t('metricsResponderBucketResponder')} />
             <Bar dataKey="partial" fill={BUCKET_COLORS.partial} name={t('metricsResponderBucketPartial')} />
             <Bar dataKey="nonResponder" fill={BUCKET_COLORS.nonResponder} name={t('metricsResponderBucketNonResponder')} />
@@ -280,21 +290,23 @@ export default function ResponderView({ cases, thresholdLetters, t, locale: _loc
         </h4>
         <ResponsiveContainer width="100%" height={320}>
           <ComposedChart data={trajData}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
             <XAxis
               dataKey="x"
               type="number"
               tickCount={5}
-              tick={{ fontSize: 11 }}
-              label={{ value: 'Tage', position: 'insideBottom', offset: -4, fontSize: 11, fill: '#6b7280' }}
+              tick={{ fontSize: 11, fill: ct.axisTick }}
+              stroke={ct.axisTick}
+              label={{ value: 'Tage', position: 'insideBottom', offset: -4, fontSize: 11, fill: ct.axisLabel }}
             />
             <YAxis
               tickCount={5}
-              tick={{ fontSize: 11 }}
-              label={{ value: t('metricsPreviewColDeltaVisusLetters'), angle: -90, position: 'insideLeft', fontSize: 11, fill: '#6b7280' }}
+              tick={{ fontSize: 11, fill: ct.axisTick }}
+              stroke={ct.axisTick}
+              label={{ value: t('metricsPreviewColDeltaVisusLetters'), angle: -90, position: 'insideLeft', fontSize: 11, fill: ct.axisLabel }}
             />
-            <Tooltip />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Tooltip contentStyle={{ backgroundColor: ct.tooltipBg, border: `1px solid ${ct.tooltipBorder}`, borderRadius: 6, color: ct.tooltipText }} itemStyle={{ color: ct.tooltipText }} labelStyle={{ color: ct.tooltipText }} />
+            <Legend wrapperStyle={{ fontSize: 12, color: ct.legend }} />
             <Line type="monotone" dataKey="responder" stroke={BUCKET_COLORS.responder} strokeWidth={3} dot={false} name={t('metricsResponderBucketResponder')} connectNulls />
             <Line type="monotone" dataKey="partial" stroke={BUCKET_COLORS.partial} strokeWidth={3} dot={false} name={t('metricsResponderBucketPartial')} connectNulls />
             <Line type="monotone" dataKey="nonResponder" stroke={BUCKET_COLORS.nonResponder} strokeWidth={3} dot={false} name={t('metricsResponderBucketNonResponder')} connectNulls />

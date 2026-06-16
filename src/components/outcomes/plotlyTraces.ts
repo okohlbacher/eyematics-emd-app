@@ -129,7 +129,11 @@ export function buildSingleCohortTraces(args: {
           ? SERIES_STYLES.perPatient.opacitySparse
           : SERIES_STYLES.perPatient.opacityDense,
         customdata: p.x.map(() => p.id),
-        hovertemplate: `${p.id}<extra></extra>`,
+        // M2 (v1.18 WS-A): suppress Plotly's NATIVE hover label so it never
+        // double-shows alongside our custom imperative tooltip. 'none' (not 'skip')
+        // keeps the `plotly_hover` event firing (so the detailed tooltip — and the
+        // M1 line-emphasis below — still works); 'skip' would kill the event too.
+        hoverinfo: 'none',
         showlegend: false,
         name: `perpatient-${p.id}`,
       });
@@ -164,7 +168,12 @@ export function buildSingleCohortTraces(args: {
         color: rgba(colors.series, SERIES_STYLES.scatter.fillOpacity),
         line: { width: 0 },
       },
-      hovertemplate: '%{text}<extra></extra>',
+      // M2 (v1.18 WS-A): 'none' suppresses Plotly's NATIVE hover label (which showed
+      // only the pseudonym and double-stacked with our detailed custom tooltip) while
+      // STILL firing `plotly_hover` — which drives the single detailed tooltip. Do NOT
+      // use 'skip' (that disables the hover event entirely). `text` is retained for the
+      // fallback/customdata path. End state: exactly ONE tooltip on scatter hover.
+      hoverinfo: 'none',
       showlegend: false,
       name: 'scatter',
     });
@@ -173,11 +182,37 @@ export function buildSingleCohortTraces(args: {
   return traces;
 }
 
-/** Build cross-cohort median + IQR traces (one per cohort series). */
+/** One cohort's series payload for the cross-cohort overlay. */
+export interface CrossCohortSeriesInput {
+  cohortId: string;
+  cohortName: string;
+  patientCount: number;
+  color: string;
+  medianGrid: GridPoint[];
+  /** M3 (v1.18 WS-A): per-cohort scatter cloud, drawn when `layers.scatter` is on. */
+  scatterPoints?: ScatterDatum[];
+  /** M3: per-cohort per-patient lines, drawn when `layers.perPatient` is on. */
+  perPatientSeries?: Array<{ id: string; sparse: boolean; x: number[]; y: Array<number | null> }>;
+}
+
+/**
+ * Build cross-cohort traces. Z-order per cohort: IQR band → per-patient lines →
+ * scatter (bands first across all cohorts so no cohort's band hides another's lines),
+ * then all medians on top.
+ *
+ * M3 (v1.18 WS-A): the scatter / per-patient layers now actually render in compare
+ * mode — each in its OWN cohort colour — gated on the same layer toggles as the
+ * single-cohort path. Drill-down stays disabled in cross mode (by design), but hover
+ * tooltips work: scatter carries customdata=pseudonym and per-patient lines carry it
+ * too, while `hoverinfo:'none'` keeps the single custom tooltip (no native label).
+ */
 export function buildCrossCohortTraces(args: {
-  series: Array<{ cohortId: string; cohortName: string; patientCount: number; color: string; medianGrid: GridPoint[] }>;
+  series: CrossCohortSeriesInput[];
+  layers?: LayerState;
 }): PlotlyData[] {
+  const layers = args.layers;
   const traces: PlotlyData[] = [];
+  // IQR bands (bottom of the z-stack) for every cohort first.
   for (const s of args.series) {
     if (s.medianGrid.length === 0) continue;
     const xs = s.medianGrid.map((g) => g.x);
@@ -206,6 +241,53 @@ export function buildCrossCohortTraces(args: {
       name: `iqr-upper-${s.cohortId}`,
     });
   }
+  // M3: per-cohort per-patient lines (opt-in via the toggle), in the cohort colour.
+  if (layers?.perPatient) {
+    for (const s of args.series) {
+      for (const p of s.perPatientSeries ?? []) {
+        traces.push({
+          type: 'scatter',
+          mode: 'lines',
+          x: p.x,
+          y: p.y,
+          line: { width: SERIES_STYLES.perPatient.strokeWidth, color: s.color },
+          opacity: p.sparse
+            ? SERIES_STYLES.perPatient.opacitySparse
+            : SERIES_STYLES.perPatient.opacityDense,
+          customdata: p.x.map(() => p.id),
+          hoverinfo: 'none',
+          showlegend: false,
+          legendgroup: s.cohortId,
+          name: `perpatient-${s.cohortId}-${p.id}`,
+        });
+      }
+    }
+  }
+  // M3: per-cohort scatter cloud (opt-in via the toggle), in the cohort colour.
+  if (layers?.scatter) {
+    for (const s of args.series) {
+      const pts = s.scatterPoints ?? [];
+      if (pts.length === 0) continue;
+      traces.push({
+        type: 'scattergl',
+        mode: 'markers',
+        x: pts.map((p) => p.x),
+        y: pts.map((p) => p.y),
+        customdata: pts.map((p) => p.patientId),
+        text: pts.map((p) => p.patientId),
+        marker: {
+          size: 7,
+          color: rgba(s.color, SERIES_STYLES.scatter.fillOpacity),
+          line: { width: 0 },
+        },
+        hoverinfo: 'none',
+        showlegend: false,
+        legendgroup: s.cohortId,
+        name: `scatter-${s.cohortId}`,
+      });
+    }
+  }
+  // Medians on top.
   for (const s of args.series) {
     if (s.medianGrid.length === 0) continue;
     traces.push({

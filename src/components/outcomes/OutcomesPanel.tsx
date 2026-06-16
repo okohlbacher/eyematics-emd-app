@@ -21,7 +21,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useThemeSafe } from '../../context/ThemeContext';
 import type { AxisMode, GridPoint, PanelResult, YMetric } from '../../utils/cohortTrajectory';
 import { DARK_EYE_COLORS, EYE_COLORS, SERIES_STYLES } from './palette';
-import PlotlyChart from './PlotlyChart';
+import PlotlyChart, { type PlotlyImperativeHandle } from './PlotlyChart';
 import {
   buildCrossCohortTraces,
   buildSingleCohortTraces,
@@ -105,6 +105,12 @@ export default function OutcomesPanel({
   // Hovered patient drives the imperative tooltip + the click drill-down target.
   // A ref (not state) so hover never re-renders the chart subtree.
   const hoveredDatumRef = useRef<{ patientId: string } | null>(null);
+  // M1 (v1.18 WS-A): imperative Plotly restyle handle + the per-patient trace index
+  // currently emphasised (so unhover/hover-switch can restore exactly that one trace
+  // to its natural width/opacity). Refs, never state — emphasis is a cheap in-place
+  // restyle that must NOT re-render the chart subtree.
+  const plotlyHandleRef = useRef<PlotlyImperativeHandle | null>(null);
+  const emphasizedRef = useRef<{ index: number; width: number; opacity: number } | null>(null);
 
   const isCrossMode = Array.isArray(cohortSeries) && cohortSeries.length > 0;
 
@@ -228,12 +234,31 @@ export default function OutcomesPanel({
   const traces = useMemo<PlotlyData[]>(() => {
     if (isCrossMode) {
       return buildCrossCohortTraces({
+        layers,
         series: cohortSeries!.map((s) => ({
           cohortId: s.cohortId,
           cohortName: s.cohortName,
           patientCount: s.patientCount,
           color: s.color,
           medianGrid: s.panel.medianGrid,
+          // M3 (v1.18 WS-A): supply per-cohort scatter + per-patient data so the
+          // layer toggles actually render in compare mode. Scatter is downsampled to
+          // the same per-panel cap; per-patient lines reuse the single-cohort filter
+          // (>=2 measurements, not excluded). buildCrossCohortTraces only emits these
+          // when the matching toggle is on.
+          scatterPoints: layers.scatter
+            ? downsampleScatter(s.panel.scatterPoints as ScatterDatum[], SCATTER_RENDER_CAP)
+            : undefined,
+          perPatientSeries: layers.perPatient
+            ? s.panel.patients
+                .filter((p) => !p.excluded && p.measurements.length >= 2)
+                .map((p) => ({
+                  id: p.pseudonym,
+                  sparse: p.sparse,
+                  x: p.measurements.map((m) => m.x),
+                  y: p.measurements.map((m) => (typeof m.y === 'number' ? m.y : null)),
+                }))
+            : undefined,
         })),
       });
     }
@@ -308,6 +333,40 @@ export default function OutcomesPanel({
     [onPointClick, knownPatientIds],
   );
 
+  // M1 (v1.18 WS-A): restore the currently-emphasised per-patient line to its natural
+  // width/opacity (cheap single-trace restyle). Safe to call when nothing is emphasised.
+  const restoreEmphasis = useCallback(() => {
+    const prev = emphasizedRef.current;
+    if (!prev) return;
+    emphasizedRef.current = null;
+    plotlyHandleRef.current?.restyle(
+      { 'line.width': prev.width, opacity: prev.opacity },
+      [prev.index],
+    );
+  }, []);
+
+  // M1: emphasise ONE per-patient line (bump width + opacity) via in-place restyle.
+  // Gated by the caller (only when scatter is OFF, so scatter keeps hover priority)
+  // and only for a trace that is actually a per-patient line. Restores any prior one
+  // first so switching lines never leaves a stuck-emphasised trace.
+  const emphasizeLine = useCallback(
+    (index: number) => {
+      if (index < 0 || index >= traces.length) return;
+      const tr = traces[index];
+      if (!String(tr?.name ?? '').startsWith('perpatient-')) return;
+      if (emphasizedRef.current?.index === index) return;
+      restoreEmphasis();
+      const naturalWidth = (tr.line as { width?: number } | undefined)?.width ?? SERIES_STYLES.perPatient.strokeWidth;
+      const naturalOpacity = typeof tr.opacity === 'number' ? tr.opacity : 1;
+      emphasizedRef.current = { index, width: naturalWidth, opacity: naturalOpacity };
+      plotlyHandleRef.current?.restyle(
+        { 'line.width': SERIES_STYLES.perPatient.strokeWidth * 2.5, opacity: 0.95 },
+        [index],
+      );
+    },
+    [traces, restoreEmphasis],
+  );
+
   const handlePlotlyHover = useCallback(
     (raw: unknown) => {
       const e = raw as PlotlyMouseEvent;
@@ -323,14 +382,21 @@ export default function OutcomesPanel({
         x: typeof pt?.x === 'number' ? pt.x : undefined,
         y: typeof pt?.y === 'number' ? pt.y : undefined,
       });
+      // M1: highlight the hovered per-patient line — only when the scatter layer is
+      // OFF (preserve scatter-priority) and the hovered curve is a per-patient line.
+      // `curveNumber` is the trace index; we re-check the trace name in emphasizeLine.
+      if (!isCrossMode && layers.perPatient && !layers.scatter && typeof pt?.curveNumber === 'number') {
+        emphasizeLine(pt.curveNumber);
+      }
     },
-    [showHoverTooltip],
+    [showHoverTooltip, isCrossMode, layers.perPatient, layers.scatter, emphasizeLine],
   );
 
   const handlePlotlyUnhover = useCallback(() => {
     hoveredDatumRef.current = null;
     hideHoverTooltip();
-  }, [hideHoverTooltip]);
+    restoreEmphasis();
+  }, [hideHoverTooltip, restoreEmphasis]);
 
   if (totalPatients === 0) {
     return (
@@ -352,6 +418,7 @@ export default function OutcomesPanel({
   const fallback = (
     <ChartFallback
       eye={eye}
+      isCrossMode={isCrossMode}
       traces={traces}
       hasScatter={!isCrossMode && layers.scatter}
       scatterPoints={scatterRenderPoints}
@@ -416,6 +483,7 @@ export default function OutcomesPanel({
           onPointClick={onPointClick ? handlePlotlyClick : undefined}
           onHover={handlePlotlyHover}
           onUnhover={handlePlotlyUnhover}
+          handleRef={plotlyHandleRef}
           style={{ width: '100%', height: '100%' }}
           fallback={fallback}
         />
@@ -431,6 +499,7 @@ export default function OutcomesPanel({
 
 interface ChartFallbackProps {
   eye: string;
+  isCrossMode: boolean;
   traces: PlotlyData[];
   hasScatter: boolean;
   scatterPoints: ScatterDatum[];
@@ -447,6 +516,7 @@ interface ChartFallbackProps {
 
 function ChartFallback({
   eye,
+  isCrossMode,
   traces,
   hasScatter,
   scatterPoints,
@@ -469,7 +539,20 @@ function ChartFallback({
       tr.name !== 'scatter',
   );
   const iqrTraces = traces.filter((tr) => String(tr.name).startsWith('iqr') && tr.fill === 'tonexty');
-  const perPatientTraces = traces.filter((tr) => String(tr.name).startsWith('perpatient-'));
+  // Single-cohort per-patient lines are named `perpatient-${id}`; cross-cohort ones
+  // are `perpatient-${cohortId}-${id}` (handled separately below so they don't pollute
+  // the single-cohort `outcomes-perpatient-${id}` markers the tests key on).
+  const perPatientTraces = isCrossMode
+    ? []
+    : traces.filter((tr) => String(tr.name).startsWith('perpatient-'));
+  // M3 (v1.18 WS-A): cross-cohort scatter + per-patient presence markers, so the tests
+  // (and any DOM consumers) can confirm the toggles actually emit traces in compare mode.
+  const crossScatterTraces = isCrossMode
+    ? traces.filter((tr) => String(tr.name).startsWith('scatter-'))
+    : [];
+  const crossPerPatientTraces = isCrossMode
+    ? traces.filter((tr) => String(tr.name).startsWith('perpatient-'))
+    : [];
 
   return (
     <div data-testid={`outcomes-fallback-${eye}`}>
@@ -525,6 +608,32 @@ function ChartFallback({
           ))}
         </div>
       )}
+
+      {/* M3 (v1.18 WS-A): cross-cohort scatter clouds — one presence marker per cohort,
+          carrying the cohort colour + point count. Hover tooltips are driven by the live
+          Plotly path; drill-down stays disabled in cross mode (no onClick wiring). */}
+      {crossScatterTraces.map((tr) => {
+        const cohortId = String(tr.name).replace('scatter-', '');
+        const count = Array.isArray(tr.x) ? tr.x.length : 0;
+        return (
+          <div
+            key={`cross-scatter-${cohortId}`}
+            data-testid={`outcomes-cross-scatter-${cohortId}`}
+            data-count={String(count)}
+            data-color={String((tr.marker as { color?: string } | undefined)?.color ?? '')}
+          />
+        );
+      })}
+
+      {/* M3: cross-cohort per-patient lines — one presence marker per line, in the
+          cohort colour. */}
+      {crossPerPatientTraces.map((tr) => (
+        <div
+          key={`cross-pp-${tr.name}`}
+          data-testid={`outcomes-cross-perpatient-${String(tr.name).replace('perpatient-', '')}`}
+          data-color={String((tr.line as { color?: string } | undefined)?.color ?? '')}
+        />
+      ))}
     </div>
   );
 }
