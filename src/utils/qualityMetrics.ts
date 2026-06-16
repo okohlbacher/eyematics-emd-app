@@ -6,7 +6,7 @@ import {
   LOINC_VISUS,
 } from '../services/fhirLoader';
 import { getSettings } from '../services/settingsService';
-import type { PatientCase } from '../types/fhir';
+import type { FhirBundle, Observation, PatientCase } from '../types/fhir';
 
 // ---------------------------------------------------------------------------
 // Category colours
@@ -86,9 +86,15 @@ export function scoreColor(score: number): string {
 }
 
 export function scoreBgClass(score: number): string {
-  if (score > 80) return 'bg-green-100 text-green-800 border-green-200';
-  if (score >= 60) return 'bg-amber-100 text-amber-800 border-amber-200';
-  return 'bg-red-100 text-red-800 border-red-200';
+  // M12 (v1.18): dark-mode variants so the MetricCard status colours hold up on
+  // a dark page (translucent tinted fill + lighter text/border).
+  if (score > 80) {
+    return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-800';
+  }
+  if (score >= 60) {
+    return 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800';
+  }
+  return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800';
 }
 
 export function scoreIconColor(score: number): string {
@@ -212,6 +218,49 @@ export function filterCasesByTimeRange(
       return { ...c, observations: obs };
     })
     .filter((c) => c.observations.length > 0);
+}
+
+/**
+ * M14 (v1.18): count the REGISTERED patient population active inside the
+ * selected time window — the windowed Vollzähligkeit denominator.
+ *
+ * The all-time denominator (countRawPatients) holds at the full registration
+ * count (incl. stubs) so the metric does not collapse to ~100% (the I5/B1
+ * invariant). But the tester (M14) reported that filtering the time range left
+ * the absolute patient count pinned at the full dataset (1775) instead of
+ * restricting to the range. When a window IS active we therefore restrict the
+ * denominator to the patients that actually have at least one observation in
+ * that window — derived directly from the bundles' Patient/Observation
+ * resources, so the count AND the completeness percentage reflect the range.
+ *
+ * range === 'all' (or any range that yields no window): returns null, signalling
+ * the caller to fall back to the full registered total (countRawPatients), which
+ * preserves the landing-page parity asserted by the I5 tests. 0-safe.
+ */
+export function countRawPatientsInWindow(
+  bundles: FhirBundle[],
+  range: TimeRange,
+): number | null {
+  const window = timeRangeWindow(range);
+  if (!window) return null; // 'all' / malformed → no windowing (full total)
+  const fromMs = window.from.getTime();
+  const toMs = window.to.getTime();
+
+  // Collect the patient references (Patient/<id>) that carry ≥1 observation
+  // inside the window, across every permitted bundle.
+  const activeRefs = new Set<string>();
+  for (const b of bundles) {
+    for (const e of b.entry) {
+      if (e.resource.resourceType !== 'Observation') continue;
+      const obs = e.resource as Observation;
+      if (!obs.effectiveDateTime) continue;
+      const t = new Date(obs.effectiveDateTime).getTime();
+      if (Number.isNaN(t) || t < fromMs || t > toMs) continue;
+      const ref = obs.subject?.reference;
+      if (ref) activeRefs.add(ref);
+    }
+  }
+  return activeRefs.size;
 }
 
 /**

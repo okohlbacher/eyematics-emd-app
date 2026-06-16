@@ -2,28 +2,27 @@ import { Monitor, Moon, Sun } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
 import { type Theme, useTheme } from '../context/ThemeContext';
+import { nextTheme } from './themeCycle';
 
-const CYCLE: Record<Theme, Theme> = { light: 'dark', dark: 'system', system: 'light' };
 const ICONS: Record<Theme, typeof Sun> = { light: Sun, dark: Moon, system: Monitor };
 
-// aria-label is set to the i18n string for the NEXT mode (UI-SPEC D-09)
-// When current is Light, next = Dark, label = t('themeDark') = 'Switch to dark mode'
-const NEXT_LABEL_KEY: Record<Theme, 'themeLight' | 'themeDark' | 'themeSystem'> = {
-  light: 'themeDark',    // next is dark
-  dark: 'themeSystem',   // next is system
-  system: 'themeLight',  // next is light
+// aria-label / icon describe the mode the click will switch TO (UI-SPEC D-09).
+const LABEL_KEY: Record<Theme, 'themeLight' | 'themeDark' | 'themeSystem'> = {
+  light: 'themeLight',
+  dark: 'themeDark',
+  system: 'themeSystem',
 };
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, systemTheme } = useTheme();
   const { t } = useLanguage();
-  const Icon = ICONS[theme];
-  const nextTheme = CYCLE[theme];
-  const label = t(NEXT_LABEL_KEY[theme]);
+  const next = nextTheme(theme, systemTheme);
+  const Icon = ICONS[next];
+  const label = t(LABEL_KEY[next]);
   return (
     <button
       type="button"
-      onClick={() => setTheme(nextTheme)}
+      onClick={() => setTheme(next)}
       title={label}
       aria-label={label}
       className="flex items-center gap-2 w-full px-2 py-1.5 text-xs text-slate-400 hover:text-white transition-colors rounded hover:bg-slate-700/50"
