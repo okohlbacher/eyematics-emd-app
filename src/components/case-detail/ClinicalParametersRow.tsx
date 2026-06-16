@@ -161,7 +161,7 @@ export default function ClinicalParametersRow({
                   stroke={IOP_MEDIAN_COLOR}
                   strokeWidth={1.5}
                   strokeDasharray="4 3"
-                  name={t('cohortReferenceMedianIod')}
+                  name={t('cohortReferenceMedianIop')}
                   dot={false}
                   connectNulls
                 />

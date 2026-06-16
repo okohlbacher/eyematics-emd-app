@@ -1193,8 +1193,6 @@ const translations = {
   // ==== v1.17 WS-3 (case-detail / cohort-overlay round-5 fixes) ====
   // L5: relative X-axis label shown when the cohort overlay is on.
   relativeMonthsAxisLabel: { de: 'Monate seit Erstvisite', en: 'Months since first visit' },
-  // L4a/L4b/L4c: shared IOD cohort-overlay median legend (now a line, K-converted from bar).
-  cohortReferenceMedianIod: { de: 'Kohorten-Median IOD', en: 'Cohort median IOP' },
   // L10: overlay-specific addendum appended to the plot info tooltips when the
   // cohort overlay is active — explains the IQR band + relative-time alignment.
   cohortOverlayInfoVisusCrt: {
