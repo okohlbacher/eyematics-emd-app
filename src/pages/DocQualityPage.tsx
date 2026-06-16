@@ -20,6 +20,7 @@ import { datedFilename, downloadCsv } from '../utils/download';
 import {
   type CenterMetrics,
   computeMetrics,
+  countRawPatientsInWindow,
   filterCasesByTimeRange,
   isCustomTimeRange,
   type TimeRange,
@@ -92,7 +93,18 @@ export default function DocQualityPage() {
   // aggregate card. NOT windowed (full registration). Derived from `bundles`,
   // keyed by Patient.meta.source = centerId (same mapping as the cases).
   const rawByCenter = useMemo(() => countRawPatientsByCenter(bundles), [bundles]);
-  const rawTotal = useMemo(() => countRawPatients(bundles), [bundles]);
+  const rawTotalAll = useMemo(() => countRawPatients(bundles), [bundles]);
+
+  // M14 (v1.18): the Vollzähligkeit denominator must follow the time-range
+  // filter. With no window ('all') it stays the full registered total
+  // (countRawPatients → landing parity, I5 invariant). With a window active it
+  // restricts to the registered patients with ≥1 observation in the window, so
+  // the absolute count and the completeness % reflect the chosen range instead
+  // of staying pinned at the full dataset. 0-safe: null → fall back to all.
+  const rawTotal = useMemo(() => {
+    const windowed = countRawPatientsInWindow(bundles, timeRange);
+    return windowed ?? rawTotalAll;
+  }, [bundles, timeRange, rawTotalAll]);
 
   const centerMetrics = useMemo(
     () => buildCenterMetrics(casesByCenter, timeRange, rawByCenter),
@@ -116,12 +128,15 @@ export default function DocQualityPage() {
     return new Set(windowCases.map((c) => c.pseudonym)).size;
   }, [cases, timeRange]);
 
-  // I5: aggregate Vollzähligkeit = distinct patients active in window (numerator)
-  // / global raw registered total incl. stubs (denominator, NOT windowed). This
-  // matches the landing-page definition exactly when timeRange === 'all'
-  // (active==registered clinical set): distinctPatientCount === cases.length and
-  // rawTotal === countRawPatients(bundles). Computed directly (NOT averaged over
-  // centres) so it stays consistent with the landing number. 0-safe + clamped.
+  // I5 / M14: aggregate Vollzähligkeit = distinct patients active in window
+  // (numerator) / registered total (denominator). The denominator is windowed
+  // too (M14, v1.18): with no window it is the full registered total incl. stubs
+  // (landing parity); with a window active it restricts to patients registered
+  // in that window so both the count and the % track the filter. When
+  // timeRange === 'all' this matches the landing-page definition exactly
+  // (distinctPatientCount === cases.length, rawTotal === countRawPatients).
+  // Computed directly (NOT averaged over centres) so it stays consistent with
+  // the landing number. 0-safe + clamped.
   const aggregateVollzaehligkeit = useMemo(
     () => (rawTotal > 0 ? Math.min(100, (distinctPatientCount / rawTotal) * 100) : 0),
     [distinctPatientCount, rawTotal]
