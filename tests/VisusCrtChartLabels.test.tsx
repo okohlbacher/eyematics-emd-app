@@ -86,6 +86,8 @@ const deStrings: Partial<Record<TranslationKey, string>> = {
   cohortReferenceMedianVisus: 'Kohorten-Median Visus',
   cohortReferenceMedianCrt: 'Kohorten-Median CRT',
   cohortReferenceBand: 'Kohorten-IQR (25.–75. Perzentil)',
+  cohortReferenceBandVisus: 'Kohorten-IQR Visus (25.–75. Perz.)',
+  cohortReferenceBandCrt: 'Kohorten-IQR CRT (25.–75. Perz.)',
 };
 
 // Data with cohort-reference fields so the overlay renders (I3a/I3b).
@@ -111,9 +113,6 @@ const minimalProps = {
   locale: 'de',
   t: tDE,
   visusObs: [],
-  // J3c: relative-time mapper (absolute date → months-since-baseline). Tests
-  // don't exercise the highlight/IVI mapping, so a no-op-ish stub suffices.
-  toRelMonths: () => null,
 };
 
 describe('VisusCrtChart — FALL-012 / A4 i18n labels', () => {
@@ -166,26 +165,31 @@ describe('VisusCrtChart — FALL-012 / A4 i18n labels', () => {
     expect(crtMedian?.getAttribute('data-legendtype')).not.toBe('none');
   });
 
-  it('labels the cohort reference band as IQR in the legend (I3b)', () => {
+  it('labels BOTH cohort IQR bands in the legend (I3b + K3a: CRT band too)', () => {
     const { container } = render(
       <VisusCrtChart {...minimalProps} combinedData={refData} showCohortReference />,
     );
     const areas = Array.from(container.querySelectorAll('[data-testid="recharts-area"]'));
-    const iqrBand = dataName(areas, 'Kohorten-IQR (25.–75. Perzentil)');
-    expect(iqrBand).not.toBeUndefined();
-    expect(iqrBand?.getAttribute('data-legendtype')).not.toBe('none');
+    const visusBand = dataName(areas, 'Kohorten-IQR Visus (25.–75. Perz.)');
+    const crtBand = dataName(areas, 'Kohorten-IQR CRT (25.–75. Perz.)');
+    // K3a: the CRT band previously had legendType="none" and no entry — now both
+    // dual-axis IQR bands are explained in the legend.
+    expect(visusBand).not.toBeUndefined();
+    expect(crtBand).not.toBeUndefined();
+    expect(visusBand?.getAttribute('data-legendtype')).not.toBe('none');
+    expect(crtBand?.getAttribute('data-legendtype')).not.toBe('none');
   });
 
-  it('renders the IQR legend entry as a shaded RECT swatch, not a line (J3a)', () => {
+  it('renders BOTH IQR legend entries as shaded RECT swatches, not lines (J3a + K3a)', () => {
     const { container } = render(
       <VisusCrtChart {...minimalProps} combinedData={refData} showCohortReference />,
     );
-    // J3a: the IQR band's legend icon must read as a filled rectangle (shaded
+    // J3a/K3a: each IQR band's legend icon must read as a filled rectangle (shaded
     // range), so legendType="rect" — the tester saw the default line icon as
     // "an additional line".
     const areas = Array.from(container.querySelectorAll('[data-testid="recharts-area"]'));
-    const iqrBand = dataName(areas, 'Kohorten-IQR (25.–75. Perzentil)');
-    expect(iqrBand?.getAttribute('data-legendtype')).toBe('rect');
+    expect(dataName(areas, 'Kohorten-IQR Visus (25.–75. Perz.)')?.getAttribute('data-legendtype')).toBe('rect');
+    expect(dataName(areas, 'Kohorten-IQR CRT (25.–75. Perz.)')?.getAttribute('data-legendtype')).toBe('rect');
 
     // The two cohort MEDIAN entries stay line-typed (default, not "rect").
     const lines = Array.from(container.querySelectorAll('[data-testid="recharts-line"]'));
@@ -203,7 +207,8 @@ describe('VisusCrtChart — FALL-012 / A4 i18n labels', () => {
     const areas = Array.from(container.querySelectorAll('[data-testid="recharts-area"]'));
     expect(dataName(lines, 'Kohorten-Median Visus')).toBeUndefined();
     expect(dataName(lines, 'Kohorten-Median CRT')).toBeUndefined();
-    expect(dataName(areas, 'Kohorten-IQR (25.–75. Perzentil)')).toBeUndefined();
+    expect(dataName(areas, 'Kohorten-IQR Visus (25.–75. Perz.)')).toBeUndefined();
+    expect(dataName(areas, 'Kohorten-IQR CRT (25.–75. Perz.)')).toBeUndefined();
   });
 
   it('shows the interpolation hint only when interpolated points exist', () => {

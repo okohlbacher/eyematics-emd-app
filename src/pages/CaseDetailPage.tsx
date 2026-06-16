@@ -22,6 +22,7 @@ import MedicationCard from '../components/case-detail/MedicationCard';
 import PatientHeader from '../components/case-detail/PatientHeader';
 import VisusCrtChart from '../components/case-detail/VisusCrtChart';
 import OctViewer from '../components/OctViewer';
+import { InfoTooltip } from '../components/primitives';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useCaseData } from '../hooks/useCaseData';
@@ -38,8 +39,13 @@ export default function CaseDetailPage() {
   const octViewerRef = useRef<HTMLDivElement>(null);
   const [octSelectedIdx, setOctSelectedIdx] = useState(0);
   const [highlightDate, setHighlightDate] = useState<string | null>(null);
+  // K3d: the currently-highlighted injection date (temporary emphasis in the plot
+  // + the Intravitreale Injektionen list). Independent of the visit highlight.
+  const [highlightInjectionDate, setHighlightInjectionDate] = useState<string | null>(null);
   // FALL-011: cohort reference overlay toggle (off by default to avoid visual clutter)
   const [showCohortReference, setShowCohortReference] = useState(false);
+  const toggleInjectionHighlight = (date: string) =>
+    setHighlightInjectionDate((prev) => (prev === date ? null : date));
 
   const patientCase = cases.find((c) => c.id === caseId);
   const dateFmt = getDateLocale(locale);
@@ -71,7 +77,6 @@ export default function CaseDetailPage() {
     cohortVisusCrtScatter,
     baselineData,
     baselineChangeWithReference,
-    toRelMonths,
     totalEncounters,
     hasCriticalValues,
     criticalCrtCount,
@@ -79,7 +84,7 @@ export default function CaseDetailPage() {
     criticalIopCount,
     octImages,
     encounterTimeline,
-    iopData,
+    iopDataWithReference,
   } = useCaseData(patientCase, cases, locale, t);
 
   const handleOctTimelineClick = (octIdx: number) => {
@@ -146,6 +151,8 @@ export default function CaseDetailPage() {
                 aria-label={t('cohortReferenceToggle')}
               />
               {t('cohortReferenceToggle')}
+              {/* K-bl1: explain how the cohort overlay is aggregated. */}
+              <InfoTooltip text={t('cohortAggregationInfo')} />
             </label>
           </div>
           <VisusCrtChart
@@ -160,7 +167,8 @@ export default function CaseDetailPage() {
             showCohortReference={showCohortReference}
             hasInterpolatedPoints={hasInterpolatedPoints}
             injections={injections}
-            toRelMonths={toRelMonths}
+            highlightInjectionDate={highlightInjectionDate}
+            onInjectionClick={toggleInjectionHighlight}
           />
         </div>
 
@@ -175,8 +183,23 @@ export default function CaseDetailPage() {
             <div className="space-y-2">
               {(() => {
                 const primaryDrug = patientCase?.medications?.[0]?.medicationCodeableConcept?.coding?.[0]?.display;
-                return injections.map((inj, i) => (
-                  <div key={inj.id} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm">
+                return injections.map((inj, i) => {
+                  const injDate = inj.performedDateTime?.substring(0, 10) ?? '';
+                  const active = !!injDate && highlightInjectionDate === injDate;
+                  return (
+                  <div
+                    key={inj.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={active}
+                    onClick={() => injDate && toggleInjectionHighlight(injDate)}
+                    onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && injDate) { e.preventDefault(); toggleInjectionHighlight(injDate); } }}
+                    className={`flex items-center gap-3 p-2 rounded-lg text-sm cursor-pointer transition-colors ${
+                      active
+                        ? 'bg-amber-50 dark:bg-amber-900/30 ring-1 ring-amber-300'
+                        : 'bg-gray-50 dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-gray-600'
+                    }`}
+                  >
                     <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
                       {i + 1}
                     </span>
@@ -195,7 +218,8 @@ export default function CaseDetailPage() {
                       </span>
                     )}
                   </div>
-                ));
+                  );
+                });
               })()}
             </div>
           )}
@@ -213,39 +237,37 @@ export default function CaseDetailPage() {
               <TrendingDown className="w-4 h-4 text-red-600" />
             )}
             {t('baselineChange')}
+            {/* K-bl1: explain the per-metric baseline change plot. */}
+            <InfoTooltip text={t('baselineChangePlotInfo')} />
           </h3>
           <ResponsiveContainer width="100%" height={200}>
-            {/* J3c: relative-time X axis (months since first visit). J3d: cohort
-                change-from-baseline overlay (median + IQR), gated on the same
-                "Kohorten-Referenz anzeigen" toggle. ComposedChart so the IQR
-                Areas render alongside the patient lines. */}
+            {/* K3c (revert of v1.15-p5): calendar-date X axis. J3d: cohort
+                change-from-baseline overlay (median + IQR), aggregated by relative
+                time since each peer's own baseline but mapped onto the patient's
+                dates upstream; gated on the same "Kohorten-Referenz anzeigen"
+                toggle. ComposedChart so the IQR Areas render alongside the lines.
+                K-bl2: each metric's %-change is now anchored to its OWN baseline. */}
             <ComposedChart data={baselineChangeWithReference}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
-                dataKey="relMonths"
-                type="number"
-                domain={['dataMin', 'dataMax']}
-                tickFormatter={(v: number) => `${Number.isInteger(v) ? v : v.toFixed(1)} ${t('relativeTimeUnitShort')}`}
+                dataKey="date"
+                tickFormatter={(d: string) => (d ? new Date(d).toLocaleDateString(dateFmt, { month: '2-digit', year: '2-digit' }) : '')}
                 tick={{ fontSize: 10 }}
-                label={{ value: t('relativeTimeAxisLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: '#9ca3af' }}
               />
               <YAxis tick={{ fontSize: 10 }} label={{ value: '%', position: 'insideLeft', fontSize: 11 }} />
               <Tooltip formatter={(v: unknown) => typeof v === 'number' ? `${v}%` : String(v)} />
               <Legend />
               <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
-              {/* FALL-003: synchronise event highlight, mapped onto the relative axis */}
-              {(() => {
-                const hr = toRelMonths(highlightDate);
-                return hr != null ? (
-                  <ReferenceLine
-                    x={hr}
-                    stroke="#f59e0b"
-                    strokeWidth={2}
-                    strokeDasharray="4 2"
-                    label={{ value: highlightDate ? new Date(highlightDate).toLocaleDateString(dateFmt) : '', position: 'top', fontSize: 10, fill: '#f59e0b' }}
-                  />
-                ) : null;
-              })()}
+              {/* FALL-003: synchronise event highlight on the calendar-date axis */}
+              {highlightDate && (
+                <ReferenceLine
+                  x={highlightDate}
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  strokeDasharray="4 2"
+                  label={{ value: new Date(highlightDate).toLocaleDateString(dateFmt), position: 'top', fontSize: 10, fill: '#f59e0b' }}
+                />
+              )}
               {showCohortReference && (
                 <>
                   <Area
@@ -295,7 +317,8 @@ export default function CaseDetailPage() {
       {/* Clinical parameters row: IOP + Refraction + HbA1c */}
       <ClinicalParametersRow
         iopObs={iopObs}
-        iopData={iopData}
+        iopData={iopDataWithReference}
+        showCohortReference={showCohortReference}
         refractionObs={refractionObs}
         hba1cObs={hba1cObs}
         diabetesCond={diabetesCond}

@@ -1,8 +1,11 @@
 import { Eye, Glasses, HeartPulse } from 'lucide-react';
 import {
+  Area,
   Bar,
-  BarChart,
   CartesianGrid,
+  ComposedChart,
+  Legend,
+  Line,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -11,13 +14,15 @@ import {
 } from 'recharts';
 
 import { CRITICAL_IOP_THRESHOLD } from '../../config/clinicalThresholds';
+import type { IopDataPoint } from '../../hooks/useCaseData';
 import type { TranslationKey } from '../../i18n/translations';
 import type { Condition, Observation } from '../../types/fhir';
 import { translateClinical } from '../../utils/clinicalTerms';
+import { InfoTooltip } from '../primitives';
 
 export interface ClinicalParametersRowProps {
   iopObs: Observation[];
-  iopData: Array<{ date: string; iop: number }>;
+  iopData: IopDataPoint[];
   refractionObs: Observation[];
   hba1cObs: Observation[];
   diabetesCond?: Condition;
@@ -25,6 +30,8 @@ export interface ClinicalParametersRowProps {
   dateFmt: string;
   locale: string;
   t: (key: TranslationKey) => string;
+  /** K3b: gate the IOP cohort overlay on the same toggle as the Visus/CRT overlay. */
+  showCohortReference?: boolean;
 }
 
 export default function ClinicalParametersRow({
@@ -37,7 +44,12 @@ export default function ClinicalParametersRow({
   dateFmt,
   locale,
   t,
+  showCohortReference = false,
 }: ClinicalParametersRowProps) {
+  // K3b: show the IOP cohort overlay only when the toggle is on AND the data
+  // actually carries cohort reference fields for at least one row.
+  const hasIopReference =
+    showCohortReference && iopData.some((d) => d.iopMedian != null || d.iopBand != null);
   return (
     <div className="grid grid-cols-12 gap-6 mb-6">
       {/* IOP chart (N05.06) */}
@@ -45,6 +57,8 @@ export default function ClinicalParametersRow({
         <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
           <Eye className="w-4 h-4" />
           {t('iop')} {eyeLaterality && <span className="text-xs text-gray-400">({eyeLaterality})</span>}
+          {/* K-bl1: short explanation of the IOP plot (+ cohort overlay note). */}
+          <InfoTooltip text={t('iopPlotInfo')} />
         </h3>
         {iopObs.length > 0 && (
           <p className="text-xs text-gray-400 mb-3">
@@ -55,14 +69,44 @@ export default function ClinicalParametersRow({
           <p className="text-sm text-gray-400">{t('noData')}</p>
         ) : (
           <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={iopData}>
+            {/* K3b: ComposedChart so the cohort median Line + IQR Area band can
+                render alongside the patient's IOP bars when the cohort overlay is
+                on. The reference values are aggregated by relative time since each
+                peer's own baseline (index excluded) and mapped onto the patient's
+                IOP dates (calendar-date axis per K3c). */}
+            <ComposedChart data={iopData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" tick={{ fontSize: 9 }} />
               <YAxis domain={[0, 30]} tickCount={5} tick={{ fontSize: 10 }} />
               <Tooltip formatter={(v: unknown) => typeof v === 'number' ? `${v} mmHg` : String(v)} />
+              {hasIopReference && <Legend />}
               <ReferenceLine y={CRITICAL_IOP_THRESHOLD()} stroke="#ef4444" strokeDasharray="3 3" label={{ value: String(CRITICAL_IOP_THRESHOLD()), fontSize: 9, fill: '#ef4444' }} />
+              {hasIopReference && (
+                <Area
+                  dataKey="iopBand"
+                  stroke="none"
+                  fill="#6366f1"
+                  fillOpacity={0.15}
+                  name={t('cohortReferenceBandIop')}
+                  legendType="rect"
+                  connectNulls
+                  isAnimationActive={false}
+                />
+              )}
+              {hasIopReference && (
+                <Line
+                  type="monotone"
+                  dataKey="iopMedian"
+                  stroke="#a5b4fc"
+                  strokeWidth={1.5}
+                  strokeDasharray="4 3"
+                  name={t('cohortReferenceMedianIop')}
+                  dot={false}
+                  connectNulls
+                />
+              )}
               <Bar dataKey="iop" fill="#6366f1" name={t('iop')} radius={[3, 3, 0, 0]} />
-            </BarChart>
+            </ComposedChart>
           </ResponsiveContainer>
         )}
       </div>

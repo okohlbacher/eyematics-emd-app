@@ -78,6 +78,17 @@ export interface BaselineChangePoint {
   crtChangeBand?: [number, number];
 }
 
+/** A row of the IOP (Augeninnendruck) chart. K3b: optionally carries the cohort
+ *  median + IQR band aggregated by relative time since each peer's own baseline. */
+export interface IopDataPoint {
+  date: string;
+  iop: number;
+  /** K3b: cohort IOP median at this row's relative-month bucket. */
+  iopMedian?: number;
+  /** K3b: cohort IOP IQR [p25, p75] at this row's relative-month bucket. */
+  iopBand?: [number, number];
+}
+
 /** Nearest-rank percentile (0-based fraction, 0 = min, 1 = max). */
 function percentile(sorted: number[], p: number): number {
   if (sorted.length === 0) return 0;
@@ -221,18 +232,9 @@ export function useCaseData(
     return dates.reduce((min, d) => (d < min ? d : min), dates[0]);
   }, [visusObs, crtObs]);
 
-  // J3c: map an absolute date (e.g. an IVI/event date or the highlighted visit)
-  // onto the chart's relative-month axis. Returns null when there is no baseline.
-  const toRelMonths = useMemo(
-    () => (date: string | null | undefined): number | null => {
-      if (!date || !baselineDate) return null;
-      return monthsBetween(baselineDate, date.substring(0, 10));
-    },
-    [baselineDate],
-  );
-
-  // Combined dual-axis data: merge visus + CRT by date, keyed on the relative
-  // month offset since baseline (J3c). `date` is retained per row for tooltips.
+  // Combined dual-axis data: merge visus + CRT by date. The chart's X axis is the
+  // calendar date (K3c); `relMonths` is retained per row only to bucket the cohort
+  // overlay by relative time-since-baseline (mapped back onto these date rows).
   const combinedData = useMemo((): CombinedDataPoint[] => {
     const dateMap = new Map<string, CombinedDataPoint>();
     const ensure = (d: string): CombinedDataPoint => {
@@ -253,6 +255,13 @@ export function useCaseData(
       const entry = ensure(d);
       entry.crt = o.valueQuantity?.value;
       entry.crtMeasured = true;
+    });
+    // K3c/K3d: ensure each injection date exists as a row (with no visus/crt
+    // values) so the calendar-date category axis includes it — the date-keyed IVI
+    // marker + injection highlight ReferenceLines then always land on a real tick.
+    injections.forEach((inj) => {
+      const d = inj.performedDateTime?.substring(0, 10);
+      if (d) ensure(d);
     });
     const rows = Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
@@ -291,7 +300,7 @@ export function useCaseData(
     interpolate('crt', 'crtInterp');
 
     return rows;
-  }, [visusObs, crtObs, baselineDate]);
+  }, [visusObs, crtObs, injections, baselineDate]);
 
   // A4 v2: hint/markers only when interpolated points actually exist.
   const hasInterpolatedPoints = useMemo(
@@ -377,10 +386,16 @@ export function useCaseData(
     return out;
   }, [cases, patientCase]);
 
+  // K-bl2 (per-metric baseline anchor): the Visus %-change is anchored to the
+  // FIRST VISUS value and the CRT %-change to the FIRST CRT value — each metric to
+  // its OWN baseline, never a single shared first-visit baseline. visusObs/crtObs
+  // are date-sorted by getObservationsByCode, so [0] is each metric's earliest
+  // measurement. The two metrics are independent: a metric with <2 measurements
+  // simply contributes no change series, but does not suppress the other.
   const baselineData = useMemo((): BaselineChangePoint[] => {
-    if (visusObs.length < 2) return [];
-    const baselineVisus = visusObs[0]?.valueQuantity?.value ?? 0;
-    const baselineCrt = crtObs[0]?.valueQuantity?.value ?? 0;
+    if (visusObs.length < 2 && crtObs.length < 2) return [];
+    const baselineVisus = visusObs[0]?.valueQuantity?.value;
+    const baselineCrt = crtObs[0]?.valueQuantity?.value;
     const dateMap = new Map<string, BaselineChangePoint>();
     const ensure = (d: string): BaselineChangePoint => {
       const existing = dateMap.get(d);
@@ -389,22 +404,24 @@ export function useCaseData(
       dateMap.set(d, entry);
       return entry;
     };
-    visusObs.forEach((o) => {
-      const d = o.effectiveDateTime?.substring(0, 10) ?? '';
-      const val = o.valueQuantity?.value ?? 0;
-      const entry = ensure(d);
-      entry.visusChange = baselineVisus
-        ? +((((val - baselineVisus) / baselineVisus) * 100).toFixed(1))
-        : 0;
-    });
-    crtObs.forEach((o) => {
-      const d = o.effectiveDateTime?.substring(0, 10) ?? '';
-      const val = o.valueQuantity?.value ?? 0;
-      const entry = ensure(d);
-      entry.crtChange = baselineCrt
-        ? +((((val - baselineCrt) / baselineCrt) * 100).toFixed(1))
-        : 0;
-    });
+    // Visus %-change vs the FIRST VISUS baseline only.
+    if (visusObs.length >= 2 && baselineVisus) {
+      visusObs.forEach((o) => {
+        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
+        const val = o.valueQuantity?.value;
+        if (!d || val == null) return;
+        ensure(d).visusChange = +((((val - baselineVisus) / baselineVisus) * 100).toFixed(1));
+      });
+    }
+    // CRT %-change vs the FIRST CRT baseline only (independent of Visus).
+    if (crtObs.length >= 2 && baselineCrt) {
+      crtObs.forEach((o) => {
+        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
+        const val = o.valueQuantity?.value;
+        if (!d || val == null) return;
+        ensure(d).crtChange = +((((val - baselineCrt) / baselineCrt) * 100).toFixed(1));
+      });
+    }
     return Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
   }, [visusObs, crtObs, baselineDate]);
 
@@ -540,6 +557,57 @@ export function useCaseData(
       })),
     [iopObs],
   );
+
+  // K3b: cohort IOP reference (median + IQR), aggregated by months-since-each-
+  // peer's-own-baseline (same relative-time alignment + index-exclusion as
+  // cohortReference, WR-04) and mapped back onto the index patient's IOP dates
+  // (calendar-date axis per K3c). Folded onto each iopData row as iopMedian +
+  // iopBand ([p25, p75]) so the IOP chart reads them as extra dataKeys.
+  const iopDataWithReference = useMemo((): IopDataPoint[] => {
+    if (!iopData.length || !cases.length) return iopData;
+
+    // The index patient's baseline for bucketing its own rows = earliest IOP date.
+    const indexBaseline = iopData
+      .map((d) => d.date)
+      .filter(Boolean)
+      .reduce((min, d) => (!min || d < min ? d : min), '');
+
+    const iopByRelMonth = new Map<number, number[]>();
+    for (const c of cases) {
+      if (patientCase && c.id === patientCase.id) continue; // WR-04: exclude index
+      const peerIop = getObservationsByCode(c.observations, LOINC_IOP);
+      const peerDates: string[] = [];
+      for (const o of peerIop) {
+        const d = o.effectiveDateTime?.substring(0, 10);
+        if (d) peerDates.push(d);
+      }
+      if (!peerDates.length) continue;
+      const peerBaseline = peerDates.reduce((min, d) => (d < min ? d : min), peerDates[0]);
+      for (const o of peerIop) {
+        const d = o.effectiveDateTime?.substring(0, 10) ?? '';
+        const val = o.valueQuantity?.value;
+        if (!d || val == null) continue;
+        const bucket = Math.round(monthsBetween(peerBaseline, d));
+        const arr = iopByRelMonth.get(bucket) ?? [];
+        arr.push(val);
+        iopByRelMonth.set(bucket, arr);
+      }
+    }
+
+    if (!iopByRelMonth.size) return iopData;
+
+    return iopData.map((row) => {
+      const bucket = Math.round(monthsBetween(indexBaseline, row.date));
+      const vals = iopByRelMonth.get(bucket);
+      if (!vals || !vals.length) return row;
+      const sorted = [...vals].sort((a, b) => a - b);
+      return {
+        ...row,
+        iopMedian: +percentile(sorted, 0.5).toFixed(1),
+        iopBand: [+percentile(sorted, 0.25).toFixed(1), +percentile(sorted, 0.75).toFixed(1)] as [number, number],
+      };
+    });
+  }, [iopData, cases, patientCase]);
 
   // FALL-011 + J3c: cohort median + IQR reference series, aligned to the
   // patient's RELATIVE-time axis (months since the patient's first visit).
@@ -689,7 +757,6 @@ export function useCaseData(
     cohortVisusCrtScatter,
     baselineData,
     baselineChangeWithReference,
-    toRelMonths,
     totalEncounters,
     hasCriticalValues,
     criticalCrtCount,
@@ -698,5 +765,6 @@ export function useCaseData(
     octImages,
     encounterTimeline,
     iopData,
+    iopDataWithReference,
   };
 }

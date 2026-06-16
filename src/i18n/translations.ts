@@ -1153,6 +1153,9 @@ const translations = {
   cohortReferenceMedianVisus: { de: 'Kohorten-Median Visus', en: 'Cohort median visual acuity' },
   cohortReferenceMedianCrt: { de: 'Kohorten-Median CRT', en: 'Cohort median CRT' },
   cohortReferenceBand: { de: 'Kohorten-IQR (25.\u201375. Perzentil)', en: 'Cohort IQR (25th\u201375th percentile)' },
+  // K3a: distinct legend swatches so each dual-axis IQR band is explained.
+  cohortReferenceBandVisus: { de: 'Kohorten-IQR Visus (25.\u201375. Perz.)', en: 'Cohort IQR visual acuity (25th\u201375th pct)' },
+  cohortReferenceBandCrt: { de: 'Kohorten-IQR CRT (25.\u201375. Perz.)', en: 'Cohort IQR CRT (25th\u201375th pct)' },
 
   // ---- J3c: relative-time axis (months since the patient's first visit) ----
   relativeTimeAxisLabel: { de: 'Monate seit Erstvisite', en: 'Months since first visit' },
@@ -1163,8 +1166,29 @@ const translations = {
 
   // ---- J3d: cohort overlay on the change-from-baseline + distribution + scatter plots ----
   cohortReferenceMedianChange: { de: 'Kohorten-Median \u00c4nderung', en: 'Cohort median change' },
+  // K3b: IOP (Augeninnendruck) cohort overlay legend entries.
+  cohortReferenceMedianIop: { de: 'Kohorten-Median IOD', en: 'Cohort median IOP' },
+  cohortReferenceBandIop: { de: 'Kohorten-IQR IOD (25.\u201375. Perz.)', en: 'Cohort IQR IOP (25th\u201375th pct)' },
   cohortReferenceDistribution: { de: 'Kohorten-Verteilung', en: 'Cohort distribution' },
   cohortReferenceScatter: { de: 'Kohorte', en: 'Cohort' },
+
+  // ---- K-bl1: info tooltips (aggregation explainer + per-plot explanations) ----
+  cohortAggregationInfo: {
+    de: 'Die Kohorten-Referenz aggregiert die Vergleichsgruppe nach relativer Zeit seit der jeweils ersten Visite jedes Patienten (nicht nach Kalenderdatum). Pro relativem Monat werden Median und IQR (25.–75. Perzentil) über die Peers berechnet; der aktuelle Patient ist ausgeschlossen. Diese Referenzwerte werden auf die Kalenderdaten des aktuellen Patienten abgebildet (gleiche verstrichene Behandlungszeit).',
+    en: 'The cohort reference aggregates the comparison group by relative time since each patient\'s own first visit (not by calendar date). Per relative month, the median and IQR (25th–75th percentile) are computed across the peers; the current patient is excluded. These reference values are mapped onto the current patient\'s calendar dates (same elapsed treatment time).',
+  },
+  visusCrtPlotInfo: {
+    de: 'Verlauf der gemessenen Sehschärfe (Visus, linke Achse) und der zentralen Netzhautdicke (CRT, rechte Achse) über die Kalenderdaten der Visiten. Offene Kreise sind interpolierte Anzeigewerte (keine Messung).',
+    en: 'Trajectory of measured visual acuity (Visus, left axis) and central retinal thickness (CRT, right axis) over the visit calendar dates. Open circles are interpolated display values (not measurements).',
+  },
+  baselineChangePlotInfo: {
+    de: 'Relative prozentuale Änderung gegenüber dem Ausgangswert — Visus bezogen auf den ersten Visus-Wert, CRT bezogen auf den ersten CRT-Wert (je eigener Ausgangswert).',
+    en: 'Relative percent change from baseline — Visus relative to the first Visus value, CRT relative to the first CRT value (each metric anchored to its own baseline).',
+  },
+  iopPlotInfo: {
+    de: 'Verlauf des Augeninnendrucks (IOD) je Visite. Die rote Linie markiert den kritischen Schwellenwert.',
+    en: 'Intraocular pressure (IOP) per visit. The red line marks the critical threshold.',
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
