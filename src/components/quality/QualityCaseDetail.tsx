@@ -484,7 +484,7 @@ export default function QualityCaseDetail({
                 <col />
                 <col className="w-24" />
                 <col className="w-24" />
-                <col className="w-36" />
+                <col className="w-28" />
                 <col className="w-48" />
               </colgroup>
               <thead className="bg-gray-50 dark:bg-gray-700">
@@ -492,7 +492,7 @@ export default function QualityCaseDetail({
                   <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{t('parameter')}</th>
                   <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{t('date')}</th>
                   <th scope="col" className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">{t('value')}</th>
-                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{t('status')}</th>
+                  <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{t('annotation')}</th>
                   <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">{t('action')}</th>
                 </tr>
               </thead>
