@@ -10,7 +10,6 @@ declare const __APP_VERSION__: string;
  * `any`-default declaration is sufficient (WS-1 / v1.17).
  */
 declare module 'plotly.js-dist-min' {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const Plotly: any;
+  const Plotly: unknown;
   export default Plotly;
 }

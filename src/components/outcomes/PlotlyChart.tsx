@@ -18,29 +18,8 @@
  */
 import { useEffect, useRef } from 'react';
 
+import { plotlyRenderable } from './plotlyRenderable';
 import type { PlotlyClickHandler, PlotlyData, PlotlyHoverHandler, PlotlyLayout } from './plotlyTypes';
-
-/**
- * True only in a browser with a usable WebGL/2D canvas context. False in jsdom/SSR
- * (no context) → caller renders the fallback. Guarded + try/catch so a throwing
- * `getContext` (some headless envs) is treated as "not renderable", never a crash.
- */
-export function plotlyRenderable(): boolean {
-  if (typeof document === 'undefined' || typeof window === 'undefined') return false;
-  try {
-    const c = document.createElement('canvas');
-    if (typeof c.getContext !== 'function') return false;
-    // Prefer WebGL (scattergl); fall back to 2D so a no-WebGL-but-real-canvas
-    // browser still renders rather than dropping to the test fallback.
-    const gl =
-      c.getContext('webgl') ??
-      c.getContext('experimental-webgl') ??
-      c.getContext('2d');
-    return gl != null;
-  } catch {
-    return false;
-  }
-}
 
 interface PlotlyChartProps {
   data: PlotlyData[];
@@ -82,13 +61,16 @@ export default function PlotlyChart({
 }: PlotlyChartProps) {
   const elRef = useRef<HTMLDivElement | null>(null);
   // Latest handlers in refs so the Plotly event listeners (attached once per redraw)
-  // always call the current callback without re-binding on every render.
+  // always call the current callback without re-binding. Synced in an effect (not in
+  // the render body) so we never write a ref during render.
   const clickRef = useRef(onPointClick);
   const hoverRef = useRef(onHover);
   const unhoverRef = useRef(onUnhover);
-  clickRef.current = onPointClick;
-  hoverRef.current = onHover;
-  unhoverRef.current = onUnhover;
+  useEffect(() => {
+    clickRef.current = onPointClick;
+    hoverRef.current = onHover;
+    unhoverRef.current = onUnhover;
+  }, [onPointClick, onHover, onUnhover]);
 
   const renderable = plotlyRenderable();
 
@@ -135,8 +117,9 @@ export default function PlotlyChart({
     return () => {
       disposed = true;
       resizeObserver?.disconnect();
-      const el2 = elRef.current;
-      if (plotly && el2) plotly.purge(el2);
+      // `el` is captured from this effect run (the node we drew into) — use it rather
+      // than elRef.current, which may have changed by cleanup time.
+      if (plotly) plotly.purge(el);
     };
   }, [data, layout, config, renderable]);
 

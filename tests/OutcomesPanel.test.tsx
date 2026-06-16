@@ -1,63 +1,15 @@
 // @vitest-environment jsdom
 /**
- * A11Y-01: aria-label on OutcomesPanel chart container div.
+ * A11Y-01 + cross-cohort overlay tests for OutcomesPanel.
  *
- * Tests:
- * 1. role="img" element with aria-label containing patientCount is present for eye="od"
- * 2. data-testid="outcomes-panel-od" is on the same element
- *
- * Phase 16: Cross-cohort overlay + VIS-04 assertions (XCOHORT-02, XCOHORT-03, VIS-04).
+ * WS-1 (v1.17): the panel chart is now Plotly. In jsdom Plotly cannot render, so
+ * PlotlyChart renders a testable fallback whose semantic markers
+ * (outcomes-trace-median, outcomes-scatter-${eye}, …) we assert against instead of
+ * the former Recharts-mock DOM.
  */
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
-// Mock Recharts so ResponsiveContainer works in jsdom (no ResizeObserver).
-// Extended in Phase 16 to expose stroke / strokeWidth / name as data-* attributes
-// so test assertions can inspect rendered Line/Area props.
-vi.mock('recharts', async (importOriginal) => {
-  const real = await importOriginal<typeof import('recharts')>();
-  return {
-    ...real,
-     
-    ResponsiveContainer: ({ children }: { children: any }) => (
-      <div data-testid="recharts-responsive-container">
-        <svg>{children}</svg>
-      </div>
-    ),
-     
-    ComposedChart: ({ children }: { children: any }) => (
-      <g data-testid="recharts-composed-chart">{children}</g>
-    ),
-    CartesianGrid: () => null,
-    XAxis: () => null,
-    YAxis: () => null,
-    Tooltip: () => null,
-    Legend: () => null,
-    ReferenceLine: () => null,
-     
-    Area: ({ fill, stroke, legendType }: any) => (
-      <g
-        data-testid="recharts-area"
-        data-fill={fill}
-        data-stroke={stroke}
-        data-legend-type={legendType}
-      />
-    ),
-     
-    Line: ({ stroke, strokeWidth, name, legendType }: any) => (
-      <g
-        data-testid="recharts-line"
-        data-stroke={stroke}
-        data-stroke-width={String(strokeWidth)}
-        data-name={name}
-        data-legend-type={legendType}
-      />
-    ),
-    Scatter: () => <g data-testid="recharts-scatter" />,
-  };
-});
-
 import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import type { CohortSeriesEntry } from '../src/components/outcomes/OutcomesPanel';
 import OutcomesPanel from '../src/components/outcomes/OutcomesPanel';
@@ -84,7 +36,7 @@ function buildPanel(patientCount: number): PanelResult {
     scatterPoints: [],
     medianGrid: [{ x: 0, y: 0.3, p25: 0.2, p75: 0.4, n: patientCount }],
     summary: { patientCount, measurementCount: patientCount * 3, excludedCount: 0 },
-  };
+  } as unknown as PanelResult;
 }
 
 function buildPanelNoPatients(patientCount: number): PanelResult {
@@ -96,7 +48,6 @@ function buildPanelNoPatients(patientCount: number): PanelResult {
   };
 }
 
-/** Simple translation stub: returns key as-is (consistent with other test files) */
 const t = (key: string) => key;
 
 const defaultProps = {
@@ -110,10 +61,6 @@ const defaultProps = {
   titleKey: 'outcomesPanelOd' as const,
   metric: 'visus' as const,
 };
-
-// ---------------------------------------------------------------------------
-// Cross-cohort fixtures
-// ---------------------------------------------------------------------------
 
 const seriesA: CohortSeriesEntry = {
   cohortId: 'a',
@@ -132,49 +79,31 @@ const seriesB: CohortSeriesEntry = {
 };
 
 // ---------------------------------------------------------------------------
-// A11Y-01 Tests (existing)
+// A11Y-01
 // ---------------------------------------------------------------------------
 
 describe('OutcomesPanel — ARIA label (A11Y-01)', () => {
   afterEach(() => cleanup());
-  it('renders role="img" element with aria-label containing patientCount for eye="od"', () => {
-    const panel = buildPanel(42);
-    render(<OutcomesPanel {...defaultProps} panel={panel} eye="od" />);
 
-    // RTL ARIA query: find the element by role "img" with label containing "42"
+  it('renders role="img" element with aria-label containing patientCount for eye="od"', () => {
+    render(<OutcomesPanel {...defaultProps} panel={buildPanel(42)} eye="od" />);
     const el = screen.getByRole('img', { name: /42/ });
-    expect(el).toBeTruthy();
-    // Confirm it is the correct outer panel div
     expect(el.getAttribute('data-testid')).toBe('outcomes-panel-od');
   });
 
   it('aria-label includes the titleKey and patient count', () => {
-    const panel = buildPanel(42);
-    render(<OutcomesPanel {...defaultProps} panel={panel} eye="od" />);
-
-    const el = screen.getByRole('img', { name: /42/ });
-    const label = el.getAttribute('aria-label') ?? '';
-    // titleKey stub returns the key string: 'outcomesPanelOd'
+    render(<OutcomesPanel {...defaultProps} panel={buildPanel(42)} eye="od" />);
+    const label = screen.getByRole('img', { name: /42/ }).getAttribute('aria-label') ?? '';
     expect(label).toContain('outcomesPanelOd');
-    // patient count from summary
     expect(label).toContain('42');
-    // outcomesCardPatients key stub
     expect(label).toContain('outcomesCardPatients');
   });
 
   it('renders role="img" element for eye="os"', () => {
-    const panel = buildPanel(17);
     render(
-      <OutcomesPanel
-        {...defaultProps}
-        panel={panel}
-        eye="os"
-        titleKey="outcomesPanelOs"
-      />,
+      <OutcomesPanel {...defaultProps} panel={buildPanel(17)} eye="os" titleKey="outcomesPanelOs" />,
     );
-
-    const el = screen.getByRole('img', { name: /17/ });
-    expect(el.getAttribute('data-testid')).toBe('outcomes-panel-os');
+    expect(screen.getByRole('img', { name: /17/ }).getAttribute('data-testid')).toBe('outcomes-panel-os');
   });
 });
 
@@ -185,30 +114,21 @@ describe('OutcomesPanel — ARIA label (A11Y-01)', () => {
 describe('OutcomesPanel — cross-cohort mode (Phase 16)', () => {
   afterEach(() => cleanup());
 
-  it('XCOHORT-02: renders one median Line per cohortSeries entry', () => {
+  it('XCOHORT-02: renders one median trace per cohortSeries entry', () => {
     const { container } = render(
-      <OutcomesPanel
-        {...defaultProps}
-        panel={buildPanelNoPatients(0)}
-        cohortSeries={[seriesA, seriesB]}
-      />,
+      <OutcomesPanel {...defaultProps} panel={buildPanelNoPatients(0)} cohortSeries={[seriesA, seriesB]} />,
     );
-    const lines = container.querySelectorAll('[data-testid="recharts-line"]');
-    expect(lines.length).toBe(2);
+    const medians = container.querySelectorAll('[data-testid="outcomes-trace-median"]');
+    expect(medians.length).toBe(2);
   });
 
-  it('XCOHORT-03: median Line name prop uses "(N=X patients)" format', () => {
+  it('XCOHORT-03: median trace name uses "(N=X patients)" format', () => {
     const { container } = render(
-      <OutcomesPanel
-        {...defaultProps}
-        panel={buildPanelNoPatients(0)}
-        cohortSeries={[seriesA]}
-      />,
+      <OutcomesPanel {...defaultProps} panel={buildPanelNoPatients(0)} cohortSeries={[seriesA]} />,
     );
-    const line = container.querySelector('[data-testid="recharts-line"]');
-    expect(line).not.toBeNull();
-    const nameAttr = line!.getAttribute('data-name') ?? '';
-    expect(nameAttr).toMatch(/Cohort A \(N=42 patients\)/);
+    const median = container.querySelector('[data-testid="outcomes-trace-median"]');
+    expect(median).not.toBeNull();
+    expect(median!.getAttribute('data-name') ?? '').toMatch(/Cohort A \(N=42 patients\)/);
   });
 
   it('XCOHORT-02: per-patient lines are suppressed in cross-cohort mode even when layers.perPatient is true', () => {
@@ -220,9 +140,9 @@ describe('OutcomesPanel — cross-cohort mode (Phase 16)', () => {
         cohortSeries={[seriesA, seriesB]}
       />,
     );
-    // In cross mode only 2 cohort median Lines render (no per-patient lines)
-    const lines = container.querySelectorAll('[data-testid="recharts-line"]');
-    expect(lines.length).toBe(2);
+    // No per-patient markers in cross mode; only the 2 cohort medians.
+    expect(container.querySelectorAll('[data-testid^="outcomes-perpatient-"]').length).toBe(0);
+    expect(container.querySelectorAll('[data-testid="outcomes-trace-median"]').length).toBe(2);
   });
 
   it('XCOHORT-02: scatter is suppressed in cross-cohort mode even when layers.scatter is true', () => {
@@ -234,11 +154,10 @@ describe('OutcomesPanel — cross-cohort mode (Phase 16)', () => {
         cohortSeries={[seriesA, seriesB]}
       />,
     );
-    const scatters = container.querySelectorAll('[data-testid="recharts-scatter"]');
-    expect(scatters.length).toBe(0);
+    expect(container.querySelector('[data-testid="outcomes-scatter-od"]')).toBeNull();
   });
 
-  it('VIS-04: single-cohort per-patient Line stroke is #9ca3af', () => {
+  it('VIS-04: single-cohort per-patient line color is #9ca3af', () => {
     const { container } = render(
       <OutcomesPanel
         {...defaultProps}
@@ -246,12 +165,12 @@ describe('OutcomesPanel — cross-cohort mode (Phase 16)', () => {
         layers={{ ...defaultProps.layers, perPatient: true }}
       />,
     );
-    // per-patient lines should have data-stroke="#9ca3af"
-    const perPatientLine = container.querySelector('[data-testid="recharts-line"][data-stroke="#9ca3af"]');
-    expect(perPatientLine).not.toBeNull();
+    const perPatient = container.querySelector('[data-testid="outcomes-perpatient-P-001"]');
+    expect(perPatient).not.toBeNull();
+    expect(perPatient!.getAttribute('data-color')).toBe('#9ca3af');
   });
 
-  it('VIS-04: single-cohort median Line has strokeWidth 4', () => {
+  it('VIS-04: single-cohort median trace has strokeWidth 4', () => {
     const { container } = render(
       <OutcomesPanel
         {...defaultProps}
@@ -259,7 +178,8 @@ describe('OutcomesPanel — cross-cohort mode (Phase 16)', () => {
         layers={{ ...defaultProps.layers, median: true }}
       />,
     );
-    const medianLine = container.querySelector('[data-testid="recharts-line"][data-stroke-width="4"]');
-    expect(medianLine).not.toBeNull();
+    const median = container.querySelector('[data-testid="outcomes-trace-median"]');
+    expect(median).not.toBeNull();
+    expect(median!.getAttribute('data-stroke-width')).toBe('4');
   });
 });

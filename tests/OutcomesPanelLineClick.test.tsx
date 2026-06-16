@@ -1,55 +1,16 @@
 // @vitest-environment jsdom
 /**
- * J1b (v1.15-p4) — clickable per-patient trajectory lines.
+ * J1b / K1c — clickable + hoverable per-patient trajectory lines.
  *
- * Clicking a patient's <Line> drills to that patient's case via the SAME
- * onPointClick → handlePointDrillDown path as the scatter click (IDOR gate reused).
- * Gated: only wired in single-cohort mode (onPointClick provided) AND while the
- * per-patient layer is shown. Cursor affordance on the line.
+ * WS-1 (v1.17): the chart is Plotly; in jsdom the testable fallback renders each
+ * per-patient line as a node (outcomes-perpatient-${pseudonym}). Clicking it drills
+ * to that patient via the same onPointClick → drill-down path as a scatter click
+ * (IDOR gate reused); hovering it shows that patient's tooltip — but only when the
+ * scatter layer is OFF (scatter takes precedence). Both are gated to single-cohort
+ * mode + the per-patient layer being shown.
  */
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
-// Recharts mock: Line exposes onClick + cursor as data-* and, for per-patient
-// lines, tags itself by the patient's pseudonym (read from the first datum's
-// `pseudonym`) so a test can click a specific patient's line.
-vi.mock('recharts', async (importOriginal) => {
-  const real = await importOriginal<typeof import('recharts')>();
-  return {
-    ...real,
-    ResponsiveContainer: ({ children }: { children: any }) => (
-      <div data-testid="recharts-responsive-container"><svg>{children}</svg></div>
-    ),
-    ComposedChart: ({ children }: { children: any }) => (
-      <g data-testid="recharts-composed-chart">{children}</g>
-    ),
-    CartesianGrid: () => null,
-    XAxis: () => null,
-    YAxis: () => null,
-    Tooltip: () => null,
-    Legend: () => null,
-    ReferenceLine: () => null,
-    Area: () => <g data-testid="recharts-area" />,
-    Line: ({ onClick, cursor, data, onMouseEnter, onMouseLeave }: any) => {
-      const pseudonym = Array.isArray(data) && data[0]?.pseudonym ? data[0].pseudonym : undefined;
-      return (
-        <g
-          data-testid={pseudonym ? `perpatient-line-${pseudonym}` : 'recharts-line'}
-          data-has-onclick={onClick ? 'true' : 'false'}
-          data-has-mouseenter={onMouseEnter ? 'true' : 'false'}
-          data-cursor={cursor ?? ''}
-          onClick={() => onClick && onClick({})}
-          // Recharts passes (lineProps, index, domEvent) — forward a synthetic event
-          // carrying clientX/Y + a target so the K1c handler can position the tooltip.
-          onMouseEnter={(e: any) =>
-            onMouseEnter && onMouseEnter({}, 0, { clientX: 50, clientY: 60, target: e.target })}
-          onMouseLeave={() => onMouseLeave && onMouseLeave({}, 0, {})}
-        />
-      );
-    },
-    Scatter: () => <g data-testid="recharts-scatter" />,
-  };
-});
 
 import OutcomesPanel from '../src/components/outcomes/OutcomesPanel';
 import type { PanelResult } from '../src/utils/cohortTrajectory';
@@ -106,20 +67,18 @@ describe('OutcomesPanel — per-patient line click (J1b)', () => {
     const { container } = render(
       <OutcomesPanel {...base} panel={panelWithPerPatient()} onPointClick={onPointClick} />,
     );
-    const line = container.querySelector('[data-testid="perpatient-line-PSN-2"]');
+    const line = container.querySelector('[data-testid="outcomes-perpatient-PSN-2"]');
     expect(line).not.toBeNull();
     expect(line!.getAttribute('data-has-onclick')).toBe('true');
-    expect(line!.getAttribute('data-cursor')).toBe('pointer');
-    line!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fireEvent.click(line!);
     expect(onPointClick).toHaveBeenCalledWith('PSN-2');
   });
 
   it('does NOT wire line onClick when onPointClick is absent (e.g. cross-mode)', () => {
     const { container } = render(<OutcomesPanel {...base} panel={panelWithPerPatient()} />);
-    const line = container.querySelector('[data-testid="perpatient-line-PSN-1"]');
+    const line = container.querySelector('[data-testid="outcomes-perpatient-PSN-1"]');
     expect(line).not.toBeNull();
     expect(line!.getAttribute('data-has-onclick')).toBe('false');
-    expect(line!.getAttribute('data-cursor')).toBe('');
   });
 
   it('does NOT render per-patient lines when the layer is hidden (gate)', () => {
@@ -132,22 +91,19 @@ describe('OutcomesPanel — per-patient line click (J1b)', () => {
         onPointClick={onPointClick}
       />,
     );
-    expect(container.querySelector('[data-testid="perpatient-line-PSN-1"]')).toBeNull();
-    expect(container.querySelector('[data-testid="perpatient-line-PSN-2"]')).toBeNull();
+    expect(container.querySelector('[data-testid="outcomes-perpatient-PSN-1"]')).toBeNull();
+    expect(container.querySelector('[data-testid="outcomes-perpatient-PSN-2"]')).toBeNull();
   });
 });
 
-// ---------------------------------------------------------------------------
-// K1c (v1.16-A): per-patient line hover — highlight + tooltip when scatter is OFF
-// ---------------------------------------------------------------------------
 describe('OutcomesPanel — per-patient line hover (K1c)', () => {
   afterEach(() => cleanup());
 
-  it('wires line hover handlers when scatter is OFF and per-patient is ON', () => {
+  it('wires line hover when scatter is OFF and per-patient is ON', () => {
     const { container } = render(<OutcomesPanel {...base} panel={panelWithPerPatient()} />);
-    const line = container.querySelector('[data-testid="perpatient-line-PSN-1"]');
+    const line = container.querySelector('[data-testid="outcomes-perpatient-PSN-1"]');
     expect(line).not.toBeNull();
-    expect(line!.getAttribute('data-has-mouseenter')).toBe('true');
+    expect(line!.getAttribute('data-has-hover')).toBe('true');
   });
 
   it('does NOT wire line hover when scatter is ON (scatter takes precedence)', () => {
@@ -158,20 +114,18 @@ describe('OutcomesPanel — per-patient line hover (K1c)', () => {
         panel={panelWithPerPatient()}
       />,
     );
-    const line = container.querySelector('[data-testid="perpatient-line-PSN-1"]');
+    const line = container.querySelector('[data-testid="outcomes-perpatient-PSN-1"]');
     expect(line).not.toBeNull();
-    expect(line!.getAttribute('data-has-mouseenter')).toBe('false');
+    expect(line!.getAttribute('data-has-hover')).toBe('false');
   });
 
   it('hovering a line shows that patient tooltip; leaving hides it', () => {
     const { container } = render(<OutcomesPanel {...base} panel={panelWithPerPatient()} />);
-    const tooltip = container.querySelector(
-      '[data-testid="outcomes-hover-tooltip-od"]',
-    ) as HTMLElement;
+    const tooltip = container.querySelector('[data-testid="outcomes-hover-tooltip-od"]') as HTMLElement;
     expect(tooltip.style.display).toBe('none');
 
-    const line = container.querySelector('[data-testid="perpatient-line-PSN-2"]') as Element;
-    fireEvent.mouseEnter(line);
+    const line = container.querySelector('[data-testid="outcomes-perpatient-PSN-2"]') as Element;
+    fireEvent.mouseEnter(line, { clientX: 50, clientY: 60 });
     expect(tooltip.style.display).toBe('block');
     expect(tooltip.textContent).toContain('PSN-2');
 

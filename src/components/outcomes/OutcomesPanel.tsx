@@ -22,15 +22,15 @@ import { useThemeSafe } from '../../context/ThemeContext';
 import type { AxisMode, GridPoint, PanelResult, YMetric } from '../../utils/cohortTrajectory';
 import { DARK_EYE_COLORS, EYE_COLORS, SERIES_STYLES } from './palette';
 import PlotlyChart from './PlotlyChart';
-import type { PlotlyData, PlotlyLayout, PlotlyMouseEvent } from './plotlyTypes';
 import {
   buildCrossCohortTraces,
   buildSingleCohortTraces,
   downsampleScatter,
   type LayerState,
-  type ScatterDatum,
   SCATTER_RENDER_CAP,
+  type ScatterDatum,
 } from './plotlyTraces';
+import type { PlotlyData, PlotlyLayout, PlotlyMouseEvent } from './plotlyTypes';
 
 export interface CohortSeriesEntry {
   cohortId: string;

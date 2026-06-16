@@ -476,10 +476,11 @@ describe('OutcomesPage — panels, summary cards, drawer toggles (09-02)', () =>
   });
 
   /**
-   * Test 8: OD panel renders an SVG for a 3-patient cohort with OD measurements.
-   * OutcomesPanel must mount a Recharts ComposedChart which renders an <svg>.
+   * Test 8: OD panel renders the chart for a 3-patient cohort with OD measurements.
+   * WS-1 (v1.17): the chart is Plotly; in jsdom PlotlyChart renders its testable
+   * fallback subtree (outcomes-fallback-od) instead of an <svg>.
    */
-  it('8. OD panel renders and its subtree contains an svg element', () => {
+  it('8. OD panel renders and its subtree contains the chart fallback', () => {
     const cases = [
       buildPatientCaseWithVisus('p1'),
       buildPatientCaseWithVisus('p2'),
@@ -490,8 +491,7 @@ describe('OutcomesPage — panels, summary cards, drawer toggles (09-02)', () =>
 
     const panel = screen.getByTestId('outcomes-panel-od');
     expect(panel).toBeDefined();
-    const svg = panel.querySelector('svg');
-    expect(svg).not.toBeNull();
+    expect(panel.querySelector('[data-testid="outcomes-fallback-od"]')).not.toBeNull();
   });
 
   /**
