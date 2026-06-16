@@ -155,7 +155,6 @@ export function useOutcomesRouteState() {
   // Phase 16 / XCOHORT-01..04: cross-cohort URL parsing (placed here, above any early return, per Pitfall 3 hook-order rule).
   const rawCohortsParam = searchParams.get('cohorts');
   const primaryCohortId = searchParams.get('cohort');
-  const isCrossMode = Boolean(rawCohortsParam);
 
   // Parse, cap at 4, drop unknown ids, always include primary first.
   const crossCohortIds: string[] = useMemo(() => {
@@ -167,6 +166,13 @@ export function useOutcomesRouteState() {
       : known;
     return withPrimary.slice(0, 4);
   }, [rawCohortsParam, primaryCohortId, savedSearches]);
+
+  // L3 (v1.17): cross-cohort overlay needs at least TWO cohorts. The compare drawer's
+  // working selection lives in ?cohorts= even at a SINGLE in-progress pick (so the
+  // menu stays interactive — see handleCompareChange), but the view only enters cross
+  // mode at >=2 valid cohorts. Previously a single pick was discarded from the URL
+  // entirely, which "locked" the drawer (the tester's report).
+  const isCrossMode = crossCohortIds.length >= 2;
 
   // J2 (v1.15-p4): persisted trajectory view state for the mount-time cohort, read
   // ONCE at mount (lazy initializer). Used to seed the session-only toggles below so
@@ -521,7 +527,12 @@ export function useOutcomesRouteState() {
       const primary = primaryCohortId ?? null;
       const ensured = primary && !nextIds.includes(primary) ? [primary, ...nextIds] : nextIds;
       const capped = ensured.slice(0, 4);
-      if (capped.length >= 2) {
+      // L3 (v1.17): persist ?cohorts= for ANY in-progress selection (>=1), not only
+      // at >=2. The view still only enters cross mode at >=2 valid cohorts (isCrossMode
+      // above), but keeping a single pick in the URL means it is NOT discarded — so the
+      // drawer stays interactive and the user can add a second cohort. Only an EMPTY
+      // selection clears the param.
+      if (capped.length >= 1) {
         p.set('cohorts', capped.join(','));
         // D-05: ?cohorts= takes precedence — remove ?cohort= to avoid ambiguity, then re-add primary.
         p.delete('cohort');

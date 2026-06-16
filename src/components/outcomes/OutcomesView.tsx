@@ -88,6 +88,14 @@ export default function OutcomesView() {
   // until the deferral has armed for the CURRENT key (status painted first).
   const clientRenderReady = !isClientHeavyMetric || armedRenderKey === clientRenderKey;
 
+  // L3 (v1.17): the compare drawer's working selection. crossCohortIds reflects the
+  // active set; below 2 cohorts it falls back to the locked primary (or nothing). The
+  // lock fix lives in handleCompareChange (route hook): it now persists ?cohorts= for
+  // a single in-progress pick so a selection below 2 is no longer discarded.
+  const compareSelection = s.crossCohortIds.length > 0
+    ? s.crossCohortIds
+    : (s.primaryCohortId ? [s.primaryCohortId] : []);
+
   const renderTabStrip = () => (
     <nav
       role="tablist"
@@ -363,7 +371,7 @@ export default function OutcomesView() {
         savedSearches={s.savedSearches}
         patientCounts={s.patientCounts}
         primaryCohortId={s.primaryCohortId}
-        selectedIds={s.crossCohortIds.length > 0 ? s.crossCohortIds : (s.primaryCohortId ? [s.primaryCohortId] : [])}
+        selectedIds={compareSelection}
         onChange={s.handleCompareChange}
         onReset={s.handleCompareReset}
         t={s.t as (k: string) => string}
