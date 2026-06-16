@@ -47,22 +47,22 @@ function RangesTable() {
   return (
     <table className="w-full text-sm">
       <thead>
-        <tr className="bg-gray-50 border-b border-gray-100">
-          <th className="text-left px-3 py-2 font-medium text-gray-600">
+        <tr className="bg-gray-50 dark:bg-gray-700 border-b border-gray-100 dark:border-gray-700">
+          <th className="text-left px-3 py-2 font-medium text-gray-600 dark:text-gray-300">
             {t('docQualityParameter')}
           </th>
-          <th className="text-left px-3 py-2 font-medium text-gray-600">
+          <th className="text-left px-3 py-2 font-medium text-gray-600 dark:text-gray-300">
             {t('docQualityRange')}
           </th>
-          <th className="text-left px-3 py-2 font-medium text-gray-600">LOINC</th>
+          <th className="text-left px-3 py-2 font-medium text-gray-600 dark:text-gray-300">LOINC</th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-gray-50">
+      <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
         {rows.map((r) => (
           <tr key={r.parameter}>
-            <td className="px-3 py-2 text-gray-800">{r.parameter}</td>
-            <td className="px-3 py-2 text-gray-600">{r.range}</td>
-            <td className="px-3 py-2 text-gray-400 font-mono text-xs">{r.loinc}</td>
+            <td className="px-3 py-2 text-gray-800 dark:text-gray-200">{r.parameter}</td>
+            <td className="px-3 py-2 text-gray-600 dark:text-gray-300">{r.range}</td>
+            <td className="px-3 py-2 text-gray-400 dark:text-gray-500 font-mono text-xs">{r.loinc}</td>
           </tr>
         ))}
       </tbody>
@@ -98,9 +98,9 @@ export function PlausibilityRangesTable({ collapsible = false }: PlausibilityRan
   return (
     <div
       data-testid="plausibility-ranges-table"
-      className="bg-white rounded-xl border border-gray-200 p-4"
+      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
     >
-      <h3 className="text-sm font-semibold text-gray-700 mb-3">
+      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
         {t('docQualityPlausibilityRanges')}
       </h3>
       <RangesTable />

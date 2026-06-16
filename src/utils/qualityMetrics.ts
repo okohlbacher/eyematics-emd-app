@@ -86,9 +86,15 @@ export function scoreColor(score: number): string {
 }
 
 export function scoreBgClass(score: number): string {
-  if (score > 80) return 'bg-green-100 text-green-800 border-green-200';
-  if (score >= 60) return 'bg-amber-100 text-amber-800 border-amber-200';
-  return 'bg-red-100 text-red-800 border-red-200';
+  // M12 (v1.18): dark-mode variants so the MetricCard status colours hold up on
+  // a dark page (translucent tinted fill + lighter text/border).
+  if (score > 80) {
+    return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-800';
+  }
+  if (score >= 60) {
+    return 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800';
+  }
+  return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800';
 }
 
 export function scoreIconColor(score: number): string {

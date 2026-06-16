@@ -10,8 +10,10 @@ import {
 } from 'recharts';
 
 import { useLanguage } from '../../context/LanguageContext';
+import { useThemeSafe } from '../../context/ThemeContext';
 import type { CenterMetrics, QualityCategory } from '../../utils/qualityMetrics';
 import { QUALITY_CATEGORY_COLORS } from '../../utils/qualityMetrics';
+import { caseChartColors } from '../case-detail/chartTheme';
 import { CustomTooltip } from './CustomTooltip';
 
 // ---------------------------------------------------------------------------
@@ -28,6 +30,11 @@ export function CenterComparisonChart({
   noDataLabel,
 }: CenterComparisonChartProps) {
   const { t } = useLanguage();
+  // M12 (v1.18): theme-aware Recharts styling — Recharts cannot read Tailwind
+  // `dark:` classes, so axis/grid/legend/tooltip colours are passed explicitly.
+  const { effectiveTheme } = useThemeSafe();
+  const isDark = effectiveTheme === 'dark';
+  const colors = caseChartColors(isDark);
 
   const chartData = metrics.map((m) => ({
     name: m.centerLabel,
@@ -53,23 +60,23 @@ export function CenterComparisonChart({
         barCategoryGap="20%"
         barGap={2}
       >
-        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
         <XAxis
           dataKey="name"
-          tick={{ fontSize: 12 }}
+          tick={{ fontSize: 12, fill: colors.axisTick }}
           tickLine={false}
-          axisLine={{ stroke: '#e5e7eb' }}
+          axisLine={{ stroke: colors.grid }}
         />
         <YAxis
           domain={[0, 100]}
           tickCount={5}
           tickFormatter={(v: number) => `${v}%`}
-          tick={{ fontSize: 11 }}
+          tick={{ fontSize: 11, fill: colors.axisTick }}
           tickLine={false}
           axisLine={false}
         />
-        <Tooltip content={<CustomTooltip />} />
-        <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
+        <Tooltip content={<CustomTooltip isDark={isDark} />} cursor={{ fill: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }} />
+        <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12, color: colors.legend }} />
         {(
           [
             ['completeness', t('docQualityCompleteness')],

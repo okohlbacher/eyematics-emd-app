@@ -196,7 +196,7 @@ export default function DocQualityPage() {
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               {t('docQualitySubtitle')}
               {timeRange !== 'all' && (
-                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
                   {isCustomTimeRange(timeRange)
                     ? `${timeRange.from || '…'} – ${timeRange.to || '…'}`
                     : timeRange === '3m'
