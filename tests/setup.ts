@@ -41,6 +41,14 @@ if (typeof globalThis.BroadcastChannel === 'undefined') {
   (globalThis as unknown as { BroadcastChannel: typeof MockBroadcastChannel }).BroadcastChannel = MockBroadcastChannel;
 }
 
+// WS-1 (v1.17): PlotlyChart feature-detects a canvas context (plotlyRenderable). jsdom
+// has no canvas backend, so getContext() logs a noisy "Not implemented" warning before
+// returning null. Stub it to quietly return null in jsdom — the Plotly fallback path is
+// exactly what we want under test (so OutcomesPanel renders its testable fallback DOM).
+if (typeof HTMLCanvasElement !== 'undefined') {
+  HTMLCanvasElement.prototype.getContext = (() => null) as unknown as HTMLCanvasElement['getContext'];
+}
+
 beforeEach(() => {
   MockBroadcastChannel._reset();
   // J2 (v1.15-p4): the outcomes view persists explicit toggle choices in

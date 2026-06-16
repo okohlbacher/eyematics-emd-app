@@ -1,47 +1,19 @@
 // @vitest-environment jsdom
 /**
- * I2 (v1.14-p4) — scatter cap/downsample in OutcomesPanel.
+ * Scatter cap / downsample — OutcomesPanel.
  *
- * When the scatter layer is ON for a large cohort, the panel renders at most
- * SCATTER_RENDER_CAP points (even-stride downsample) instead of the full cloud —
- * bounding the SVG node count so enabling scatter stays responsive. The drop is
- * logged (console.info), never silent. Drill-down/hover machinery is unchanged and
- * operates on every RENDERED point (asserted indirectly: the rendered Scatter still
- * receives the downsampled data with patientId payloads intact).
- *
- * A recharts mock captures the `data` array handed to <Scatter>.
+ * WS-1 (v1.17): scattergl draws to WebGL so the cap rose from the v1.16 SVG cap to
+ * SCATTER_RENDER_CAP. When the scatter layer is on for a very large cohort the panel
+ * renders at most SCATTER_RENDER_CAP points (even-stride downsample) and logs the
+ * drop (console.info), never silently. Below the cap, every point renders. We assert
+ * via the jsdom fallback's per-point nodes (outcomes-scatter-point-${id}).
  */
 
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Capture every <Scatter data> the panel renders.
-const scatterDataCaptures: unknown[][] = [];
-
-vi.mock('recharts', async (importOriginal) => {
-  const real = await importOriginal<typeof import('recharts')>();
-  return {
-    ...real,
-    ResponsiveContainer: ({ children }: { children: any }) => (
-      <div><svg>{children}</svg></div>
-    ),
-    ComposedChart: ({ children }: { children: any }) => <g>{children}</g>,
-    CartesianGrid: () => null,
-    XAxis: () => null,
-    YAxis: () => null,
-    Tooltip: () => null,
-    Legend: () => null,
-    ReferenceLine: () => null,
-    Area: () => null,
-    Line: () => null,
-    Scatter: ({ data }: { data: unknown[] }) => {
-      scatterDataCaptures.push(data);
-      return <g data-testid="recharts-scatter" />;
-    },
-  };
-});
-
 import OutcomesPanel from '../src/components/outcomes/OutcomesPanel';
+import { SCATTER_RENDER_CAP } from '../src/components/outcomes/plotlyTraces';
 import type { PanelResult } from '../src/utils/cohortTrajectory';
 
 const t = (key: string) => key;
@@ -73,9 +45,15 @@ const baseProps = {
   onPointClick: vi.fn(),
 };
 
-describe('I2 — OutcomesPanel scatter cap/downsample', () => {
+function renderedCount(container: HTMLElement): number {
+  return container.querySelector('[data-testid="outcomes-scatter-od"]')
+    ? Number(container.querySelector('[data-testid="outcomes-scatter-od"]')!.getAttribute('data-count'))
+    : 0;
+}
+
+describe('OutcomesPanel scatter cap/downsample', () => {
   beforeEach(() => {
-    scatterDataCaptures.length = 0;
+    vi.spyOn(console, 'info').mockImplementation(() => {});
   });
   afterEach(() => {
     cleanup();
@@ -83,50 +61,44 @@ describe('I2 — OutcomesPanel scatter cap/downsample', () => {
   });
 
   it('renders ALL points unchanged when below the cap', () => {
-    const panel = buildPanelWithScatter(200);
-    render(<OutcomesPanel {...baseProps} panel={panel} />);
-    expect(scatterDataCaptures.length).toBe(1);
-    expect((scatterDataCaptures[0] as unknown[]).length).toBe(200);
+    const { container } = render(<OutcomesPanel {...baseProps} panel={buildPanelWithScatter(200)} />);
+    expect(renderedCount(container)).toBe(200);
   });
 
-  it('downsamples to at most the cap for a large cohort (and logs, never silent)', () => {
+  it('downsamples to at most the cap for a very large cohort (and logs, never silent)', () => {
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
-    const panel = buildPanelWithScatter(7130); // ~the 245-cohort point count
-    render(<OutcomesPanel {...baseProps} panel={panel} />);
-
-    const rendered = scatterDataCaptures[0] as unknown[];
-    expect(rendered.length).toBeLessThanOrEqual(1500);
-    expect(rendered.length).toBeLessThan(7130);
-    // Drop is logged with both counts — no silent truncation.
+    const n = SCATTER_RENDER_CAP * 2 + 130;
+    const { container } = render(<OutcomesPanel {...baseProps} panel={buildPanelWithScatter(n)} />);
+    const rendered = renderedCount(container);
+    expect(rendered).toBeLessThanOrEqual(SCATTER_RENDER_CAP);
+    expect(rendered).toBeLessThan(n);
     expect(infoSpy).toHaveBeenCalledTimes(1);
     const msg = String(infoSpy.mock.calls[0][0]);
-    expect(msg).toContain('7130');
-    expect(msg).toContain(String(rendered.length));
+    expect(msg).toContain(String(n));
+    expect(msg).toContain(String(rendered));
   });
 
   it('downsample is even-stride (spans the range), not a truncated prefix', () => {
-    const panel = buildPanelWithScatter(7130);
-    vi.spyOn(console, 'info').mockImplementation(() => {});
-    render(<OutcomesPanel {...baseProps} panel={panel} />);
-
-    const rendered = scatterDataCaptures[0] as { x: number; patientId: string }[];
-    // First point is the original first; last rendered point is near the original
-    // tail (even stride), proving uniform coverage rather than a head slice.
-    expect(rendered[0].x).toBe(0);
-    expect(rendered[rendered.length - 1].x).toBeGreaterThan(7000);
-    // Payloads (patientId) are preserved so drill-down/hover still resolves a patient.
-    expect(typeof rendered[0].patientId).toBe('string');
+    const n = SCATTER_RENDER_CAP * 2 + 130;
+    const { container } = render(<OutcomesPanel {...baseProps} panel={buildPanelWithScatter(n)} />);
+    // First original point is retained; a high-index point is also retained (even
+    // stride covers the whole range, not just a head slice).
+    expect(container.querySelector('[data-testid="outcomes-scatter-point-PSN-0"]')).not.toBeNull();
+    const lastIdx = n - 1;
+    const nearTail = Array.from({ length: 200 }, (_, k) => lastIdx - k).some(
+      (i) => container.querySelector(`[data-testid="outcomes-scatter-point-PSN-${i}"]`) != null,
+    );
+    expect(nearTail).toBe(true);
   });
 
-  it('renders no Scatter when the layer is off', () => {
-    const panel = buildPanelWithScatter(7130);
-    render(
+  it('renders no scatter when the layer is off', () => {
+    const { container } = render(
       <OutcomesPanel
         {...baseProps}
-        panel={panel}
+        panel={buildPanelWithScatter(200)}
         layers={{ median: false, perPatient: false, scatter: false, spreadBand: false }}
       />,
     );
-    expect(scatterDataCaptures.length).toBe(0);
+    expect(container.querySelector('[data-testid="outcomes-scatter-od"]')).toBeNull();
   });
 });

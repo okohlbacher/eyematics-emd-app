@@ -21,7 +21,7 @@
  * renderOutcomesView options.settings field rather than configuring loadSettingsMock
  * directly.
  */
-import { cleanup, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
@@ -233,5 +233,45 @@ describe('OutcomesView — cross-cohort routing (Phase 16)', () => {
       const panel = screen.getByTestId('outcomes-panel-od');
       expect(panel).toBeDefined();
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// L3 (v1.17): the compare menu must NOT lock after dropping below 2 selections.
+// Repro: split flow opens compare with ?cohorts= and NO ?cohort= (no locked
+// primary). Deselecting the pre-selected sub-cohorts to zero used to discard every
+// subsequent single pick (cross-mode needs >=2), leaving the menu unusable. The
+// local working selection now persists 0/1 picks so cohorts stay freely addable.
+// ---------------------------------------------------------------------------
+
+describe('OutcomesView — compare menu stays interactive (L3)', () => {
+  it('after deselecting all pre-selected sub-cohorts, a fresh pick registers (no lock)', async () => {
+    await renderOutcomesView('/analysis?cohorts=p2,p3', {
+      savedSearches: CROSS_COHORT_SAVED_SEARCHES,
+      activeCases: buildCases(5),
+    });
+
+    // Open the compare drawer.
+    fireEvent.click(screen.getByRole('button', { name: /outcomesCompareOpenDrawer/i }));
+
+    const checkbox = (name: RegExp) => screen.getByLabelText(name) as HTMLInputElement;
+
+    // Both pre-selected sub-cohorts start checked.
+    await waitFor(() => expect(checkbox(/Cohort B \(N=/i).checked).toBe(true));
+    expect(checkbox(/Cohort C \(N=/i).checked).toBe(true);
+
+    // Deselect both → zero selections. Menu must remain interactive.
+    fireEvent.click(checkbox(/Cohort B \(N=/i));
+    fireEvent.click(checkbox(/Cohort C \(N=/i));
+    await waitFor(() => expect(checkbox(/Cohort B \(N=/i).checked).toBe(false));
+    expect(checkbox(/Cohort C \(N=/i).checked).toBe(false);
+
+    // A fresh pick now REGISTERS (the lock bug discarded it). Add Cohort A.
+    fireEvent.click(checkbox(/Cohort A \(N=/i));
+    await waitFor(() => expect(checkbox(/Cohort A \(N=/i).checked).toBe(true));
+
+    // And a second can still be added (re-reaching cross-mode is possible).
+    fireEvent.click(checkbox(/Cohort D \(N=/i));
+    await waitFor(() => expect(checkbox(/Cohort D \(N=/i).checked).toBe(true));
   });
 });

@@ -3,39 +3,15 @@
  * VQA-03 / D-04: Two-layer regression guard for the IQR band's n<2 edge case.
  *
  *   1. Math  — computeCohortTrajectory must never emit GridPoint with n<2.
- *   2. DOM   — OutcomesPanel must not render <path> elements with empty `d` attr
- *              (the symptom of a 0-height IQR band).
+ *   2. DOM   — OutcomesPanel renders the IQR band marker when the band layer is on
+ *              and a non-degenerate medianGrid is present, and the empty-state
+ *              short-circuit (patientCount=0) renders no chart at all.
+ *
+ * WS-1 (v1.17): the chart is Plotly (no SVG <path> to inspect); the DOM assertions
+ * now target the panel's IQR marker + the empty-state short-circuit instead.
  */
-import { cleanup,render } from '@testing-library/react';
-import { afterEach,describe, expect, it, vi } from 'vitest';
-
-// Deterministic Recharts mock (same pattern as tests/OutcomesPage.test.tsx).
-// Emit <path d="M0,0 L10,10"> so the DOM has a non-empty `d` to assert on.
-vi.mock('recharts', async (importOriginal) => {
-  const real = await importOriginal<typeof import('recharts')>();
-  return {
-    ...real,
-     
-    ResponsiveContainer: ({ children }: { children: any }) => (
-      <div data-testid="recharts-responsive-container">
-        <svg>{children}</svg>
-      </div>
-    ),
-     
-    ComposedChart: ({ children }: { children: any }) => (
-      <g data-testid="recharts-composed-chart">{children}</g>
-    ),
-    CartesianGrid: () => null,
-    XAxis: () => null,
-    YAxis: () => null,
-    Tooltip: () => null,
-    Legend: () => null,
-    ReferenceLine: () => null,
-    Area: () => <path data-testid="area-path" d="M0,0 L10,10" />,
-    Line: () => <path data-testid="line-path" d="M0,0 L10,10" />,
-    Scatter: () => null,
-  };
-});
+import { cleanup, render } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import OutcomesPanel from '../src/components/outcomes/OutcomesPanel';
 import { LOINC_VISUS, SNOMED_EYE_RIGHT } from '../src/services/fhirLoader';
@@ -48,14 +24,10 @@ import {
 afterEach(() => cleanup());
 
 // ---------------------------------------------------------------------------
-// Fixture helpers (shape matches tests/cohortTrajectory.test.ts:makeObs)
+// Fixture helpers
 // ---------------------------------------------------------------------------
 
-function makeVisusObs(
-  date: string,
-  decimal: number,
-  id = 'obs-' + date + '-od',
-) {
+function makeVisusObs(date: string, decimal: number, id = 'obs-' + date + '-od') {
   return {
     resourceType: 'Observation' as const,
     id,
@@ -65,14 +37,11 @@ function makeVisusObs(
     effectiveDateTime: date,
     valueQuantity: { value: decimal, unit: 'decimal' },
     bodySite: { coding: [{ code: SNOMED_EYE_RIGHT }] },
-     
+
   } as any;
 }
 
-function makeCase(
-  pseudonym: string,
-  obs: Array<{ date: string; decimal: number }>,
-): PatientCase {
+function makeCase(pseudonym: string, obs: Array<{ date: string; decimal: number }>): PatientCase {
   return {
     id: pseudonym,
     pseudonym,
@@ -81,9 +50,7 @@ function makeCase(
     centerId: 'org-test',
     centerName: 'Test Center',
     conditions: [],
-    observations: obs.map((o, i) =>
-      makeVisusObs(o.date, o.decimal, `obs-${pseudonym}-${i}`),
-    ),
+    observations: obs.map((o, i) => makeVisusObs(o.date, o.decimal, `obs-${pseudonym}-${i}`)),
     procedures: [],
     imagingStudies: [],
     medications: [],
@@ -96,18 +63,12 @@ function makeCase(
 
 describe('cohortTrajectory — medianGrid n>=2 invariant (VQA-03 / D-04)', () => {
   it('omits grid points where fewer than 2 patients contribute (n<2)', () => {
-    // Patient 1: 2 obs spanning days 0..100. Patient 2: 1 obs at day 200 — never interpolates.
-    // Grid extends to ~day 200 but only patient 1 can contribute to any interpolation;
-    // patients with <2 measurements are pruned earlier (D-18), so ys.length at every gx is
-    // at most 1. New guard (D-04) must skip every such point — medianGrid must be empty.
     const cases: PatientCase[] = [
       makeCase('p1', [
         { date: '2024-01-01', decimal: 0.5 },
-        { date: '2024-04-10', decimal: 0.6 }, // ~day 100
+        { date: '2024-04-10', decimal: 0.6 },
       ]),
-      makeCase('p2', [
-        { date: '2024-07-19', decimal: 0.7 }, // ~day 200 (single obs — pruned)
-      ]),
+      makeCase('p2', [{ date: '2024-07-19', decimal: 0.7 }]),
     ];
     const result = computeCohortTrajectory({
       cases,
@@ -117,10 +78,7 @@ describe('cohortTrajectory — medianGrid n>=2 invariant (VQA-03 / D-04)', () =>
       spreadMode: 'iqr',
     });
     const offenders = result.od.medianGrid.filter((gp) => gp.n < 2);
-    expect(
-      offenders,
-      `GridPoints with n<2 present: ${JSON.stringify(offenders)}`,
-    ).toEqual([]);
+    expect(offenders, `GridPoints with n<2 present: ${JSON.stringify(offenders)}`).toEqual([]);
   });
 
   it('emits n>=2 on a dense two-patient grid', () => {
@@ -149,7 +107,7 @@ describe('cohortTrajectory — medianGrid n>=2 invariant (VQA-03 / D-04)', () =>
 });
 
 // ---------------------------------------------------------------------------
-// DOM invariant: OutcomesPanel never renders <path> with empty `d` (VQA-03)
+// DOM invariant: IQR band marker present on a dense grid; no chart when empty
 // ---------------------------------------------------------------------------
 
 function makePanel(
@@ -168,16 +126,11 @@ function makePanel(
   };
 }
 
-describe('OutcomesPanel — IQR Area DOM has no degenerate geometry (VQA-03)', () => {
+describe('OutcomesPanel — IQR band marker (VQA-03)', () => {
   const t = (k: string) => k;
-  const layers = {
-    median: true,
-    perPatient: false,
-    scatter: false,
-    spreadBand: true,
-  };
+  const layers = { median: true, perPatient: false, scatter: false, spreadBand: true };
 
-  it('renders no <path> with empty d attribute when medianGrid is dense (p25<p75)', () => {
+  it('renders the IQR band marker + an IQR trace when medianGrid is dense (p25<p75)', () => {
     const dense = [
       { x: 0, y: 0.5, p25: 0.4, p75: 0.6, n: 3 },
       { x: 50, y: 0.5, p25: 0.42, p75: 0.58, n: 3 },
@@ -196,15 +149,11 @@ describe('OutcomesPanel — IQR Area DOM has no degenerate geometry (VQA-03)', (
         titleKey="outcomesPanelOd"
       />,
     );
-    const paths = Array.from(container.querySelectorAll('path'));
-    expect(paths.length).toBeGreaterThan(0);
-    for (const p of paths) {
-      const d = p.getAttribute('d') ?? '';
-      expect(d, 'path with empty d attribute found').not.toBe('');
-    }
+    expect(container.querySelector('[data-testid="outcomes-panel-od-iqr"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="outcomes-trace-iqr"]')).not.toBeNull();
   });
 
-  it('renders no chart <path> when patientCount is 0 (empty medianGrid short-circuit)', () => {
+  it('renders the empty-state (no chart) when patientCount is 0', () => {
     const { container } = render(
       <OutcomesPanel
         panel={makePanel([], 0)}
@@ -218,11 +167,8 @@ describe('OutcomesPanel — IQR Area DOM has no degenerate geometry (VQA-03)', (
         titleKey="outcomesPanelOd"
       />,
     );
-    // The patientCount=0 branch (OutcomesPanel.tsx:60-73) renders the empty-state div,
-    // NOT the ResponsiveContainer. Assert the chart short-circuit.
-    expect(
-      container.querySelector('[data-testid="recharts-responsive-container"]'),
-    ).toBeNull();
-    expect(container.querySelectorAll('path').length).toBe(0);
+    // Empty-state branch — no chart fallback, no IQR trace.
+    expect(container.querySelector('[data-testid="outcomes-fallback-od"]')).toBeNull();
+    expect(container.querySelector('[data-testid="outcomes-trace-iqr"]')).toBeNull();
   });
 });

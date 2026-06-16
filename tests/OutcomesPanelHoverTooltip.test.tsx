@@ -1,50 +1,14 @@
 // @vitest-environment jsdom
 /**
- * J1a (v1.15-p4) — the hover tooltip follows the HOVERED scatter point, not the
- * axis-tooltip's nearest-x point, and does so WITHOUT re-rendering the scatter
- * (the highlight + tooltip are driven imperatively from the same hover handlers).
+ * Hover tooltip — follows the HOVERED scatter point (single, scatter-priority).
+ *
+ * WS-1 (v1.17): the chart is Plotly; in jsdom the testable fallback renders each
+ * scatter point as a node whose mouseenter drives the same imperative tooltip that
+ * plotly_hover drives in the browser. There is exactly ONE tooltip element
+ * (outcomes-hover-tooltip-${eye}); no second nearest-x pop-up.
  */
 import { cleanup, fireEvent, render } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
-// Recharts mock: renders the Scatter custom shape per datum (tagged by patientId)
-// so a test can drive hover on a specific point, and renders the Tooltip content
-// function so its nearest-x suppression branch runs.
-vi.mock('recharts', async (importOriginal) => {
-  const real = await importOriginal<typeof import('recharts')>();
-  return {
-    ...real,
-    ResponsiveContainer: ({ children }: { children: any }) => (
-      <div data-testid="recharts-responsive-container"><svg>{children}</svg></div>
-    ),
-    ComposedChart: ({ children }: { children: any }) => (
-      <g data-testid="recharts-composed-chart">{children}</g>
-    ),
-    CartesianGrid: () => null,
-    XAxis: () => null,
-    YAxis: () => null,
-    Tooltip: ({ content }: { content?: any }) => {
-      if (typeof content !== 'function') return null;
-      const state = (globalThis as any).__tooltipState ?? { active: false, payload: [] };
-      return <div data-testid="recharts-tooltip">{content(state)}</div>;
-    },
-    Legend: () => null,
-    ReferenceLine: () => null,
-    Area: () => <g data-testid="recharts-area" />,
-    Line: () => null,
-    Scatter: ({ shape, data }: any) => (
-      <g data-testid="recharts-scatter">
-        {typeof shape === 'function' && Array.isArray(data)
-          ? data.map((d: any, i: number) => (
-              <g key={i} data-testid={`scatter-shape-${d.patientId}`}>
-                {shape({ cx: 5, cy: 5, payload: d })}
-              </g>
-            ))
-          : null}
-      </g>
-    ),
-  };
-});
+import { afterEach, describe, expect, it } from 'vitest';
 
 import OutcomesPanel from '../src/components/outcomes/OutcomesPanel';
 import type { PanelResult } from '../src/utils/cohortTrajectory';
@@ -73,34 +37,18 @@ const props = {
   metric: 'visus' as const,
 };
 
-describe('OutcomesPanel — hover tooltip follows the hovered point (J1a)', () => {
-  afterEach(() => {
-    cleanup();
-    delete (globalThis as any).__tooltipState;
-  });
+describe('OutcomesPanel — hover tooltip follows the hovered point', () => {
+  afterEach(() => cleanup());
 
-  it('shows the HOVERED point in the tooltip, not the nearest-x axis tooltip point', () => {
-    // The axis tooltip would report PSN-1 (nearest-x)...
-    (globalThis as any).__tooltipState = {
-      active: true,
-      payload: [{ payload: { x: 10, y: 0.5, patientId: 'PSN-1' } }],
-    };
+  it('shows the HOVERED point in the tooltip', () => {
     const { container } = render(<OutcomesPanel {...props} panel={panel()} />);
-
-    const tooltip = container.querySelector(
-      '[data-testid="outcomes-hover-tooltip-od"]',
-    ) as HTMLElement;
+    const tooltip = container.querySelector('[data-testid="outcomes-hover-tooltip-od"]') as HTMLElement;
     expect(tooltip).not.toBeNull();
-    // Hidden until a point is hovered.
     expect(tooltip.style.display).toBe('none');
 
-    // ...but the cursor is over PSN-2's halo.
-    const halo = container.querySelector(
-      '[data-testid="scatter-shape-PSN-2"] circle',
-    ) as Element;
-    fireEvent.mouseEnter(halo, { clientX: 100, clientY: 100 });
+    const point = container.querySelector('[data-testid="outcomes-scatter-point-PSN-2"]') as Element;
+    fireEvent.mouseEnter(point, { clientX: 100, clientY: 100 });
 
-    // The imperative tooltip reflects PSN-2 (the hovered point), shown.
     expect(tooltip.style.display).toBe('block');
     expect(tooltip.textContent).toContain('PSN-2');
     expect(tooltip.textContent).not.toContain('PSN-1');
@@ -108,28 +56,16 @@ describe('OutcomesPanel — hover tooltip follows the hovered point (J1a)', () =
 
   it('hides the hover tooltip on mouse leave', () => {
     const { container } = render(<OutcomesPanel {...props} panel={panel()} />);
-    const tooltip = container.querySelector(
-      '[data-testid="outcomes-hover-tooltip-od"]',
-    ) as HTMLElement;
-    const halo = container.querySelector(
-      '[data-testid="scatter-shape-PSN-2"] circle',
-    ) as Element;
-    fireEvent.mouseEnter(halo, { clientX: 100, clientY: 100 });
+    const tooltip = container.querySelector('[data-testid="outcomes-hover-tooltip-od"]') as HTMLElement;
+    const point = container.querySelector('[data-testid="outcomes-scatter-point-PSN-2"]') as Element;
+    fireEvent.mouseEnter(point, { clientX: 100, clientY: 100 });
     expect(tooltip.style.display).toBe('block');
-    fireEvent.mouseLeave(halo);
+    fireEvent.mouseLeave(point);
     expect(tooltip.style.display).toBe('none');
   });
 
-  it('K1a: the axis Tooltip is removed entirely (no nearest-x pop-up renders)', () => {
-    // K1a (v1.16-A): the Recharts axis <Tooltip> is gone — it produced the tester's
-    // "TWO tooltips" (a nearest-x pop-up alongside the hovered-point one). With it
-    // removed the panel renders NO recharts-tooltip node; only the single imperative
-    // hover tooltip element remains.
-    (globalThis as any).__tooltipState = {
-      active: true,
-      payload: [{ payload: { x: 10, y: 0.5, patientId: 'PSN-1' } }],
-    };
+  it('renders exactly ONE tooltip element (no second nearest-x pop-up)', () => {
     const { container } = render(<OutcomesPanel {...props} panel={panel()} />);
-    expect(container.querySelector('[data-testid="recharts-tooltip"]')).toBeNull();
+    expect(container.querySelectorAll('[data-testid="outcomes-hover-tooltip-od"]').length).toBe(1);
   });
 });
