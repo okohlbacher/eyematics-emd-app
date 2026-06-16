@@ -1189,6 +1189,22 @@ const translations = {
     de: 'Verlauf des Augeninnendrucks (IOD) je Visite. Die rote Linie markiert den kritischen Schwellenwert.',
     en: 'Intraocular pressure (IOP) per visit. The red line marks the critical threshold.',
   },
+
+  // ==== v1.17 WS-3 (case-detail / cohort-overlay round-5 fixes) ====
+  // L5: relative X-axis label shown when the cohort overlay is on.
+  relativeMonthsAxisLabel: { de: 'Monate seit Erstvisite', en: 'Months since first visit' },
+  // L4a/L4b/L4c: shared IOD cohort-overlay median legend (now a line, K-converted from bar).
+  cohortReferenceMedianIod: { de: 'Kohorten-Median IOD', en: 'Cohort median IOP' },
+  // L10: overlay-specific addendum appended to the plot info tooltips when the
+  // cohort overlay is active — explains the IQR band + relative-time alignment.
+  cohortOverlayInfoVisusCrt: {
+    de: 'Kohorten-Overlay aktiv: Das schattierte Band ist der Interquartilsbereich (IQR, 25.–75. Perzentil) der Vergleichsgruppe, die gestrichelte Linie der Kohorten-Median. Die X-Achse wechselt auf „Monate seit Erstvisite", sodass alle Peers an ihrer jeweils eigenen Erstvisite ausgerichtet und bei gleicher verstrichener Behandlungszeit verglichen werden.',
+    en: 'Cohort overlay active: the shaded band is the comparison group\'s interquartile range (IQR, 25th–75th percentile) and the dashed line is the cohort median. The X-axis switches to "months since first visit", so all peers are aligned to their own first visit and compared at the same elapsed treatment time.',
+  },
+  cohortOverlayInfoIop: {
+    de: 'Kohorten-Overlay aktiv: Das schattierte Band ist der IQR (25.–75. Perzentil) des Augeninnendrucks der Vergleichsgruppe, die gestrichelte Linie der Kohorten-Median — aggregiert nach relativer Zeit seit der jeweils ersten Visite jedes Peers.',
+    en: 'Cohort overlay active: the shaded band is the comparison group\'s IOP interquartile range (IQR, 25th–75th percentile) and the dashed line is the cohort median — aggregated by relative time since each peer\'s own first visit.',
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
