@@ -22,6 +22,19 @@ import { useThemeSafe } from '../../context/ThemeContext';
 import type { AxisMode, GridPoint, PanelResult, YMetric } from '../../utils/cohortTrajectory';
 import OutcomesTooltip from './OutcomesTooltip';
 import { DARK_EYE_COLORS, EYE_COLORS, SERIES_STYLES } from './palette';
+import {
+  canvasContextAvailable,
+  type CanvasScatterPoint,
+  drawScatter,
+  hitTestScatter,
+} from './scatterCanvas';
+
+// K2 (v1.16-A): canvas rendering for the heavy scatter layer is used only when a real
+// 2D context is available (browser). In jsdom (no `canvas` package) / SSR this is
+// false, so the existing per-point SVG <Scatter> shape path runs unchanged and the
+// existing scatter tests (which assert the SVG hit-halo + per-point shape groups)
+// keep passing. Computed once at module load — the environment never changes mid-run.
+const SCATTER_CANVAS_MODE = canvasContextAvailable();
 
 type LayerState = {
   median: boolean;
@@ -169,6 +182,22 @@ export default function OutcomesPanel({
   // longer sees the nearest-x scatter pop-up.
   const containerRef = useRef<HTMLDivElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
+
+  // K2 (v1.16-A): canvas scatter rendering state. In canvas mode the Recharts
+  // <Scatter> shape collects each point's resolved pixel position (cx/cy) into this
+  // buffer and schedules ONE canvas repaint, instead of emitting ~2 SVG circles per
+  // point. The plot-area box is captured so the canvas overlays the chart exactly and
+  // mouse coordinates map to the same space as cx/cy. The highlight id drives the
+  // cheap single-point overdraw (replacing the SVG attribute mutation).
+  const chartWrapRef = useRef<HTMLDivElement | null>(null);
+  const scatterCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const canvasPointsRef = useRef<CanvasScatterPoint[]>([]);
+  const canvasBoxRef = useRef<{ width: number; height: number } | null>(null);
+  const canvasRafRef = useRef<number | null>(null);
+  const canvasHighlightIdRef = useRef<string | null>(null);
+  // Identity of the scatter buffer pass — reset the canvas point buffer + recapture
+  // the plot box on the first shape call after the rendered point set changes.
+  const canvasPassRef = useRef<unknown>(null);
   // Latest formatting context for the imperative tooltip. Refs (not deps) so the
   // memoized enter handler stays stable while always reading current labels/units.
   // Written during render below (a "latest value" cache — read only inside handlers).
@@ -256,6 +285,91 @@ export default function OutcomesPanel({
     [hideHoverTooltip],
   );
 
+  // K2 (v1.16-A): canvas draw style (color + opacity) kept in a ref so the redraw
+  // scheduler stays stable while always reading the current theme-resolved color.
+  const canvasStyleRef = useRef<{ color: string; fillOpacity: number }>({
+    color: EYE_COLORS.OD,
+    fillOpacity: SERIES_STYLES.scatter.fillOpacity,
+  });
+
+  // K2: schedule a single canvas repaint on the next animation frame (coalesces the
+  // per-point shape callbacks into ONE draw). Reads the current point buffer, box,
+  // style, and highlight id. No-op outside canvas mode.
+  const scheduleCanvasDraw = useCallback(() => {
+    if (!SCATTER_CANVAS_MODE) return;
+    if (canvasRafRef.current != null) return;
+    const raf =
+      typeof requestAnimationFrame === 'function'
+        ? requestAnimationFrame
+        : (cb: FrameRequestCallback) => setTimeout(() => cb(0), 0) as unknown as number;
+    canvasRafRef.current = raf(() => {
+      canvasRafRef.current = null;
+      const canvas = scatterCanvasRef.current;
+      const box = canvasBoxRef.current;
+      if (!canvas || !box) return;
+      const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+      drawScatter(canvas, canvasPointsRef.current, {
+        width: box.width,
+        height: box.height,
+        dpr,
+        color: canvasStyleRef.current.color,
+        fillOpacity: canvasStyleRef.current.fillOpacity,
+        highlightId: canvasHighlightIdRef.current,
+      });
+    }) as unknown as number;
+  }, []);
+
+  // K2: pointer move over the canvas → nearest-point hit-test → imperative highlight
+  // (canvas overdraw) + hover tooltip + click-target ref (same pipeline as the SVG
+  // halo's enter/leave, so drill-down + tooltip behaviour is identical).
+  const handleCanvasMove = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      const canvas = scatterCanvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      const hit = hitTestScatter(canvasPointsRef.current, px, py);
+      const prevHi = canvasHighlightIdRef.current;
+      if (hit && hit.patientId != null) {
+        hoveredDatumRef.current = { patientId: hit.patientId };
+        canvasHighlightIdRef.current = hit.patientId;
+        showHoverTooltip(e.clientX, e.clientY, {
+          patientId: hit.patientId,
+          x: hit.x,
+          y: hit.y,
+        });
+      } else {
+        hoveredDatumRef.current = null;
+        canvasHighlightIdRef.current = null;
+        hideHoverTooltip();
+      }
+      if (prevHi !== canvasHighlightIdRef.current) scheduleCanvasDraw();
+    },
+    [showHoverTooltip, hideHoverTooltip, scheduleCanvasDraw],
+  );
+
+  const handleCanvasLeave = useCallback(() => {
+    hoveredDatumRef.current = null;
+    if (canvasHighlightIdRef.current != null) {
+      canvasHighlightIdRef.current = null;
+      scheduleCanvasDraw();
+    }
+    hideHoverTooltip();
+  }, [hideHoverTooltip, scheduleCanvasDraw]);
+
+  const handleCanvasClick = useCallback(() => {
+    const id = hoveredDatumRef.current?.patientId;
+    if (id && onPointClick) onPointClick(id);
+  }, [onPointClick]);
+
+  // K2: cancel any pending canvas RAF on unmount.
+  useEffect(() => () => {
+    if (canvasRafRef.current != null && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(canvasRafRef.current);
+    }
+  }, []);
+
   // F7 (defensive): clear the stashed drill-down target when the panel's
   // underlying patient set CHANGES (e.g. a cohort switch). Without this, a stale
   // within-cohort pseudonym left in the ref from a prior cohort's hover could fire
@@ -338,6 +452,18 @@ export default function OutcomesPanel({
     return shown;
   }, [layers.scatter, panel.scatterPoints, eye]);
 
+  // K2: when the rendered scatter set becomes EMPTY in canvas mode the per-point
+  // shape never fires, so the pass-reset can't clear stale points — clear + repaint
+  // here so toggling to a no-point state leaves a clean canvas.
+  useEffect(() => {
+    if (!SCATTER_CANVAS_MODE) return;
+    if (scatterRenderPoints.length === 0) {
+      canvasPassRef.current = scatterRenderPoints;
+      canvasPointsRef.current = [];
+      scheduleCanvasDraw();
+    }
+  }, [scatterRenderPoints, scheduleCanvasDraw]);
+
   const chartColors = {
     grid:         isDark ? '#374151' : '#e5e7eb', // gray-700 / gray-200
     axisTick:     isDark ? '#9ca3af' : '#6b7280', // gray-400 / gray-500
@@ -359,6 +485,14 @@ export default function OutcomesPanel({
     ...Object.values(DARK_EYE_COLORS),
   ]);
   const seriesColor = ALL_EYE_HEX.has(color) ? resolvedColor : color;
+  // K2: keep the canvas draw style current (a latest-value ref, like hoverFmtRef) so
+  // the redraw scheduler stays stable while always painting in the active color.
+  // Synced in an effect (not during render) + repaints so a theme/colour change is
+  // reflected on the canvas without a state-driven scatter re-render.
+  useEffect(() => {
+    canvasStyleRef.current = { color: seriesColor, fillOpacity: SERIES_STYLES.scatter.fillOpacity };
+    scheduleCanvasDraw();
+  }, [seriesColor, scheduleCanvasDraw]);
 
   const subtitle = `${panel.summary.patientCount} · ${panel.summary.measurementCount}`;
   // CRT tooltip value label key — passed to OutcomesTooltip for µm unit display
@@ -453,6 +587,23 @@ export default function OutcomesPanel({
         data-max={yDomain(yMetric, panel.medianGrid, metric)[1]}
       />
 
+      <div ref={chartWrapRef} className="relative" style={{ width: '100%', height: 320 }}>
+      {/* K2 (v1.16-A): canvas scatter overlay — one DOM node carrying the whole
+          (capped) cloud, drawn imperatively from the buffer the <Scatter> shape fills.
+          Only rendered in canvas mode + when the layer is on; it captures pointer
+          events for hover/click hit-testing (the SVG hit halo is not emitted in this
+          mode). Sits above the chart's plot but below the tooltip (z-10). */}
+      {SCATTER_CANVAS_MODE && !isCrossMode && layers.scatter && (
+        <canvas
+          ref={scatterCanvasRef}
+          data-testid={`outcomes-scatter-canvas-${eye}`}
+          className="absolute inset-0 z-[5]"
+          style={{ width: '100%', height: '100%', cursor: onPointClick ? 'pointer' : 'default' }}
+          onMouseMove={handleCanvasMove}
+          onMouseLeave={handleCanvasLeave}
+          onClick={handleCanvasClick}
+        />
+      )}
       <ResponsiveContainer width="100%" height={320}>
         <ComposedChart
           data={panel.medianGrid}
@@ -640,6 +791,27 @@ export default function OutcomesPanel({
                 };
                 if (cx == null || cy == null) return <g />;
                 const patientId = payload?.patientId;
+                // K2 (v1.16-A): canvas mode — collect this point's resolved pixel
+                // position into the buffer and emit NO SVG (so the ~2 circles/point
+                // node wall disappears). The first point of a render pass resets the
+                // buffer + captures the plot box; all points coalesce into ONE canvas
+                // repaint scheduled on the next frame. Hover/click run off the buffer.
+                if (SCATTER_CANVAS_MODE) {
+                  if (canvasPassRef.current !== scatterRenderPoints) {
+                    canvasPassRef.current = scatterRenderPoints;
+                    canvasPointsRef.current = [];
+                    const wrap = chartWrapRef.current;
+                    if (wrap) {
+                      canvasBoxRef.current = {
+                        width: wrap.clientWidth,
+                        height: wrap.clientHeight,
+                      };
+                    }
+                  }
+                  canvasPointsRef.current.push({ cx, cy, patientId, x: payload?.x, y: payload?.y });
+                  scheduleCanvasDraw();
+                  return <g />;
+                }
                 // J1a: wire the per-point hover (tooltip + highlight) whenever the
                 // point carries a patientId — independent of drill-down. The click
                 // ref is harmless without onPointClick; the chart onClick only acts
@@ -730,6 +902,7 @@ export default function OutcomesPanel({
           ))}
         </ComposedChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }
