@@ -221,18 +221,9 @@ export function useCaseData(
     return dates.reduce((min, d) => (d < min ? d : min), dates[0]);
   }, [visusObs, crtObs]);
 
-  // J3c: map an absolute date (e.g. an IVI/event date or the highlighted visit)
-  // onto the chart's relative-month axis. Returns null when there is no baseline.
-  const toRelMonths = useMemo(
-    () => (date: string | null | undefined): number | null => {
-      if (!date || !baselineDate) return null;
-      return monthsBetween(baselineDate, date.substring(0, 10));
-    },
-    [baselineDate],
-  );
-
-  // Combined dual-axis data: merge visus + CRT by date, keyed on the relative
-  // month offset since baseline (J3c). `date` is retained per row for tooltips.
+  // Combined dual-axis data: merge visus + CRT by date. The chart's X axis is the
+  // calendar date (K3c); `relMonths` is retained per row only to bucket the cohort
+  // overlay by relative time-since-baseline (mapped back onto these date rows).
   const combinedData = useMemo((): CombinedDataPoint[] => {
     const dateMap = new Map<string, CombinedDataPoint>();
     const ensure = (d: string): CombinedDataPoint => {
@@ -253,6 +244,13 @@ export function useCaseData(
       const entry = ensure(d);
       entry.crt = o.valueQuantity?.value;
       entry.crtMeasured = true;
+    });
+    // K3c/K3d: ensure each injection date exists as a row (with no visus/crt
+    // values) so the calendar-date category axis includes it — the date-keyed IVI
+    // marker + injection highlight ReferenceLines then always land on a real tick.
+    injections.forEach((inj) => {
+      const d = inj.performedDateTime?.substring(0, 10);
+      if (d) ensure(d);
     });
     const rows = Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
@@ -291,7 +289,7 @@ export function useCaseData(
     interpolate('crt', 'crtInterp');
 
     return rows;
-  }, [visusObs, crtObs, baselineDate]);
+  }, [visusObs, crtObs, injections, baselineDate]);
 
   // A4 v2: hint/markers only when interpolated points actually exist.
   const hasInterpolatedPoints = useMemo(
@@ -689,7 +687,6 @@ export function useCaseData(
     cohortVisusCrtScatter,
     baselineData,
     baselineChangeWithReference,
-    toRelMonths,
     totalEncounters,
     hasCriticalValues,
     criticalCrtCount,

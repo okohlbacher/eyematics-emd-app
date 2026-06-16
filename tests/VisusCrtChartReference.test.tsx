@@ -304,19 +304,30 @@ describe('useCaseData — J3c relative-time axis', () => {
     expect(rows[2].relMonths).toBeLessThanOrEqual(6.1);
   });
 
-  it('toRelMonths maps an absolute date onto the relative axis (IVI/highlight remap)', async () => {
+  it('K3c: includes each injection date as a row so date-keyed IVI markers land', async () => {
     const { useCaseData } = await import('../src/hooks/useCaseData');
-    const patientCase = makeCase('C1', [
-      makeObs(LOINC_VISUS, '2024-01-01', 0.5),
-      makeObs(LOINC_VISUS, '2024-04-01', 0.6),
-    ]);
+    const patientCase: PatientCase = {
+      ...makeCase('C1', [
+        makeObs(LOINC_VISUS, '2024-01-01', 0.5),
+        makeObs(LOINC_VISUS, '2024-04-01', 0.6),
+      ]),
+      procedures: [
+        {
+          resourceType: 'Procedure',
+          id: 'ivi-1',
+          status: 'completed',
+          code: { coding: [{ system: 'http://snomed.info/sct', code: '36189003' }] },
+          performedDateTime: '2024-02-15T09:00:00Z',
+        } as any,
+      ],
+    };
     const { result } = renderHook(() => useCaseData(patientCase, [patientCase], 'de', t));
-    expect(result.current.toRelMonths('2024-01-01')).toBe(0);
-    const rel = result.current.toRelMonths('2024-04-01');
-    expect(rel).not.toBeNull();
-    expect(rel!).toBeGreaterThanOrEqual(2.9);
-    expect(rel!).toBeLessThanOrEqual(3.1);
-    expect(result.current.toRelMonths(null)).toBeNull();
+    const rows = result.current.combinedData;
+    // The injection-only date appears as a row (no visus/crt values).
+    const injRow = rows.find((r) => r.date === '2024-02-15');
+    expect(injRow).not.toBeUndefined();
+    expect(injRow!.visus).toBeUndefined();
+    expect(injRow!.crt).toBeUndefined();
   });
 });
 
@@ -499,8 +510,6 @@ const baseChartProps = {
   locale: 'de',
   t: tStub,
   visusObs: [],
-  // J3c: relative-time mapper stub (these render tests don't exercise highlight/IVI).
-  toRelMonths: () => null,
 };
 
 describe('VisusCrtChart — FALL-011 reference overlay (A3 v2 merged single array)', () => {
@@ -554,37 +563,51 @@ describe('VisusCrtChart — FALL-011 reference overlay (A3 v2 merged single arra
     expect(lines.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('keys the X axis on relMonths as a numeric axis (J3c)', () => {
+  it('K3c: keys the X axis on the calendar date (category axis, not relMonths)', () => {
     const { container } = render(
       <VisusCrtChart {...baseChartProps} combinedData={mergedData} />,
     );
     const xAxis = container.querySelector('[data-testid="recharts-xaxis"]');
-    expect(xAxis?.getAttribute('data-data-key')).toBe('relMonths');
-    expect(xAxis?.getAttribute('data-type')).toBe('number');
+    expect(xAxis?.getAttribute('data-data-key')).toBe('date');
+    // Category (default) axis — not the numeric relMonths axis.
+    expect(xAxis?.getAttribute('data-type')).not.toBe('number');
   });
 
-  it('maps IVI markers + the highlight onto the relative axis (J3c)', () => {
-    // toRelMonths maps 2024-03-01 → 6 (highlight) and the IVI date → 2.
-    const toRelMonths = (d: string | null | undefined) => {
-      const day = d?.substring(0, 10);
-      return day === '2024-03-01' ? 6 : day === '2024-02-01' ? 2 : null;
-    };
+  it('K3c: IVI markers + the highlight are date-keyed (not relative-month)', () => {
     const injections = [
-      { resourceType: 'Procedure', id: 'ivi-1', status: 'completed', code: { coding: [] }, performedDateTime: '2024-02-01T09:00:00Z' },
+      { resourceType: 'Procedure', id: 'ivi-1', status: 'completed', code: { coding: [] }, performedDateTime: '2024-01-01T09:00:00Z' },
     ] as any;
     const { container } = render(
       <VisusCrtChart
         {...baseChartProps}
         combinedData={mergedData}
         injections={injections}
-        toRelMonths={toRelMonths}
-        highlightDate="2024-03-01"
+        highlightDate="2024-02-01"
       />,
     );
     const reflines = Array.from(container.querySelectorAll('[data-testid="recharts-refline"]'));
     const xs = reflines.map((el) => el.getAttribute('data-x'));
-    // IVI marker mapped to relative month 2, highlight mapped to relative month 6.
-    expect(xs).toContain('2');
-    expect(xs).toContain('6');
+    // IVI marker keyed to its calendar date; highlight keyed to its calendar date.
+    expect(xs).toContain('2024-01-01');
+    expect(xs).toContain('2024-02-01');
+  });
+
+  it('K3d: a highlighted injection emphasises its marker and fires onInjectionClick', () => {
+    const injections = [
+      { resourceType: 'Procedure', id: 'ivi-1', status: 'completed', code: { coding: [] }, performedDateTime: '2024-01-01T09:00:00Z' },
+    ] as any;
+    const onInjectionClick = vi.fn();
+    const { container } = render(
+      <VisusCrtChart
+        {...baseChartProps}
+        combinedData={mergedData}
+        injections={injections}
+        highlightInjectionDate="2024-01-01"
+        onInjectionClick={onInjectionClick}
+      />,
+    );
+    const reflines = Array.from(container.querySelectorAll('[data-testid="recharts-refline"]'));
+    const iviMarker = reflines.find((el) => el.getAttribute('data-x') === '2024-01-01');
+    expect(iviMarker).not.toBeUndefined();
   });
 });

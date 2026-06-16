@@ -111,9 +111,6 @@ const minimalProps = {
   locale: 'de',
   t: tDE,
   visusObs: [],
-  // J3c: relative-time mapper (absolute date → months-since-baseline). Tests
-  // don't exercise the highlight/IVI mapping, so a no-op-ish stub suffices.
-  toRelMonths: () => null,
 };
 
 describe('VisusCrtChart — FALL-012 / A4 i18n labels', () => {
