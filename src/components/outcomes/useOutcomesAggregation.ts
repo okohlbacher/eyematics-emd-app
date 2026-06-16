@@ -232,6 +232,90 @@ export function useOutcomesAggregation(state: RouteState) {
   // Resolve the fresh worker result for the CURRENT key (null if heavy + not ready).
   const freshWorkerResult = workerKey && workerResult?.key === workerKey ? workerResult.result : null;
 
+  // K7 (v1.16-A): off-main-thread CROSS-COHORT aggregation.
+  //
+  // The compare drawer freeze (tester: "Kohorten vergleichen … freezes now and is
+  // not usable") is the synchronous N-cohort aggregation below: each selected cohort
+  // ran applyFilters + computeCohortTrajectory/computeCrtTrajectory on the MAIN
+  // THREAD inside a render memo. Toggling a checkbox in the drawer changes the URL →
+  // re-render → N heavy aggregations back-to-back, blocking the drawer's own input
+  // handling (the freeze). We move that work into the SAME Web Worker the single-
+  // cohort path uses: one request per selected cohort, assembled when all land. The
+  // drawer (and the rest of the UI) stays interactive because the main thread is free.
+  //
+  // Resolve the per-cohort case sets ONCE (cheap applyFilters) — these feed both the
+  // worker dispatch and the synchronous fallback / no-worker path below.
+  const crossCohortCaseSets = useMemo(() => {
+    if (!isCrossMode || crossCohortIds.length === 0) return [];
+    return crossCohortIds.flatMap((id, idx) => {
+      const saved = savedSearches.find((s) => s.id === id);
+      if (!saved) return [];
+      const cases = applyFilters(activeCases, saved.filters, filterOptions);
+      const color = COHORT_PALETTES[idx % COHORT_PALETTES.length];
+      return [{ id, name: saved.name, color, cases }];
+    });
+  }, [isCrossMode, crossCohortIds, savedSearches, activeCases, filterOptions]);
+
+  const crossMetric: 'visus' | 'crt' = activeMetric === 'crt' ? 'crt' : 'visus';
+  // Heavy when a real Worker exists AND the total work is non-trivial — mirrors the
+  // single-cohort heavy gate so small compares / tests stay synchronous (no flash,
+  // no timer advance needed) while real multi-hundred-case compares go off-thread.
+  const isCrossWorkerHeavy =
+    isCrossMode &&
+    crossCohortCaseSets.length > 0 &&
+    workerAvailable() &&
+    crossCohortCaseSets.reduce((n, c) => n + c.cases.length, 0) > CLIENT_WORKER_THRESHOLD_CASES;
+  // Key identifies the exact cross-cohort aggregation inputs — supersedes any
+  // in-flight responses when it changes (matched by key; stale results ignored).
+  const crossWorkerKey = isCrossWorkerHeavy
+    ? `${crossMetric}|${crossCohortCaseSets.map((c) => `${c.id}:${c.cases.length}`).join(',')}|${axisMode}|${yMetric}|${gridPoints}|${spreadMode}`
+    : null;
+  const [crossWorkerResult, setCrossWorkerResult] = useState<{
+    key: string;
+    results: { id: string; result: TrajectoryResult }[];
+  } | null>(null);
+  useEffect(() => {
+    if (!isCrossWorkerHeavy || !crossWorkerKey) return;
+    if (crossWorkerResult?.key === crossWorkerKey) return;
+    let cancelled = false;
+    Promise.all(
+      crossCohortCaseSets.map((c) =>
+        computeTrajectoryAsync(crossMetric, {
+          cases: c.cases,
+          axisMode,
+          yMetric,
+          gridPoints,
+          spreadMode,
+        }).then((result) => ({ id: c.id, result })),
+      ),
+    )
+      .then((results) => {
+        if (!cancelled) setCrossWorkerResult({ key: crossWorkerKey, results });
+      })
+      .catch((err) => {
+        // Mirror the single-cohort + server fallback: on worker failure aggregate
+        // synchronously so the user still sees the compare plots (D-03 throw-only).
+        console.warn('[OutcomesView] Cross-cohort worker aggregate failed — falling back to sync compute', err);
+        if (!cancelled) {
+          try {
+            const results = crossCohortCaseSets.map((c) => ({
+              id: c.id,
+              result: computeTrajectorySync(crossMetric, {
+                cases: c.cases, axisMode, yMetric, gridPoints, spreadMode,
+              }),
+            }));
+            setCrossWorkerResult({ key: crossWorkerKey, results });
+          } catch {
+            /* leave null — the memo computes synchronously on next render */
+          }
+        }
+      });
+    return () => { cancelled = true; };
+  }, [isCrossWorkerHeavy, crossWorkerKey, crossCohortCaseSets, crossMetric, axisMode, yMetric, gridPoints, spreadMode, crossWorkerResult]);
+
+  const freshCrossWorkerResults =
+    crossWorkerKey && crossWorkerResult?.key === crossWorkerKey ? crossWorkerResult.results : null;
+
   // D-26: single memoized aggregate keyed on all 5 inputs — feeds BOTH cards AND panels.
   // Hoisted above early-return guards to satisfy Rules of Hooks (WR-01).
   // Phase 12 / AGG-03: prefers server result when routeServerSide is active.
@@ -279,49 +363,65 @@ export function useOutcomesAggregation(state: RouteState) {
   const crossCohortAggregates = useMemo((): null | {
     od: CohortSeriesEntry[]; os: CohortSeriesEntry[]; combined: CohortSeriesEntry[];
   } => {
-    if (!isCrossMode || crossCohortIds.length === 0) return null;
+    if (!isCrossMode || crossCohortCaseSets.length === 0) return null;
+    // K7: heavy compare → use the off-thread worker results; null while they are
+    // computing (OutcomesView shows the client-computing status). Never block the
+    // main thread (and therefore the drawer) with the synchronous N-cohort compute.
+    if (isCrossWorkerHeavy) {
+      if (!freshCrossWorkerResults) return null;
+      const byId = new Map(freshCrossWorkerResults.map((r) => [r.id, r.result]));
+      const od: CohortSeriesEntry[] = [];
+      const os: CohortSeriesEntry[] = [];
+      const combined: CohortSeriesEntry[] = [];
+      crossCohortCaseSets.forEach((c) => {
+        const result = byId.get(c.id);
+        if (!result) return;
+        const base = { cohortId: c.id, cohortName: c.name, patientCount: c.cases.length, color: c.color };
+        od.push({ ...base, panel: result.od });
+        os.push({ ...base, panel: result.os });
+        combined.push({ ...base, panel: result.combined });
+      });
+      return { od, os, combined };
+    }
+    // Small compare / no-worker (tests, SSR): synchronous compute as before.
     const od: CohortSeriesEntry[] = [];
     const os: CohortSeriesEntry[] = [];
     const combined: CohortSeriesEntry[] = [];
-    crossCohortIds.forEach((id, idx) => {
-      const saved = savedSearches.find((s) => s.id === id);
-      if (!saved) return;
-      const cases = applyFilters(activeCases, saved.filters, filterOptions);
+    crossCohortCaseSets.forEach((c) => {
       const result = activeMetric === 'crt'
-        ? computeCrtTrajectory({ cases, axisMode, yMetric, gridPoints, spreadMode })
-        : computeCohortTrajectory({ cases, axisMode, yMetric, gridPoints, spreadMode });
-      const color = COHORT_PALETTES[idx % COHORT_PALETTES.length];
-      const base = {
-        cohortId: id,
-        cohortName: saved.name,
-        patientCount: cases.length,
-        color,
-      };
+        ? computeCrtTrajectory({ cases: c.cases, axisMode, yMetric, gridPoints, spreadMode })
+        : computeCohortTrajectory({ cases: c.cases, axisMode, yMetric, gridPoints, spreadMode });
+      const base = { cohortId: c.id, cohortName: c.name, patientCount: c.cases.length, color: c.color };
       od.push({ ...base, panel: result.od });
       os.push({ ...base, panel: result.os });
       combined.push({ ...base, panel: result.combined });
     });
     return { od, os, combined };
-  }, [isCrossMode, crossCohortIds, savedSearches, activeCases, activeMetric, axisMode, yMetric, gridPoints, spreadMode, filterOptions]);
+  }, [isCrossMode, crossCohortCaseSets, isCrossWorkerHeavy, freshCrossWorkerResults, activeMetric, axisMode, yMetric, gridPoints, spreadMode]);
 
   // Phase 42 / ANL-010: per-cohort case series for interval histogram + responder view.
   // Uses the same cohort order and COHORT_PALETTES index as crossCohortAggregates so
   // colors are consistent across all four metric tabs.
   const crossCohortCaseSeries = useMemo((): IntervalCohortSeries[] => {
-    if (!isCrossMode || crossCohortIds.length === 0) return [];
-    return crossCohortIds.flatMap((id, idx) => {
-      const saved = savedSearches.find((s) => s.id === id);
-      if (!saved) return [];
-      const cases = applyFilters(activeCases, saved.filters, filterOptions);
-      const color = COHORT_PALETTES[idx % COHORT_PALETTES.length];
-      return [{ cohortId: id, cohortName: saved.name, patientCount: cases.length, color, cases }];
-    });
-  }, [isCrossMode, crossCohortIds, savedSearches, activeCases, filterOptions]);
+    // K7: reuse the already-resolved per-cohort case sets (one applyFilters pass)
+    // instead of re-filtering — same cohort order + colours as crossCohortAggregates.
+    return crossCohortCaseSets.map((c) => ({
+      cohortId: c.id,
+      cohortName: c.name,
+      patientCount: c.cases.length,
+      color: c.color,
+      cases: c.cases,
+    }));
+  }, [crossCohortCaseSets]);
 
   // J2: true while a heavy client cohort is being aggregated in the worker and the
   // result for the current key has not arrived yet — OutcomesView keeps the client-
   // computing status visible (no bare white/empty cards) until it lands.
   const clientWorkerPending = isClientWorkerHeavy && freshWorkerResult === null;
 
-  return { routeServerSide, aggregate, crtAggregate, crossCohortAggregates, crossCohortCaseSeries, clientWorkerPending };
+  // K7: true while the heavy cross-cohort aggregation is still off-thread — drives
+  // the compare "computing" status so the panels never render with null series.
+  const crossWorkerPending = isCrossWorkerHeavy && freshCrossWorkerResults === null;
+
+  return { routeServerSide, aggregate, crtAggregate, crossCohortAggregates, crossCohortCaseSeries, clientWorkerPending, crossWorkerPending };
 }

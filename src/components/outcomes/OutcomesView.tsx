@@ -167,6 +167,24 @@ export default function OutcomesView() {
       );
     }
 
+    // K7 (v1.16-A): cross-cohort compare computing status — shown while the heavy
+    // N-cohort aggregation runs OFF the main thread (worker). The compare drawer
+    // stays interactive because nothing blocks the main thread; the panels mount
+    // once all cohorts land instead of synchronously freezing on every toggle.
+    if (s.isCrossMode && a.crossWorkerPending && (s.activeMetric === 'visus' || s.activeMetric === 'crt')) {
+      return (
+        <div className="flex items-center gap-2 py-8 justify-center text-gray-500 text-sm italic">
+          <span
+            role="status"
+            aria-live="polite"
+            data-testid="outcomes-cross-computing"
+          >
+            {s.t('outcomesClientComputingLabel')}
+          </span>
+        </div>
+      );
+    }
+
     if (s.activeMetric === 'visus') {
       if (!a.aggregate) {
         return <OutcomesEmptyState variant="no-cohort" t={s.t as (key: TranslationKey) => string} />;

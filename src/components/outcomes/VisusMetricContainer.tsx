@@ -48,9 +48,20 @@ export default function VisusMetricContainer({
   // The stage key re-arms staging when the heavy inputs change. Hook runs before the
   // early returns below to satisfy Rules of Hooks (the guards never change between
   // renders for a given aggregate).
-  const progressiveActive =
-    !isCrossMode && cohort.cases.length > PROGRESSIVE_PANEL_THRESHOLD_CASES;
-  const stageKey = `${cohort.cases.length}|${axisMode}|${yMetric}|${layers.perPatient}|${layers.scatter}|${layers.median}|${layers.spreadBand}`;
+  // K7 (v1.16-A): stage in CROSS-MODE too. Compare renders N cohorts × (Area+Line)
+  // across all three panels; mounting all three synchronously on every compare-drawer
+  // toggle is the freeze. Staging yields the main thread between panel builds so the
+  // drawer stays responsive. Keyed on the cross-cohort series identity so a selection
+  // change re-arms staging.
+  const crossWork = isCrossMode
+    ? (crossCohortAggregates?.combined.reduce((n, c) => n + c.patientCount, 0) ?? 0)
+    : 0;
+  const progressiveActive = isCrossMode
+    ? crossWork > PROGRESSIVE_PANEL_THRESHOLD_CASES
+    : cohort.cases.length > PROGRESSIVE_PANEL_THRESHOLD_CASES;
+  const stageKey = isCrossMode
+    ? `cross|${crossCohortAggregates?.combined.map((c) => `${c.cohortId}:${c.patientCount}`).join(',') ?? ''}|${axisMode}|${yMetric}`
+    : `${cohort.cases.length}|${axisMode}|${yMetric}|${layers.perPatient}|${layers.scatter}|${layers.median}|${layers.spreadBand}`;
   const mountedPanels = useProgressivePanels(3, progressiveActive, stageKey);
 
   if (!aggregate) {
