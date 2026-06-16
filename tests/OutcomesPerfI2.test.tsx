@@ -163,7 +163,7 @@ describe('I2 — OutcomesView client-path loading status', () => {
     await waitFor(() => expect(screen.queryByTestId('outcomes-panel-od')).not.toBeNull());
 
     // Open settings drawer (aria-label resolves to its key via the t-mock).
-    fireEvent.click(screen.getByLabelText('outcomesOpenSettings'));
+    fireEvent.click(screen.getByRole('button', { name: /outcomesSettingsButton/ }));
     const scatterToggle = screen.getByLabelText('outcomesLayerScatter') as HTMLInputElement;
     // Large cohort → derived default is OFF.
     expect(scatterToggle.checked).toBe(false);

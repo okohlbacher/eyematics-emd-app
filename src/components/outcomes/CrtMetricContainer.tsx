@@ -44,9 +44,17 @@ export default function CrtMetricContainer({
   // J2 (v1.15-p4): progressive panel staging — see VisusMetricContainer. Hook runs
   // before the early return below (the guard never changes between renders for a
   // given crtAggregate).
-  const progressiveActive =
-    !isCrossMode && cohort.cases.length > PROGRESSIVE_PANEL_THRESHOLD_CASES;
-  const stageKey = `crt|${cohort.cases.length}|${axisMode}|${yMetric}|${layers.perPatient}|${layers.scatter}|${layers.median}|${layers.spreadBand}`;
+  // K7 (v1.16-A): stage in CROSS-MODE too (see VisusMetricContainer) so the compare-
+  // drawer toggle no longer freezes building N cohorts × 3 panels synchronously.
+  const crossWork = isCrossMode
+    ? (crossCohortAggregates?.combined.reduce((n, c) => n + c.patientCount, 0) ?? 0)
+    : 0;
+  const progressiveActive = isCrossMode
+    ? crossWork > PROGRESSIVE_PANEL_THRESHOLD_CASES
+    : cohort.cases.length > PROGRESSIVE_PANEL_THRESHOLD_CASES;
+  const stageKey = isCrossMode
+    ? `crt-cross|${crossCohortAggregates?.combined.map((c) => `${c.cohortId}:${c.patientCount}`).join(',') ?? ''}|${axisMode}|${yMetric}`
+    : `crt|${cohort.cases.length}|${axisMode}|${yMetric}|${layers.perPatient}|${layers.scatter}|${layers.median}|${layers.spreadBand}`;
   const mountedPanels = useProgressivePanels(3, progressiveActive, stageKey);
 
   if (!crtAggregate || crtAggregate.od.summary.measurementCount + crtAggregate.os.summary.measurementCount === 0) {

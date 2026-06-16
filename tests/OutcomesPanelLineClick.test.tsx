@@ -7,7 +7,7 @@
  * Gated: only wired in single-cohort mode (onPointClick provided) AND while the
  * per-patient layer is shown. Cursor affordance on the line.
  */
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // Recharts mock: Line exposes onClick + cursor as data-* and, for per-patient
@@ -30,14 +30,20 @@ vi.mock('recharts', async (importOriginal) => {
     Legend: () => null,
     ReferenceLine: () => null,
     Area: () => <g data-testid="recharts-area" />,
-    Line: ({ onClick, cursor, data }: any) => {
+    Line: ({ onClick, cursor, data, onMouseEnter, onMouseLeave }: any) => {
       const pseudonym = Array.isArray(data) && data[0]?.pseudonym ? data[0].pseudonym : undefined;
       return (
         <g
           data-testid={pseudonym ? `perpatient-line-${pseudonym}` : 'recharts-line'}
           data-has-onclick={onClick ? 'true' : 'false'}
+          data-has-mouseenter={onMouseEnter ? 'true' : 'false'}
           data-cursor={cursor ?? ''}
           onClick={() => onClick && onClick({})}
+          // Recharts passes (lineProps, index, domEvent) — forward a synthetic event
+          // carrying clientX/Y + a target so the K1c handler can position the tooltip.
+          onMouseEnter={(e: any) =>
+            onMouseEnter && onMouseEnter({}, 0, { clientX: 50, clientY: 60, target: e.target })}
+          onMouseLeave={() => onMouseLeave && onMouseLeave({}, 0, {})}
         />
       );
     },
@@ -128,5 +134,48 @@ describe('OutcomesPanel — per-patient line click (J1b)', () => {
     );
     expect(container.querySelector('[data-testid="perpatient-line-PSN-1"]')).toBeNull();
     expect(container.querySelector('[data-testid="perpatient-line-PSN-2"]')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// K1c (v1.16-A): per-patient line hover — highlight + tooltip when scatter is OFF
+// ---------------------------------------------------------------------------
+describe('OutcomesPanel — per-patient line hover (K1c)', () => {
+  afterEach(() => cleanup());
+
+  it('wires line hover handlers when scatter is OFF and per-patient is ON', () => {
+    const { container } = render(<OutcomesPanel {...base} panel={panelWithPerPatient()} />);
+    const line = container.querySelector('[data-testid="perpatient-line-PSN-1"]');
+    expect(line).not.toBeNull();
+    expect(line!.getAttribute('data-has-mouseenter')).toBe('true');
+  });
+
+  it('does NOT wire line hover when scatter is ON (scatter takes precedence)', () => {
+    const { container } = render(
+      <OutcomesPanel
+        {...base}
+        layers={{ median: false, perPatient: true, scatter: true, spreadBand: false }}
+        panel={panelWithPerPatient()}
+      />,
+    );
+    const line = container.querySelector('[data-testid="perpatient-line-PSN-1"]');
+    expect(line).not.toBeNull();
+    expect(line!.getAttribute('data-has-mouseenter')).toBe('false');
+  });
+
+  it('hovering a line shows that patient tooltip; leaving hides it', () => {
+    const { container } = render(<OutcomesPanel {...base} panel={panelWithPerPatient()} />);
+    const tooltip = container.querySelector(
+      '[data-testid="outcomes-hover-tooltip-od"]',
+    ) as HTMLElement;
+    expect(tooltip.style.display).toBe('none');
+
+    const line = container.querySelector('[data-testid="perpatient-line-PSN-2"]') as Element;
+    fireEvent.mouseEnter(line);
+    expect(tooltip.style.display).toBe('block');
+    expect(tooltip.textContent).toContain('PSN-2');
+
+    fireEvent.mouseLeave(line);
+    expect(tooltip.style.display).toBe('none');
   });
 });

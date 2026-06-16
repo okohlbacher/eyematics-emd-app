@@ -167,6 +167,24 @@ export default function OutcomesView() {
       );
     }
 
+    // K7 (v1.16-A): cross-cohort compare computing status — shown while the heavy
+    // N-cohort aggregation runs OFF the main thread (worker). The compare drawer
+    // stays interactive because nothing blocks the main thread; the panels mount
+    // once all cohorts land instead of synchronously freezing on every toggle.
+    if (s.isCrossMode && a.crossWorkerPending && (s.activeMetric === 'visus' || s.activeMetric === 'crt')) {
+      return (
+        <div className="flex items-center gap-2 py-8 justify-center text-gray-500 text-sm italic">
+          <span
+            role="status"
+            aria-live="polite"
+            data-testid="outcomes-cross-computing"
+          >
+            {s.t('outcomesClientComputingLabel')}
+          </span>
+        </div>
+      );
+    }
+
     if (s.activeMetric === 'visus') {
       if (!a.aggregate) {
         return <OutcomesEmptyState variant="no-cohort" t={s.t as (key: TranslationKey) => string} />;
@@ -292,15 +310,20 @@ export default function OutcomesView() {
             <GitCompare className="w-4 h-4" />
             <span>{s.t('outcomesCompareOpenDrawer')}</span>
           </button>
+          {/* K1d (v1.16-A): self-explanatory display-settings button — a labelled
+              button ("Diagramm-Anzeige" / "Chart display") with a descriptive title
+              naming the layers + axes it controls, replacing the bare gear icon the
+              tester found unclear. */}
           <button
             type="button"
-            aria-label={s.t('outcomesOpenSettings')}
+            title={s.t('outcomesSettingsButtonTooltip')}
             aria-expanded={s.drawerOpen}
             aria-controls="outcomes-settings-drawer"
             onClick={() => s.setDrawerOpen((v) => !v)}
-            className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
           >
             <Settings className="w-4 h-4" />
+            <span>{s.t('outcomesSettingsButton')}</span>
           </button>
         </div>
       </header>

@@ -13,15 +13,26 @@ import {
   ReferenceLine,
   ResponsiveContainer,
   Scatter,
-  Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
 
 import { useThemeSafe } from '../../context/ThemeContext';
 import type { AxisMode, GridPoint, PanelResult, YMetric } from '../../utils/cohortTrajectory';
-import OutcomesTooltip from './OutcomesTooltip';
 import { DARK_EYE_COLORS, EYE_COLORS, SERIES_STYLES } from './palette';
+import {
+  canvasContextAvailable,
+  type CanvasScatterPoint,
+  drawScatter,
+  hitTestScatter,
+} from './scatterCanvas';
+
+// K2 (v1.16-A): canvas rendering for the heavy scatter layer is used only when a real
+// 2D context is available (browser). In jsdom (no `canvas` package) / SSR this is
+// false, so the existing per-point SVG <Scatter> shape path runs unchanged and the
+// existing scatter tests (which assert the SVG hit-halo + per-point shape groups)
+// keep passing. Computed once at module load — the environment never changes mid-run.
+const SCATTER_CANVAS_MODE = canvasContextAvailable();
 
 type LayerState = {
   median: boolean;
@@ -126,17 +137,6 @@ export default function OutcomesPanel({
   const { effectiveTheme } = useThemeSafe();
   const isDark = effectiveTheme === 'dark';
 
-  // FALL-010 (A1 v2): controlled-tooltip ref for drill-down navigation.
-  //
-  // Recharts 3.8.1 chart-level onClick receives MouseHandlerDataParam
-  // (activeIndex/activeLabel/activeCoordinate/...) WITHOUT an activePayload, so
-  // the click event itself cannot tell us which scatter point was hit. Instead we
-  // tap the SAME nearest-point pipeline that drives the visible tooltip: the custom
-  // Tooltip content stashes the active scatter entry's patientId into this ref on
-  // every render. The chart onClick then navigates to ref.current. This is the
-  // exact pipeline the tester can see working (the tooltip shows the pseudonym).
-  const activePatientIdRef = useRef<string | null>(null);
-
   // I1 (v1.14-p2): explicit hovered-scatter-datum tracking.
   //
   // The axis-level Tooltip above resolves the active entry by NEAREST X, not by
@@ -169,6 +169,22 @@ export default function OutcomesPanel({
   // longer sees the nearest-x scatter pop-up.
   const containerRef = useRef<HTMLDivElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
+
+  // K2 (v1.16-A): canvas scatter rendering state. In canvas mode the Recharts
+  // <Scatter> shape collects each point's resolved pixel position (cx/cy) into this
+  // buffer and schedules ONE canvas repaint, instead of emitting ~2 SVG circles per
+  // point. The plot-area box is captured so the canvas overlays the chart exactly and
+  // mouse coordinates map to the same space as cx/cy. The highlight id drives the
+  // cheap single-point overdraw (replacing the SVG attribute mutation).
+  const chartWrapRef = useRef<HTMLDivElement | null>(null);
+  const scatterCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const canvasPointsRef = useRef<CanvasScatterPoint[]>([]);
+  const canvasBoxRef = useRef<{ width: number; height: number } | null>(null);
+  const canvasRafRef = useRef<number | null>(null);
+  const canvasHighlightIdRef = useRef<string | null>(null);
+  // Identity of the scatter buffer pass — reset the canvas point buffer + recapture
+  // the plot box on the first shape call after the rendered point set changes.
+  const canvasPassRef = useRef<unknown>(null);
   // Latest formatting context for the imperative tooltip. Refs (not deps) so the
   // memoized enter handler stays stable while always reading current labels/units.
   // Written during render below (a "latest value" cache — read only inside handlers).
@@ -256,6 +272,140 @@ export default function OutcomesPanel({
     [hideHoverTooltip],
   );
 
+  // K2 (v1.16-A): canvas draw style (color + opacity) kept in a ref so the redraw
+  // scheduler stays stable while always reading the current theme-resolved color.
+  const canvasStyleRef = useRef<{ color: string; fillOpacity: number }>({
+    color: EYE_COLORS.OD,
+    fillOpacity: SERIES_STYLES.scatter.fillOpacity,
+  });
+
+  // K2: schedule a single canvas repaint on the next animation frame (coalesces the
+  // per-point shape callbacks into ONE draw). Reads the current point buffer, box,
+  // style, and highlight id. No-op outside canvas mode.
+  const scheduleCanvasDraw = useCallback(() => {
+    if (!SCATTER_CANVAS_MODE) return;
+    if (canvasRafRef.current != null) return;
+    const raf =
+      typeof requestAnimationFrame === 'function'
+        ? requestAnimationFrame
+        : (cb: FrameRequestCallback) => setTimeout(() => cb(0), 0) as unknown as number;
+    canvasRafRef.current = raf(() => {
+      canvasRafRef.current = null;
+      const canvas = scatterCanvasRef.current;
+      const box = canvasBoxRef.current;
+      if (!canvas || !box) return;
+      const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+      drawScatter(canvas, canvasPointsRef.current, {
+        width: box.width,
+        height: box.height,
+        dpr,
+        color: canvasStyleRef.current.color,
+        fillOpacity: canvasStyleRef.current.fillOpacity,
+        highlightId: canvasHighlightIdRef.current,
+      });
+    }) as unknown as number;
+  }, []);
+
+  // K2: pointer move over the canvas → nearest-point hit-test → imperative highlight
+  // (canvas overdraw) + hover tooltip + click-target ref (same pipeline as the SVG
+  // halo's enter/leave, so drill-down + tooltip behaviour is identical).
+  const handleCanvasMove = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      const canvas = scatterCanvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      const hit = hitTestScatter(canvasPointsRef.current, px, py);
+      const prevHi = canvasHighlightIdRef.current;
+      if (hit && hit.patientId != null) {
+        hoveredDatumRef.current = { patientId: hit.patientId };
+        canvasHighlightIdRef.current = hit.patientId;
+        showHoverTooltip(e.clientX, e.clientY, {
+          patientId: hit.patientId,
+          x: hit.x,
+          y: hit.y,
+        });
+      } else {
+        hoveredDatumRef.current = null;
+        canvasHighlightIdRef.current = null;
+        hideHoverTooltip();
+      }
+      if (prevHi !== canvasHighlightIdRef.current) scheduleCanvasDraw();
+    },
+    [showHoverTooltip, hideHoverTooltip, scheduleCanvasDraw],
+  );
+
+  const handleCanvasLeave = useCallback(() => {
+    hoveredDatumRef.current = null;
+    if (canvasHighlightIdRef.current != null) {
+      canvasHighlightIdRef.current = null;
+      scheduleCanvasDraw();
+    }
+    hideHoverTooltip();
+  }, [hideHoverTooltip, scheduleCanvasDraw]);
+
+  const handleCanvasClick = useCallback(() => {
+    const id = hoveredDatumRef.current?.patientId;
+    if (id && onPointClick) onPointClick(id);
+  }, [onPointClick]);
+
+  // K1c (v1.16-A): per-patient LINE hover. When the scatter layer is OFF and the
+  // per-patient lines are ON, hovering a line highlights THAT line (imperative DOM —
+  // raise opacity + width on its <path>, like the scatter dot highlight, so no
+  // re-render of the line layer) AND shows that patient's tooltip. Scatter takes
+  // precedence when both layers are on, so these handlers only act when scatter is
+  // off. The hovered line also becomes the click target (hoveredDatumRef) so the
+  // chart-level onClick + the line's own onClick resolve to the same patient.
+  const highlightedLinePathRef = useRef<SVGPathElement | null>(null);
+  const restoreHighlightedLine = useCallback(() => {
+    const path = highlightedLinePathRef.current;
+    if (path) {
+      path.style.strokeOpacity = '';
+      path.style.strokeWidth = '';
+      highlightedLinePathRef.current = null;
+    }
+  }, []);
+  const handleLineEnter = useCallback(
+    (
+      patientId: string,
+      e: { clientX?: number; clientY?: number; target?: EventTarget | null },
+    ) => {
+      hoveredDatumRef.current = { patientId };
+      // Highlight the hovered line's <path> imperatively.
+      restoreHighlightedLine();
+      const target = e.target as Element | null;
+      const path = target?.closest?.('path.recharts-curve') as SVGPathElement | null
+        ?? (target as SVGPathElement | null);
+      if (path && 'style' in path) {
+        path.style.strokeOpacity = '1';
+        path.style.strokeWidth = String(SERIES_STYLES.perPatient.strokeWidth + 1.5);
+        highlightedLinePathRef.current = path;
+      }
+      if (typeof e.clientX === 'number' && typeof e.clientY === 'number') {
+        showHoverTooltip(e.clientX, e.clientY, { patientId });
+      }
+    },
+    [restoreHighlightedLine, showHoverTooltip],
+  );
+  const handleLineLeave = useCallback(
+    (patientId: string) => {
+      if (hoveredDatumRef.current?.patientId === patientId) {
+        hoveredDatumRef.current = null;
+      }
+      restoreHighlightedLine();
+      hideHoverTooltip();
+    },
+    [restoreHighlightedLine, hideHoverTooltip],
+  );
+
+  // K2: cancel any pending canvas RAF on unmount.
+  useEffect(() => () => {
+    if (canvasRafRef.current != null && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(canvasRafRef.current);
+    }
+  }, []);
+
   // F7 (defensive): clear the stashed drill-down target when the panel's
   // underlying patient set CHANGES (e.g. a cohort switch). Without this, a stale
   // within-cohort pseudonym left in the ref from a prior cohort's hover could fire
@@ -269,8 +419,7 @@ export default function OutcomesPanel({
   useEffect(() => {
     if (patientsRef.current !== panel.patients) {
       patientsRef.current = panel.patients;
-      activePatientIdRef.current = null;
-      // I1: also drop any stale hovered datum from the prior cohort.
+      // I1: drop any stale hovered datum from the prior cohort.
       hoveredDatumRef.current = null;
     }
   }, [panel.patients]);
@@ -338,14 +487,25 @@ export default function OutcomesPanel({
     return shown;
   }, [layers.scatter, panel.scatterPoints, eye]);
 
+  // K2: when the rendered scatter set becomes EMPTY in canvas mode the per-point
+  // shape never fires, so the pass-reset can't clear stale points — clear + repaint
+  // here so toggling to a no-point state leaves a clean canvas.
+  useEffect(() => {
+    if (!SCATTER_CANVAS_MODE) return;
+    if (scatterRenderPoints.length === 0) {
+      canvasPassRef.current = scatterRenderPoints;
+      canvasPointsRef.current = [];
+      scheduleCanvasDraw();
+    }
+  }, [scatterRenderPoints, scheduleCanvasDraw]);
+
+  // K1a (v1.16-A): tooltip* colours dropped with the removed axis <Tooltip>; the
+  // imperative hover tooltip styles itself via Tailwind classes.
   const chartColors = {
     grid:         isDark ? '#374151' : '#e5e7eb', // gray-700 / gray-200
     axisTick:     isDark ? '#9ca3af' : '#6b7280', // gray-400 / gray-500
     axisLabel:    isDark ? '#d1d5db' : '#374151', // gray-300 / gray-700
     legend:       isDark ? '#d1d5db' : '#374151',
-    tooltipBg:    isDark ? '#1f2937' : '#ffffff',
-    tooltipText:  isDark ? '#f3f4f6' : '#111827',
-    tooltipBorder: isDark ? '#374151' : '#e5e7eb',
   };
   // Select eye color palette based on theme
   const eyeColors = isDark ? DARK_EYE_COLORS : EYE_COLORS;
@@ -359,12 +519,16 @@ export default function OutcomesPanel({
     ...Object.values(DARK_EYE_COLORS),
   ]);
   const seriesColor = ALL_EYE_HEX.has(color) ? resolvedColor : color;
+  // K2: keep the canvas draw style current (a latest-value ref, like hoverFmtRef) so
+  // the redraw scheduler stays stable while always painting in the active color.
+  // Synced in an effect (not during render) + repaints so a theme/colour change is
+  // reflected on the canvas without a state-driven scatter re-render.
+  useEffect(() => {
+    canvasStyleRef.current = { color: seriesColor, fillOpacity: SERIES_STYLES.scatter.fillOpacity };
+    scheduleCanvasDraw();
+  }, [seriesColor, scheduleCanvasDraw]);
 
   const subtitle = `${panel.summary.patientCount} · ${panel.summary.measurementCount}`;
-  // CRT tooltip value label key — passed to OutcomesTooltip for µm unit display
-  const valueLabelKey = metric === 'crt'
-    ? (yMetric === 'absolute' ? 'metricsCrtYAxisAbsolute' : yMetric === 'delta' ? 'metricsCrtYAxisDelta' : 'metricsCrtYAxisDeltaPercent')
-    : undefined;
   const xLabel =
     axisMode === 'days'
       ? t('outcomesTooltipDay')
@@ -453,21 +617,35 @@ export default function OutcomesPanel({
         data-max={yDomain(yMetric, panel.medianGrid, metric)[1]}
       />
 
+      <div ref={chartWrapRef} className="relative" style={{ width: '100%', height: 320 }}>
+      {/* K2 (v1.16-A): canvas scatter overlay — one DOM node carrying the whole
+          (capped) cloud, drawn imperatively from the buffer the <Scatter> shape fills.
+          Only rendered in canvas mode + when the layer is on; it captures pointer
+          events for hover/click hit-testing (the SVG hit halo is not emitted in this
+          mode). Sits above the chart's plot but below the tooltip (z-10). */}
+      {SCATTER_CANVAS_MODE && !isCrossMode && layers.scatter && (
+        <canvas
+          ref={scatterCanvasRef}
+          data-testid={`outcomes-scatter-canvas-${eye}`}
+          className="absolute inset-0 z-[5]"
+          style={{ width: '100%', height: '100%', cursor: onPointClick ? 'pointer' : 'default' }}
+          onMouseMove={handleCanvasMove}
+          onMouseLeave={handleCanvasLeave}
+          onClick={handleCanvasClick}
+        />
+      )}
       <ResponsiveContainer width="100%" height={320}>
         <ComposedChart
           data={panel.medianGrid}
           {...(onPointClick
             ? {
-                // I1 (v1.14-p2): chart-level click navigates to the HOVERED scatter
-                // datum (the hit-halo physically under the cursor) when one exists,
-                // so the click always opens the point the user is pointing at — never
-                // a different point that merely shares its x-band. Only when no point
-                // is hovered (e.g. a click in empty plot area where Recharts still
-                // fires the chart onClick) do we fall back to the axis-tooltip's
-                // nearest-x patientId. A click with neither is a no-op.
+                // I1 (v1.14-p2) / K1a (v1.16-A): chart-level click navigates to the
+                // HOVERED datum (the scatter point under the cursor, or the hovered
+                // per-patient line — both set hoveredDatumRef). With the axis Tooltip
+                // removed there is no nearest-x fallback: a click with no hovered datum
+                // is a no-op, so a click never opens a point the user isn't pointing at.
                 onClick: () => {
-                  const patientId =
-                    hoveredDatumRef.current?.patientId ?? activePatientIdRef.current;
+                  const patientId = hoveredDatumRef.current?.patientId;
                   if (patientId) onPointClick(patientId);
                 },
               }
@@ -492,48 +670,15 @@ export default function OutcomesPanel({
             }}
           />
           <YAxis tickCount={5} tick={{ fontSize: 11, fill: chartColors.axisTick }} stroke={chartColors.grid} domain={yDomain(yMetric, panel.medianGrid, metric)} />
-          <Tooltip
-            content={(props: { active?: boolean; payload?: ReadonlyArray<{ payload?: Record<string, unknown> }> }) => {
-              // FALL-010 (A1 v2): on every tooltip render, capture the active scatter
-              // entry's patientId into the ref so the chart-level onClick can navigate.
-              // The scatter payload entries carry `patientId`; median/per-patient entries
-              // do not. When no scatter entry is active (tooltip off, or hovering a
-              // non-scatter series), reset to null so a click becomes a no-op.
-              const scatterEntry = props.active && Array.isArray(props.payload)
-                ? props.payload.find(
-                    (e) => typeof e?.payload?.patientId === 'string',
-                  )
-                : undefined;
-              if (onPointClick) {
-                // FALL-010: keep capturing the nearest-x scatter patientId as the
-                // CLICK fallback (used only when no point is actually hovered).
-                activePatientIdRef.current = scatterEntry
-                  ? (scatterEntry.payload!.patientId as string)
-                  : null;
-              }
-              // J1a (v1.15-p4): the axis tooltip resolves by NEAREST X. For a SCATTER
-              // hover that means the wrong point — so suppress the axis pop-up when a
-              // scatter entry is active; the imperative hover tooltip (driven by the
-              // point physically under the cursor) shows the correct point instead.
-              // Non-scatter series (median / per-patient line) keep the axis tooltip.
-              if (scatterEntry) return null;
-              return (
-                <OutcomesTooltip
-                  active={props.active}
-                  payload={props.payload as never}
-                  yMetric={yMetric}
-                  axisMode={axisMode}
-                  layers={layers}
-                  t={t}
-                  locale={locale}
-                  valueLabelKey={valueLabelKey}
-                />
-              );
-            }}
-            contentStyle={{ backgroundColor: chartColors.tooltipBg, color: chartColors.tooltipText, border: `1px solid ${chartColors.tooltipBorder}` }}
-            labelStyle={{ color: chartColors.tooltipText }}
-            itemStyle={{ color: chartColors.tooltipText }}
-          />
+          {/* K1a (v1.16-A): the Recharts axis <Tooltip> is REMOVED. It resolved by
+              NEAREST X, so it surfaced a SECOND tooltip (the tester's "now there are
+              TWO tooltips") that disagreed with the point under the cursor. All hover
+              tooltips are now the single imperative tooltip element above, driven by
+              the actual hovered datum:
+                - scatter layer on  → the scatter hover (canvas/SVG hit-test) tooltip.
+                - scatter off + per-patient lines on → the per-patient LINE hover
+                  highlights that line and shows that patient's tooltip (K1c).
+              No axis/nearest-x pop-up remains. */}
           <Legend wrapperStyle={{ fontSize: 12, color: chartColors.legend }} />
 
           {!isCrossMode && layers.spreadBand && (
@@ -562,6 +707,21 @@ export default function OutcomesPanel({
                   strokeOpacity={p.sparse ? SERIES_STYLES.perPatient.opacitySparse : SERIES_STYLES.perPatient.opacityDense}
                   dot={false}
                   isAnimationActive={false}
+                  // K1c (v1.16-A): line hover highlight + tooltip — ONLY when scatter
+                  // is off (scatter takes precedence when both layers are on). Recharts
+                  // passes (lineProps, index, domEvent); we read clientX/Y + target off
+                  // the DOM event to position the imperative tooltip and highlight the
+                  // hovered <path>.
+                  {...(!layers.scatter
+                    ? ({
+                        // Recharts types onMouseEnter loosely; the runtime 3rd arg is
+                        // the DOM event. Cast to satisfy the Line prop overload (D-05
+                        // pattern of narrowly-cast Recharts callbacks elsewhere here).
+                        onMouseEnter: ((_d: unknown, _i: number, e: React.MouseEvent) =>
+                          handleLineEnter(p.id, e)) as unknown as undefined,
+                        onMouseLeave: (() => handleLineLeave(p.id)) as unknown as undefined,
+                      } as Record<string, unknown>)
+                    : {})}
                   // J1b (v1.15-p4): click a patient's trajectory LINE → that patient's
                   // case, alongside the scatter-point click. Same drill-down handler +
                   // IDOR gate (onPointClick → handlePointDrillDown resolves the
@@ -640,6 +800,27 @@ export default function OutcomesPanel({
                 };
                 if (cx == null || cy == null) return <g />;
                 const patientId = payload?.patientId;
+                // K2 (v1.16-A): canvas mode — collect this point's resolved pixel
+                // position into the buffer and emit NO SVG (so the ~2 circles/point
+                // node wall disappears). The first point of a render pass resets the
+                // buffer + captures the plot box; all points coalesce into ONE canvas
+                // repaint scheduled on the next frame. Hover/click run off the buffer.
+                if (SCATTER_CANVAS_MODE) {
+                  if (canvasPassRef.current !== scatterRenderPoints) {
+                    canvasPassRef.current = scatterRenderPoints;
+                    canvasPointsRef.current = [];
+                    const wrap = chartWrapRef.current;
+                    if (wrap) {
+                      canvasBoxRef.current = {
+                        width: wrap.clientWidth,
+                        height: wrap.clientHeight,
+                      };
+                    }
+                  }
+                  canvasPointsRef.current.push({ cx, cy, patientId, x: payload?.x, y: payload?.y });
+                  scheduleCanvasDraw();
+                  return <g />;
+                }
                 // J1a: wire the per-point hover (tooltip + highlight) whenever the
                 // point carries a patientId — independent of drill-down. The click
                 // ref is harmless without onPointClick; the chart onClick only acts
@@ -730,6 +911,7 @@ export default function OutcomesPanel({
           ))}
         </ComposedChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }
