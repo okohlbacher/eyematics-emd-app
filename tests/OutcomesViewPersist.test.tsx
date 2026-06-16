@@ -67,7 +67,7 @@ describe('J2 — OutcomesView view-state persistence restore', () => {
     });
 
     await waitFor(() => expect(screen.queryByTestId('outcomes-panel-od')).not.toBeNull());
-    fireEvent.click(screen.getByLabelText('outcomesOpenSettings'));
+    fireEvent.click(screen.getByRole('button', { name: /outcomesSettingsButton/ }));
     // Size-derived default for a 200-cohort is scatter OFF; the persisted choice wins.
     const scatterToggle = screen.getByLabelText('outcomesLayerScatter') as HTMLInputElement;
     expect(scatterToggle.checked).toBe(true);
@@ -80,7 +80,7 @@ describe('J2 — OutcomesView view-state persistence restore', () => {
     });
 
     await waitFor(() => expect(screen.queryByTestId('outcomes-panel-od')).not.toBeNull());
-    fireEvent.click(screen.getByLabelText('outcomesOpenSettings'));
+    fireEvent.click(screen.getByRole('button', { name: /outcomesSettingsButton/ }));
     const scatterToggle = screen.getByLabelText('outcomesLayerScatter') as HTMLInputElement;
     expect(scatterToggle.checked).toBe(false);
   });
@@ -91,7 +91,7 @@ describe('J2 — OutcomesView view-state persistence restore', () => {
       settings: { outcomes: { serverAggregationThresholdPatients: 1000, aggregateCacheTtlMs: 1800000 } },
     });
     await waitFor(() => expect(screen.queryByTestId('outcomes-panel-od')).not.toBeNull());
-    fireEvent.click(screen.getByLabelText('outcomesOpenSettings'));
+    fireEvent.click(screen.getByRole('button', { name: /outcomesSettingsButton/ }));
     const toggle = screen.getByLabelText('outcomesLayerScatter') as HTMLInputElement;
     expect(toggle.checked).toBe(false);
     fireEvent.click(toggle); // enable scatter (explicit override → persisted)
@@ -106,7 +106,7 @@ describe('J2 — OutcomesView view-state persistence restore', () => {
       settings: { outcomes: { serverAggregationThresholdPatients: 1000, aggregateCacheTtlMs: 1800000 } },
     });
     await waitFor(() => expect(screen.queryByTestId('outcomes-panel-od')).not.toBeNull());
-    fireEvent.click(screen.getByLabelText('outcomesOpenSettings'));
+    fireEvent.click(screen.getByRole('button', { name: /outcomesSettingsButton/ }));
     expect((screen.getByLabelText('outcomesLayerScatter') as HTMLInputElement).checked).toBe(true);
   });
 });

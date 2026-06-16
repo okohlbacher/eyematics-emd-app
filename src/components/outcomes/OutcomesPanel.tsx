@@ -13,14 +13,12 @@ import {
   ReferenceLine,
   ResponsiveContainer,
   Scatter,
-  Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
 
 import { useThemeSafe } from '../../context/ThemeContext';
 import type { AxisMode, GridPoint, PanelResult, YMetric } from '../../utils/cohortTrajectory';
-import OutcomesTooltip from './OutcomesTooltip';
 import { DARK_EYE_COLORS, EYE_COLORS, SERIES_STYLES } from './palette';
 import {
   canvasContextAvailable,
@@ -138,17 +136,6 @@ export default function OutcomesPanel({
 }: Props) {
   const { effectiveTheme } = useThemeSafe();
   const isDark = effectiveTheme === 'dark';
-
-  // FALL-010 (A1 v2): controlled-tooltip ref for drill-down navigation.
-  //
-  // Recharts 3.8.1 chart-level onClick receives MouseHandlerDataParam
-  // (activeIndex/activeLabel/activeCoordinate/...) WITHOUT an activePayload, so
-  // the click event itself cannot tell us which scatter point was hit. Instead we
-  // tap the SAME nearest-point pipeline that drives the visible tooltip: the custom
-  // Tooltip content stashes the active scatter entry's patientId into this ref on
-  // every render. The chart onClick then navigates to ref.current. This is the
-  // exact pipeline the tester can see working (the tooltip shows the pseudonym).
-  const activePatientIdRef = useRef<string | null>(null);
 
   // I1 (v1.14-p2): explicit hovered-scatter-datum tracking.
   //
@@ -363,6 +350,55 @@ export default function OutcomesPanel({
     if (id && onPointClick) onPointClick(id);
   }, [onPointClick]);
 
+  // K1c (v1.16-A): per-patient LINE hover. When the scatter layer is OFF and the
+  // per-patient lines are ON, hovering a line highlights THAT line (imperative DOM —
+  // raise opacity + width on its <path>, like the scatter dot highlight, so no
+  // re-render of the line layer) AND shows that patient's tooltip. Scatter takes
+  // precedence when both layers are on, so these handlers only act when scatter is
+  // off. The hovered line also becomes the click target (hoveredDatumRef) so the
+  // chart-level onClick + the line's own onClick resolve to the same patient.
+  const highlightedLinePathRef = useRef<SVGPathElement | null>(null);
+  const restoreHighlightedLine = useCallback(() => {
+    const path = highlightedLinePathRef.current;
+    if (path) {
+      path.style.strokeOpacity = '';
+      path.style.strokeWidth = '';
+      highlightedLinePathRef.current = null;
+    }
+  }, []);
+  const handleLineEnter = useCallback(
+    (
+      patientId: string,
+      e: { clientX?: number; clientY?: number; target?: EventTarget | null },
+    ) => {
+      hoveredDatumRef.current = { patientId };
+      // Highlight the hovered line's <path> imperatively.
+      restoreHighlightedLine();
+      const target = e.target as Element | null;
+      const path = target?.closest?.('path.recharts-curve') as SVGPathElement | null
+        ?? (target as SVGPathElement | null);
+      if (path && 'style' in path) {
+        path.style.strokeOpacity = '1';
+        path.style.strokeWidth = String(SERIES_STYLES.perPatient.strokeWidth + 1.5);
+        highlightedLinePathRef.current = path;
+      }
+      if (typeof e.clientX === 'number' && typeof e.clientY === 'number') {
+        showHoverTooltip(e.clientX, e.clientY, { patientId });
+      }
+    },
+    [restoreHighlightedLine, showHoverTooltip],
+  );
+  const handleLineLeave = useCallback(
+    (patientId: string) => {
+      if (hoveredDatumRef.current?.patientId === patientId) {
+        hoveredDatumRef.current = null;
+      }
+      restoreHighlightedLine();
+      hideHoverTooltip();
+    },
+    [restoreHighlightedLine, hideHoverTooltip],
+  );
+
   // K2: cancel any pending canvas RAF on unmount.
   useEffect(() => () => {
     if (canvasRafRef.current != null && typeof cancelAnimationFrame === 'function') {
@@ -383,8 +419,7 @@ export default function OutcomesPanel({
   useEffect(() => {
     if (patientsRef.current !== panel.patients) {
       patientsRef.current = panel.patients;
-      activePatientIdRef.current = null;
-      // I1: also drop any stale hovered datum from the prior cohort.
+      // I1: drop any stale hovered datum from the prior cohort.
       hoveredDatumRef.current = null;
     }
   }, [panel.patients]);
@@ -464,14 +499,13 @@ export default function OutcomesPanel({
     }
   }, [scatterRenderPoints, scheduleCanvasDraw]);
 
+  // K1a (v1.16-A): tooltip* colours dropped with the removed axis <Tooltip>; the
+  // imperative hover tooltip styles itself via Tailwind classes.
   const chartColors = {
     grid:         isDark ? '#374151' : '#e5e7eb', // gray-700 / gray-200
     axisTick:     isDark ? '#9ca3af' : '#6b7280', // gray-400 / gray-500
     axisLabel:    isDark ? '#d1d5db' : '#374151', // gray-300 / gray-700
     legend:       isDark ? '#d1d5db' : '#374151',
-    tooltipBg:    isDark ? '#1f2937' : '#ffffff',
-    tooltipText:  isDark ? '#f3f4f6' : '#111827',
-    tooltipBorder: isDark ? '#374151' : '#e5e7eb',
   };
   // Select eye color palette based on theme
   const eyeColors = isDark ? DARK_EYE_COLORS : EYE_COLORS;
@@ -495,10 +529,6 @@ export default function OutcomesPanel({
   }, [seriesColor, scheduleCanvasDraw]);
 
   const subtitle = `${panel.summary.patientCount} · ${panel.summary.measurementCount}`;
-  // CRT tooltip value label key — passed to OutcomesTooltip for µm unit display
-  const valueLabelKey = metric === 'crt'
-    ? (yMetric === 'absolute' ? 'metricsCrtYAxisAbsolute' : yMetric === 'delta' ? 'metricsCrtYAxisDelta' : 'metricsCrtYAxisDeltaPercent')
-    : undefined;
   const xLabel =
     axisMode === 'days'
       ? t('outcomesTooltipDay')
@@ -609,16 +639,13 @@ export default function OutcomesPanel({
           data={panel.medianGrid}
           {...(onPointClick
             ? {
-                // I1 (v1.14-p2): chart-level click navigates to the HOVERED scatter
-                // datum (the hit-halo physically under the cursor) when one exists,
-                // so the click always opens the point the user is pointing at — never
-                // a different point that merely shares its x-band. Only when no point
-                // is hovered (e.g. a click in empty plot area where Recharts still
-                // fires the chart onClick) do we fall back to the axis-tooltip's
-                // nearest-x patientId. A click with neither is a no-op.
+                // I1 (v1.14-p2) / K1a (v1.16-A): chart-level click navigates to the
+                // HOVERED datum (the scatter point under the cursor, or the hovered
+                // per-patient line — both set hoveredDatumRef). With the axis Tooltip
+                // removed there is no nearest-x fallback: a click with no hovered datum
+                // is a no-op, so a click never opens a point the user isn't pointing at.
                 onClick: () => {
-                  const patientId =
-                    hoveredDatumRef.current?.patientId ?? activePatientIdRef.current;
+                  const patientId = hoveredDatumRef.current?.patientId;
                   if (patientId) onPointClick(patientId);
                 },
               }
@@ -643,48 +670,15 @@ export default function OutcomesPanel({
             }}
           />
           <YAxis tickCount={5} tick={{ fontSize: 11, fill: chartColors.axisTick }} stroke={chartColors.grid} domain={yDomain(yMetric, panel.medianGrid, metric)} />
-          <Tooltip
-            content={(props: { active?: boolean; payload?: ReadonlyArray<{ payload?: Record<string, unknown> }> }) => {
-              // FALL-010 (A1 v2): on every tooltip render, capture the active scatter
-              // entry's patientId into the ref so the chart-level onClick can navigate.
-              // The scatter payload entries carry `patientId`; median/per-patient entries
-              // do not. When no scatter entry is active (tooltip off, or hovering a
-              // non-scatter series), reset to null so a click becomes a no-op.
-              const scatterEntry = props.active && Array.isArray(props.payload)
-                ? props.payload.find(
-                    (e) => typeof e?.payload?.patientId === 'string',
-                  )
-                : undefined;
-              if (onPointClick) {
-                // FALL-010: keep capturing the nearest-x scatter patientId as the
-                // CLICK fallback (used only when no point is actually hovered).
-                activePatientIdRef.current = scatterEntry
-                  ? (scatterEntry.payload!.patientId as string)
-                  : null;
-              }
-              // J1a (v1.15-p4): the axis tooltip resolves by NEAREST X. For a SCATTER
-              // hover that means the wrong point — so suppress the axis pop-up when a
-              // scatter entry is active; the imperative hover tooltip (driven by the
-              // point physically under the cursor) shows the correct point instead.
-              // Non-scatter series (median / per-patient line) keep the axis tooltip.
-              if (scatterEntry) return null;
-              return (
-                <OutcomesTooltip
-                  active={props.active}
-                  payload={props.payload as never}
-                  yMetric={yMetric}
-                  axisMode={axisMode}
-                  layers={layers}
-                  t={t}
-                  locale={locale}
-                  valueLabelKey={valueLabelKey}
-                />
-              );
-            }}
-            contentStyle={{ backgroundColor: chartColors.tooltipBg, color: chartColors.tooltipText, border: `1px solid ${chartColors.tooltipBorder}` }}
-            labelStyle={{ color: chartColors.tooltipText }}
-            itemStyle={{ color: chartColors.tooltipText }}
-          />
+          {/* K1a (v1.16-A): the Recharts axis <Tooltip> is REMOVED. It resolved by
+              NEAREST X, so it surfaced a SECOND tooltip (the tester's "now there are
+              TWO tooltips") that disagreed with the point under the cursor. All hover
+              tooltips are now the single imperative tooltip element above, driven by
+              the actual hovered datum:
+                - scatter layer on  → the scatter hover (canvas/SVG hit-test) tooltip.
+                - scatter off + per-patient lines on → the per-patient LINE hover
+                  highlights that line and shows that patient's tooltip (K1c).
+              No axis/nearest-x pop-up remains. */}
           <Legend wrapperStyle={{ fontSize: 12, color: chartColors.legend }} />
 
           {!isCrossMode && layers.spreadBand && (
@@ -713,6 +707,21 @@ export default function OutcomesPanel({
                   strokeOpacity={p.sparse ? SERIES_STYLES.perPatient.opacitySparse : SERIES_STYLES.perPatient.opacityDense}
                   dot={false}
                   isAnimationActive={false}
+                  // K1c (v1.16-A): line hover highlight + tooltip — ONLY when scatter
+                  // is off (scatter takes precedence when both layers are on). Recharts
+                  // passes (lineProps, index, domEvent); we read clientX/Y + target off
+                  // the DOM event to position the imperative tooltip and highlight the
+                  // hovered <path>.
+                  {...(!layers.scatter
+                    ? ({
+                        // Recharts types onMouseEnter loosely; the runtime 3rd arg is
+                        // the DOM event. Cast to satisfy the Line prop overload (D-05
+                        // pattern of narrowly-cast Recharts callbacks elsewhere here).
+                        onMouseEnter: ((_d: unknown, _i: number, e: React.MouseEvent) =>
+                          handleLineEnter(p.id, e)) as unknown as undefined,
+                        onMouseLeave: (() => handleLineLeave(p.id)) as unknown as undefined,
+                      } as Record<string, unknown>)
+                    : {})}
                   // J1b (v1.15-p4): click a patient's trajectory LINE → that patient's
                   // case, alongside the scatter-point click. Same drill-down handler +
                   // IDOR gate (onPointClick → handlePointDrillDown resolves the

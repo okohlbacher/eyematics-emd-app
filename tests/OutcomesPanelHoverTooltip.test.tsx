@@ -120,16 +120,16 @@ describe('OutcomesPanel — hover tooltip follows the hovered point (J1a)', () =
     expect(tooltip.style.display).toBe('none');
   });
 
-  it('axis tooltip suppresses the nearest-x SCATTER pop-up (returns null for a scatter entry)', () => {
-    // When a scatter entry is active, the axis Tooltip content must render nothing
-    // (the imperative tooltip handles scatter) — so no nearest-x scatter pop-up.
+  it('K1a: the axis Tooltip is removed entirely (no nearest-x pop-up renders)', () => {
+    // K1a (v1.16-A): the Recharts axis <Tooltip> is gone — it produced the tester's
+    // "TWO tooltips" (a nearest-x pop-up alongside the hovered-point one). With it
+    // removed the panel renders NO recharts-tooltip node; only the single imperative
+    // hover tooltip element remains.
     (globalThis as any).__tooltipState = {
       active: true,
       payload: [{ payload: { x: 10, y: 0.5, patientId: 'PSN-1' } }],
     };
     const { container } = render(<OutcomesPanel {...props} panel={panel()} />);
-    const axisTooltip = container.querySelector('[data-testid="recharts-tooltip"]') as HTMLElement;
-    // The content function returned null for the scatter entry → empty render.
-    expect(axisTooltip.textContent).toBe('');
+    expect(container.querySelector('[data-testid="recharts-tooltip"]')).toBeNull();
   });
 });

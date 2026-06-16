@@ -503,7 +503,7 @@ describe('OutcomesPage — panels, summary cards, drawer toggles (09-02)', () =>
     renderWith({ activeCases: cases });
 
     // Open the settings drawer by clicking the gear button
-    const gearBtn = screen.getByLabelText('outcomesOpenSettings');
+    const gearBtn = screen.getByRole('button', { name: /outcomesSettingsButton/ });
     fireEvent.click(gearBtn);
 
     // Click the treatments radio
@@ -532,7 +532,7 @@ describe('OutcomesPage — panels, summary cards, drawer toggles (09-02)', () =>
     expect(screen.getByTestId('outcomes-panel-od-iqr')).toBeDefined();
 
     // Open drawer and toggle the spread band off
-    fireEvent.click(screen.getByLabelText('outcomesOpenSettings'));
+    fireEvent.click(screen.getByRole('button', { name: /outcomesSettingsButton/ }));
     await waitFor(() => {
       expect(screen.getByLabelText('outcomesLayerSpreadBand')).toBeDefined();
     });
@@ -555,7 +555,7 @@ describe('OutcomesPage — panels, summary cards, drawer toggles (09-02)', () =>
     renderWith({ activeCases: cases });
 
     // Open the drawer
-    fireEvent.click(screen.getByLabelText('outcomesOpenSettings'));
+    fireEvent.click(screen.getByRole('button', { name: /outcomesSettingsButton/ }));
 
     await waitFor(() => {
       const scatterCheckbox = screen.getByLabelText('outcomesLayerScatter') as HTMLInputElement;

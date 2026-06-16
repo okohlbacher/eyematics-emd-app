@@ -819,6 +819,13 @@ const translations = {
   outcomesSubtitleAdhoc: { de: 'Ad-hoc-Filter · {count} Patient:innen', en: 'Ad-hoc filter · {count} patients' },
   outcomesOpenSettings: { de: 'Einstellungen öffnen', en: 'Open settings' },
   outcomesCloseSettings: { de: 'Einstellungen schließen', en: 'Close settings' },
+  // K1d (v1.16-A): the bare gear button was "not self-explanatory" (tester). Give it
+  // a visible label + descriptive tooltip naming what it controls (display layers & axes).
+  outcomesSettingsButton: { de: 'Diagramm-Anzeige', en: 'Chart display' },
+  outcomesSettingsButtonTooltip: {
+    de: 'Anzeigeebenen & Achsen einstellen (Median, Einzelverläufe, Streupunkte, IQR-Band, Zeitachse)',
+    en: 'Configure display layers & axes (median, per-patient curves, scatter, IQR band, time axis)',
+  },
   outcomesBackToCohort: { de: 'Zurück zur Kohorte', en: 'Back to cohort' },
 
   // Entry points (CohortBuilderPage — D-02)

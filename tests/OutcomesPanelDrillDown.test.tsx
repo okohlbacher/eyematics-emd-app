@@ -6,7 +6,7 @@
  * Task 2 (RED): OutcomesView drill-down — pseudonym→case-id resolution + navigate guard.
  */
 
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
@@ -257,17 +257,10 @@ describe('OutcomesPanel — chart-level onClick + tooltip ref (FALL-010 A1 v2)',
     expect(chart!.getAttribute('data-has-chart-onclick')).toBe('false');
   });
 
-  it('navigates via ref when tooltip has an active scatter payload, then chart is clicked', () => {
+  it('navigates to the HOVERED scatter point on chart click (K1a: no axis-tooltip fallback)', () => {
     const onPointClick = vi.fn();
-    // Simulate the tooltip pipeline reporting an active scatter point.
-    (globalThis as any).__tooltipState = {
-      active: true,
-      payload: [
-        // A median entry (no patientId) followed by the scatter entry.
-        { payload: { x: 10, y: 0.3 } },
-        { payload: { x: 10, y: 0.5, patientId: 'PSN-2' } },
-      ],
-    };
+    // K1a (v1.16-A): the axis Tooltip + its nearest-x click fallback are removed.
+    // The click resolves ONLY via the hovered datum (the point under the cursor).
     const { container } = render(
       <OutcomesPanel
         {...defaultProps}
@@ -275,6 +268,8 @@ describe('OutcomesPanel — chart-level onClick + tooltip ref (FALL-010 A1 v2)',
         onPointClick={onPointClick}
       />,
     );
+    const halo = container.querySelector('[data-testid="scatter-shape-PSN-2"] circle');
+    fireEvent.mouseEnter(halo!);
     const chart = container.querySelector('[data-testid="recharts-composed-chart"]');
     chart!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(onPointClick).toHaveBeenCalledWith('PSN-2');
@@ -318,8 +313,6 @@ describe('OutcomesPanel — chart-level onClick + tooltip ref (FALL-010 A1 v2)',
 // Task 1c (I1 v1.14-p2): hovered-datum drives highlight + click, NOT nearest-x
 // ---------------------------------------------------------------------------
 
-import { fireEvent } from '@testing-library/react';
-
 describe('OutcomesPanel — hovered datum drives click (I1 v1.14-p2)', () => {
   afterEach(() => {
     cleanup();
@@ -353,8 +346,11 @@ describe('OutcomesPanel — hovered datum drives click (I1 v1.14-p2)', () => {
     expect(onPointClick).not.toHaveBeenCalledWith('PSN-1');
   });
 
-  it('after mouse leaves the point, chart click falls back to the nearest-x tooltip ref', () => {
+  it('after mouse leaves the point, chart click is a NO-OP (K1a: no nearest-x fallback)', () => {
     const onPointClick = vi.fn();
+    // K1a (v1.16-A): with the axis Tooltip removed there is no nearest-x click
+    // fallback. After leaving the point, nothing is hovered → a chart click navigates
+    // nowhere (so a stray click never opens a point the user isn't pointing at).
     (globalThis as any).__tooltipState = {
       active: true,
       payload: [{ payload: { x: 10, y: 0.5, patientId: 'PSN-1' } }],
@@ -373,8 +369,7 @@ describe('OutcomesPanel — hovered datum drives click (I1 v1.14-p2)', () => {
     fireEvent.mouseLeave(halo!);
     const chart = container.querySelector('[data-testid="recharts-composed-chart"]');
     chart!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    // No point hovered → fall back to nearest-x tooltip ref (PSN-1).
-    expect(onPointClick).toHaveBeenCalledWith('PSN-1');
+    expect(onPointClick).not.toHaveBeenCalled();
   });
 
   it('highlights the hovered point (enlarged radius) and only that point', () => {
