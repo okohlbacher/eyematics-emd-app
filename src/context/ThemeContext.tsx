@@ -7,6 +7,12 @@ interface ThemeContextType {
   theme: Theme;
   setTheme: (t: Theme) => void;
   effectiveTheme: 'light' | 'dark';
+  // M11 (v1.18): the appearance the OS currently resolves to. The theme cycle
+  // needs this to skip a step whose appearance would equal the current one (e.g.
+  // System-resolving-to-light → Light is a no-op visual step). Independent of
+  // the active `theme` so the toggle can reason about the 'system' candidate
+  // even while the user is on an explicit light/dark mode.
+  systemTheme: 'light' | 'dark';
 }
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
@@ -54,7 +60,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem(STORAGE_KEY, t); } catch { /* ignore */ }
   }, []);
 
-  const value = useMemo(() => ({ theme, setTheme, effectiveTheme }), [theme, setTheme, effectiveTheme]);
+  const systemTheme: 'light' | 'dark' = systemDark ? 'dark' : 'light';
+
+  const value = useMemo(
+    () => ({ theme, setTheme, effectiveTheme, systemTheme }),
+    [theme, setTheme, effectiveTheme, systemTheme],
+  );
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
@@ -68,6 +79,6 @@ export function useTheme(): ThemeContextType {
  *  Used in components that are rendered in tests without the full provider tree. */
 export function useThemeSafe(): ThemeContextType {
   const ctx = useContext(ThemeContext);
-  if (!ctx) return { theme: 'light', setTheme: () => {}, effectiveTheme: 'light' };
+  if (!ctx) return { theme: 'light', setTheme: () => {}, effectiveTheme: 'light', systemTheme: 'light' };
   return ctx;
 }
