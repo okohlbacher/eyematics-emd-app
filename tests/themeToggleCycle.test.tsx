@@ -9,7 +9,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { nextTheme } from '../src/components/ThemeToggle';
+import { nextTheme } from '../src/components/themeCycle';
 import type { Theme } from '../src/context/ThemeContext';
 
 /** Appearance a mode renders as, mirroring the toggle's own resolution. */
