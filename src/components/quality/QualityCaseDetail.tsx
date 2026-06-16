@@ -480,14 +480,23 @@ export default function QualityCaseDetail({
                 "Annotation" column on the right carries the per-row flag/anomaly
                 content (e.g. "Duplikat" or an implausible-value reason). Changing a
                 row's status never re-sizes a column and the action buttons never
-                shift. Parameter takes the remaining flexible width. */}
+                shift. Parameter takes the remaining flexible width.
+
+                v1.18 WS-C (M10): Parameter was eating too much width and the
+                Annotation badge overflowed its cell. Pin Parameter to a fixed
+                w-40 (it only ever holds short labels like "Visual acuity") and
+                widen Annotation to w-56 so its (possibly multi-word) badge has
+                room; the badge itself wraps WITHIN the cell (see the Annotation
+                <td> below). Fixed-width budget: 40+24+20+28+56+28 = 196 (~12rem
+                less than the prior layout's Parameter-flex), comfortably fitting a
+                typical case-detail width without horizontal overflow. */}
             <table className="w-full text-sm table-fixed">
               <colgroup>
-                <col />
+                <col className="w-40" />
                 <col className="w-24" />
-                <col className="w-24" />
+                <col className="w-20" />
                 <col className="w-28" />
-                <col className="w-48" />
+                <col className="w-56" />
                 <col className="w-28" />
               </colgroup>
               <thead className="bg-gray-50 dark:bg-gray-700">
@@ -526,25 +535,30 @@ export default function QualityCaseDetail({
                           corrected-upstream note). Em-dash when the row has none.
                           Lives in its own fixed-width column so the amber/red badges
                           wrap WITHIN the column and never reflow the action buttons. */}
-                      <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 align-top text-xs">
+                      {/* v1.18 WS-C (M10): overflow-hidden + max-w-full keep a
+                          long badge clipped to the column box; the badges below
+                          use whitespace-normal/break-words so multi-word reasons
+                          WRAP inside the cell instead of floating outside the
+                          table. */}
+                      <td className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 align-top text-xs overflow-hidden">
                         {(row.reason || note || verdict === 'resolved') ? (
-                          <div className="flex flex-wrap items-center gap-1.5">
+                          <div className="flex flex-wrap items-start gap-1.5 max-w-full">
                             {row.reason && (
-                              <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 border ${
+                              <span className={`inline-flex items-start gap-1 rounded-md px-2 py-0.5 border max-w-full whitespace-normal break-words ${
                                 row.missing
                                   ? 'text-red-600 bg-red-50 border-red-200 dark:text-red-300 dark:bg-red-900/30 dark:border-red-800'
                                   : 'text-amber-800 bg-amber-50 border-amber-200 dark:text-amber-200 dark:bg-amber-900/30 dark:border-amber-800'
                               }`}>
-                                <AlertCircle className="w-3 h-3 shrink-0" />
-                                {row.missing ? t('statusMissing') : t('statusAnomalous')}: {row.reason}
+                                <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />
+                                <span className="min-w-0 break-words">{row.missing ? t('statusMissing') : t('statusAnomalous')}: {row.reason}</span>
                               </span>
                             )}
                             {/* I6a: show the real reviewer note for open AND
                                 acknowledged/resolved rows; sentinels are suppressed
                                 by displayNote so a confirmed clean row shows nothing. */}
                             {note && (
-                              <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 border text-red-600 bg-red-50 border-red-200 dark:text-red-300 dark:bg-red-900/30 dark:border-red-800">
-                                <Flag className="w-3 h-3 shrink-0" /> {note}
+                              <span className="inline-flex items-start gap-1 rounded-md px-2 py-0.5 border max-w-full whitespace-normal break-words text-red-600 bg-red-50 border-red-200 dark:text-red-300 dark:bg-red-900/30 dark:border-red-800">
+                                <Flag className="w-3 h-3 shrink-0 mt-0.5" /> <span className="min-w-0 break-words">{note}</span>
                               </span>
                             )}
                             {verdict === 'resolved' && (
