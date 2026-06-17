@@ -10,6 +10,67 @@ export interface DistributionBin {
   count: number;
 }
 
+/** N5 (v1.19 WS-B): a histogram bin carrying the comparable PERCENTAGE figures
+ *  used by the reworked distribution plots when the cohort overlay is on, plus
+ *  the absolute counts shown in the tooltip. The patient figures are the
+ *  patient's own share of their measurements in this bin; the cohort figures are
+ *  the MEDIAN across the cohort patients (each patient's own per-bin share /
+ *  count), so the two bars sit on a single shared percentage axis. */
+export interface ComparableDistributionBin extends DistributionBin {
+  /** Patient's % of their own measurements that fall in this bin. */
+  patientPct: number;
+  /** Median across cohort patients of each patient's per-bin percentage. */
+  cohortMedianPct: number;
+  /** Median across cohort patients of each patient's per-bin absolute count. */
+  cohortMedianCount: number;
+}
+
+/** Median of a numeric list (0 for empty). Linear interpolation for even n. */
+function median(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+}
+
+/**
+ * N5: build comparable percentage bins for the patient's histogram against a
+ * cohort. `binFn` is the relevant per-observation binner (visus or CRT).
+ *
+ * - The patient bars are `patientPct` = the patient's count in each bin as a %
+ *   of all their own measurements.
+ * - The cohort bars are the per-bin MEDIAN of each cohort patient's own bin-%
+ *   (and the median of each cohort patient's bin COUNT, for the tooltip) — NOT
+ *   a single pooled percentage, so an atypically prolific patient cannot skew
+ *   the comparison. Cohort patients with zero measurements are excluded.
+ */
+export function computeComparableDistribution(
+  patientObs: Observation[],
+  cohortPerPatientObs: Observation[][],
+  binFn: (obs: Observation[]) => DistributionBin[],
+): ComparableDistributionBin[] {
+  const patientBins = binFn(patientObs);
+  const patientTotal = patientBins.reduce((s, b) => s + b.count, 0);
+
+  // Per cohort patient: their own per-bin counts + total (skip empty patients).
+  const cohortBinned = cohortPerPatientObs
+    .map((obs) => binFn(obs))
+    .map((bins) => ({ bins, total: bins.reduce((s, b) => s + b.count, 0) }))
+    .filter((p) => p.total > 0);
+
+  return patientBins.map((bin, i) => {
+    const cohortPcts = cohortBinned.map((p) => (p.bins[i].count / p.total) * 100);
+    const cohortCounts = cohortBinned.map((p) => p.bins[i].count);
+    return {
+      range: bin.range,
+      count: bin.count,
+      patientPct: patientTotal ? +((bin.count / patientTotal) * 100).toFixed(1) : 0,
+      cohortMedianPct: +median(cohortPcts).toFixed(1),
+      cohortMedianCount: +median(cohortCounts).toFixed(1),
+    };
+  });
+}
+
 /** Compute visus distribution across standard bins. */
 export function computeVisusDistribution(observations: Observation[]): DistributionBin[] {
   const bins = [

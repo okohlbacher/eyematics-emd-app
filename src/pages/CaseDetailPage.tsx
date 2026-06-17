@@ -1,6 +1,6 @@
 /** Case detail page — EMDREQ-FALL-001 to FALL-006 (single case analysis, clinical parameters, cohort comparison). */
 import { ArrowLeft, Syringe, TrendingDown, TrendingUp } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useNavigate,useParams } from 'react-router-dom';
 import {
   Area,
@@ -28,12 +28,16 @@ import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useThemeSafe } from '../context/ThemeContext';
 import { useCaseData } from '../hooks/useCaseData';
-import { SNOMED_EYE_RIGHT } from '../services/fhirLoader';
+import { applyFilters, SNOMED_EYE_RIGHT } from '../services/fhirLoader';
 import { getDateLocale } from '../utils/dateFormat';
+
+/** N11 (v1.19 WS-B): sentinel id for the default overlay cohort = all patients
+ *  (the v1.18 behaviour). Kept distinct from any saved-search id. */
+const ALL_PATIENTS_COHORT_ID = '__all_patients__';
 
 export default function CaseDetailPage() {
   const { caseId } = useParams<{ caseId: string }>();
-  const { cases } = useData();
+  const { cases, activeCases, savedSearches } = useData();
   const navigate = useNavigate();
   const { locale, t } = useLanguage();
   // L11b: theme-aware chart colours for the inline baseline-change ComposedChart.
@@ -49,6 +53,9 @@ export default function CaseDetailPage() {
   const [highlightInjectionDate, setHighlightInjectionDate] = useState<string | null>(null);
   // FALL-011: cohort reference overlay toggle (off by default to avoid visual clutter)
   const [showCohortReference, setShowCohortReference] = useState(false);
+  // N11 (v1.19 WS-B): the chosen overlay cohort id. ALL_PATIENTS_COHORT_ID is the
+  // default — the v1.18 behaviour where the overlay aggregates over every patient.
+  const [overlayCohortId, setOverlayCohortId] = useState(ALL_PATIENTS_COHORT_ID);
   const toggleInjectionHighlight = (date: string) =>
     setHighlightInjectionDate((prev) => (prev === date ? null : date));
 
@@ -62,10 +69,42 @@ export default function CaseDetailPage() {
     setPrevCaseId(caseId);
     setHighlightDate(null);
     setHighlightInjectionDate(null);
+    // N11: a saved cohort selected for the previous patient may not contain the
+    // new one — reset to the "all patients" default on navigation.
+    setOverlayCohortId(ALL_PATIENTS_COHORT_ID);
   }
 
   const patientCase = cases.find((c) => c.id === caseId);
   const dateFmt = getDateLocale(locale);
+
+  // N10/N11 (v1.19 WS-B): the overlay can aggregate any saved cohort that
+  // CONTAINS this patient. Cohorts are saved searches (DataContext.savedSearches)
+  // whose CohortFilter is materialised against activeCases via applyFilters() —
+  // the exact same membership rule the Analysis/Cohort pages use. We keep only
+  // the cohorts whose materialised case set includes the current case, and
+  // always offer the "all patients" default first. patientCount = N of the
+  // cohort (used for the N10 label + the selector option text).
+  const overlayCohorts = useMemo(() => {
+    const all = {
+      id: ALL_PATIENTS_COHORT_ID,
+      label: t('overlayCohortAllPatients'),
+      patientCount: cases.length,
+      cases,
+    };
+    if (!patientCase) return [all];
+    const containing = savedSearches
+      .map((s) => {
+        const cohortCases = applyFilters(activeCases, s.filters);
+        return { id: s.id, label: s.name, patientCount: cohortCases.length, cases: cohortCases };
+      })
+      .filter((c) => c.cases.some((pc) => pc.id === patientCase.id));
+    return [all, ...containing];
+  }, [savedSearches, activeCases, cases, patientCase, t]);
+
+  // Resolve the active overlay cohort (falls back to "all patients" if the
+  // chosen cohort no longer contains the patient — e.g. after a data reload).
+  const activeOverlayCohort =
+    overlayCohorts.find((c) => c.id === overlayCohortId) ?? overlayCohorts[0];
 
   const {
     cohortAvgVisus,
@@ -101,7 +140,7 @@ export default function CaseDetailPage() {
     octImages,
     encounterTimeline,
     iopDataWithReference,
-  } = useCaseData(patientCase, cases, locale, t);
+  } = useCaseData(patientCase, cases, locale, t, activeOverlayCohort.cases);
 
   // L5 (consistency): switch the baseline-change chart to the relative axis only when
   // the cohort overlay is on AND reference rows actually exist — matching VisusCrtChart's
@@ -207,6 +246,11 @@ export default function CaseDetailPage() {
         onInjectionClick={toggleInjectionHighlight}
         showCohortReference={showCohortReference}
         onToggleCohortReference={setShowCohortReference}
+        overlayCohortOptions={overlayCohorts.map((c) => ({ id: c.id, label: c.label, patientCount: c.patientCount }))}
+        overlayCohortId={activeOverlayCohort.id}
+        onSelectOverlayCohort={setOverlayCohortId}
+        activeOverlayCohortLabel={activeOverlayCohort.label}
+        activeOverlayCohortCount={activeOverlayCohort.patientCount}
       />
 
       {/* Combined chart + injections row */}

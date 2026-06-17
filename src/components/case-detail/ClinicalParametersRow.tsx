@@ -67,6 +67,24 @@ export default function ClinicalParametersRow({
   // patient's axis; the linear calendar-time axis (M6) otherwise.
   const useIopRelativeAxis = hasIopReference;
 
+  // N4 (v1.19 WS-B): on the relative axis the patient IOP series must be keyed
+  // PURELY on relMonths — no leftover calendar-date rows/ticks. iopData is built
+  // in iopObs (date) order, which is NOT guaranteed to be ascending in relMonths
+  // nor free of relMonths collisions once a patient has many IOP dates (repro:
+  // EM-UKT-0027). Recharts' numeric axis then renders out-of-order / duplicate
+  // points, which surfaced as residual individual-date artefacts. Collapse rows
+  // that share a relMonths bucket (last write wins) and sort ascending by
+  // relMonths so each x-position is unique and the axis is a clean numeric
+  // relative-time axis. The calendar variant keeps the date-ordered rows
+  // untouched (its axis is the epoch-ms time axis, M6).
+  const chartData = useIopRelativeAxis
+    ? Array.from(
+        iopData
+          .reduce((m, row) => m.set(row.relMonths, { ...row }), new Map<number, IopDataPoint>())
+          .values(),
+      ).sort((a, b) => a.relMonths - b.relMonths)
+    : iopData;
+
   // L4b: custom legend so the IQR band swatch reproduces the rendered band colour
   // (semi-transparent fill), not the opaque patient series colour.
   const renderIopLegend = (props: {
@@ -168,13 +186,18 @@ export default function ClinicalParametersRow({
                 M7: the X axis now switches calendar ↔ relative with the overlay
                 toggle (like Visus/CRT, L5); the calendar variant is a linear
                 TIME axis keyed on epoch-ms (M6) so spacing tracks elapsed time. */}
-            <ComposedChart data={iopData}>
+            <ComposedChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
               {useIopRelativeAxis ? (
                 <XAxis
                   dataKey="relMonths"
                   type="number"
                   domain={['dataMin', 'dataMax']}
+                  /* N4: numeric ticks derived strictly from the relMonths values
+                     so the axis can never fall back to per-row calendar-date
+                     ticks; the formatter only ever sees a number. */
+                  ticks={chartData.map((d) => d.relMonths)}
+                  allowDuplicatedCategory={false}
                   tickFormatter={(m: number) => String(m)}
                   tick={{ fontSize: 9, fill: colors.axisTick }}
                   stroke={colors.grid}

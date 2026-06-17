@@ -40,12 +40,12 @@ export default function OctViewer({ images, crt, controlledIdx, onSelectIdx }: O
 
   if (images.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <ImageIcon className="w-4 h-4" />
           {t('octTitle')}
         </h3>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-400 dark:text-gray-500">
           {t('octNoImages')}
         </p>
       </div>
@@ -90,9 +90,9 @@ export default function OctViewer({ images, crt, controlledIdx, onSelectIdx }: O
   );
 
   const mainContent = (
-    <div className={fullscreen ? '' : 'bg-white rounded-xl border border-gray-200 p-5'}>
+    <div className={fullscreen ? '' : 'bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5'}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+        <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
           <ImageIcon className="w-4 h-4" />
           {t('octTitle')} ({images.length})
         </h3>
@@ -105,8 +105,8 @@ export default function OctViewer({ images, crt, controlledIdx, onSelectIdx }: O
               }}
               className={`px-2.5 py-1.5 text-xs rounded-lg border transition-colors ${
                 compareMode
-                  ? 'bg-blue-50 border-blue-200 text-blue-700'
-                  : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                  ? 'bg-blue-50 dark:bg-blue-900/40 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300'
+                  : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
               {t('octCompare')}
@@ -114,17 +114,17 @@ export default function OctViewer({ images, crt, controlledIdx, onSelectIdx }: O
           )}
           <button
             onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))}
-            className="p-1.5 text-gray-500 hover:bg-gray-100 rounded"
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
             title={t('octZoomOut')}
           >
             <ZoomOut className="w-4 h-4" />
           </button>
-          <span className="text-xs text-gray-400 w-10 text-center">
+          <span className="text-xs text-gray-400 dark:text-gray-500 w-10 text-center">
             {Math.round(zoom * 100)}%
           </span>
           <button
             onClick={() => setZoom((z) => Math.min(3, z + 0.25))}
-            className="p-1.5 text-gray-500 hover:bg-gray-100 rounded"
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
             title={t('octZoomIn')}
           >
             <ZoomIn className="w-4 h-4" />
@@ -134,7 +134,7 @@ export default function OctViewer({ images, crt, controlledIdx, onSelectIdx }: O
               setFullscreen(!fullscreen);
               setZoom(1);
             }}
-            className="p-1.5 text-gray-500 hover:bg-gray-100 rounded"
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
             title={fullscreen ? t('close') : t('octFullscreen')}
           >
             {fullscreen ? <X className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -152,7 +152,7 @@ export default function OctViewer({ images, crt, controlledIdx, onSelectIdx }: O
               className={`flex-shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${
                 i === selectedIdx
                   ? 'border-blue-500'
-                  : 'border-transparent hover:border-gray-300'
+                  : 'border-transparent hover:border-gray-300 dark:hover:border-gray-500'
               }`}
             >
               <AuthImg
@@ -160,7 +160,7 @@ export default function OctViewer({ images, crt, controlledIdx, onSelectIdx }: O
                 alt={img.title}
                 className="w-20 h-14 object-cover"
               />
-              <p className="text-[10px] text-gray-500 px-1 py-0.5 bg-gray-50 truncate w-20">
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 px-1 py-0.5 bg-gray-50 dark:bg-gray-700 truncate w-20">
                 {img.date}
               </p>
             </button>
@@ -176,7 +176,7 @@ export default function OctViewer({ images, crt, controlledIdx, onSelectIdx }: O
             <select
               value={selectedIdx}
               onChange={(e) => setSelectedIdx(Number(e.target.value))}
-              className="mt-2 w-full text-sm border rounded px-2 py-1"
+              className="mt-2 w-full text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded px-2 py-1"
             >
               {images.map((img, i) => (
                 <option key={i} value={i}>
@@ -190,7 +190,7 @@ export default function OctViewer({ images, crt, controlledIdx, onSelectIdx }: O
             <select
               value={compareIdx}
               onChange={(e) => setCompareIdx(Number(e.target.value))}
-              className="mt-2 w-full text-sm border rounded px-2 py-1"
+              className="mt-2 w-full text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded px-2 py-1"
             >
               {images.map((img, i) => (
                 <option key={i} value={i}>
@@ -223,7 +223,7 @@ export default function OctViewer({ images, crt, controlledIdx, onSelectIdx }: O
       )}
 
       {/* Data attribution */}
-      <p className="text-[10px] text-gray-400 mt-3">
+      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-3">
         {t('octAttribution')}
       </p>
     </div>
@@ -232,7 +232,7 @@ export default function OctViewer({ images, crt, controlledIdx, onSelectIdx }: O
   if (fullscreen) {
     return (
       <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-8">
-        <div className="bg-white rounded-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto p-6">
           {mainContent}
         </div>
       </div>

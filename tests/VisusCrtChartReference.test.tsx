@@ -406,7 +406,7 @@ describe('useCaseData — J3d cohort overlays on the other plots', () => {
     expect(rows.find((r) => r.date === '2024-02-01')!.visusChange).toBeUndefined();
   });
 
-  it('computes cohort distribution percentages excluding the index patient', async () => {
+  it('N5: computes per-bin cohort MEDIAN percentages excluding the index patient', async () => {
     const { useCaseData } = await import('../src/hooks/useCaseData');
     const patientCase = makeCase('C1', [makeObs(LOINC_VISUS, '2024-01-01', 0.5)]);
     const peer2 = makeCase('C2', [
@@ -416,10 +416,17 @@ describe('useCaseData — J3d cohort overlays on the other plots', () => {
     const cases = [patientCase, peer2];
     const { result } = renderHook(() => useCaseData(patientCase, cases, 'de', t));
     const dist = result.current.visusDistributionWithCohort;
-    const totalPct = dist.reduce((s, b) => s + (b.cohortPct ?? 0), 0);
-    // Two peer measurements → percentages sum to ~100.
+    // N5: the cohort bars are the per-bin MEDIAN of each cohort patient's own
+    // bin-%. With a single peer (0.1 → bin "0–0.2", 0.3 → bin "0.2–0.4"), the
+    // median equals that peer's distribution: 50% in each of those two bins,
+    // summing to ~100 across all bins.
+    const totalPct = dist.reduce((s, b) => s + (b.cohortMedianPct ?? 0), 0);
     expect(totalPct).toBeGreaterThanOrEqual(99);
     expect(totalPct).toBeLessThanOrEqual(101);
+    // The index patient (0.5) is excluded from the cohort aggregation.
+    expect(dist.find((b) => b.range === '0–0.2')!.cohortMedianPct).toBeCloseTo(50, 1);
+    // The patient's own per-bin % is also exposed (0.5 → the "0.4–0.6" bin = 100%).
+    expect(dist.find((b) => b.range === '0.4–0.6')!.patientPct).toBeCloseTo(100, 1);
   });
 
   it('K3b: adds cohort IOP median + IQR aligned by relative month (index excluded)', async () => {
