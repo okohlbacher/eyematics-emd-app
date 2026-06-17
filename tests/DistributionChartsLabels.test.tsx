@@ -115,16 +115,25 @@ const cohortProps = {
 };
 
 describe('DistributionCharts — N5 grouped %-bars + cohort overlay', () => {
-  it('renders grouped patientPct + cohortMedianPct bars + the cloud when the overlay is on', () => {
+  it('renders the CSS grouped patient% + cohort-median% bars + the cloud when the overlay is on', () => {
+    // N5 (v1.19 round-7): the overlay-on histogram is a CSS grouped-bar chart
+    // (Recharts 3.8.1 computed a height of 0 for these <Bar>s — see project memory).
+    // Each bin renders a patient %-bar + a cohort-median %-bar, identified by their
+    // title (which carries the % and the absolute count).
     const { container } = render(<DistributionCharts {...cohortProps} showCohortReference />);
-    const bars = Array.from(container.querySelectorAll('[data-testid="recharts-bar"]'));
-    const patientBars = bars.filter((el) => el.getAttribute('data-data-key') === 'patientPct');
-    const cohortBars = bars.filter((el) => el.getAttribute('data-data-key') === 'cohortMedianPct');
-    // One patient %-bar AND one cohort-median %-bar per histogram (visus + crt).
-    expect(patientBars.length).toBe(2);
-    expect(cohortBars.length).toBe(2);
-    // N5: the count bar is gone on the overlay axis — both series are percentages.
-    expect(bars.filter((el) => el.getAttribute('data-data-key') === 'count').length).toBe(0);
+    const patientLabel = tDE('distributionPatientPct');
+    const cohortLabel = tDE('distributionCohortMedianPct');
+    const titled = Array.from(container.querySelectorAll('div[title]'));
+    const patientBars = titled.filter((el) => (el.getAttribute('title') ?? '').startsWith(patientLabel));
+    const cohortBars = titled.filter((el) => (el.getAttribute('title') ?? '').startsWith(cohortLabel));
+    // 2 bins per histogram × 2 histograms (visus + crt) = 4 bins, each with both bars.
+    expect(patientBars.length).toBe(4);
+    expect(cohortBars.length).toBe(4);
+    // The title carries the absolute count (tester's N5 requirement).
+    expect(patientBars.some((el) => /\(\d+/.test(el.getAttribute('title') ?? ''))).toBe(true);
+    // N5: no Recharts count bar on the overlay path.
+    const rcBars = Array.from(container.querySelectorAll('[data-testid="recharts-bar"]'));
+    expect(rcBars.filter((el) => el.getAttribute('data-data-key') === 'count').length).toBe(0);
     const cohortCloud = Array.from(container.querySelectorAll('[data-testid="recharts-scatter"]')).find(
       (el) => el.getAttribute('data-name') === 'Kohorte',
     );

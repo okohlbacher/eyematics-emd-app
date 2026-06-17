@@ -186,7 +186,12 @@ export default function ClinicalParametersRow({
                 M7: the X axis now switches calendar ↔ relative with the overlay
                 toggle (like Visus/CRT, L5); the calendar variant is a linear
                 TIME axis keyed on epoch-ms (M6) so spacing tracks elapsed time. */}
-            <ComposedChart data={chartData}>
+            {/* N4 (v1.19 round-7): key the chart on the axis MODE so toggling the
+                cohort overlay (which swaps the X dataKey relMonths↔dateMs) forces a
+                clean remount. Without it, Recharts' internal axis store kept the
+                stale calendar-date axis alongside the new relative axis → a leftover
+                row of date ticks rendered under the relative-months axis (EM-UKT-0027). */}
+            <ComposedChart key={useIopRelativeAxis ? 'iop-relative' : 'iop-calendar'} data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
               {useIopRelativeAxis ? (
                 <XAxis
