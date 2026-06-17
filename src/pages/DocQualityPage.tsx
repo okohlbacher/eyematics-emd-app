@@ -13,6 +13,7 @@ import { useLanguage } from '../context/LanguageContext';
 import {
   countRawPatients,
   countRawPatientsByCenter,
+  countRawPatientsInWindow,
   getCenterShorthand,
 } from '../services/fhirLoader';
 import type { PatientCase } from '../types/fhir';
@@ -23,6 +24,7 @@ import {
   filterCasesByTimeRange,
   isCustomTimeRange,
   type TimeRange,
+  timeRangeWindow,
 } from '../utils/qualityMetrics';
 
 // ---------------------------------------------------------------------------
@@ -92,15 +94,18 @@ export default function DocQualityPage() {
   // aggregate card. NOT windowed (full registration). Derived from `bundles`,
   // keyed by Patient.meta.source = centerId (same mapping as the cases).
   const rawByCenter = useMemo(() => countRawPatientsByCenter(bundles), [bundles]);
-  // M14 (v1.18, round-6 decision): the Vollzähligkeit DENOMINATOR is always the full
-  // registered total (incl. stubs), NOT windowed. The tester's complaint was that the
-  // displayed *count* didn't restrict to the range — that's the NUMERATOR
-  // (distinctPatientCount, below), which does follow the window. Windowing the
-  // denominator too would shrink it in lockstep and make the % jump toward ~100% for
-  // any window (review H1), contradicting the "of all registered patients" meaning.
-  // Keeping the denominator fixed makes the % a coverage reading that DROPS as the
-  // window narrows (e.g. 14% all-time → ~4% for one year), which is the intended sense.
-  const rawTotal = useMemo(() => countRawPatients(bundles), [bundles]);
+  // N8 (v1.19, round-7 decision — reverses the round-6 call): the Vollzähligkeit
+  // DENOMINATOR now follows the time-range filter, per the tester ("the denominator
+  // should be adapted to the registered total in the time range"), so the count AND
+  // the % both reflect the window. With no window ('all') it is the full registered
+  // total (incl. stubs, landing parity); with a window active it restricts to the
+  // registered patients with ≥1 observation in that window. (Trade-off the owner
+  // accepted: since the numerator is also the active-in-window population, the % reads
+  // high for narrow windows — the tooltip says "active in the selected period".)
+  const rawTotal = useMemo(() => {
+    const window = timeRangeWindow(timeRange);
+    return window ? countRawPatientsInWindow(bundles, window) : countRawPatients(bundles);
+  }, [bundles, timeRange]);
 
   const centerMetrics = useMemo(
     () => buildCenterMetrics(casesByCenter, timeRange, rawByCenter),
@@ -124,15 +129,13 @@ export default function DocQualityPage() {
     return new Set(windowCases.map((c) => c.pseudonym)).size;
   }, [cases, timeRange]);
 
-  // I5 / M14 (round-6): aggregate Vollzähligkeit = distinct patients active in the
-  // window (numerator, follows the filter) / full registered total (denominator,
-  // NOT windowed — incl. stubs, landing parity). Narrowing the window lowers the
-  // numerator only, so the % reads as coverage of the registered population in the
-  // period and DROPS as the range tightens (rather than jumping to ~100%). When
-  // timeRange === 'all' this matches the landing-page definition exactly
-  // (distinctPatientCount === cases.length, rawTotal === countRawPatients).
-  // Computed directly (NOT averaged over centres) so it stays consistent with
-  // the landing number. 0-safe + clamped.
+  // I5 / N8 (round-7): aggregate Vollzähligkeit = distinct patients active in the
+  // window (numerator) / registered total IN the same window (denominator — N8 now
+  // windows it too, per the tester, so both the count and the % track the filter).
+  // When timeRange === 'all' this matches the landing-page definition exactly
+  // (distinctPatientCount === cases.length, rawTotal === countRawPatients). Computed
+  // directly (NOT averaged over centres) so it stays consistent with the landing
+  // number. 0-safe + clamped.
   const aggregateVollzaehligkeit = useMemo(
     () => (rawTotal > 0 ? Math.min(100, (distinctPatientCount / rawTotal) * 100) : 0),
     [distinctPatientCount, rawTotal]

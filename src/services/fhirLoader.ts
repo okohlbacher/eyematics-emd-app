@@ -133,6 +133,35 @@ export function countRawPatientsByCenter(
   return counts;
 }
 
+/**
+ * N8 (v1.19, round-7 decision): the Vollzähligkeit denominator restricted to the
+ * selected time window — the count of REGISTERED patients with ≥1 observation inside
+ * `window`. The tester asked for "the registered total in the time range" so the count
+ * AND the percentage both track the filter (reversing the round-6 full-denominator
+ * choice). With no window the caller uses countRawPatients (the full registered total,
+ * landing parity). Counts each patient once (distinct Observation.subject refs).
+ */
+export function countRawPatientsInWindow(
+  bundles: FhirBundle[],
+  window: { from: Date; to: Date },
+): number {
+  const fromMs = window.from.getTime();
+  const toMs = window.to.getTime();
+  const refs = new Set<string>();
+  for (const b of bundles) {
+    for (const e of b.entry) {
+      if (e.resource.resourceType !== 'Observation') continue;
+      const obs = e.resource as Observation;
+      if (!obs.effectiveDateTime) continue;
+      const t = new Date(obs.effectiveDateTime).getTime();
+      if (Number.isNaN(t) || t < fromMs || t > toMs) continue;
+      const ref = obs.subject?.reference;
+      if (ref) refs.add(ref);
+    }
+  }
+  return refs.size;
+}
+
 // extractPatientCases, getAge — re-exported from shared/patientCases above (M1 fix).
 
 /**

@@ -763,8 +763,8 @@ const translations = {
   // I5 (v1.14): Vollzähligkeit — patients active in the selected window over the
   // full registered population incl. stubs (same definition as the landing page).
   docQualityCompletenessTooltip: {
-    de: 'Vollzähligkeit: Anteil der im gewählten Zeitraum aktiven Patient:innen (mit ≥1 Messwert) an allen registrierten Patient:innen (inkl. noch ohne Messwerte). Gleiche Definition wie auf der Startseite. Zähler folgt dem Zeitfilter, Nenner ist die vollständige Registrierung.',
-    en: 'Completeness (Vollzähligkeit): share of patients active in the selected period (≥1 measurement) among all registered patients (incl. those without measurements yet). Same definition as on the start page. The numerator follows the time filter; the denominator is the full registration.',
+    de: 'Vollzähligkeit: Anteil der im gewählten Zeitraum aktiven Patient:innen (mit ≥1 Messwert) an den im selben Zeitraum registrierten Patient:innen. Ohne Zeitfilter: Anteil an allen registrierten Patient:innen (inkl. noch ohne Messwerte) — gleiche Definition wie auf der Startseite. Zähler und Nenner folgen dem Zeitfilter.',
+    en: 'Completeness (Vollzähligkeit): share of patients active in the selected period (≥1 measurement) among the patients registered in that same period. With no time filter: share among all registered patients (incl. those without measurements yet) — same definition as on the start page. Both numerator and denominator follow the time filter.',
   },
   docQualityDataCompletenessDesc: { de: '% Beobachtungen mit Wert', en: '% observations with value' },
   // I5: Vollständigkeit — share of observations carrying a numeric value. Distinct
