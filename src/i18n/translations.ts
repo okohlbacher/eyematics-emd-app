@@ -1220,6 +1220,25 @@ const translations = {
   cohortReferenceBandCrtChange: { de: 'Kohorten-IQR CRT-Änderung (25.–75. Perz.)', en: 'Cohort IQR CRT change (25th–75th pct)' },
   cohortReferenceMedianVisusChange: { de: 'Kohorten-Median Visus-Änderung', en: 'Cohort median Visus change' },
   cohortReferenceMedianCrtChange: { de: 'Kohorten-Median CRT-Änderung', en: 'Cohort median CRT change' },
+
+  // ==== v1.19 WS-B (per-patient case-detail view — UAT round 7) ====
+  // N10/N11: overlay-cohort label + selector near the cohort-reference toggle.
+  overlayCohortSelectorLabel: { de: 'Vergleichskohorte wählen', en: 'Select comparison cohort' },
+  overlayCohortActiveLabel: { de: 'Vergleichskohorte', en: 'Comparison cohort' },
+  // Default overlay cohort = all other patients (the v1.18 behaviour).
+  overlayCohortAllPatients: { de: 'Alle Patienten', en: 'All patients' },
+  // N5: distribution plots reworked to grouped %-bars when the overlay is on.
+  distributionPatientPct: { de: 'Patient (% der eigenen Messungen)', en: 'Patient (% of own measurements)' },
+  distributionCohortMedianPct: { de: 'Kohorten-Median (% pro Bin)', en: 'Cohort median (% per bin)' },
+  // N5: tooltip — absolute counts shown alongside the percentages.
+  distributionPatientCount: { de: 'Patient', en: 'Patient' },
+  distributionCohortMedianCount: { de: 'Kohorten-Median', en: 'Cohort median' },
+  distributionMeasurementsUnit: { de: 'Messungen', en: 'measurements' },
+  // N5: ℹ explanation of the reworked grouped-percentage histogram.
+  distributionGroupedInfo: {
+    de: 'Bei aktivem Kohorten-Overlay zeigt jedes Histogramm gruppierte Balken pro Messwert-Bin auf einer gemeinsamen Prozent-Achse: ein Balken ist der Anteil der eigenen Messungen des Patienten in diesem Bin, der andere der Median des Bin-Anteils über die Vergleichskohorte. Der Tooltip nennt zusätzlich die absoluten Anzahlen (Median-Anzahl der Kohorte und die tatsächliche Anzahl des Patienten).',
+    en: 'When the cohort overlay is active, each histogram shows grouped bars per measurement-range bin on a single percentage axis: one bar is the patient\'s share of their own measurements in that bin, the other is the median bin-share across the comparison cohort. The tooltip additionally shows the absolute counts (the cohort\'s median count and the patient\'s actual count).',
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

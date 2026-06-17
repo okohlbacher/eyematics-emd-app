@@ -10,6 +10,7 @@ import {
   Stethoscope,
   Syringe,
   User,
+  Users,
 } from 'lucide-react';
 import React from 'react';
 
@@ -65,6 +66,17 @@ export interface PatientHeaderProps {
    *  header still renders standalone in tests that don't exercise the toggle. */
   showCohortReference?: boolean;
   onToggleCohortReference?: (next: boolean) => void;
+  /** N10/N11 (v1.19 WS-B): overlay-cohort selection. The overlay can aggregate
+   *  any saved/derived cohort that CONTAINS this patient; these props surface
+   *  the current choice (label + N) and let the user switch it. All optional so
+   *  the header still renders standalone in tests. */
+  overlayCohortOptions?: Array<{ id: string; label: string; patientCount: number }>;
+  overlayCohortId?: string;
+  onSelectOverlayCohort?: (id: string) => void;
+  /** N10: label + N of the currently-active overlay cohort (shown when the
+   *  overlay is on). */
+  activeOverlayCohortLabel?: string;
+  activeOverlayCohortCount?: number;
 }
 
 /**
@@ -131,6 +143,11 @@ export default function PatientHeader({
   onInjectionClick,
   showCohortReference = false,
   onToggleCohortReference,
+  overlayCohortOptions = [],
+  overlayCohortId,
+  onSelectOverlayCohort,
+  activeOverlayCohortLabel,
+  activeOverlayCohortCount,
 }: PatientHeaderProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
@@ -167,31 +184,11 @@ export default function PatientHeader({
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {/* M4 (v1.18): cohort-reference overlay toggle — a prominent header
-              control because it governs ALL case-detail plots (Visus/CRT,
-              baseline-change, IOD, distributions), not a single chart. */}
-          {onToggleCohortReference && (
-            <label
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer select-none border transition-colors ${
-                showCohortReference
-                  ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700'
-                  : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:bg-indigo-50 dark:hover:bg-gray-600'
-              }`}
-            >
-              <Layers className="w-4 h-4" />
-              <input
-                type="checkbox"
-                className="w-3.5 h-3.5 cursor-pointer"
-                checked={showCohortReference}
-                onChange={(e) => onToggleCohortReference(e.target.checked)}
-                aria-label={t('cohortReferenceToggle')}
-              />
-              {t('cohortReferenceToggle')}
-              {/* K-bl1: explain how the cohort overlay is aggregated. */}
-              <InfoTooltip text={t('cohortAggregationInfo')} />
-            </label>
-          )}
+        {/* N3 (v1.19 WS-B): right-aligned control cluster. Reading order is
+            [adverse-event / implausible-data warnings] → [cohort-ref toggle],
+            so the cohort-reference toggle is the RIGHTMOST element. justify-end
+            keeps the cluster right-aligned even when it wraps. */}
+        <div className="flex items-center gap-2 justify-end flex-wrap">
           {adverseEvents.length > 0 && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 rounded-lg text-sm font-medium">
               <FileWarning className="w-4 h-4" />
@@ -207,8 +204,69 @@ export default function PatientHeader({
               {criticalIopCount > 0 && <span className="ml-1">{t('criticalIopCount').replace('{0}', String(criticalIopCount))}</span>}
             </div>
           )}
+          {/* M4 (v1.18): cohort-reference overlay toggle — a prominent header
+              control because it governs ALL case-detail plots (Visus/CRT,
+              baseline-change, IOD, distributions), not a single chart. N3: the
+              toggle is the RIGHTMOST item in the cluster. N11 (v1.19): the
+              overlay-cohort selector sits immediately left of the toggle so the
+              peer group is chosen right where the overlay is switched on. */}
+          {onToggleCohortReference && (
+            <div className="flex items-center gap-2">
+              {/* N11: overlay-cohort selector — cohorts that CONTAIN this patient.
+                  Only shown when there is a real choice (more than one option). */}
+              {onSelectOverlayCohort && overlayCohortOptions.length > 1 && (
+                <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <Users className="w-3.5 h-3.5" />
+                  <select
+                    className="px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs"
+                    value={overlayCohortId ?? ''}
+                    onChange={(e) => onSelectOverlayCohort(e.target.value)}
+                    aria-label={t('overlayCohortSelectorLabel')}
+                  >
+                    {overlayCohortOptions.map((opt) => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label} (N={opt.patientCount})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <label
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer select-none border transition-colors ${
+                  showCohortReference
+                    ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700'
+                    : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:bg-indigo-50 dark:hover:bg-gray-600'
+                }`}
+              >
+                <Layers className="w-4 h-4" />
+                <input
+                  type="checkbox"
+                  className="w-3.5 h-3.5 cursor-pointer"
+                  checked={showCohortReference}
+                  onChange={(e) => onToggleCohortReference(e.target.checked)}
+                  aria-label={t('cohortReferenceToggle')}
+                />
+                {t('cohortReferenceToggle')}
+                {/* K-bl1: explain how the cohort overlay is aggregated. */}
+                <InfoTooltip text={t('cohortAggregationInfo')} />
+              </label>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* N10 (v1.19 WS-B): when the overlay is active, surface WHICH cohort it
+          aggregates (label + patient count N) under the control cluster, so the
+          peer group the overlay represents is unambiguous. */}
+      {showCohortReference && activeOverlayCohortLabel && (
+        <div className="mt-2 flex justify-end">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-medium">
+            <Users className="w-3.5 h-3.5" />
+            {t('overlayCohortActiveLabel')}: {activeOverlayCohortLabel}
+            {activeOverlayCohortCount != null && ` (N=${activeOverlayCohortCount})`}
+          </span>
+        </div>
+      )}
 
       {/* Diagnoses + Treatment indication */}
       <div className="mt-4 flex flex-wrap gap-2">

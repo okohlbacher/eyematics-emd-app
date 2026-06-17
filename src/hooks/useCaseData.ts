@@ -11,7 +11,7 @@ import {
 } from '../services/fhirLoader';
 import type { PatientCase } from '../types/fhir';
 import { getEyeLabel, translateClinical } from '../utils/clinicalTerms';
-import { computeCrtDistribution, computeVisusDistribution } from '../utils/distributionBins';
+import { computeComparableDistribution, computeCrtDistribution, computeVisusDistribution } from '../utils/distributionBins';
 
 /** Average days per month used to convert an absolute date span to relative
  *  months-since-baseline (J3c relative-time axis). */
@@ -121,19 +121,27 @@ export function useCaseData(
   cases: PatientCase[],
   locale: string,
   t: (key: TranslationKey) => string,
+  /** N11 (v1.19 WS-B): the cases the cohort overlay aggregates. Defaults to the
+   *  full `cases` set (the v1.18 behaviour — "all patients"). When the user
+   *  picks a patient-containing cohort, the caller passes that cohort's cases so
+   *  every cohort reference (median/IQR bands, distributions, scatter, averages)
+   *  reflects the selected peer group. The index patient is still excluded from
+   *  the peer aggregations (WR-04) inside each memo. */
+  cohortCases: PatientCase[] = cases,
 ) {
-  // Cohort averages for comparison (EMDREQ-FALL-006)
+  // Cohort averages for comparison (EMDREQ-FALL-006). N11: aggregated over the
+  // selected overlay cohort (cohortCases), not necessarily all patients.
   const cohortAvgVisus = useMemo(() => {
-    const all = cases.flatMap((c) => getObservationsByCode(c.observations, LOINC_VISUS));
+    const all = cohortCases.flatMap((c) => getObservationsByCode(c.observations, LOINC_VISUS));
     if (!all.length) return 0;
     return all.reduce((s, o) => s + (o.valueQuantity?.value ?? 0), 0) / all.length;
-  }, [cases]);
+  }, [cohortCases]);
 
   const cohortAvgCrt = useMemo(() => {
-    const all = cases.flatMap((c) => getObservationsByCode(c.observations, LOINC_CRT));
+    const all = cohortCases.flatMap((c) => getObservationsByCode(c.observations, LOINC_CRT));
     if (!all.length) return 0;
     return all.reduce((s, o) => s + (o.valueQuantity?.value ?? 0), 0) / all.length;
-  }, [cases]);
+  }, [cohortCases]);
 
   // Derived observations (safe when patientCase is undefined — returns empty arrays)
   const visusObs = useMemo(
@@ -331,42 +339,40 @@ export function useCaseData(
   const visusDistribution = useMemo(() => computeVisusDistribution(visusObs), [visusObs]);
   const crtDistribution = useMemo(() => computeCrtDistribution(crtObs), [crtObs]);
 
-  // J3d: peer-cohort observations (index patient excluded) for the distribution +
-  // scatter overlays. Reuses the same exclusion rule as cohortReference (WR-04).
-  const peerVisusObs = useMemo(
-    () =>
-      cases
-        .filter((c) => !patientCase || c.id !== patientCase.id)
-        .flatMap((c) => getObservationsByCode(c.observations, LOINC_VISUS)),
-    [cases, patientCase],
-  );
-  const peerCrtObs = useMemo(
-    () =>
-      cases
-        .filter((c) => !patientCase || c.id !== patientCase.id)
-        .flatMap((c) => getObservationsByCode(c.observations, LOINC_CRT)),
-    [cases, patientCase],
+  // J3d: peer-cohort observations (index patient excluded) for the scatter
+  // overlay. Reuses the same exclusion rule as cohortReference (WR-04). N11:
+  // drawn from the selected overlay cohort (cohortCases), not all patients.
+  const peerCases = useMemo(
+    () => cohortCases.filter((c) => !patientCase || c.id !== patientCase.id),
+    [cohortCases, patientCase],
   );
 
-  // J3d: fold the cohort distribution onto the patient's bins as a cohort
-  // percentage per bin (own scale → comparable to the patient's small counts).
-  const visusDistributionWithCohort = useMemo(() => {
-    const cohort = computeVisusDistribution(peerVisusObs);
-    const total = cohort.reduce((s, b) => s + b.count, 0);
-    return visusDistribution.map((bin, i) => ({
-      ...bin,
-      cohortPct: total ? +((cohort[i].count / total) * 100).toFixed(1) : 0,
-    }));
-  }, [visusDistribution, peerVisusObs]);
+  // N5 (v1.19 WS-B): reworked distribution data for the cohort overlay. The
+  // patient bars carry their own per-bin PERCENTAGE; the cohort bars carry the
+  // per-bin MEDIAN percentage (and median count) across the peer patients, so
+  // both bars share a single percentage axis and the units are comparable. The
+  // peer observations are grouped PER PATIENT so the median is over patients,
+  // not pooled measurements (J3d's pooled cohortPct skewed toward prolific
+  // patients). Cohort patients with no measurements are filtered inside the
+  // helper.
+  const peerVisusByPatient = useMemo(
+    () => peerCases.map((c) => getObservationsByCode(c.observations, LOINC_VISUS)),
+    [peerCases],
+  );
+  const peerCrtByPatient = useMemo(
+    () => peerCases.map((c) => getObservationsByCode(c.observations, LOINC_CRT)),
+    [peerCases],
+  );
 
-  const crtDistributionWithCohort = useMemo(() => {
-    const cohort = computeCrtDistribution(peerCrtObs);
-    const total = cohort.reduce((s, b) => s + b.count, 0);
-    return crtDistribution.map((bin, i) => ({
-      ...bin,
-      cohortPct: total ? +((cohort[i].count / total) * 100).toFixed(1) : 0,
-    }));
-  }, [crtDistribution, peerCrtObs]);
+  const visusDistributionWithCohort = useMemo(
+    () => computeComparableDistribution(visusObs, peerVisusByPatient, computeVisusDistribution),
+    [visusObs, peerVisusByPatient],
+  );
+
+  const crtDistributionWithCohort = useMemo(
+    () => computeComparableDistribution(crtObs, peerCrtByPatient, computeCrtDistribution),
+    [crtObs, peerCrtByPatient],
+  );
 
   const visusCrtScatter = useMemo(
     () =>
@@ -381,7 +387,7 @@ export function useCaseData(
   const cohortVisusCrtScatter = useMemo(() => {
     const COHORT_SCATTER_CAP = 400;
     const pairs: Array<{ visus: number; crt: number }> = [];
-    for (const c of cases) {
+    for (const c of cohortCases) {
       if (patientCase && c.id === patientCase.id) continue;
       const byDate = new Map<string, { visus?: number; crt?: number }>();
       for (const o of getObservationsByCode(c.observations, LOINC_VISUS)) {
@@ -404,7 +410,7 @@ export function useCaseData(
     const out: Array<{ visus: number; crt: number }> = [];
     for (let i = 0; i < pairs.length; i += step) out.push(pairs[Math.floor(i)]);
     return out;
-  }, [cases, patientCase]);
+  }, [cohortCases, patientCase]);
 
   // K-bl2 (per-metric baseline anchor): the Visus %-change is anchored to the
   // FIRST VISUS value and the CRT %-change to the FIRST CRT value — each metric to
@@ -449,12 +455,12 @@ export function useCaseData(
   // EACH peer's own baseline (same relative-time alignment as cohortReference).
   // Each peer's change at a visit = % change from that peer's first measured value.
   const baselineChangeWithReference = useMemo((): BaselineChangePoint[] => {
-    if (!baselineData.length || !cases.length) return baselineData;
+    if (!baselineData.length || !cohortCases.length) return baselineData;
 
     const visusChangeByRelMonth = new Map<number, number[]>();
     const crtChangeByRelMonth = new Map<number, number[]>();
 
-    for (const c of cases) {
+    for (const c of cohortCases) {
       if (patientCase && c.id === patientCase.id) continue; // exclude index patient
       const pv = getObservationsByCode(c.observations, LOINC_VISUS);
       const pc = getObservationsByCode(c.observations, LOINC_CRT);
@@ -506,7 +512,7 @@ export function useCaseData(
       }
       return merged;
     });
-  }, [baselineData, cases, patientCase]);
+  }, [baselineData, cohortCases, patientCase]);
 
   const totalEncounters =
     (patientCase?.observations.length ?? 0) + (patientCase?.procedures.length ?? 0);
@@ -592,7 +598,7 @@ export function useCaseData(
   // (calendar-date axis per K3c). Folded onto each iopData row as iopMedian +
   // iopBand ([p25, p75]) so the IOP chart reads them as extra dataKeys.
   const iopDataWithReference = useMemo((): IopDataPoint[] => {
-    if (!iopData.length || !cases.length) return iopData;
+    if (!iopData.length || !cohortCases.length) return iopData;
 
     // The index patient's baseline for bucketing its own rows = earliest IOP date.
     const indexBaseline = iopData
@@ -601,7 +607,7 @@ export function useCaseData(
       .reduce((min, d) => (!min || d < min ? d : min), '');
 
     const iopByRelMonth = new Map<number, number[]>();
-    for (const c of cases) {
+    for (const c of cohortCases) {
       if (patientCase && c.id === patientCase.id) continue; // WR-04: exclude index
       const peerIop = getObservationsByCode(c.observations, LOINC_IOP);
       const peerDates: string[] = [];
@@ -635,7 +641,7 @@ export function useCaseData(
         iopBand: [+percentile(sorted, 0.25).toFixed(1), +percentile(sorted, 0.75).toFixed(1)] as [number, number],
       };
     });
-  }, [iopData, cases, patientCase]);
+  }, [iopData, cohortCases, patientCase]);
 
   // FALL-011 + J3c: cohort median + IQR reference series, aligned to the
   // patient's RELATIVE-time axis (months since the patient's first visit).
@@ -651,13 +657,13 @@ export function useCaseData(
   //   that fall in the same month-since-baseline aggregate together; each index
   //   patient row resolves its reference from the bucket matching round(relMonths).
   const cohortReference = useMemo((): CohortReferencePoint[] => {
-    if (!combinedData.length || !cases.length) return [];
+    if (!combinedData.length || !cohortCases.length) return [];
 
     // Build per-relative-month buckets from the PEER cohort only.
     const visusByRelMonth = new Map<number, number[]>();
     const crtByRelMonth = new Map<number, number[]>();
 
-    for (const c of cases) {
+    for (const c of cohortCases) {
       if (patientCase && c.id === patientCase.id) continue; // WR-04: exclude index patient
       const peerVisus = getObservationsByCode(c.observations, LOINC_VISUS);
       const peerCrt = getObservationsByCode(c.observations, LOINC_CRT);
@@ -726,7 +732,7 @@ export function useCaseData(
         return ref;
       })
       .filter((p): p is CohortReferencePoint => p !== null);
-  }, [combinedData, cases, patientCase]);
+  }, [combinedData, cohortCases, patientCase]);
 
   // FALL-011 (A3 v2): fold the cohort reference fields onto the patient's
   // combinedData rows by date, producing a SINGLE data array for the chart.

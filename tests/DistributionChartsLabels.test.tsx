@@ -92,14 +92,16 @@ describe('DistributionCharts — A4 scatter axis labels', () => {
 // J3d: cohort overlay on the distributions + scatter, gated on the toggle.
 // ---------------------------------------------------------------------------
 
+// N5 (v1.19 WS-B): overlay-on histograms are grouped %-bars — patientPct +
+// cohortMedianPct — on a single percentage axis (was count + pooled cohortPct).
 const cohortProps = {
   visusDistribution: [
-    { range: '0–0.2', count: 0, cohortPct: 30 },
-    { range: '0.2–0.4', count: 1, cohortPct: 70 },
+    { range: '0–0.2', count: 0, patientPct: 0, cohortMedianPct: 30, cohortMedianCount: 1 },
+    { range: '0.2–0.4', count: 1, patientPct: 100, cohortMedianPct: 70, cohortMedianCount: 2 },
   ],
   crtDistribution: [
-    { range: '<200', count: 0, cohortPct: 20 },
-    { range: '200–250', count: 2, cohortPct: 80 },
+    { range: '<200', count: 0, patientPct: 0, cohortMedianPct: 20, cohortMedianCount: 1 },
+    { range: '200–250', count: 2, patientPct: 100, cohortMedianPct: 80, cohortMedianCount: 3 },
   ],
   visusCrtScatter: [
     { visus: 0.5, crt: 300, date: '2024-01-01' },
@@ -112,14 +114,17 @@ const cohortProps = {
   t: tDE,
 };
 
-describe('DistributionCharts — J3d cohort overlay', () => {
-  it('renders the cohort distribution bars + cloud only when showCohortReference is on', () => {
+describe('DistributionCharts — N5 grouped %-bars + cohort overlay', () => {
+  it('renders grouped patientPct + cohortMedianPct bars + the cloud when the overlay is on', () => {
     const { container } = render(<DistributionCharts {...cohortProps} showCohortReference />);
-    const cohortBars = Array.from(container.querySelectorAll('[data-testid="recharts-bar"]')).filter(
-      (el) => el.getAttribute('data-data-key') === 'cohortPct',
-    );
-    // One cohort bar per histogram (visus + crt).
+    const bars = Array.from(container.querySelectorAll('[data-testid="recharts-bar"]'));
+    const patientBars = bars.filter((el) => el.getAttribute('data-data-key') === 'patientPct');
+    const cohortBars = bars.filter((el) => el.getAttribute('data-data-key') === 'cohortMedianPct');
+    // One patient %-bar AND one cohort-median %-bar per histogram (visus + crt).
+    expect(patientBars.length).toBe(2);
     expect(cohortBars.length).toBe(2);
+    // N5: the count bar is gone on the overlay axis — both series are percentages.
+    expect(bars.filter((el) => el.getAttribute('data-data-key') === 'count').length).toBe(0);
     const cohortCloud = Array.from(container.querySelectorAll('[data-testid="recharts-scatter"]')).find(
       (el) => el.getAttribute('data-name') === 'Kohorte',
     );
@@ -127,12 +132,13 @@ describe('DistributionCharts — J3d cohort overlay', () => {
     expect(cohortCloud!.getAttribute('data-len')).toBe('2');
   });
 
-  it('hides the cohort overlay when showCohortReference is off', () => {
+  it('falls back to the single count bar (no %-bars / cloud) when the overlay is off', () => {
     const { container } = render(<DistributionCharts {...cohortProps} showCohortReference={false} />);
-    const cohortBars = Array.from(container.querySelectorAll('[data-testid="recharts-bar"]')).filter(
-      (el) => el.getAttribute('data-data-key') === 'cohortPct',
-    );
-    expect(cohortBars.length).toBe(0);
+    const bars = Array.from(container.querySelectorAll('[data-testid="recharts-bar"]'));
+    expect(bars.filter((el) => el.getAttribute('data-data-key') === 'cohortMedianPct').length).toBe(0);
+    expect(bars.filter((el) => el.getAttribute('data-data-key') === 'patientPct').length).toBe(0);
+    // Overlay off → the original count bars (one per histogram).
+    expect(bars.filter((el) => el.getAttribute('data-data-key') === 'count').length).toBe(2);
     const cohortCloud = Array.from(container.querySelectorAll('[data-testid="recharts-scatter"]')).find(
       (el) => el.getAttribute('data-name') === 'Kohorte',
     );
