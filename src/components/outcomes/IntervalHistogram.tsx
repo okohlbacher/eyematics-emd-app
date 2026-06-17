@@ -123,10 +123,10 @@ export default function IntervalHistogram({ cases, t, locale: _locale, cohortSer
   return (
     <div
       data-testid="interval-histogram"
-      className="bg-white rounded-xl border border-gray-200 p-5"
+      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
     >
       <header className="mb-4 flex items-start justify-between">
-        <h3 className="text-base font-semibold text-gray-900">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
           {t('metricsIntervalTitle')}
         </h3>
         {/* Eye toggle — available in both single and cross mode (re-computes all series) */}
@@ -146,7 +146,7 @@ export default function IntervalHistogram({ cases, t, locale: _locale, cohortSer
                 className={
                   active
                     ? 'px-3 py-1 text-xs rounded bg-violet-700 text-white'
-                    : 'px-3 py-1 text-xs rounded bg-white border border-gray-200 text-gray-700'
+                    : 'px-3 py-1 text-xs rounded bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200'
                 }
                 data-testid={`interval-eye-${e}`}
               >
@@ -164,10 +164,10 @@ export default function IntervalHistogram({ cases, t, locale: _locale, cohortSer
             data-testid="interval-empty"
             className="p-8 flex flex-col items-center justify-center text-center min-h-[280px]"
           >
-            <h4 className="text-base font-semibold text-gray-900 mb-2">
+            <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
               {t('metricsIntervalNoDataTitle')}
             </h4>
-            <p className="text-sm text-gray-500 max-w-md">
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md">
               {t('metricsIntervalNoDataBody')}
             </p>
           </div>
@@ -197,7 +197,7 @@ export default function IntervalHistogram({ cases, t, locale: _locale, cohortSer
                   />
                   <span>{m.cohortName}</span>
                   {m.medianGap > 0 && (
-                    <span className="text-gray-400 ml-1">
+                    <span className="text-gray-400 dark:text-gray-500 ml-1">
                       {' · '}
                       {t('metricsIntervalMedianLineCohort')
                         .replace('{name}', '')
@@ -268,10 +268,10 @@ export default function IntervalHistogram({ cases, t, locale: _locale, cohortSer
             data-testid="interval-empty"
             className="p-8 flex flex-col items-center justify-center text-center min-h-[280px]"
           >
-            <h4 className="text-base font-semibold text-gray-900 mb-2">
+            <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
               {t('metricsIntervalNoDataTitle')}
             </h4>
-            <p className="text-sm text-gray-500 max-w-md">
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md">
               {t('metricsIntervalNoDataBody')}
             </p>
           </div>
@@ -281,7 +281,7 @@ export default function IntervalHistogram({ cases, t, locale: _locale, cohortSer
             <p
               data-testid="interval-median"
               data-median-days={distribution!.medianGap}
-              className="text-xs text-gray-500 mb-2"
+              className="text-xs text-gray-500 dark:text-gray-400 mb-2"
             >
               {t('metricsIntervalMedianLine').replace('{days}', String(distribution!.medianGap))}
             </p>
