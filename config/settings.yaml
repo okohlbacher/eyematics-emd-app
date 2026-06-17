@@ -1,4 +1,10 @@
 twoFactorEnabled: false
+# v1.19 deploy — let the Express server (npm start) serve the built dist/ (UI) AND
+# the API on one port, so `npm run build && npm start` is a self-contained deploy
+# (no Vite, no /api proxy). In dev the UI is served by Vite (:5100); the backend
+# only serves the built UI here when a dist/ exists.
+server:
+  serveFrontend: true
 # Phase 39 / CFG-01 — critical/action clinical thresholds (admin-configurable)
 thresholds:
   criticalCrtUm: 400        # µm — CRT critical exceedance (was CRITICAL_CRT_THRESHOLD)
