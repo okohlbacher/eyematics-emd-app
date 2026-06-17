@@ -195,16 +195,16 @@ export default function OutcomesDataPreview({
   return (
     <details
       data-testid="outcomes-data-preview"
-      className="mt-8 bg-white rounded-xl border border-gray-200"
+      className="mt-8 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
     >
-      <summary className="cursor-pointer text-sm font-medium text-gray-700 px-5 py-3 flex items-center gap-2">
+      <summary className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-200 px-5 py-3 flex items-center gap-2">
         <ChevronRight className="w-4 h-4 transition-transform group-open:rotate-90" />
         {t('outcomesPreviewToggleOpen')}
       </summary>
 
       <div className="px-5 pb-5">
         <div className="flex items-center justify-between py-3">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             {t('outcomesPreviewCaption').replace('{rows}', String(rowCount))}
           </p>
           <button
@@ -231,26 +231,26 @@ export default function OutcomesDataPreview({
 
         <div className="max-h-96 overflow-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-gray-900/40">
               <tr>
                 {columns.map((c) => (
                   <th
                     key={c.headerKey}
-                    className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2 whitespace-nowrap"
+                    className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider px-3 py-2 whitespace-nowrap"
                   >
                     {t(c.headerKey)}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700 text-gray-900 dark:text-gray-100">
               {rows.map((r, i) => {
                 const key = rowKey(r, i);
                 return (
                   <tr
                     key={key}
                     {...(parity ? { 'data-row-key': key } : {})}
-                    className="text-sm hover:bg-gray-50"
+                    className="text-sm hover:bg-gray-50 dark:hover:bg-gray-700/40"
                   >
                     {columns.map((c, ci) => (
                       <td key={`${key}|c${ci}`} className="px-3 py-2">

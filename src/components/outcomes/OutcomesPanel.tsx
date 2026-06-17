@@ -131,6 +131,19 @@ export default function OutcomesPanel({
   const subtitle = `${panel.summary.patientCount} · ${panel.summary.measurementCount}`;
   const xLabel = axisMode === 'days' ? t('outcomesTooltipDay') : t('outcomesTooltipTreatmentIndex');
 
+  // N9 (v1.19 WS-A): y-axis title reflecting the active metric + mode, so the plotted
+  // quantity is self-evident without opening the settings drawer. Visus → logMAR /
+  // Δ logMAR / Δ logMAR %; CRT → Netzhautdicke (µm) / Δ µm / Δ %. The title font uses
+  // the theme-resolved axis-label colour so it stays readable in light + dark.
+  const yLabelKey = metric === 'crt'
+    ? (yMetric === 'absolute'
+        ? 'outcomesYAxisCrtAbsolute'
+        : yMetric === 'delta' ? 'outcomesYAxisCrtDelta' : 'outcomesYAxisCrtDeltaPercent')
+    : (yMetric === 'absolute'
+        ? 'outcomesYAxisVisusAbsolute'
+        : yMetric === 'delta' ? 'outcomesYAxisVisusDelta' : 'outcomesYAxisVisusDeltaPercent');
+  const yLabel = t(yLabelKey);
+
   // Imperative tooltip formatting context — kept current in a ref so handlers read
   // the latest labels without re-binding.
   const hoverFmtRef = useRef<{ xLabel: string; valueLabel: string; valueUnit: string }>(
@@ -232,6 +245,7 @@ export default function OutcomesPanel({
 
   // Build Plotly traces (memoised so identity is stable across hover/unrelated renders).
   const traces = useMemo<PlotlyData[]>(() => {
+    const built: PlotlyData[] = (() => {
     if (isCrossMode) {
       return buildCrossCohortTraces({
         layers,
@@ -271,7 +285,38 @@ export default function OutcomesPanel({
       hovertemplate: (name) => `${name}<extra></extra>`,
       perPatientSeries,
     });
-  }, [isCrossMode, cohortSeries, panel, layers, scatterRenderPoints, seriesColor, t, perPatientSeries]);
+    })();
+
+    // N2 (v1.19 WS-A): dedicated single-point "highlight" overlay trace, ALWAYS the
+    // last trace (stable index) whenever the scatter layer is on. It starts empty and
+    // is positioned at the hovered marker via a cheap Plotly.restyle (x/y) — never a
+    // redraw — then cleared on unhover. A larger, ringed marker reads as an emphasised
+    // point on top of the cloud. Mirrors the M1 line-emphasis imperative pattern.
+    if (layers.scatter) {
+      built.push({
+        type: 'scattergl',
+        mode: 'markers',
+        x: [],
+        y: [],
+        marker: {
+          size: 16,
+          color: 'rgba(0,0,0,0)',           // transparent fill — the ring carries it
+          line: { width: 3, color: isDark ? '#f9fafb' : '#111827' },  // contrast ring
+        },
+        hoverinfo: 'skip',
+        showlegend: false,
+        name: 'scatter-highlight',
+      });
+    }
+    return built;
+  }, [isCrossMode, cohortSeries, panel, layers, scatterRenderPoints, seriesColor, t, perPatientSeries, isDark]);
+
+  // N2 (v1.19 WS-A): index of the highlight overlay trace (always the last trace when
+  // scatter is on; -1 otherwise). Computed from the trace list so it tracks rebuilds.
+  const highlightIndex = useMemo(
+    () => (traces.length > 0 && traces[traces.length - 1]?.name === 'scatter-highlight' ? traces.length - 1 : -1),
+    [traces],
+  );
 
   // M1 (review LOW): a trace-set rebuild (layer toggle, eye/metric/data change)
   // makes PlotlyChart purge+redraw, resetting all line widths to natural — so any
@@ -287,7 +332,8 @@ export default function OutcomesPanel({
     () => ({
       autosize: true,
       height: 320,
-      margin: { l: 48, r: 16, t: 8, b: 40 },
+      // N9: wider left margin so the rotated y-axis title clears the tick labels.
+      margin: { l: 64, r: 16, t: 8, b: 40 },
       paper_bgcolor: chartColors.paper,
       plot_bgcolor: chartColors.paper,
       font: { color: chartColors.axisLabel, size: 11 },
@@ -303,6 +349,8 @@ export default function OutcomesPanel({
         tickfont: { size: 11, color: chartColors.axisTick },
       },
       yaxis: {
+        // N9: y-axis title — active metric + mode, theme-coloured for light/dark.
+        title: { text: yLabel, font: { size: 11, color: chartColors.axisLabel } },
         range: [yMin, yMax],
         gridcolor: chartColors.grid,
         zeroline: yMetric !== 'absolute',
@@ -310,7 +358,7 @@ export default function OutcomesPanel({
         tickfont: { size: 11, color: chartColors.axisTick },
       },
     }),
-    [chartColors.paper, chartColors.axisLabel, chartColors.grid, chartColors.legend, chartColors.axisTick, xLabel, yMin, yMax, yMetric],
+    [chartColors.paper, chartColors.axisLabel, chartColors.grid, chartColors.legend, chartColors.axisTick, xLabel, yLabel, yMin, yMax, yMetric],
   );
 
   // L12: modebar — zoom, pan, box-select, lasso, reset/autoscale enabled.
@@ -375,6 +423,29 @@ export default function OutcomesPanel({
     [traces, restoreEmphasis],
   );
 
+  // N2 (v1.19 WS-A): move the single-point highlight overlay to (x, y) via a cheap
+  // in-place Plotly.restyle — no relayout/redraw. Cleared by restoreHighlight (empty
+  // arrays → nothing drawn). Tracked in a ref purely to skip a redundant restyle when
+  // hovering the same point repeatedly. Mirrors the M1 line-emphasis pattern.
+  const highlightedPointRef = useRef<{ x: number; y: number } | null>(null);
+  const restoreHighlight = useCallback(() => {
+    if (highlightIndex < 0) return;
+    if (!highlightedPointRef.current) return;
+    highlightedPointRef.current = null;
+    plotlyHandleRef.current?.restyle({ x: [[]], y: [[]] }, [highlightIndex]);
+  }, [highlightIndex]);
+  const highlightPoint = useCallback(
+    (x: number, y: number) => {
+      if (highlightIndex < 0) return;
+      const prev = highlightedPointRef.current;
+      if (prev && prev.x === x && prev.y === y) return;
+      highlightedPointRef.current = { x, y };
+      // restyle expects per-trace arrays; wrap the single x/y in nested arrays.
+      plotlyHandleRef.current?.restyle({ x: [[x]], y: [[y]] }, [highlightIndex]);
+    },
+    [highlightIndex],
+  );
+
   const handlePlotlyHover = useCallback(
     (raw: unknown) => {
       const e = raw as PlotlyMouseEvent;
@@ -390,6 +461,14 @@ export default function OutcomesPanel({
         x: typeof pt?.x === 'number' ? pt.x : undefined,
         y: typeof pt?.y === 'number' ? pt.y : undefined,
       });
+      // N2: when the hovered curve is a scatter cloud (single- or cross-cohort) and we
+      // have an (x, y), overlay the highlight marker on that point. The hovered trace
+      // is identified by name so per-patient lines / medians never trigger it.
+      const hoveredName = String(pt?.data?.name ?? '');
+      const isScatterPoint = hoveredName === 'scatter' || hoveredName.startsWith('scatter-');
+      if (layers.scatter && isScatterPoint && typeof pt?.x === 'number' && typeof pt?.y === 'number') {
+        highlightPoint(pt.x, pt.y);
+      }
       // M1: highlight the hovered per-patient line — only when the scatter layer is
       // OFF (preserve scatter-priority) and the hovered curve is a per-patient line.
       // `curveNumber` is the trace index; we re-check the trace name in emphasizeLine.
@@ -397,14 +476,15 @@ export default function OutcomesPanel({
         emphasizeLine(pt.curveNumber);
       }
     },
-    [showHoverTooltip, isCrossMode, layers.perPatient, layers.scatter, emphasizeLine],
+    [showHoverTooltip, isCrossMode, layers.perPatient, layers.scatter, emphasizeLine, highlightPoint],
   );
 
   const handlePlotlyUnhover = useCallback(() => {
     hoveredDatumRef.current = null;
     hideHoverTooltip();
     restoreEmphasis();
-  }, [hideHoverTooltip, restoreEmphasis]);
+    restoreHighlight();
+  }, [hideHoverTooltip, restoreEmphasis, restoreHighlight]);
 
   if (totalPatients === 0) {
     return (
@@ -480,6 +560,14 @@ export default function OutcomesPanel({
         data-ymetric={yMetric}
         data-min={yMin}
         data-max={yMax}
+      />
+
+      {/* N9 (v1.19 WS-A): y-axis title marker — exposes the resolved label so the
+          active metric/mode is assertable without introspecting the Plotly canvas. */}
+      <div
+        hidden
+        data-testid={`outcomes-panel-${eye}-ylabel`}
+        data-ylabel={yLabel}
       />
 
       <div className="relative" style={{ width: '100%', height: 320 }}>

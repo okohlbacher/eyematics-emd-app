@@ -81,7 +81,7 @@ function CohortResponderPanel({ series, thresholdLetters, t, ct }: CohortRespond
   return (
     <div
       data-testid={`responder-cohort-${series.cohortId}`}
-      className="border border-gray-100 rounded-lg p-3"
+      className="border border-gray-100 dark:border-gray-700 rounded-lg p-3"
     >
       {/* Cohort heading with color swatch — identifiable by color + name */}
       <h4
@@ -94,12 +94,12 @@ function CohortResponderPanel({ series, thresholdLetters, t, ct }: CohortRespond
           style={{ backgroundColor: series.color }}
         />
         {series.cohortName}
-        <span className="text-gray-400 font-normal text-xs ml-1">
+        <span className="text-gray-400 dark:text-gray-500 font-normal text-xs ml-1">
           (N={series.patientCount})
         </span>
       </h4>
       {total === 0 ? (
-        <p className="text-xs text-gray-400 italic">{t('metricsResponderNoDataBody')}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 italic">{t('metricsResponderNoDataBody')}</p>
       ) : (
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={barData}>
@@ -155,12 +155,12 @@ export default function ResponderView({ cases, thresholdLetters, t, locale: _loc
     return (
       <div
         data-testid="responder-empty"
-        className="bg-white rounded-xl border border-gray-200 p-8 flex flex-col items-center justify-center text-center min-h-[60vh]"
+        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 flex flex-col items-center justify-center text-center min-h-[60vh]"
       >
-        <h3 className="text-base font-semibold text-gray-900 mb-2">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
           {t('metricsResponderNoDataTitle')}
         </h3>
-        <p className="text-sm text-gray-500 max-w-md">
+        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md">
           {t('metricsResponderNoDataBody')}
         </p>
       </div>
@@ -173,8 +173,8 @@ export default function ResponderView({ cases, thresholdLetters, t, locale: _loc
   // grouping 3 buckets × N cohorts × 3 eyes would be too dense to read.
   if (isCrossMode && cohortSeries) {
     return (
-      <div data-testid="responder-view" className="bg-white rounded-xl border border-gray-200 p-5">
-        <h3 className="text-base font-semibold text-gray-900 mb-4">
+      <div data-testid="responder-view" className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">
           {t('metricsResponderTitle')}
         </h3>
         <div
@@ -240,15 +240,15 @@ export default function ResponderView({ cases, thresholdLetters, t, locale: _loc
   return (
     <div
       data-testid="responder-view"
-      className="bg-white rounded-xl border border-gray-200 p-5"
+      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
     >
-      <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center">
+      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
         {t('metricsResponderTitle')}
         {/* ANL-002: plot-adjacent info affordance — separate from the tab affordance in OutcomesView */}
         <span
           title={t('metricsResponderTooltip')}
           aria-label={t('metricsResponderTooltip')}
-          className="ml-1 text-gray-400 hover:text-blue-600 cursor-help"
+          className="ml-1 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 cursor-help"
         >
           &#x2139;
         </span>
@@ -281,11 +281,11 @@ export default function ResponderView({ cases, thresholdLetters, t, locale: _loc
         </ResponsiveContainer>
       </div>
 
-      <hr className="my-6 border-gray-100" />
+      <hr className="my-6 border-gray-100 dark:border-gray-700" />
 
       {/* Section 2: trajectory overlay */}
       <div data-testid="responder-trajectory-section">
-        <h4 className="text-sm font-semibold text-gray-700 mb-2">
+        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
           {t('metricsResponderTrajectoryTitle')}
         </h4>
         <ResponsiveContainer width="100%" height={320}>

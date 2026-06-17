@@ -924,6 +924,16 @@ const translations = {
   // in compare mode, replacing the old "suppressed in comparison mode" note.
   outcomesCompareLayersOptIn: { de: 'Streupunkte und Einzelkurven werden im Vergleichsmodus je Kohorte in ihrer Farbe angezeigt.', en: 'Scatter points and per-patient lines render per cohort in its colour in comparison mode.' },
   // --- end v1.18 WS-A keys ---
+  // --- v1.19 WS-A (outcomes Plotly round-7) keys ---
+  // N9: y-axis titles for the Plotly Verläufe panels — reflect the active metric +
+  // mode so the plotted quantity is self-evident without opening the settings drawer.
+  outcomesYAxisVisusAbsolute: { de: 'Visus (logMAR)', en: 'Visual acuity (logMAR)' },
+  outcomesYAxisVisusDelta: { de: 'Δ logMAR', en: 'Δ logMAR' },
+  outcomesYAxisVisusDeltaPercent: { de: 'Δ logMAR %', en: 'Δ logMAR %' },
+  outcomesYAxisCrtAbsolute: { de: 'Netzhautdicke (µm)', en: 'Retinal thickness (µm)' },
+  outcomesYAxisCrtDelta: { de: 'Δ µm', en: 'Δ µm' },
+  outcomesYAxisCrtDeltaPercent: { de: 'Δ %', en: 'Δ %' },
+  // --- end v1.19 WS-A keys ---
   // FALL-010: drill-down hint shown in aria-label when scatter points are clickable
   outcomesDrillDownHint: { de: 'Datenpunkt anklicken, um den Fall zu öffnen', en: 'Click a data point to open the case' },
 
