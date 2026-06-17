@@ -1015,6 +1015,14 @@ const translations = {
   themeLight: { de: 'Zum hellen Modus wechseln', en: 'Switch to light mode' },
   themeDark: { de: 'Zum dunklen Modus wechseln', en: 'Switch to dark mode' },
   themeSystem: { de: 'Systemdesign verwenden', en: 'Use system theme' },
+  // ---- v1.19 WS-C (N7): theme selector as a collapsible menu ----
+  // Plain mode-name labels for the directly-selectable menu items + a label for
+  // the menu trigger. (The "switch to X" keys above are kept for back-compat but
+  // read wrong as a list item.)
+  themeMenuLabel: { de: 'Design', en: 'Theme' },
+  themeLightOption: { de: 'Hell', en: 'Light' },
+  themeDarkOption: { de: 'Dunkel', en: 'Dark' },
+  themeSystemOption: { de: 'System', en: 'System' },
   auditFilterUser: { de: 'Benutzer', en: 'User' },
   auditFilterAllUsers: { de: 'Alle Benutzer', en: 'All users' },
   auditFilterCategory: { de: 'Kategorie', en: 'Category' },
