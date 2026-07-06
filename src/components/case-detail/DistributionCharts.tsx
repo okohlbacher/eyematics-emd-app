@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Bar,
   BarChart,
@@ -59,6 +61,12 @@ export default function DistributionCharts({
   const colors = caseChartColors(isDark);
   const legendStyle = { fontSize: 12, color: colors.legend };
 
+  // N5 tooltips (round-8): the CSS grouped %-bars lost their styled tooltip when
+  // they replaced the (broken) Recharts <Bar>. A native title= is delayed/unstyled
+  // and shows one bar at a time; the tester wants the combined patient+cohort box
+  // back. One component-level hover state → one cursor-following tooltip.
+  const [distTip, setDistTip] = useState<{ bin: CohortDistributionBin; color: string; x: number; y: number } | null>(null);
+
   // M8 (v1.18): overlay-OFF tooltip — patient absolute COUNT + its share of all
   // the patient's measurements (%). No cohort row when the overlay is off.
   const makeCountTooltip = (patientTotal: number) =>
@@ -105,15 +113,16 @@ export default function DistributionCharts({
           </div>
           <div className="flex flex-1 items-end gap-2 border-l border-b" style={{ borderColor: colors.grid }}>
             {bins.map((bin) => (
-              <div key={bin.range} className="flex flex-1 items-end justify-center gap-0.5" style={{ height: '100%' }}>
-                <div
-                  title={`${t('distributionPatientPct')}: ${bin.patientPct}% (${bin.count} ${t('distributionMeasurementsUnit')})`}
-                  style={{ height: `${Math.min(100, (bin.patientPct / yMax) * 100)}%`, width: 9, background: patientColor, borderRadius: '2px 2px 0 0' }}
-                />
-                <div
-                  title={`${t('distributionCohortMedianPct')}: ${bin.cohortMedianPct}% (${bin.cohortMedianCount} ${t('distributionMeasurementsUnit')})`}
-                  style={{ height: `${Math.min(100, (bin.cohortMedianPct / yMax) * 100)}%`, width: 9, background: COHORT_COLOR, borderRadius: '2px 2px 0 0' }}
-                />
+              <div
+                key={bin.range}
+                className="flex flex-1 items-end justify-center gap-0.5"
+                style={{ height: '100%' }}
+                onMouseMove={(e) => setDistTip({ bin, color: patientColor, x: e.clientX, y: e.clientY })}
+                onMouseLeave={() => setDistTip(null)}
+                aria-label={`${bin.range}: ${t('distributionPatientPct')} ${bin.patientPct}% (${bin.count}), ${t('distributionCohortMedianPct')} ${bin.cohortMedianPct}% (${bin.cohortMedianCount})`}
+              >
+                <div style={{ height: `${Math.min(100, (bin.patientPct / yMax) * 100)}%`, width: 9, background: patientColor, borderRadius: '2px 2px 0 0' }} />
+                <div style={{ height: `${Math.min(100, (bin.cohortMedianPct / yMax) * 100)}%`, width: 9, background: COHORT_COLOR, borderRadius: '2px 2px 0 0' }} />
               </div>
             ))}
           </div>
@@ -173,6 +182,22 @@ export default function DistributionCharts({
 
   return (
     <div className="grid grid-cols-12 gap-6 mb-6">
+      {/* N5 tooltips: cursor-following box for the CSS grouped %-bars (both series). */}
+      {distTip && createPortal(
+        <div
+          className="pointer-events-none rounded-lg shadow-lg px-3 py-2 text-xs border"
+          style={{ position: 'fixed', left: distTip.x + 12, top: distTip.y + 12, zIndex: 60, background: colors.tooltipBg, borderColor: colors.tooltipBorder }}
+        >
+          <div className="font-semibold mb-1" style={{ color: colors.tooltipHeading }}>{distTip.bin.range}</div>
+          <div style={{ color: colors.tooltipText }}>
+            <span style={{ color: distTip.color }}>{t('distributionPatientPct')}</span>: {distTip.bin.patientPct}% ({distTip.bin.count} {t('distributionMeasurementsUnit')})
+          </div>
+          <div style={{ color: colors.tooltipText }}>
+            <span style={{ color: COHORT_COLOR }}>{t('distributionCohortMedianPct')}</span>: {distTip.bin.cohortMedianPct}% ({distTip.bin.cohortMedianCount} {t('distributionMeasurementsUnit')})
+          </div>
+        </div>,
+        document.body,
+      )}
       {renderHistogram(visusDistribution, t('distributionVisus'), PATIENT_VISUS_COLOR, visusTotal)}
       {renderHistogram(crtDistribution, t('distributionCrt'), PATIENT_CRT_COLOR, crtTotal, { range: '>400' })}
 

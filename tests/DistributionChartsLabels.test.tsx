@@ -123,14 +123,15 @@ describe('DistributionCharts — N5 grouped %-bars + cohort overlay', () => {
     const { container } = render(<DistributionCharts {...cohortProps} showCohortReference />);
     const patientLabel = tDE('distributionPatientPct');
     const cohortLabel = tDE('distributionCohortMedianPct');
-    const titled = Array.from(container.querySelectorAll('div[title]'));
-    const patientBars = titled.filter((el) => (el.getAttribute('title') ?? '').startsWith(patientLabel));
-    const cohortBars = titled.filter((el) => (el.getAttribute('title') ?? '').startsWith(cohortLabel));
-    // 2 bins per histogram × 2 histograms (visus + crt) = 4 bins, each with both bars.
-    expect(patientBars.length).toBe(4);
-    expect(cohortBars.length).toBe(4);
-    // The title carries the absolute count (tester's N5 requirement).
-    expect(patientBars.some((el) => /\(\d+/.test(el.getAttribute('title') ?? ''))).toBe(true);
+    // Round-8: each bin is one hover column with an aria-label carrying BOTH series
+    // + their absolute counts (the tooltip content, also read by screen readers).
+    const bins = Array.from(container.querySelectorAll('[aria-label]')).filter(
+      (el) => (el.getAttribute('aria-label') ?? '').includes(patientLabel) && (el.getAttribute('aria-label') ?? '').includes(cohortLabel),
+    );
+    // 2 bins per histogram × 2 histograms (visus + crt) = 4 bins.
+    expect(bins.length).toBe(4);
+    // The label carries the absolute counts (tester's N5 requirement).
+    expect(bins.some((el) => /\(\d+\),/.test(el.getAttribute('aria-label') ?? ''))).toBe(true);
     // N5: no Recharts count bar on the overlay path.
     const rcBars = Array.from(container.querySelectorAll('[data-testid="recharts-bar"]'));
     expect(rcBars.filter((el) => el.getAttribute('data-data-key') === 'count').length).toBe(0);
