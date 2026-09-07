@@ -40,8 +40,9 @@ jobs:
           push: ${{ startsWith(github.ref, 'refs/tags/') }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Docker-format manifest list: Podman only honours HEALTHCHECK on non-OCI images,
-          # and it keeps the unknown/unknown attestation rows off the GHCR package page.
+          # No provenance attestation → no unknown/unknown rows in the index / on the GHCR page.
+          # (BuildKit pushes an OCI index; Podman ignores HEALTHCHECK on OCI images, which is why
+          # deploy/EMD.container carries its own HealthCmd. Docker reads it from the config regardless.)
           provenance: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
