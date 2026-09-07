@@ -1,12 +1,13 @@
 # Software Bill of Materials (SBOM)
 
 **Project:** EyeMatics Clinical Demonstrator (EMD) — `emd-app`
-**Application version:** 1.4.0
+**Application version:** 1.20.0
 **Project license:** MIT
-**Generated:** 2026-05-26 (v1.12 build, pre-release)
+**Generated:** 2026-09-07 (v1.20 build — container packaging; `tsx` promoted to a production dependency)
 **Format:** Human-readable Markdown SBOM derived from `package.json` + `package-lock.json` (lockfileVersion 3) and per-package `license` fields.
 **Replaces:** the earlier point-in-time `BOM.md` (v1.9.3, removed). `SBOM.md` is the canonical, maintained software bill of materials going forward.
-**Runtime:** Node.js ≥ 20 · npm ≥ 10 · ECMAScript modules (`"type": "module"`)
+**Runtime:** Node.js ≥ 22 · npm ≥ 10 · ECMAScript modules (`"type": "module"`)
+**Container image:** `ghcr.io/okohlbacher/eyematics-emd-app` — base `node:24-bookworm-slim` (Debian 12, glibc), built from `Containerfile` (v1.20)
 
 > ⚠️ Research & development prototype — **not a medical device**. No PHI; all shipped data is synthetic.
 
@@ -21,8 +22,8 @@ end-of-phase verification and the pre-release checklist both include an "SBOM cu
 
 | Metric | Value |
 |--------|-------|
-| Direct production dependencies | 20 |
-| Direct development dependencies | 27 |
+| Direct production dependencies | 21 |
+| Direct development dependencies | 26 |
 | Total installed packages (incl. transitive) | 405 |
 | License distribution (direct deps) | MIT ×43 · ISC ×2 · BSD-3-Clause ×1 · Apache-2.0 ×1 |
 | Copyleft / restrictive licenses | none — all direct dependencies are permissive |
@@ -55,6 +56,7 @@ direct dependency set.
 | `react-router-dom` | ^7.14.2 | 7.14.2 | MIT |
 | `recharts` | ^3.8.1 | 3.8.1 | MIT |
 | `tailwindcss` | ^4.2.4 | 4.2.4 | MIT |
+| `tsx` | ^4.21.0 | 4.21.0 | MIT |
 
 **Role notes (key components):** `express` + `helmet` + `compression` + `cookie-parser` +
 `http-proxy-middleware` — backend HTTP/security/proxy; `better-sqlite3` — audit log +
@@ -62,7 +64,8 @@ direct dependency set.
 `otplib` + `qrcode` — auth (JWT/HS256, Keycloak JWKS prep, password hashing, TOTP 2FA);
 `js-yaml` — `config/settings.yaml` loading; `react` + `react-dom` + `react-router-dom` —
 UI; `recharts` — trajectory/outcome charts; `tailwindcss` + `@tailwindcss/vite` — styling;
-`lucide-react` — icons; `html-to-image` — chart export.
+`lucide-react` — icons; `html-to-image` — chart export; `tsx` — runs the uncompiled
+TypeScript server (`node --import tsx server/index.ts`), hence a production dependency since v1.20.
 
 ## Development dependencies
 
@@ -90,7 +93,6 @@ UI; `recharts` — trajectory/outcome charts; `tailwindcss` + `@tailwindcss/vite
 | `jsdom` | ^29.0.2 | 29.0.2 | MIT |
 | `knip` | ^6.6.2 | 6.6.2 | ISC |
 | `supertest` | ^7.2.2 | 7.2.2 | MIT |
-| `tsx` | ^4.21.0 | 4.21.0 | MIT |
 | `typescript` | ~6.0.3 | 6.0.3 | Apache-2.0 |
 | `typescript-eslint` | ^8.59.0 | 8.59.0 | MIT |
 | `vite` | ^8.0.10 | 8.0.10 | MIT |

@@ -203,6 +203,12 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false, // allow loading FHIR data
 }));
 
+// v1.20 container liveness probe (deploy/healthcheck.mjs). Outside /api on purpose:
+// not audit-logged, not JWT-gated, no index.html payload every 30 s.
+app.get('/healthz', (_req: Request, res: Response) => {
+  res.json({ status: 'ok' });
+});
+
 // Phase 20 / D-03: required for /api/auth/refresh emd-refresh cookie + emd-csrf double-submit.
 // MUST be mounted before auditMiddleware + authMiddleware so downstream handlers see req.cookies.
 app.use(cookieParser());
@@ -324,7 +330,7 @@ if (SERVE_FRONTEND) {
 // 8. Start server
 // ---------------------------------------------------------------------------
 
-app.listen(PORT, HOST, () => {
+const server = app.listen(PORT, HOST, () => {
   console.log(`[server] EMD app running at http://${HOST}:${PORT}`);
   console.log(`[server] Frontend: ${SERVE_FRONTEND ? 'serving dist/ (production mode)' : 'API only — use Vite at http://localhost:5173 for the UI'}`);
   console.log(`[server] FHIR proxy target: ${blazeTarget} (at /api/fhir-proxy)`);
@@ -346,3 +352,13 @@ app.listen(PORT, HOST, () => {
     }
   })();
 });
+
+// v1.20 container: as PID 1 Node ignores SIGTERM unless a handler exists → podman/docker
+// would SIGKILL after 10 s (dirty SQLite WAL). Stop accepting, then exit; 3 s hard cap.
+for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+  process.on(signal, () => {
+    console.log(`[server] ${signal} received — shutting down`);
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(0), 3000).unref();
+  });
+}

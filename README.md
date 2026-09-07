@@ -8,7 +8,7 @@ A web-based dashboard for analysing ophthalmological research data from IVOM tre
 
 Clone the repo, install dependencies, then run the API and the UI in **two separate shells**.
 
-**Prerequisites:** Node.js ≥ 20, npm ≥ 10
+**Prerequisites:** Node.js ≥ 22, npm ≥ 10
 
 **Shell 1 — clone & start the API:**
 ```bash
@@ -36,7 +36,7 @@ Open **http://localhost:5173** and log in. All seeded users share the default pa
 
 ## Development & Production
 
-**Prerequisites:** Node.js ≥ 20, npm ≥ 10
+**Prerequisites:** Node.js ≥ 22, npm ≥ 10
 
 ### Development (two ports)
 

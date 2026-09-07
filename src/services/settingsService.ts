@@ -89,7 +89,7 @@ function merge(base: AppSettings, patch: DeepPartial<AppSettings>): AppSettings 
 
 /**
  * Load settings from the server (settings.yaml via API).
- * Falls back to fetching public/settings.yaml directly if API unavailable.
+ * Falls back to the built-in DEFAULTS if the API is unavailable.
  */
 export async function loadSettings(): Promise<AppSettings> {
   let fromYaml: Partial<AppSettings> = {};
