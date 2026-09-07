@@ -1,0 +1,19 @@
+# Build context for Containerfile — keep it to sources + public assets.
+.git
+.github
+.claude
+.clone
+.planning
+node_modules
+dist
+data
+config
+feedback
+tests
+docs
+scripts
+*.md
+*.docx
+*.tar.gz
+*.zip
+.DS_Store

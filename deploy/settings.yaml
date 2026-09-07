@@ -1,0 +1,55 @@
+# EMD container default configuration (v1.20).
+# Copied to /data/settings.yaml on the FIRST container start only — edit ~/EMD/settings.yaml on
+# the host afterwards (or use Administration → Einstellungen in the UI) and restart the container.
+# Every key mirrors config/settings.yaml (tests/deploySettings.test.ts enforces parity); the
+# four container-specific values are marked "container:".
+twoFactorEnabled: false
+server:
+  host: 0.0.0.0             # container: listen on all interfaces of the container netns (published via PublishPort / -p)
+  port: 3000                # container: keep 3000 — deploy/healthcheck.mjs probes it; remap on the host side
+  dataDir: /data            # container: the persistent volume (users, secrets, SQLite DBs, feedback/, this file)
+  serveFrontend: true       # the Express server serves the built UI (dist/) and the API on one port
+# Phase 39 / CFG-01 — critical/action clinical thresholds (admin-configurable)
+thresholds:
+  criticalCrtUm: 400        # µm — CRT critical exceedance (was CRITICAL_CRT_THRESHOLD)
+  criticalVisus: 0.1        # decimal — Visus critical low (was CRITICAL_VISUS_THRESHOLD)
+  criticalIopMmHg: 21       # mmHg — IOP critical high (was CRITICAL_IOP_THRESHOLD)
+  visusJump: 0.3            # decimal — sudden visus change (was VISUS_JUMP_THRESHOLD)
+# Phase 39 / CFG-02 — plausibility ranges (admin-configurable)
+plausibility:
+  visusMin: 0               # Minimum plausible Visus (inclusive)
+  visusMax: 2.0             # Maximum plausible Visus (inclusive)
+  crtMin: 100               # Minimum plausible CRT in µm (inclusive)
+  crtMax: 800               # Maximum plausible CRT in µm (inclusive)
+  iopMin: 5                 # Minimum plausible IOP in mmHg (inclusive)
+  iopMax: 40                # Maximum plausible IOP in mmHg (inclusive)
+# Phase 34 / D-11 — stub generation factor range.
+# Per-site stub count ≈ factor × consented count; factor drawn seeded from [factorMin, factorMax].
+stubs:
+  factorMin: 2
+  factorMax: 8
+therapyInterrupterDays: 120
+therapyBreakerDays: 365
+crtImplausibleThresholdUm: 400     # Phase 33 / COH-03: CRT implausibility threshold in µm
+dataSource:
+  type: local
+  blazeUrl: http://localhost:8080/fhir
+outcomes:
+  serverAggregationThresholdPatients: 1000
+  aggregateCacheTtlMs: 1800000
+# Phase 20 / D-23 — refresh-token configuration. YAML-only in v1.8 (no UI).
+auth:
+  refreshTokenTtlMs: 28800000      # 8h rolling refresh-token lifetime
+  refreshAbsoluteCapMs: 43200000   # 12h hard cap from initial login
+  refreshCookieSecure: false       # container: plain-http default (PublishPort=3000:3000). Set true behind a TLS reverse proxy.
+  # Phase 32 / AUTHCFG-04 — login lockout + inactivity configuration
+  maxLoginAttempts: 5              # max failed logins before lockout
+  lockoutCapMs: 900000             # exponential backoff cap: lockout = min(2^failures * 1s, lockoutCapMs), not a fixed window
+  inactivityTimeoutMs: 600000      # 10 min inactivity before auto-logout
+  warningBeforeMs: 180000          # 3 min warning before auto-logout (AUTHCFG-02)
+# Phase 25 / D-16, D-17 — terminology resolver. Code-defaulted; omit to keep
+# offline behavior. Set enabled: true + a real serverUrl to opt in.
+# terminology:
+#   enabled: false                                          # default OFF — preserves offline behavior
+#   serverUrl: 'https://r4.ontoserver.csiro.au/fhir'        # placeholder default; real server set per-deployment
+#   cacheTtlMs: 86400000                                    # 24h
