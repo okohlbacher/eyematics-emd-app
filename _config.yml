@@ -17,6 +17,8 @@ exclude:
   - dist
   - data
   - config
+  - deploy
+  - Containerfile
   - docs
   - .planning
   - .claude

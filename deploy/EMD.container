@@ -1,0 +1,36 @@
+# EyeMatics Clinical Demonstrator (EMD) — Podman Quadlet unit (rootless).
+# Install: cp deploy/EMD.container ~/.config/containers/systemd/ && systemctl --user daemon-reload && systemctl --user start EMD
+# Docs:    docs/Deployment.md
+[Unit]
+Description=EyeMatics Clinical Demonstrator (EMD) Podman Container
+
+[Container]
+Image=ghcr.io/okohlbacher/eyematics-emd-app:latest
+ContainerName=EMD
+HostName=EMD
+
+PublishPort=3000:3000
+
+# All state lives here: settings.yaml (seeded on first start), users, secrets, SQLite DBs, feedback/.
+# :Z = SELinux label for Fedora/RHEL hosts; a no-op on Debian/Ubuntu.
+Volume=%h/EMD:/data:Z
+
+# The image runs as uid 1000 (node). Map your own user onto it so ~/EMD stays yours and writable.
+UserNS=keep-id:uid=1000,gid=1000
+
+# Pull a new :latest via podman-auto-update.timer; a container that never turns healthy is rolled back.
+AutoUpdate=registry
+HealthCmd=node /app/deploy/healthcheck.mjs
+HealthInterval=30s
+HealthStartPeriod=20s
+Notify=healthy
+
+# No EnvironmentFile: the app is configured through ~/EMD/settings.yaml, not environment variables.
+
+[Service]
+Restart=always
+# The first start pulls the image (~400 MB unpacked) before /healthz can answer.
+TimeoutStartSec=900
+
+[Install]
+WantedBy=default.target

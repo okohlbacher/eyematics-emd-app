@@ -18,6 +18,8 @@ emd-app/
 
 Alle Änderungen, die über die Settings-Seite im UI vorgenommen werden, werden **serverseitig** in diese Datei zurückgeschrieben. Die Konfiguration ist damit persistent und unabhängig vom Browser-Cache oder localStorage.
 
+> **Container-Betrieb (v1.20):** Im Container liegen `settings.yaml` und das gesamte `data/`-Verzeichnis auf dem Volume `/data` (auf dem Host `~/EMD/`). Die Datei wird beim ersten Start aus dem Image kopiert; Details und die container-spezifischen Werte (`server.host`, `server.dataDir`, `auth.refreshCookieSecure`) in [Deployment.md](Deployment.md).
+
 ## Konfigurationsparameter
 
 > **Hinweis — Minimalkonfiguration vs. Vollbeispiel.** Die ausgelieferte `config/settings.yaml` enthält nur die Schlüssel, die vom UI gesetzt werden (z. B. `twoFactorEnabled`, `therapyInterrupterDays`, `therapyBreakerDays`, `dataSource`, `outcomes`, `auth`). Alle anderen unten aufgeführten Schlüssel (`server.*`, `audit.*`, `provider`, `maxLoginAttempts`, `otpCode`, `keycloak.*`, `terminology.*`) werden vom Server mit sicheren Defaults gefüllt, wenn sie in der Datei fehlen. Das folgende Beispiel zeigt **alle** verfügbaren Schlüssel — nicht alle müssen explizit gesetzt werden.
@@ -157,6 +159,8 @@ Der Server:
 - Dient statische Dateien aus `dist/`
 - Blockiert direkten Zugriff auf `/data/*` (nur über `/api/fhir/bundles`)
 - Alle API-Endpunkte unter `/api/*` sind JWT-geschützt
+
+Alternativ als Container (Podman Quadlet oder Docker, Image `ghcr.io/okohlbacher/eyematics-emd-app`): siehe [Deployment.md](Deployment.md).
 
 ## Standardbenutzer
 

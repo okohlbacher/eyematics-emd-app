@@ -58,6 +58,19 @@ npm start          # Express serves UI + API on http://localhost:3000
 
 For LAN access in production, set `server.host: '0.0.0.0'` in `config/settings.yaml`. By default the server binds to `127.0.0.1` (localhost only) for safety.
 
+### Container (Podman / Docker)
+
+Every `v*` tag publishes a multi-arch image to `ghcr.io/okohlbacher/eyematics-emd-app` (built from
+`Containerfile`). All state lives on the `/data` volume; the image runs as uid 1000 on port 3000.
+
+```bash
+docker run -d -p 3000:3000 -v ~/EMD:/data --user "$(id -u):$(id -g)" ghcr.io/okohlbacher/eyematics-emd-app:latest
+```
+
+Podman users: install the Quadlet unit [`deploy/EMD.container`](deploy/EMD.container). Setup, first-start
+defaults, auto-updates, TLS and troubleshooting are in [docs/Deployment.md](docs/Deployment.md);
+`bash scripts/container-smoke.sh` builds and end-to-end-tests the image locally.
+
 > See the full credential table and login flow in [docs/Benutzerhandbuch.md](docs/Benutzerhandbuch.md) §2.
 
 ## Reporting Feedback
@@ -203,6 +216,7 @@ dataSource:
 |----------|-------------|
 | [docs/Benutzerhandbuch.md](docs/Benutzerhandbuch.md) | User guide (German) |
 | [docs/Konfiguration.md](docs/Konfiguration.md) | Configuration reference |
+| [docs/Deployment.md](docs/Deployment.md) | Container deployment — Podman Quadlet / Docker (German) |
 | [docs/Lastenheft.md](docs/Lastenheft.md) | Requirements specification |
 | [docs/Pflichtenheft.md](docs/Pflichtenheft.md) | Functional specification |
 | [docs/Anforderungsabgleich.md](docs/Anforderungsabgleich.md) | Requirements traceability matrix |
