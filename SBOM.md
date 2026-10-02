@@ -1,9 +1,9 @@
 # Software Bill of Materials (SBOM)
 
 **Project:** EyeMatics Clinical Demonstrator (EMD) — `emd-app`
-**Application version:** 1.20.1
+**Application version:** 1.20.2
 **Project license:** MIT
-**Generated:** 2026-10-03 (v1.20.1 — `plotly.js-dist-min` → `plotly.js-strict-dist-min`, the CSP-safe build; the missing Plotly row added; Inter + JetBrains Mono self-hosted via Fontsource)
+**Generated:** 2026-10-03 (v1.20.2, dependencies unchanged since v1.20.1 — `plotly.js-dist-min` → `plotly.js-strict-dist-min`, the CSP-safe build; the missing Plotly row added; Inter + JetBrains Mono self-hosted via Fontsource)
 **Format:** Human-readable Markdown SBOM derived from `package.json` + `package-lock.json` (lockfileVersion 3) and per-package `license` fields.
 **Replaces:** the earlier point-in-time `BOM.md` (v1.9.3, removed). `SBOM.md` is the canonical, maintained software bill of materials going forward.
 **Runtime:** Node.js ≥ 22 · npm ≥ 10 · ECMAScript modules (`"type": "module"`)
