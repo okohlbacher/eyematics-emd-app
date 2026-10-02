@@ -198,6 +198,10 @@ app.use(helmet({
       connectSrc,
       frameAncestors: ["'self'"],
       baseUri: ["'self'"],
+      // v1.20.1: drop helmet's default upgrade-insecure-requests. It rewrites every http://
+      // asset URL to https:// — on a plain-HTTP host (container on http://<host>:3000) that
+      // blanks the page. All assets are same-origin, so on HTTPS it is a no-op; HSTS still pins TLS.
+      upgradeInsecureRequests: null,
     },
   },
   crossOriginEmbedderPolicy: false, // allow loading FHIR data

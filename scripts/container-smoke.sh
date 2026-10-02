@@ -46,6 +46,13 @@ ok "login admin/changeme2025! returns a token" test -n "$TOKEN"
 ok "GET /api/fhir/centers lists 6 centers" \
   test "$(curl -fsS -H "authorization: Bearer $TOKEN" "$BASE/api/fhir/centers" | jq '.centers | length')" = 6
 ok "GET / serves the SPA" sh -c "curl -fsS '$BASE/' | grep -q '<div id=\"root\"'"
+# v1.20.1 — the production CSP (helmet, script-src 'self') is only active here, never in Vite dev:
+ok "index.html has no inline <script> (CSP blocks them)" \
+  sh -c "! curl -fsS '$BASE/' | grep -o '<script[^>]*>' | grep -qv 'src='"
+ok "Plotly chunk is the CSP-safe strict build (dist-min needs 'unsafe-eval' for WebGL)" \
+  "$CLI" exec "$NAME" sh -c 'ls /app/dist/assets/plotly-strict.min-*.js'
+ok "CSP has no upgrade-insecure-requests (would blank plain-HTTP hosts)" \
+  sh -c "curl -fsSI '$BASE/' | grep -i '^content-security-policy:' | grep -vqi 'upgrade-insecure-requests'"
 ok "GET /data/manifest.json is 403 (raw bundles guarded)" \
   test "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/data/manifest.json")" = 403
 ok "GET /api/data/quality-flags without token is 401" \

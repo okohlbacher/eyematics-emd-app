@@ -1,5 +1,11 @@
 /**
- * PlotlyChart — thin WS-1 (v1.17) wrapper around plotly.js-dist-min.
+ * PlotlyChart — thin WS-1 (v1.17) wrapper around plotly.js-strict-dist-min.
+ *
+ * v1.20.1: the STRICT bundle is required, not plotly.js-dist-min. The regular bundle's
+ * WebGL layer (regl) compiles its draw calls with `new Function`, which the production
+ * CSP (`script-src 'self'`, helmet in server/index.ts) blocks — Plotly then reports
+ * "WebGL is not supported by your browser" for every scattergl trace. The strict build
+ * ships that code precompiled. Dev (Vite, no CSP) never shows the difference.
  *
  * Replaces the v1.16 Recharts ComposedChart + canvas-scatter for the heavy cohort
  * Verläufe panels. Plotly's `scattergl` (WebGL) draws thousands of points to ONE
@@ -99,7 +105,7 @@ export default function PlotlyChart({
     let plotly: PlotlyModule | null = null;
 
     void (async () => {
-      const mod = (await import('plotly.js-dist-min')) as unknown as { default: PlotlyModule };
+      const mod = (await import('plotly.js-strict-dist-min')) as unknown as { default: PlotlyModule };
       const Plotly = mod.default;
       if (disposed || !elRef.current) return;
       plotly = Plotly;

@@ -3,7 +3,7 @@
  *
  * We deliberately keep these narrow rather than leaning on the full @types/plotly.js
  * surface: the OutcomesPanel only builds a handful of trace/layout shapes, and the
- * lazy `import('plotly.js-dist-min')` is typed structurally where it is used. Keeping
+ * lazy `import('plotly.js-strict-dist-min')` is typed structurally where it is used. Keeping
  * the public wrapper props on small interfaces avoids dragging the heavy Plotly type
  * graph into every consumer.
  */

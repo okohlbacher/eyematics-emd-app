@@ -125,6 +125,8 @@ docker run -d --name EMD --restart unless-stopped -p 3000:3000 \
 | Port 3000 belegt | `PublishPort=8080:3000` (Port im Container bleibt 3000) |
 | Unit-Datei prüfen | `/usr/lib/systemd/system-generators/podman-system-generator --user --dryrun` |
 | Keine automatischen Updates | `systemctl --user status podman-auto-update.timer` |
+| Verläufe: „WebGL is not supported“ trotz WebGL-fähigem Browser | Image älter als 1.20.1 (Plotly-Build war mit der CSP inkompatibel) → `podman auto-update` |
+| Leere Seite über `http://<host>:3000` (ohne TLS) | Image älter als 1.20.1 (CSP `upgrade-insecure-requests`) → `podman auto-update` |
 
 ## Lokal bauen und testen
 

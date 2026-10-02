@@ -5,15 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>emd-app</title>
-    <script>
-      /* Phase 17 — FOUC prevention: apply dark class before first paint */
-      try {
-        var t = localStorage.getItem('emd-theme');
-        if (t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
-        }
-      } catch (e) { /* ignore */ }
-    </script>
+    <!-- FOUC guard (Phase 17). External file: the production CSP (script-src 'self') blocks inline scripts. -->
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

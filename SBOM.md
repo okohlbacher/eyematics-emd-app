@@ -1,9 +1,9 @@
 # Software Bill of Materials (SBOM)
 
 **Project:** EyeMatics Clinical Demonstrator (EMD) — `emd-app`
-**Application version:** 1.20.0
+**Application version:** 1.20.1
 **Project license:** MIT
-**Generated:** 2026-09-07 (v1.20 build — container packaging; `tsx` promoted to a production dependency)
+**Generated:** 2026-10-03 (v1.20.1 — `plotly.js-dist-min` → `plotly.js-strict-dist-min`, the CSP-safe build; the missing Plotly row added)
 **Format:** Human-readable Markdown SBOM derived from `package.json` + `package-lock.json` (lockfileVersion 3) and per-package `license` fields.
 **Replaces:** the earlier point-in-time `BOM.md` (v1.9.3, removed). `SBOM.md` is the canonical, maintained software bill of materials going forward.
 **Runtime:** Node.js ≥ 22 · npm ≥ 10 · ECMAScript modules (`"type": "module"`)
@@ -22,7 +22,7 @@ end-of-phase verification and the pre-release checklist both include an "SBOM cu
 
 | Metric | Value |
 |--------|-------|
-| Direct production dependencies | 21 |
+| Direct production dependencies | 22 |
 | Direct development dependencies | 26 |
 | Total installed packages (incl. transitive) | 405 |
 | License distribution (direct deps) | MIT ×43 · ISC ×2 · BSD-3-Clause ×1 · Apache-2.0 ×1 |
@@ -50,6 +50,7 @@ direct dependency set.
 | `jwks-rsa` | ^3.2.0 | 3.2.2 | MIT |
 | `lucide-react` | ^1.9.0 | 1.9.0 | ISC |
 | `otplib` | ^12.0.1 | 12.0.1 | MIT |
+| `plotly.js-strict-dist-min` | ^3.6.0 | 3.6.0 | MIT |
 | `qrcode` | ^1.5.4 | 1.5.4 | MIT |
 | `react` | ^19.2.4 | 19.2.5 | MIT |
 | `react-dom` | ^19.2.4 | 19.2.5 | MIT |
@@ -64,7 +65,8 @@ direct dependency set.
 `otplib` + `qrcode` — auth (JWT/HS256, Keycloak JWKS prep, password hashing, TOTP 2FA);
 `js-yaml` — `config/settings.yaml` loading; `react` + `react-dom` + `react-router-dom` —
 UI; `recharts` — trajectory/outcome charts; `tailwindcss` + `@tailwindcss/vite` — styling;
-`lucide-react` — icons; `html-to-image` — chart export; `tsx` — runs the uncompiled
+`lucide-react` — icons; `html-to-image` — chart export; `plotly.js-strict-dist-min` — WebGL
+cohort trajectories (strict build: no `new Function`, so it runs under the production CSP); `tsx` — runs the uncompiled
 TypeScript server (`node --import tsx server/index.ts`), hence a production dependency since v1.20.
 
 ## Development dependencies
