@@ -67,6 +67,16 @@ type PlotlyModule = {
   Plots: { resize: (el: HTMLElement) => void };
 };
 
+/** The lazily imported Plotly module (a singleton once loaded) — used by the unmount purge. */
+let loadedPlotly: PlotlyModule | null = null;
+
+// v1.20.2: Plotly swaps its WebGL canvases on a full replot (trace count changes, e.g. a
+// layer toggle) and on purge, but never releases the old contexts — they stay "active"
+// until GC, and browsers keep only ~16 ("Too many active WebGL contexts"). Release them
+// as soon as Plotly has detached them. No match if Plotly renames the classes → no-op.
+const glCanvases = (el: HTMLElement) => [...el.querySelectorAll<HTMLCanvasElement>('canvas.gl-canvas')];
+const releaseGl = (c: HTMLCanvasElement) => c.getContext('webgl')?.getExtension('WEBGL_lose_context')?.loseContext();
+
 export default function PlotlyChart({
   data,
   layout,
@@ -107,13 +117,16 @@ export default function PlotlyChart({
     void (async () => {
       const mod = (await import('plotly.js-strict-dist-min')) as unknown as { default: PlotlyModule };
       const Plotly = mod.default;
+      loadedPlotly = Plotly;
       if (disposed || !elRef.current) return;
       plotly = Plotly;
+      const previousGl = glCanvases(el);
       await Plotly.react(el, data, layout, {
         responsive: true,
         displaylogo: false,
         ...(config ?? {}),
       });
+      for (const c of previousGl) if (!c.isConnected) releaseGl(c);
       if (disposed) return;
 
       const elev = el as unknown as {
@@ -170,11 +183,23 @@ export default function PlotlyChart({
       resizeObserver?.disconnect();
       // M1: drop the imperative handle so a stale restyle can't target a purged div.
       if (handleRef) handleRef.current = null;
-      // `el` is captured from this effect run (the node we drew into) — use it rather
-      // than elRef.current, which may have changed by cleanup time.
-      if (plotly) plotly.purge(el);
+      // No purge here: the next run's Plotly.react updates the SAME graph in place.
     };
   }, [data, layout, config, renderable, handleRef]);
+
+  // v1.20.2: purge only on unmount. Purging on every data/layout change discarded
+  // Plotly.react's diff (full redraw per layer toggle) and re-created each chart's
+  // WebGL contexts every time — the stale ones lingered until GC ("Too many active WebGL
+  // contexts"). `el` is captured at mount: the div keeps its identity for the lifetime.
+  useEffect(() => {
+    const el = elRef.current;
+    return () => {
+      if (!el || !loadedPlotly) return;
+      const gl = glCanvases(el);
+      loadedPlotly.purge(el);
+      gl.forEach(releaseGl);
+    };
+  }, []);
 
   if (!renderable) {
     return <>{fallback}</>;
