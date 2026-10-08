@@ -1,7 +1,7 @@
 {
   "name": "emd-app",
   "private": true,
-  "version": "1.20.2",
+  "version": "1.20.3",
   "description": "EyeMatics Clinical Demonstrator (EMD) — ophthalmological research data analysis dashboard",
   "license": "MIT",
   "type": "module",
