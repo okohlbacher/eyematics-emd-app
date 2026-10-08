@@ -75,7 +75,7 @@ defaults, auto-updates, TLS and troubleshooting are in [docs/Deployment.md](docs
 
 ## Reporting Feedback
 
-Any authenticated user can submit feedback via the in-app **"Report issue"** dialog (sidebar → message-square icon). Each submission — including page context, user/role, timestamp, description, and an optional screenshot — is stored server-side as a JSON file in the `feedback/` directory at the project root:
+Any authenticated user can submit feedback via the in-app **"Report issue"** dialog (the "Problem melden" tab on the right edge of every page). Each submission — including page context, user/role, timestamp, description, and an optional screenshot — is stored server-side as a JSON file in the `feedback/` directory at the project root:
 
 ```
 feedback/
@@ -104,8 +104,11 @@ feedback/
 | `npm run lint:fix`         | Run ESLint with `--fix` (autofix where possible)         |
 | `npm start`                | Start production Express server                          |
 | `npm test`                 | Run full Vitest suite                                    |
-| `npm run test:ci`          | CI gate: skipped-test guard + full suite (619/619)       |
+| `npm run test:ci`          | Gate: skipped-test guard + full suite + bundle audits (all must pass; 1 327 tests at v1.20.2) |
 | `npm run test:check-skips` | Fail if any test is skipped without an allow-list entry  |
+| `npm run verify:bundles`   | Statistical priors of the synthetic bundles (part of `test:ci`)   |
+| `npm run audit:bundles`    | Code-system audit + priors of the synthetic bundles (part of `test:ci`) |
+| `npm run augment-reference-bundles` | Augment the curated reference bundles (Aachen/Tübingen) |
 | `npm run knip`             | Dead-code / unused-export scan (config: `knip.json`)     |
 | `npm run generate-bundles` | Regenerate synthetic FHIR bundles for configured sites   |
 

@@ -36,6 +36,8 @@ import helmet from 'helmet';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import yaml from 'js-yaml';
 
+const APP_VERSION: string = (JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf-8')) as { version: string }).version;
+
 import { auditApiRouter } from './auditApi.js';
 import { initAuditDb, startPurgeInterval } from './auditDb.js';
 import { auditMiddleware } from './auditMiddleware.js';
@@ -209,8 +211,9 @@ app.use(helmet({
 
 // v1.20 container liveness probe (deploy/healthcheck.mjs). Outside /api on purpose:
 // not audit-logged, not JWT-gated, no index.html payload every 30 s.
+// v1.21: carries the version so a rollout can be confirmed without logging in (handoff loop).
 app.get('/healthz', (_req: Request, res: Response) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', version: APP_VERSION });
 });
 
 // Phase 20 / D-03: required for /api/auth/refresh emd-refresh cookie + emd-csrf double-submit.

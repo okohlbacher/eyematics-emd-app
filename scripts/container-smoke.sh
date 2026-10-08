@@ -38,6 +38,8 @@ fi
 echo "--- first start (empty volume)"
 start
 ok "/healthz answers within 60 s" wait_healthy
+ok "/healthz reports the package.json version" \
+  test "$(curl -fsS "$BASE/healthz" | jq -r .version)" = "$(node -p "require('./package.json').version")"
 ok "runs as uid 1000 (node)" test "$("$CLI" exec "$NAME" id -u)" = 1000
 
 TOKEN=$(curl -fsS -H 'content-type: application/json' \

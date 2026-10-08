@@ -156,7 +156,7 @@ Der Server:
 - Liest `config/settings.yaml` beim Start (fail-fast bei Fehler)
 - Lädt Zentren aus `data/centers.json`
 - Initialisiert JWT-Secret, Benutzer, Audit-DB, Daten-DB
-- Dient statische Dateien aus `dist/`
+- Dient statische Dateien aus `dist/` (nur mit `server.serveFrontend: true` **und** vorhandenem `dist/index.html`; sonst antwortet `/` mit einem 404-Hinweis)
 - Blockiert direkten Zugriff auf `/data/*` (nur über `/api/fhir/bundles`)
 - Alle API-Endpunkte unter `/api/*` sind JWT-geschützt
 

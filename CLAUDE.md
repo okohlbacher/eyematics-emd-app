@@ -4,7 +4,8 @@ Minimal project conventions for Claude sessions.
 
 ## Commands
 
-- Test (safety net): `npm run test:ci` (901/901 must pass — v1.11/Phase 36 baseline)
+- Test (safety net): `npm run test:ci` (all must pass — 1 327 tests at v1.20.2)
+- Container: `bash scripts/container-smoke.sh` (build + 18 checks)
 - Build: `npm run build`
 - Dev: `npm run dev` (Vite) + `npm start` (Express API on :3000)
 - Lint: `npm run lint`
