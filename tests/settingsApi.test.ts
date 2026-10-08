@@ -118,6 +118,21 @@ describe('settingsApi', () => {
       expect(res.body).toEqual({ ok: true });
     });
 
+    it('keeps top-level sections the body omits (reset must not drop server/stubs/audit)', async () => {
+      // The mocked settings.yaml on disk carries audit/provider/otpCode/maxLoginAttempts; this body has none of them.
+      const app = createApp('admin');
+      const body = 'twoFactorEnabled: true\ntherapyInterrupterDays: 90\ntherapyBreakerDays: 365\ndataSource:\n  type: local\n  blazeUrl: "http://localhost:8080/fhir"\n';
+      const res = await request(app).put('/api/settings').type('text').send(body);
+      expect(res.status).toBe(200);
+      const writes = (fs.writeFileSync as unknown as ReturnType<typeof vi.fn>).mock.calls;
+      const written = yaml.load(writes[writes.length - 1]![1] as string) as Record<string, unknown>;
+      expect(written.twoFactorEnabled).toBe(true);                       // the body wins for keys it sends
+      expect(written.therapyInterrupterDays).toBe(90);
+      expect((written.audit as Record<string, unknown>).cohortHashSecret).toBe('test-cohort-hash-secret-32-chars-min-xxxx');
+      expect(written.provider).toBe('local');                            // omitted sections are carried over
+      expect(written.otpCode).toBe('999999');
+    });
+
     it('rejects empty body', async () => {
       const app = createApp('admin');
       const res = await request(app)

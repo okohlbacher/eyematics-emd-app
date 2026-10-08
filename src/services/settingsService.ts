@@ -156,7 +156,9 @@ export async function updateSettings(patch: DeepPartial<AppSettings>): Promise<A
  */
 export async function resetSettings(): Promise<AppSettings> {
   const previous = _cached;
-  _cached = { ...DEFAULTS };
+  // v1.21: reset the UI-managed keys only; sections the UI does not know (server, stubs, audit, …)
+  // stay as loaded from the server, so the persisted YAML keeps them. The server guards this too.
+  _cached = { ...(_cached ?? {}), ...DEFAULTS };
   try {
     await persistSettings(_cached);
     return _cached;

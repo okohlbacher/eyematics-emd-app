@@ -324,8 +324,17 @@ settingsApiRouter.put('/', (req: Request, res: Response): void => {
     return;
   }
   try {
-    writeSettings(body, req.auth!.preferred_username);
-    const parsedObj = parsed as Record<string, unknown>;
+    // v1.21: a PUT never removes a top-level section. The UI manages only its own keys; sections it
+    // does not know (server, stubs, audit, keycloak, …) must survive a body that omits them — the
+    // "Auf Standard zurücksetzen" reset used to drop `server:` and brick the container on its next
+    // restart (serveFrontend off, dataDir back to ./data). Remove a section in the file on disk.
+    const current = (yaml.load(readSettings()) ?? {}) as Record<string, unknown>;
+    const incoming = parsed as Record<string, unknown>;
+    const carried = Object.keys(current).filter((k) => !(k in incoming));
+    const parsedObj: Record<string, unknown> = carried.length
+      ? { ...incoming, ...Object.fromEntries(carried.map((k) => [k, current[k]])) }
+      : incoming;
+    writeSettings(carried.length ? yaml.dump(parsedObj, { indent: 2, lineWidth: 120, noRefs: true }) : body, req.auth!.preferred_username);
     updateAuthConfig(parsedObj);
     // Blocker #1 / AUTHCFG-04: null the lazy limiter singleton so the next login
     // request rebuilds it from the updated config (e.g. a lowered maxLoginAttempts
