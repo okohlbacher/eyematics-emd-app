@@ -1,0 +1,28 @@
+# PROPOSED — inactive until the repository owner moves it to .github/workflows/ (decision C-11).
+# Installed by the UseAVibe harness. Runs the per-attempt gate's deterministic part on every push/PR:
+# unit tests (skip guard, vitest, bundle audits), build, lint, knip, requirements registry (static), and the
+# Playwright acceptance suite against the production container (fresh /data volume). No secrets, no API key.
+name: useavibe-test
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:ci
+      - run: npm run build
+      - run: npm run lint
+      - run: npm run knip
+      - run: npm run requirements -- --no-run
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:acceptance

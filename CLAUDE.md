@@ -29,6 +29,18 @@ Minimal project conventions for Claude sessions.
   contracts — do NOT rename (D-05, D-12)
 - "patients" ≠ "cases": a patient has one or more cases (visits)
 
+<!-- >>> useavibe (managed by the UseAVibe harness installer) -->
+## UseAVibe iteration rules (study protocol V01)
+
+- One usability problem (`Z<k>-P<nn>`) per fresh session and commit series: `/clear`, then `/useavibe-fix <ID>`.
+- Done = the scenarios in `acceptance/Z<k>/<ID>.feature` (read-only) + the Stop-hook gate. Problem list: `.planning/useavibe/Z<k>/PROBLEMS.md` (frozen).
+- Test first: the new acceptance test fails before the fix and passes after; all earlier cycles' tests stay green.
+- Never weaken, skip or delete a test. A registry-mapped test keeps its title and assertions; if it goes red, stop and report.
+- Change nothing outside the problem: other findings go under `## Observed, not changed`; ambiguity → `## Blocked`.
+- Trailers `Usability-Problem:`, `Acceptance:`, `Attempts:`. Report evidence (command output), not claims.
+- Skills: `/useavibe-cycle-open`, `/useavibe-plan`, `/useavibe-fix`, `/useavibe-release`, `/useavibe-accept`, `/useavibe-close`.
+<!-- <<< useavibe -->
+
 ## Entry points
 
 - `.planning/PROJECT.md` — domain + architecture

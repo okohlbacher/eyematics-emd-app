@@ -1,12 +1,25 @@
 {
+  "blocks": {
+    ".gitignore": "122ae3840406d361f30bddf71be2bd50edd5ea117f9686d7de87ad9845eedef6",
+    "CLAUDE.md": "6e3780bfdd5c6c33601b1363cfe41b76ac0d21283e820221b6e9155b8b3c36ab"
+  },
   "files": {
+    ".claude/agents/ac-reviewer.md": "62e93ae94a1ce62cfe30f65e3e38c3da6e312de683491edfcd0560c60b4940f4",
     ".claude/launch.json": "75c600a870297992fa948eb12e861b25c44f424ec3ab53d767c6bacf780a7faf",
+    ".claude/settings.json": "fa944e6e9fd5c6581aaa19656961a66b083341746d4e2a7ed89f6a7e8f3e00a6",
     ".claude/skills/uat-implement/SKILL.md": "a6c644cd7eb13e2ac74727182191fa33c64a8ffdff8d7970902d417881f07180",
     ".claude/skills/uat-release/SKILL.md": "daceaac3a436479181982021e48fc8d1dd4b8ca85064768141b3f27626b6ee8a",
     ".claude/skills/uat-round/SKILL.md": "71ec105c30fe2c9d9219b1e59484b9cc0efd48f56555a2769bc92c1568a299b5",
     ".claude/skills/uat-triage/SKILL.md": "34dc49fb180ae7f1301723be2c5963d2ee3d7bb422ccf4cf47ada9717578f08b",
     ".claude/skills/uat-verify/SKILL.md": "2c7d223df22fddbb038223bbca3fc902b7d571fb2dfe58a4328f2022a82992f8",
+    ".claude/skills/useavibe-accept/SKILL.md": "10bec4e029762787b5bf1e6a61da79e7e986b96d013de901c49a0a9048e476b0",
+    ".claude/skills/useavibe-close/SKILL.md": "bbb93830e7e45a8520966f3230aab94d38b540c1097624f0516bfa81588081c6",
+    ".claude/skills/useavibe-cycle-open/SKILL.md": "922b1fee33ab44b8b7674740b5219729b3acebfe73743fdc8b8489887eb64ba3",
+    ".claude/skills/useavibe-fix/SKILL.md": "9ae89cc3ded1b07d39106916918810a4d01e15f445d9c5d073f46fc8a50fd5c6",
+    ".claude/skills/useavibe-plan/SKILL.md": "5ad38e214669858dc29463bb0f9c0190ce0205fb3d008ca9851283b411f49295",
+    ".claude/skills/useavibe-release/SKILL.md": "7df9d866ae09d58da666875df073f9dd113f1c858a2a3c2abb3ea32e5080bee3",
     ".claude/workflows/uat-verify.js": "5d61fece8c6cafe97b401fadfb060120917852d53d63614e4556c937343a8313",
+    ".github/workflows-proposed/useavibe-test.yml": "88986d2778ba4a987af1d33baa0addcd5264e9ac5d912ceda183edb866b66714",
     "handoff/HANDOFF.md": "749797de9680a2d4fe3fd5e0f19d86c39e816eb68fc7361fe90935ff00c61f64",
     "handoff/reports/registry-2026-10-08.md": "21f7fd655f8db47aa8f84a8b1acb159088f8435f6772ed02268accff69910bbe",
     "handoff/requirements/ADMIN.yaml": "8f3de8357b35c765edd961a1b0d0ff3aa1ef937e46a2dd1e756d501c07da2c07",
@@ -30,8 +43,20 @@
     "handoff/rounds/v1.19/items.yaml": "322a90bf362df772392efc57e0d0d77b167b0ff49fcb30277a899f8a05de53bb",
     "handoff/rounds/v1.19/report-local.md": "fb8823e4ae8a99aa764b09bd482e8d55e044386b7ed8f32bffe51170e97348ca",
     "handoff/rounds/v1.19/verification.yaml": "c85af1942facc8c8ab5d39ff51f50277a627c4f6ec5141ef381bc2c8637cd014",
-    "scripts/requirements-check.mjs": "1d9638a717fdd4dd03c3bb58f3b5674969f346eae965e48a931a8e339ce20be6",
-    "scripts/useavibe/node22.sh": "ef74183d22f5fc198242d06838a166e23433ac0c1beb519c8f93a6647479fa74"
+    "playwright.config.ts": "f0d015c0e751fb2255a2027dc14f74a4b68a608ee1f07c83735f317dd23824e9",
+    "scripts/requirements-check.mjs": "f7e912eec014535f771288b418b7757a5f668bcee922a20a31703bfaccabb49e",
+    "scripts/useavibe/activate.mjs": "9cb11b1a0a9608f56b648346a2023820619d96c646905a934a55f27c1e08424c",
+    "scripts/useavibe/e2e-container.sh": "f205f39c252ded830f7b1b884a20cec93010a7fdc0ef3188a43a08bf96da9fa0",
+    "scripts/useavibe/gate.mjs": "a0e2135ebe722176496ea817738d738b6f6a8a74241c16564e20d5c8a6ab003a",
+    "scripts/useavibe/gate.sh": "4532e81632c29aeae7a2d1b75dcf2b52eb705a9e4d6135f38e7baa75a708b4e2",
+    "scripts/useavibe/guard-pseudonyms.mjs": "b368360613b0e7a41317efd791a4077abd4994038b8e98054de9817876dcdf37",
+    "scripts/useavibe/hook-data-deny.mjs": "d4295919bb7e017452fcd50fabb8beb37f1218e367a7c49308d379c46f919ce4",
+    "scripts/useavibe/hook-protect.mjs": "9a0c4e723e5c6f93f42bf37d17522dd83d64e15408e2bc84b68902a76d4fecf1",
+    "scripts/useavibe/hook-session-start.mjs": "81a47d05a8b34b16e27b58395426c2cfd3f1108bde5f354d8717c99d2683ea03",
+    "scripts/useavibe/lib.mjs": "062a881572a8aba67d27d804731aa20e2912cd8ebb61522ee56204b1099705bc",
+    "scripts/useavibe/node22.sh": "ef74183d22f5fc198242d06838a166e23433ac0c1beb519c8f93a6647479fa74",
+    "tests/acceptance/fixtures.ts": "a045b571e6a67d86a63363f0c250d9dd690a88d29640cf2983bb8faa7c647415",
+    "tests/acceptance/harness.spec.ts": "4c41a61dc59cb17bb224e5470ba4766a5c5bba8d3e5afa5d9625668a50703e54"
   },
   "handoff": {
     "name": "emd-uat-handoff_2026-10-08",
@@ -41,5 +66,6 @@
   "patch": {
     "file": "repo-changes.patch",
     "sha256": "c488d016b95e45866cc59153e7c4f569013153b91752b1573478dd19cc2d988f"
-  }
+  },
+  "pseudonym_guard": false
 }

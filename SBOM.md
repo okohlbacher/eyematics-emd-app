@@ -3,7 +3,7 @@
 **Project:** EyeMatics Clinical Demonstrator (EMD) — `emd-app`
 **Application version:** 1.20.3
 **Project license:** MIT
-**Generated:** 2026-10-08 (v1.20.3, dependencies unchanged since v1.20.1 — `plotly.js-dist-min` → `plotly.js-strict-dist-min`, the CSP-safe build; the missing Plotly row added; Inter + JetBrains Mono self-hosted via Fontsource)
+**Generated:** 2026-10-09 (branch `useavibe/harness`: `@playwright/test` 1.63.0 added as exact-pinned devDependency for the UseAVibe acceptance tests — +3 packages: `@playwright/test`, `playwright`, `playwright-core`, all Apache-2.0; production dependencies unchanged since v1.20.1)
 **Format:** Human-readable Markdown SBOM derived from `package.json` + `package-lock.json` (lockfileVersion 3) and per-package `license` fields.
 **Replaces:** the earlier point-in-time `BOM.md` (v1.9.3, removed). `SBOM.md` is the canonical, maintained software bill of materials going forward.
 **Runtime:** Node.js ≥ 22 · npm ≥ 10 · ECMAScript modules (`"type": "module"`)
@@ -23,9 +23,9 @@ end-of-phase verification and the pre-release checklist both include an "SBOM cu
 | Metric | Value |
 |--------|-------|
 | Direct production dependencies | 24 |
-| Direct development dependencies | 26 |
-| Total installed packages (incl. transitive) | 640 |
-| License distribution (direct deps) | MIT ×44 · OFL-1.1 ×2 · ISC ×2 · BSD-3-Clause ×1 · Apache-2.0 ×1 |
+| Direct development dependencies | 27 |
+| Total installed packages (incl. transitive) | 643 |
+| License distribution (direct deps) | MIT ×44 · OFL-1.1 ×2 · ISC ×2 · BSD-3-Clause ×1 · Apache-2.0 ×2 |
 | Copyleft / restrictive licenses | none for code — the two font packages are OFL-1.1 (bundling with any software permitted; obligations apply only to modified fonts) |
 
 All direct dependency licenses are OSI-approved permissive licenses compatible with the
@@ -77,6 +77,7 @@ TypeScript server (`node --import tsx server/index.ts`), hence a production depe
 | Package | Declared range | Resolved | License |
 |---------|----------------|----------|---------|
 | `@eslint/js` | ^9.39.4 | 9.39.4 | MIT |
+| `@playwright/test` | 1.63.0 (exact) | 1.63.0 | Apache-2.0 |
 | `@testing-library/react` | ^16.3.2 | 16.3.2 | MIT |
 | `@types/better-sqlite3` | ^7.6.13 | 7.6.13 | MIT |
 | `@types/compression` | ^1.8.1 | 1.8.1 | MIT |

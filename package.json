@@ -18,6 +18,7 @@
     "generate-bundles": "node --import tsx scripts/generate-all-bundles.ts",
     "augment-reference-bundles": "node --import tsx scripts/augment-reference-bundles.ts",
     "test": "vitest run",
+    "test:acceptance": "bash scripts/useavibe/e2e-container.sh",
     "test:check-skips": "node scripts/check-skipped-tests.mjs",
     "test:ci": "npm run test:check-skips && npm test && npm run audit:bundles",
     "verify:bundles": "node scripts/verify-bundle-distributions.mjs",
@@ -53,6 +54,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@playwright/test": "1.63.0",
     "@testing-library/react": "^16.3.2",
     "@types/better-sqlite3": "^7.6.13",
     "@types/compression": "^1.8.1",

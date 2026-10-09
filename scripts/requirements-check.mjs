@@ -12,6 +12,7 @@
  *   node scripts/requirements-check.mjs --no-run               # schema + static mapping check, no vitest
  *   node scripts/requirements-check.mjs --sweep handoff/sweeps/2026-10-20/verification.yaml   # extra browser records
  *   node scripts/requirements-check.mjs --report handoff/rounds/v1.21/report-local.md         # also write markdown
+ *   node scripts/requirements-check.mjs --e2e playwright.json   # + Playwright JSON report as e2e layer (UseAVibe)
  *   node scripts/requirements-check.mjs --strict               # UNVERIFIED in scope (round items / --area / --changed) fails
  *
  * Inputs
@@ -50,7 +51,7 @@ const RESULTS = new Set(['PASS', 'FAIL', 'BLOCKED']);
 
 // ---------------------------------------------------------------- args
 const argv = process.argv.slice(2);
-const VALUED = new Set(['--round', '--area', '--id', '--results', '--report', '--changed', '--sweep']);
+const VALUED = new Set(['--e2e', '--round', '--area', '--id', '--results', '--report', '--changed', '--sweep']);
 const KNOWN = new Set([...VALUED, '--strict', '--browser', '--no-run', '--release', '--help', '-h']);
 if (argv.includes('--help') || argv.includes('-h')) {
   const src = readFileSync(new URL(import.meta.url), 'utf8');
@@ -131,12 +132,12 @@ function validate(entries) {
     if (r._round) {
       if (!DECISIONS.has(r.decision)) errors.push(`${where}: decision must be ${[...DECISIONS].join('|')} (got ${r.decision})`);
       if (r.decision === 'fix' && !(Array.isArray(r.acceptance) && r.acceptance.length)) errors.push(`${where}: fix item needs acceptance[]`);
-      if (VERIFIABLE.has(r.decision) && !r.browser && !(r.tests ?? []).length) errors.push(`${where}: ${r.decision} item needs a browser procedure or tests`);
+      if (VERIFIABLE.has(r.decision) && !r.browser && !(r.tests ?? []).length && !(r.e2e ?? []).length) errors.push(`${where}: ${r.decision} item needs a browser procedure or tests`);
     } else {
       if (!STATUSES.has(r.status)) errors.push(`${where}: status must be ${[...STATUSES].join('|')}`);
       if (!r.statement) errors.push(`${where}: missing statement`);
     }
-    for (const t of r.tests ?? []) {
+    for (const t of [...(r.tests ?? []), ...(r.e2e ?? [])]) {
       if (!t.file) { errors.push(`${where}: test mapping without file`); continue; }
       if (!existsSync(path.join(ROOT, t.file))) {
         if (opts['no-run'] && r._round) warnings.push(`${where}: planned test file ${t.file} does not exist yet`);
@@ -167,7 +168,7 @@ function runVitest() {
 }
 
 const RANK = { FAIL: 3, MISSING: 2, PLANNED: 1, PASS: 0, SKIPPED: 0 };
-const titleMatches = (title, name) => /^\[?[A-Z]+-?\d+[a-z]?\]?$/.test(name)
+const titleMatches = (title, name) => /^\[?(?:[A-Z]+-?\d+[a-z]?|Z\d+-P\d+|AT-M-\d{3})\]?$/.test(name)
   ? new RegExp(`(^|[^A-Za-z0-9])${name.replace(/[[\]]/g, '')}(?![A-Za-z0-9])`).test(title)   // bare item id: whole token
   : title.toLowerCase().includes(name.toLowerCase());
 
@@ -201,13 +202,38 @@ function unitVerdict(entry, report) {
   return { verdict: worst, detail: details.join(' | ') };
 }
 
-function overall(e, unit, browser) {
+// UseAVibe e2e layer: Playwright JSON report (--e2e) checked against `e2e: [{file, name}]` mappings.
+function flattenSpecs(suite, out = [], prefix = []) {
+  for (const s of suite.suites ?? []) flattenSpecs(s, out, s.title && !s.title.endsWith('.ts') ? [...prefix, s.title] : prefix);
+  for (const sp of suite.specs ?? []) out.push({ file: sp.file ?? suite.file ?? '', title: [...prefix, sp.title].join(' › '), ok: sp.ok,
+    skipped: (sp.tests ?? []).every((t) => t.status === 'skipped') });
+  return out;
+}
+function e2eVerdict(entry, pw) {
+  const maps = entry.e2e ?? [];
+  if (!maps.length) return { verdict: 'NONE', detail: '' };
+  if (!pw) return { verdict: 'NONE', detail: 'no --e2e report' };
+  const specs = (pw.suites ?? []).flatMap((s) => flattenSpecs(s));
+  let worst = 'PASS';
+  const details = [];
+  for (const m of maps) {
+    const cases = specs.filter((s) => (s.file.endsWith(m.file) || m.file.endsWith(s.file)) && (!m.name || titleMatches(s.title, m.name)));
+    const ran = cases.filter((s) => !s.skipped);
+    if (!ran.length) { worst = worst === 'FAIL' ? 'FAIL' : 'MISSING'; details.push(`${m.file}: no e2e test "${m.name ?? '*'}"`); continue; }
+    const bad = ran.filter((s) => !s.ok);
+    if (bad.length) { worst = 'FAIL'; details.push(`${m.file}: ${bad.map((s) => s.title).join('; ')}`); }
+    else details.push(`${m.file}: ${ran.length} e2e passed`);
+  }
+  return { verdict: worst, detail: details.join(' | ') };
+}
+
+function overall(e, unit, browser, e2e = 'NONE') {
   if (e._round ? !VERIFIABLE.has(e.decision) : e.status === 'retired') return 'N/A';
   if (!e._round && e.when === 'release' && !opts.release) return 'N/A';
-  if (unit === 'FAIL' || unit === 'MISSING') return 'FAIL';
+  if (unit === 'FAIL' || unit === 'MISSING' || e2e === 'FAIL' || e2e === 'MISSING') return 'FAIL';
   if (browser === 'FAIL') return (!e._round && e.status !== 'implemented') ? 'KNOWN_GAP' : 'FAIL';
-  if (e._round) return browser === 'PASS' ? 'PASS' : 'UNVERIFIED';   // HANDOFF §6: a round item needs a browser record
-  if (unit === 'PASS' || browser === 'PASS') return 'PASS';
+  if (e._round) return browser === 'PASS' || (e2e === 'PASS' && !e.visual) ? 'PASS' : 'UNVERIFIED';   // HANDOFF §6: a round item needs a browser record
+  if (unit === 'PASS' || browser === 'PASS' || e2e === 'PASS') return 'PASS';
   return 'UNVERIFIED';
 }
 
@@ -257,13 +283,16 @@ if (opts.browser) {
   console.log(lines.join('\n'));
   if (errors.length) { console.error('\nSchema errors:\n- ' + errors.join('\n- ')); process.exitCode = 1; }
 } else {
-  const report = runVitest();   // schema errors are reported but do not suppress the unit layer
+  const report = runVitest();
+  const e2eReport = opts.e2e ? JSON.parse(readFileSync(resolveUser(opts.e2e), 'utf8')) : null;   // schema errors are reported but do not suppress the unit layer
   const rows = entries.map((e) => {
     const unit = unitVerdict(e, report);
+    const e2e = e2eVerdict(e, e2eReport);
+    if (e2e.detail) unit.detail = [unit.detail, `e2e: ${e2e.detail}`].filter(Boolean).join(' | ');
     const b = round.results.get(e.id);
     const browser = b ? b.result : 'NONE';
     return { id: e.id, kind: e._round ? 'round' : e.area, scope: inScope(e), title: e.title ?? e.statement ?? '', status: e.status ?? e.decision ?? '',
-      unit: unit.verdict, unitDetail: unit.detail, browser, browserDetail: b ? `${b.evidence ?? ''}${b._source === 'sweep' ? ' [sweep]' : ''}` : '', overall: overall(e, unit.verdict, browser) };
+      unit: unit.verdict, unitDetail: unit.detail, browser, browserDetail: b ? `${b.evidence ?? ''}${b._source === 'sweep' ? ' [sweep]' : ''}` : '', overall: overall(e, unit.verdict, browser, e2e.verdict) };
   });
   const count = (v, pred = () => true) => rows.filter((r) => r.overall === v && pred(r)).length;
   const scoped = (r) => r.scope;

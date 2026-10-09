@@ -48,3 +48,15 @@ feedback/issue-*.json
 # Local planning scratch
 .planning/.next-call-count
 .planning/reviews/
+
+# >>> useavibe (managed by the UseAVibe harness installer)
+!.claude/settings.json
+!.claude/agents/
+.planning/useavibe/*/PROBLEMS.md
+.planning/useavibe/ACTIVE
+.planning/useavibe/sessions.jsonl
+.planning/useavibe/*/gate-logs/
+.planning/useavibe/.cache/
+test-results/
+playwright-report/
+# <<< useavibe
