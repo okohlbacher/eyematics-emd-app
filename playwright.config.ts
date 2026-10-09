@@ -5,8 +5,8 @@
 // the browser clock is pinned per test in tests/acceptance/fixtures.ts — the server clock is not (documented there).
 import { defineConfig, devices } from '@playwright/test';
 
+// No throw here: tools such as knip load this file; the fixtures refuse to run without a target.
 const baseURL = process.env.PLAYWRIGHT_BASE_URL;
-if (!baseURL) throw new Error('PLAYWRIGHT_BASE_URL is not set — run `npm run test:acceptance` (container) instead');
 
 export default defineConfig({
   testDir: 'tests',

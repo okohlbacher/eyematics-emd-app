@@ -26,7 +26,8 @@ export const test = base.extend<{
   loginAs: (user: string) => Promise<void>;
   startTask: (task: Task) => Promise<void>;
 }>({
-  page: async ({ page }, provide) => {
+  page: async ({ page, baseURL }, provide) => {
+    if (!baseURL) throw new Error('PLAYWRIGHT_BASE_URL is not set — run `npm run test:acceptance` (container)');
     await page.clock.setFixedTime(new Date(REFERENCE_DATE));
     await provide(page);
   },

@@ -43,7 +43,7 @@
     "handoff/rounds/v1.19/items.yaml": "322a90bf362df772392efc57e0d0d77b167b0ff49fcb30277a899f8a05de53bb",
     "handoff/rounds/v1.19/report-local.md": "fb8823e4ae8a99aa764b09bd482e8d55e044386b7ed8f32bffe51170e97348ca",
     "handoff/rounds/v1.19/verification.yaml": "c85af1942facc8c8ab5d39ff51f50277a627c4f6ec5141ef381bc2c8637cd014",
-    "playwright.config.ts": "f0d015c0e751fb2255a2027dc14f74a4b68a608ee1f07c83735f317dd23824e9",
+    "playwright.config.ts": "c3db666e910167f9cc6a3740a8c952e21bfabee8899baf11b31faa84b815040b",
     "scripts/requirements-check.mjs": "f7e912eec014535f771288b418b7757a5f668bcee922a20a31703bfaccabb49e",
     "scripts/useavibe/activate.mjs": "9cb11b1a0a9608f56b648346a2023820619d96c646905a934a55f27c1e08424c",
     "scripts/useavibe/e2e-container.sh": "f205f39c252ded830f7b1b884a20cec93010a7fdc0ef3188a43a08bf96da9fa0",
@@ -55,7 +55,7 @@
     "scripts/useavibe/hook-session-start.mjs": "81a47d05a8b34b16e27b58395426c2cfd3f1108bde5f354d8717c99d2683ea03",
     "scripts/useavibe/lib.mjs": "062a881572a8aba67d27d804731aa20e2912cd8ebb61522ee56204b1099705bc",
     "scripts/useavibe/node22.sh": "ef74183d22f5fc198242d06838a166e23433ac0c1beb519c8f93a6647479fa74",
-    "tests/acceptance/fixtures.ts": "a045b571e6a67d86a63363f0c250d9dd690a88d29640cf2983bb8faa7c647415",
+    "tests/acceptance/fixtures.ts": "5fcd8ebf88009e5bbd424a38501d0a87d0e0d98c7dc74984578eb7c9574538c1",
     "tests/acceptance/harness.spec.ts": "4c41a61dc59cb17bb224e5470ba4766a5c5bba8d3e5afa5d9625668a50703e54"
   },
   "handoff": {
