@@ -24,9 +24,10 @@ end with `## Blocked` (questions for the study team). Do not guess.
 Write one Playwright test per scenario in `tests/acceptance/Z<k>/$ARGUMENTS.spec.ts`, titled
 `[$ARGUMENTS] <scenario name>` (fixtures and login helpers in `tests/acceptance/fixtures.ts`; synthetic data only),
 or a Vitest test `tests/acceptance/Z<k>/$ARGUMENTS.test.ts` for pure logic. `@visual` scenarios get a DOM/ARIA proxy
-assertion where possible and are listed for the browser pass. Run them with `npm run test:acceptance -- tests/acceptance/Z<k>/$ARGUMENTS.spec.ts` (production container, fresh
-`/data`): they MUST fail for the reason the .feature
-describes. Paste the failing output. If they already pass, stop and report.
+assertion where possible and are listed for the browser pass. Do not run the container tests yourself (the sandbox
+blocks Docker by design). Commit nothing yet and end your turn with only the test file(s) changed: the gate's red
+check runs them against the production container and MUST report them failing for the reason the .feature describes.
+Quote that output. If the gate reports "PASS before any fix", stop and report.
 
 ## 3. Implement
 Minimal change that turns the tests green, following CLAUDE.md. No unrelated refactoring. Never modify existing tests;
@@ -34,7 +35,7 @@ a registry-mapped test keeps its title and assertions — if it goes red, stop a
 Anything else you notice goes under `## Observed, not changed`.
 
 ## 4. Verify — evidence, not claims
-Run `npm run test:acceptance -- tests/acceptance/Z<k>/$ARGUMENTS.spec.ts`, then end your turn: the Stop hook runs the
+End your turn: the Stop hook runs the
 whole gate (integrity, unit, build, lint, knip, audit delta, all cycles' acceptance tests, requirements). On failure
 it continues the turn with the failing step; fix the root cause and end the turn again. At the cap the hook asks for
 `## Blocked` — then stop changing code.

@@ -7,6 +7,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 . scripts/useavibe/node22.sh
+. scripts/useavibe/hide-workspace.sh
+[ -n "${USEAVIBE_HIDDEN:-}" ] || useavibe_hidden_exec bash "$PWD/scripts/useavibe/e2e-container.sh" "$@"
 if [ -n "${PLAYWRIGHT_BASE_URL:-}" ]; then exec npx playwright test "$@"; fi
 CLI=${CONTAINER_CLI:-docker}
 IMAGE=${USEAVIBE_E2E_IMAGE:-emd-useavibe-e2e}

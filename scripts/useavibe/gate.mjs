@@ -132,6 +132,31 @@ function semgrepDelta() {
     .map(({ x }) => `${x.path}:${x.start?.line}: ${x.check_id.split('.').at(-1)} — ${String(x.extra?.message ?? '').split('\n')[0]}`);
 }
 
+// Red check (test first, workflow plan §5.3 step 2): while only this problem's own acceptance tests have changed,
+// the e2e run must FAIL. It is recorded as "red"/"green-before-fix" and does not count as an attempt.
+const changedNow = [...new Set([
+  ...git(root, 'diff', '--name-only', active.base, '--', '.', OWN).split('\n'),
+  ...git(root, 'ls-files', '--others', '--exclude-standard', '--', '.', OWN).split('\n'),
+])].filter(Boolean);
+const ownTests = new RegExp(`^tests/acceptance/Z${k}/${active.id}\\.`);
+if (active.kind === 'usability' && changedNow.length && changedNow.every((f) => ownTests.test(f))) {
+  const specs = changedNow.filter((f) => f.endsWith('.spec.ts')).join(' ');
+  const units = changedNow.filter((f) => f.endsWith('.test.ts')).join(' ');
+  const redCmd = process.env.USEAVIBE_RED_CMD   // harness level-2 tests only
+    ?? (specs ? `PLAYWRIGHT_JSON_OUTPUT_NAME=${JSON.stringify(pwJson)} bash scripts/useavibe/e2e-container.sh ${specs}`
+      : `npx vitest run ${units}`);
+  const r = spawnSync('bash', ['-c', redCmd], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const out = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim().split('\n').slice(-25).join('\n');
+  writeFileSync(path.join(logDir, `${active.id}-red.log`), out);
+  if (r.status === 0) {
+    record({ result: 'green-before-fix', attempt: runs.length, fingerprint: fp });
+    fail(`the new acceptance tests PASS before any fix — stop and report (problem fixed already or misdescribed):\n${out}`);
+  }
+  record({ result: 'red', attempt: runs.length, fingerprint: fp });
+  fail(`red check confirmed — the new acceptance tests fail before the fix (not counted as an attempt):\n${out}\n` +
+    'Quote this failing output in your report, then implement the fix.');
+}
+
 const attempt = runs.length + 1;
 const durations = {};
 let failing = null;
