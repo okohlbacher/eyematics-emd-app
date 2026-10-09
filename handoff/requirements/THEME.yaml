@@ -1,0 +1,379 @@
+# UI requirements registry — area THEME. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+area: THEME
+requirements:
+  - id: UIR-THEME-001
+    title: "Theme menu offers Hell, Dunkel, System with active marked"
+    statement: "The user can open the sidebar \"Design\" menu (role=menu) and sees three directly selectable entries \"Hell\", \"Dunkel\" and \"System\", the active one marked by aria-checked and a check icon."
+    status: implemented
+    sources: ["UAT v1.19 N7", "code: src/components/ThemeToggle.tsx", "manual: .planning/v1.20-ROADMAP.md v1.20.1"]
+    evidence:
+      - "src/components/ThemeToggle.tsx:18 (OPTIONS = light/dark/system)"
+      - "src/components/ThemeToggle.tsx:56-72 (trigger button aria-haspopup=menu, aria-expanded, aria-controls, aria-label themeMenuLabel, chevron + current mode name)"
+      - "src/components/ThemeToggle.tsx:74-100 (role=menu, role=menuitemradio, aria-checked, Check icon when active)"
+      - "src/i18n/translations.ts:1032-1035 (themeMenuLabel de 'Design'/en 'Theme'; options 'Hell'/'Dunkel'/'System')"
+      - "src/components/Layout.tsx:121 (ThemeToggle mounted in the sidebar footer below the language button)"
+    tests:
+      - file: tests/themeToggleCycle.test.tsx
+        name: "opens the menu listing all three options when the trigger is clicked"
+      - file: tests/themeToggleCycle.test.tsx
+        name: "marks the active option (System by default) as checked"
+      - file: tests/themeToggleCycle.test.tsx
+        name: "selecting Light persists light, marks it active, and closes the menu"
+      - file: tests/themeToggleCycle.test.tsx
+        name: "starts closed (no menu in the DOM)"
+    browser:
+      route: "/"
+      steps:
+        - "Log in and stay on the Startseite."
+        - "In the sidebar footer (below the \"English\" language button) click the \"Design\" button; it shows a chevron and the current mode name."
+        - "Observe the popover that opens above the button."
+        - "Click \"Dunkel\"."
+        - "Click the \"Design\" trigger again and inspect the entries."
+      expect: "The popover lists exactly three entries \"Hell\", \"Dunkel\", \"System\" (each a menuitemradio). After clicking \"Dunkel\" the page turns dark immediately, the menu closes, the trigger label reads \"Dunkel\" with a moon icon, and on reopening only \"Dunkel\" carries a check icon (aria-checked=true). There is no cycling button."
+    notes: "Trigger button has aria-label/title 'Design' (DE) / 'Theme' (EN). Tests pin locale 'en' so they query the button by name 'Theme'."
+
+  - id: UIR-THEME-002
+    title: "Theme menu closes on outside click or Escape"
+    statement: "The UI closes the open \"Design\" theme menu when the user clicks outside it or presses Escape, without changing the selected theme."
+    status: implemented
+    sources: ["UAT v1.19 N7", "code: src/components/ThemeToggle.tsx"]
+    evidence:
+      - "src/components/ThemeToggle.tsx:28-44 (document mousedown outside containerRef and keydown Escape both call setOpen(false); setTheme is not called)"
+    tests:
+      - file: tests/themeToggleCycle.test.tsx
+        name: "closes on Escape"
+      - file: tests/themeToggleCycle.test.tsx
+        name: "closes on outside click"
+    browser:
+      route: "/"
+      steps:
+        - "Note the current trigger label of the sidebar \"Design\" button (e.g. \"System\")."
+        - "Click \"Design\" to open the menu."
+        - "Press Escape."
+        - "Click \"Design\" again to open the menu."
+        - "Click on the page heading in the main content area (outside the menu)."
+      expect: "In both cases the popover disappears, the page colours do not change, and the trigger label still shows the same mode as before (no theme change)."
+    notes: "The two tests assert only that the menu disappears; they do not assert that localStorage 'emd-theme' is unchanged (it is never written on close, see code)."
+
+  - id: UIR-THEME-003
+    title: "Theme defaults to System (prefers-color-scheme)"
+    statement: "The UI defaults to the \"System\" theme when no theme is stored: a light OS appearance opens the app light and a dark OS appearance opens it dark."
+    status: implemented
+    sources: ["UAT v1.17 L11a", "UAT v1.18 (tester confirmed)", "code: src/context/ThemeContext.tsx", "manual: .planning/v1.20-ROADMAP.md v1.20.1 (no stored theme = system)"]
+    evidence:
+      - "src/context/ThemeContext.tsx:21-30 (readStored returns 'system' when localStorage 'emd-theme' is absent/invalid)"
+      - "src/context/ThemeContext.tsx:34-37 (initial systemDark from matchMedia '(prefers-color-scheme: dark)')"
+      - "src/context/ThemeContext.tsx:47 (effectiveTheme resolves 'system' via systemDark)"
+      - "public/theme-init.js:4-9 (pre-paint: null or 'system' + OS dark adds .dark)"
+    tests:
+      - file: tests/themeToggleCycle.test.tsx
+        name: "marks the active option (System by default) as checked"
+    browser:
+      route: "/"
+      steps:
+        - "In DevTools → Application → Local Storage delete the key 'emd-theme' (or clear site data) and keep the OS appearance set to Light."
+        - "Reload the app and log in."
+        - "Open the sidebar \"Design\" menu and note which entry is checked."
+        - "Set the OS appearance to Dark (macOS: Systemeinstellungen → Erscheinungsbild), delete 'emd-theme' again, reload."
+      expect: "With OS light the app opens light; with OS dark it opens dark. In both cases the \"Design\" menu shows \"System\" checked and the trigger reads \"System\"."
+    notes: "The cited test only asserts that System is the default checked entry; the OS-appearance resolution (matchMedia) is not asserted by any test."
+
+  - id: UIR-THEME-004
+    title: "Chosen theme applies immediately and persists across reload"
+    statement: "The user can choose \"Hell\", \"Dunkel\" or \"System\" and the UI applies the scheme immediately and keeps it after a reload (stored in localStorage 'emd-theme')."
+    status: implemented
+    sources: ["code: src/context/ThemeContext.tsx", "manual: .planning/v1.20-ROADMAP.md v1.20.1"]
+    evidence:
+      - "src/context/ThemeContext.tsx:49-56 (effect toggles .dark on <html> whenever effectiveTheme changes)"
+      - "src/context/ThemeContext.tsx:58-61 (setTheme writes localStorage 'emd-theme')"
+      - "src/context/ThemeContext.tsx:19-30 (STORAGE_KEY 'emd-theme'; readStored restores it on mount)"
+      - "src/index.css:4,47 (@variant dark on .dark; .dark token block)"
+      - "public/theme-init.js:4-9 (restores the stored choice before first paint)"
+    tests:
+      - file: tests/themeToggleCycle.test.tsx
+        name: "selecting Light persists light, marks it active, and closes the menu"
+      - file: tests/themeToggleCycle.test.tsx
+        name: "each option selects its own theme value"
+    browser:
+      route: "/"
+      steps:
+        - "Open the sidebar \"Design\" menu and click \"Dunkel\"."
+        - "Observe the page background at once."
+        - "Reload the page (F5)."
+        - "In DevTools → Application → Local Storage read the key 'emd-theme'."
+        - "Repeat with \"Hell\" and \"System\"."
+      expect: "The background turns dark immediately without reload; after reload the app is still dark and 'emd-theme' equals 'dark'. \"Hell\" stores 'light' and shows light; \"System\" stores 'system' and follows the OS appearance."
+    notes: "Tests assert the localStorage write and the re-marked active entry; the .dark class on <html> is not asserted."
+
+  - id: UIR-THEME-005
+    title: "System mode follows OS appearance changes live"
+    statement: "The UI in \"System\" mode follows OS appearance changes live, switching between light and dark without a reload."
+    status: implemented
+    sources: ["code: src/context/ThemeContext.tsx", "manual: .planning/v1.20-ROADMAP.md v1.20.1"]
+    evidence:
+      - "src/context/ThemeContext.tsx:39-45 (matchMedia 'change' listener updates systemDark while mounted)"
+      - "src/context/ThemeContext.tsx:47-56 (effectiveTheme recomputed from systemDark when theme === 'system'; effect re-applies .dark)"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Open the sidebar \"Design\" menu and click \"System\"."
+        - "With the app visible, switch the OS appearance to Dark (macOS: Systemeinstellungen → Erscheinungsbild → Dunkel)."
+        - "Switch the OS appearance back to Hell."
+        - "Open the \"Design\" menu again."
+      expect: "The app turns dark the moment the OS switches to dark and back to light when the OS switches back, with no reload. The \"Design\" menu still shows \"System\" checked throughout."
+    notes: "No test exercises the matchMedia change listener (ThemeContext.tsx:39-45)."
+
+  - id: UIR-THEME-006
+    title: "No light flash on reload in dark mode"
+    statement: "The UI applies the dark class on <html> before first paint via the external /theme-init.js so no light flash (FOUC) occurs on reload in dark mode."
+    status: implemented
+    sources: ["code: public/theme-init.js; index.html", "manual: .planning/v1.20-ROADMAP.md v1.20.1 (theme-init.js)"]
+    evidence:
+      - "index.html:8-9 (<script src=\"/theme-init.js\"> in <head>, before the module bundle)"
+      - "public/theme-init.js:4-9 (synchronous classic script: reads 'emd-theme' / prefers-color-scheme and adds .dark to document.documentElement)"
+      - "server/index.ts:192-196 (CSP scriptSrc 'self' — external file allowed, inline would be blocked)"
+      - "dist/theme-init.js (file is emitted into the production build)"
+    tests: []
+    browser:
+      route: "/analysis"
+      steps:
+        - "At the bottom of the sidebar click the theme button (shows the current option, e.g. 'System'; title 'Design') and choose 'Dunkel'."
+        - "Log out and on the login page press Cmd/Ctrl+Shift+R (hard reload) while watching the page."
+        - "Log in, navigate to /analysis and hard-reload again."
+        - "Optionally: DevTools → Network, confirm /theme-init.js is loaded before the main bundle and has status 200."
+      expect: "The page paints dark from the first frame; no white/light background flashes before the login form or the Analyse page appears. /theme-init.js is served (200) and the <html> element already carries class \"dark\" when inspected immediately after load."
+    notes: "Not testable in jsdom (no paint); production-only observation."
+
+  - id: UIR-THEME-007
+    title: "Dark mode restyles all Analyse charts and raw-data preview"
+    statement: "In dark mode the Analyse page renders the distribution/IOD charts, the trajectory plots incl. \"Streuband (IQR)\", the \"Behandlungsintervall\"/\"Responder\" plots and the \"Rohdaten anzeigen\" table dark."
+    status: implemented
+    sources: ["UAT v1.17 L11b", "UAT v1.18 M12", "UAT v1.19 N6 (tester confirmed)"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:71-72 (useThemeSafe → rechartsTheme(isDark) for Aggregiert distribution/IOD charts; 31 dark:/isDark usages)"
+      - "src/components/outcomes/palette.ts:88-100 (rechartsTheme dark/light token map)"
+      - "src/components/outcomes/OutcomesPanel.tsx:101-125,304,337-338 (Plotly trajectory layout: dark grid/axis/legend tokens, DARK_EYE_COLORS, paper_bgcolor from chartColors so the dark card shows through)"
+      - "src/components/outcomes/IntervalHistogram.tsx:71-72 and src/components/outcomes/ResponderView.tsx:127 (useThemeSafe → rechartsTheme)"
+      - "src/components/outcomes/OutcomesDataPreview.tsx:198-239 (7 dark: classes on the Rohdaten <details>, table head and cells)"
+    tests:
+      - file: tests/rechartsDarkTheme.test.tsx
+        name: "returns distinct dark vs light tokens"
+      - file: tests/rechartsDarkTheme.test.tsx
+        name: "IntervalHistogram renders inside a dark ThemeProvider"
+      - file: tests/rechartsDarkTheme.test.tsx
+        name: "ResponderView renders inside a dark ThemeProvider"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open the sidebar \"Design\" menu and click \"Dunkel\"."
+        - "Go to Analyse → tab \"Aggregiert\": inspect the distribution charts and the IOD chart (grid lines, axis ticks, tooltip on hover)."
+        - "Switch to tab \"Verläufe\": inspect the Visus/CRT trajectory panels and enable the display layer \"Streuband (IQR)\" to see the band."
+        - "Open the metrics tabs \"Behandlungsintervall\" and \"Responder\"."
+        - "Expand \"Rohdaten anzeigen\" at the bottom of the Verläufe tab."
+      expect: "Every figure has a dark background with light grey grid/ticks/legend and dark tooltip boxes; the Rohdaten table has a dark header and rows. No chart, tooltip or table keeps a white/light background."
+    notes: "Corrected: the Analyse trajectory band is the \"Streuband (IQR)\" display layer; \"Kohorten-Referenz anzeigen\" is a Fallansicht control (see UIR-THEME-008). Tests are smoke renders plus the token map; axis colours in rendered SVG are not asserted (jsdom limitation noted in the test file)."
+
+  - id: UIR-THEME-008
+    title: "Dark mode restyles case view header, charts and cards"
+    statement: "In dark mode the Fallansicht renders the patient header/timeline, the clinical and distribution charts (grid, ticks, tooltips) and the Anamnese, Befunde, AE, Medikation and OCT cards dark."
+    status: implemented
+    sources: ["UAT v1.17 L11b", "UAT v1.18 M12", "UAT v1.19 N6", "code: src/components/case-detail/VisusCrtChart.tsx"]
+    evidence:
+      - "src/components/case-detail/chartTheme.ts:18-30 (caseChartColors: dark grid/tick/legend/tooltip tokens)"
+      - "src/components/case-detail/VisusCrtChart.tsx:74 (caseChartColors(isDark))"
+      - "src/components/case-detail/DistributionCharts.tsx:61 (caseChartColors(isDark)); ClinicalParametersRow.tsx (28 dark:/isDark usages)"
+      - "src/components/case-detail/PatientHeader.tsx (25 dark: classes), AnamnesisFindings.tsx (23), MedicationCard.tsx (10)"
+      - "src/components/OctViewer.tsx (17 dark: classes)"
+      - "src/pages/CaseDetailPage.tsx (10 dark:/isDark usages: header, timeline, chart wrappers)"
+    tests: []
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "Open the sidebar \"Design\" menu and click \"Dunkel\"."
+        - "From Kohortenbildung or Datenqualität open any case (route /case/<caseId>)."
+        - "Inspect the patient header and the visit timeline at the top."
+        - "Hover a point in the Visus/CRT chart and in the distribution charts; check grid lines, tick labels and the tooltip box. Optionally toggle \"Kohorten-Referenz anzeigen\" and inspect the overlay band."
+        - "Scroll to the \"Anamnese\", \"Befunde\", \"Unerwünschte Ereignisse\", \"Medikation\" and \"OCT-Aufnahmen\" cards."
+      expect: "Header, timeline, chart grids/ticks (grey on dark), tooltip boxes (dark background, light text) and all listed cards are dark; no white card or white tooltip remains."
+    notes: "No test asserts dark styling of case-detail components; CaseDetailRound5/7 tests render the components in light mode only."
+
+  - id: UIR-THEME-009
+    title: "Dark mode restyles quality and doc-quality pages"
+    statement: "In dark mode the Datenqualität page (case table, quality case incl. \"OCT-Aufnahmen\") and the Dokumentationsqualität page (score cards, centre chart, plausibility table, filter bar) render dark."
+    status: implemented
+    sources: ["UAT v1.17 L11b", "UAT v1.18 M12", "UAT v1.19 N6 (tester confirmed)", "code: src/components/doc-quality/CenterDetailPanel.tsx"]
+    evidence:
+      - "src/pages/QualityPage.tsx (17 dark: classes), src/components/quality/QualityCaseList.tsx (21), src/components/quality/QualityCaseDetail.tsx (47, OctViewer mounted at :599), src/components/OctViewer.tsx (17)"
+      - "src/pages/DocQualityPage.tsx (13 dark: classes)"
+      - "src/components/doc-quality/CenterComparisonChart.tsx:37 and CenterDetailPanel.tsx:36 (caseChartColors(isDark))"
+      - "src/components/doc-quality/CenterTable.tsx (9), PlausibilityRangesTable.tsx (12), QualityFilterBar.tsx (11), ScoreBadge.tsx (3), CustomTooltip.tsx (5)"
+      - "src/utils/qualityMetrics.ts (scoreBgClass with dark: variants used by MetricCard)"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Open the sidebar \"Design\" menu and click \"Dunkel\"."
+        - "Go to Datenqualität (/quality): inspect the case table and open a flagged case; scroll to its \"OCT-Aufnahmen\" section."
+        - "Go to Dokumentationsqualität (/doc-quality): click the \"Zeitraum\" filter button to reveal the filter bar; inspect the four score cards, the centre comparison chart and the \"Plausibilitätsbereiche\" table."
+        - "Click a centre row in the centre table to open the \"Zentrumsdetails\" panel."
+      expect: "Tables, cards, the filter bar, chart grid/ticks/tooltip and the per-centre detail chart are all dark with light text; no light-background table, chart or filter bar remains."
+    notes: "Corrected: the quality case detail has an \"OCT-Aufnahmen\" section (octTitle), not an OCT tab; the doc-quality filter bar is hidden behind the \"Zeitraum\" toggle button; the detail panel opens via a row click in CenterTable (onSelectCenter). No test asserts dark styling here."
+
+  - id: UIR-THEME-010
+    title: "Every page fully German by default, fully English after switch"
+    statement: "The UI shows every page fully in German by default and switches all visible labels (headings, buttons, chart titles) to English immediately via the sidebar language button, without reload."
+    status: implemented
+    sources: ["UAT v1.13 live re-verification", "code: src/i18n/translations.ts; src/context/LanguageContext.tsx", "manual: Benutzerhandbuch §13; README i18n"]
+    evidence:
+      - "src/context/LanguageContext.tsx:15-18 (default locale 'de' unless 'emd-locale' stored)"
+      - "src/context/LanguageContext.tsx:20-28 (setLocale updates state → t() re-renders consumers, no reload)"
+      - "src/components/Layout.tsx:114-120 (sidebar button toggles de↔en, labelled 'English' when DE and 'Deutsch' when EN)"
+      - "src/i18n/translations.ts:1262-1266 (single {de,en} table, t(key, locale))"
+      - "src/i18n/translations.ts:648-651 (DocQuality card titles: 'Completeness', 'Data Completeness', 'Plausibility', 'Overall Score')"
+    tests:
+      - file: tests/outcomesI18n.test.ts
+        name: "every outcomes* key has a non-empty de and en translation"
+      - file: tests/outcomesI18n.test.ts
+        name: "every metrics* key has a non-empty de and en translation"
+      - file: tests/docQualityVollzaehligkeit.test.tsx
+        name: "docQualityCompleteness label is \"Vollzähligkeit\" / \"Completeness\""
+      - file: tests/inactivitySettings.test.ts
+        name: "inactivityCountdown has non-empty de and en translations"
+    browser:
+      route: "/"
+      steps:
+        - "Clear localStorage key 'emd-locale', reload and log in — the UI must be German."
+        - "Click the sidebar button \"English\" (globe icon above \"Design\")."
+        - "Without reloading, visit Startseite, Kohortenbildung, Analyse (Aggregiert + Verläufe), a Fallansicht, Datenqualität, Dokumentationsqualität, Verwaltung, Protokoll, Einstellungen and Konto."
+        - "On /doc-quality read the four score-card titles."
+        - "Click the sidebar button \"Deutsch\" and revisit the same pages."
+      expect: "After \"English\" every heading, button, nav label and chart title is English (on /doc-quality the cards read 'Completeness', 'Data Completeness', 'Plausibility', 'Overall Score'); after \"Deutsch\" they read 'Vollzähligkeit', 'Vollständigkeit', 'Plausibilität', 'Gesamtbewertung' and no English label remains. The switch happens instantly without reload."
+    notes: "The EN card titles 'Documentation Completeness' / 'Measurement Completeness' quoted in older UAT notes no longer exist (reverted in v1.14 I5, see docQualityVollzaehligkeit.test.tsx). Test coverage is per-namespace (outcomes*, metrics*, selected keys), not an exhaustive every-page sweep; the Layout language button itself has no test."
+
+  - id: UIR-THEME-011
+    title: "Language switch keeps current page and state"
+    statement: "The UI keeps the current route and page state (filters, selections) when the user switches between German and English."
+    status: implemented
+    sources: ["UAT v1.13 live re-verification", "code: src/context/LanguageContext.tsx"]
+    evidence:
+      - "src/context/LanguageContext.tsx:20-23 (setLocale only updates React state + localStorage 'emd-locale'; no navigation, no reload)"
+      - "src/components/Layout.tsx:114-120 (switch button calls setLocale inside the persistent Layout shell; routed page components stay mounted)"
+      - "src/pages/DocQualityPage.tsx:79-81 (timeRange/selectedCenter/showFilters are component state that survives the re-render)"
+    tests: []
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Open Dokumentationsqualität, click the \"Zeitraum\" button to reveal the filter bar, choose a time range other than \"Gesamter Zeitraum\" and a specific centre in the \"Zentrum\" select."
+        - "Click the sidebar button \"English\"."
+        - "Check the browser address bar and the filter bar."
+        - "Click \"Deutsch\" again."
+      expect: "The URL stays /doc-quality, the chosen time range and centre remain selected (now labelled 'Time Range' / 'Center'), and only the labels change language in both directions."
+    notes: "Corrected: DocQuality filters live in component state, not in query params, so no query-string expectation applies. The analogous check on /analysis?tab=trajectories&cohorts=… would also keep its query params (AnalysisPage uses useSearchParams)."
+
+  - id: UIR-THEME-012
+    title: "Dates and numbers formatted for the active locale"
+    statement: "The UI formats dates and numbers for the active locale (de-DE vs en-US) on the landing, case, admin and audit pages."
+    status: partial
+    sources: ["code: src/utils/dateFormat.ts; src/pages/LandingPage.tsx; src/pages/AuditPage.tsx"]
+    evidence:
+      - "src/utils/dateFormat.ts:9-11 (getDateLocale: 'de' → 'de-DE', otherwise 'en-US')"
+      - "src/pages/LandingPage.tsx:104,111 (toLocaleString(locale) for KPI numbers), 125-130 and 289-294 (toLocaleDateString(getDateLocale(locale), weekday long))"
+      - "src/pages/AuditPage.tsx:20,32,188-191 (dateFmt = getDateLocale(locale) with dateStyle short / timeStyle medium)"
+      - "src/pages/CaseDetailPage.tsx:78,310,380,411,439 (dateFmt for injection dates and chart ticks)"
+      - "src/pages/AdminPage.tsx:93,817,871-875 (user table createdAt/lastLogin via dateFmt)"
+      - "src/pages/AdminPage.tsx:1004-1006 (sessions sub-table uses toLocaleString() WITHOUT a locale → browser locale, not the app locale)"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "On the Startseite with German active read the date line next to 'Klinischer Demonstrator' and the KPI numbers."
+        - "Click the sidebar button \"English\" and read the same line and numbers."
+        - "Open Protokoll (/audit) and compare the timestamp column in both languages."
+        - "Open Verwaltung (/admin): compare the 'Angelegt' / 'Letzte Anmeldung' columns in both languages; then click a user's \"Sitzungen\" button and compare the timestamps of the sessions sub-table."
+      expect: "German: 'Donnerstag, 8. Oktober 2026', numbers with thousands dot (e.g. 12.345), audit timestamps '08.10.26, 14:05:09'. English (en-US): 'Thursday, October 8, 2026', numbers 12,345, audit timestamps '10/8/26, 2:05:09 PM'. Known gap: the admin sessions sub-table follows the browser locale instead of the app language."
+    notes: "Corrected the admin column labels to 'Angelegt' / 'Letzte Anmeldung' (adminCreated / adminLastLogin) — 'Erstellt' / 'Letzter Login' do not exist in translations.ts. Partial because AdminPage.tsx:1004-1006 (sessions sub-table) calls toLocaleString() without the app locale. No test covers locale formatting."
+
+  - id: UIR-THEME-013
+    title: "Text in Inter Variable, data numbers in JetBrains Mono"
+    statement: "The UI renders body text in Inter Variable and data numbers (class font-data or font-mono, e.g. KPI values and the inactivity countdown) in JetBrains Mono Variable rather than a system fallback."
+    status: implemented
+    sources: ["UAT v1.20.1 fonts", "code: src/main.tsx; src/index.css", "manual: .planning/v1.20-ROADMAP.md v1.20.1 Fonts"]
+    evidence:
+      - "src/main.tsx:3-4 (imports @fontsource-variable/inter and @fontsource-variable/jetbrains-mono)"
+      - "src/index.css:8-9 (--font-sans 'Inter Variable', --font-mono 'JetBrains Mono Variable' in @theme)"
+      - "src/index.css:99 (.font-data → var(--font-mono) with tnum)"
+      - "src/components/Layout.tsx:72 (inactivity countdown span uses Tailwind font-mono → --font-mono)"
+      - "src/pages/LandingPage.tsx:163,196,282 (font-data on KPI values); src/pages/AdminPage.tsx:1003-1006 (font-data on session cells)"
+      - "dist/assets/index-*.css contains 'Inter Variable' and 'JetBrains Mono Variable' @font-face"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in; in DevTools select the <body> element → Computed → font-family."
+        - "On the Startseite select a KPI number (class font-data) and read its computed font-family."
+        - "Stay idle until the inactivity warning banner appears (or shorten the timeout in Einstellungen) and inspect the mm:ss countdown span (class font-mono)."
+        - "In DevTools → Rendered Fonts (Chrome: Computed → 'Rendered Fonts') confirm the actual font file used."
+      expect: "body resolves to 'Inter Variable' and the rendered font is Inter Variable (not Helvetica/Arial/system-ui); the KPI value and the countdown resolve to 'JetBrains Mono Variable' (not Menlo/SF Mono)."
+    notes: "The countdown uses the Tailwind class font-mono (Layout.tsx:72), not font-data; both map to --font-mono. No automated test covers fonts."
+
+  - id: UIR-THEME-014
+    title: "Fonts self-hosted from /assets, no third-party font requests"
+    statement: "The UI loads its font files as woff2 subsets from /assets with zero requests to third-party font hosts such as fonts.googleapis.com."
+    status: implemented
+    sources: ["UAT v1.20.1 fonts", "manual: .planning/v1.20-ROADMAP.md v1.20.1 Fonts"]
+    evidence:
+      - "src/main.tsx:1-4 (fonts bundled via @fontsource-variable packages; comment documents removal of the Google Fonts request)"
+      - "package.json:29-30 (@fontsource-variable/inter, @fontsource-variable/jetbrains-mono)"
+      - "dist/assets/inter-*-wght-normal-*.woff2 and jetbrains-mono-*-wght-normal-*.woff2 (per-subset woff2 files emitted by Vite)"
+      - "index.html, src/ and server/ contain no fonts.googleapis.com / fonts.gstatic.com reference (grep empty)"
+      - "server/index.ts:192-196 (CSP defaultSrc 'self' with no font-src override → any third-party font request would be blocked)"
+    tests: []
+    browser:
+      route: "/login"
+      steps:
+        - "Open DevTools → Network, enable 'Disable cache', filter by 'Font'."
+        - "Hard-reload the login page."
+        - "Clear the filter and type 'fonts.g' in the Network search box."
+        - "Log in and open /analysis; repeat the Network check."
+      expect: "Only woff2 files are listed, all with URLs under /assets/ (names like inter-latin-wght-normal-*.woff2, jetbrains-mono-latin-wght-normal-*.woff2) with status 200; no request to fonts.googleapis.com or fonts.gstatic.com and no CSP violation in the console."
+    notes: "Production/container observation; dev server serves the same bundled files from node_modules."
+
+  - id: UIR-THEME-015
+    title: "Language choice persists across reload"
+    statement: "The UI keeps the language chosen via the sidebar button after a reload or new login (stored in localStorage 'emd-locale'), falling back to German when nothing is stored."
+    status: implemented
+    sources: ["code: src/context/LanguageContext.tsx"]
+    evidence:
+      - "src/context/LanguageContext.tsx:15-18 (initial locale read from localStorage 'emd-locale'; 'de' otherwise)"
+      - "src/context/LanguageContext.tsx:20-23 (setLocale writes localStorage 'emd-locale')"
+      - "src/App.tsx:74-82 (LanguageProvider wraps the whole router, so the login page restores the locale too)"
+    tests:
+      - file: tests/themeToggleCycle.test.tsx
+        name: "opens the menu listing all three options when the trigger is clicked"
+    browser:
+      route: "/"
+      steps:
+        - "With German active click the sidebar button \"English\"."
+        - "Reload the page (F5) and, if prompted, log in again."
+        - "In DevTools → Application → Local Storage read the key 'emd-locale'."
+        - "Delete the key 'emd-locale' and reload."
+      expect: "After the reload the UI (login page and app) is still English and 'emd-locale' equals 'en'; after deleting the key and reloading the UI is German again."
+    notes: "Added by the refute pass (no sweep listed it). The cited test seeds 'emd-locale'='en' and then finds the trigger by its EN name 'Theme', which only passes because LanguageProvider restores the stored locale; the write path is not asserted by any test."
+  - id: UIR-THEME-016
+    title: "Dialogs and overlays render dark in dark mode"
+    statement: "The UI renders dialogs and overlays (the \"Problem melden\" dialog, drawers, menus) with dark surfaces and light text when the dark theme is active, not as white panels on the dark page."
+    status: partial
+    sources: ["handoff review 2026-10-08 (browser dry run on the verify container, dark mode)"]
+    evidence:
+      - "src/components/FeedbackButton.tsx:142-173 (dialog panel bg-white, header bg-gray-50; no dark: classes — renders white on the dark page)"
+    tests: []
+    browser:
+      route: "/analysis"
+      steps:
+        - "At the bottom of the sidebar click the theme button (shows the current option, e.g. 'System'; title 'Design') and choose 'Dunkel'."
+        - "Click the amber \"Problem melden\" tab at the right edge of the page; wait until role=dialog \"Problem melden\" exists (≥ 2 s)."
+        - "Look at the dialog panel, its header and its text colours against the dark page; close with Escape."
+      expect: "REQUIRED BEHAVIOUR: panel, header, textarea and buttons use dark surfaces with light text. CURRENT BEHAVIOUR (gap): the panel is white with a light-grey header on the dark page."
+    notes: "found 2026-10-08 during handoff review — backlog. Only the Problem melden dialog was checked; the Verläufe drawers (\"Diagramm-Anzeige\", \"Kohorten vergleichen\") and the theme menu should be re-checked when the fix lands."

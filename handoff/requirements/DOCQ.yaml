@@ -1,0 +1,440 @@
+# UI requirements registry — area DOCQ. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+area: DOCQ
+requirements:
+  - id: UIR-DOCQ-001
+    title: "Header: Zeitraum toggle reveals time-range bar"
+    statement: "The Dokumentationsqualität page header has a \"Zeitraum\" toggle that shows or hides the time-range preset bar."
+    status: implemented
+    sources: ["code: src/pages/DocQualityPage.tsx:183-255", "UAT v1.13 B1"]
+    evidence:
+      - "src/pages/DocQualityPage.tsx:81 (showFilters state, default false)"
+      - "src/pages/DocQualityPage.tsx:213-223 (\"Zeitraum\" button toggles showFilters, highlighted blue when open)"
+      - "src/pages/DocQualityPage.tsx:246-255 (QualityFilterBar rendered only while showFilters)"
+      - "src/components/doc-quality/QualityFilterBar.tsx:72-103 (preset bar with \"Zeitraum:\" label)"
+      - "src/i18n/translations.ts:653 (docQualityTimeRange = \"Zeitraum\")"
+    tests: []
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin (or diz_manager / klinikleitung) and open /doc-quality."
+        - "Observe the header: no preset buttons are visible below it."
+        - "Click the \"Zeitraum\" button in the header."
+        - "Click \"Zeitraum\" again."
+      expect: "After step 3 a bar labelled \"Zeitraum:\" with buttons \"Letzte 3 Monate\", \"Letzte 6 Monate\", \"Letztes Jahr\", \"Gesamter Zeitraum\", \"Benutzerdefiniert\" appears and the \"Zeitraum\" button is highlighted blue; after step 4 the bar disappears again."
+    notes: "No test renders DocQualityPage. The shared QualityFilterBar is only exercised through tests/QualityPage.test.tsx ('time-range control (QualityFilterBar) renders on the page'), which targets /quality, so it is not cited here. The route is gated to roles admin/clinic_lead/data_manager (src/App.tsx:35-39,61; src/context/AuthContext.tsx:23)."
+  - id: UIR-DOCQ-002
+    title: "Time-range presets incl. Benutzerdefiniert with date picker"
+    statement: "The user can choose \"Letzte 3 Monate\", \"Letzte 6 Monate\", \"Letztes Jahr\", \"Gesamter Zeitraum\" or \"Benutzerdefiniert\" with a from/to date picker whose upper bound is respected."
+    status: implemented
+    sources: ["EMDREQ-QUAL-011 / N07.02", "UAT v1.13 B1; confirmed v1.14", "manual: Benutzerhandbuch §8.2"]
+    evidence:
+      - "src/components/doc-quality/QualityFilterBar.tsx:41-46 (3m/6m/1y/all presets)"
+      - "src/components/doc-quality/QualityFilterBar.tsx:53-62,92-101 (\"Benutzerdefiniert\" seeds last 30 days → today)"
+      - "src/components/doc-quality/QualityFilterBar.tsx:106-126 (\"Von:\"/\"Bis:\" date inputs, Bis max=today and min=Von, Von max=Bis)"
+      - "src/utils/qualityMetrics.ts:170-189 (timeRangeWindow: custom to = end of 'to' day, from>to rejected)"
+      - "src/utils/qualityMetrics.ts:191-221 (filterCasesByTimeRange clips observations to both bounds)"
+    tests:
+      - file: tests/qualityMetrics.test.ts
+        name: "custom range: clips to BOTH bounds (obs after `to` are excluded)"
+      - file: tests/qualityMetrics.test.ts
+        name: "custom range: both bounds applied (inclusive from start-of-day / to end-of-day)"
+      - file: tests/qualityMetrics.test.ts
+        name: "custom range with from>to is rejected (null → no window)"
+      - file: tests/qualityMetrics.test.ts
+        name: "3m preset: only cases with obs in the last 3 months survive"
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin, open /doc-quality, click \"Zeitraum\"."
+        - "Click each of \"Letzte 3 Monate\", \"Letzte 6 Monate\", \"Letztes Jahr\", \"Gesamter Zeitraum\" and note the \"Grundgesamtheit\" value after each."
+        - "Click \"Benutzerdefiniert\"; \"Von:\" and \"Bis:\" date inputs appear pre-filled with the last 30 days."
+        - "Set \"Von\" to a date two years ago and \"Bis\" to a date one year ago (end date in the past)."
+        - "Compare \"Grundgesamtheit\" and the \"Beobachtungen\" column with the values for \"Gesamter Zeitraum\"."
+      expect: "The clicked preset is highlighted blue; Grundgesamtheit changes per preset. In the custom range the counts are lower than for \"Gesamter Zeitraum\" and the \"Bis\" input cannot be set later than today; observations after the \"Bis\" date are not counted (Beobachtungen shrink when \"Bis\" is moved earlier)."
+    notes: "Only the window logic is unit-tested; the picker UI itself has no test."
+  - id: UIR-DOCQ-003
+    title: "Metrics, Grundgesamtheit and counts recompute on time range"
+    statement: "The Dokumentationsqualität metric cards, Grundgesamtheit label and per-centre counts recompute from windowed observations only when the time range changes."
+    status: implemented
+    sources: ["EMDREQ-QUAL-011 / N07.02", "UAT v1.13 A2/B1; confirmed v1.14", "manual: Benutzerhandbuch §8.2"]
+    evidence:
+      - "src/pages/DocQualityPage.tsx:34-62 (buildCenterMetrics filters each centre's cases by timeRange)"
+      - "src/pages/DocQualityPage.tsx:105-113,127-142 (rawTotal, centerMetrics, distinctPatientCount, aggregateVollzaehligkeit all depend on timeRange)"
+      - "src/utils/qualityMetrics.ts:191-221 (filterCasesByTimeRange trims observations and drops empty cases)"
+      - "src/utils/qualityMetrics.ts:241-329 (computeMetrics on windowed cases)"
+    tests:
+      - file: tests/qualityMetrics.test.ts
+        name: "range=\"6m\": case with obs ONLY outside window is excluded (A2 core fix)"
+      - file: tests/qualityMetrics.test.ts
+        name: "patientCount from computeMetrics reflects only windowed cases (not raw cases)"
+      - file: tests/qualityMetrics.test.ts
+        name: "does NOT collapse to ~100% as the window shrinks (numerator windowed, denominator full)"
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin, open /doc-quality, click \"Zeitraum\"."
+        - "With \"Gesamter Zeitraum\" active, note \"Grundgesamtheit\", the four card percentages and the \"Patienten\"/\"Beobachtungen\" columns of the table."
+        - "Click \"Letztes Jahr\", then \"Letzte 6 Monate\", then \"Letzte 3 Monate\", noting the same values each time."
+      expect: "Grundgesamtheit, the card patient counts and the table Patienten/Beobachtungen values decrease (or stay equal) with each shorter window; the Vollständigkeit and Plausibilität percentages remain meaningful (not 0 %) and the page never shows NaN."
+    notes: "Page-level recomputation is untested; only the underlying utils are, and the 'does NOT collapse' test covers the per-centre computeMetrics rule (full per-centre denominator, DocQualityPage.tsx:51-58), not the aggregate card. Denominators differ by level: the aggregate Vollzähligkeit card uses the windowed registered count (N8, countRawPatientsInWindow), per-centre rows keep the full registered per-centre total (rawByCenter)."
+  - id: UIR-DOCQ-004
+    title: "Subtitle badge shows active non-default time range"
+    statement: "The Dokumentationsqualität subtitle shows a blue badge with the active range (preset label or from–to) whenever a range other than \"Gesamter Zeitraum\" is active."
+    status: implemented
+    sources: ["UAT v1.10 QUAL-011 / A-09", "code: src/pages/DocQualityPage.tsx:195-208"]
+    evidence:
+      - "src/pages/DocQualityPage.tsx:197-207 (badge rendered when timeRange !== 'all'; custom shows `from – to`, presets show their label)"
+      - "src/i18n/translations.ts:654-657 (preset labels)"
+    tests: []
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin, open /doc-quality, click \"Zeitraum\"."
+        - "Click \"Letzte 6 Monate\" and look at the subtitle line under the page title \"Dokumentationsqualität\"."
+        - "Click \"Benutzerdefiniert\"."
+        - "Click \"Gesamter Zeitraum\"."
+      expect: "After step 2 a blue rounded badge \"Letzte 6 Monate\" sits right of the subtitle text; after step 3 the badge shows \"<yyyy-mm-dd> – <yyyy-mm-dd>\"; after step 4 no badge is shown."
+    notes: "The custom badge shows raw ISO dates (yyyy-mm-dd), not localized dates."
+  - id: UIR-DOCQ-005
+    title: "Always-visible centre select scopes KPIs (no chip filter)"
+    statement: "The user can pick \"Alle Zentren\" or a single centre in an always-visible header select (no multi-centre chip filter), and the KPIs are scoped to that selection."
+    status: implemented
+    sources: ["EMDREQ-QUAL-011 / N07.01", "UAT v1.13 D1 (by decision); v1.10 QUAL-011", "code: src/pages/DocQualityPage.tsx:183-255"]
+    evidence:
+      - "src/pages/DocQualityPage.tsx:224-234 (header <select> with \"Alle Zentren\" + one option per centre, always rendered)"
+      - "src/pages/DocQualityPage.tsx:253 (QualityFilterBar showCenterFilter={false} — no second centre control)"
+      - "src/pages/DocQualityPage.tsx:144-150,328-333 (selected centre → CenterDetailPanel with that centre's metrics)"
+    tests: []
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin and open /doc-quality without clicking \"Zeitraum\"."
+        - "Confirm the header shows a dropdown whose current value is \"Alle Zentren\" and that no chip/multi-select centre filter exists anywhere on the page."
+        - "Note the row for one centre (e.g. UKT) in the comparison table."
+        - "Choose that centre in the header dropdown."
+      expect: "The page switches to the centre detail view; its four cards show exactly the percentages of that centre's table row (Vollzähligkeit, Vollständigkeit, Plausibilität, Gesamtbewertung) and the \"… Patienten\" chip equals the row's Patienten value."
+    notes: "The 'scoped KPIs' are the centre detail panel's cards; the overview cards are not re-scoped in place."
+  - id: UIR-DOCQ-006
+    title: "Centres without cases in window are omitted"
+    statement: "The Dokumentationsqualität page omits centres with no cases in the selected time window from the table, the chart and the centre select."
+    status: implemented
+    sources: ["code: src/pages/DocQualityPage.tsx:34-62"]
+    evidence:
+      - "src/pages/DocQualityPage.tsx:41-46 (buildCenterMetrics skips a centre whose filtered cases are empty)"
+      - "src/pages/DocQualityPage.tsx:115-118 (centerOptions derived from centerMetrics → dropdown)"
+      - "src/pages/DocQualityPage.tsx:306-318 (chart and table fed from centerMetrics)"
+    tests: []
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin, open /doc-quality, open the header centre dropdown and count the centre options with \"Gesamter Zeitraum\"."
+        - "Click \"Zeitraum\" → \"Benutzerdefiniert\" and set \"Von\" and \"Bis\" to a narrow 7-day window in the past."
+        - "Re-open the centre dropdown, and inspect the table rows and chart groups."
+      expect: "Centres that have no observation in the chosen 7-day window are absent from the dropdown, the table and the chart; the remaining centres are identical across all three."
+    notes: "If the window is so narrow that no centre has data, the Grundgesamtheit line, cards, table and ranges table disappear (DocQualityPage.tsx:258,266,314,323 require centerMetrics.length > 0); the \"Alle Zentren\" chart card stays and shows \"Keine Daten verfügbar\" (CenterComparisonChart.tsx:47-53, translations.ts:47)."
+  - id: UIR-DOCQ-007
+    title: "Grundgesamtheit label in overview only"
+    statement: "The Dokumentationsqualität page shows \"Grundgesamtheit: n\" (distinct in-window patients) above the metric cards when \"Alle Zentren\" is selected, and not in the centre detail."
+    status: implemented
+    sources: ["code: src/pages/DocQualityPage.tsx:120-130,257-263", "UAT v1.13 A2"]
+    evidence:
+      - "src/pages/DocQualityPage.tsx:127-130 (distinctPatientCount = distinct pseudonyms in windowed cases)"
+      - "src/pages/DocQualityPage.tsx:258-263 (label rendered only when selectedCenter === 'all' and centerMetrics.length > 0)"
+      - "src/i18n/translations.ts:535 (qualityPopulationLabel = \"Grundgesamtheit\")"
+    tests: []
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin and open /doc-quality."
+        - "Look directly above the four KPI cards."
+        - "Select a centre in the header dropdown."
+        - "Click \"← Alle Zentren\"."
+      expect: "Step 2 shows a line \"Grundgesamtheit: <n>\" (n > 0); after step 3 the centre detail has no \"Grundgesamtheit\" line; after step 4 the line is back."
+    notes: "The line also disappears when the active window leaves no centre with data (same guard as the cards)."
+  - id: UIR-DOCQ-008
+    title: "Four KPI cards with info tooltips"
+    statement: "The Dokumentationsqualität page shows four KPI cards \"Vollzähligkeit\", \"Vollständigkeit\", \"Plausibilität\" and \"Gesamtbewertung\", each with an ℹ tooltip giving its definition."
+    status: implemented
+    sources: ["EMDREQ-QUAL-011 / N07.03", "UAT v1.14 I5 (reversal of v1.13 B2); confirmed v1.15", "code: src/pages/DocQualityPage.tsx:265-297; src/components/doc-quality/MetricCard.tsx:17-55", "manual: Benutzerhandbuch §8.1"]
+    evidence:
+      - "src/pages/DocQualityPage.tsx:266-297 (four MetricCards with tooltip props)"
+      - "src/components/doc-quality/MetricCard.tsx:23-26 (InfoTooltip next to the label)"
+      - "src/components/primitives/InfoTooltip.tsx:16-26 (native title + aria-label)"
+      - "src/i18n/translations.ts:648-651,765-786 (labels and tooltip texts)"
+    tests:
+      - file: tests/docQualityVollzaehligkeit.test.tsx
+        name: "docQualityCompleteness label is \"Vollzähligkeit\" / \"Completeness\""
+      - file: tests/docQualityVollzaehligkeit.test.tsx
+        name: "every tooltip key resolves to a non-empty string (de + en)"
+      - file: tests/docQualityVollzaehligkeit.test.tsx
+        name: "renders an accessible info tooltip for Plausibilität"
+      - file: tests/components.test.tsx
+        name: "renders an accessible info tooltip when tooltip prop is provided"
+      - file: tests/docQualityMainCentreParity.test.tsx
+        name: "renders the same four definition tooltips the main view uses"
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin and open /doc-quality with \"Alle Zentren\" selected."
+        - "Read the four card titles in the KPI row."
+        - "Hover the ℹ icon next to each title for about one second."
+      expect: "Cards are titled \"Vollzähligkeit\", \"Vollständigkeit\", \"Plausibilität\", \"Gesamtbewertung\"; each ℹ shows a native tooltip starting with that metric name followed by its definition (four different texts)."
+    notes: "Tooltip is the native browser title attribute, so it appears after the OS hover delay. The parity test renders CenterDetailPanel (same MetricCard + same four tooltip keys), not the overview row; no test renders the overview cards themselves."
+  - id: UIR-DOCQ-009
+    title: "Gesamtbewertung tooltip states 40/30/30 weighting"
+    statement: "The \"Gesamtbewertung\" card weights Vollzähligkeit 40 %, Vollständigkeit 30 % and Plausibilität 30 %, and its ℹ tooltip states these weights."
+    status: implemented
+    sources: ["UAT v1.14 I5; confirmed v1.15", "manual: Benutzerhandbuch §8.1"]
+    evidence:
+      - "src/utils/qualityMetrics.ts:318-319 (overall = completeness*0.4 + dataCompleteness*0.3 + plausibility*0.3)"
+      - "src/i18n/translations.ts:783-786 (tooltip text names 40 %/30 %/30 %)"
+      - "src/pages/DocQualityPage.tsx:289-295 and src/components/doc-quality/CenterDetailPanel.tsx:108-114 (card wiring)"
+    tests:
+      - file: tests/docQualityVollzaehligkeit.test.tsx
+        name: "the Gesamtbewertung tooltip documents the 40/30/30 weighting"
+      - file: tests/docQualityVollzaehligkeit.test.tsx
+        name: "renders an accessible info tooltip for Gesamtbewertung"
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin, open /doc-quality and hover the ℹ next to \"Gesamtbewertung\"."
+        - "Select one centre in the header dropdown to open its detail panel."
+        - "Compute 0.4 × Vollzähligkeit + 0.3 × Vollständigkeit + 0.3 × Plausibilität from that centre's three card percentages."
+      expect: "The tooltip reads \"Gesamtbewertung: gewichteter Gesamtscore aus Vollzähligkeit (40 %), Vollständigkeit (30 %) und Plausibilität (30 %).\"; the centre's Gesamtbewertung card equals the computed value within ±1 % (rounding)."
+    notes: "Check the arithmetic in the centre detail, not the overview: the overview Gesamtbewertung is the unweighted mean of per-centre overall scores (DocQualityPage.tsx:291) while the overview Vollzähligkeit is a direct windowed ratio (lines 139-142), so the overview cards do not satisfy the 40/30/30 identity exactly. The cited tests only check the tooltip text; no test asserts the 0.4/0.3/0.3 arithmetic of computeMetrics (tests/qualityMetrics.test.ts:321 only checks overall is not NaN)."
+  - id: UIR-DOCQ-010
+    title: "Cards show patient count, progress bar and 80 % target"
+    statement: "The Dokumentationsqualität metric cards each show the percentage, a readable absolute \"… Patienten\" count, a description, a progress bar and the target line \"Zielwert: 80%\"."
+    status: implemented
+    sources: ["UAT v1.10 QUAL-011; v1.12 QUAL-023 #3", "code: src/components/doc-quality/MetricCard.tsx:17-55"]
+    evidence:
+      - "src/components/doc-quality/MetricCard.tsx:33 (rounded %)"
+      - "src/components/doc-quality/MetricCard.tsx:35-39 (\"<n> Patienten\" in text-sm font-medium)"
+      - "src/components/doc-quality/MetricCard.tsx:40-49 (description, progress bar width = score)"
+      - "src/components/doc-quality/MetricCard.tsx:17,51-53 (threshold default 80, label docQualityThreshold)"
+      - "src/i18n/translations.ts:663-664 (docQualityPatients = \"Patienten\", docQualityThreshold = \"Zielwert\")"
+      - "src/i18n/translations.ts:758-761 (overview descriptions: \"Vollzähligkeit\", \"Vollständigkeit (Ø)\", \"Plausibilität (Ø)\", \"Gesamtbewertung (Ø)\")"
+    tests:
+      - file: tests/docQualityMainCentreParity.test.tsx
+        name: "shows the absolute patient count on the centre cards"
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin and open /doc-quality with \"Alle Zentren\"."
+        - "Inspect each of the four KPI cards top to bottom."
+      expect: "Each card shows a large percentage, below it \"<n> Patienten\" in normal (not tiny) text, a one-line description (\"Vollzähligkeit\", \"Vollständigkeit (Ø)\", \"Plausibilität (Ø)\", \"Gesamtbewertung (Ø)\"), a thin coloured progress bar, and the small line \"Zielwert: 80%\". No card reads \"Schwellenwert\"."
+    notes: "The German label is \"Zielwert\" (translations.ts:664), not \"Schwellenwert\". The cited test covers the count on the centre-detail cards only; no test asserts the progress bar or the Zielwert line."
+  - id: UIR-DOCQ-011
+    title: "Vollzähligkeit matches Startseite definition"
+    statement: "The Vollzähligkeit card uses the Startseite definition: with \"Gesamter Zeitraum\" it equals the landing figure; with a filter both count and denominator follow the selected period."
+    status: implemented
+    sources: ["UAT v1.19 N8 (reverses v1.18 M14); v1.14 I5", "code: src/pages/DocQualityPage.tsx:105-142"]
+    evidence:
+      - "src/pages/DocQualityPage.tsx:105-108 (rawTotal = countRawPatientsInWindow when windowed, countRawPatients otherwise)"
+      - "src/pages/DocQualityPage.tsx:127-142 (aggregateVollzaehligkeit = distinct in-window patients / rawTotal)"
+      - "src/services/fhirLoader.ts:96-102,144-163 (countRawPatients, countRawPatientsInWindow)"
+      - "src/pages/LandingPage.tsx:65-71,199-204 (landing: cases.length / countRawPatients, \"{n} / {m} Patienten\")"
+      - "src/i18n/translations.ts:765-767 (tooltip: \"Zähler und Nenner folgen dem Zeitfilter\")"
+      - "shared/patientCases.ts:65-95 (one PatientCase per clinical Patient → distinct pseudonyms == cases.length)"
+    tests:
+      - file: tests/qualityMetrics.test.ts
+        name: "aggregate matches the landing definition when unfiltered (active==registered)"
+      - file: tests/stubIsolation.test.ts
+        name: "returns total Patient count including stubs (denominator)"
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin, open / (Startseite) and note the DATENVOLLZÄHLIGKEIT percentage and its \"n / m Patienten\" sub-label."
+        - "Open /doc-quality with \"Gesamter Zeitraum\"; read the \"Vollzähligkeit\" card percentage and its \"… Patienten\" count."
+        - "Click \"Zeitraum\" → \"Letztes Jahr\" and read the card again; hover its ℹ icon."
+      expect: "Step 2 percentage equals the landing percentage and the Patienten count equals the landing n; after step 3 the Patienten count is ≤ the step-2 count and the percentage rises to (about) 100 % because numerator and denominator are both the in-window active population; the tooltip states that Zähler und Nenner follow the time filter."
+    notes: "With a window active the aggregate card reads ≈100 % by construction (N8 trade-off, DocQualityPage.tsx:97-104): countRawPatientsInWindow counts registered patients with ≥1 observation in the window, which is the same population as the numerator. No test covers countRawPatientsInWindow or the N8 windowed denominator; tests/docQualityVollzaehligkeit.test.tsx header still describes the superseded M14 rule."
+  - id: UIR-DOCQ-012
+    title: "Plausibilität reflects ranges set in Einstellungen"
+    statement: "The Plausibilität metric reflects the plausibility ranges configured in Einstellungen."
+    status: implemented
+    sources: ["manual: Konfiguration.md (UI-set keys: outcomes)", "translations docQualityPlausibilityTooltip"]
+    evidence:
+      - "src/utils/qualityMetrics.ts:110-123 (isVisusInRange/isCrtInRange/isIopInRange read getSettings().plausibility at call time)"
+      - "src/utils/qualityMetrics.ts:275-309 (plausibility = in-range / checkable Visus+CRT+IOP values)"
+      - "src/services/settingsService.ts:115-152 (getSettings cache updated by updateSettings)"
+      - "src/pages/SettingsPage.tsx:241-257,779-931 (Plausibilitätsbereiche form + Speichern → updateSettings({ plausibility }))"
+      - "src/i18n/translations.ts:1160-1172 (settingsPlausibilityTitle = \"Plausibilitätsbereiche\", settingsPlausibilityCrtMax = \"CRT Maximum (µm)\"); translations.ts:6 (save = \"Speichern\")"
+    tests: []
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin, open /doc-quality with \"Gesamter Zeitraum\" and note the \"Plausibilität\" percentage."
+        - "Open /settings, scroll to \"Plausibilitätsbereiche\", set \"CRT Maximum (µm)\" from 800 to 300 and click \"Speichern\" in that section."
+        - "Open /doc-quality again (via the sidebar entry \"Dokumentationsqualität\")."
+        - "Restore \"CRT Maximum (µm)\" to 800 in /settings afterwards."
+      expect: "After step 3 the Plausibilität card percentage is lower than in step 1 (many CRT values above 300 µm now count as implausible) and the per-centre Plausibilität badges drop accordingly."
+    notes: "The metrics memo does not depend on settings (DocQualityPage.tsx:110-113), so the new ranges take effect on the next mount of the page (navigation), not live while staying on the page. /settings is admin-only (src/App.tsx:64). No test feeds non-default plausibility settings into computeMetrics."
+  - id: UIR-DOCQ-013
+    title: "Per-centre comparison bar chart"
+    statement: "The Dokumentationsqualität page shows a comparison bar chart with one bar group per visible centre when \"Alle Zentren\" is selected."
+    status: implemented
+    sources: ["EMDREQ-QUAL-011 / N07.05", "code: src/pages/DocQualityPage.tsx:299-319", "manual: Benutzerhandbuch §8.1"]
+    evidence:
+      - "src/pages/DocQualityPage.tsx:300-311 (card titled \"Alle Zentren\" with CenterComparisonChart, only when selectedCenter === 'all')"
+      - "src/components/doc-quality/CenterComparisonChart.tsx:39-45,55-97 (one data row per centre, four bars per group, 0–100 % Y axis, legend, CustomTooltip)"
+    tests: []
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin and open /doc-quality with \"Alle Zentren\"."
+        - "Locate the card headed \"Alle Zentren\" below the KPI cards and count the X-axis labels."
+        - "Compare them with the \"Zentrum\" column of the table below the chart."
+        - "Hover one bar group."
+      expect: "The chart has one group of four bars (Vollzähligkeit, Vollständigkeit, Plausibilität, Gesamtbewertung) per centre, the X-axis labels match the table's centre labels exactly, the Y axis runs 0 %–100 %, and the hover tooltip lists the four values in percent."
+    notes: "tests/qualityMetrics.test.ts 'QUALITY_CATEGORY_COLORS' only asserts the series colours, not the chart, so it is not cited."
+  - id: UIR-DOCQ-014
+    title: "Per-centre table with four metrics and score badges"
+    statement: "The Dokumentationsqualität page shows a table with one row per visible centre listing Vollzähligkeit, Vollständigkeit, Plausibilität and Gesamtbewertung with score badges."
+    status: implemented
+    sources: ["EMDREQ-QUAL-011 / N07.05", "code: src/components/doc-quality/CenterTable.tsx:17-57", "manual: Benutzerhandbuch §8.1"]
+    evidence:
+      - "src/pages/DocQualityPage.tsx:314-319 (CenterTable with centerMetrics when 'all')"
+      - "src/components/doc-quality/CenterTable.tsx:20-31 (columns Zentrum, Patienten, Beobachtungen, Vollzähligkeit, Vollständigkeit, Plausibilität, Gesamtbewertung)"
+      - "src/components/doc-quality/CenterTable.tsx:33-53 (one row per centre, ScoreBadge per metric, bold Gesamtbewertung)"
+      - "src/components/doc-quality/ScoreBadge.tsx:6-20 (green >80, amber 60–80, red <60)"
+    tests: []
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin and open /doc-quality with \"Alle Zentren\"."
+        - "Scroll to the table under the chart and read its header row."
+        - "Count the rows and compare with the centre options in the header dropdown."
+      expect: "Header columns are \"Zentrum\", \"Patienten\", \"Beobachtungen\", \"Vollzähligkeit\", \"Vollständigkeit\", \"Plausibilität\", \"Gesamtbewertung\"; there is exactly one row per centre listed in the dropdown; the four metric cells are rounded pill badges coloured green (>80 %), amber (60–80 %) or red (<60 %), with the Gesamtbewertung badge in bold."
+    notes: "Rows are sorted by Gesamtbewertung descending (DocQualityPage.tsx:61). No test covers CenterTable or ScoreBadge."
+  - id: UIR-DOCQ-015
+    title: "Clicking a centre row opens the detail panel"
+    statement: "The user can click a centre row (\"Details →\") or select a centre to open the centre detail panel with breadcrumb \"← Alle Zentren / <centre>\"."
+    status: implemented
+    sources: ["code: src/pages/DocQualityPage.tsx:299-319; src/components/doc-quality/CenterTable.tsx:17-57", "manual: Benutzerhandbuch §8.3", "UAT v1.13 D1"]
+    evidence:
+      - "src/components/doc-quality/CenterTable.tsx:34-38,49-51 (whole row clickable → onSelectCenter; \"Details →\" cell)"
+      - "src/pages/DocQualityPage.tsx:315-318,328-333 (onSelectCenter=setSelectedCenter; CenterDetailPanel when a centre is selected)"
+      - "src/components/doc-quality/CenterDetailPanel.tsx:50-67 (\"← Alle Zentren\" button, \"/\" separator, centre label, heading \"Zentrumsdetails — <centre>\")"
+      - "src/i18n/translations.ts:662,790 (docQualityCenterDetail = \"Zentrumsdetails\", docQualityDetails = \"Details\")"
+    tests: []
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin and open /doc-quality with \"Alle Zentren\"."
+        - "Click anywhere on the first table row (its last cell reads \"Details →\")."
+        - "Observe the top of the content area and the header dropdown."
+        - "Click \"← Alle Zentren\", then choose a different centre in the header dropdown."
+      expect: "After step 2 the chart/table are replaced by a panel whose first line reads \"← Alle Zentren / <centre label>\" followed by the heading \"Zentrumsdetails — <centre label>\", and the header dropdown now shows that centre; step 4 opens the same kind of panel for the other centre."
+    notes: ""
+  - id: UIR-DOCQ-016
+    title: "Detail panel: stats, four cards with counts, bar chart"
+    statement: "The centre detail panel shows patient/observation stats, four metric cards with absolute counts and ℹ tooltips, and a per-metric bar chart with a % axis and tooltip."
+    status: implemented
+    sources: ["code: src/components/doc-quality/CenterDetailPanel.tsx:48-168", "UAT v1.15 J5b; confirmed v1.16"]
+    evidence:
+      - "src/components/doc-quality/CenterDetailPanel.tsx:69-83 (\"<n> Patienten\" and \"<n> Beobachtungen\" chips)"
+      - "src/components/doc-quality/CenterDetailPanel.tsx:85-115 (four MetricCards with patientCount and tooltip)"
+      - "src/components/doc-quality/CenterDetailPanel.tsx:117-163 (BarChart, Y axis 0–100 with % formatter, CustomTooltip)"
+      - "src/components/doc-quality/CustomTooltip.tsx:20-36 (tooltip rows \"<metric>: <n>%\")"
+    tests:
+      - file: tests/docQualityMainCentreParity.test.tsx
+        name: "shows the absolute patient count on the centre cards"
+      - file: tests/docQualityMainCentreParity.test.tsx
+        name: "renders the same four definition tooltips the main view uses"
+      - file: tests/components.test.tsx
+        name: "renders label and entries when active with payload"
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin, open /doc-quality and select a centre in the header dropdown."
+        - "Read the two grey chips under the heading."
+        - "Inspect the four cards and hover each ℹ icon."
+        - "Hover the bars in the chart card headed \"Vollzähligkeit / Vollständigkeit / Plausibilität\"."
+      expect: "Chips read \"<n> Patienten\" and \"<m> Beobachtungen\"; each of the four cards shows the same \"<n> Patienten\" count plus a definition tooltip; the chart's Y axis is labelled 0 %–100 % and the hover tooltip lists Vollzähligkeit, Vollständigkeit, Plausibilität and Gesamtbewertung with their percentages."
+    notes: "The chart heading names three metrics but the chart renders four bars (incl. Gesamtbewertung). The detail cards use the per-centre descriptions (\"Im System / registriert gesamt\", \"% Beobachtungen mit Wert\", \"% Werte im Plausibilitätsbereich\", \"Gewichteter Gesamtscore\"), unlike the overview cards."
+  - id: UIR-DOCQ-017
+    title: "Back link returns from detail to overview"
+    statement: "The user can click \"← Alle Zentren\" in the centre detail panel to return to the all-centres overview."
+    status: implemented
+    sources: ["code: src/components/doc-quality/CenterDetailPanel.tsx:48-168"]
+    evidence:
+      - "src/components/doc-quality/CenterDetailPanel.tsx:52-57 (back button calls onBack)"
+      - "src/pages/DocQualityPage.tsx:331 (onBack → setSelectedCenter('all'))"
+      - "src/pages/DocQualityPage.tsx:258-325 (overview sections render when selectedCenter === 'all')"
+    tests: []
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin, open /doc-quality and click a table row to open a centre."
+        - "Click the blue \"← Alle Zentren\" link at the top of the panel."
+      expect: "The detail panel disappears; the \"Grundgesamtheit\" line, four KPI cards, the \"Alle Zentren\" chart and the centre table are shown again, and the header dropdown reads \"Alle Zentren\"."
+    notes: ""
+  - id: UIR-DOCQ-018
+    title: "Collapsible Plausibilitätsbereiche table (live settings)"
+    statement: "The Dokumentationsqualität main view has a collapsible \"Plausibilitätsbereiche\" table (collapsed by default) with live Visus/CRT/IOP ranges and LOINC codes; the detail panel shows it expanded."
+    status: implemented
+    sources: ["UAT v1.15 J5a; confirmed v1.16", "code: src/components/doc-quality/PlausibilityRangesTable.tsx:27-109; src/pages/DocQualityPage.tsx:321-325"]
+    evidence:
+      - "src/components/doc-quality/PlausibilityRangesTable.tsx:27-42 (rows Visus/CRT/IOP from getSettings().plausibility with LOINC_VISUS/CRT/IOP)"
+      - "src/components/doc-quality/PlausibilityRangesTable.tsx:81-96 (collapsible <details> without open attribute, chevron summary)"
+      - "src/components/doc-quality/PlausibilityRangesTable.tsx:98-108 (always-open variant)"
+      - "src/pages/DocQualityPage.tsx:323-325 (collapsible in main view)"
+      - "src/components/doc-quality/CenterDetailPanel.tsx:165-166 (expanded in detail panel)"
+      - "config/settings.yaml:15-21 (defaults visus 0–2.0, CRT 100–800, IOP 5–40)"
+    tests:
+      - file: tests/docQualityMainCentreParity.test.tsx
+        name: "collapsible variant renders a <details> that is collapsed by default"
+      - file: tests/docQualityMainCentreParity.test.tsx
+        name: "renders the configured global ranges (not hardcoded values)"
+      - file: tests/docQualityMainCentreParity.test.tsx
+        name: "still renders the plausibility ranges table inside the centre panel"
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin and open /doc-quality with \"Alle Zentren\"; scroll to the bottom."
+        - "Click the \"Plausibilitätsbereiche\" row with the chevron."
+        - "Open /settings, set \"CRT Maximum (µm)\" to 750 in \"Plausibilitätsbereiche\", click \"Speichern\", reload the browser and return to /doc-quality; expand the table again."
+        - "Select a centre in the header dropdown and scroll to the bottom of the detail panel."
+        - "Restore CRT Maximum to 800 in /settings afterwards."
+      expect: "Step 1 shows only the collapsed heading; step 2 reveals a table with columns \"Parameter\", \"Bereich\", \"LOINC\" and rows Visus \"0 – 2\", CRT \"100 – 800 µm\", IOP \"5 – 40 mmHg\"; after step 3 the CRT row reads \"100 – 750 µm\"; in step 4 the same table is shown expanded without a chevron."
+    notes: "The parameter column reads \"IOP\" (hardcoded, PlausibilityRangesTable.tsx:40), not \"IOD\" as elsewhere in the German UI."
+  - id: UIR-DOCQ-019
+    title: "Bericht exportieren downloads per-centre CSV"
+    statement: "The \"Bericht exportieren\" button downloads doc-quality-report-<date>.csv with columns Zentrum, Patienten, Beobachtungen and the four metrics in percent."
+    status: implemented
+    sources: ["EMDREQ-QUAL-011 / N07.03", "code: src/pages/DocQualityPage.tsx:183-255"]
+    evidence:
+      - "src/pages/DocQualityPage.tsx:152-172 (handleExport: headers Zentrum, Patienten, Beobachtungen, Vollzähligkeit (%), Vollständigkeit (%), Plausibilität (%), Gesamtbewertung (%); one row per centre in centerMetrics)"
+      - "src/pages/DocQualityPage.tsx:235-241 (\"Bericht exportieren\" button)"
+      - "src/utils/download.ts:21-35,50-52 (CSV with BOM, quoted cells; filename doc-quality-report-YYYY-MM-DD.csv)"
+      - "src/i18n/translations.ts:661 (docQualityExport = \"Bericht exportieren\")"
+    tests: []
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin and open /doc-quality with \"Alle Zentren\" and \"Gesamter Zeitraum\"."
+        - "Click \"Bericht exportieren\" in the header."
+        - "Open the downloaded file in a text editor."
+      expect: "A file named doc-quality-report-<today yyyy-mm-dd>.csv downloads; its first line is \"Zentrum\",\"Patienten\",\"Beobachtungen\",\"Vollzähligkeit (%)\",\"Vollständigkeit (%)\",\"Plausibilität (%)\",\"Gesamtbewertung (%)\" and it has one further line per centre shown in the table, with integer percentages matching the table badges."
+    notes: "The export always contains all in-window centres (centerMetrics), even while a single centre is selected; it does respect the active time range. The filename date is the UTC date (toISOString), which can differ from the local date late in the evening. No test covers handleExport."
+  - id: UIR-DOCQ-020
+    title: "Metric cards tinted and iconed by score band"
+    statement: "The Dokumentationsqualität metric cards are tinted green (>80 %), amber (60–80 %) or red (<60 %) and shows a check icon above 80 % and an alert icon otherwise."
+    status: implemented
+    sources: ["code: src/components/doc-quality/MetricCard.tsx:17-32; src/utils/qualityMetrics.ts:82-104", "UAT v1.18 M12 (dark-mode swatches)"]
+    evidence:
+      - "src/components/doc-quality/MetricCard.tsx:21 (card className from scoreBgClass(score))"
+      - "src/components/doc-quality/MetricCard.tsx:27-31 (CheckCircle2 when score > 80, AlertCircle otherwise, coloured by scoreIconColor)"
+      - "src/components/doc-quality/MetricCard.tsx:44-49 (progress bar fill from scoreColor)"
+      - "src/utils/qualityMetrics.ts:82-104 (scoreColor/scoreBgClass/scoreIconColor: >80 green, >=60 amber, else red)"
+    tests: []
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as admin and open /doc-quality with \"Alle Zentren\"."
+        - "For each KPI card compare its percentage with its background tint and the icon at the top right."
+        - "Select a centre with a red or amber badge in the table and inspect its detail cards."
+      expect: "Cards above 80 % have a green tint and a green check icon; cards between 60 % and 80 % an amber tint with an amber alert icon; cards below 60 % a red tint with a red alert icon; the progress bar uses the same colour."
+    notes: "Added by the refute pass (missed by the sweeps). No test covers scoreBgClass/scoreIconColor; the only colour test (QUALITY_CATEGORY_COLORS) concerns the chart series, not the score bands."

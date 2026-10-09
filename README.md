@@ -109,6 +109,7 @@ feedback/
 | `npm run verify:bundles`   | Statistical priors of the synthetic bundles (part of `test:ci`)   |
 | `npm run audit:bundles`    | Code-system audit + priors of the synthetic bundles (part of `test:ci`) |
 | `npm run augment-reference-bundles` | Augment the curated reference bundles (Aachen/Tübingen) |
+| `npm run requirements`     | UI requirements harness: registry (+ `-- --round handoff/rounds/<vX.Y>`) vs unit tests / browser records |
 | `npm run knip`             | Dead-code / unused-export scan (config: `knip.json`)     |
 | `npm run generate-bundles` | Regenerate synthetic FHIR bundles for configured sites   |
 
@@ -220,6 +221,7 @@ dataSource:
 | [docs/Benutzerhandbuch.md](docs/Benutzerhandbuch.md) | User guide (German) |
 | [docs/Konfiguration.md](docs/Konfiguration.md) | Configuration reference |
 | [docs/Deployment.md](docs/Deployment.md) | Container deployment — Podman Quadlet / Docker (German) |
+| [handoff/HANDOFF.md](handoff/HANDOFF.md) | UAT user-study loop handoff — process, requirements registry, test harness, agent skills |
 | [docs/Lastenheft.md](docs/Lastenheft.md) | Requirements specification |
 | [docs/Pflichtenheft.md](docs/Pflichtenheft.md) | Functional specification |
 | [docs/Anforderungsabgleich.md](docs/Anforderungsabgleich.md) | Requirements traceability matrix |

@@ -1,0 +1,29 @@
+# Round items — written by the uat-triage skill from the tester's docx (+ the in-app issues export), read by
+# `npm run requirements -- --round handoff/rounds/<vX.Y>`. One entry per tester item that needs work this round
+# (decision fix / by_design / design / needs_decision / deferred). Items the tester confirmed closed are NOT listed
+# here — they are recorded as `promotes_to` on the PREVIOUS round's items.yaml and in the triage header sentence.
+# Ids: one letter per round + number (+ sub-letter for independently shippable sub-points): O1, O2a, O2b, …
+round: vX.Y                       # the version this round ships as (next minor after the tested one)
+tested_version: vX.(Y-1)          # the version the tester used (from the docx / the issues export's appVersion)
+source: "EMD-vX.(Y-1)-UAT-User-Response_YYYY-MM-DD.docx"
+grounded_on: "vX.(Y-1) @ <commit>"  # the tag/commit the diagnoses were made against
+items: []
+# Example entry (copy, then remove the leading '# '):
+#  - id: O1
+#    title: "Short imperative title (≤ 70 chars)"
+#    area: TRAJ                    # registry area code, see handoff/HANDOFF.md §4
+#    tester_quote: "Verbatim sentence(s) from the docx"
+#    diagnosis: "What is actually wrong / what the tester wants, in our terms (file:line)"
+#    decision: fix                 # fix | by_design | design | needs_decision | deferred
+#    owner_decision: ""            # the owner's answer when decision started as needs_decision / design
+#    acceptance:                   # required for fix: each line observable in the running app
+#      - "…"
+#    tests:                        # planned at triage (file may not exist yet → PLANNED), filled/corrected in uat-implement
+#      - file: tests/CaseDetailRound9.test.tsx
+#        name: "[O1]"              # the it() title carries the item id → mapping by whole token
+#    browser:                      # required for fix/by_design (unless tests cover it): executed on the verify container
+#      route: "/analysis?tab=trajectories"
+#      steps:
+#        - "…"                     # no "1. " prefixes — the harness numbers them
+#      expect: "…"
+#    promotes_to: ""               # filled at the NEXT triage when the tester confirms: the UIR id(s) this became

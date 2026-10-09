@@ -1,0 +1,1125 @@
+# UI requirements registry — area CASE. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+# Short name: "Visus/CRT chart" in titles/statements means the case-page card headed "Visusverlauf und Netzhautdicke (CRT)" (its real heading, used in steps/expect).
+area: CASE
+requirements:
+  - id: UIR-CASE-001
+    title: "Open case from Kohortenbildung Detailansicht row"
+    statement: "The user can open a case detail page by clicking a row in the \"Detailansicht\" table on Kohortenbildung; the URL becomes /case/<id> and \"Zurück\" returns to the cohort page."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-001 / N05.03"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:1078-1081 (<tr onClick={() => navigate(`/case/${c.id}`)}>)"
+      - "src/App.tsx:58 (<Route path=\"/case/:caseId\">)"
+      - "src/pages/CaseDetailPage.tsx:216-221 (Zurück button → navigate(-1))"
+      - "src/i18n/translations.ts:207 (detailedView: 'Detailansicht'), :5 (back: 'Zurück')"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Log in and open Kohortenbildung (/cohort)."
+        - "Switch the result view to \"Detailansicht\"."
+        - "Click any row of the table (note its Pseudonym)."
+        - "On the case page click \"Zurück\"."
+      expect: "Step 3: URL changes to /case/<id> and the header h1 shows the same pseudonym. Step 4: the browser returns to /cohort with the Detailansicht still shown."
+    notes: "\"Zurück\" is navigate(-1) (history back), so it returns to whatever page opened the case. No test renders the row click or the route."
+  - id: UIR-CASE-002
+    title: "Open case from Datenqualität detail panel"
+    statement: "The user can open the full case page from the Datenqualität detail panel via \"Vollständige Fallansicht\"."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-001 / N03.07"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:413-418 (button t('fullCaseView') → onNavigateToCase)"
+      - "src/pages/QualityPage.tsx:461 (onNavigateToCase={(id) => navigate(`/case/${id}`)})"
+      - "src/i18n/translations.ts:326 (fullCaseView: 'Vollständige Fallansicht')"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Open Datenqualität (/quality)."
+        - "Click a case in the case list so the detail panel opens; note its Pseudonym."
+        - "Click \"Vollständige Fallansicht\" in the action row under the panel's header strip."
+      expect: "URL becomes /case/<id> and the case page header shows the same pseudonym."
+    notes: "The link sits in the 'mt-3 flex gap-2' action row next to the exclude/include button (QualityCaseDetail.tsx:398-419)."
+  - id: UIR-CASE-003
+    title: "Unknown case id shows not-found message"
+    statement: "The case page shows \"Fall nicht gefunden.\" with a \"Zurück\" button for an unknown or inaccessible case id, without crashing."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-001 / N05.03"]
+    evidence:
+      - "src/pages/CaseDetailPage.tsx:77 (cases.find by caseId)"
+      - "src/pages/CaseDetailPage.tsx:203-212 (early return with t('caseNotFound') + t('back') button)"
+      - "src/i18n/translations.ts:245 (caseNotFound: 'Fall nicht gefunden.')"
+    tests: []
+    browser:
+      route: "/case/does-not-exist"
+      steps:
+        - "While logged in, open /case/does-not-exist directly in the address bar."
+        - "Observe the page."
+        - "Click \"Zurück\"."
+      expect: "Text \"Fall nicht gefunden.\" and a \"Zurück\" link-button are shown; no error boundary / blank page; \"Zurück\" navigates back in history."
+    notes: "When the page was opened directly (no history entry) navigate(-1) may leave the page unchanged; open it from an in-app page first to see the back navigation."
+  - id: UIR-CASE-004
+    title: "Patient header fields and Zurück button"
+    statement: "The case page shows a \"Zurück\" button and a patient header with pseudonym, age (\"Alter: N Jahre\"), gender, centre, eye badge (OD/OS) and contact count (\"N Kontakte\")."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-002 / N05.01", "code: src/pages/CaseDetailPage.tsx:216-254; src/components/case-detail/PatientHeader.tsx:152-184", "manual: Benutzerhandbuch §6.1"]
+    evidence:
+      - "src/pages/CaseDetailPage.tsx:216-221 (Zurück), 224-254 (PatientHeader props)"
+      - "src/components/case-detail/PatientHeader.tsx:160-184 (h1 pseudonym; '{t('age')}: {getAge(birthDate)} {t('years')}'; t('female')/t('male'); centerName; eye badge t('rightEye')/t('leftEye'); '{totalEncounters} {t('contacts')}')"
+      - "src/i18n/translations.ts:34-44 (female 'Weiblich', male 'Männlich', age 'Alter', years 'Jahre', contacts 'Kontakte'), :271-272 (rightEye 'Rechtes Auge (OD)', leftEye 'Linkes Auge (OS)')"
+      - "src/hooks/useCaseData.ts:517-518 (totalEncounters = observations + procedures), :227 (eyeLaterality from the first visus observation's bodySite)"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open /cohort, switch to \"Detailansicht\", click any row (or open /case/pat-uka-003 directly)."
+        - "Inspect the top white card."
+      expect: "A \"Zurück\" button sits above the card; the card shows the pseudonym (EM-UKA-0003 for pat-uka-003) as heading, \"Alter: N Jahre\", 'Weiblich' or 'Männlich', the centre name, a badge \"Rechtes Auge (OD)\" or \"Linkes Auge (OS)\", and a badge \"N Kontakte\"."
+    notes: "The eye badge is shown only when the first visus observation carries a body site. 'N Kontakte' counts observations + procedures, not encounters. The previously cited test 'calculates age from birthDate' (tests/ui-requirements.test.ts:276) exercises a local copy of getAge, not the component or fhirLoader — mapping removed."
+  - id: UIR-CASE-005
+    title: "No identifying data anywhere on the case page"
+    statement: "The case page displays no patient name, birth date or other identifying data anywhere; only the pseudonym identifies the patient."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-002 / N05.01 (Abgleich: Abweichend)"]
+    evidence:
+      - "src/components/case-detail/PatientHeader.tsx:160-166 (only pseudonym rendered; birthDate used solely via getAge())"
+      - "src/pages/CaseDetailPage.tsx:224-254 (no name field passed; birthDate only for age)"
+      - "src/components/quality/QualityCaseDetail.tsx:359,373 (Datenqualität panel likewise shows pseudonym + age only)"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open any case page."
+        - "Use the browser find (Ctrl/Cmd+F) for a date in the past that could be a birth date (e.g. '19' followed by two digits and a dot) and scan the header and all cards."
+        - "Check the OCT caption, medication, anamnesis and findings cards."
+      expect: "Only the pseudonym (e.g. EM-UKA-0003) identifies the patient; no name, no birth date (only \"Alter: N Jahre\") appears anywhere."
+    notes: "The previously cited test 'case uses pseudonym, never real patient name' (tests/ui-requirements.test.ts:225) only inspects a hand-built mock object and never renders the page — mapping removed; there is no render-level assertion."
+  - id: UIR-CASE-006
+    title: "Diagnosis pills with short label and full-term tooltip"
+    statement: "The patient header shows primary diagnoses as purple pills with a short label (short name for SNOMED, raw ICD-10 code otherwise) and a hover tooltip with the written-out diagnosis and code."
+    status: implemented
+    sources: ["code: src/components/case-detail/PatientHeader.tsx:87-119,272-281", "manual: Benutzerhandbuch §6.1, §14"]
+    evidence:
+      - "src/components/case-detail/PatientHeader.tsx:87-119 (DiagnosisPill: useDiagnosisDisplay → label + title={fullText}, cursor-help; optional (OD)/(OS) and 'seit <Datum>')"
+      - "src/components/case-detail/PatientHeader.tsx:272-281 (primaryDiagnoses.map → DiagnosisPill)"
+      - "src/services/terminology.ts:41-154 (seed map: SNOMED 267718000 → label 'AMD'; 312903003 → 'Diabetisches Makulaödem (DMÖ)'; ICD-10 codes keep the raw code as label, e.g. 'E11.9')"
+      - "src/hooks/useCaseData.ts:217-220 (primaryDiagnoses = conditions without category)"
+    tests:
+      - file: tests/terminology.test.ts
+        name: "SNOMED 312903003 — DME (label + fullText, de + en)"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open /case/pat-uka-003 (primary diagnosis SNOMED 267718000, AMD)."
+        - "In the header, hover the purple diagnosis pill for about one second."
+      expect: "The pill reads 'AMD seit 12.11.2023' (short label, no raw SNOMED code); the native tooltip shows the written-out term with the code, e.g. 'Altersbedingte Makuladegeneration (267718000)'. On a DMÖ case the pill reads 'Diabetisches Makulaödem (DMÖ)'."
+    notes: "Statement corrected: the pill does NOT always show an ICD-10 code — SNOMED diagnoses show a short clinical name and only ICD-10 conditions show the bare code. The terminology test covers the label/fullText resolver, not the pill DOM."
+  - id: UIR-CASE-007
+    title: "Behandlungsindikation in header"
+    statement: "The patient header shows a teal pill \"Behandlungsindikation: <text>\" for a case whose first injection carries a reason code, and no such pill otherwise."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-004 / N05.13", "manual: Benutzerhandbuch §6.1", "code: src/components/case-detail/PatientHeader.tsx:282-287"]
+    evidence:
+      - "src/components/case-detail/PatientHeader.tsx:282-287 ({treatmentIndication && ... t('treatmentIndication')}: {treatmentIndication})"
+      - "src/hooks/useCaseData.ts:222-225 (treatmentIndication = injections[0].reasonCode[0].coding[0].display, translated)"
+      - "src/pages/CaseDetailPage.tsx:125,232"
+      - "src/i18n/translations.ts:289 (treatmentIndication: 'Behandlungsindikation')"
+    tests: []
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "Open a case from /cohort Detailansicht."
+        - "Look at the pill row under the pseudonym/age line in the header."
+      expect: "A teal pill with stethoscope icon reads \"Behandlungsindikation: <text>\" when the case's first injection has a reason code; it is absent otherwise."
+    notes: "Sharpened: the indication is derived from the FIRST intravitreal injection's reasonCode only, so a case without injections never shows the pill."
+  - id: UIR-CASE-008
+    title: "Adverse-events badge count matches AE section"
+    statement: "The patient header shows an orange \"N Unerwünschte Ereignisse\" badge whose count equals the number of entries in the adverse-events section."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-005 / N05.33", "manual: Benutzerhandbuch §6.1", "code: src/components/case-detail/PatientHeader.tsx:192-197"]
+    evidence:
+      - "src/components/case-detail/PatientHeader.tsx:192-197 ({adverseEvents.length} {t('adverseEvents')} in bg-orange-50)"
+      - "src/components/case-detail/AnamnesisFindings.tsx:125-153 (section heading '(adverseEvents.length)' + one row per AE)"
+      - "src/pages/CaseDetailPage.tsx:233,515 (same adverseEvents array passed to both)"
+      - "src/hooks/useCaseData.ts:209-215 (adverseEvents = conditions with category 'adverse-event')"
+    tests: []
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "On /cohort Detailansicht open cases until the header shows an orange badge \"N Unerwünschte Ereignisse\"."
+        - "Scroll down to the orange section \"Unerwünschte Ereignisse (N)\" and count its rows."
+      expect: "The badge number, the section heading number and the number of listed rows are identical."
+    notes: "The previously cited Round7 test 'orders the cluster …' only asserts the toggle is the last cluster child; it never checks the badge count — mapping removed. pat-uka-003 has no adverse events."
+  - id: UIR-CASE-009
+    title: "Kritische Überschreitungen badge with per-metric counts"
+    statement: "The patient header shows a red \"Kritische Überschreitungen\" badge with per-metric counts (N× CRT > 400 µm, N× Visus < 0.1, N× IOD > 21 mmHg) whenever at least one CRT or Visus value is critical."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-005 / N05.33", "manual: Benutzerhandbuch §6.1", "code: src/components/case-detail/PatientHeader.tsx:198-206"]
+    evidence:
+      - "src/components/case-detail/PatientHeader.tsx:198-206 (hasCriticalValues → red badge with criticalCrtCount/criticalVisusCount/criticalIopCount, each only when > 0)"
+      - "src/hooks/useCaseData.ts:520-532 (hasCriticalValues = any CRT > threshold OR any Visus < threshold; the three counts via CRITICAL_*_THRESHOLD())"
+      - "src/i18n/translations.ts:741-744 (criticalExceedances 'Kritische Überschreitungen'; '{0}× CRT > 400 µm', '{0}× Visus < 0.1', '{0}× IOD > 21 mmHg')"
+    tests: []
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "Open a case whose Visus/CRT chart has CRT points above the red 400 line."
+        - "Read the red header badge."
+        - "Open a case with all CRT < 400, Visus ≥ 0.1 and IOD ≤ 21."
+      expect: "Step 2: badge \"Kritische Überschreitungen: N× CRT > 400 µm\" (plus Visus/IOD parts if applicable), N equal to the number of CRT points above the line. Step 3: no red badge."
+    notes: "hasCriticalValues only considers CRT and Visus (useCaseData.ts:520-522): an IOD-only exceedance shows NO badge even though criticalIopCount > 0. The badge label texts hard-code '400 µm', '0.1', '21 mmHg' and do not follow changed settings (see UIR-CASE-010). The previously cited test 'CRT > 400 µm is critical' compares local literals only — mapping removed."
+  - id: UIR-CASE-010
+    title: "Critical marking follows Einstellungen thresholds"
+    statement: "The case page marks measurements beyond the critical thresholds in the charts, and marking and header counts follow the thresholds set under \"Klinische Schwellenwerte\" in Einstellungen."
+    status: partial
+    sources: ["spec: EMDREQ-FALL-005 / N05.28", "manual: Benutzerhandbuch §6.1, §6.3"]
+    evidence:
+      - "src/config/clinicalThresholds.ts:15-27 (CRITICAL_CRT/VISUS/IOP_THRESHOLD() read getSettings().thresholds)"
+      - "src/hooks/useCaseData.ts:520-532 (header counts use the accessors)"
+      - "src/components/case-detail/VisusCrtChart.tsx:302-308 (red CRT threshold ReferenceLine at CRITICAL_CRT_THRESHOLD())"
+      - "src/components/case-detail/ClinicalParametersRow.tsx:225 (red IOP line at CRITICAL_IOP_THRESHOLD())"
+      - "src/components/case-detail/VisusCrtChart.tsx:400-419 (dot renderers draw every point in the series colour — no per-point critical marking)"
+      - "src/components/case-detail/DistributionCharts.tsx:170-175,202 (the '>400' CRT bin is red regardless of the setting)"
+      - "src/i18n/translations.ts:742-744 (badge labels hard-code 400/0.1/21)"
+      - "src/pages/SettingsPage.tsx:666-689 (section t('settingsThresholdTitle') 'Klinische Schwellenwerte', input t('settingsThresholdCriticalCrtUm')); src/App.tsx:64 (/settings is AdminRoute)"
+    tests: []
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "Log in as admin. On /cohort set \"Netzhautdicke (µm)\" Min 300 / Max 400, open \"Detailansicht\" and click a row whose \"CRT (µm)\" column shows a value between 300 and 400; note the red line position and the header badge text."
+        - "Go to /settings, scroll to the card \"Klinische Schwellenwerte\", set \"CRT kritischer Schwellenwert (µm)\" to 300 and click the \"Speichern\" button at the bottom of THAT card; a green banner \"Einstellungen gespeichert\" appears at the top of the page."
+        - "Return to the same case page (reload if needed)."
+      expect: "The red dashed line now sits at 300 on the right axis and the header count rises to include points > 300. Expected gap: individual points above the line are NOT coloured differently, and the badge still reads '… CRT > 400 µm'; the CRT histogram still colours only the '>400' bin red."
+    notes: "Only the threshold reference lines and the counts follow the settings; there is no per-point visual marking of exceedances, the badge label text is static and the histogram's red bin is fixed at >400. /settings requires the admin role. tests/ui-requirements.test.ts \"clinical thresholds are imported from config, not hardcoded\" only asserts the accessor defaults (400/0.1/0.3) and does not exercise the case page; no test covers the threshold-follows-settings behaviour. No reload is needed after saving (updateSettings updates the in-memory cache, settingsService.ts:139-142), but a reload confirms persistence. /settings has four \"Speichern\" buttons, one per card — only the one in \"Klinische Schwellenwerte\" saves thresholds. Record the case id used in step 1 here once chosen so later rounds reuse it."
+  - id: UIR-CASE-011
+    title: "Exclusion state and include/exclude toggle"
+    statement: "The case page shows the analysis-exclusion state and offers \"Von Analysen ausschließen\" / \"In Analysen einschließen\"; toggling changes the badge."
+    status: not_implemented
+    sources: ["uat: v1.19 N6; v1.13 C1 UI-SPEC §6"]
+    evidence:
+      - "src/pages/CaseDetailPage.tsx (no exclusion badge or toggle rendered; no use of excludeFromAnalysis/includeInAnalysis/excludedCase)"
+      - "src/components/quality/QualityCaseDetail.tsx:360-412 (the 'Ausgeschlossen' badge and the exclude/include button live in the Datenqualität detail panel instead)"
+      - "src/i18n/translations.ts:494-496 (excludeFromAnalysis 'Von Analysen ausschließen', includeInAnalysis 'In Analysen einschließen', excludedCase 'Ausgeschlossen')"
+    tests: []
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "Open any case page via /cohort Detailansicht."
+        - "Search the page for \"Von Analysen ausschließen\" / \"In Analysen einschließen\" / \"Ausgeschlossen\"."
+        - "For comparison open /quality, select the same case and look at the detail panel."
+      expect: "Step 2: none of these controls exists on /case/<id>. Step 3: the button and the \"Ausgeschlossen\" badge are present on the Datenqualität panel only."
+    notes: "The behaviour exists, but on /quality (QualityCaseDetail), not on the Fallansicht. Either move/duplicate the control to the case page or reassign this requirement to area QUAL. The previously cited test 'exclusion is togglable' manipulates a local array and touches no UI — mapping removed."
+  - id: UIR-CASE-012
+    title: "Kohorten-Referenz toggle in header, off by default"
+    statement: "The header shows a \"Kohorten-Referenz anzeigen\" checkbox (aria-label, off by default) as the rightmost element, right of the AE/critical badges, and it governs the cohort overlay on all case plots."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-006 / N05.23", "uat: v1.18 M4; v1.19 N3", "code: src/components/case-detail/PatientHeader.tsx:191-254; src/pages/CaseDetailPage.tsx:55,247-248", "manual: Benutzerhandbuch §6.3"]
+    evidence:
+      - "src/components/case-detail/PatientHeader.tsx:191-254 (cluster order: AE badge → critical badge → selector+checkbox; input aria-label={t('cohortReferenceToggle')})"
+      - "src/pages/CaseDetailPage.tsx:55 (useState(false)), 247-248, 271 (VisusCrtChart), 490 (DistributionCharts), 499 (ClinicalParametersRow), 443 (baseline chart)"
+      - "src/i18n/translations.ts:1184 (cohortReferenceToggle: 'Kohorten-Referenz anzeigen')"
+    tests:
+      - file: tests/CaseDetailRound5.test.tsx
+        name: "M4: renders the cohort-reference toggle when onToggleCohortReference is provided"
+      - file: tests/CaseDetailRound5.test.tsx
+        name: "M4: fires onToggleCohortReference with the new value when toggled"
+      - file: tests/CaseDetailRound7.test.tsx
+        name: "orders the cluster [adverse events] → [critical warnings] → [cohort toggle]"
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "Open a case that shows an orange or red warning badge in the header."
+        - "Confirm the checkbox \"Kohorten-Referenz anzeigen\" is unchecked and is the rightmost element of the header's top-right cluster, badges to its left."
+        - "Tick the checkbox; inspect Visus/CRT, Veränderung zum Ausgangswert, Visus-/CRT-Verteilung, Visus vs. CRT and IOD."
+        - "Untick it."
+      expect: "Step 3: dashed median lines/bands (Visus/CRT, baseline, IOD), grouped % bars (distributions) and grey cloud (scatter) appear. Step 4: all of them vanish and the count histograms return."
+    notes: "Statement corrected: PatientHeader renders no 'implausible-data' warning — only the adverse-event and critical-value badges sit left of the toggle. The toggle does NOT govern the always-visible grey 'Visus Ø' / 'CRT Ø' average lines (see UIR-CASE-056)."
+  - id: UIR-CASE-013
+    title: "Vergleichskohorte wählen selector"
+    statement: "The user can choose the overlay cohort via \"Vergleichskohorte wählen\" (\"Alle Patienten\" default plus saved searches containing the patient); the select appears only with more than one option."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-006 / N05.23", "uat: v1.19 N11", "code: src/components/case-detail/PatientHeader.tsx:217-233"]
+    evidence:
+      - "src/components/case-detail/PatientHeader.tsx:217-233 (select aria-label t('overlayCohortSelectorLabel'), rendered only when overlayCohortOptions.length > 1; options '<label> (N=<count>)')"
+      - "src/pages/CaseDetailPage.tsx:87-107 (overlayCohorts = [all patients, ...savedSearches whose applyFilters() set contains the case]), 249-251"
+      - "src/i18n/translations.ts:1244 (overlayCohortSelectorLabel 'Vergleichskohorte wählen'), :1247 (overlayCohortAllPatients 'Alle Patienten')"
+    tests:
+      - file: tests/CaseDetailRound7.test.tsx
+        name: "N11: renders a selector listing the patient-containing cohorts"
+      - file: tests/CaseDetailRound7.test.tsx
+        name: "N11: omits the selector when there is no real choice (single cohort)"
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "On /cohort create and save a search (e.g. centre = the case's centre) so it contains the target patient."
+        - "Open that patient's case page; tick \"Kohorten-Referenz anzeigen\"."
+        - "Open the select left of the checkbox (aria-label \"Vergleichskohorte wählen\")."
+        - "Choose the saved search."
+      expect: "Options read \"Alle Patienten (N=…)\" first and the saved search \"<name> (N=…)\"; after choosing it, the band/median shape in the Visus/CRT chart changes. For a patient in no saved search the select is absent."
+    notes: "The select is rendered regardless of the toggle state (as long as >1 option exists); only the active-label badge needs the toggle on. Saved searches are materialised against activeCases (excluded cases are never members)."
+  - id: UIR-CASE-014
+    title: "Active cohort label with name and N"
+    statement: "With the reference on, the patient header names the active overlay cohort as \"Vergleichskohorte: <name> (N=…)\" beneath the toggle, and the label updates when the cohort is changed."
+    status: implemented
+    sources: ["uat: v1.19 N10", "code: src/pages/CaseDetailPage.tsx:87-107,252-253"]
+    evidence:
+      - "src/components/case-detail/PatientHeader.tsx:261-269 ({showCohortReference && activeOverlayCohortLabel && ... t('overlayCohortActiveLabel')}: {label} (N={count}))"
+      - "src/pages/CaseDetailPage.tsx:106-107,252-253 (activeOverlayCohort label + patientCount)"
+      - "src/i18n/translations.ts:1245 (overlayCohortActiveLabel 'Vergleichskohorte')"
+    tests:
+      - file: tests/CaseDetailRound7.test.tsx
+        name: "N10: shows the active cohort label + N only when the overlay is ON"
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "Open a case page and tick \"Kohorten-Referenz anzeigen\"."
+        - "Read the indigo badge below the control cluster."
+        - "If a selector is present, choose a saved cohort."
+      expect: "Step 2: \"Vergleichskohorte: Alle Patienten (N=<total cases>)\". Step 3: the badge changes to the saved search name and its N. Unticking hides the badge."
+    notes: "The badge renders on its own right-aligned line directly beneath the toggle, not inline next to it. N for 'Alle Patienten' is cases.length (includes excluded cases)."
+  - id: UIR-CASE-015
+    title: "Behandlungsverlauf timeline strip with per-contact icons"
+    statement: "The case page shows a horizontal \"Behandlungsverlauf\" timeline listing contact dates chronologically with distinct icons for visus measurement, CRT measurement, injection and OCT image."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-003 / N05.25", "manual: Benutzerhandbuch §6.2", "code: src/components/case-detail/PatientHeader.tsx:290-392"]
+    evidence:
+      - "src/components/case-detail/PatientHeader.tsx:291-293 (h4 t('treatmentTimeline')), 334-356 (Eye=visus emerald, Activity=crt purple, Syringe=injection blue, ScanEye=oct cyan), 385-387 (dd.mm.yy label)"
+      - "src/hooks/useCaseData.ts:548-576 (encounterTimeline grouped by date, sorted ascending; icon titles 'Visus: …', 'CRT: … µm', t('intravitralInjection'), 'OCT: …')"
+      - "src/i18n/translations.ts:260 (treatmentTimeline 'Behandlungsverlauf'), :259 (intravitralInjection 'Intravitreale Injektion')"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case page."
+        - "Below the diagnosis pills find the uppercase heading \"BEHANDLUNGSVERLAUF\"."
+        - "Hover the icons of one tile."
+      expect: "Tiles with dd.mm.yy labels run left to right in ascending date order (first tile 12.11.23 with a camera-eye icon for pat-uka-003); tiles contain an eye icon (tooltip 'Visus: …'), pulse icon ('CRT: … µm'), syringe ('Intravitreale Injektion') and/or camera-eye icon ('OCT: …') depending on the contact."
+    notes: "The strip is omitted entirely when the case has no visus/CRT/injection/OCT dates. Tests exercise tile clicks (UIR-CASE-016/017) but no test asserts the icon set or ordering."
+  - id: UIR-CASE-016
+    title: "Timeline tile click highlights the visit date"
+    statement: "The user can click an encounter tile in the Behandlungsverlauf (single hotspot, no separate Visus/CRT buttons) to toggle an amber highlight line at that date in both trajectory charts."
+    status: implemented
+    sources: ["uat: v1.10 FALL-003", "code: src/components/case-detail/PatientHeader.tsx:301-333; src/pages/CaseDetailPage.tsx:50,243,429-442", "manual: Benutzerhandbuch §6.2, §14"]
+    evidence:
+      - "src/components/case-detail/PatientHeader.tsx:309-333 (tile role=button toggles onHighlightDate when the node has a visus/crt event; visus/crt icons have no onClick)"
+      - "src/pages/CaseDetailPage.tsx:50,243 (highlightDate state), 429-442 (amber dashed ReferenceLine in baseline chart)"
+      - "src/components/case-detail/VisusCrtChart.tsx:117,328-337 (amber highlight ReferenceLine with date label)"
+    tests:
+      - file: tests/CaseDetailRound5.test.tsx
+        name: "injection icon click does not also trigger the visit highlight on a mixed node"
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "K3c/M6: IVI markers + the highlight resolve to epoch-ms on the linear calendar axis"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case page with the overlay off."
+        - "Click the body of a Behandlungsverlauf tile that contains an eye or pulse icon."
+        - "Look at \"Visusverlauf und Netzhautdicke (CRT)\" and \"Veränderung zum Ausgangswert\"."
+        - "Click the same tile again."
+      expect: "Step 2-3: the tile turns amber and a vertical amber dashed line labelled with the date appears in both charts. Step 4: tile and lines are cleared."
+    notes: "The Round5 test only proves the syringe icon does not fire the visit highlight; the second test proves the highlight line is positioned at the date's epoch-ms. No test clicks the tile body and asserts onHighlightDate(date)."
+  - id: UIR-CASE-017
+    title: "Injection highlight via strip or list"
+    statement: "The user can click an injection in the timeline strip or in the \"Intravitreale Injektionen\" list (Enter/Space on a row, aria-pressed) to highlight it in the plot and list; clicking again clears it."
+    status: implemented
+    sources: ["uat: v1.16 K3d; v1.17 L6", "code: src/components/case-detail/PatientHeader.tsx:311,350,361-378; src/pages/CaseDetailPage.tsx:59-60,287-325"]
+    evidence:
+      - "src/pages/CaseDetailPage.tsx:53,59-60 (toggleInjectionHighlight), 293-305 (row role=button, tabIndex, aria-pressed, Enter/Space, amber ring when active)"
+      - "src/components/case-detail/PatientHeader.tsx:311,350,361-378 (syringe button aria-pressed, stopPropagation, amber when active)"
+      - "src/components/case-detail/VisusCrtChart.tsx:312-327 (IVI marker solid amber when highlighted, onClick)"
+    tests:
+      - file: tests/CaseDetailRound5.test.tsx
+        name: "fires onInjectionClick when an injection-only timeline node is clicked"
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "K3d: a highlighted injection emphasises its marker and fires onInjectionClick"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open a case with injections (pat-uka-003 lists \"Intravitreale Injektionen (22)\")."
+        - "Click a syringe icon in the Behandlungsverlauf strip."
+        - "Click the same injection again."
+        - "Tab to a row of the injection list and press Space."
+      expect: "Step 2: the matching list row gets an amber background/ring and the dashed blue IVI marker in the chart becomes a solid amber line. Step 3: both are cleared. Step 4: the row highlights the same way (aria-pressed=true)."
+    notes: "The K3d chart test only asserts the marker exists at the date's x; it does not click it. No test covers the list row keyboard handling."
+  - id: UIR-CASE-018
+    title: "Highlights and cohort selection reset on case change"
+    statement: "Visit and injection highlights and the overlay cohort selection reset when the user navigates to a different case."
+    status: implemented
+    sources: ["uat: v1.16 K3d; v1.17 L6", "code: src/pages/CaseDetailPage.tsx:62-75"]
+    evidence:
+      - "src/pages/CaseDetailPage.tsx:67-75 (prevCaseId guard resets highlightDate, highlightInjectionDate and overlayCohortId to ALL_PATIENTS_COHORT_ID during render)"
+    tests: []
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "Open a case, click a Behandlungsverlauf tile (amber line visible), tick the cohort reference and pick a saved cohort if offered."
+        - "Use the browser back button to /cohort and click a different row."
+        - "Inspect the new case page."
+      expect: "No amber highlight line or amber tile; the comparison-cohort select (if shown) is back on \"Alle Patienten\"; the \"Kohorten-Referenz anzeigen\" checkbox is still ticked."
+    notes: "showCohortReference itself is not reset on case change (only the cohort choice and highlights). The OCT selected index (octSelectedIdx) is also NOT reset, so a high index from the previous case can briefly point past the new case's image list."
+  - id: UIR-CASE-019
+    title: "Timeline camera icon jumps to OCT image"
+    statement: "The user can click a camera icon in the timeline to scroll to the \"OCT-Aufnahmen\" viewer and select the OCT image of that date."
+    status: implemented
+    sources: ["manual: Benutzerhandbuch §14, §6.8", "code: src/components/case-detail/PatientHeader.tsx:362-375; src/pages/CaseDetailPage.tsx:197-200"]
+    evidence:
+      - "src/components/case-detail/PatientHeader.tsx:362-375 (oct icon button → onOctTimelineClick(ev.octIdx))"
+      - "src/pages/CaseDetailPage.tsx:48-49,197-200 (setOctSelectedIdx + scrollIntoView), 529-535 (OctViewer controlledIdx/onSelectIdx)"
+      - "src/components/OctViewer.tsx:29-32,55 (controlledIdx drives the shown image)"
+      - "src/hooks/useCaseData.ts:572-574 (octIdx = index into octImages, the same array OctViewer receives)"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open /case/pat-uka-003 (one OCT image dated 2023-11-12) or any case of a centre with OCT count > 0 on the Startseite."
+        - "In the Behandlungsverlauf click the cyan camera-eye icon on the tile 12.11.23."
+      expect: "The page smoothly scrolls to the \"OCT-Aufnahmen\" card and the main image shows that date in its caption (with ≥2 images the thumbnail with blue border is that date)."
+    notes: ""
+  - id: UIR-CASE-020
+    title: "Dual-axis Visus/CRT time-course chart"
+    statement: "The case page shows a \"Visusverlauf und Netzhautdicke (CRT)\" chart with visus on the left axis (green) and CRT on the right axis (violet) over time, with a tooltip naming both metrics."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-003 / N05.24", "manual: Benutzerhandbuch §6.3", "code: src/components/case-detail/VisusCrtChart.tsx:239-337"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:24-25 (VISUS_COLOR #10b981, CRT_COLOR #8b5cf6), 268-285 (YAxis visus left / crt right), 393-421 (two Lines), 126-169 (tooltip rows 'Visus' and 'CRT (µm)')"
+      - "src/i18n/translations.ts:246 (visusAndCrt title)"
+    tests:
+      - file: tests/VisusCrtChartLabels.test.tsx
+        name: "renders CRT legend label from t(\"crtLegendLabel\")"
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "renders without crash + no overlay when rows carry no reference fields"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case page; find the card \"Visusverlauf und Netzhautdicke (CRT)\"."
+        - "Hover a data point."
+      expect: "Left axis 0–1 titled 'Visus' in green, right axis titled 'CRT (µm)' in violet, a green and a violet line; the tooltip shows the date, 'Visus: 0.xx' and 'CRT (µm): NNN µm'."
+    notes: "The second test only asserts ≥2 Line elements render; Recharts Tooltip is mocked to null in all chart tests, so the tooltip rows are unverified by the suite."
+  - id: UIR-CASE-021
+    title: "Clickable injection markers on the time axis"
+    statement: "The Visus/CRT chart shows dashed, clickable IVI markers at injection dates that turn solid amber when highlighted."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-003 / N05.24", "code: src/components/case-detail/VisusCrtChart.tsx:108-115,312-327"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:108-115 (injectionMarkers), 312-327 (ReferenceLine stroke #3b82f6 dashed '2 2', active → #f59e0b solid width 2, onClick, label 'IVI')"
+    tests:
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "K3d: a highlighted injection emphasises its marker and fires onInjectionClick"
+      - file: tests/CaseDetailRound5.test.tsx
+        name: "L5: IVI markers + highlight use relMonths values when the overlay is ON"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open a case with injections (pat-uka-003 has 22)."
+        - "In \"Visusverlauf und Netzhautdicke (CRT)\" locate the thin blue dashed vertical lines labelled 'IVI'."
+        - "Click one of them."
+      expect: "The clicked marker becomes a solid, thicker amber line and the corresponding row in \"Intravitreale Injektionen\" is highlighted; clicking again reverts."
+    notes: "The clickable area is the thin SVG line itself; aim precisely. With 22 injections the IVI labels overlap heavily on a 300 px chart."
+  - id: UIR-CASE-022
+    title: "CRT legend label and upright right-axis title"
+    statement: "The Visus/CRT chart labels CRT as \"CRT (µm)\" in the legend and the right-hand CRT axis title is upright and readable, not mirrored."
+    status: implemented
+    sources: ["uat: v1.10 A-07 / FALL-003; v1.12 FALL-012"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:284 (right YAxis label t('crtLegendLabel'), angle -90, position insideRight)"
+      - "src/components/case-detail/VisusCrtChart.tsx:413 (CRT Line name t('crtLegendLabel'))"
+      - "src/i18n/translations.ts:745 (crtLegendLabel 'CRT (µm)')"
+    tests:
+      - file: tests/VisusCrtChartLabels.test.tsx
+        name: "renders CRT legend label from t(\"crtLegendLabel\")"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case page; look at the \"Visusverlauf und Netzhautdicke (CRT)\" legend and the right axis."
+      expect: "Legend entry 'CRT (µm)'; the right axis title 'CRT (µm)' is rotated like the left axis title (reads bottom-to-top), not mirrored or upside-down."
+    notes: "Both axis titles use angle -90 (bottom-to-top). 'Upright' is satisfied in the sense of not mirrored; the test checks the label text only, not the angle."
+  - id: UIR-CASE-023
+    title: "Visus axis title and full legend label"
+    statement: "The Visus axis is titled \"Visus\" and the legend carries the full label \"Visus (Dezimal, bestkorrigiert)\" without being cut off."
+    status: implemented
+    sources: ["uat: v1.14 I4; v1.13 A4"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:275 (left YAxis label t('visusShortLabel')), 398 (Visus Line name t('visusYAxisLabel'))"
+      - "src/components/case-detail/VisusCrtChart.tsx:176-212 (custom legend <ul> with flex-wrap, no truncation)"
+      - "src/i18n/translations.ts:746-747"
+    tests:
+      - file: tests/VisusCrtChartLabels.test.tsx
+        name: "uses the SHORT Visus Y-axis label (A4/I4: full text lives in the legend)"
+      - file: tests/VisusCrtChartLabels.test.tsx
+        name: "renders the full Visus description as the measured-Visus legend name (I4)"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case page and look at the \"Visusverlauf und Netzhautdicke (CRT)\" card."
+      expect: "Left axis title reads 'Visus'; the legend under the chart contains the complete text 'Visus (Dezimal, bestkorrigiert)'."
+    notes: ""
+  - id: UIR-CASE-024
+    title: "Filled markers only, no 'Offene Kreise'"
+    statement: "The Visus/CRT trajectory uses filled markers only, draws interpolated gaps through the line itself, and shows no 'Offene Kreise' explanation anywhere."
+    status: implemented
+    sources: ["uat: v1.17 L7/L8; v1.18 M9 (supersedes Benutzerhandbuch §6.3 hollow-circle description)"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:389-421 (only two measured Lines; filled r=4 dots; connectNulls; no visusInterp/crtInterp series rendered)"
+      - "src/components/case-detail/VisusCrtChart.tsx:214-238 (no hint text about open circles)"
+    tests:
+      - file: tests/CaseDetailRound5.test.tsx
+        name: "L7/L8: renders no separate interpolated marker series (no open circles)"
+      - file: tests/VisusCrtChartLabels.test.tsx
+        name: "M9: never renders the leftover open-circle / interpolation explanation"
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "Open a case where some dates have only Visus or only CRT (gaps in one series)."
+        - "Inspect the \"Visusverlauf und Netzhautdicke (CRT)\" chart and the whole page text."
+      expect: "All markers are filled circles on the line; the line passes straight through missing dates; no caption or tooltip mentions 'Offene Kreise' / 'interpoliert'."
+    notes: "useCaseData.ts still computes visusInterp/crtInterp rows (lines 296-328) but the chart does not render them."
+  - id: UIR-CASE-025
+    title: "Legend never describes an undrawn style"
+    statement: "The case chart legends and hints never describe a marker or line style that is not actually drawn in the chart."
+    status: implemented
+    sources: ["uat: v1.10 A-08 / FALL-003"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:176-212 (legend built from the Recharts payload of actually rendered series; band swatches at the real fill opacity)"
+      - "src/pages/CaseDetailPage.tsx:160-195 (same for the baseline chart)"
+      - "src/components/case-detail/ClinicalParametersRow.tsx:90-124 (same for IOD)"
+    tests:
+      - file: tests/VisusCrtChartLabels.test.tsx
+        name: "does NOT show cohort median/band legend entries when overlay is off (I3a)"
+      - file: tests/VisusCrtChartLabels.test.tsx
+        name: "M9: never renders the leftover open-circle / interpolation explanation"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "With the overlay off, read every legend entry of Visusverlauf und Netzhautdicke (CRT), Veränderung zum Ausgangswert, the histograms, Visus vs. CRT and IOD."
+        - "Tick \"Kohorten-Referenz anzeigen\" and repeat."
+      expect: "Every legend entry corresponds to a visible line/band/bar in that chart; with the overlay off no 'Kohorten-…' entries exist."
+    notes: "The reverse direction is not fully symmetric: the always-drawn grey 'Visus Ø' / 'CRT Ø' average lines in Visusverlauf und Netzhautdicke (CRT) have no legend entry (in-chart labels only, see UIR-CASE-056)."
+  - id: UIR-CASE-026
+    title: "All case chart axes render tick labels"
+    statement: "All Fallansicht charts render axis tick labels at both ends and in between; none are dropped on tight layouts."
+    status: partial
+    sources: ["uat: v1.12 CHART-01 / A-06"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:271,280 (tickCount={5} on both Y axes; X axes rely on Recharts defaults, no interval/minTickGap)"
+      - "src/components/case-detail/ClinicalParametersRow.tsx:204-205 (IOD relative axis: explicit ticks), 222 (Y tickCount 5)"
+      - "src/components/case-detail/DistributionCharts.tsx:168,213-214 (tickCount 5)"
+      - "src/pages/CaseDetailPage.tsx:364-385 (baseline chart: no tickCount on X or Y)"
+      - ".planning/v1.12-DEV-RESPONSE-TO-UAT.md:56-66 (A-06 left open pending tester screenshot)"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case page at desktop width (≥1280 px)."
+        - "For each chart (Visusverlauf und Netzhautdicke (CRT), Veränderung zum Ausgangswert, Visus-Verteilung, CRT-Verteilung, Visus vs. CRT, IOD) check the first, last and intermediate tick labels on both axes."
+        - "Narrow the window to ~1024 px and repeat."
+      expect: "Every axis shows labels at both ends and in between. Known risk: the calendar-time X axes (type number, scale time) use Recharts auto ticks and may omit the exact first/last date label on narrow layouts."
+    notes: "Y axes were given explicit tickCount in v1.12/v1.13, but the time-based X axes and the baseline chart's Y axis still use defaults; the original A-06 chart was never confirmed by the tester. Treat as needing a browser check each round."
+  - id: UIR-CASE-027
+    title: "Red critical CRT threshold line follows settings"
+    statement: "The Visus/CRT chart draws the critical CRT threshold (default 400 µm) as a red dashed line labelled \"Kritisch\" on the CRT axis, and the line moves when the threshold is changed in Einstellungen."
+    status: implemented
+    sources: ["manual: Benutzerhandbuch §6.3", "code: src/components/case-detail/VisusCrtChart.tsx:302-308"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:302-308 (ReferenceLine yAxisId='crt' y={CRITICAL_CRT_THRESHOLD()} stroke #ef4444 label t('critical'))"
+      - "src/config/clinicalThresholds.ts:15-17 (reads getSettings().thresholds.criticalCrtUm, default 400)"
+      - "src/i18n/translations.ts:250 (critical 'Kritisch'), :1149-1150 (settings labels)"
+      - "src/pages/SettingsPage.tsx:666-689; src/App.tsx:64 (/settings is AdminRoute)"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Log in as admin. Open the case; in \"Visusverlauf und Netzhautdicke (CRT)\" locate the red dashed line labelled 'Kritisch' at 400 on the right axis."
+        - "Go to /settings → \"Klinische Schwellenwerte\" → \"CRT kritischer Schwellenwert (µm)\" = 350 → \"Speichern\"."
+        - "Reopen the case page."
+      expect: "The red line now sits at 350 on the CRT axis. Restore 400 afterwards."
+    notes: "/settings requires the admin role. The threshold is read synchronously from the settings cache, so a reload after saving may be needed."
+  - id: UIR-CASE-028
+    title: "Calendar-date x-axis is linear in time"
+    statement: "With the overlay off, the calendar-date x-axis on the Visus/CRT, \"Veränderung zum Ausgangswert\" and IOD charts is linear in time, with spacing proportional to the real interval between visits."
+    status: implemented
+    sources: ["uat: v1.18 M6", "code: src/components/case-detail/VisusCrtChart.tsx:258-266"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:258-266 (XAxis dataKey dateMs, type number, scale time)"
+      - "src/pages/CaseDetailPage.tsx:375-383 (baseline chart same axis)"
+      - "src/components/case-detail/ClinicalParametersRow.tsx:212-220 (IOD same axis)"
+      - "src/hooks/useCaseData.ts:271,429,588 (dateMs per row)"
+    tests:
+      - file: tests/CaseDetailRound5.test.tsx
+        name: "M6: keys the X axis on the linear calendar-time axis (dateMs, numeric) when the overlay is OFF"
+      - file: tests/CaseDetailRound5.test.tsx
+        name: "M6/M7: keys the IOD X axis on the linear calendar-time axis (dateMs, numeric) when the overlay is OFF"
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "K3c/M6: keys the X axis on the linear calendar-time axis (dateMs, numeric) when the overlay is off"
+      - file: tests/CaseDetailRound7.test.tsx
+        name: "leaves the calendar axis (overlay OFF) keyed on dateMs with date-ordered rows"
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "Open a case whose Behandlungsverlauf shows uneven gaps (e.g. 1 month then 6 months) with the overlay off."
+        - "Compare horizontal distances between consecutive points in Visusverlauf und Netzhautdicke (CRT), Veränderung zum Ausgangswert and IOD."
+      expect: "The 6-month gap is visibly about six times wider than the 1-month gap; X tick labels are MM/YY dates."
+    notes: ""
+  - id: UIR-CASE-029
+    title: "Overlay switches x-axis to months since first visit"
+    statement: "The Visus/CRT x-axis shows calendar dates when the overlay is off and switches to \"Monate seit Erstvisite\" when it is on; IVI markers and highlight lines follow the active axis."
+    status: implemented
+    sources: ["uat: v1.17 L5", "code: src/components/case-detail/VisusCrtChart.tsx:76-82,247-256"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:76-82 (useRelativeAxis = hasReference), 87-117 (xForDate resolves relMonths vs dateMs for markers/highlight), 247-256 (relMonths XAxis with label t('relativeMonthsAxisLabel'))"
+      - "src/i18n/translations.ts:1219 (relativeMonthsAxisLabel 'Monate seit Erstvisite')"
+    tests:
+      - file: tests/CaseDetailRound5.test.tsx
+        name: "keys the X axis on relMonths (numeric) when the overlay is ON"
+      - file: tests/CaseDetailRound5.test.tsx
+        name: "L5: IVI markers + highlight use relMonths values when the overlay is ON"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open a case with injections; click a timeline tile so an amber highlight line shows."
+        - "Note the X tick labels (MM/YY) and the positions of the IVI markers and highlight."
+        - "Tick \"Kohorten-Referenz anzeigen\"."
+      expect: "X ticks become numbers (0, 7, 14 …) with the axis title 'Monate seit Erstvisite'; IVI markers and the amber highlight re-position onto the month axis. Unticking restores dates."
+    notes: "The relative axis is only used when the selected cohort actually yields reference rows (hasReference guard); for a lone patient with no peers the axis stays on dates even with the toggle on."
+  - id: UIR-CASE-030
+    title: "Cohort median line and IQR band on Visus/CRT"
+    statement: "With \"Kohorten-Referenz anzeigen\" on, the Visus/CRT chart overlays a dashed cohort median line and a shaded IQR band for both metrics, excluding the index patient from its own reference."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-006 / N05.23", "uat: v1.12 FALL-011; v1.13 A3", "code: src/components/case-detail/VisusCrtChart.tsx:341-388", "manual: Benutzerhandbuch §6.3"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:341-388 (Area visusBand/crtBand at IQR_FILL_OPACITY; dashed Lines visusMedian/crtMedian)"
+      - "src/hooks/useCaseData.ts:659-735 (cohortReference: peers = cohortCases minus the index patient, median/p25/p75 per relative month), 744-761 (merged onto patient rows)"
+    tests:
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "computes visus median/IQR from PEER cohort only (index patient excluded — WR-04)"
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "renders cohort median lines reading from the merged row dataKeys"
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "renders translucent range-Area IQR bands (visusBand/crtBand) — no white paint-over"
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "does NOT render cohort median lines or IQR areas when showCohortReference=false"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case page; tick \"Kohorten-Referenz anzeigen\"."
+        - "Inspect \"Visusverlauf und Netzhautdicke (CRT)\"."
+        - "Untick."
+      expect: "Step 2: a light-green dashed median line with translucent green band and a light-violet dashed median line with translucent violet band appear behind the patient's lines; the patient's own lines remain clearly readable. Step 3: they disappear."
+    notes: ""
+  - id: UIR-CASE-031
+    title: "Four cohort legend entries with translucent IQR swatches"
+    statement: "With the overlay on, the trajectory legend lists \"Kohorten-Median Visus\", \"Kohorten-Median CRT\" and an IQR entry for each, with IQR swatches drawn as shaded boxes in the band colour and opacity."
+    status: implemented
+    sources: ["uat: v1.14 I3a; v1.15 J3a; v1.16 K3a; v1.17 L4a/L4b", "code: src/components/case-detail/VisusCrtChart.tsx:176-212,341-388"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:176-212 (renderLegend: band entries → 14×10 box at IQR_FILL_OPACITY, others → line glyph), 343-386 (names cohortReferenceBandVisus/Crt, cohortReferenceMedianVisus/Crt)"
+      - "src/i18n/translations.ts:1185-1189"
+    tests:
+      - file: tests/VisusCrtChartLabels.test.tsx
+        name: "shows BOTH cohort median lines in the legend with distinct names (I3a)"
+      - file: tests/VisusCrtChartLabels.test.tsx
+        name: "labels BOTH cohort IQR bands in the legend (I3b + K3a: CRT band too)"
+      - file: tests/VisusCrtChartLabels.test.tsx
+        name: "renders BOTH IQR legend entries as shaded RECT swatches, not lines (J3a + K3a)"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case page; tick \"Kohorten-Referenz anzeigen\"."
+        - "Read the legend under \"Visusverlauf und Netzhautdicke (CRT)\"."
+      expect: "Six entries: 'Kohorten-IQR Visus (25.–75. Perz.)' and 'Kohorten-IQR CRT (25.–75. Perz.)' with translucent filled boxes, 'Kohorten-Median Visus', 'Kohorten-Median CRT' with line glyphs, plus the two patient series."
+    notes: ""
+  - id: UIR-CASE-032
+    title: "Band labelled as IQR, never standard deviation"
+    statement: "The cohort band is labelled as the interquartile range ('Kohorten-IQR … (25.–75. Perz.)') in legends and tooltips, never as a standard deviation."
+    status: implemented
+    sources: ["uat: v1.14 I3b"]
+    evidence:
+      - "src/i18n/translations.ts:1188-1189,1195,1237-1238 (all band names 'Kohorten-IQR … (25.–75. Perz.)')"
+      - "src/i18n/translations.ts:1200-1229 (info texts speak of IQR 25.–75. Perzentil)"
+      - "src/components/case-detail/VisusCrtChart.tsx:126-169 (tooltip never lists band values)"
+    tests:
+      - file: tests/VisusCrtChartLabels.test.tsx
+        name: "labels BOTH cohort IQR bands in the legend (I3b + K3a: CRT band too)"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Tick \"Kohorten-Referenz anzeigen\"."
+        - "Read legends of Visusverlauf und Netzhautdicke (CRT), Veränderung zum Ausgangswert and IOD, and hover the ℹ icons."
+      expect: "Band entries read 'Kohorten-IQR … (25.–75. Perz.)'; the words 'SD', 'Standardabweichung' or 'σ' do not occur anywhere on the page."
+    notes: ""
+  - id: UIR-CASE-033
+    title: "Cohort aggregated by relative time since first visit"
+    statement: "The cohort overlay aggregates peers by relative time since each peer's own first visit, so the patient is compared at the same elapsed treatment time."
+    status: implemented
+    sources: ["uat: v1.15 J3c; v1.16 K3c"]
+    evidence:
+      - "src/hooks/useCaseData.ts:659-735 (per-peer baseline = earliest visus/crt date; bucket = round(monthsBetween(peerBaseline, d)))"
+      - "src/hooks/useCaseData.ts:457-515 (baseline-change overlay, same alignment), 600-644 (IOD overlay, same)"
+      - "src/i18n/translations.ts:1200-1202 (cohortAggregationInfo text)"
+    tests:
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "aligns peers by RELATIVE month-since-their-own-baseline, not calendar month (J3c)"
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "adds cohort percent-change median + IQR aligned by relative month"
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "K3b: adds cohort IOP median + IQR aligned by relative month (index excluded)"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Tick \"Kohorten-Referenz anzeigen\"."
+        - "Hover the ℹ icon inside the toggle label."
+      expect: "Tooltip text states that the reference is aggregated by relative time since each patient's own first visit (not by calendar date), median + IQR per relative month, index patient excluded; the X axis reads 'Monate seit Erstvisite'."
+    notes: ""
+  - id: UIR-CASE-034
+    title: "Tooltips show medians, never IQR band values"
+    statement: "With the overlay on, the Visus/CRT, baseline-change and IOD tooltips show the measurements plus 'Kohorten-Median' rows and a relative-month header, never raw p25/p75 band tuples."
+    status: implemented
+    sources: ["uat: v1.17 L4c", "code: src/components/case-detail/VisusCrtChart.tsx:126-169"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:126-169 (renderTooltip whitelists visus, crt, visusMedian, crtMedian only)"
+      - "src/pages/CaseDetailPage.tsx:390-422 (baseline tooltip whitelists visusChange, crtChange, visusChangeMedian, crtChangeMedian → t('cohortReferenceMedianChange'))"
+      - "src/components/case-detail/ClinicalParametersRow.tsx:129-162 (IOD tooltip whitelists iop, iopMedian)"
+      - "src/i18n/translations.ts:1192 (cohortReferenceMedianChange 'Kohorten-Median Änderung'), :1194 (cohortReferenceMedianIop 'Kohorten-Median IOD')"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Tick \"Kohorten-Referenz anzeigen\"."
+        - "Hover a visit point in \"Visusverlauf und Netzhautdicke (CRT)\"; then hover the same relative month in \"Veränderung zum Ausgangswert\" and in IOD."
+      expect: "Tooltips show a header like '7 Monate seit Erstvisite', the patient values and rows 'Kohorten-Median Visus/CRT' (or 'Kohorten-Median Änderung', 'Kohorten-Median IOD'); no comma-separated pairs such as '12,14'."
+    notes: "All chart tests mock the Recharts Tooltip to null, so the tooltip content is unverified by the suite. In the baseline tooltip both median rows carry the same name 'Kohorten-Median Änderung' and are distinguished by colour only."
+  - id: UIR-CASE-035
+    title: "Info icons explain plots and overlay aggregation"
+    statement: "Info icons next to plot titles (role=img, title, aria-label, focusable) explain each plot; with the overlay on, the Visus/CRT, baseline and IOD icons also explain the IQR band and relative time."
+    status: implemented
+    sources: ["uat: v1.16 K-bl1; v1.17 L10; v1.18 M13", "code: src/components/primitives/InfoTooltip.tsx:9-27; src/components/case-detail/VisusCrtChart.tsx:216-227"]
+    evidence:
+      - "src/components/primitives/InfoTooltip.tsx:16-25 (role=img, title, aria-label, tabIndex=0, focus-visible ring)"
+      - "src/components/case-detail/VisusCrtChart.tsx:220-226 (visusCrtPlotInfo + cohortOverlayInfoVisusCrt when hasReference)"
+      - "src/pages/CaseDetailPage.tsx:346-352 (baselineChangePlotInfo + overlay note)"
+      - "src/components/case-detail/ClinicalParametersRow.tsx:173 (iopPlotInfo + cohortOverlayInfoIop)"
+      - "src/components/case-detail/DistributionCharts.tsx:158 (distributionGroupedInfo, overlay on)"
+      - "src/i18n/translations.ts:1204-1229"
+    tests:
+      - file: tests/components.test.tsx
+        name: "renders an accessible info tooltip when tooltip prop is provided"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Hover the ℹ next to 'Visusverlauf und Netzhautdicke (CRT)', 'Veränderung zum Ausgangswert' and 'Augeninnendruck (IOD)' with the overlay off."
+        - "Tick \"Kohorten-Referenz anzeigen\" and hover the same three icons; also press Tab until an icon is focused."
+      expect: "Step 1: a short explanation of each plot. Step 2: the texts additionally mention the IQR band (25.–75. Perzentil) and 'Monate seit Erstvisite'; icons are keyboard-focusable with a visible ring."
+    notes: "The cited test exercises the shared InfoTooltip primitive through MetricCard, not the case page. The overlay addendum is appended only when reference rows exist (hasReference), not merely when the box is ticked."
+  - id: UIR-CASE-036
+    title: "Intravitreale Injektionen list with count and substance badge"
+    statement: "The case page shows an \"Intravitreale Injektionen (N)\" list of numbered rows with date, OD/OS tag and a violet substance badge; N equals the row count; no injections shows an empty-state text."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-003 / N05.25", "uat: v1.10 FALL-004", "code: src/pages/CaseDetailPage.tsx:278-329"]
+    evidence:
+      - "src/pages/CaseDetailPage.tsx:279-285 (heading '{t('intravitreal')} ({injections.length})', empty text t('noInjections')), 287-325 (numbered rows, date, OD/OS tag, violet badge with primaryDrug)"
+      - "src/i18n/translations.ts:251-259"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open a case with injections (pat-uka-003: 22); read the card right of \"Visusverlauf und Netzhautdicke (CRT)\"."
+        - "Count the rows (the card scrolls at 380 px) and compare with the heading number."
+        - "Open a case without injections."
+      expect: "Step 1-2: heading \"Intravitreale Injektionen (N)\", rows numbered 1..N with date, 'OD'/'OS' tag and a violet badge (agent name, e.g. Aflibercept); N equals the row count. Step 3: heading '(0)' and the no-injections text."
+    notes: "The substance badge shows the display of the case's first MedicationStatement for every row (CaseDetailPage.tsx:288), not a per-injection substance; a case with a Präparatwechsel shows the same badge on all rows."
+  - id: UIR-CASE-037
+    title: "Veränderung zum Ausgangswert chart"
+    statement: "The case page shows a \"Veränderung zum Ausgangswert\" line chart of the percentage change of visus and CRT relative to baseline with a zero line, shown when more than one baseline point exists."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-004 / N05.27", "manual: Benutzerhandbuch §6.4", "code: src/pages/CaseDetailPage.tsx:333-481"]
+    evidence:
+      - "src/pages/CaseDetailPage.tsx:333 (baselineData.length > 1 guard), 342-352 (title + InfoTooltip), 425 (ReferenceLine y=0), 476-477 (Lines 'Visus %' and 'CRT %')"
+      - "src/hooks/useCaseData.ts:421-452 (baselineData %-change)"
+      - "src/i18n/translations.ts:292 (baselineChange 'Veränderung zum Ausgangswert')"
+    tests:
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "K-bl2: anchors Visus %-change to first VISUS and CRT %-change to first CRT"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case; find the card \"Veränderung zum Ausgangswert\" under the Visus/CRT row."
+        - "Hover the ℹ icon and the first point of each series."
+      expect: "A chart with Y axis '%', a dashed grey zero line, a green 'Visus %' and a violet 'CRT %' series each starting at 0 %; the ℹ explains the plot."
+    notes: "The card title icon is a green up-trend or red down-trend arrow depending on the sign of the last visus change. Only the hook data is unit-tested; the inline chart has no component test."
+  - id: UIR-CASE-038
+    title: "Baseline change anchored per metric"
+    statement: "Change-from-baseline is anchored per metric: Visus change from the first Visus measurement and CRT change from the first CRT measurement."
+    status: implemented
+    sources: ["uat: v1.16 K-bl2"]
+    evidence:
+      - "src/hooks/useCaseData.ts:421-452 (baselineVisus = visusObs[0], baselineCrt = crtObs[0]; each series computed against its own first value)"
+    tests:
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "K-bl2: anchors Visus %-change to first VISUS and CRT %-change to first CRT"
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "K-bl2: a metric with <2 measurements does not suppress the other metric"
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "Open a case whose Behandlungsverlauf shows a first tile with only an eye icon (Visus) and a later tile with the first pulse icon (CRT)."
+        - "In \"Veränderung zum Ausgangswert\" hover the first point of 'Visus %' and the first point of 'CRT %'."
+      expect: "Each series' first point is 0 % at its own first measurement date; the CRT series starts later than the Visus series."
+    notes: ""
+  - id: UIR-CASE-039
+    title: "Baseline chart overlay with unified legend"
+    statement: "With the overlay on, \"Veränderung zum Ausgangswert\" switches to the relative axis and shows cohort median change plus IQR bands, with a legend styled like Visus/CRT and a synced highlight line."
+    status: implemented
+    sources: ["uat: v1.15 J3d; v1.18 M5", "code: src/pages/CaseDetailPage.tsx:333-481"]
+    evidence:
+      - "src/pages/CaseDetailPage.tsx:149-153 (baselineRelativeAxis), 160-195 (renderBaselineLegend mirrors VisusCrtChart), 364-373 (relMonths axis), 429-442 (highlight on active axis), 443-475 (visusChangeBand/crtChangeBand Areas + median Lines)"
+      - "src/hooks/useCaseData.ts:457-515 (baselineChangeWithReference)"
+      - "src/i18n/translations.ts:1237-1240"
+    tests:
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "adds cohort percent-change median + IQR aligned by relative month"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Click a timeline tile (amber line visible), then tick \"Kohorten-Referenz anzeigen\"."
+        - "Inspect \"Veränderung zum Ausgangswert\"."
+      expect: "X axis becomes 'Monate seit Erstvisite'; translucent green/violet bands and dashed median lines appear; legend lists 'Kohorten-IQR Visus-Änderung (25.–75. Perz.)', 'Kohorten-IQR CRT-Änderung …', 'Kohorten-Median Visus-Änderung', 'Kohorten-Median CRT-Änderung' with the same swatch style as Visusverlauf und Netzhautdicke (CRT); the amber line sits at the same relative month as in Visusverlauf und Netzhautdicke (CRT)."
+    notes: "Only the hook-level data is unit-tested; the inline chart/legend in CaseDetailPage has no component test."
+  - id: UIR-CASE-040
+    title: "Visus and CRT count histograms"
+    statement: "The case page shows \"Visus-Verteilung\" (5 bins 0–0.2 … 0.8–1.0) and \"CRT-Verteilung (µm)\" (6 bins <200 … >400, the >400 bar red) histograms of the patient's own measurements with count/% tooltips."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-004 / N05.31", "manual: Benutzerhandbuch §6.5", "code: src/components/case-detail/DistributionCharts.tsx:147-181,201-202"]
+    evidence:
+      - "src/utils/distributionBins.ts:76-82 (5 visus bins), 94-101 (6 CRT bins)"
+      - "src/components/case-detail/DistributionCharts.tsx:72-91 (count + % tooltip), 164-178 (Recharts BarChart, Y label t('frequency') 'Häufigkeit', >400 Cell red), 201-202 (titles distributionVisus / distributionCrt)"
+      - "src/pages/CaseDetailPage.tsx:484-493 (rendered when >2 visus or CRT observations)"
+      - "src/i18n/translations.ts:751-753"
+    tests:
+      - file: tests/DistributionChartsLabels.test.tsx
+        name: "falls back to the single count bar (no %-bars / cloud) when the overlay is off"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case with the overlay off; scroll to the row with \"Visus-Verteilung\" and \"CRT-Verteilung (µm)\"."
+        - "Hover a bar in each."
+      expect: "Visus histogram has bins 0–0.2, 0.2–0.4, 0.4–0.6, 0.6–0.8, 0.8–1.0; CRT histogram has <200, 200–250, 250–300, 300–350, 350–400, >400 with the >400 bar red; Y axis 'Häufigkeit'; bars have visible heights; tooltip reads 'Messungen: N (P%)'."
+    notes: "Per-bin aria-labels exist only in the overlay-on CSS variant (DistributionCharts.tsx:122); the overlay-off Recharts bars carry no aria-label. The row is hidden for cases with ≤2 visus and ≤2 CRT observations. The previously cited Round7 'computes patient %, cohort median % …' test concerns the overlay-on bins and was moved to UIR-CASE-041 only."
+  - id: UIR-CASE-041
+    title: "Paired patient/cohort % bars with overlay on"
+    statement: "With the overlay on, each distribution shows paired bars per bin (patient % vs. cohort-median %) on one shared % axis with a two-entry legend, ℹ note and a tooltip with counts; off restores counts."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-006 / N05.23", "uat: v1.19 N5; v1.18 M8; v1.15 J3d", "code: src/components/case-detail/DistributionCharts.tsx:104-141,160-163,186-200"]
+    evidence:
+      - "src/components/case-detail/DistributionCharts.tsx:104-141 (CSS grouped % bars, shared % axis, two-entry legend, aria-label with counts), 158 (ℹ distributionGroupedInfo), 160-163 (overlay on → CSS bars, off → Recharts counts), 186-200 (portal tooltip with absolute counts)"
+      - "src/utils/distributionBins.ts (computeComparableDistribution); src/hooks/useCaseData.ts (visusDistributionWithCohort / crtDistributionWithCohort)"
+      - "src/i18n/translations.ts:1249-1259 (distributionPatientPct, distributionCohortMedianPct, distributionMeasurementsUnit, distributionGroupedInfo)"
+    tests:
+      - file: tests/DistributionChartsLabels.test.tsx
+        name: "renders the CSS grouped patient% + cohort-median% bars + the cloud when the overlay is on"
+      - file: tests/DistributionChartsLabels.test.tsx
+        name: "falls back to the single count bar (no %-bars / cloud) when the overlay is off"
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "N5: computes per-bin cohort MEDIAN percentages excluding the index patient"
+      - file: tests/CaseDetailRound7.test.tsx
+        name: "computes patient %, cohort median %, and cohort median count per bin"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Tick \"Kohorten-Referenz anzeigen\"; look at \"Visus-Verteilung\" and \"CRT-Verteilung (µm)\"."
+        - "Hover a bin column."
+        - "Untick the toggle."
+      expect: "Step 1: two bars per bin (coloured patient bar + grey cohort bar) on a 0–N% axis, legend 'Patient (% der eigenen Messungen)' / 'Kohorten-Median (% pro Bin)', ℹ next to the title. Step 2: tooltip with both percentages and absolute counts in parentheses ('… Messungen'). Step 3: single count bars with visible heights return."
+    notes: "In the overlay-on CSS variant the '>400' CRT bin is NOT coloured red (the red Cell exists only in the Recharts count chart)."
+  - id: UIR-CASE-042
+    title: "Visus vs. CRT scatter with labelled axes"
+    statement: "The case page shows a \"Visus vs. CRT\" scatter of all same-day measurement pairs with axis titles (Visus and CRT in µm) and a tooltip showing date, visus and CRT."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-004 / N05.31", "uat: v1.13 A4", "manual: Benutzerhandbuch §6.6"]
+    evidence:
+      - "src/components/case-detail/DistributionCharts.tsx:205-239 (title correlationVisusCrt; XAxis label scatterVisusAxisLabel; YAxis label scatterCrtAxisLabel; tooltip date/Visus/CRT µm; t('noData') when < 2 pairs)"
+      - "src/i18n/translations.ts:748-749,755"
+    tests:
+      - file: tests/DistributionChartsLabels.test.tsx
+        name: "labels the scatter X axis from t(\"scatterVisusAxisLabel\")"
+      - file: tests/DistributionChartsLabels.test.tsx
+        name: "labels the scatter Y axis from t(\"scatterCrtAxisLabel\")"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case; find the card \"Visus vs. CRT\" right of the histograms."
+        - "Hover an amber point."
+      expect: "X axis titled 'Visus (dezimal)', Y axis titled 'CRT (µm)'; tooltip shows the ISO date (yyyy-mm-dd), 'Visus: 0.xx' and 'CRT: NNN µm'."
+    notes: "The scatter date is the raw ISO string, not locale-formatted like the other tooltips. With fewer than two pairs the card shows 'Keine Daten verfügbar'."
+  - id: UIR-CASE-043
+    title: "Scatter shows cohort cloud with overlay on"
+    statement: "With the overlay on, the \"Visus vs. CRT\" scatter shows a grey 'Kohorte' point cloud behind the patient's points together with a legend."
+    status: implemented
+    sources: ["uat: v1.15 J3d", "code: src/components/case-detail/DistributionCharts.tsx:228-233"]
+    evidence:
+      - "src/components/case-detail/DistributionCharts.tsx:228-233 (Legend + grey Scatter name t('cohortReferenceScatter') rendered before the patient Scatter)"
+      - "src/hooks/useCaseData.ts (cohortVisusCrtScatter from peer same-day pairs)"
+      - "src/i18n/translations.ts:1197 (cohortReferenceScatter 'Kohorte'), :241 (measurements 'Messungen')"
+    tests:
+      - file: tests/DistributionChartsLabels.test.tsx
+        name: "renders the CSS grouped patient% + cohort-median% bars + the cloud when the overlay is on"
+      - file: tests/VisusCrtChartReference.test.tsx
+        name: "builds a cohort Visus-vs-CRT cloud from peer same-day pairs (index excluded)"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Tick \"Kohorten-Referenz anzeigen\"."
+        - "Look at \"Visus vs. CRT\"."
+      expect: "A translucent grey point cloud appears behind the amber patient points and a legend with 'Kohorte' and 'Messungen' is shown; unticking removes both."
+    notes: ""
+  - id: UIR-CASE-044
+    title: "Augeninnendruck (IOD) chart with method and threshold"
+    statement: "The case page shows an \"Augeninnendruck (IOD)\" line chart with a \"Messmethode:\" line, eye side and a red critical line (default 21, from Einstellungen); no IOP shows \"Keine Daten verfügbar\"."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-004 / N05.06", "manual: Benutzerhandbuch §6.7", "code: src/components/case-detail/ClinicalParametersRow.tsx:166-268"]
+    evidence:
+      - "src/components/case-detail/ClinicalParametersRow.tsx:168-181 (title t('iop') + (OD/OS), 'Messmethode: …' when iopObs exist, t('noData') when iopData empty), 222 (Y domain 0–30), 225 (red ReferenceLine at CRITICAL_IOP_THRESHOLD() labelled with the value), 252-264 (patient IOP Line)"
+      - "src/config/clinicalThresholds.ts:24-27"
+      - "src/i18n/translations.ts:47 (noData 'Keine Daten verfügbar'), :273 (iop 'Augeninnendruck (IOD)'), :275 (measurementMethod 'Messmethode')"
+    tests:
+      - file: tests/CaseDetailRound5.test.tsx
+        name: "renders the patient IOP as a Line (not a Bar)"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case; find the card \"Augeninnendruck (IOD)\" (first of the three-card row)."
+        - "Note the red dashed line labelled '21'."
+        - "As admin go to /settings → \"Klinische Schwellenwerte\", change \"IOD kritischer Schwellenwert (mmHg)\" to 18, \"Speichern\"; reopen the case."
+        - "Open a case without IOP measurements."
+      expect: "Step 1: 'Messmethode: <method>' text (shows '—' when the data carries no method, as in the Aachen demo bundle), eye side in the title, an indigo line with filled points on a 0–30 axis. Step 3: the red line moves to 18 and its label reads '18'. Step 4: the card shows 'Keine Daten verfügbar'."
+    notes: "The empty-state text is 'Keine Daten verfügbar' (t('noData')). The tooltip rows use '<value> mmHg'; the axis itself has no unit title. Demo IOP observations in center-aachen.json carry no method, so the line reads 'Messmethode: —'. /settings requires the admin role."
+  - id: UIR-CASE-045
+    title: "IOD overlay as median line plus IQR band"
+    statement: "With the overlay on, the IOD chart shows the cohort reference as a median line plus IQR band (not bars) and switches to the relative-month axis with no residual calendar-date ticks."
+    status: implemented
+    sources: ["uat: v1.16 K3b; v1.17 L4d; v1.18 M7; v1.19 N4 (EM-UKT-0027)", "code: src/components/case-detail/ClinicalParametersRow.tsx:59-86,194-249"]
+    evidence:
+      - "src/components/case-detail/ClinicalParametersRow.tsx:59-86 (hasIopReference, chartData collapsed/sorted by relMonths), 194 (key remount on axis mode), 196-210 (relMonths XAxis with explicit ticks), 224-249 (legend, iopBand Area, iopMedian dashed Line)"
+      - "src/hooks/useCaseData.ts:600-644 (iopDataWithReference)"
+      - "src/i18n/translations.ts:1194-1195"
+    tests:
+      - file: tests/CaseDetailRound7.test.tsx
+        name: "keys the X axis purely on relMonths (numeric) — no date-keyed axis remains"
+      - file: tests/CaseDetailRound7.test.tsx
+        name: "collapses duplicate relMonths buckets and sorts ascending (no leftover rows)"
+      - file: tests/CaseDetailRound5.test.tsx
+        name: "renders the cohort median as a Line and the IQR as an Area band"
+      - file: tests/CaseDetailRound5.test.tsx
+        name: "M7: keys the IOD X axis on relMonths (numeric) when the overlay is ON"
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "On /cohort Detailansicht open the case with pseudonym EM-UKT-0027."
+        - "Tick \"Kohorten-Referenz anzeigen\" and inspect \"Augeninnendruck (IOD)\"."
+      expect: "X axis shows only integer month ticks with title 'Monate seit Erstvisite' (no dd.mm. / MM/YY labels); a dashed light-indigo median line and a translucent indigo band appear with legend entries 'Kohorten-Median IOD' and 'Kohorten-IQR IOD (25.–75. Perz.)'; no bars."
+    notes: "Rows sharing a relative-month bucket are collapsed (last write wins), so a patient with two IOP readings in the same month shows only the later one on the relative axis."
+  - id: UIR-CASE-046
+    title: "Refraktion card with sphere, cylinder, axis"
+    statement: "The case page shows a \"Refraktion\" card listing Sphäre, Zylinder and Achse values per examination date, with the eye side in the card title."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-004 / N05.09", "manual: Benutzerhandbuch §6.7", "code: src/components/case-detail/ClinicalParametersRow.tsx:270-308"]
+    evidence:
+      - "src/components/case-detail/ClinicalParametersRow.tsx:271-308 (title t('refraction') + (OD/OS); per-observation block with date and LOINC 79846-2 / 79847-0 / 79848-8 → Sphäre dpt, Zylinder dpt, Achse °; noData fallback)"
+      - "src/i18n/translations.ts:276-279 (refraction, sphere 'Sphäre', cylinder 'Zylinder', axis 'Achse')"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case; find the \"Refraktion (OD/OS)\" card (middle card of the three-card row; pat-uka-003 has 2 refraction dates)."
+      expect: "One grey block per examination date with the date and three columns 'Sphäre' (±x.xx dpt), 'Zylinder' (x.xx dpt), 'Achse' (n°); 'Keine Daten verfügbar' when the case has no refraction."
+    notes: "The eye side is shown once in the card title (case eye laterality from the first visus observation), not per row."
+  - id: UIR-CASE-047
+    title: "HbA1c card with diabetes onset and red >7.0"
+    statement: "The case page shows an \"HbA1c\" card with the value and the \"Diabetes seit\" date when available, colouring values above 7.0 % red."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-004 / N05.09", "manual: Benutzerhandbuch §6.7", "code: src/components/case-detail/ClinicalParametersRow.tsx:310-342"]
+    evidence:
+      - "src/components/case-detail/ClinicalParametersRow.tsx:311-342 (title t('hba1c'); amber block with diabetes condition display + 'Diabetes seit <date>'; per-observation value with text-red-600 when > 7.0 else green; noData fallback)"
+      - "src/hooks/useCaseData.ts:229-235 (diabetesCond = E11.9/E10.9 condition)"
+      - "src/i18n/translations.ts:280,282"
+    tests: []
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "On /cohort filter diagnosis = diabetic macular oedema / E11.9, switch to Detailansicht and open a case."
+        - "Inspect the \"HbA1c\" card (right card of the three-card row)."
+      expect: "An amber box names the diabetes diagnosis and 'Diabetes seit <date>'; each HbA1c row shows date and 'x.x%' — red when > 7.0, green otherwise. A case without HbA1c (e.g. pat-uka-003) shows 'Keine Daten verfügbar'."
+    notes: "The diabetes box is keyed on ICD-10 E11.9/E10.9 only; a diabetes diagnosis coded differently (e.g. E11) would not show the amber box."
+  - id: UIR-CASE-048
+    title: "Anamnese split into ophthalmic and non-ophthalmic"
+    statement: "The case page shows an \"Anamnese\" card split into ophthalmic and non-ophthalmic sections, with conditions showing \"seit <date>\" and a no-data text for empty cases."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-004 / N05.08", "manual: Benutzerhandbuch §6.7", "code: src/components/case-detail/AnamnesisFindings.tsx:29-76"]
+    evidence:
+      - "src/components/case-detail/AnamnesisFindings.tsx:29-43 (conditionBadge with 'seit <date>' and OD/OS), 49-76 (card t('anamnesis'); sub-headings t('ophthalmicAnamnesis') / t('nonOphthalmicAnamnesis'); t('noAnamnesis'))"
+      - "src/i18n/translations.ts:283-285 (Anamnese, Ophthalmologisch, Nicht-ophthalmologisch), :294 (noAnamnesis 'Keine Anamnese dokumentiert')"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case; scroll to the \"Anamnese\" card (pat-uka-003 has one non-ophthalmic condition, coronary artery disease since 2021)."
+        - "Open a case with no anamnesis conditions."
+      expect: "Step 1: uppercase sub-headings 'OPHTHALMOLOGISCH' and/or 'NICHT-OPHTHALMOLOGISCH' with condition rows reading '<condition> seit <date>'. Step 2: 'Keine Anamnese dokumentiert'."
+    notes: ""
+  - id: UIR-CASE-049
+    title: "Befunde split into anterior and posterior segment"
+    statement: "The case page shows a \"Befunde\" card split into anterior and posterior segment sections with an eye label per finding, and a no-data text for empty cases."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-004 / N05.08", "manual: Benutzerhandbuch §6.7", "code: src/components/case-detail/AnamnesisFindings.tsx:78-122"]
+    evidence:
+      - "src/components/case-detail/AnamnesisFindings.tsx:78-122 (card t('findings'); t('anteriorSegment') / t('posteriorSegment'); per finding date + (getEyeLabel) ; t('noFindings'))"
+      - "src/utils/clinicalTerms.ts:49-54 (getEyeLabel → 'OD'/'OS')"
+      - "src/i18n/translations.ts:286-288,293 (Vorderer/Hinterer Augenabschnitt, Befunde, noFindings 'Keine Befunde')"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case; scroll to the \"Befunde\" card next to Anamnese (pat-uka-003 has 2 anterior + 2 posterior findings)."
+        - "Open a case without findings."
+      expect: "Step 1: sub-headings 'VORDERER AUGENABSCHNITT' and/or 'HINTERER AUGENABSCHNITT'; each row shows the finding, date and '(OD)'/'(OS)'. Step 2: 'Keine Befunde'."
+    notes: ""
+  - id: UIR-CASE-050
+    title: "Unerwünschte Ereignisse section with status badges"
+    statement: "The case page shows an \"Unerwünschte Ereignisse (N)\" section only for cases with adverse events, listing each with date and a red 'active' / green 'resolved' badge; N equals the number of entries."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-005 / N05.29", "manual: Benutzerhandbuch §6.7", "code: src/components/case-detail/AnamnesisFindings.tsx:124-156"]
+    evidence:
+      - "src/components/case-detail/AnamnesisFindings.tsx:125-156 (section only when adverseEvents.length > 0; heading '(N)'; per AE: display, OD/OS tag, onset date, clinicalStatus code badge green when 'resolved' else red)"
+      - "src/i18n/translations.ts:290 (adverseEvents 'Unerwünschte Ereignisse')"
+    tests: []
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "From the /cohort \"Detailansicht\" table open cases (e.g. of centre UKA) until the case header shows the orange \"N Unerwünschte Ereignisse\" badge; record that case id in notes for later rounds."
+        - "Scroll to the orange section \"Unerwünschte Ereignisse (N)\"."
+        - "Open a case without the orange header badge."
+      expect: "Step 2: N rows, each with event name, date and a small badge reading 'active' (red) or 'resolved' (green). Step 3: no adverse-events section at all (not a '(0)' heading)."
+    notes: "The section is omitted entirely for zero AEs, and the badge shows the raw FHIR clinicalStatus code ('active'/'resolved'), not a translated 'aktiv/aufgelöst'. No AE case id is pinned yet (patient data lives on the Blaze server, not in the repo); record the id found in step 1 here as 'AE case: /case/<id>' so later rounds reuse it."
+  - id: UIR-CASE-051
+    title: "Medikation card with switch marker"
+    statement: "The case page shows a \"Medikation (N)\" card listing agents by start date with Aktiv/Beendet badge, \"seit\"/\"bis\" period, trade-name tag and a \"Präparatwechsel\" marker after an ended entry."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-004 / N05.14", "manual: Benutzerhandbuch §6.7", "code: src/components/case-detail/MedicationCard.tsx:17-80"]
+    evidence:
+      - "src/components/case-detail/MedicationCard.tsx:17-19 (sort by effectivePeriod.start), 25 ('Medikation (N)'), 27-28 (t('noMedication')), 32-35 (drugName, tradeName, isActive, hasSwitch), 47-66 (trade-name tag, 'Aktiv'/'Beendet' badge, 'seit … — bis …'), 69-74 (ArrowRightLeft + 'Präparatwechsel')"
+      - "src/i18n/translations.ts:261-267 (Medikation, 'Keine Medikation dokumentiert.', Aktiv, Beendet, seit, bis, Präparatwechsel)"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open a case; scroll to the \"Medikation (N)\" card (pat-uka-003: 'Medikation (1)', Aflibercept, Aktiv)."
+        - "Find a case whose card lists two different agents where the first has an end date."
+      expect: "Rows sorted by start date, each with agent name, blue trade-name tag, green 'Aktiv' or grey 'Beendet' badge and 'seit <date> — bis <date>'; between the ended first entry and the next one an amber row with arrow icon reading 'Präparatwechsel'. A case without medication shows 'Keine Medikation dokumentiert.'."
+    notes: "hasSwitch (line 35) triggers after any non-last entry that has an end date, without checking that the next agent differs; isActive is true whenever status is 'active' OR no end date exists."
+  - id: UIR-CASE-052
+    title: "OCT viewer with thumbnails, stepping and dropdown"
+    statement: "The case page shows an \"OCT-Aufnahmen (N)\" viewer with a thumbnail strip and prev/next arrows for N>1 (dropdowns only in \"Vergleich\" mode) and a date/CRT caption; selection updates image and caption."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-004 / N05.11", "manual: Benutzerhandbuch §6.8", "code: src/components/OctViewer.tsx:41-53,82-88,146-169,172-221"]
+    evidence:
+      - "src/components/OctViewer.tsx:41-53 (no images → 'OCT-Aufnahmen' + octNoImages text), 82-88 (caption: title, date, '— CRT: N µm'), 146-169 (thumbnail strip, N>1 and not compare mode), 176-200 (dropdowns, compare mode only), 206-221 (prev/next arrows, N>1)"
+      - "src/hooks/useCaseData.ts:534-546 (octImages from imagingStudies)"
+      - "src/pages/CaseDetailPage.tsx:529-535"
+      - "src/i18n/translations.ts:298-299 (octTitle 'OCT-Aufnahmen', octNoImages)"
+    tests: []
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "On Startseite pick a centre card with OCT count > 1 per case; open one of its cases from /cohort (pat-uka-003 has only ONE image, so thumbnails/arrows are absent there)."
+        - "Scroll to \"OCT-Aufnahmen (N)\"."
+        - "Click the right arrow on the image; then click a different thumbnail."
+        - "Click \"Vergleich\" and change the left dropdown."
+      expect: "Step 2: thumbnail strip with dates, main image with caption '<title>', '<date> — CRT: N µm'. Step 3: image, caption date and the blue thumbnail border change. Step 4: two images each with a select; changing the left select changes only the left image."
+    notes: "In single-image mode there is no dropdown; dropdowns appear only in Vergleich mode (OctViewer.tsx:172-202). The CRT caption appears only when a CRT observation shares the image date. The prev/next arrow buttons carry no title/aria-label."
+  - id: UIR-CASE-053
+    title: "OCT zoom and fullscreen"
+    statement: "The user can zoom an OCT image from 50 % to 300 % in 25 % steps with the current percentage displayed, and open a fullscreen overlay via \"Vollbild\" that resets the zoom to 100 %."
+    status: implemented
+    sources: ["manual: Benutzerhandbuch §6.8", "code: src/components/OctViewer.tsx:115-141,232-240"]
+    evidence:
+      - "src/components/OctViewer.tsx:115-131 (zoom −/+ in 0.25 steps clamped 0.5–3; '{Math.round(zoom*100)}%' label), 132-141 (fullscreen toggle, resets zoom; title t('octFullscreen') / t('close')), 232-240 (fixed inset-0 overlay)"
+      - "src/i18n/translations.ts:304-306 (octZoomIn 'Vergrößern', octZoomOut 'Verkleinern', octFullscreen 'Vollbild'), :10 (close 'Schließen')"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open a case with OCT images; in \"OCT-Aufnahmen\" click the zoom-in (title \"Vergrößern\") button twice."
+        - "Click zoom-out (\"Verkleinern\") repeatedly; then zoom-in repeatedly."
+        - "Click the fullscreen button (title \"Vollbild\"); then the X (title \"Schließen\")."
+      expect: "Step 1: label reads '150%' and the image is enlarged. Step 2: label never goes below '50%' or above '300%'. Step 3: a dark full-window overlay with the viewer at '100%' opens; X closes it."
+    notes: ""
+  - id: UIR-CASE-054
+    title: "OCT Vergleich compare mode"
+    statement: "The user can enable \"Vergleich\" in the OCT viewer (shown for 2+ images) to compare two OCT images side by side, each with its own image select and a 'k/N' label."
+    status: implemented
+    sources: ["manual: Benutzerhandbuch §6.8", "code: src/components/OctViewer.tsx:100-114,172-202"]
+    evidence:
+      - "src/components/OctViewer.tsx:100-114 (\"Vergleich\" button, only when >1 image; compareIdx starts at 1), 172-202 (two viewers with independent <select>s labelled '<date> — <title>')"
+      - "src/i18n/translations.ts:303 (octCompare 'Vergleich')"
+    tests: []
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "Open a case with ≥2 OCT images (not pat-uka-003); click \"Vergleich\" in the OCT card header."
+        - "Change the right-hand select to another date."
+        - "Click \"Vergleich\" again."
+      expect: "Step 1: two images side by side labelled '1/N' and '2/N', each with a select. Step 2: only the right image/caption changes. Step 3: single-image view with thumbnails returns."
+    notes: "The CRT caption under both compare images is computed from the LEFT (selected) image's date (matchingCrt, OctViewer.tsx:56), so the right image may show the wrong CRT value."
+  - id: UIR-CASE-055
+    title: "OCT images served only through authenticated API"
+    statement: "OCT images render while logged in via the authenticated API (blob-backed img src), and a direct unauthenticated request to /api/fhir/images/<file> returns 401."
+    status: implemented
+    sources: ["code: src/components/AuthImg.tsx:13-60; server/fhirApi.ts:419-442"]
+    evidence:
+      - "src/components/AuthImg.tsx:21-46 (authFetch(src) → blob → object URL; transparent GIF until loaded)"
+      - "src/hooks/useCaseData.ts:541 (path `/api/fhir/images/<file>`)"
+      - "server/fhirApi.ts:425-442 (GET /images/:filename, traversal-safe sendFile)"
+      - "server/index.ts:243,264 (authMiddleware mounted on /api before fhirApiRouter)"
+    tests:
+      - file: tests/authMiddlewareLocal.test.ts
+        name: "returns 401 without Authorization header"
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Logged in, open a case with OCT images and confirm the images render; in DevTools → Elements note the <img src> starts with 'blob:'."
+        - "In DevTools → Network copy the URL of a request to /api/fhir/images/<file>."
+        - "Open that URL in a private/incognito window (no session)."
+      expect: "Step 1: images visible, src is a blob: URL (no direct /api path in the img). Step 3: the response is HTTP 401 with a JSON error, not the image."
+    notes: "The cited middleware test covers /api/* generically (a synthetic /api/protected route), not the images route specifically."
+  - id: UIR-CASE-056
+    title: "Cohort average reference lines always shown on Visus/CRT"
+    statement: "The Visus/CRT chart always draws grey dashed horizontal lines labelled \"Visus Ø <mean>\" and \"CRT Ø <mean>\" for the selected comparison cohort, independent of the overlay toggle."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-006 (cohort comparison)", "code: src/components/case-detail/VisusCrtChart.tsx:288-301"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:288-301 (two ReferenceLines, strokeDasharray '5 5', labels `Visus Ø ${cohortAvgVisus.toFixed(2)}` and `CRT Ø ${cohortAvgCrt.toFixed(0)}`, rendered unconditionally)"
+      - "src/hooks/useCaseData.ts:132-144 (cohortAvgVisus/cohortAvgCrt = mean over ALL observations of cohortCases — index patient included)"
+      - "src/pages/CaseDetailPage.tsx:143,264-265 (cohortCases = activeOverlayCohort.cases)"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case with \"Kohorten-Referenz anzeigen\" unticked; look at the \"Visusverlauf und Netzhautdicke (CRT)\" chart."
+        - "Tick the toggle, choose a saved cohort in \"Vergleichskohorte wählen\" (if offered) and look again."
+      expect: "Step 1: a grey dashed line labelled 'Visus Ø 0.xx' (top-left, visus axis) and a lilac dashed line 'CRT Ø NNN' (top-right, CRT axis) are present even with the overlay off. Step 2: the lines stay and their values change with the selected cohort."
+    notes: "Added by the refute pass. Unlike the median/IQR overlay these averages are plain means that INCLUDE the index patient, have no legend entry and ignore the toggle — a likely source of tester confusion ('Kohorten-Referenz aus, aber Kohortenlinie sichtbar')."
+  - id: UIR-CASE-057
+    title: "Visus measurement method line under the chart title"
+    statement: "The \"Visusverlauf und Netzhautdicke (CRT)\" card shows the visus measurement method (correction unit in parentheses) as a small line under the title when the first visus observation carries a method."
+    status: implemented
+    sources: ["spec: EMDREQ-FALL-003 / N05.07", "code: src/components/case-detail/VisusCrtChart.tsx:228-238"]
+    evidence:
+      - "src/components/case-detail/VisusCrtChart.tsx:229-237 (visusObs[0].method → translateClinical(display); component 79844-7 unit in parentheses)"
+      - "src/utils/clinicalTerms.ts:43-46 (translateClinical, German map fallback to the raw display)"
+      - "public/data/center-aachen.json (pat-uka-003 visus observations: method SNOMED 252886007 'Best corrected visual acuity', component 79844-7 unit 'contact lens')"
+    tests: []
+    browser:
+      route: "/case/pat-uka-003"
+      steps:
+        - "Open the case; read the small grey line directly under the \"Visusverlauf und Netzhautdicke (CRT)\" title."
+      expect: "A line reading 'Best corrected visual acuity' (no German mapping exists in CLINICAL_TERMS_DE, so the English display is shown) followed by '(contact lens)'; the line is absent for a case whose visus observations carry no method."
+    notes: "Added by the refute pass. 'Best corrected visual acuity' is not in CLINICAL_TERMS_DE (src/utils/clinicalTerms.ts), so the DE UI shows the English method text — a candidate i18n fix."

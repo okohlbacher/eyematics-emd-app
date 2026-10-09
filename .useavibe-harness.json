@@ -1,0 +1,45 @@
+{
+  "files": {
+    ".claude/launch.json": "75c600a870297992fa948eb12e861b25c44f424ec3ab53d767c6bacf780a7faf",
+    ".claude/skills/uat-implement/SKILL.md": "a6c644cd7eb13e2ac74727182191fa33c64a8ffdff8d7970902d417881f07180",
+    ".claude/skills/uat-release/SKILL.md": "daceaac3a436479181982021e48fc8d1dd4b8ca85064768141b3f27626b6ee8a",
+    ".claude/skills/uat-round/SKILL.md": "71ec105c30fe2c9d9219b1e59484b9cc0efd48f56555a2769bc92c1568a299b5",
+    ".claude/skills/uat-triage/SKILL.md": "34dc49fb180ae7f1301723be2c5963d2ee3d7bb422ccf4cf47ada9717578f08b",
+    ".claude/skills/uat-verify/SKILL.md": "2c7d223df22fddbb038223bbca3fc902b7d571fb2dfe58a4328f2022a82992f8",
+    ".claude/workflows/uat-verify.js": "5d61fece8c6cafe97b401fadfb060120917852d53d63614e4556c937343a8313",
+    "handoff/HANDOFF.md": "749797de9680a2d4fe3fd5e0f19d86c39e816eb68fc7361fe90935ff00c61f64",
+    "handoff/reports/registry-2026-10-08.md": "21f7fd655f8db47aa8f84a8b1acb159088f8435f6772ed02268accff69910bbe",
+    "handoff/requirements/ADMIN.yaml": "8f3de8357b35c765edd961a1b0d0ff3aa1ef937e46a2dd1e756d501c07da2c07",
+    "handoff/requirements/AGG.yaml": "cf4fb596517cf3e0ae6432a82d0d627ae5ed9561b089993470f29b98cc7dddb2",
+    "handoff/requirements/AUDIT.yaml": "e4a31c26c07ac598101a66d6151427c5d281d2a89ef487536e467537296e664a",
+    "handoff/requirements/AUTH.yaml": "479cac8d3cbe18e6c0ce7338e86b2ee51073ccfcb57662d4915743ad9d02d3d5",
+    "handoff/requirements/CASE.yaml": "04f1fb894bbb457d17102cfb76aa9f4aa76e1b36326a2d6f68c387e17cfdf2e9",
+    "handoff/requirements/COH.yaml": "962d19e23d3d4e5d515d25b9478420d300dfeb460dbd8ad4d398116d76f53726",
+    "handoff/requirements/DEPLOY.yaml": "1aef0e8c06e98834a1909bdfb9b4d6ea4d300a132ab7f2bf5e2324c809a02ac6",
+    "handoff/requirements/DOCQ.yaml": "c0fe6fe802c6780312ddc043f66c2cbf3346f45427184a34ed8370800fb90bf1",
+    "handoff/requirements/FEEDBACK.yaml": "fe6f8844eda12b7b3b99be86bf33b80a1bce1b7eec545a6790d5451b789cccb8",
+    "handoff/requirements/LAND.yaml": "044059bb65d7a7bf89adc1cb75b0c9005ad6f0dd00a038e39652d5ff9158c4a9",
+    "handoff/requirements/NAV.yaml": "33659cb5f0940c95ea374c23423c2137477a05d0ce577b1e885bfa8579128ec7",
+    "handoff/requirements/QUAL.yaml": "3bec6e29e6d448560fd7af650f7766c6089a06667f7e05dc9ba8de414113a25f",
+    "handoff/requirements/SET.yaml": "20aaf767879a81dd74484bf81242010e056437896d73558b385e4846e0d8af5a",
+    "handoff/requirements/THEME.yaml": "f2f4409f84633d347d94f1dc236e410ebb66f771e030a2a169dc596827dede0a",
+    "handoff/requirements/TRAJ.yaml": "d79ce7c1b4d6c2906bfa7e5a7f7cced28b90ba6e8c814d15e602774591fd7ea5",
+    "handoff/rounds/TEMPLATE/README.md": "8fb81b28bde1461f15357da7b89e25c22573909a9f490f31e9530b5c0ce8f0bc",
+    "handoff/rounds/TEMPLATE/items.yaml": "1d9525c0982b334a03c21aa41d9d584456e80811675a103dcdedb4d9f553c141",
+    "handoff/rounds/TEMPLATE/verification.yaml": "b8ecff5b89063f57a5334a4ae00237569cb23705c7cd2c0f4d3731ddf0232ba1",
+    "handoff/rounds/v1.19/items.yaml": "322a90bf362df772392efc57e0d0d77b167b0ff49fcb30277a899f8a05de53bb",
+    "handoff/rounds/v1.19/report-local.md": "fb8823e4ae8a99aa764b09bd482e8d55e044386b7ed8f32bffe51170e97348ca",
+    "handoff/rounds/v1.19/verification.yaml": "c85af1942facc8c8ab5d39ff51f50277a627c4f6ec5141ef381bc2c8637cd014",
+    "scripts/requirements-check.mjs": "1d9638a717fdd4dd03c3bb58f3b5674969f346eae965e48a931a8e339ce20be6",
+    "scripts/useavibe/node22.sh": "ef74183d22f5fc198242d06838a166e23433ac0c1beb519c8f93a6647479fa74"
+  },
+  "handoff": {
+    "name": "emd-uat-handoff_2026-10-08",
+    "zip_sha256": "4a8b415c1624790677f8862d96bdfe8c96e10e50901e75b83aeb648df164e1d1"
+  },
+  "harness_version": "0.1.0",
+  "patch": {
+    "file": "repo-changes.patch",
+    "sha256": "c488d016b95e45866cc59153e7c4f569013153b91752b1573478dd19cc2d988f"
+  }
+}

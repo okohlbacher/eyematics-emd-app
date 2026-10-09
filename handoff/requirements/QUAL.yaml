@@ -1,0 +1,860 @@
+# UI requirements registry — area QUAL. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+area: QUAL
+requirements:
+  - id: UIR-QUAL-001
+    title: "Kohorte scope dropdown restricts the review set"
+    statement: "The user can restrict the Datenqualität review set via the \"Kohorte\" dropdown to \"Alle Fälle\" or any saved search, and the case list and status tiles shrink to that scope."
+    status: implemented
+    sources: ["EMDREQ-QUAL-001 / N03.01", "code: src/pages/QualityPage.tsx:132-145,341-364"]
+    evidence:
+      - "src/pages/QualityPage.tsx:103 (selectedCohortId state)"
+      - "src/pages/QualityPage.tsx:135-145 (scopedCases via applyFilters on the saved search)"
+      - "src/pages/QualityPage.tsx:153-165,175-196 (timeScopedCases/caseStatus/statusCounts derive from the scoped set)"
+      - "src/pages/QualityPage.tsx:345-364 (\"Kohorte\" <select> with \"Alle Fälle\" + savedSearches options)"
+      - "src/utils/cohortFilterSerialization.ts (safePickCohortFilter)"
+    tests:
+      - file: tests/qualityCohortScope.test.tsx
+        name: "Selecting a cohort filtered to CENTER-A shows only MULTI-ANOMALY, hides OUTSIDER"
+      - file: tests/qualityCohortScope.test.tsx
+        name: "Switching back to \"All cases\" restores both cases"
+      - file: tests/qualityCohortScope.test.tsx
+        name: "cohort selector shows saved search names as options"
+      - file: tests/qualityFlaggedCohortRoundTrip.test.tsx
+        name: "scopes case list to flaggedCaseIds members when flaggedQuality cohort is selected"
+    browser:
+      route: "/quality"
+      steps:
+        - "Log in (e.g. as admin) and make sure at least one saved search exists in Kohortenbildung (/cohort) that matches fewer cases than the total."
+        - "Open /quality and note the number next to \"Grundgesamtheit\" and the case-count line above the case list (\"N Fälle\")."
+        - "In the \"Kohorte\" dropdown (left of \"CSV exportieren\") select the saved search."
+        - "Observe the case list, the \"Grundgesamtheit\" number and the \"Ungeprüft\" / \"In Bearbeitung\" / \"Geprüft\" tiles."
+        - "Select \"Alle Fälle\" again."
+      expect: "After selecting the saved search the case list contains only that cohort's pseudonyms and Grundgesamtheit plus the tile totals drop to the cohort size; selecting \"Alle Fälle\" restores the original numbers."
+    notes: "The dropdown lists only the signed-in user's own saved searches (per-user storage, see dataDb isolation tests). Changing the scope also clears the open case detail (QualityPage.tsx:353)."
+
+  - id: UIR-QUAL-002
+    title: "Per-cohort quality-check checklist persists"
+    statement: "The user can, with a saved cohort selected in \"Kohorte\", tick the \"Qualitätsprüfungen für diese Kohorte\" checkboxes to choose which checks run; each toggle saves at once and persists across reload."
+    status: implemented
+    sources: ["EMDREQ-QUAL-001 / N03.01", "UAT v1.13 C2 / v1.12 QUAL-020/021 (confirmed v1.14)", "code: src/components/quality/QualityParamsChecklist.tsx:26-64"]
+    evidence:
+      - "src/pages/QualityPage.tsx:170-173 (activeQualityParams from the selected saved search)"
+      - "src/pages/QualityPage.tsx:379-399 (card with hint for \"Alle Fälle\", checklist otherwise; onChange → updateSavedSearchQualityParams)"
+      - "src/components/quality/QualityParamsChecklist.tsx:26-64 (one checkbox per QUALITY_PARAM_KEYS, labels via t(key))"
+      - "shared/qualityParams.ts:16-23,37-78 (keys, sanitize, canonicalize, resolve)"
+      - "src/context/DataContext.tsx:177-185 (updateSavedSearchQualityParams → PATCH /api/data/saved-searches/:id, server response adopted)"
+      - "server/dataApi.ts:272 (PATCH /saved-searches/:id — qualityParams sanitised and persisted per user)"
+      - "src/components/quality/QualityCaseDetail.tsx:140-186 (activeKeys gate every anomaly/missing check)"
+    tests:
+      - file: tests/qualityCohortScope.test.tsx
+        name: "params (only missingVisus checked)"
+      - file: tests/qualityCohortScope.test.tsx
+        name: "toggling a check calls updateSavedSearchQualityParams with the canonical subset"
+      - file: tests/qualityCohortScope.test.tsx
+        name: "shows a select-a-cohort hint and no checkboxes in the \"all cases\" scope"
+      - file: tests/qualityCohortScope.test.tsx
+        name: "qualityParams=[\"missingVisus\"] also suppresses missingCrt and missingInjections"
+      - file: tests/dataApiSavedSearch.test.ts
+        name: "strips unknown qualityParams keys before persistence"
+      - file: tests/dataApiSavedSearch.test.ts
+        name: "all keys checked canonicalizes to NULL (back-compat)"
+      - file: tests/qualityParams.test.ts
+        name: "round-trips with resolveQualityParams"
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality; with \"Kohorte\" = \"Alle Fälle\" the card \"Qualitätsprüfungen für diese Kohorte\" shows only the hint \"Wählen Sie oben eine Kohorte …\" and no checkboxes."
+        - "Select a saved search in \"Kohorte\"; six checkboxes appear: \"Kein Visus dokumentiert\", \"Keine CRT dokumentiert\", \"Keine Injektionen dokumentiert\", \"CRT > 400 µm (kritisch)\", \"Visus < 0.1 (kritisch)\", \"Sprung > 0.3\"."
+        - "Untick \"CRT > 400 µm (kritisch)\", then click a case in the list that has a CRT value above the critical threshold."
+        - "Reload the page (F5), reselect the same cohort."
+      expect: "The CRT check stays unticked after reload and the opened case's \"Zu prüfende Messwerte\" table shows no amber \"auffällig: CRT > 400 µm\" rows; re-ticking brings them back immediately."
+    notes: "Checklist is hidden (hint only) for \"Alle Fälle\" since there is no cohort to attach the selection to. The persistence path is PATCH (not PUT); the cited dataApiSavedSearch tests exercise exactly that route."
+
+  - id: UIR-QUAL-003
+    title: "Cohort checks use live global thresholds"
+    statement: "The Datenqualität anomaly evaluation uses the live global thresholds from Einstellungen for every cohort; no per-cohort threshold snapshot exists."
+    status: implemented
+    sources: ["UAT v1.12 Q-40-1 (confirmed by owner 2026-05-26)", "EMDREQ-QUAL-009 / N06.02", "manual: Benutzerhandbuch §7.1, §9.2"]
+    evidence:
+      - "src/config/clinicalThresholds.ts:15-32 (CRITICAL_CRT/VISUS/VISUS_JUMP read getSettings() on every call)"
+      - "src/services/settingsService.ts:115-144 (getSettings() returns the in-memory cache that updateSettings() replaces)"
+      - "src/components/quality/QualityCaseDetail.tsx:163-181 (anomaly checks call the threshold accessors)"
+      - "src/pages/QualityPage.tsx:139-144,199-208,224 (getSettings() for therapy days and CRT-implausible threshold; cohort applyFilters gets the same settings)"
+      - "shared/qualityParams.ts (SavedSearch stores only check keys, never threshold values)"
+    tests:
+      - file: tests/ui-requirements.test.ts
+        name: "clinical thresholds are imported from config, not hardcoded"
+    browser:
+      route: "/settings"
+      steps:
+        - "As admin open /settings, set \"Visus kritischer Schwellenwert\" to 0.5 and \"Therapieabbrecher-Schwellenwert (Tage)\" to 60, click \"Speichern\"."
+        - "Navigate to /quality, select a saved search in \"Kohorte\", open a case with a Visus between 0.1 and 0.5."
+        - "Inspect the \"Zu prüfende Messwerte\" table and the header line \"Therapieabbruch/-unterbrechung\"."
+        - "Restore the original values in /settings and repeat."
+      expect: "With the lowered thresholds the Visus rows show the amber \"auffällig\" pill and more cases/headers read \"Therapieabbrecher (Nd)\"; restoring the settings removes them again, for every cohort alike."
+    notes: "Therapy statuses are memoised on the case set (QualityPage.tsx:199-208), so a settings change takes effect after navigating back to /quality (remount). The annotation texts \"CRT > 400 µm\" / \"Visus < 0.1\" and the checklist labels are static strings and do not follow the configured value. The cited test only asserts the accessors return the config defaults; no test covers a live settings change."
+
+  - id: UIR-QUAL-004
+    title: "Time-range bar scopes the population"
+    statement: "The Datenqualität page has a \"Zeitraum\" bar (\"Letzte 3 Monate\" / \"Letzte 6 Monate\" / \"Letztes Jahr\" / \"Gesamter Zeitraum\" / \"Benutzerdefiniert\" with Von/Bis) that scopes the population and the tiles."
+    status: implemented
+    sources: ["code: src/pages/QualityPage.tsx:147-165,329-339,401-405", "code: src/components/doc-quality/QualityFilterBar.tsx:72-126"]
+    evidence:
+      - "src/pages/QualityPage.tsx:105,153-165 (timeScopedCases: a case stays when it has ≥1 observation inside the window)"
+      - "src/pages/QualityPage.tsx:329-339 (QualityFilterBar without centre filter)"
+      - "src/pages/QualityPage.tsx:401-413 (Grundgesamtheit + tiles use timeScopedCases)"
+      - "src/components/doc-quality/QualityFilterBar.tsx:41-46,78-126 (preset buttons, custom from/to date inputs)"
+      - "src/utils/qualityMetrics.ts:170-189 (timeRangeWindow)"
+    tests:
+      - file: tests/QualityPage.test.tsx
+        name: "switching to \"6m\" reduces denominator"
+      - file: tests/QualityPage.test.tsx
+        name: "time-range control (QualityFilterBar) renders on the page"
+      - file: tests/qualityMetrics.test.ts
+        name: "custom range: both bounds applied"
+      - file: tests/qualityMetrics.test.ts
+        name: "timeRangeWindow(preset) has from=cutoff and to≈now"
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality and note \"Grundgesamtheit: N\" and the \"Ungeprüft\" tile's \"n / N\" line."
+        - "In the \"Zeitraum\" bar click \"Letzte 3 Monate\"."
+        - "Click \"Benutzerdefiniert\"; set \"Von\" and \"Bis\" to a one-month window in the past with data."
+        - "Click \"Gesamter Zeitraum\"."
+      expect: "\"Letzte 3 Monate\" lowers Grundgesamtheit and every tile denominator; the custom window changes them again; \"Gesamter Zeitraum\" restores the original N."
+    notes: "Statement uses the actual German preset labels. The QualityPage.test \"6m\" test clicks the real button but only asserts the population label is still present, not the reduced number; the qualityMetrics tests cover the windowing maths."
+
+  - id: UIR-QUAL-005
+    title: "Grundgesamtheit label counts distinct patients"
+    statement: "The Datenqualität page shows a \"Grundgesamtheit: N\" label counting distinct patients without double-counting across centres."
+    status: partial
+    sources: ["UAT v1.12 QUAL-023", "code: src/pages/QualityPage.tsx:401-405"]
+    evidence:
+      - "src/pages/QualityPage.tsx:401-405 (renders timeScopedCases.length — a case count)"
+      - "shared/patientCases.ts:65-90 (one PatientCase per Patient resource per centre bundle)"
+      - "src/pages/DocQualityPage.tsx:120-129 (the distinct-pseudonym count lives on Dokumentationsqualität, not here)"
+    tests:
+      - file: tests/QualityPage.test.tsx
+        name: "shows qualityPopulationLabel near summary cards"
+      - file: tests/QualityPage.test.tsx
+        name: "default \"all\" shows Grundgesamtheit = 2"
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality with \"Kohorte\" = \"Alle Fälle\" and \"Zeitraum\" = \"Gesamter Zeitraum\"."
+        - "Read \"Grundgesamtheit: N\"."
+        - "Compare N with the \"N Fälle\" line above the case list and, if the data set has a pseudonym at two centres, with the number of distinct pseudonyms in the list."
+      expect: "Today N equals the case count (a pseudonym present at two centres would be counted twice); the requirement expects N to equal the number of distinct pseudonyms."
+    notes: "Label is implemented; the distinct-patient semantics are not — QualityPage counts cases. If the registry should match current behaviour, sharpen to: \"shows a Grundgesamtheit: N label with the number of cases in the current cohort/time scope\"."
+
+  - id: UIR-QUAL-006
+    title: "Centre chip multi-select narrows the view"
+    statement: "The Datenqualität page has a multi-select \"Zentrum\" chip filter that narrows the client view and never widens beyond the user's authorised centres."
+    status: implemented
+    sources: ["UAT v1.12 QUAL-024 (confirmed v1.13)", "code: src/components/quality/QualityCaseList.tsx:147-153"]
+    evidence:
+      - "src/components/quality/QualityCaseList.tsx:147-153 (CenterMultiSelect in the filter panel)"
+      - "src/components/common/CenterMultiSelect.tsx:40-95 (toggle chips, count badge, \"Zurücksetzen\", \"Alle Zentren\")"
+      - "src/pages/QualityPage.tsx:210-213,219 (centerNames from the loaded cases; selectedCenters narrows filteredCases)"
+      - "server/fhirApi.ts:110,404 (filterBundlesByCenters — server only returns authorised centres; client cannot widen)"
+    tests:
+      - file: tests/CenterMultiSelect.test.tsx
+        name: "clicking an unselected option calls onChange with it added"
+      - file: tests/CenterMultiSelect.test.tsx
+        name: "clear affordance calls onChange with empty array"
+      - file: tests/CenterMultiSelect.test.tsx
+        name: "with empty selected shows all-centers label"
+      - file: tests/fhirApi.test.ts
+        name: "filterBundlesByCenters() with local bundles filters to user centers only"
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality as a non-admin user assigned to two or more centres; click the funnel icon (title \"Filterkriterien\") next to the search box."
+        - "Under \"Zentrum\" click one centre chip, then a second one; note the blue count badge."
+        - "Click \"Zurücksetzen\"."
+      expect: "With two chips active only cases of those two centres are listed and the count line reads \"N gefiltert / M Fälle\"; after \"Zurücksetzen\" the label \"Alle Zentren\" shows and all cases of the user's authorised centres (never others) are listed."
+    notes: ""
+
+  - id: UIR-QUAL-007
+    title: "Summary tiles with counts, n/total and percentage"
+    statement: "The Datenqualität page shows summary tiles \"Ungeprüft\", \"In Bearbeitung\", \"Geprüft\" and \"Ausgeschlossene Fälle\", each with count / total and a percentage for the current scope."
+    status: partial
+    sources: ["EMDREQ-QUAL-002 / N03.02", "UAT v1.10 QUAL-011; v1.12 QUAL-023", "code: src/pages/QualityPage.tsx:35-53,407-413"]
+    evidence:
+      - "src/pages/QualityPage.tsx:35-53 (SummaryCard shows \"n / total\" and % only when total is passed)"
+      - "src/pages/QualityPage.tsx:409-411 (three status tiles receive total=timeScopedCases.length)"
+      - "src/pages/QualityPage.tsx:412 (\"Ausgeschlossene Fälle\" tile = excludedCases.length — global, no total)"
+      - "src/pages/QualityPage.tsx:175-196 (caseStatus / statusCounts)"
+    tests:
+      - file: tests/QualityPage.test.tsx
+        name: "summary cards render count + percentage without hover"
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality."
+        - "Read the four tiles under the Grundgesamtheit line."
+        - "Add the big numbers of \"Ungeprüft\", \"In Bearbeitung\" and \"Geprüft\"."
+        - "Select a saved search in \"Kohorte\" that contains no excluded case and re-read the \"Ausgeschlossene Fälle\" tile."
+      expect: "The first three tiles each show the count, a \"n / N\" line and a percentage; the sum of their counts equals Grundgesamtheit N. The \"Ausgeschlossene Fälle\" tile shows the count only (no n / N, no %) and does not change with the cohort/time scope."
+    notes: "Two deviations from the statement: the \"Ausgeschlossene Fälle\" tile has no n/N and no %, and it counts ALL of the user's excluded cases regardless of the cohort/time scope. The three status counts include excluded cases. The cited test only asserts that the three status labels render."
+
+  - id: UIR-QUAL-008
+    title: "Pseudonym search narrows the case list"
+    statement: "The user can search the Datenqualität case list by pseudonym (\"Pseudonym suchen...\") and the list narrows with a \"x gefiltert / n Fälle\" count line."
+    status: implemented
+    sources: ["EMDREQ-QUAL-003 / N03.07", "code: src/components/quality/QualityCaseList.tsx:101-126,197-204"]
+    evidence:
+      - "src/components/quality/QualityCaseList.tsx:104-112 (search input, placeholder \"Pseudonym suchen...\")"
+      - "src/pages/QualityPage.tsx:217 (case-insensitive substring match on pseudonym)"
+      - "src/components/quality/QualityCaseList.tsx:197-204 (count line \"N gefiltert / M Fälle\" vs \"M Fälle\")"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality; note the \"M Fälle\" line above the list."
+        - "Type the first three characters of a visible pseudonym into the \"Pseudonym suchen...\" box."
+        - "Clear the box."
+      expect: "Only pseudonyms containing the typed text remain and the line reads \"N gefiltert / M Fälle\"; clearing restores \"M Fälle\"."
+    notes: "No unit test asserts the search behaviour."
+
+  - id: UIR-QUAL-009
+    title: "Prüfstatus filter on the case list"
+    statement: "The user can filter the Datenqualität case list by \"Prüfstatus\" (Ungeprüft / In Bearbeitung / Geprüft) and the filtered count is shown."
+    status: implemented
+    sources: ["EMDREQ-QUAL-002 / N03.02", "manual: Benutzerhandbuch §7.6", "code: src/components/quality/QualityCaseList.tsx:132-146"]
+    evidence:
+      - "src/components/quality/QualityCaseList.tsx:132-146 (\"Prüfstatus\" select with Alle/Ungeprüft/In Bearbeitung/Geprüft)"
+      - "src/pages/QualityPage.tsx:175-190,218 (caseStatus map; filterStatus applied)"
+      - "src/components/quality/QualityCaseList.tsx:197-204 (count line)"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality and click the funnel icon to open the filter panel."
+        - "In \"Prüfstatus\" choose \"Geprüft\"."
+        - "Compare with the \"Geprüft\" tile count."
+      expect: "Only cases with the green check icon are listed, the count line reads \"N gefiltert / M Fälle\" and N equals the \"Geprüft\" tile count."
+    notes: "tests/qualityPageDeepLink.test.tsx only asserts URL seeding of this select (see UIR-QUAL-012), not the list filtering."
+
+  - id: UIR-QUAL-010
+    title: "Therapiestatus and CRT-Wert filters"
+    statement: "The user can filter the Datenqualität list by \"Therapiestatus\" (Aktiv / Therapieunterbrecher / Therapieabbrecher) and by \"CRT-Wert\" (implausible only); the URL reflects the choice."
+    status: partial
+    sources: ["EMDREQ-QUAL-010 / N06.03", "manual: Benutzerhandbuch §7.6", "code: src/components/quality/QualityCaseList.tsx:154-181"]
+    evidence:
+      - "src/components/quality/QualityCaseList.tsx:154-181 (\"Therapiestatus\" select with Aktiv/Therapieunterbrecher/Therapieabbrecher; \"CRT-Wert\" select with \"Unplausibel (> 400 µm)\")"
+      - "src/pages/QualityPage.tsx:220-226 (therapy and CRT filtering; CRT uses getSettings().crtImplausibleThresholdUm)"
+      - "src/pages/QualityPage.tsx:74,84-98 (useSearchParams is read-only: filters are seeded from the URL but setSearchParams is never called)"
+    tests:
+      - file: tests/qualityPageDeepLink.test.tsx
+        name: "shows only cases with CRT > threshold when filterCrt is implausible"
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality, open the filter panel via the funnel icon."
+        - "In \"Therapiestatus\" choose \"Therapieabbrecher\"; hover a red \"AB\" badge."
+        - "In \"CRT-Wert\" choose \"Unplausibel (> 400 µm)\"."
+        - "Look at the browser address bar."
+      expect: "Every listed case carries the red AB badge whose tooltip gives the gap days; with the CRT filter only cases whose latest CRT exceeds the configured threshold remain. The address bar still shows /quality without ?therapy=breaker or ?crt=implausible (not reflected)."
+    notes: "Filtering is implemented; URL reflection is one-way (URL → filter, see UIR-QUAL-012). The \"Unplausibel (> 400 µm)\" option label is a static string and does not follow the configured threshold. Sharpened statement if current behaviour is accepted: drop \"; the URL reflects the choice\"."
+
+  - id: UIR-QUAL-011
+    title: "Case list therapy badges in yellow and red"
+    statement: "The Datenqualität case list marks therapy interrupters (UB badge, yellow) and therapy breakers (AB badge, red) with gap days according to the configured day thresholds."
+    status: implemented
+    sources: ["manual: Benutzerhandbuch §7.1, §9.2", "code: src/components/quality/QualityCaseList.tsx:82-97"]
+    evidence:
+      - "src/components/quality/QualityCaseList.tsx:82-97 (therapyBadge: AB red / UB amber, title \"<gapDays> Tage ohne Behandlung\")"
+      - "src/pages/QualityPage.tsx:199-208 (getTherapyStatus with settings.therapyInterrupterDays / therapyBreakerDays)"
+      - "shared/qualityPredicates.ts:15-39 (max gap between injections or since last injection > thresholds)"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality (defaults: interrupter > 120 d, breaker > 365 d) and locate a case with a yellow \"UB\" badge and one with a red \"AB\" badge; hover each."
+        - "As admin, in /settings set \"Therapieunterbrecher-Schwellenwert (Tage)\" to 30, click \"Speichern\", return to /quality."
+      expect: "The tooltip shows \"<N> Tage ohne Behandlung\"; UB is amber/yellow and AB is red; after lowering the threshold additional cases show the UB badge."
+    notes: "tests/ui-requirements.test.ts 'classifies patient by days since last injection' uses a local toy classifier and does not exercise the UI, so it is not cited. Cases with fewer than two injections are always \"Aktiv\" (qualityPredicates.ts:25)."
+
+  - id: UIR-QUAL-012
+    title: "URL params seed filters and open the panel"
+    statement: "The Datenqualität page seeds filters from URL params ?therapy=breaker|interrupter, ?crt=implausible and ?status=flagged (mapped to In Bearbeitung) and auto-opens the filter panel."
+    status: implemented
+    sources: ["code: src/pages/QualityPage.tsx:84-98,109-115"]
+    evidence:
+      - "src/pages/QualityPage.tsx:84-90 (status=flagged → in_progress)"
+      - "src/pages/QualityPage.tsx:92-98 (therapy breaker|interrupter; crt implausible; unknown → all)"
+      - "src/pages/QualityPage.tsx:109-115 (showFilters true when any of the three params is present)"
+      - "src/pages/LandingPage.tsx:358,372 (Attention panel Review buttons navigate to /quality?therapy=breaker and /quality?crt=implausible; no UI link produces ?status=flagged — deep-link only)"
+    tests:
+      - file: tests/qualityPageDeepLink.test.tsx
+        name: "seeds filterTherapy to \"breaker\" when ?therapy=breaker is in the URL"
+      - file: tests/qualityPageDeepLink.test.tsx
+        name: "seeds filterStatus to \"in_progress\" (not \"flagged\") when ?status=flagged is in the URL"
+      - file: tests/qualityPageDeepLink.test.tsx
+        name: "seeds filterCrt to \"implausible\" when ?crt=implausible is in the URL"
+      - file: tests/qualityPageDeepLink.test.tsx
+        name: "auto-opens the filter panel when ?crt=implausible is in the URL"
+      - file: tests/qualityPageDeepLink.test.tsx
+        name: "falls back to \"all\" for an unknown therapy param value"
+      - file: tests/landingPageAlerts.test.tsx
+        name: "therapy-breaker Review button navigates to /quality?therapy=breaker"
+    browser:
+      route: "/quality?crt=implausible"
+      steps:
+        - "Open /quality?crt=implausible directly."
+        - "Observe the filter panel under the search box without clicking the funnel icon."
+        - "Open /quality?status=flagged and /quality?therapy=breaker the same way."
+      expect: "The panel is already open; \"CRT-Wert\" shows \"Unplausibel (> 400 µm)\"; with ?status=flagged \"Prüfstatus\" shows \"In Bearbeitung\"; with ?therapy=breaker \"Therapiestatus\" shows \"Therapieabbrecher\"."
+    notes: "?status=flagged is reachable only by typing the URL (no UI link produces it). The filter funnel button's title is \"Filterkriterien\"."
+
+  - id: UIR-QUAL-013
+    title: "Ausgeschlossene anzeigen reveals excluded cases"
+    statement: "The \"Ausgeschlossene anzeigen\" checkbox in the case-list filter (on by default) shows excluded cases dimmed with a red ban icon; unticking it hides them from the list."
+    status: implemented
+    sources: ["EMDREQ-QUAL-008 / N04.04", "manual: Benutzerhandbuch §7.4", "code: src/components/quality/QualityCaseList.tsx:182-192,206-229"]
+    evidence:
+      - "src/components/quality/QualityCaseList.tsx:182-192 (checkbox \"Ausgeschlossene anzeigen\")"
+      - "src/pages/QualityPage.tsx:99,227 (showExcluded defaults to true; false hides excluded cases)"
+      - "src/components/quality/QualityCaseList.tsx:209-223 (excluded rows get opacity-50 and a red Ban icon)"
+      - "src/components/quality/QualityCaseDetail.tsx:360-365 (the text badge \"Ausgeschlossen\" is in the detail header)"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Exclude one case via \"Von Analysen ausschließen\" in its detail panel."
+        - "Open the filter panel (funnel icon) and untick \"Ausgeschlossene anzeigen\"."
+        - "Tick it again."
+      expect: "Unticked: the excluded case disappears and the count line reads \"N gefiltert / M Fälle\"; ticked: it reappears greyed out with a red ban icon, and its detail header shows the \"Ausgeschlossen\" badge."
+    notes: "In code the checkbox is on by default and the list marks excluded cases with an icon, while the text badge sits in the detail header. No unit test covers the checkbox."
+
+  - id: UIR-QUAL-014
+    title: "CSV export of the filtered list"
+    statement: "The Datenqualität \"CSV exportieren\" button downloads quality-review-<date>.csv of the current list incl. Prüfstatus, Therapieabbruch/-unterbrechung and Ausgeschlossen; disabled when empty."
+    status: implemented
+    sources: ["EMDREQ-QUAL-010 / N06.05", "manual: Benutzerhandbuch §7.5, §15", "code: src/pages/QualityPage.tsx:291-316,365-372"]
+    evidence:
+      - "src/pages/QualityPage.tsx:291-316 (headers Pseudonym, Zentrum, Alter, Diagnose, Prüfstatus, Therapieabbruch/-unterbrechung, Ausgeschlossen; one row per filteredCases entry)"
+      - "src/pages/QualityPage.tsx:365-372 (button disabled={filteredCases.length === 0})"
+      - "src/utils/download.ts:21-35,50-52 (buildCsv with BOM, datedFilename 'quality-review-YYYY-MM-DD.csv')"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality, open the filter panel and choose \"Prüfstatus\" = \"Geprüft\" so that N cases remain."
+        - "Click \"CSV exportieren\" and open the downloaded file."
+        - "Type a nonsense string into \"Pseudonym suchen...\" so that 0 cases remain."
+      expect: "A file quality-review-<today>.csv downloads whose header contains Prüfstatus, Therapieabbruch/-unterbrechung and Ausgeschlossen and which has exactly N data rows; with an empty list the \"CSV exportieren\" button is greyed out and does nothing."
+    notes: "No unit test covers the export."
+
+  - id: UIR-QUAL-015
+    title: "Clicking a case opens its review detail panel"
+    statement: "The user can click a case row in the Datenqualität list to open its review detail panel with the \"Zu prüfende Messwerte\" table."
+    status: implemented
+    sources: ["EMDREQ-QUAL-003 / N03.07", "manual: Benutzerhandbuch §6"]
+    evidence:
+      - "src/components/quality/QualityCaseList.tsx:206-231 (row buttons call onSelectCase)"
+      - "src/pages/QualityPage.tsx:446-466 (placeholder \"Fall auswählen, um Datenqualität zu prüfen\" vs QualityCaseDetail)"
+      - "src/components/quality/QualityCaseDetail.tsx:424-441,486-500 (\"Zu prüfende Messwerte\" tab and table)"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality; the right column shows \"Fall auswählen, um Datenqualität zu prüfen\"."
+        - "Click any row in the case list."
+      expect: "The right column shows a header card with the clicked pseudonym and a card with the active tab \"Zu prüfende Messwerte\" containing the table with columns Parameter, Datum, Wert, Status, Annotation, Aktion."
+    notes: ""
+
+  - id: UIR-QUAL-016
+    title: "Selecting a case records a Weitermachen entry"
+    statement: "The UI records, when a case is selected on Datenqualität, a \"Weitermachen\" entry on the Startseite labelled with the pseudonym, the sub-label \"Datenqualität\" and the path /quality."
+    status: implemented
+    sources: ["code: src/pages/QualityPage.tsx:117-128"]
+    evidence:
+      - "src/pages/QualityPage.tsx:120-128 (record({id, label: pseudonym, sub: t('navQuality') = 'Datenqualität', path: '/quality'}))"
+      - "src/hooks/useRecentActivity.ts:29-36 (per-username store)"
+      - "src/services/recentActivityStore.ts:16-19,65 (localStorage emd-recent:<username>, max 5)"
+      - "src/pages/LandingPage.tsx:305-335 (\"Weitermachen\" tile renders label + sub and navigates to entry.path)"
+      - "src/i18n/translations.ts:1059 (jumpBackIn = 'Weitermachen')"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality and click a case row (note its pseudonym)."
+        - "Navigate to the Startseite (/)."
+        - "Find the \"Weitermachen\" panel and click the entry."
+      expect: "The panel lists an entry with the pseudonym and the sub-label \"Datenqualität\"; clicking it opens /quality (without query parameters)."
+    notes: "Entries are stored in the browser's localStorage per username, so they do not follow the user to another browser. tests/recentActivityStore.test.ts and tests/jumpBackIn.test.tsx cover the store and the panel but none asserts that QualityPage records the entry."
+
+  - id: UIR-QUAL-017
+    title: "Case detail header content and links"
+    statement: "The Datenqualität case detail header shows pseudonym, excluded badge, \"Fortschritt\", age, diagnosis, centre, therapy status, the exclude/include toggle and a \"Vollständige Fallansicht\" link."
+    status: implemented
+    sources: ["code: src/components/quality/QualityCaseDetail.tsx:356-420", "UAT v1.13 C1 UI-SPEC §6", "manual: Benutzerhandbuch §6"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:356-367 (pseudonym, \"Ausgeschlossen\" badge, \"Fortschritt: judged / all beurteilt\")"
+      - "src/components/quality/QualityCaseDetail.tsx:368-394 (\"<age> Alter\", Diagnose, Zentrum, Therapieabbruch/-unterbrechung, Messwerte gesamt)"
+      - "src/components/quality/QualityCaseDetail.tsx:395-419 (exclude/include toggle, \"Vollständige Fallansicht\")"
+      - "src/pages/QualityPage.tsx:461 (onNavigateToCase → navigate(`/case/${id}`))"
+      - "src/App.tsx:58 (/case/:caseId route)"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality and click a case."
+        - "Read the top card of the detail panel."
+        - "Click \"Vollständige Fallansicht\"."
+      expect: "The card shows the pseudonym, \"Fortschritt: n / N beurteilt\", \"<age> Alter\", \"Diagnose:\", \"Zentrum:\", \"Therapieabbruch/-unterbrechung:\", \"Messwerte gesamt:\", the button \"Von Analysen ausschließen\" (or \"In Analysen einschließen\") and the link; the link navigates to /case/<id> showing the same pseudonym."
+    notes: "The age is rendered as \"<number> Alter\" (t('age')), not \"<number> Jahre\"."
+
+  - id: UIR-QUAL-018
+    title: "Therapy classification with gap days in header"
+    statement: "The Datenqualität review detail shows \"Therapieabbruch/-unterbrechung\" as \"Therapieabbrecher (Nd)\", \"Therapieunterbrecher (Nd)\" or \"Aktiv\" with the gap in days as the criterion."
+    status: implemented
+    sources: ["EMDREQ-QUAL-009 / N06.07", "code: src/components/quality/QualityCaseDetail.tsx:381-391"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:381-391 (red breaker / amber interrupter with (gapDays d) / green Aktiv)"
+      - "src/pages/QualityPage.tsx:454 (therapyStatus passed from therapyStatuses map)"
+      - "shared/qualityPredicates.ts:15-39 (gapDays = rounded max gap)"
+    tests: []
+    browser:
+      route: "/quality?therapy=breaker"
+      steps:
+        - "Open /quality?therapy=breaker and click the first listed case."
+        - "Read the header line \"Therapieabbruch/-unterbrechung:\"."
+        - "Open /quality, pick a case without a badge and read the same line."
+      expect: "The breaker case shows a red \"Therapieabbrecher (Nd)\" with N > the configured breaker days; the unbadged case shows a green \"Aktiv\"."
+    notes: ""
+
+  - id: UIR-QUAL-019
+    title: "Exclude / include a case from analyses"
+    statement: "The user can exclude a case via \"Von Analysen ausschließen\"; it is marked \"Ausgeschlossen\", leaves the Kohortenbildung/Analyse counts, and \"In Analysen einschließen\" reverts it."
+    status: implemented
+    sources: ["EMDREQ-QUAL-008 / N04.04", "manual: Benutzerhandbuch §7.4", "code: src/components/quality/QualityCaseDetail.tsx:395-412"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:360-365,395-412 (badge + toggle button)"
+      - "src/pages/QualityPage.tsx:281,412 (toggleExcludeCase; \"Ausgeschlossene Fälle\" tile = excludedCases.length)"
+      - "src/context/DataContext.tsx:150-154,244-254 (activeCases = cases minus excluded; PUT /api/data/excluded-cases)"
+      - "src/pages/CohortBuilderPage.tsx:949 and src/pages/AnalysisPage.tsx:65,148 (use activeCases)"
+      - "src/pages/LandingPage.tsx:52 (Startseite total uses raw cases — NOT reduced)"
+    tests:
+      - file: tests/dataDb.test.ts
+        name: "stores and retrieves excluded cases"
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /cohort (Kohortenbildung) and note the \"von N Gesamtfällen\" total; open /quality, click a case, click \"Von Analysen ausschließen\"."
+        - "Observe the header badge, the button label and the \"Ausgeschlossene Fälle\" tile."
+        - "Return to /cohort and read the total; then back on /quality click \"In Analysen einschließen\"."
+      expect: "After exclusion the header shows the red \"Ausgeschlossen\" badge, the button reads \"In Analysen einschließen\", the \"Ausgeschlossene Fälle\" tile rises by one and the Kohortenbildung total drops by one; including again restores the total and the tile."
+    notes: "The Kohortenbildung route is /cohort (not /kohorte) and its total reads \"von N Gesamtfällen\". The Startseite total (LandingPage.tsx:52) counts raw cases and does not drop. tests/ui-requirements.test.ts 'exclusion is togglable' is a toy array test that does not exercise the UI or DataContext and is therefore not cited; no UI test covers the toggle."
+
+  - id: UIR-QUAL-020
+    title: "Measurement and OCT tabs in the case detail"
+    statement: "The Datenqualität case detail has tabs \"Zu prüfende Messwerte\" and \"OCT-Aufnahmen\" (with a count pill when images exist), the latter showing the OCT viewer."
+    status: implemented
+    sources: ["code: src/components/quality/QualityCaseDetail.tsx:424-460,598-600"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:108,424-460 (activeTab state, two tab buttons, count pill when octImages.length > 0)"
+      - "src/components/quality/QualityCaseDetail.tsx:113-126 (octImages from imagingStudies)"
+      - "src/components/quality/QualityCaseDetail.tsx:598-600 (<OctViewer images=…/> in the oct tab)"
+      - "src/i18n/translations.ts:298 (octTitle = 'OCT-Aufnahmen')"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality and click a case that has OCT imaging (the tab shows a number pill)."
+        - "Click the tab \"OCT-Aufnahmen\"."
+        - "Click \"Zu prüfende Messwerte\" again."
+      expect: "The OCT tab shows the image viewer with as many recordings as the pill indicates; switching back shows the measurement table."
+    notes: "The count pill is omitted when a case has no OCT images."
+
+  - id: UIR-QUAL-021
+    title: "Filter chips Alle / Nur auffällige / Offen"
+    statement: "The Datenqualität review detail offers filter chips \"Alle\", \"Nur auffällige\" and \"Offen\" (role=group, aria-pressed) with counts that narrow the measurement table."
+    status: implemented
+    sources: ["EMDREQ-QUAL-004 / N03.09", "UAT v1.13 C1 (confirmed v1.14)", "code: src/components/quality/QualityCaseDetail.tsx:463-484"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:463-484 (role=group, three chips with aria-pressed and counts)"
+      - "src/components/quality/QualityCaseDetail.tsx:236-255 (counts and visibleRows)"
+      - "src/i18n/translations.ts:383-385 (filterAll 'Alle', filterOnlyAnomalies 'Nur auffällige', filterOnlyOpen 'Offen')"
+    tests:
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "the filter chips show anomaly count and filter the table"
+    browser:
+      route: "/quality?crt=implausible"
+      steps:
+        - "Open /quality?crt=implausible and click the first case."
+        - "Read the three chips above the table (\"Alle N\", \"Nur auffällige n\", \"Offen m\")."
+        - "Click \"Nur auffällige\", then \"Offen\", then \"Alle\"."
+      expect: "\"Nur auffällige\" leaves only amber \"auffällig\"/\"fehlt\" rows (exactly n rows); \"Offen\" leaves the un-judged rows (m rows, a superset of the anomalous ones); \"Alle\" shows all N rows; the active chip is dark."
+    notes: "The third chip is labelled \"Offen\" (translation key filterOnlyOpen), not \"Nur offene\"."
+
+  - id: UIR-QUAL-022
+    title: "Measurement table with six fixed columns"
+    statement: "The Datenqualität \"Zu prüfende Messwerte\" table has fixed-width columns Parameter, Datum, Wert, Status, Annotation and Aktion, and changing a row's status never shifts the action buttons."
+    status: implemented
+    sources: ["EMDREQ-QUAL-004 / N03.08", "UAT v1.15 J6a; v1.17 L9 (confirmed v1.18)", "code: src/components/quality/QualityCaseDetail.tsx:486-500"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:486-500 (table-fixed + colgroup w-40/w-24/w-20/w-28/w-56/w-28; six <th>)"
+      - "src/components/quality/QualityCaseDetail.tsx:519,565 (Status and Aktion cells whitespace-nowrap)"
+    tests:
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "the status pills live in a fixed-width column (table-fixed + colgroup) so actions do not reflow"
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "the Status header is restored AND a distinct Annotation column header is present"
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality, click a case; read the table header."
+        - "Note the horizontal position of the \"Bestätigen\" button of a clean row."
+        - "Click \"Bestätigen\" on that row, then click the flag button (\"Fehler melden\") on another row and submit with type \"Sonstiger Fehler\"."
+      expect: "Header reads Parameter | Datum | Wert | Status | Annotation | Aktion; after the status changes the Aktion column and its buttons keep the same x-position and column widths do not change."
+    notes: ""
+
+  - id: UIR-QUAL-023
+    title: "Anomalous and missing values highlighted inline"
+    statement: "The Datenqualität review detail marks values above the critical CRT, below the critical visus or with a visus jump as amber \"auffällig\" rows with a reason, and missing Visus/CRT/IVOM as \"fehlt\" rows."
+    status: implemented
+    sources: ["EMDREQ-QUAL-004 / N03.06", "UAT v1.13 C1 (confirmed v1.14)", "manual: Benutzerhandbuch §7.1", "code: src/components/quality/QualityCaseDetail.tsx:140-220"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:140-186 (crtCritical/visusCritical/visusJump by observation id; missing Visus/CRT/IVOM synthetic rows)"
+      - "src/components/quality/QualityCaseDetail.tsx:190-220 (rows incl. synthetic missing rows)"
+      - "src/components/quality/QualityCaseDetail.tsx:504-545 (amber row background; Annotation cell shows \"auffällig: <reason>\" or \"fehlt: <reason>\")"
+    tests:
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "renders the anomalous Visus row inline with an auffällig status pill"
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "renders a synthetic missing row for parameters with no observation"
+      - file: tests/qualityCohortScope.test.tsx
+        name: "qualityParams=undefined → all applicable anomaly checks run (fallback)"
+      - file: tests/qualityCohortScope.test.tsx
+        name: "qualityParams=[\"crtCritical\",\"missingVisus\"] shows only those two checks"
+    browser:
+      route: "/quality?crt=implausible"
+      steps:
+        - "Open /quality?crt=implausible and click the first case."
+        - "Look at rows whose Wert exceeds the critical CRT."
+        - "Open /quality, choose a case whose list entry has no injections (e.g. via a saved search) and look for a row labelled IVOM."
+      expect: "CRT rows above the threshold are amber with the \"auffällig\" pill and the annotation \"auffällig: CRT > 400 µm\"; a case without injections shows a row \"IVOM\" with Wert \"—\", pill \"fehlt\" and annotation \"fehlt: Keine Injektionen dokumentiert\"."
+    notes: "The reason texts are static translations (\"CRT > 400 µm\", \"Visus < 0.1\", \"Sprung > 0.3\") even when the thresholds in Einstellungen differ."
+
+  - id: UIR-QUAL-024
+    title: "Status pill vocabulary with legend tooltips"
+    statement: "The Datenqualität review detail shows per row a status pill (Offen / bestätigt / auffällig / fehlt) with aria-label, and a legend under the table explains Offen, bestätigt and auffällig via tooltips."
+    status: implemented
+    sources: ["EMDREQ-QUAL-006 / N03.12", "UAT v1.13 C1; v1.15 J6b", "code: src/components/quality/QualityCaseDetail.tsx:268-305,588-596"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:268-305 (statusPill with aria-label \"Status: <label>\" for confirmed/resolved/anomalous/missing/open)"
+      - "src/components/quality/QualityCaseDetail.tsx:588-596 (legend with InfoTooltip for open, confirmed, anomalous)"
+      - "src/components/primitives/InfoTooltip.tsx (Info icon with title + aria-label)"
+    tests:
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "exposes the three settable status definitions as tooltips"
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "an acknowledged flag renders the bestätigt verdict"
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality, click a case."
+        - "Scroll below the table to the legend line with three pills."
+        - "Hover the ℹ icon next to \"Offen\", then next to \"bestätigt\" and \"auffällig\"."
+      expect: "Tooltips read \"Noch nicht geprüft.\", \"Wert wurde als korrekt bestätigt.\" and \"Vom System als auffällig erkannt …\"; rows show pills Offen / bestätigt / auffällig / fehlt."
+    notes: "The legend has three entries (no \"fehlt\" or \"Behoben\" entry since J6b). The tooltip is the native title attribute of the icon."
+
+  - id: UIR-QUAL-025
+    title: "Fortschritt line counts judged values"
+    statement: "The Datenqualität review detail shows a \"Fortschritt: n / N beurteilt\" line whose n rises as rows are confirmed."
+    status: implemented
+    sources: ["EMDREQ-QUAL-006 / N03.12", "code: src/components/quality/QualityCaseDetail.tsx:236-247,366-370"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:236-247 (counts.judged = confirmed + resolved rows)"
+      - "src/components/quality/QualityCaseDetail.tsx:366-370 (\"Fortschritt: judged / all beurteilt\")"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality, click a case and read \"Fortschritt: n / N beurteilt\"."
+        - "Click \"Bestätigen\" on two clean rows."
+        - "Click the flag button (\"Fehler melden\") on a third row, choose \"Duplikat\", submit."
+      expect: "The Fortschritt counter rises by exactly 2 after the two confirmations (n+2 / N) and does not change after flagging the third row."
+    notes: "Only confirmed (and legacy resolved) rows count as judged; a row with an open \"Fehler melden\" flag does not increase the counter — the statement was sharpened accordingly (\"or flagged\" dropped)."
+
+  - id: UIR-QUAL-026
+    title: "Per-row Bestätigen with tooltip and reset"
+    statement: "The user can confirm a value with the per-row \"Bestätigen\" action (with mouseover tooltip); the pill becomes \"bestätigt\", persists across reload, and a reset icon returns the row to \"Offen\"."
+    status: implemented
+    sources: ["EMDREQ-QUAL-005 / N03.10", "UAT v1.13 C1; v1.14 I6b (confirmed v1.15)", "code: src/components/quality/QualityCaseDetail.tsx:307-349"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:307-349 (Bestätigen button with title tooltip; reset RotateCcw button titled \"Zurücksetzen\" for judged rows)"
+      - "src/pages/QualityPage.tsx:250-279 (handleConfirmRow → acknowledged flag with sentinel 'confirmed'; handleResetRow → removeQualityFlagByParameter)"
+      - "src/context/DataContext.tsx:201-242 (PUT /api/data/quality-flags, server response adopted)"
+      - "server/dataApi.ts:92-135 (per-user persistence)"
+    tests:
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "clicking Bestätigen on a row fires onConfirmRow with the parameter key"
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "a judged row shows a single reset action instead of confirm/correct"
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "an acknowledged flag renders the bestätigt verdict"
+      - file: tests/dataDb.test.ts
+        name: "stores and retrieves flags"
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality, click a case, hover \"Bestätigen\" on a clean row."
+        - "Click \"Bestätigen\"."
+        - "Reload the page, reselect the case."
+        - "Click the circular-arrow reset icon (tooltip \"Zurücksetzen\") in the row's Aktion cell."
+      expect: "Hover shows the tooltip \"Bestätigen\"; after the click the Status cell shows the green \"bestätigt\" pill and the Aktion cell only the reset icon; the pill survives the reload; the reset returns the row to \"Offen\" with Bestätigen + flag buttons."
+    notes: ""
+
+  - id: UIR-QUAL-027
+    title: "Only Bestätigen and Fehler melden row actions"
+    statement: "The Datenqualität review offers exactly the row actions \"Bestätigen\" and \"Fehler melden\"; there is no \"Behoben\" action and no duplicate top/bottom status controls."
+    status: implemented
+    sources: ["UAT v1.15 J6b (confirmed v1.16); v1.13 C1 (confirmed v1.14)", "code: src/components/quality/QualityCaseDetail.tsx:307-349"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:307-349 (rowActions: Bestätigen + Fehler melden, or reset; no corrected-upstream button)"
+      - "src/pages/QualityPage.tsx:274-276 (handleCorrectRow removed)"
+      - "src/components/quality/QualityCaseDetail.tsx:356-358,604-612 (single header strip, review card, one collapsed log card)"
+    tests:
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "the \"Behoben\" (corrected-upstream) action is GONE — only Bestätigen + Fehler melden remain"
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "removes the duplicate top approve control and the second editor select"
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "the audit log is read-only (no select editor) and lists flags"
+    browser:
+      route: "/quality?status=flagged"
+      steps:
+        - "Open /quality?status=flagged and click a case."
+        - "Count the cards in the detail column and the buttons in each table row's Aktion cell."
+        - "Expand \"Fallstatus & Prüfprotokoll\"."
+      expect: "Exactly three cards (header strip, review card, collapsed log); open rows have only the green \"Bestätigen\" button and the red flag button titled \"Fehler melden\"; judged rows only a reset icon; no \"Behoben\" button and no status dropdown anywhere."
+    notes: "Missing (\"fehlt\") rows offer only \"Fehler melden\" (no Bestätigen), by design."
+
+  - id: UIR-QUAL-028
+    title: "Bulk confirm skips anomalous and judged rows"
+    statement: "The Datenqualität bulk button \"Alle sichtbaren (unbeurteilten, unauffälligen) als bestätigt\" confirms only visible open rows that are neither anomalous nor missing, leaving all other rows unchanged."
+    status: implemented
+    sources: ["EMDREQ-QUAL-005 / N03.10", "UAT v1.13 C1 / DECISIONS", "code: src/components/quality/QualityCaseDetail.tsx:257-266,577-585"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:257-266 (handleBulkConfirm over visibleRows with verdict 'open')"
+      - "src/components/quality/QualityCaseDetail.tsx:577-585 (button)"
+      - "src/i18n/translations.ts:379-382 (label)"
+    tests:
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "bulk-confirm only confirms un-judged, non-anomalous rows"
+    browser:
+      route: "/quality?crt=implausible"
+      steps:
+        - "Open /quality?crt=implausible, click a case with both clean and amber rows; flag one clean row via the flag button (type \"Duplikat\") first."
+        - "Click \"Alle sichtbaren (unbeurteilten, unauffälligen) als bestätigt\" under the table."
+      expect: "All previously \"Offen\" clean rows become \"bestätigt\"; amber \"auffällig\"/\"fehlt\" rows keep their status; the flagged row (still verdict Offen) is also confirmed but keeps its Duplikat annotation; Fortschritt rises by the number of confirmed rows."
+    notes: "A flagged-but-open clean row still has verdict 'open' (verdictOf only looks at acknowledged/resolved), so bulk confirm DOES confirm it (the flag's status becomes acknowledged, annotation kept). The original expect claimed the flagged row keeps its status — corrected."
+
+  - id: UIR-QUAL-029
+    title: "Fehler melden dialog with error-type select"
+    statement: "The user can flag a value via \"Fehler melden\", which opens \"Fehler kennzeichnen\" showing Parameter and Wert, a \"Fehlerart\" select with five error types and a submit disabled until a type is chosen."
+    status: implemented
+    sources: ["EMDREQ-QUAL-005 / N03.13", "manual: Benutzerhandbuch §7.2", "code: src/components/quality/QualityFlagDialog.tsx:27-78"]
+    evidence:
+      - "src/components/quality/QualityFlagDialog.tsx:27-33 (five error types: labels \"Unplausibler Wert\", \"Fehlender Wert\", \"Duplikat\", \"Formatfehler\", \"Sonstiger Fehler\"; wire values Unplausibel/Fehlend/Duplikat/Formatfehler/Sonstiger Fehler)"
+      - "src/components/quality/QualityFlagDialog.tsx:38-43 (title \"Fehler kennzeichnen\", Parameter, Wert)"
+      - "src/components/quality/QualityFlagDialog.tsx:48-60,68-74 (select with placeholder \"Bitte auswählen...\"; submit disabled={!errorType})"
+      - "src/pages/QualityPage.tsx:232-244,470-482 (handleFlag adds an open flag; dialog mount)"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality, click a case, click the red flag button (tooltip \"Fehler melden\") on a row."
+        - "In the dialog \"Fehler kennzeichnen\" observe Parameter/Wert and the \"Fehlerart\" select showing \"Bitte auswählen...\"; try the red \"Fehler melden\" submit."
+        - "Open the select and read its options; choose \"Duplikat\" and click the submit; expand \"Fallstatus & Prüfprotokoll\"."
+      expect: "The options are \"Unplausibler Wert\", \"Fehlender Wert\", \"Duplikat\", \"Formatfehler\", \"Sonstiger Fehler\"; submit is disabled until a type is chosen; after submitting, the row's Annotation cell shows \"Duplikat\" and the log lists \"<Parameter> — als Fehler markiert · Duplikat … gemeldet von <user> · <date>\"."
+    notes: "The stored errorType is the wire value (e.g. 'Fehlend', 'Unplausibel'), so the annotation and the log show 'Fehlend' although the option read \"Fehlender Wert\". The row's Status pill does not change on flagging (it stays Offen/auffällig). No unit test covers the dialog."
+
+  - id: UIR-QUAL-030
+    title: "Annotation column shows flag content, wraps inside"
+    statement: "The Datenqualität \"Annotation\" column shows the flag content (e.g. 'Duplikat') or an em-dash for unflagged rows, and the badge wraps inside its cell without floating outside the table."
+    status: implemented
+    sources: ["UAT v1.15 J6a; v1.17 L9 (confirmed v1.18); v1.18 M10 (confirmed v1.19)", "code: src/components/quality/QualityCaseDetail.tsx:520-562"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:346-352 (displayNote)"
+      - "src/components/quality/QualityCaseDetail.tsx:520-562 (Annotation <td> overflow-hidden; badges max-w-full whitespace-normal break-words; '—' when empty)"
+      - "src/components/quality/QualityCaseDetail.tsx:494-500 (colgroup; Annotation <col> w-56 at line 499)"
+    tests:
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "an annotated (anomalous) row shows its flag text in the Annotation column"
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "shows the reviewer note while the flag is still open"
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality, click a case; on a clean row click the red flag icon \"Fehler melden\" (Aktion column), in the dialog \"Fehler kennzeichnen\" choose \"Sonstiger Fehler\" under \"Fehlertyp\" and click \"Fehler melden\"."
+        - "Look at the Annotation cell of that row and of an unflagged row; narrow the browser window to ~1100 px."
+      expect: "The flagged row shows a red badge \"Sonstiger Fehler\" that wraps onto a second line inside the column border when space is tight; the unflagged row shows \"—\"; nothing overlaps the Aktion column."
+    notes: "Layout (wrapping) cannot be asserted in jsdom; the cited tests cover content only."
+
+  - id: UIR-QUAL-031
+    title: "Annotation survives confirm; no placeholders"
+    statement: "The UI keeps a reported-error annotation visible after the row is confirmed, never shows the system placeholders ('confirmed'/'corrected') as a note, and repeats the note in the read-only log."
+    status: implemented
+    sources: ["UAT v1.14 I6a (confirmed v1.15)", "code: src/components/quality/QualityCaseDetail.tsx:346-352,548-552,632-637"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:346-352 (displayNote suppresses CONFIRMED_ERROR_TYPE/CORRECTED_ERROR_TYPE)"
+      - "src/components/quality/QualityCaseDetail.tsx:548-552 (note rendered regardless of verdict)"
+      - "src/components/quality/QualityCaseDetail.tsx:632-637 (log shows displayNote)"
+      - "src/pages/QualityPage.tsx:256-258 (confirm updates status only, errorType kept)"
+    tests:
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "still shows the reviewer note after Bestätigen (status acknowledged)"
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "confirming a clean row shows NO sentinel text (confirmed)"
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "the read-only audit log includes the real note (sentinels suppressed)"
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality, click a case; on a clean row click the flag button, choose \"Duplikat\", submit."
+        - "Click \"Bestätigen\" on the same row."
+        - "Click \"Bestätigen\" on another clean row; expand \"Fallstatus & Prüfprotokoll\"."
+      expect: "The first row shows \"bestätigt\" and still \"Duplikat\" in Annotation; the second row's Annotation is \"—\" (no 'confirmed' text); the log entry for the first row reads \"… als korrekt bestätigt · Duplikat\"."
+    notes: ""
+
+  - id: UIR-QUAL-032
+    title: "Multiple flags on one parameter are independent"
+    statement: "The UI treats several flags on one parameter independently: changing one flag's status affects only that flag."
+    status: implemented
+    sources: ["UAT v1.10 QUAL-006", "code: src/context/DataContext.tsx:215-231"]
+    evidence:
+      - "src/context/DataContext.tsx:215-231 (updateQualityFlag matches caseId + flaggedAt → one flag)"
+      - "src/pages/QualityPage.tsx:250-269 (setRowVerdict updates the first flag of the parameter, otherwise creates one)"
+      - "src/components/quality/QualityCaseDetail.tsx:233,620-645 (row uses the first flag; log lists every flag with its own verb)"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality, click a case; on one row click the flag button → \"Duplikat\" → submit, then again the flag button → \"Formatfehler\" → submit."
+        - "Click \"Bestätigen\" on that row."
+        - "Expand \"Fallstatus & Prüfprotokoll\"."
+      expect: "The log shows two entries for the parameter: one \"als korrekt bestätigt · Duplikat\" and one still \"als Fehler markiert · Formatfehler\"; the heading count reads \"2 Einträge\"."
+    notes: "Independence holds at data level; the row's inline actions always operate on the first flag of that parameter, and the reset icon (removeQualityFlagByParameter) removes all flags of the parameter. No unit test covers multi-flag behaviour."
+
+  - id: UIR-QUAL-033
+    title: "Resolved flag shown as Behoben with upstream note"
+    statement: "The Datenqualität review detail shows a flag with wire status 'resolved' as a blue \"Behoben\" pill with the value struck through and an italic corrected-upstream note in the Annotation cell."
+    status: implemented
+    sources: ["EMDREQ-QUAL-007 / N04.02", "code: src/components/quality/QualityCaseDetail.tsx:223-233,276-282,516-518,553-556"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:223-233 (status 'resolved' → verdict resolved)"
+      - "src/components/quality/QualityCaseDetail.tsx:276-282 (blue \"Behoben\" pill)"
+      - "src/components/quality/QualityCaseDetail.tsx:516-518,553-556 (value struck through; italic \"im Quellsystem korrigiert — …\" note)"
+      - "server/dataApi.ts:92-135 (PUT /quality-flags accepts status 'resolved')"
+    tests:
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "a resolved flag renders the value struck through and the corrected-upstream note"
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "still shows the reviewer note on a resolved row"
+    browser:
+      route: "/quality"
+      steps:
+        - "Using the signed-in user's Bearer token, PUT /api/data/quality-flags with one flag {caseId, parameter: '<Display> (<YYYY-MM-DD>)', errorType: 'corrected', status: 'resolved'} for a known row (no UI path can create this state since v1.15)."
+        - "Open /quality and click that case."
+      expect: "The row's Status shows the blue \"Behoben\" pill, the Wert is struck through and the Annotation cell shows the italic note \"im Quellsystem korrigiert — Wert im Quell-EHR berichtigt\"."
+    notes: "Rendering only: since J6b (v1.15) the UI offers no action that sets a flag to resolved, so this state can only come from pre-existing or API-written data. The PUT replaces the user's whole flag list — include the existing flags in the body."
+
+  - id: UIR-QUAL-034
+    title: "Read-only Fallstatus & Prüfprotokoll log"
+    statement: "The Datenqualität collapsed \"Fallstatus & Prüfprotokoll\" card lists every flag with parameter, verb, note, reporter and date as a read-only log (\"Nur-Lese-Protokoll\") without edit/delete controls."
+    status: implemented
+    sources: ["EMDREQ-QUAL-006 / N03.11", "UAT v1.13 C1 UI-SPEC §6", "code: src/components/quality/QualityCaseDetail.tsx:604-656"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:604-612 (<details> with heading and \"<n> Einträge\" pill)"
+      - "src/components/quality/QualityCaseDetail.tsx:332-337 (logVerb: als Fehler markiert / als korrekt bestätigt / im Quellsystem korrigiert)"
+      - "src/components/quality/QualityCaseDetail.tsx:628-648 (entries: parameter — verb · note, \"gemeldet von <user> · <date>\")"
+      - "src/components/quality/QualityCaseDetail.tsx:650 (\"Nur-Lese-Protokoll. …\" note)"
+    tests:
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "the audit log is read-only (no select editor) and lists flags"
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "the read-only audit log includes the real note (sentinels suppressed)"
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality, click a case, flag one row via the flag button (type \"Fehlender Wert\") and confirm another via \"Bestätigen\"."
+        - "Click the collapsed card \"Fallstatus & Prüfprotokoll\" to expand it."
+      expect: "The heading pill reads \"2 Einträge\"; each entry shows \"<Parameter> — als Fehler markiert · Fehlend\" / \"<Parameter> — als korrekt bestätigt\" and on the right \"gemeldet von <username> · <date>\"; the footer reads \"Nur-Lese-Protokoll. Beurteilung erfolgt ausschließlich oben …\"; no edit or delete control exists on entries."
+    notes: "The reporter line is lower-case \"gemeldet von\". The stored wire value 'Fehlend' is shown in the log although the option label was \"Fehlender Wert\"."
+
+  - id: UIR-QUAL-035
+    title: "Als geprüft markieren / Prüfung aufheben"
+    statement: "The user can mark a case \"Als geprüft markieren\" or \"Prüfung aufheben\" inside the status/log card; the tiles, \"Prüfstatus\" filter and list check icon reflect the change and it persists."
+    status: implemented
+    sources: ["EMDREQ-QUAL-007 / N04.01", "manual: Benutzerhandbuch §7.3", "UAT v1.13 C1 UI-SPEC §6", "code: src/components/quality/QualityCaseDetail.tsx:614-627"]
+    evidence:
+      - "src/components/quality/QualityCaseDetail.tsx:614-627 (toggle button inside the <details> card)"
+      - "src/pages/QualityPage.tsx:283-289 (handleMarkReviewed → markCaseReviewed/unmarkCaseReviewed)"
+      - "src/pages/QualityPage.tsx:175-196 (reviewedCases → status 'reviewed' → tiles/filter)"
+      - "src/components/quality/QualityCaseList.tsx:45-54 (green CheckCircle2 icon for reviewed)"
+      - "src/context/DataContext.tsx:256-275 and server/dataApi.ts:342-376 (PUT /api/data/reviewed-cases per user)"
+    tests:
+      - file: tests/QualityCaseDetail.test.tsx
+        name: "mark-as-reviewed lives in the collapsed Card B and fires onMarkReviewed"
+      - file: tests/dataDb.test.ts
+        name: "stores and retrieves reviewed cases"
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality, note the \"Ungeprüft\" and \"Geprüft\" tile counts, click an unreviewed case (grey circle icon)."
+        - "Expand \"Fallstatus & Prüfprotokoll\" and click \"Als geprüft markieren\"."
+        - "Reload the page; open the filter panel and set \"Prüfstatus\" = \"Geprüft\"."
+        - "Reselect the case, expand the card, click \"Prüfung aufheben\"."
+      expect: "After marking: \"Geprüft\" +1, \"Ungeprüft\" −1, the list row shows a green check icon, the button reads \"Prüfung aufheben\" and the state survives the reload; the Geprüft filter lists the case; \"Prüfung aufheben\" reverts all of it."
+    notes: ""
+
+  - id: UIR-QUAL-036
+    title: "Review state stored server-side per user"
+    statement: "The UI stores flags, reviewed and excluded states per user on the server so they persist across browsers and reloads and are not visible to other users."
+    status: implemented
+    sources: ["manual: Benutzerhandbuch §1.3", "code: server/dataApi.ts:86-135,307-376"]
+    evidence:
+      - "src/context/DataContext.tsx:119-130 (GET quality-flags / excluded-cases / reviewed-cases on load)"
+      - "src/context/DataContext.tsx:201-275 (every mutation PUTs to /api/data/*)"
+      - "server/dataApi.ts:86-135,307-376 (keyed by req.auth.preferred_username; centre ownership validated)"
+      - "server/dataDb.ts (get/set*ByUsername, see dataDb tests)"
+    tests:
+      - file: tests/dataDb.test.ts
+        name: "isolates by username"
+      - file: tests/dataApiCenter.test.ts
+        name: "PUT /quality-flags with caseId outside permitted center returns 403"
+      - file: tests/dataApiCenter.test.ts
+        name: "PUT /quality-flags with caseId in permitted center succeeds"
+    browser:
+      route: "/quality"
+      steps:
+        - "As user A, open /quality, click a case, flag a row via the flag button (Duplikat), mark the case \"Als geprüft markieren\" and exclude it via \"Von Analysen ausschließen\"."
+        - "Open a private window, log in as user A, open /quality and select the same case."
+        - "Log in as a different user B (same centre) in the private window and open the same case."
+      expect: "User A in the private window sees the Duplikat annotation, the green check and the \"Ausgeschlossen\" badge; user B sees none of them (row Offen, case unreviewed, not excluded)."
+    notes: "The three dataDb 'isolates by username' tests (quality flags, excluded cases, reviewed cases) share the same it() title in different describe blocks."
+
+  - id: UIR-QUAL-037
+    title: "Case list rows show status icon, pseudonym and centre"
+    statement: "The Datenqualität case list rows show a status icon (grey circle Ungeprüft, amber clock In Bearbeitung, green check Geprüft), the pseudonym and the centre name, and the selected row is highlighted."
+    status: implemented
+    sources: ["code: src/components/quality/QualityCaseList.tsx:45-54,206-229"]
+    evidence:
+      - "src/components/quality/QualityCaseList.tsx:45-54 (statusIcon per QualityStatus)"
+      - "src/components/quality/QualityCaseList.tsx:206-229 (row: icon, mono pseudonym, centerName, bg-blue-50 when selected)"
+      - "src/pages/QualityPage.tsx:175-190 (caseStatus: reviewed / open flag → in_progress / none → unchecked)"
+    tests: []
+    browser:
+      route: "/quality"
+      steps:
+        - "Open /quality and look at the list rows: icon, pseudonym (monospace) and centre name below it."
+        - "Click a row; flag one of its values via the flag button (type \"Duplikat\")."
+        - "Expand \"Fallstatus & Prüfprotokoll\" and click \"Als geprüft markieren\"."
+      expect: "The clicked row is highlighted blue; its icon changes from a grey circle to an amber clock after the flag and to a green check after marking as reviewed."
+    notes: "Added by the refute pass: the row content and the icon vocabulary were covered by no other QUAL requirement. No unit test asserts the icons."

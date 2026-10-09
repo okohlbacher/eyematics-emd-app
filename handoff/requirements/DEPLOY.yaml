@@ -1,0 +1,523 @@
+# UI requirements registry — area DEPLOY. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+area: DEPLOY
+requirements:
+  - id: UIR-DEPLOY-001
+    title: "Published image is public and multi-arch"
+    statement: "The published image ghcr.io/okohlbacher/eyematics-emd-app:<version> is pullable anonymously for linux/amd64 and linux/arm64 and carries the same version tag as the app."
+    status: implemented
+    when: release
+    sources: ["uat: v1.20 Phase 4–5 (.planning/v1.20-ROADMAP.md:25)", "code: .github/workflows/container.yml"]
+    evidence:
+      - ".github/workflows/container.yml:27-34 (docker/metadata-action: tag = version from the v* git tag + latest)"
+      - ".github/workflows/container.yml:35-42 (docker/build-push-action platforms linux/amd64,linux/arm64; push only on refs/tags/)"
+      - ".github/workflows/container.yml:20 (docker/setup-qemu-action for the arm64 leg)"
+      - "Containerfile:7-21 (SPA built on $BUILDPLATFORM, per-arch runtime deps for better-sqlite3)"
+      - "scripts/container-smoke.sh:7-8,29,32-36 (IMAGE=ghcr.io/… and PLATFORM=linux/amd64 modes exercise a published image per arch)"
+      - "package.json:4 (version 1.20.2 — the image tag is derived from the git tag, so tag == package.json version is a release-process convention, not enforced in code)"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Without any GHCR login, from a shell: T=$(curl -s 'https://ghcr.io/token?scope=repository:okohlbacher/eyematics-emd-app:pull' | jq -r .token); test -n \"$T\" && echo token-ok"
+        - "Run: H1=\"Authorization: Bearer $T\"; H2='Accept: application/vnd.oci.image.index.v1+json'; U=https://ghcr.io/v2/okohlbacher/eyematics-emd-app/manifests/<version>; curl -s -o /dev/null -w '%{http_code}\\n' -H \"$H1\" -H \"$H2\" $U; curl -s -H \"$H1\" -H \"$H2\" $U | jq '{mediaType, platforms: [.manifests[].platform]}' (manifest only — no layer download, no login state involved)."
+        - "Run the published image on the spot-check port: docker run -d --name emd-release -p 127.0.0.1:3312:3000 -v emd-release-vol:/data ghcr.io/okohlbacher/eyematics-emd-app:<version>; until curl -fsS http://127.0.0.1:3312/healthz >/dev/null; do sleep 0.5; done"
+        - "Open http://127.0.0.1:3312, log in, click the amber \"Problem melden\" tab at the right edge of the page; wait until role=dialog \"Problem melden\" exists (≥ 2 s) and read its \"Version\" line."
+      expect: "Step 1 prints token-ok without credentials; step 2 answers HTTP 200 with an OCI image index (mediaType application/vnd.oci.image.index.v1+json) whose platforms include linux/amd64 and linux/arm64; the dialog's \"Version\" line reads v<version>, the same as the image tag."
+    notes: "Public visibility of the GHCR package is a registry setting (.planning/v1.20-ROADMAP.md:4,25) not expressible in repo code; CI only proves multi-arch build/push. \"Problem melden\" is a right-edge tab (src/components/Layout.tsx:157), not a sidebar entry. when: release — the tag exists only after /uat-release pushes it, so the verify pass skips this entry pre-release (N/A) and uat-release §2 runs it on the published image (127.0.0.1:3312). The anonymous token + manifest GET replaces the former double pull (podman is not installed here, HANDOFF §7; docker pull of the tag works without login too). Clean up: docker rm -f emd-release; docker volume rm emd-release-vol."
+  - id: UIR-DEPLOY-002
+    title: "Container runs with no environment variables"
+    statement: "The deployed container runs with no operator-supplied environment variables; all UI-visible configuration (e.g. auth.inactivityTimeoutMs, warningBeforeMs) comes from settings.yaml on the volume."
+    status: implemented
+    sources: ["manual: docs/Deployment.md:43 (keine EnvironmentFile); docs/Konfiguration.md", "code: deploy/settings.yaml:48-49; src/context/AuthContext.tsx:200-214"]
+    evidence:
+      - "deploy/EMD.container:7-28 (no EnvironmentFile=/Environment= lines; comment at :28 states it explicitly)"
+      - "deploy/entrypoint.sh:11-12 (seeds /data/settings.yaml from the image copy; exec node with no env)"
+      - "Containerfile:28,38-40 (only ENV is the image's own NODE_ENV=production; config/settings.yaml is a symlink to /data/settings.yaml)"
+      - "server/index.ts:61-86 (all server config read from SETTINGS_FILE; grep process.env server/ finds nothing)"
+      - "server/constants.ts:104 (SETTINGS_FILE = config/settings.yaml)"
+      - "deploy/settings.yaml:48-49 (inactivityTimeoutMs / warningBeforeMs on the volume)"
+      - "src/context/AuthContext.tsx:207-214 (idle timer takes s.auth.inactivityTimeoutMs / warningBeforeMs from settingsService.loadSettings())"
+      - "docs/Deployment.md:43"
+    tests:
+      - file: tests/deploySettings.test.ts
+        name: "carries exactly the container-specific values"
+    browser:
+      route: "/"
+      steps:
+        - "On the host, confirm: grep -i environment ~/.config/containers/systemd/EMD.container prints no EnvironmentFile=/Environment= line."
+        - "Edit ~/EMD/settings.yaml: set auth.inactivityTimeoutMs: 60000 and auth.warningBeforeMs: 30000; run systemctl --user restart EMD."
+        - "Open http://<host>:3000, log in (e.g. admin), then do not touch mouse or keyboard."
+      expect: "After about 30 s an inactivity warning with a countdown appears; after 60 s the UI logs out and shows the login page."
+    notes: "Statement sharpened to 'no operator-supplied environment variables': the image itself bakes ENV NODE_ENV=production (Containerfile:28). The previously cited settingsApi test 'auth.* operational params…' was dropped: it only asserts otpCode/maxLoginAttempts are stripped for non-admins (its mocked settings carry no auth sub-keys), so it does not prove inactivityTimeoutMs reaches the client."
+  - id: UIR-DEPLOY-003
+    title: "First start seeds users, centres and settings"
+    statement: "The deployed container on an empty volume seeds the 7 default users, 6 centres, settings.yaml and feedback/ so Verwaltung and Startseite are populated after first login."
+    status: implemented
+    sources: ["manual: docs/Deployment.md:45-56 (Erster Start)", "code: Containerfile:38-40; deploy/entrypoint.sh:5,11; deploy/settings.yaml:10"]
+    evidence:
+      - "deploy/entrypoint.sh:5,11 (mkdir -p /data/feedback; cp deploy/settings.yaml → /data/settings.yaml when absent)"
+      - "server/index.ts:105-119 (writes users.json with 7 default users when missing)"
+      - "server/constants.ts:30-52 (initCenters loads data/centers.json or writes the default 6-centre file)"
+      - "server/index.ts:92-97,122,125,147-148,160 (DATA_DIR = /data from server.dataDir; initCenters, initAuth, audit.db, data.db, sessions.db created there)"
+      - "Containerfile:38-40 (config/settings.yaml → /data/settings.yaml, feedback → /data/feedback symlinks)"
+      - "deploy/settings.yaml:10 (dataDir: /data)"
+      - "scripts/container-smoke.sh:46-47,60-62 (6 centers via /api/fhir/centers; volume seeded check)"
+      - "src/i18n/translations.ts:50,403 (navHome \"Startseite\", navAdmin \"Verwaltung\")"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Stop the container and empty the volume: rm -rf ~/EMD/* ; systemctl --user start EMD."
+        - "Open http://<host>:3000/login, sign in as admin / changeme2025! (\"Anmelden\")."
+        - "Click \"Verwaltung\" in the sidebar and count the user rows."
+        - "Click \"Startseite\" and count the centre cards."
+        - "On the host run: ls ~/EMD"
+      expect: "Verwaltung lists 7 users (admin, forscher1, forscher2, epidemiologe, kliniker, diz_manager, klinikleitung); Startseite shows 6 centre cards; ~/EMD contains users.json, centers.json, settings.yaml, jwt-secret.txt, audit.db and feedback/."
+    notes: "Only scripts/container-smoke.sh (volume seeded check) covers this; no vitest asserts the seeding."
+  - id: UIR-DEPLOY-004
+    title: "/healthz answers 200 without login or audit row"
+    statement: "The production server answers GET /healthz with 200 {\"status\":\"ok\"} outside /api, without a JWT and without writing an audit row."
+    status: implemented
+    sources: ["uat: v1.20 Phase 1 (.planning/v1.20-ROADMAP.md:8)", "code: server/index.ts:209-213", "manual: docs/Deployment.md:29,39"]
+    evidence:
+      - "server/index.ts:209-213 (app.get('/healthz') mounted before cookieParser/audit/auth)"
+      - "server/index.ts:240-243 (auditMiddleware and authMiddleware are mounted on '/api' only)"
+      - "deploy/healthcheck.mjs:3 (probe fetches http://127.0.0.1:3000/healthz)"
+      - "deploy/EMD.container:23-26 (HealthCmd + Notify=healthy)"
+      - "Containerfile:45 (HEALTHCHECK for Docker)"
+      - "scripts/container-smoke.sh:30,40 (wait_healthy polls /healthz)"
+    tests:
+      - file: tests/auditMiddleware.test.ts
+        name: "skips non-/api/ requests"
+    browser:
+      route: "/healthz"
+      steps:
+        - "While logged out, open http://<host>:3000/healthz in the browser (or curl -i)."
+        - "Log in as admin and open \"Protokoll\" in the sidebar; look at the newest rows."
+        - "On the host run: podman ps (or docker ps)."
+      expect: "The response is HTTP 200 with body {\"status\":\"ok\"}; Protokoll shows no row with path /healthz; the container shows status healthy."
+    notes: "The cited audit test proves the middleware ignores non-/api paths generally (it uses /index.html); no test targets /healthz itself."
+  - id: UIR-DEPLOY-005
+    title: "SPA and API served from one origin on port 3000"
+    statement: "The deployed container serves the login page at http://<host>:3000 and the UI and API share that single origin, so login succeeds without CORS errors."
+    status: implemented
+    sources: ["uat: v1.20 Phases 2–3; v1.19 (deployed production build confirmed)", "manual: docs/Deployment.md Installation / TLS", "code: server/index.ts:311-322; deploy/settings.yaml:8-11"]
+    evidence:
+      - "server/index.ts:311-322 (serveFrontend + dist/index.html → express.static(dist) and SPA fallback on the same Express app as /api)"
+      - "server/index.ts:337 (app.listen(PORT, HOST))"
+      - "deploy/settings.yaml:8-11 (host 0.0.0.0, port 3000, serveFrontend: true)"
+      - "server/index.ts:181,198 (connectSrc 'self' — the UI may only call its own origin)"
+      - "deploy/EMD.container:12 (PublishPort=3000:3000)"
+      - "Containerfile:42 (EXPOSE 3000)"
+      - "src/i18n/translations.ts:62-67 (\"Benutzername\", \"Passwort\", \"Anmelden\")"
+    tests:
+      - file: tests/deploySettings.test.ts
+        name: "carries exactly the container-specific values"
+    browser:
+      route: "/login"
+      steps:
+        - "From another machine open http://<host>:3000 and open the browser DevTools console."
+        - "Enter \"Benutzername\" admin and \"Passwort\", click \"Anmelden\"."
+        - "Watch the Network tab for /api/auth/login and /api/fhir/centers."
+      expect: "The login page loads, login succeeds and the Startseite shows centre cards; all requests go to http://<host>:3000/...; the console shows no CORS error."
+    notes: ""
+  - id: UIR-DEPLOY-006
+    title: "Plain HTTP on a LAN host loads all assets"
+    statement: "The deployed UI renders over plain HTTP on a non-localhost host: asset URLs stay http (no upgrade-insecure-requests rewrite) and the page is not blank; HSTS still applies on HTTPS."
+    status: implemented
+    sources: ["uat: v1.20.1 (.planning/v1.20-ROADMAP.md:40ff, upgradeInsecureRequests disabled)", "manual: docs/Deployment.md:129"]
+    evidence:
+      - "server/index.ts:201-204 (upgradeInsecureRequests: null in the helmet CSP directives)"
+      - "server/index.ts:191 (helmet() defaults keep Strict-Transport-Security, which browsers only honour over HTTPS)"
+      - "scripts/container-smoke.sh:54-55 (CSP has no upgrade-insecure-requests check)"
+      - "docs/Deployment.md:129"
+    tests: []
+    browser:
+      route: "/login"
+      steps:
+        - "Open http://<lan-ip>:3000/login (not localhost) in a browser; open DevTools → Network."
+        - "Run on the host: curl -sI http://<lan-ip>:3000/ | grep -i content-security-policy"
+      expect: "The login page renders (not blank); every asset request in Network is http://<lan-ip>:3000/assets/...; the CSP header contains no upgrade-insecure-requests."
+    notes: ""
+  - id: UIR-DEPLOY-007
+    title: "Production CSP header is strict and inline-script free"
+    statement: "The production server sends a CSP with script-src 'self' (no inline/eval), style-src self + unsafe-inline, img-src self data: blob:, frame-ancestors self and no upgrade-insecure-requests."
+    status: implemented
+    sources: ["code: server/index.ts:191-208"]
+    evidence:
+      - "server/index.ts:191-208 (helmet contentSecurityPolicy: defaultSrc/scriptSrc 'self', styleSrc 'self' 'unsafe-inline', imgSrc 'self' data: blob:, connectSrc, frameAncestors 'self', baseUri 'self', upgradeInsecureRequests null)"
+      - "server/index.ts:181-188 (connect-src gains the Keycloak issuer origin only when provider=keycloak)"
+      - "scripts/container-smoke.sh:50-55 (no inline <script>, strict Plotly chunk, no upgrade-insecure-requests)"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Run: curl -sI http://<host>:3000/ | grep -i content-security-policy"
+        - "Open http://<host>:3000, log in, open DevTools → Console."
+      expect: "The header contains script-src 'self' (no 'unsafe-inline'/'unsafe-eval'), style-src 'self' 'unsafe-inline', img-src 'self' data: blob:, frame-ancestors 'self' and no upgrade-insecure-requests; the app loads with zero CSP violation messages."
+    notes: "CSP is only active via the Express server (production/container); Vite dev sends no CSP."
+  - id: UIR-DEPLOY-008
+    title: "index.html has no inline script; theme via /theme-init.js"
+    statement: "The production index.html contains no inline script; the theme is initialised from an external /theme-init.js and no stored theme counts as 'System'."
+    status: implemented
+    sources: ["uat: v1.20.1 (FOUC fix)", "manual: .planning/v1.20-ROADMAP.md:45 (FOUC script moved to public/theme-init.js)"]
+    evidence:
+      - "index.html:8-9,13 (only <script src=\"/theme-init.js\"> and the module entry; no inline body)"
+      - "public/theme-init.js:4-9 (reads localStorage 'emd-theme'; null or 'system' → follows prefers-color-scheme)"
+      - "src/context/ThemeContext.tsx:19-29 (STORAGE_KEY 'emd-theme'; missing/invalid value → 'system')"
+      - "dist/index.html (built output: both <script> tags carry src=)"
+      - "scripts/container-smoke.sh:50-51 (no inline <script> check against the running container)"
+      - "src/components/Layout.tsx:121 + src/i18n/translations.ts:1032,1035 (ThemeToggle in the sidebar footer, button \"Design\", option \"System\")"
+    tests:
+      - file: tests/themeToggleCycle.test.tsx
+        name: "marks the active option (System by default) as checked"
+    browser:
+      route: "/"
+      steps:
+        - "Open view-source:http://<host>:3000/ and search for <script."
+        - "Open DevTools → Network, reload, filter for theme-init.js."
+        - "Open DevTools → Application → Local Storage, delete emd-theme, reload, log in and click the \"Design\" button in the sidebar footer."
+      expect: "Every <script> tag has a src attribute (no inline script body); /theme-init.js is requested with status 200; the theme menu shows \"System\" as the checked option; the console shows 0 CSP violations."
+    notes: "The cited test covers the 'System' default; no test inspects index.html for inline scripts (container-smoke.sh does)."
+  - id: UIR-DEPLOY-009
+    title: "Dark theme shows no light flash on load"
+    statement: "The deployed UI shows no light flash (FOUC) on page load for a user with the dark theme selected."
+    status: implemented
+    sources: ["uat: v1.20.1 (FOUC fix)", "manual: .planning/v1.20-ROADMAP.md:45"]
+    evidence:
+      - "public/theme-init.js:5-8 (adds the dark class to <html> synchronously in <head>, before first paint)"
+      - "index.html:9 (classic script in <head>, loaded before the module bundle)"
+      - "src/index.css:4,47 (@variant dark on .dark; .dark retints the app)"
+      - "src/context/ThemeContext.tsx:47-54 (keeps the class in sync after mount)"
+      - "src/i18n/translations.ts:1032,1034 (\"Design\" menu, \"Dunkel\" option)"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Open http://<host>:3000, log in, click the \"Design\" button in the sidebar footer and select \"Dunkel\"."
+        - "Hard-reload (Ctrl/Cmd+Shift+R) five times, watching the first painted frame (optionally with DevTools → Performance → screenshots)."
+      expect: "The first painted frame is already dark on every reload; no white/light flash before the dark UI appears."
+    notes: "FOUC is not asserted by any vitest; it is a deployment-only visual check."
+  - id: UIR-DEPLOY-010
+    title: "Fonts are self-hosted; no Google Fonts request"
+    statement: "The deployed UI loads Inter and JetBrains Mono from the app origin (/assets/) and makes no request to Google Fonts or any third-party host."
+    status: implemented
+    sources: ["code: src/main.tsx:1-4; package.json:29-30", "manual: .planning/v1.20-ROADMAP.md:49 (Fonts)"]
+    evidence:
+      - "src/main.tsx:1-4 (imports @fontsource-variable/inter and @fontsource-variable/jetbrains-mono)"
+      - "package.json:29-30 (the two @fontsource-variable dependencies)"
+      - "src/index.css:8-9 ('Inter Variable' / 'JetBrains Mono Variable' font stacks)"
+      - "dist/assets/ (inter-*.woff2 and jetbrains-mono-*.woff2 emitted by Vite; no fonts.googleapis reference in dist/index.html or src)"
+      - "server/index.ts:194 (default-src 'self' would block any third-party font anyway)"
+    tests: []
+    browser:
+      route: "/login"
+      steps:
+        - "Open http://<host>:3000/login with DevTools → Network open; filter by \"woff2\"."
+        - "Clear the filter and check the Domain column for every request."
+      expect: "All woff2 requests come from http://<host>:3000/assets/...; no request to fonts.googleapis.com, fonts.gstatic.com or any other host; the console shows 0 CSP violations."
+    notes: ""
+  - id: UIR-DEPLOY-011
+    title: "Refresh cookie is httpOnly/Strict with single-flight refresh"
+    statement: "The refresh token is an httpOnly SameSite=strict cookie scoped to /api/auth/refresh, the emd-csrf cookie is readable for double-submit, and a 401 triggers one refresh before redirecting to /login."
+    status: implemented
+    sources: ["code: server/auth/authHelpers.ts:141-154; src/services/authHeaders.ts:43-47,104-131"]
+    evidence:
+      - "server/auth/authHelpers.ts:141-154 (emd-refresh: httpOnly true, sameSite strict, path /api/auth/refresh; emd-csrf: httpOnly false, path /)"
+      - "src/services/authHeaders.ts:43-47 (getCsrfFromCookie reads emd-csrf from document.cookie)"
+      - "src/services/authHeaders.ts:104-124 (refreshAccessToken single-flight via refreshPromise; X-CSRF-Token header)"
+      - "src/services/authHeaders.ts:127-131 (handleAuthFailure clears the token and redirects to /login)"
+      - "server/index.ts:217 (cookieParser mounted before auth)"
+    tests:
+      - file: tests/authRefresh.test.ts
+        name: "sets emd-refresh (HttpOnly, SameSite=Strict, Path=/api/auth/refresh) AND emd-csrf"
+      - file: tests/authFetchRefresh.test.ts
+        name: "Test 1 — silently refreshes on 401 and retries original request once"
+      - file: tests/authFetchRefresh.test.ts
+        name: "Test 2 — single-flight: 5 concurrent 401s trigger ONLY 1 refresh call"
+      - file: tests/authFetchRefresh.test.ts
+        name: "Test 4 — refresh failure: refresh 401 → no retry, falls through to logout"
+      - file: tests/authFetchRefreshSuite.test.ts
+        name: "UAT-AUTO-01: silent refresh — 401 triggers refresh and retries original request once"
+    browser:
+      route: "/"
+      steps:
+        - "Log in at http://<host>:3000/login, then open DevTools → Application → Cookies → http://<host>:3000."
+        - "Inspect emd-refresh and emd-csrf."
+        - "In DevTools → Application → Session Storage, set emd-token to an invalid value (e.g. append x), then click \"Startseite\" in the sidebar and watch Network."
+      expect: "emd-refresh has HttpOnly ✓, SameSite Strict, Path /api/auth/refresh; emd-csrf has HttpOnly ✗ and Path /; after the invalid token exactly one POST /api/auth/refresh (200) appears, the page keeps working and no redirect to /login happens."
+    notes: ""
+  - id: UIR-DEPLOY-012
+    title: "Session survives >10 min active use over plain HTTP"
+    statement: "The deployed UI keeps a user logged in through active use beyond 10 minutes on a plain-HTTP host when auth.refreshCookieSecure is false (the container default)."
+    status: implemented
+    sources: ["uat: v1.20 Phases 2–3 (refresh cookie not Secure by default)", "manual: docs/Deployment.md:71,124"]
+    evidence:
+      - "deploy/settings.yaml:42-44 (refreshTokenTtlMs 8h rolling, refreshAbsoluteCapMs 12h, refreshCookieSecure: false)"
+      - "server/auth/authHelpers.ts:141-154 (secure: settings.refreshCookieSecure on both cookies)"
+      - "src/services/authHeaders.ts:104-124 (silent refresh on 401 keeps the access token fresh)"
+      - "src/context/AuthContext.tsx:228-231 (mouse/keyboard activity resets the 10-min idle timer)"
+      - "docs/Deployment.md:71,124"
+    tests:
+      - file: tests/deploySettings.test.ts
+        name: "carries exactly the container-specific values"
+      - file: tests/sessionRotation.test.ts
+        name: "rolling rotation: first refresh marks old jti revoked and inserts a new row"
+    browser:
+      route: "/"
+      steps:
+        - "Confirm ~/EMD/settings.yaml has auth.refreshCookieSecure: false; open http://<host>:3000 (plain http, non-localhost) and log in."
+        - "Keep using the UI for 12 minutes (switch between \"Startseite\", \"Kohortenbildung\", \"Analyse\" at least every 2 minutes)."
+        - "Optionally set refreshCookieSecure: true, restart the container, log in again and repeat."
+      expect: "With false: still logged in after 12 min, Network shows successful POST /api/auth/refresh calls. With true over http: the session ends at about 10 min with a redirect to /login (documented failure mode)."
+    notes: "The previously cited settingsAuthSchema test 'rejects non-boolean refreshCookieSecure' was dropped: it asserts a 400 on invalid YAML, not that the session survives; the setting's wiring is proven by deploySettings + authHelpers.ts:143,150. On 127.0.0.1 (the verify container) the browser treats the origin as a secure context, so the Secure flag is honoured over plain http and only the 'false' path is observable there; the 'true' failure mode (logout at ~10 min) needs a LAN hostname — record it as BLOCKED locally unless a non-localhost host is available."
+  - id: UIR-DEPLOY-013
+    title: "Deep links survive a reload (SPA fallback)"
+    statement: "The production server serves dist/ and falls back to index.html for non-API paths, so deep links like /case/<id> or /analysis?tab=trajectories survive a reload."
+    status: implemented
+    sources: ["code: server/index.ts:311-322; deploy/settings.yaml:11"]
+    evidence:
+      - "server/index.ts:311-322 (express.static(dist) then app.get('/{*path}') → sendFile(dist/index.html))"
+      - "server/index.ts:301-304 (/api 404 handler precedes the fallback so only non-API paths fall through)"
+      - "deploy/settings.yaml:11 (serveFrontend: true)"
+      - "Containerfile:36 (dist copied into the image)"
+      - "src/App.tsx:57-58 (routes /analysis and /case/:caseId)"
+      - "src/i18n/translations.ts:52,218 (\"Analyse\", tab \"Verläufe\")"
+    tests: []
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Log in at http://<host>:3000, click \"Analyse\" and the \"Verläufe\" tab so the URL is /analysis?tab=trajectories."
+        - "Press F5 / Cmd+R to reload."
+        - "Open a case from \"Kohortenbildung\" so the URL is /case/<id>, then reload again."
+      expect: "Both reloads render the same page (Verläufe tab / case detail) with HTTP 200; no 404 page and no 'No built frontend found' text."
+    notes: ""
+  - id: UIR-DEPLOY-014
+    title: "Verläufe WebGL renders under the production CSP"
+    statement: "The Verläufe \"Individuelle Kurven\" and \"Streupunkte\" layers render WebGL canvases under the production CSP via the strict Plotly bundle; Plotly never reports 'WebGL is not supported'."
+    status: implemented
+    sources: ["uat: v1.20.1 (NF report, emd.ukaachen.de)", "code: src/components/outcomes/PlotlyChart.tsx:1-9,118", "manual: .planning/v1.20-ROADMAP.md v1.20.1; docs/Deployment.md:128"]
+    evidence:
+      - "src/components/outcomes/PlotlyChart.tsx:1-9 (strict bundle rationale: regular build uses new Function, blocked by script-src 'self')"
+      - "src/components/outcomes/PlotlyChart.tsx:118 (await import('plotly.js-strict-dist-min'))"
+      - "package.json:45 (plotly.js-strict-dist-min dependency; no plotly.js-dist-min)"
+      - "dist/assets/plotly-strict.min-*.js (built chunk)"
+      - "src/i18n/translations.ts:854,864,866 (panel \"Einstellungen\", layer labels \"Individuelle Kurven\", \"Streupunkte\")"
+      - "scripts/container-smoke.sh:52-53 (strict chunk present in the image)"
+      - "docs/Deployment.md:128"
+    tests: []
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "On the container (not Vite dev) log in, open \"Analyse\" → \"Verläufe\" with a cohort loaded."
+        - "Open the panel \"Einstellungen\" (gear) and enable \"Individuelle Kurven\" and \"Streupunkte\"."
+        - "Open DevTools → Console; in Elements count <canvas> elements inside the trajectory panels."
+      expect: "Curves and scatter points are drawn; WebGL canvases exist for the panels (9 with all three metrics × panels visible); the console shows no 'WebGL is not supported', no EvalError and no CSP violation."
+    notes: "tests/plotlyRenderable.test.ts asserts the WebGL probe only, not CSP compatibility, so it is not cited."
+  - id: UIR-DEPLOY-015
+    title: "Direct /data/* requests return 403"
+    statement: "The production server blocks direct browser access to /data/* with a 403 JSON error; the UI loads bundles only via the authenticated /api/fhir/* endpoints."
+    status: implemented
+    sources: ["uat: v1.20 Phase 1–2 (smoke checks)", "code: server/index.ts:275-277", "manual: docs/Konfiguration.md Produktionsbetrieb; .planning/v1.20-ROADMAP.md:15"]
+    evidence:
+      - "server/index.ts:272-277 (app.use('/data') → 403 JSON, mounted before express.static)"
+      - "server/index.ts:264 (/api/fhir router behind authMiddleware at :243)"
+      - "Containerfile:13-15 (rm -rf dist/data in the image)"
+      - "scripts/container-smoke.sh:56-57 (GET /data/manifest.json is 403)"
+    tests: []
+    browser:
+      route: "/data/centers.json"
+      steps:
+        - "While logged in, open http://<host>:3000/data/centers.json in a new tab."
+        - "Open DevTools → Network, click \"Startseite\" and filter for 'centers'."
+      expect: "The /data/centers.json tab shows HTTP 403 with the JSON body {\"error\":\"Use /api/fhir/bundles for authenticated FHIR data access\"}; the UI's centre data comes from /api/fhir/centers (200)."
+    notes: ""
+  - id: UIR-DEPLOY-016
+    title: "/settings.yaml is never served"
+    statement: "The production server never serves a public settings file: GET /settings.yaml returns no YAML (the SPA index page is returned via the fallback, not the configuration)."
+    status: partial
+    sources: ["uat: v1.20 Phase 1–2 (smoke checks)", "manual: .planning/v1.20-ROADMAP.md:10"]
+    evidence:
+      - "public/ (no settings.yaml; removed in v1.20 per .planning/v1.20-ROADMAP.md:10) and dist/ (no settings.yaml)"
+      - "server/constants.ts:104 (settings live at config/settings.yaml outside the webroot)"
+      - "server/index.ts:316-322 (express.static(dist) misses → app.get('/{*path}') sends index.html with 200)"
+      - "server/settingsApi.ts:6-7,46,61 (settings only reachable through the authenticated /api/settings)"
+    tests: []
+    browser:
+      route: "/settings.yaml"
+      steps:
+        - "Open http://<host>:3000/settings.yaml in a new tab (logged in or out)."
+        - "Run: curl -si http://<host>:3000/settings.yaml | head -5"
+      expect: "No YAML content is returned: the browser shows the app shell (SPA index page, HTTP 200 text/html) and the UI redirects to the login page or Startseite; curl shows Content-Type text/html."
+    notes: "Statement sharpened: the code has no 404 route for /settings.yaml; the SPA fallback returns index.html with status 200. The configuration is never exposed (goal met), but the original '404' wording does not match the implementation."
+  - id: UIR-DEPLOY-017
+    title: "Unmatched /api/* routes return JSON 404"
+    statement: "The production server answers unmatched /api/* routes with a JSON 404 rather than the SPA index page."
+    status: implemented
+    sources: ["code: server/index.ts:301-304"]
+    evidence:
+      - "server/index.ts:301-304 (app.use('/api') → 404 {error:'Not found'}, mounted before the SPA fallback)"
+      - "server/index.ts:240-243 (auditMiddleware/authMiddleware precede it, so an unauthenticated /api/nope yields 401 first; a logged-in request yields the JSON 404)"
+    tests: []
+    browser:
+      route: "/api/nope"
+      steps:
+        - "Log in, then in DevTools → Console run: await (await fetch('/api/nope',{headers:{Authorization:'Bearer '+sessionStorage.getItem('emd-token')}})).text()"
+        - "Also run: await (await fetch('/api/nope')).status"
+      expect: "The first call returns the string {\"error\":\"Not found\"} with status 404 (not HTML); the second (no token) returns 401 — never the index page."
+    notes: "Without a JWT the auth middleware (server/authMiddleware.ts) answers 401 before the 404 handler; opening /api/nope directly in the browser therefore shows 401 unless the Bearer header is sent."
+  - id: UIR-DEPLOY-018
+    title: "Settings changes persist on the volume across restart"
+    statement: "The user can change a value in Einstellungen and it is written to settings.yaml on the /data volume and still shown after a container restart."
+    status: implemented
+    sources: ["uat: v1.20 Phase 2 (container-smoke.sh)", "code: Containerfile:38-40; deploy/entrypoint.sh:11; deploy/settings.yaml:10", "manual: docs/Deployment.md Konfiguration; docs/Konfiguration.md Container-Betrieb"]
+    evidence:
+      - "server/settingsApi.ts:61 (PUT /api/settings writes SETTINGS_FILE)"
+      - "server/constants.ts:104 (SETTINGS_FILE = config/settings.yaml)"
+      - "Containerfile:39 (config/settings.yaml → /data/settings.yaml symlink)"
+      - "deploy/entrypoint.sh:11 (existing /data/settings.yaml is kept on restart)"
+      - "src/pages/SettingsPage.tsx:222,679-682,768-774 (handleSaveThresholds; criticalCrtUm input; button t('save') = \"Speichern\")"
+      - "src/i18n/translations.ts:6,454 (\"Speichern\", \"Einstellungen\")"
+    tests:
+      - file: tests/settingsApi.test.ts
+        name: "persists auth.refreshTokenTtlMs and auth.refreshAbsoluteCapMs (round-trip lock)"
+      - file: tests/settingsApi.test.ts
+        name: "accepts valid settings from admin"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as admin, click \"Einstellungen\" in the sidebar."
+        - "In the thresholds section change the CRT critical value from 400 to 410 and click \"Speichern\"."
+        - "On the host run: grep criticalCrtUm ~/EMD/settings.yaml"
+        - "Run systemctl --user restart EMD (or docker restart EMD), log in again and open \"Einstellungen\"."
+      expect: "The host file shows criticalCrtUm: 410 immediately after saving; after the restart the Einstellungen page still shows 410."
+    notes: ""
+  - id: UIR-DEPLOY-019
+    title: "Feedback reports persist on the volume across restart"
+    statement: "The deployed UI's feedback reports persist in feedback/ on the volume and remain listed and exportable from Einstellungen after a container restart."
+    status: implemented
+    sources: ["manual: docs/Deployment.md:56 (feedback/); README.md Reporting Feedback", "code: Containerfile:40; deploy/entrypoint.sh:5"]
+    evidence:
+      - "server/issueApi.ts:20,27-28,72-73 (FEEDBACK_DIR = feedback/; issue-<timestamp>_<id>.json written on POST)"
+      - "Containerfile:40 (feedback → /data/feedback symlink)"
+      - "deploy/entrypoint.sh:5 (mkdir -p /data/feedback on every start)"
+      - "src/pages/SettingsPage.tsx:1020-1031 (issue count + \"Issues exportieren\" button)"
+      - "src/i18n/translations.ts:729,737-738 (labels feedbackButton \"Problem melden\", feedbackExport, feedbackCount)"
+      - "src/components/Layout.tsx:157 (FeedbackButton = right-edge tab on every authenticated page)"
+      - "README.md:76-92; docs/Deployment.md:56"
+    tests:
+      - file: tests/issueApi.test.ts
+        name: "creates an issue with valid data"
+      - file: tests/issueApi.test.ts
+        name: "returns issues list with total"
+      - file: tests/issueApi.test.ts
+        name: "returns issues for admin"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in, click the amber \"Problem melden\" tab at the right edge of the page, wait until role=dialog \"Problem melden\" exists (≥ 2 s), enter a description and submit."
+        - "As admin open \"Einstellungen\" and read the line \"<n> gemeldete(s) Problem(e)\"."
+        - "On the host run: ls ~/EMD/feedback/"
+        - "Restart the container (systemctl --user restart EMD), log in, open \"Einstellungen\" again and click \"Issues exportieren\"."
+      expect: "~/EMD/feedback/ contains issue-*.json; the count after restart equals the count before; the export downloads a file containing the submitted report."
+    notes: "\"Problem melden\" is a right-edge tab (Layout.tsx:157), not a sidebar entry."
+  - id: UIR-DEPLOY-020
+    title: "Session stays valid across a container restart"
+    statement: "The deployed UI keeps the user's session valid across a container restart: after the restart a sidebar click does not redirect to /login."
+    status: implemented
+    sources: ["uat: v1.20 Phase 2 (container-smoke.sh)", "manual: .planning/v1.20-ROADMAP.md:15 (restart keeps the token valid)"]
+    evidence:
+      - "server/initAuth.ts:83-113 (JWT secret persisted in <dataDir>/jwt-secret.txt, reused on restart)"
+      - "server/index.ts:92,125,160 (DATA_DIR = /data; initAuth and initSessionsDb use it — sessions.db on the volume, server/sessionsDb.ts:74)"
+      - "deploy/settings.yaml:10 (dataDir: /data)"
+      - "src/services/authHeaders.ts:54 (access token kept in sessionStorage, survives the server restart)"
+      - "scripts/container-smoke.sh:71-75 (old token still valid after restart)"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in at http://<host>:3000 and stay on Startseite."
+        - "On the host run: docker restart emd-verify (verify container) / systemctl --user restart EMD (deployment) and wait until /healthz answers."
+        - "In the same browser tab click \"Kohortenbildung\" in the sidebar."
+      expect: "The Kohortenbildung page loads with data; the URL does not change to /login and no login form appears."
+    notes: "On 127.0.0.1 (the verify container) the origin is a secure context, so the refresh cookie is accepted over plain http regardless of refreshCookieSecure; the plain-HTTP failure mode needs a LAN hostname and is BLOCKED locally (see UIR-DEPLOY-012)."
+  - id: UIR-DEPLOY-021
+    title: "UI version matches the image version label"
+    statement: "The deployed UI shows the running application version (in the \"Problem melden\" dialog) matching the image's org.opencontainers.image.version label."
+    status: implemented
+    when: release
+    sources: ["manual: .planning/v1.20-ROADMAP.md:9 (__APP_VERSION__); docs/Deployment.md:83"]
+    evidence:
+      - "vite.config.ts:14-18 (__APP_VERSION__ defined from package.json version)"
+      - "src/components/FeedbackButton.tsx:172-173 (\"Version\": v{__APP_VERSION__} shown in the feedback dialog) and :109 (appVersion stored with each report)"
+      - "src/i18n/translations.ts:729,734 (feedbackButton \"Problem melden\", feedbackVersion \"Version\")"
+      - ".github/workflows/container.yml:27-34,42 (docker/metadata-action labels incl. org.opencontainers.image.version from the v* tag)"
+      - "docs/Deployment.md:83"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in, click the amber \"Problem melden\" tab at the right edge of the page, wait until role=dialog \"Problem melden\" exists (≥ 2 s) and read the \"Version\" line in the dialog."
+        - "On the host run: podman inspect EMD --format '{{index .Config.Labels \"org.opencontainers.image.version\"}}' (docker: docker inspect)."
+      expect: "The dialog shows v<version> (e.g. v1.20.2) and the label prints the same version string; after an update both show the new release."
+    notes: "The version is displayed only in the feedback dialog (right-edge tab, Layout.tsx:157), not in the sidebar or login footer. Equality relies on the release tag matching package.json; nothing enforces it in code. when: release — org.opencontainers.image.version is set by CI (docker/metadata-action); the local build emd-smoke carries no version label, so this is checked on the published image (uat-release §2, container emd-release on 127.0.0.1:3312: docker inspect emd-release …)."
+  - id: UIR-DEPLOY-022
+    title: "Auto-update keeps users and data"
+    statement: "The deployed container becomes reachable again on the same port with existing users, saved searches and flags after `podman auto-update` installs a new :latest image."
+    status: implemented
+    when: release
+    sources: ["manual: docs/Deployment.md:75-86 (Updates)"]
+    evidence:
+      - "deploy/EMD.container:8,12,16,22-26 (Image :latest, PublishPort 3000:3000, Volume ~/EMD:/data, AutoUpdate=registry, HealthCmd, Notify=healthy)"
+      - "deploy/entrypoint.sh:11 (existing settings.yaml on the volume is not overwritten)"
+      - "server/index.ts:92,105-107,148,160 (users.json, data.db, sessions.db all under /data)"
+      - "server/dataDb.ts:39,57 + server/dataApi.ts:86-92 (data.db holds saved_searches and quality flags)"
+      - "docs/Deployment.md:75-86"
+    tests: []
+    browser:
+      route: "/login"
+      steps:
+        - "Before updating: log in, create a saved search in \"Kohortenbildung\" and set a quality flag in \"Datenqualität\"; click the \"Problem melden\" tab at the right edge, wait until role=dialog \"Problem melden\" exists (≥ 2 s) and note the \"Version\"."
+        - "On the host run: podman auto-update (Docker: podman/docker pull …:latest && restart)."
+        - "Open http://<host>:3000/login, sign in with the same credentials, open \"Kohortenbildung\" → saved searches and \"Datenqualität\"."
+      expect: "Login succeeds on port 3000; the saved search and the flag are still present; the \"Problem melden\" dialog shows the new version."
+    notes: "Only verifiable on a host with Podman/Docker; no automated test. when: release — needs the published :latest tag; skipped by the verify pass pre-release."
+  - id: UIR-DEPLOY-023
+    title: "Container stops within 3 s on SIGTERM"
+    statement: "The container stops within 3 seconds on SIGTERM (graceful shutdown as PID 1) without a 10 s SIGKILL."
+    status: implemented
+    sources: ["uat: v1.20 Phase 1 (smoke check ≤ 3 s)", "code: server/index.ts:360-368"]
+    evidence:
+      - "server/index.ts:360-368 (SIGTERM/SIGINT handlers: server.close → exit 0, 3 s hard cap)"
+      - "deploy/entrypoint.sh:12 (exec node … so Node is PID 1 and receives the signal)"
+      - "Containerfile:46 (ENTRYPOINT sh entrypoint.sh, which execs node)"
+      - "scripts/container-smoke.sh:66-68 (stop ≤ 3 s and exit code 0)"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "With the container running, on the host run: time podman stop EMD (or time docker stop EMD)."
+        - "Run: podman inspect EMD --format '{{.State.ExitCode}}'"
+        - "Run: podman logs EMD | tail -3"
+      expect: "The stop command returns in ≤ 3 s (no 10 s wait), the exit code is 0 and the log ends with '[server] SIGTERM received — shutting down'."
+    notes: ""
+  - id: UIR-DEPLOY-024
+    title: "Unwritable /data volume fails fast with a clear message"
+    statement: "The deployed container exits with status 1 and logs 'EMD: /data is not writable by uid 1000' plus the UserNS/chown fix when the mounted volume is not writable, instead of starting a broken server."
+    status: implemented
+    sources: ["code: deploy/entrypoint.sh:5-10", "manual: docs/Deployment.md:121 (Fehlerbehebung)"]
+    evidence:
+      - "deploy/entrypoint.sh:4-10 (set -eu; mkdir -p /data/feedback fails → error lines naming uid, UserNS=keep-id hint and Docker --user hint; exit 1)"
+      - "Containerfile:38,41 (chown node:node /data for fresh named volumes; USER node = uid 1000)"
+      - "deploy/EMD.container:18-19 (UserNS=keep-id:uid=1000,gid=1000 maps the host user onto uid 1000)"
+      - "docs/Deployment.md:121 (troubleshooting row for the message)"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "On the host run: mkdir -p /tmp/emd-ro && chmod 555 /tmp/emd-ro, then: podman run --rm -v /tmp/emd-ro:/data ghcr.io/okohlbacher/eyematics-emd-app:1.20.2 (Docker: docker run --rm --user 1000:1000 -v /tmp/emd-ro:/data …). Pre-release use the local build image emd-smoke in place of the ghcr.io tag."
+        - "Read the container output and its exit code (echo $?)."
+        - "Open http://<host>:3000 in a browser."
+      expect: "The container prints 'EMD: /data is not writable by uid 1000.' followed by the UserNS/--user hints and exits with code 1 within seconds; nothing answers on port 3000 (no half-started UI)."
+    notes: "Added by the refutation pass: deployment-only behaviour, clearly implemented in the entrypoint and documented; covered by no vitest or smoke check."

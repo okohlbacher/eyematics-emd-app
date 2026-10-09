@@ -26,8 +26,11 @@ dist-ssr
 # Archive files
 *.zip
 
-# Claude Code local config
-.claude/
+# Claude Code local config — but the handoff skills/workflows/launch config are part of the repo
+.claude/*
+!.claude/skills/
+!.claude/workflows/
+!.claude/launch.json
 
 # Per-host secrets (auto-generated on first launch — never commit)
 data/jwt-secret.txt

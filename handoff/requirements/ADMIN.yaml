@@ -1,0 +1,664 @@
+# UI requirements registry — area ADMIN. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+area: ADMIN
+requirements:
+  - id: UIR-ADMIN-001
+    title: "Non-admin never sees the user table on /admin"
+    statement: "The UI redirects a non-admin user who opens /admin to the Startseite (\"/\") and never shows the Verwaltung user table; the page's own admin-only hint card is a second guard."
+    status: implemented
+    sources: ["code: src/App.tsx:28-32,62", "code: src/pages/AdminPage.tsx:257-267"]
+    evidence:
+      - "src/App.tsx:28-32 — AdminRoute: no user → Navigate /login; user.role !== 'admin' → Navigate '/' replace"
+      - "src/App.tsx:62 — /admin route wrapped in AdminRoute"
+      - "src/pages/AdminPage.tsx:257-267 — early return with Shield icon + t('adminOnlyHint') when !user || user.role !== 'admin' (defence in depth, unreachable behind the guard)"
+      - "src/i18n/translations.ts:419-422 — adminOnlyHint: 'Diese Seite ist nur für Administratoren zugänglich.'"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as forscher1 (role Forscher/in)."
+        - "Type /admin into the address bar and press Enter."
+        - "Observe where the app lands and check the sidebar."
+      expect: "The app lands on the Startseite ('/'); no user table and no \"Verwaltung\" entry is shown. The hint card 'Diese Seite ist nur für Administratoren zugänglich.' is only reachable when AdminPage is rendered outside the guard (component test)."
+    notes: "Statement rewritten to the behaviour that is observable in the deployed app (route-guard redirect); the previous wording described the in-component hint card, which AdminRoute makes unreachable. No test asserts either the redirect or the hint card."
+  - id: UIR-ADMIN-002
+    title: "User list columns: username, name, role, centres, dates, sessions"
+    statement: "The Verwaltung page lists all users in a table with \"Benutzerkennung\", \"Name\", \"Rolle\", \"Zugewiesene Zentren\", \"Angelegt\", \"Letzte Anmeldung\" and \"Sitzungen\" columns."
+    status: implemented
+    sources: ["manual: Benutzerhandbuch §12.3", "code: src/pages/AdminPage.tsx:710-722"]
+    evidence:
+      - "src/pages/AdminPage.tsx:710-722 — table header: loginUsername, adminFullName, adminRole, adminAssignedCenters, adminCreated, adminLastLogin, adminSessions + unlabelled action column"
+      - "src/pages/AdminPage.tsx:836-880 — row cells incl. centre chips, createdAt date, lastLogin date+time or '—'"
+      - "server/auth/userAdminApi.ts:52-62 — GET /api/auth/users projection incl. lastLogin, active"
+      - "server/auth/loginApi.ts:123-125 — touchLastLogin on successful login"
+      - "src/i18n/translations.ts:60,409-429,441,1135 — column labels"
+    tests:
+      - file: tests/userCrud.test.ts
+        name: "returns 200 with user list for admin — no passwordHash fields"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin."
+        - "Click \"Verwaltung\" in the sidebar."
+        - "Read the header row of the \"Registrierte Nutzer\" table."
+      expect: "Header shows Benutzerkennung, Name, Rolle, Zugewiesene Zentren, Angelegt, Letzte Anmeldung, Sitzungen; every user has a row; admin's row shows today's date/time under Letzte Anmeldung, users who never logged in show '—'."
+    notes: "The table has seven labelled columns plus an unlabelled action column. The cited test asserts only that the list endpoint returns users without passwordHash; no test asserts the column set. tests/adminCenterFilter.test.tsx was removed from this mapping because its assertions concern the centre filter (see UIR-ADMIN-006)."
+  - id: UIR-ADMIN-003
+    title: "Fresh deployment lists the seven seeded users"
+    statement: "The Verwaltung page on a fresh deployment lists the seven seeded users (admin, forscher1, forscher2, epidemiologe, kliniker, diz_manager, klinikleitung) with their centres."
+    status: implemented
+    sources: ["manual: Benutzerhandbuch §12.3; Konfiguration.md Standardbenutzer", "code: server/index.ts:105-121"]
+    evidence:
+      - "server/index.ts:107-120 — defaultUsers seeded into data/users.json only when the file is absent: admin all 6, forscher1 UKA, forscher2 UKC, epidemiologe UKA/UKC/UKG, kliniker UKT, diz_manager UKM, klinikleitung all 6"
+      - "docs/Konfiguration.md:170-177 — Standardbenutzer table"
+      - "docs/Deployment.md:52 — 7 Standardbenutzer, Passwort changeme2025!"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Deploy the container with an empty data volume (no users.json)."
+        - "Log in as admin with the documented initial password."
+        - "Open \"Verwaltung\" and read the \"Zugewiesene Zentren\" column."
+      expect: "Exactly 7 rows: admin (UKA UKC UKG UKL UKM UKT), forscher1 (UKA), forscher2 (UKC), epidemiologe (UKA UKC UKG), kliniker (UKT), diz_manager (UKM), klinikleitung (UKA UKC UKG UKL UKM UKT); header count reads '7 Nutzer'."
+    notes: "Seeding happens only if data/users.json is missing; an existing volume keeps its users. tests/initAuthMigration.test.ts uses forscher1 as a fixture but does not assert the seed set."
+  - id: UIR-ADMIN-004
+    title: "Full-text search filters users by name, centre, role key"
+    statement: "The user can filter the user list via the \"Nutzer suchen…\" field by username, centre shorthand or internal role key, and only matching rows remain visible."
+    status: implemented
+    sources: ["manual: Benutzerhandbuch §12.3", "code: src/pages/AdminPage.tsx:210-221"]
+    evidence:
+      - "src/pages/AdminPage.tsx:213-221 — case-insensitive match on username, getCentersDisplay(u) shorthand list, u.role key"
+      - "src/pages/AdminPage.tsx:668-677 — search input with adminSearchPlaceholder"
+      - "src/pages/AdminPage.tsx:659-663 — counter `${filtered} ${t('auditFilteredOf')} ${total}`"
+      - "src/i18n/translations.ts:425,634 — adminSearchPlaceholder 'Nutzer suchen…'; auditFilteredOf 'von'"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\"."
+        - "Type UKT into the \"Nutzer suchen…\" field."
+        - "Clear it and type researcher."
+      expect: "After 'UKT' only kliniker, admin and klinikleitung remain (all have UKT); after 'researcher' only forscher1 and forscher2 remain; counter reads e.g. '2 von 7'."
+    notes: "Role matching uses the internal key (admin, researcher, clinician, …), not the German label, so typing 'Forscher' matches only usernames containing it (forscher1/forscher2), not the role. Counter text corrected: the filtered counter reads 'n von m' (auditFilteredOf = 'von'), not 'n gefiltert von m'."
+  - id: UIR-ADMIN-005
+    title: "Role filter dropdown restricts the user list"
+    statement: "The user can restrict the user list to one role via the \"Alle Rollen\" dropdown."
+    status: implemented
+    sources: ["manual: Benutzerhandbuch §12.3", "code: src/pages/AdminPage.tsx:223-225,678-693"]
+    evidence:
+      - "src/pages/AdminPage.tsx:223-225 — roleFilter applied to users"
+      - "src/pages/AdminPage.tsx:678-693 — select with adminFilterAllRoles + six role options"
+      - "src/i18n/translations.ts:426 — adminFilterAllRoles 'Alle Rollen'"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\"."
+        - "In the role dropdown (default \"Alle Rollen\") select \"Forscher/in\"."
+        - "Select \"Alle Rollen\" again."
+      expect: "Only forscher1 and forscher2 rows remain and the counter reads '2 von 7'; resetting shows all 7 again with '7 Nutzer'."
+    notes: "Counter text corrected to 'n von m'."
+  - id: UIR-ADMIN-006
+    title: "Centre filter restricts the user list"
+    statement: "The user can restrict the user list to one centre via the \"Alle Zentren\" filter (data-testid admin-center-filter), which lists exactly the six sites UKA, UKC, UKG, UKL, UKM, UKT."
+    status: implemented
+    sources: ["code: src/pages/AdminPage.tsx:227-230,694-707", "code: data/centers.json"]
+    evidence:
+      - "src/pages/AdminPage.tsx:227-230 — centerFilter: u.centers.includes(centerFilter)"
+      - "src/pages/AdminPage.tsx:694-707 — select data-testid admin-center-filter, options from centerOptions"
+      - "src/pages/AdminPage.tsx:178-195 — centre options loaded from /api/fhir/centers"
+      - "data/centers.json:2-7 — roster UKA, UKC, UKG, UKL, UKM, UKT in that order"
+      - "src/i18n/translations.ts:427 — adminFilterAllCenters 'Alle Zentren'"
+    tests:
+      - file: tests/adminCenterFilter.test.tsx
+        name: "renders exactly 7 <option> elements: All centers + 6 sites in roster order"
+      - file: tests/adminCenterFilter.test.tsx
+        name: "narrows the user table to only users belonging to the selected center"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\"."
+        - "Open the centre dropdown (default \"Alle Zentren\") and read its options."
+        - "Select UKM."
+      expect: "Options are Alle Zentren, UKA, UKC, UKG, UKL, UKM, UKT; after selecting UKM only diz_manager, admin and klinikleitung remain."
+    notes: "Both cited tests verified: the first asserts the exact option labels and values in roster order, the second asserts rows appear/disappear by username when the select changes."
+  - id: UIR-ADMIN-007
+    title: "Column headers sort the user list asc/desc"
+    statement: "The user can sort the user list by clicking the headers \"Benutzerkennung\", \"Rolle\", \"Zugewiesene Zentren\", \"Angelegt\" and \"Letzte Anmeldung\", and a second click reverses the order."
+    status: implemented
+    sources: ["manual: Benutzerhandbuch §12.3", "code: src/pages/AdminPage.tsx:60-87,232-252,269-276,714-719"]
+    evidence:
+      - "src/pages/AdminPage.tsx:60-87 — SortHeader with ArrowUpDown icon, text-blue-600 when active"
+      - "src/pages/AdminPage.tsx:232-252 — sort comparator per field, asc/desc"
+      - "src/pages/AdminPage.tsx:269-276 — handleSort toggles direction on repeated click, resets to asc on a new field"
+      - "src/pages/AdminPage.tsx:714-719 — five sortable headers; Name and Sitzungen are plain <th>"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\"."
+        - "Click the \"Rolle\" header once; note the first row."
+        - "Click \"Rolle\" again."
+      expect: "First click sorts by role key ascending (admin first), arrow icon on Rolle turns blue; second click reverses so admin is last. Default order is by Benutzerkennung ascending."
+    notes: "Role sort uses the internal role key (admin < clinic_lead < clinician < data_manager < epidemiologist < researcher), not the German label."
+  - id: UIR-ADMIN-008
+    title: "\"Nutzer anlegen\" opens form with name, role, centre fields"
+    statement: "The user can open a new-user form via \"Nutzer anlegen\" offering \"Benutzerkennung\", \"Vorname\", \"Nachname\", a \"Rolle\" select and six centre toggle buttons under \"Zentren zuweisen\"."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-001 / N10.04", "manual: Benutzerhandbuch §12.1", "code: src/pages/AdminPage.tsx:526-653"]
+    evidence:
+      - "src/pages/AdminPage.tsx:528-541 — Nutzer anlegen button toggles showForm"
+      - "src/pages/AdminPage.tsx:543-603 — username, first name, last name inputs, role select (default researcher)"
+      - "src/pages/AdminPage.tsx:605-627 — centre toggle buttons from centerOptions, highlighted when selected"
+      - "src/pages/AdminPage.tsx:629-652 — Speichern / Abbrechen buttons"
+      - "src/i18n/translations.ts:6-7,60,410,411,428,439-440 — labels"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\"."
+        - "Click \"Nutzer anlegen\"."
+        - "Inspect the form."
+      expect: "Form shows fields Benutzerkennung*, Vorname*, Nachname*, Rolle* (default Forscher/in), a row of six toggle buttons UKA UKC UKG UKL UKM UKT under 'Zentren zuweisen*', and buttons \"Speichern\" / \"Abbrechen\"."
+    notes: "Centres are selectable chip buttons, not checkboxes. tests/adminUserDialog.test.tsx opens this form but its assertion is about validation (see UIR-ADMIN-010)."
+  - id: UIR-ADMIN-009
+    title: "Role select offers exactly six German role names"
+    statement: "The user can assign exactly one of six roles (\"IT-Administrator\", \"Forscher/in\", \"Epidemiolog/in\", \"Kliniker/in\", \"DIZ Data Manager\", \"Klinikleitung\") in the create and edit forms."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-004 / N10.01", "manual: Benutzerhandbuch §12.1"]
+    evidence:
+      - "src/pages/AdminPage.tsx:589-600 — create-form role select, six options"
+      - "src/pages/AdminPage.tsx:768-779 — edit-row role select, six options"
+      - "src/i18n/translations.ts:432-437 — German role labels"
+      - "src/pages/AdminPage.tsx:36-46 — getRoleLabel for table display"
+      - "server/auth/authHelpers.ts:31 VALID_ROLES; server/auth/userAdminApi.ts:86-90,199-202 — server allowlist"
+    tests:
+      - file: tests/ui-requirements.test.ts
+        name: "all 6 roles are defined"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\", click \"Nutzer anlegen\"."
+        - "Open the \"Rolle\" select and read the options."
+        - "Click the pencil icon on forscher2's row and open its role select."
+      expect: "Both selects list exactly, in this order: Forscher/in, IT-Administrator, Epidemiolog/in, Kliniker/in, DIZ Data Manager, Klinikleitung. After saving, the table's Rolle cell shows the chosen German label with its icon."
+    notes: "The cited test only asserts that a local six-entry role array has length 6 (tests/ui-requirements.test.ts:64-70); it does not read the shared constant or the German labels. Kept as the only test touching the role set; a DOM test of the select options is missing."
+  - id: UIR-ADMIN-010
+    title: "Create form shows \"Pflichtfeld\" errors for empty fields"
+    statement: "The \"Nutzer anlegen\" form refuses to save when username, first name or last name is empty, marks the field with a red border and shows a red \"Pflichtfeld\" hint beneath it."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-001 / N10.02", "uat: v1.10 USM-001; v1.12 roadmap (all-fields-mandatory)", "code: src/pages/AdminPage.tsx:284-296,543-603"]
+    evidence:
+      - "src/pages/AdminPage.tsx:284-296 — handleAdd validation, returns before POST"
+      - "src/pages/AdminPage.tsx:546-554,558-568,572-582,586-601 — red asterisk in label, border-red-400 on error, red text hint"
+      - "src/i18n/translations.ts:25 — fieldRequired 'Pflichtfeld'"
+    tests:
+      - file: tests/adminUserDialog.test.tsx
+        name: "blocks submit and shows error when firstName is empty"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\", click \"Nutzer anlegen\"."
+        - "Leave all fields empty and click \"Speichern\"."
+      expect: "Red 'Pflichtfeld' appears under Benutzerkennung, Vorname and Nachname (role has a default so no error), 'Mindestens ein Standort muss zugewiesen werden' under the centre row, inputs get a red border, no user is created and no green banner appears."
+    notes: "The label text itself is not red; it carries a red asterisk and the input border and hint turn red. Role can never be empty in the UI (defaults to Forscher/in), so 'role' was dropped from the statement. The cited test's assertion is weak (errors shown OR no POST made) but concerns this form."
+  - id: UIR-ADMIN-011
+    title: "Create without centre shows centre-required error"
+    statement: "The \"Nutzer anlegen\" form refuses to save a user with no centre selected and shows \"Mindestens ein Standort muss zugewiesen werden\"."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-001 / N10.02", "uat: v1.10 USM-001", "code: src/pages/AdminPage.tsx:284-296"]
+    evidence:
+      - "src/pages/AdminPage.tsx:291-295 — selectedCenters.length === 0 → errors.centers, no POST"
+      - "src/pages/AdminPage.tsx:626 — error rendered under centre buttons"
+      - "src/i18n/translations.ts:26 — centerRequired"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\", click \"Nutzer anlegen\"."
+        - "Fill Benutzerkennung, Vorname, Nachname; leave all centre buttons unselected."
+        - "Click \"Speichern\"."
+      expect: "Red text 'Mindestens ein Standort muss zugewiesen werden' appears under the centre buttons; the form stays open and no new row is added."
+    notes: "tests/adminUserDialog.test.tsx 'shows center error and does NOT submit when editCenters is empty' covers the same rule for the edit row only, not the create form."
+  - id: UIR-ADMIN-012
+    title: "Saved new user appears in the user list"
+    statement: "The user can save a complete \"Nutzer anlegen\" form with \"Speichern\" and the new user then appears as a row in the user table with its role and centres."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-001 / N10.04", "manual: Benutzerhandbuch §12.1"]
+    evidence:
+      - "src/pages/AdminPage.tsx:298-320 — POST /api/auth/users, then form reset, showForm false and loadUsers()"
+      - "server/auth/userAdminApi.ts:71-136 — create handler, 201 with user + generatedPassword"
+    tests:
+      - file: tests/userCrud.test.ts
+        name: "returns 201 with generatedPassword for valid admin create"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\", click \"Nutzer anlegen\"."
+        - "Enter Benutzerkennung testuser1, Vorname Test, Nachname User, Rolle Kliniker/in, click the UKL button."
+        - "Click \"Speichern\"."
+      expect: "Form closes, a green banner appears, and a row 'testuser1 / Test User / Kliniker/in / UKL / today's date / —' is listed and the count line above the table increases by one (e.g. '8 Nutzer' on a fresh volume with the 7 seeded users)."
+    notes: "Cited test covers the API; no DOM test asserts the new row."
+  - id: UIR-ADMIN-013
+    title: "Green banner shows one-time generated password"
+    statement: "The Verwaltung page shows \"Benutzer erfolgreich erstellt\" in a green banner with a 16-character \"Generiertes Passwort:\" in monospace after a new user is saved."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-001 / N10.03", "manual: Benutzerhandbuch §12.1", "code: src/pages/AdminPage.tsx:138-143,492-524"]
+    evidence:
+      - "src/pages/AdminPage.tsx:493-499 — green banner, t('userCreatedSuccess'), <code className=font-mono>"
+      - "src/pages/AdminPage.tsx:515 — savePasswordHint: 30s auto-dismiss notice"
+      - "server/auth/authHelpers.ts:37-41 — generateSecurePassword: randomBytes(12) base64url sliced to exactly 16 chars"
+      - "src/i18n/translations.ts:17-18,21 — userCreatedSuccess, generatedPasswordLabel, savePasswordHint"
+    tests:
+      - file: tests/userCrud.test.ts
+        name: "returns 201 with generatedPassword for valid admin create"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\", create a user as in UIR-ADMIN-012."
+        - "Read the banner above the \"Nutzer anlegen\" card."
+      expect: "Green banner with 'Benutzer erfolgreich erstellt', 'Generiertes Passwort: <16 characters in monospace>', hint 'Passwort jetzt speichern — … Wird in 30s automatisch ausgeblendet.', links \"Kopieren\" and \"Schließen\"."
+    notes: "The same banner (same headline text) is reused after \"Passwort zurücksetzen\"."
+  - id: UIR-ADMIN-014
+    title: "\"Kopieren\" copies password and shows \"Kopiert!\""
+    statement: "The user can click \"Kopieren\" in the generated-password banner to copy the password to the clipboard, and the link reads \"Kopiert!\" for about 2 seconds."
+    status: implemented
+    sources: ["uat: v1.10 USM-001", "code: src/pages/AdminPage.tsx:500-513"]
+    evidence:
+      - "src/pages/AdminPage.tsx:500-513 — navigator.clipboard.writeText, copyFeedback true for 2000 ms; on rejection a retry without feedback"
+      - "src/i18n/translations.ts:19,24 — copy 'Kopieren', copied 'Kopiert!'"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\", create a user or click the key icon \"Passwort zurücksetzen\" on a test user and confirm."
+        - "Click \"Kopieren\" in the green banner."
+        - "Paste into the \"Nutzer suchen…\" field."
+      expect: "The link text changes to 'Kopiert!' and reverts to 'Kopieren' after ~2 s; the pasted text equals the displayed password."
+    notes: "Requires a secure context (HTTPS or localhost) for navigator.clipboard; if the clipboard call is rejected the link stays 'Kopieren' with no error shown."
+  - id: UIR-ADMIN-015
+    title: "Password banner dismisses and is never re-shown"
+    statement: "The generated-password banner can be dismissed with \"Schließen\" and auto-dismisses after 30 seconds, after which no control re-displays the password."
+    status: implemented
+    sources: ["manual: Benutzerhandbuch §12.1", "code: src/pages/AdminPage.tsx:138-143,516-521", "spec: EMDREQ-USM-001 / N10.03"]
+    evidence:
+      - "src/pages/AdminPage.tsx:138-143 — setTimeout 30_000 clears generatedPassword"
+      - "src/pages/AdminPage.tsx:516-521 — t('dismiss') = 'Schließen' sets generatedPassword null"
+      - "server/auth/userAdminApi.ts:133-135,373-375 — password returned once with Cache-Control: no-store; only the bcrypt hash is stored"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\", create a user."
+        - "Wait 30 s without clicking."
+        - "Create another user and this time click \"Schließen\" in the banner."
+      expect: "In both cases the green banner disappears; reloading the page or any row action shows no previous password; only a new reset generates a new one."
+    notes: ""
+  - id: UIR-ADMIN-016
+    title: "Duplicate username rejected regardless of case"
+    statement: "The Verwaltung page rejects creating a user whose username already exists regardless of letter case and shows \"Username already exists\" in the red banner instead of a duplicate account."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-003 / N10.03", "manual: Benutzerhandbuch §12.1"]
+    evidence:
+      - "server/auth/userAdminApi.ts:116-129 — case-insensitive existence check under lock → 409 'Username already exists'"
+      - "src/pages/AdminPage.tsx:321-324 — non-OK response → setActionError(err.error)"
+    tests:
+      - file: tests/userCrud.test.ts
+        name: "returns 409 for duplicate username (case-insensitive)"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\", click \"Nutzer anlegen\"."
+        - "Enter Benutzerkennung ADMIN, Vorname X, Nachname Y, select UKA, click \"Speichern\"."
+      expect: "A red banner at the top reads 'Username already exists' with a \"Schließen\" link; the form stays open; the table still has one admin row and the count is unchanged."
+    notes: "The server error text is English even in the German UI."
+  - id: UIR-ADMIN-017
+    title: "Create/update/reset errors show dismissible red banner"
+    statement: "The Verwaltung page shows create, update and password-reset failures as a dismissible red banner with \"Schließen\" at the top of the page instead of a blocking alert."
+    status: implemented
+    sources: ["code: src/pages/AdminPage.tsx:479-490", "uat: v1.10 USM-002"]
+    evidence:
+      - "src/pages/AdminPage.tsx:479-490 — actionError banner with t('dismiss') = 'Schließen'"
+      - "src/pages/AdminPage.tsx:321-328 (create), 423-430 (update), 355-362 (password reset) — set actionError"
+      - "src/pages/AdminPage.tsx:331-342,365-377 — delete and TOTP reset only console.error on failure, no banner"
+      - "src/pages/AdminPage.tsx:1022-1024 — session revoke failures show inline text inside the sessions panel, not the banner"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\"."
+        - "Trigger a create failure as in UIR-ADMIN-016."
+        - "Click \"Schließen\" on the red banner."
+      expect: "Red banner with the server message appears above the \"Nutzer anlegen\" card without any browser alert dialog; clicking \"Schließen\" removes it."
+    notes: "Delete and TOTP-reset failures are swallowed (console only); session-revoke failures use an inline red line in the panel ('Sitzung konnte nicht beendet werden.')."
+  - id: UIR-ADMIN-018
+    title: "Row edit allows names, role, centres and Aktiv"
+    statement: "The user can edit a user row inline (pencil icon) to change Vorname, Nachname, role, centre toggle buttons and the \"Aktiv\" checkbox, and save with \"Speichern\"."
+    status: implemented
+    sources: ["code: src/pages/AdminPage.tsx:379-435,740-833", "uat: v1.12 roadmap (centre-in-edit-dialog, closed by v1.11 Phase 32)", "spec: EMDREQ-USM-004 / N10.02"]
+    evidence:
+      - "src/pages/AdminPage.tsx:379-388 — startEdit seeds edit state"
+      - "src/pages/AdminPage.tsx:741-833 — edit row: name inputs, role select, Aktiv checkbox, centre toggles, Speichern / X"
+      - "src/pages/AdminPage.tsx:392-431 — handleEditSave validation + PUT /api/auth/users/:username"
+      - "server/auth/userAdminApi.ts:189-267 — PUT handler"
+      - "src/i18n/translations.ts:9,443 — edit 'Bearbeiten', adminUserActive 'Aktiv'"
+    tests:
+      - file: tests/adminUserDialog.test.tsx
+        name: "includes active field in PUT body after toggling activation checkbox"
+      - file: tests/adminUserDialog.test.tsx
+        name: "shows firstName error and blocks submit when firstName is empty"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\"."
+        - "Click the pencil icon (\"Bearbeiten\") on forscher2's row."
+        - "Change Rolle to Epidemiolog/in, click the UKG button, click \"Speichern\"."
+      expect: "The row leaves edit mode and shows Epidemiolog/in with centre chips UKC and UKG; Vorname/Nachname/Aktiv are editable in the same row."
+    notes: "Centres are chip toggle buttons; only Aktiv is a checkbox. Username is immutable in edit."
+  - id: UIR-ADMIN-019
+    title: "Assigned centres shown in list after edit"
+    statement: "The user can assign one or more centres to a user when editing, and all assigned centre codes are shown as chips in that user's row."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-004 / N10.02", "uat: v1.12 roadmap"]
+    evidence:
+      - "src/pages/AdminPage.tsx:433-435,797-812 — toggleEditCenter / centre buttons"
+      - "src/pages/AdminPage.tsx:857-869 — row renders one chip per centre via centerLabels"
+      - "server/auth/userAdminApi.ts:211-232 — centres validated and persisted"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\"."
+        - "Edit kliniker, click UKA and UKC in addition to UKT, click \"Speichern\"."
+        - "Reload the page."
+      expect: "kliniker's Zugewiesene Zentren cell shows three chips UKT, UKA, UKC (persisted after reload)."
+    notes: "tests/adminCenterFilter.test.tsx renders a two-centre user but asserts only the username, not the chips."
+  - id: UIR-ADMIN-020
+    title: "Deactivated user shows inactive badge, cannot log in"
+    statement: "The user can deactivate a user by unticking \"Aktiv\" in the edit row; the row then shows an \"inaktiv\" badge, the record remains and login for that user fails."
+    status: implemented
+    sources: ["code: src/pages/AdminPage.tsx:784-792,839-844", "uat: v1.12 roadmap (user deactivation, closed by v1.11 Phase 32)"]
+    evidence:
+      - "src/pages/AdminPage.tsx:784-792 — Aktiv checkbox; 839-844 — inaktiv badge when active === false"
+      - "server/auth/userAdminApi.ts:204-209,235-243,255-263 — active persisted; sessions revoked on true→false"
+      - "server/auth/loginApi.ts:106-112,181-184 — inactive user → generic 401 at login and at OTP verify"
+      - "src/i18n/translations.ts:443,445 — adminUserActive, adminUserInactiveBadge"
+    tests:
+      - file: tests/adminUserDialog.test.tsx
+        name: "shows inactive badge next to carol (active: false)"
+      - file: tests/userCrud.test.ts
+        name: "returns 401 for inactive user even with correct password"
+      - file: tests/userCrud.test.ts
+        name: "deactivates user: returns 200, persists active:false, calls revokeByUsername once"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\", edit forscher2, untick \"Aktiv\", click \"Speichern\"."
+        - "In a private window open /login and log in as forscher2 with its password."
+      expect: "forscher2's row stays listed with a grey 'inaktiv' badge after the username; the login attempt fails with the generic invalid-credentials message."
+    notes: "Badge text is lowercase 'inaktiv' (German) / 'inactive' (English)."
+  - id: UIR-ADMIN-021
+    title: "Failed edit keeps previous value"
+    statement: "The Verwaltung page keeps a user's stored values when an edit fails: the error banner appears, the row stays in edit mode, and cancelling (X) shows the unchanged values."
+    status: implemented
+    sources: ["uat: v1.10 USM-002", "code: src/pages/AdminPage.tsx:390,420-430"]
+    evidence:
+      - "src/pages/AdminPage.tsx:420-430 — on non-OK PUT: actionError set, editUsername NOT cleared, loadUsers NOT called"
+      - "src/pages/AdminPage.tsx:390 — cancelEdit discards edit state"
+      - "server/auth/userAdminApi.ts:247-251 — PUT on unknown user → 404 'User not found'"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin in two browser tabs, open \"Verwaltung\" in both."
+        - "Tab A: click the pencil on a throwaway user and change its Vorname. Tab B: delete that user (trash icon)."
+        - "Tab A: click \"Speichern\", then the X next to it."
+      expect: "Tab A shows the red banner 'User not found', the row remains in edit mode; after X the row shows its previous values (until reload, where the deleted row disappears)."
+    notes: "Username cannot be changed in edit, so a duplicate-username edit error is not producible from the UI; the procedure forces a 404 instead."
+  - id: UIR-ADMIN-022
+    title: "\"Passwort zurücksetzen\" confirms, then shows new password"
+    statement: "The user can click the key icon \"Passwort zurücksetzen\" on a user row, confirm the browser prompt, and then see a new generated password in the green banner."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-001 / N10.03", "manual: Deployment.md Erster Start; Konfiguration.md Standardbenutzer", "code: src/pages/AdminPage.tsx:344-363,903-909"]
+    evidence:
+      - "src/pages/AdminPage.tsx:344-363 — confirm(adminResetPasswordConfirm) then PUT /password, banner via setGeneratedPassword"
+      - "src/pages/AdminPage.tsx:903-909 — Key icon button title adminResetPassword"
+      - "server/auth/userAdminApi.ts:339-376 — server-generated 16-char password"
+      - "src/i18n/translations.ts:687-688 — adminResetPassword, adminResetPasswordConfirm"
+    tests:
+      - file: tests/userCrud.test.ts
+        name: "returns 200 with server-generated generatedPassword and Cache-Control: no-store"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\"."
+        - "Click the key icon (tooltip \"Passwort zurücksetzen\") on forscher2's row."
+        - "Confirm the dialog 'Passwort für \"forscher2\" wirklich zurücksetzen? Es wird ein neues Passwort generiert; bestehende Sitzungen werden ungültig.' with OK."
+      expect: "Green banner appears with 'Generiertes Passwort:' and a 16-character monospace password; cancelling the dialog instead leaves the page unchanged."
+    notes: "The banner headline reuses 'Benutzer erfolgreich erstellt' even for a reset."
+  - id: UIR-ADMIN-023
+    title: "Password reset invalidates old password and sessions"
+    statement: "The Verwaltung page's password reset makes the user's old password stop working immediately and makes that user's refresh sessions fail at their next refresh, so they must log in again."
+    status: partial
+    sources: ["manual: Deployment.md Erster Start (Administration → Benutzer)", "code: server/auth/userAdminApi.ts:349-371"]
+    evidence:
+      - "server/auth/userAdminApi.ts:349-371 — new bcrypt hash + tokenVersion bump + passwordChangedAt in one write"
+      - "server/auth/loginApi.ts:314-319 — refresh rejects stale tokenVersion → revokeSession(jti) + 401"
+      - "server/auth/loginApi.ts:326 — access token TTL 10 min; authMiddleware does not re-check tokenVersion"
+      - "server/auth/userAdminApi.ts:339-376 — no revokeByUsername call on password reset, unlike delete (:176) and deactivate (:259)"
+    tests:
+      - file: tests/credentialMutationInvalidation.test.ts
+        name: "admin password reset bumps tokenVersion + passwordChangedAt; old refresh → 401"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as forscher2 in a private window and open the Startseite."
+        - "As admin, open \"Verwaltung\", expand \"Sitzungen\" on forscher2 (1 session), click the key icon on forscher2 and confirm."
+        - "Re-open \"Sitzungen\" on forscher2 immediately."
+        - "In the private window keep using the app for up to 10 minutes, then try to navigate."
+        - "Log out there and log in as forscher2 with the OLD password."
+      expect: "Step 3 still lists the session as active; within ≤10 min the forscher2 window is sent to the login page (refresh refused); the old password is rejected at login; the new password from the banner works."
+    notes: "Marked partial: invalidation is effective at the next refresh (access tokens live up to 10 min), and the reset does not revoke session rows, so the \"Sitzungen\" panel keeps listing them as active until the client's next refresh attempt (which revokes that jti) or until expiry if the client is closed. The confirm text promises 'bestehende Sitzungen werden ungültig', which the panel does not reflect immediately. Note corrected: a stale-version refresh does call revokeSession(jti), so rows do not necessarily persist 'until expiry'."
+  - id: UIR-ADMIN-024
+    title: "\"TOTP zurücksetzen\" works after confirmation"
+    statement: "The user can click the \"TOTP zurücksetzen\" icon on a user row and, after confirming the prompt, that user's TOTP enrolment is cleared and their refresh sessions invalidated, with no success banner."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-001 / N10.03", "code: src/pages/AdminPage.tsx:365-377,910-916"]
+    evidence:
+      - "src/pages/AdminPage.tsx:365-377 — confirm(adminResetTotpConfirm) then POST /totp/reset; success only reloads the list, errors are swallowed"
+      - "src/pages/AdminPage.tsx:910-916 — KeyRound icon, title adminResetTotp"
+      - "server/auth/totpApi.ts:169-200 — clears totpSecret/totpEnabled/recoveryCodeHashes, bumps tokenVersion + totpChangedAt"
+      - "server/auth/loginApi.ts:114-120 — OTP step only when twoFactorEnabled or user.totpEnabled"
+      - "config/settings.yaml:1 — twoFactorEnabled: false"
+      - "src/i18n/translations.ts:685-686 — adminResetTotp, adminResetTotpConfirm"
+    tests:
+      - file: tests/credentialMutationInvalidation.test.ts
+        name: "admin TOTP reset bumps tokenVersion + totpChangedAt; old refresh → 401"
+    browser:
+      route: "/admin"
+      steps:
+        - "As forscher2, enrol TOTP in the account page; log out."
+        - "As admin, open \"Verwaltung\", click the round-key icon (tooltip \"TOTP zurücksetzen\") on forscher2 and confirm 'TOTP für \"forscher2\" wirklich zurücksetzen? Der Benutzer muss sich anschließend neu einrichten.'."
+        - "Log in as forscher2 again."
+      expect: "With the default twoFactorEnabled: false, forscher2 logs in with password only (no OTP prompt) and can re-enrol voluntarily; with twoFactorEnabled: true the legacy shared OTP code is accepted. No success banner is shown on the admin page."
+    notes: "The confirm text ('muss sich anschließend neu einrichten') overstates the behaviour: enrolment is not forced after reset; TOTP is simply disabled for that user. The UI gives no visual confirmation of success and swallows errors (console only)."
+  - id: UIR-ADMIN-025
+    title: "\"Sitzungen\" accordion lists a user's sessions"
+    statement: "The user can expand the \"Sitzungen\" accordion (aria-expanded) on a user row to see \"Aktive Sitzungen (n)\" with Gerät (key id), Ausgestellt, Zuletzt verwendet and Läuft ab columns."
+    status: implemented
+    sources: ["code: src/pages/AdminPage.tsx:437-444,881-893,936-1020", "uat: v1.10 Phase 28 (shipped 2026-05-14)"]
+    evidence:
+      - "src/pages/AdminPage.tsx:437-444 — toggleSessionAccordion fetches /api/auth/sessions?username="
+      - "src/pages/AdminPage.tsx:881-893 — button with aria-expanded, chevron text-blue-600 when open"
+      - "src/pages/AdminPage.tsx:936-1020 — panel: title with count, table columns sessionDevice/sessionIssuedAt/sessionLastUsed/sessionExpires, 'Key: ' + key_id.slice(-8), empty/loading/error states"
+      - "server/auth/sessionApi.ts:100-120 — GET sessions, admin-only, DTO projection"
+      - "server/sessionsDb.ts:203-206 — listActiveSessionsByUser: non-revoked, non-expired, issued_at DESC"
+      - "src/i18n/translations.ts:1135-1146 — adminSessions, adminSessionsTitle, adminNoActiveSessions, sessionDevice, sessionIssuedAt, sessionLastUsed, sessionExpires"
+    tests:
+      - file: tests/sessionRevoke.test.ts
+        name: "returns only active sessions for the given username"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as forscher2 in a private window."
+        - "As admin, open \"Verwaltung\" and click \"Sitzungen\" (chevron) on forscher2's row."
+      expect: "A panel 'Aktive Sitzungen (1)' expands beneath the row with one line: 'Key: <8 chars>', issued, last-used and expiry timestamps, a \"Sitzung beenden\" button and an \"Überall abmelden\" button; the chevron turns blue and aria-expanded is true. Users without sessions show 'Keine aktiven Sitzungen.'"
+    notes: "The first column 'Gerät' shows the signing-key suffix, not a device name. Cited test covers the API, not the DOM."
+  - id: UIR-ADMIN-026
+    title: "\"Sitzung beenden\" revokes a single session"
+    statement: "The user can revoke one session via its \"Sitzung beenden\" button, the list refreshes without it, and that client cannot refresh its token so it must re-login (within the 10-min access-token lifetime)."
+    status: implemented
+    sources: ["code: src/pages/AdminPage.tsx:446-455,1008-1014", "uat: v1.10 Phase 28"]
+    evidence:
+      - "src/pages/AdminPage.tsx:446-455 — DELETE /api/auth/sessions/:id then re-fetch"
+      - "src/pages/AdminPage.tsx:1008-1014 — button with aria-label adminRevokeSession + key id"
+      - "server/auth/sessionApi.ts:60-74 — revokeSession, 404 if unknown/already revoked"
+      - "server/auth/loginApi.ts:286-293 — refresh does jti lookup first; revoked → family revoked, 401"
+      - "server/auth/loginApi.ts:326 — 10-min access TTL"
+      - "src/i18n/translations.ts:1139 — adminRevokeSession 'Sitzung beenden'"
+    tests:
+      - file: tests/sessionRevoke.test.ts
+        name: "revokes an individual session and returns { revoked: true }"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as forscher2 in a private window."
+        - "As admin, expand \"Sitzungen\" on forscher2, click \"Sitzung beenden\"."
+        - "In the private window continue using the app for up to 10 minutes."
+      expect: "The session row disappears and the panel shows 'Keine aktiven Sitzungen.'; the forscher2 window is redirected to the login page at its next token refresh (≤10 min)."
+    notes: "Revocation is enforced at refresh time; an already-issued access token keeps working until it expires (≤10 min)."
+  - id: UIR-ADMIN-027
+    title: "\"Überall abmelden\" signs a user out everywhere"
+    statement: "The user can click \"Überall abmelden\" in the sessions panel to revoke all of a user's sessions at once; the button shows \"Abmeldung läuft…\" while busy and the list empties."
+    status: implemented
+    sources: ["code: src/pages/AdminPage.tsx:457-469,946-963", "uat: v1.10 Phase 28"]
+    evidence:
+      - "src/pages/AdminPage.tsx:457-469 — DELETE /api/auth/sessions?username= then re-fetch"
+      - "src/pages/AdminPage.tsx:946-963 — button, disabled + spinner + adminSigningOut while signingOutUser"
+      - "server/auth/sessionApi.ts:82-95 — revokeByUsername, returns count"
+      - "src/i18n/translations.ts:1137-1138 — adminSignOutEverywhere 'Überall abmelden', adminSigningOut 'Abmeldung läuft…'"
+    tests:
+      - file: tests/sessionRevoke.test.ts
+        name: "revokes all active sessions for a username and returns the count"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as forscher2 in two different browsers/private windows."
+        - "As admin, expand \"Sitzungen\" on forscher2 (shows 'Aktive Sitzungen (2)'), click \"Überall abmelden\"."
+      expect: "Button briefly reads 'Abmeldung läuft…', then the panel shows 'Keine aktiven Sitzungen.'; both forscher2 clients land on the login page at their next refresh (≤10 min)."
+    notes: ""
+  - id: UIR-ADMIN-028
+    title: "Delete removes user from list and blocks login"
+    statement: "The user can delete another user via the red trash icon on its row without any confirmation prompt; the row disappears and login with that account fails."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-002", "manual: Benutzerhandbuch §12.2", "code: src/pages/AdminPage.tsx:331-342,925-931"]
+    evidence:
+      - "src/pages/AdminPage.tsx:331-342 — handleDelete: DELETE then loadUsers; no confirm()"
+      - "src/pages/AdminPage.tsx:925-931 — trash button title t('delete') = 'Löschen'"
+      - "server/auth/userAdminApi.ts:144-181 — delete handler, 404/409 guards"
+      - "server/auth/loginApi.ts — unknown user → generic 401 Invalid credentials"
+    tests:
+      - file: tests/userCrud.test.ts
+        name: "returns 200 when admin deletes another user"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\", create throwaway user tmpdel (see UIR-ADMIN-012)."
+        - "Click the red trash icon (\"Löschen\") on tmpdel's row."
+        - "In a private window try to log in as tmpdel."
+      expect: "The row is removed immediately (no dialog), count decreases by one; login as tmpdel fails with the generic invalid-credentials message."
+    notes: "There is no confirmation step before deletion (unlike password/TOTP reset)."
+  - id: UIR-ADMIN-029
+    title: "Own row's delete action is disabled"
+    statement: "The Verwaltung page disables the delete action on the logged-in admin's own row, showing a greyed trash icon with the tooltip \"Eigenes Konto kann nicht gelöscht werden.\""
+    status: implemented
+    sources: ["code: src/pages/AdminPage.tsx:917-923", "manual: Benutzerhandbuch §12.2"]
+    evidence:
+      - "src/pages/AdminPage.tsx:917-923 — span text-gray-300 cursor-not-allowed title adminNoDelete when u.username === user.username"
+      - "src/i18n/translations.ts:413-416 — adminNoDelete"
+      - "server/auth/userAdminApi.ts:152-156 — server self-delete guard → 409"
+    tests:
+      - file: tests/userCrud.test.ts
+        name: "returns 409 when admin tries to self-delete"
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\"."
+        - "Hover the trash icon on the admin row; click it."
+        - "Compare with the trash icon on forscher1's row."
+      expect: "Admin's icon is light grey with a not-allowed cursor, tooltip 'Eigenes Konto kann nicht gelöscht werden.', and clicking does nothing; forscher1's icon is red and clickable."
+    notes: "Cited test covers the server guard; the greyed UI state is untested."
+  - id: UIR-ADMIN-030
+    title: "Deleting a user invalidates all their sessions"
+    statement: "The Verwaltung page's delete action revokes all of the deleted user's refresh sessions so their next token refresh is rejected and they land on the login page."
+    status: implemented
+    sources: ["uat: v1.10 PROT-001; v1.12 #9; confirmed by tester in v1.13", "code: server/auth/userAdminApi.ts:172-179"]
+    evidence:
+      - "server/auth/userAdminApi.ts:172-179 — revokeByUsername(target) after delete commits"
+      - "server/auth/loginApi.ts:286-293 — refresh: jti lookup first, revoked → 401"
+      - "server/auth/loginApi.ts:306-311 — refresh for a user no longer in users.json → 401 'User not found'"
+      - "server/auth/loginApi.ts:326 — access TTL 10 min"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Create throwaway user tmpdel, log in as tmpdel in a private window."
+        - "As admin, expand \"Sitzungen\" on tmpdel (1 session), then click the trash icon on tmpdel's row."
+        - "Use the tmpdel window for up to 10 minutes."
+      expect: "tmpdel's row vanishes; within ≤10 min the tmpdel window is redirected to /login and cannot log in again."
+    notes: "No test asserts revokeByUsername on DELETE (tests/userCrud.test.ts mocks it but asserts the call only for deactivation). Enforcement is at refresh time (≤10 min)."
+  - id: UIR-ADMIN-031
+    title: "Audit rows keep deleted user's real username"
+    statement: "The Protokoll audit rows for a deleted user keep the real historical username recorded at write time and never show 'anonymous'."
+    status: implemented
+    sources: ["uat: v1.10 PROT-001; v1.12 #9; confirmed by tester in v1.13", "code: server/auditMiddleware.ts:213-222"]
+    evidence:
+      - "server/auditMiddleware.ts:213-222 — actor = req.auth.preferred_username captured per request, stored as string"
+      - "server/auditApi.ts:49-52 — user filter is a plain string match; no join to users.json"
+      - "src/pages/AuditPage.tsx:24,69-74,194 — 'Benutzer' dropdown built from distinct users in the loaded entries; user column renders entry.user verbatim"
+      - "grep: no 'anonymous' string anywhere in server/ or src/; fallback actor is 'unauthenticated'"
+    tests: []
+    browser:
+      route: "/audit"
+      steps:
+        - "Create user tmpdel, log in as tmpdel in a private window and open Kohortenbildung."
+        - "As admin, delete tmpdel in \"Verwaltung\"."
+        - "Open \"Protokoll\" and select tmpdel in the \"Benutzer\" dropdown (default \"Alle Benutzer\")."
+      expect: "tmpdel is still offered in the dropdown; the rows for tmpdel's login and page views show 'tmpdel' in the user column; no row shows 'anonymous'."
+    notes: "Browser step corrected: the Protokoll user filter is a \"Benutzer\" <select> populated from the loaded audit entries, not a free-text field, so a deleted user stays selectable as long as their rows are loaded. tests/auditMiddleware.test.ts 'records the real username for authenticated requests' covers capture but not the post-deletion case."
+  - id: UIR-ADMIN-032
+    title: "\"Abbrechen\" closes the create form and clears its values"
+    statement: "The user can click \"Abbrechen\" in the \"Nutzer anlegen\" form to close it; reopening it shows empty Benutzerkennung, Vorname and Nachname, Rolle Forscher/in, no centre selected and no errors."
+    status: implemented
+    sources: ["code: src/pages/AdminPage.tsx:636-650"]
+    evidence:
+      - "src/pages/AdminPage.tsx:636-650 — Abbrechen resets showForm, username, firstName, lastName, role ('researcher'), selectedCenters ([]) and formErrors ({})"
+      - "src/pages/AdminPage.tsx:528-541 — the collapsed card shows only the \"Nutzer anlegen\" button"
+      - "src/i18n/translations.ts:7 — cancel 'Abbrechen'"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\", click \"Nutzer anlegen\"."
+        - "Type abc into Benutzerkennung, click the UKA button, click \"Speichern\" (Pflichtfeld errors appear)."
+        - "Click \"Abbrechen\", then click \"Nutzer anlegen\" again."
+      expect: "After \"Abbrechen\" only the \"Nutzer anlegen\" button remains; on reopening all text fields are empty, Rolle shows Forscher/in, no centre button is highlighted and no red hints are shown; no user was created."
+    notes: "Added by the refute pass; clearly implemented and user-observable, no test."
+  - id: UIR-ADMIN-033
+    title: "Only one \"Sitzungen\" panel open at a time; click again collapses"
+    statement: "The Verwaltung page keeps at most one \"Sitzungen\" panel expanded: opening it on another row collapses the previous one, and clicking \"Sitzungen\" on the open row collapses it."
+    status: implemented
+    sources: ["code: src/pages/AdminPage.tsx:437-444,881-893,936"]
+    evidence:
+      - "src/pages/AdminPage.tsx:437-444 — toggleSessionAccordion: same user → null, other user → replace expandedSessionUser and fetch"
+      - "src/pages/AdminPage.tsx:936 — panel row rendered only when expandedSessionUser === u.username"
+      - "src/pages/AdminPage.tsx:885-890 — aria-expanded and blue ChevronUp only for the expanded user"
+    tests: []
+    browser:
+      route: "/admin"
+      steps:
+        - "Log in as admin, open \"Verwaltung\"."
+        - "Click \"Sitzungen\" on admin's row (panel opens), then click \"Sitzungen\" on forscher1's row."
+        - "Click \"Sitzungen\" on forscher1's row again."
+      expect: "After step 2 only forscher1's panel is open and admin's chevron is grey again (aria-expanded false); after step 3 no panel is open."
+    notes: "Added by the refute pass; clearly implemented and user-observable, no test."

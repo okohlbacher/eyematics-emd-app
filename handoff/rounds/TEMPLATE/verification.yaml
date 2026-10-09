@@ -1,0 +1,12 @@
+# Browser verification results — written by uat-verify (this file) and uat-release (verification-release.yaml);
+# the harness loads every `verification*.yaml` in the round folder (later files override earlier records of the same id).
+# One record per round item (O…) and per registry requirement (UIR-…) exercised in this pass.
+round: vX.Y
+verified_at: YYYY-MM-DD
+deployment: "emd-smoke built from <git rev-parse --short HEAD> (local container on 127.0.0.1:3311)"
+results: []
+# Example record (copy, then remove the leading '# '):
+#  - id: O1
+#    result: PASS                  # PASS | FAIL | BLOCKED (could not exercise — say why in notes; a by_design item is PASS when it behaves as designed)
+#    evidence: "DOM/JS facts or screenshot path that prove the expectation"
+#    notes: ""

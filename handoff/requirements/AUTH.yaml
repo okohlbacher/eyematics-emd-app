@@ -1,0 +1,598 @@
+# UI requirements registry — area AUTH. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+area: AUTH
+requirements:
+  - id: UIR-AUTH-001
+    title: "Unauthenticated access to protected routes redirects to /login"
+    statement: "The UI redirects a visitor without a session from any protected route (e.g. /, /cohort, /analysis, /case/x, /settings) to /login."
+    status: implemented
+    sources: ["code: src/App.tsx:22-26", "manual: docs/Benutzerhandbuch.md §2.1"]
+    evidence:
+      - "src/App.tsx:22-26 — ProtectedRoute: no user → <Navigate to=\"/login\" replace />"
+      - "src/App.tsx:28-40 — AdminRoute/QualityRoute also redirect to /login when no user"
+      - "src/App.tsx:46-66 — every page route nested under ProtectedRoute; '*' → '/'"
+      - "src/context/AuthContext.tsx:97-103 — user hydrated only from sessionStorage 'emd-token'"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Log out (or open a fresh private window so sessionStorage is empty)."
+        - "Type http://<host>/cohort into the address bar and press Enter."
+        - "Repeat with /analysis, /case/x, /settings and /."
+      expect: "Each time the address bar changes to /login and the login card with \"Benutzerkennung\" and \"Passwort\" is shown; no page content from the protected route is rendered."
+    notes: "Guard is client-side only (user state derived from sessionStorage token); server authz is separate. No test mounts App/ProtectedRoute, so the redirect itself is untested."
+  - id: UIR-AUTH-002
+    title: "Login page shows Benutzerkennung, Passwort and Weiter"
+    statement: "The login page offers a \"Benutzerkennung\" field, a \"Passwort\" field and a \"Weiter\" button as the first authentication step."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-005 / N01.01", "code: src/pages/LoginPage.tsx:183-227", "manual: docs/Benutzerhandbuch.md §2.1"]
+    evidence:
+      - "src/pages/LoginPage.tsx:183-227 — credentials form: username input (autoFocus), password input, submit button"
+      - "src/i18n/translations.ts:60-66 — loginUsername 'Benutzerkennung', loginPassword 'Passwort', loginContinue 'Weiter'"
+    tests: []
+    browser:
+      route: "/login"
+      steps:
+        - "Open /login while logged out (German locale)."
+        - "Look at the white login card."
+      expect: "A label \"Benutzerkennung\" with a text input (autofocused, placeholder 'Benutzername'), a label \"Passwort\" with a password input, and a full-width blue button \"Weiter\" are visible; no OTP field is shown."
+    notes: "Labels are <label> elements without htmlFor; inputs are identified by placeholder/order. No RTL test renders LoginPage."
+  - id: UIR-AUTH-003
+    title: "Password field has a show/hide toggle"
+    statement: "The user can toggle password visibility with the eye button (aria-label \"Passwort anzeigen\"/\"Passwort verbergen\", aria-pressed) on the login page."
+    status: implemented
+    sources: ["code: src/pages/LoginPage.tsx:202-217", "spec: EMDREQ-USM-005 / N01.01"]
+    evidence:
+      - "src/pages/LoginPage.tsx:202-208 — input type switches 'text'/'password' on showPassword"
+      - "src/pages/LoginPage.tsx:209-217 — button aria-label from loginShowPassword/loginHidePassword, aria-pressed={showPassword}, Eye/EyeOff icon"
+      - "src/i18n/translations.ts:64-65 — 'Passwort anzeigen' / 'Passwort verbergen'"
+    tests: []
+    browser:
+      route: "/login"
+      steps:
+        - "Open /login logged out and type any text into \"Passwort\"."
+        - "Click the eye icon at the right end of the \"Passwort\" field."
+        - "Inspect the button in devtools, then click it again."
+      expect: "After step 2 the typed text is shown in clear and the button has aria-label \"Passwort verbergen\" and aria-pressed=\"true\" with a crossed-eye icon; after step 3 the input is masked again, aria-label is \"Passwort anzeigen\" and aria-pressed=\"false\"."
+    notes: "No test renders LoginPage."
+  - id: UIR-AUTH-004
+    title: "Login page offers a language toggle"
+    statement: "The login page offers a language toggle below the form whose label reads \"English\" while German is active and switches all login labels when clicked."
+    status: implemented
+    sources: ["code: src/pages/LoginPage.tsx:267-275", "manual: docs/Benutzerhandbuch.md §13"]
+    evidence:
+      - "src/pages/LoginPage.tsx:267-275 — Globe button: setLocale(de↔en); label 'English' when locale==='de', else 'Deutsch'"
+      - "src/pages/LoginPage.tsx:23 — useLanguage: locale, setLocale, t"
+      - "src/i18n/translations.ts:60-67 — de/en pairs for all login labels"
+    tests: []
+    browser:
+      route: "/login"
+      steps:
+        - "Open /login logged out with German active."
+        - "Note the small globe button below the form labelled \"English\" and click it."
+        - "Click the same button again."
+      expect: "After step 2 the field labels read \"Username\", \"Password\", the button reads \"Continue\" and the toggle now reads \"Deutsch\"; after step 3 the labels return to \"Benutzerkennung\", \"Passwort\", \"Weiter\" and the toggle reads \"English\"."
+    notes: "No test renders LoginPage."
+  - id: UIR-AUTH-005
+    title: "Keycloak provider replaces the form with a Keycloak button"
+    statement: "The login page replaces the username/password form with a \"Mit Keycloak anmelden\" button and an info box when /api/auth/config reports provider 'keycloak'."
+    status: not_implemented
+    sources: ["code: src/pages/LoginPage.tsx:25-38,160-181", "code: server/initAuth.ts:139-151", "manual: docs/keycloak-setup.md"]
+    evidence:
+      - "src/pages/LoginPage.tsx:25-38 — fetch /api/auth/config → provider state"
+      - "src/pages/LoginPage.tsx:160-181 — keycloak branch: button loginKeycloakButton, info box loginKeycloakInfoTitle/Body on click; no redirect"
+      - "server/auth/loginApi.ts:383-387 — GET /config returns { twoFactorEnabled, provider }"
+      - "server/initAuth.ts:139-151 — provider=keycloak THROWS at startup ('provider=keycloak is not yet supported'), so no running server ever reports keycloak"
+      - "src/i18n/translations.ts:97-108 — 'Mit Keycloak anmelden'; info body says the redirect flow is not yet available"
+    tests:
+      - file: tests/authConfigProvider.test.ts
+        name: "returns provider: keycloak when provider=keycloak"
+      - file: tests/authConfigProvider.test.ts
+        name: "returns 405 with error message when provider=keycloak"
+    browser:
+      route: "/login"
+      steps:
+        - "In config/settings.yaml set the top-level key provider: keycloak (plus keycloak.issuer) and restart the server."
+        - "Observe the server log / container status."
+      expect: "The server refuses to start with '[initAuth] provider=keycloak is not yet supported' (initAuth.ts:147), so the Keycloak login card cannot be observed in any deployment. With provider: local (default) the normal \"Benutzerkennung\"/\"Passwort\" form is shown."
+    notes: "Downgraded from partial to not_implemented: the client branch and /config endpoint exist and are covered only with a mocked provider, but initAuth.ts:139-151 deliberately throws when provider=keycloak, so the behaviour is not user-observable in any running deployment. The config key is top-level `provider`, not `auth.provider`. The button only opens an info box — no SSO redirect. Keep as a regression anchor for the day the OIDC flow ships."
+  - id: UIR-AUTH-006
+    title: "Valid credentials log the user in and land on Startseite"
+    statement: "The user can log in with valid credentials by clicking \"Weiter\" and is navigated to \"/\" (Startseite) when OTP verification is not required."
+    status: implemented
+    sources: ["code: src/pages/LoginPage.tsx:64-66", "manual: docs/Benutzerhandbuch.md §2.1"]
+    evidence:
+      - "src/pages/LoginPage.tsx:64-66 — login ok → navigate('/')"
+      - "src/context/AuthContext.tsx:278-297 — POST /api/auth/login; token → sessionStorage 'emd-token', setUser"
+      - "server/auth/loginApi.ts:103-129 — valid password, 2FA off → { token } + refresh cookies"
+    tests:
+      - file: tests/authConfigProvider.test.ts
+        name: "processes login normally when provider=local (regression)"
+      - file: tests/userCrud.test.ts
+        name: "succeeds for active user with correct password"
+    browser:
+      route: "/login"
+      steps:
+        - "Open /login logged out (2FA off in Einstellungen)."
+        - "Enter \"Benutzerkennung\" forscher1 and the documented default \"Passwort\" (docs/Konfiguration.md Standardbenutzer)."
+        - "Click \"Weiter\"."
+      expect: "The URL becomes / and the Startseite shows the greeting with the display name (e.g. 'Anna Müller') and the centre cards; the sidebar footer shows forscher1 / researcher."
+    notes: "Cited tests cover the server login path (200 + token), not the client navigate('/'). The authRefresh cookie-attribute test was removed from this mapping — its assertions concern refresh-cookie flags (DEPLOY), not login success."
+  - id: UIR-AUTH-007
+    title: "Seven seeded default users log in on a fresh deployment"
+    statement: "The login page accepts the seven seeded default users (admin, forscher1, forscher2, epidemiologe, kliniker, diz_manager, klinikleitung) with the documented default password on a fresh data directory."
+    status: implemented
+    sources: ["manual: docs/Konfiguration.md Standardbenutzer", "manual: docs/Deployment.md Erster Start", "manual: README.md Quick Start"]
+    evidence:
+      - "server/index.ts:107-119 — seeds data/users.json with exactly these 7 usernames when absent"
+      - "server/initAuth.ts:498-512 — migration adds bcrypt hash of the default password for users without passwordHash"
+      - "server/auth/loginApi.ts:69-101 — case-insensitive lookup + bcrypt.compare"
+      - "docs/Konfiguration.md:167-179; docs/Deployment.md:52 — documented default password"
+    tests: []
+    browser:
+      route: "/login"
+      steps:
+        - "Start the server against an empty data directory/volume (fresh deployment)."
+        - "For each of admin, forscher1, forscher2, epidemiologe, kliniker, diz_manager, klinikleitung: enter the username, the documented default password, click \"Weiter\"."
+        - "Click the sidebar logout icon (title \"Abmelden\") between users."
+      expect: "Every one of the seven logins lands on the Startseite; the sidebar footer shows the respective username and role (admin, researcher, researcher, epidemiologist, clinician, data_manager, clinic_lead); the admin additionally sees the \"Administration\" nav group."
+    notes: "Tests use the default password literal only as fixture data (rotateKey/authRefresh/sessionRotation/credentialMutationInvalidation); tests/initAuthMigration.test.ts covers field migrations but not the password-hash seed. No test asserts the seed list or first-start migration end to end."
+  - id: UIR-AUTH-008
+    title: "Wrong credentials show one generic, non-revealing error"
+    statement: "The login page shows one generic error (\"Falsches Passwort. Bitte versuchen Sie es erneut.\") for a wrong username or password that does not reveal which was wrong and keeps the form editable."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-006 / N01.06", "code: src/pages/LoginPage.tsx:92-100", "manual: docs/Benutzerhandbuch.md §2.1"]
+    evidence:
+      - "src/pages/LoginPage.tsx:92-100 — invalid_credentials → t('loginErrorWrongPassword'), same for unknown user"
+      - "src/context/AuthContext.tsx:310-317 — any non-429 failure → 'invalid_credentials'"
+      - "server/auth/loginApi.ts:73-101 — unknown user and bad password both return 401 'Invalid credentials' with attemptsRemaining"
+      - "src/i18n/translations.ts:89-92 — de: 'Falsches Passwort. Bitte versuchen Sie es erneut.'"
+      - "src/i18n/translations.ts:84 — 'Anmeldung fehlgeschlagen.' is used only for network errors (LoginPage.tsx:101-103, AuthContext.tsx:318-320)"
+    tests:
+      - file: tests/loginLockout.test.ts
+        name: "unknown user returns 401 with attemptsRemaining (symmetric shape)"
+      - file: tests/userCrud.test.ts
+        name: "returns 401 for inactive user even with correct password (non-enumeration, generic message)"
+    browser:
+      route: "/login"
+      steps:
+        - "Open /login logged out; enter \"Benutzerkennung\" nobody_xyz and any \"Passwort\"; click \"Weiter\"."
+        - "Note the red error text. Enter \"Benutzerkennung\" forscher1 with a wrong \"Passwort\"; click \"Weiter\"."
+        - "Enter forscher1 with the correct password; click \"Weiter\"."
+      expect: "Steps 1 and 2 show the identical red box 'Falsches Passwort. Bitte versuchen Sie es erneut.' (with a 'Noch N Versuch(e) übrig.' line beneath); both inputs and \"Weiter\" stay enabled; step 3 logs in and lands on /."
+    notes: "The generic text is 'Falsches Passwort. Bitte versuchen Sie es erneut.' (loginErrorWrongPassword), not 'Anmeldung fehlgeschlagen.' which only appears for network_error. The wording 'Falsches Passwort' is shown even for unknown usernames (non-revealing but semantically misleading). The unused key loginErrorUserNotFound (translations.ts:85-88) is never rendered. Tests cover server symmetry only."
+  - id: UIR-AUTH-009
+    title: "Remaining-attempts hint counts down after failures"
+    statement: "The login page shows a remaining-attempts line (\"Noch N Versuch(e) übrig.\") after a failed password attempt when the server returns attemptsRemaining, decreasing with each failure."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-006 / N01.07", "code: src/pages/LoginPage.tsx:147-151", "uat: v1.10 USM-008 (superseded by v1.11 Phase 32)"]
+    evidence:
+      - "src/pages/LoginPage.tsx:96-100 — setAttemptsRemaining when > 0"
+      - "src/pages/LoginPage.tsx:147-151 — renders loginAttemptsRemaining with {0}"
+      - "src/context/AuthContext.tsx:310-317 — parses attemptsRemaining from 401 body"
+      - "server/auth/loginApi.ts:84-85,98-99 — attemptsRemaining = maxLoginAttempts - count"
+      - "src/i18n/translations.ts:566-569 — 'Noch {0} Versuch(e) übrig.'"
+      - "config/settings.yaml:42 — maxLoginAttempts: 5"
+    tests:
+      - file: tests/loginLockout.test.ts
+        name: "known user bad password returns 401 with attemptsRemaining"
+      - file: tests/loginLockout.test.ts
+        name: "attemptsRemaining decreases with each bad-password attempt"
+      - file: tests/inactivitySettings.test.ts
+        name: "loginAttemptsRemaining has non-empty de and en translations"
+    browser:
+      route: "/login"
+      steps:
+        - "Open /login logged out (default maxLoginAttempts 5, user not previously failed)."
+        - "Enter \"Benutzerkennung\" forscher2 with a wrong \"Passwort\"; click \"Weiter\"."
+        - "Repeat step 2 once more."
+      expect: "After step 2 the red error box contains the line 'Noch 4 Versuch(e) übrig.'; after step 3 it reads 'Noch 3 Versuch(e) übrig.'. (After the 4th failure 'Noch 1 Versuch(e) übrig.'; the 5th failure switches to the lockout message.)"
+    notes: "The hint is also shown for unknown usernames (server returns attemptsRemaining symmetrically). Current code shows the counter — this supersedes the v1.10 'no counter by design' UAT note. The i18n test only asserts key presence; the server tests assert the number, not the rendered line."
+  - id: UIR-AUTH-010
+    title: "Lockout after max failed attempts with mm:ss countdown"
+    statement: "After the configured number of failed attempts (default 5) the login page shows \"Konto gesperrt. Bitte warten Sie mm:ss.\" with a live countdown and disables \"Weiter\" until it reaches 00:00."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-006 / N01.07", "code: src/pages/LoginPage.tsx:74-91,152-156,222", "uat: v1.10 USM-006; v1.11 Phase 32", "manual: docs/Benutzerhandbuch.md §2.1, §15; docs/Konfiguration.md maxLoginAttempts"]
+    evidence:
+      - "src/pages/LoginPage.tsx:74-91 — account_locked → countdown interval from retryAfterMs; clears error at 0"
+      - "src/pages/LoginPage.tsx:141-158 — error box 'Zu viele Fehlversuche. Bitte warten Sie.' + mono line loginLockoutCountdown"
+      - "src/pages/LoginPage.tsx:220-226 — submit disabled={lockoutSecondsRemaining > 0}"
+      - "src/context/AuthContext.tsx:305-308 — 429 → account_locked with retryAfterMs"
+      - "server/auth/loginApi.ts:62-67,91-97 — 429 + retryAfterMs when locked / crossing threshold"
+      - "server/rateLimiting.ts:38-47 — lock = min(2^count*1s, cap) once count >= maxLoginAttempts → 32 s at 5"
+      - "src/i18n/translations.ts:80-83,571-574"
+    tests:
+      - file: tests/loginLockout.test.ts
+        name: "known user crossing maxLoginAttempts returns 429 with retryAfterMs, no attemptsRemaining"
+      - file: tests/rateLimiting.test.ts
+        name: "locks at maxLoginAttempts"
+      - file: tests/ui-requirements.test.ts
+        name: "rate limiter locks after configured max attempts"
+    browser:
+      route: "/login"
+      steps:
+        - "Open /login logged out; enter \"Benutzerkennung\" kliniker with a wrong \"Passwort\" and click \"Weiter\" five times in a row."
+        - "Watch the error box and the \"Weiter\" button for ~35 seconds."
+        - "When the countdown has disappeared, enter the correct password and click \"Weiter\"."
+      expect: "On the 5th failure the box shows 'Zu viele Fehlversuche. Bitte warten Sie.' and beneath it 'Konto gesperrt. Bitte warten Sie 00:32.' ticking down each second; \"Weiter\" is greyed/disabled (cursor not-allowed). At 00:00 the error box disappears and \"Weiter\" is enabled again; step 3 logs in."
+    notes: "First lockout at the default threshold lasts 2^5 = 32 s (not a fixed window). On reaching 0 the whole error box is cleared (setError('')). Tests cover the server 429/limiter, not the rendered countdown."
+  - id: UIR-AUTH-011
+    title: "Lockout duration doubles on repeated failures"
+    statement: "The login page shows a longer lockout countdown when a further failed attempt follows an expired lock, as the lock time doubles with each subsequent lockout."
+    status: implemented
+    sources: ["manual: docs/Benutzerhandbuch.md §2.1, §15", "code: server/rateLimiting.ts:38-47"]
+    evidence:
+      - "server/rateLimiting.ts:38-47 — lockedUntil = now + min(2^newCount * 1000, lockoutCapMs); count only reset by resetAttempts"
+      - "server/auth/loginApi.ts:104 — resetAttempts only on successful password"
+      - "config/settings.yaml:43 — lockoutCapMs: 900000 → max 15 min"
+      - "server/initAuth.ts:135 — default lockoutCapMs 900000"
+      - "src/pages/LoginPage.tsx:74-91 — countdown driven by server retryAfterMs"
+    tests:
+      - file: tests/rateLimiting.test.ts
+        name: "lockout increases with each failure up to cap"
+      - file: tests/rateLimiting.test.ts
+        name: "caps lockout at custom lockoutCapMs when provided"
+    browser:
+      route: "/login"
+      steps:
+        - "Open /login logged out; fail the password for epidemiologe five times; note the countdown start value."
+        - "Wait until the countdown reaches 00:00 and the \"Weiter\" button is enabled."
+        - "Fail the password once more; note the new countdown start value."
+        - "Optionally repeat steps 2-3 once more."
+      expect: "Step 1 starts at about 00:32; step 3 starts at about 01:04; a further repeat starts at about 02:08 (doubling each time, capped at 15:00 by auth.lockoutCapMs)."
+    notes: "The rateLimiting test only asserts d2 >= d1, not exact doubling. The failure counter is only reset by a successful password check, so a correct login in between resets the sequence."
+  - id: UIR-AUTH-012
+    title: "OTP step appears after correct password when 2FA is enabled"
+    statement: "After a correct password the login page shows a second step with an \"OTP-Code\" field (maxLength 16), an \"Anmelden\" button and a \"Zurück\" button only when OTP verification is enabled."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-005 / N01.03", "code: src/pages/LoginPage.tsx:67-73,229-263", "manual: docs/Benutzerhandbuch.md §2.1, §9.1"]
+    evidence:
+      - "src/pages/LoginPage.tsx:67-73 — otp_required → step 'otp'"
+      - "src/pages/LoginPage.tsx:229-263 — heading login2faTitle, label loginOtpLabel 'OTP-Code', input maxLength 16, buttons loginSubmit 'Anmelden' and back 'Zurück'"
+      - "src/context/AuthContext.tsx:299-302 — challengeToken → otp_required"
+      - "server/auth/loginApi.ts:114-121 — challengeToken when twoFactorEnabled || user.totpEnabled"
+      - "server/settingsApi.ts:329 + server/initAuth.ts:245-255 — updateAuthConfig: toggle takes effect without restart"
+      - "src/pages/SettingsPage.tsx:406-430 — 2FA switch settings2faTitle/settings2faLabel 'OTP-Prüfung bei Anmeldung'"
+      - "src/i18n/translations.ts:67-74,668-669"
+    tests: []
+    browser:
+      route: "/login"
+      steps:
+        - "As admin open /settings and ensure the switch under \"Zwei-Faktor-Authentisierung\" / \"OTP-Prüfung bei Anmeldung\" is OFF; log out; log in as forscher1 with the correct password."
+        - "Log out. As admin open /settings and turn the \"OTP-Prüfung bei Anmeldung\" switch ON; log out."
+        - "Log in as forscher1 with the correct password and click \"Weiter\"."
+        - "Enter the demo OTP code (otpCode in settings.yaml, default documented in README.md) and click \"Anmelden\"."
+      expect: "Step 1 lands directly on / without an OTP prompt. Step 3 shows 'Zwei-Faktor-Authentisierung: Bitte geben Sie den OTP-Code ein.', a label \"OTP-Code\" with a centred input (maxlength 16, placeholder '123456 oder Recovery-Code'), a blue \"Anmelden\" button and a grey \"Zurück\" link-button. Step 4 lands on /."
+    notes: "No unit/RTL test covers the two-step UI or the challengeToken login path; server tests only check that challenge-typed tokens are rejected as access tokens. A user with per-user TOTP enabled always gets the OTP step regardless of the global toggle (loginApi.ts:118)."
+  - id: UIR-AUTH-013
+    title: "Zurück aborts the OTP step without logging in"
+    statement: "The user can abort the OTP step with \"Zurück\" and return to the username/password form without being logged in."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-005 / N01.05", "code: src/pages/LoginPage.tsx:254-263"]
+    evidence:
+      - "src/pages/LoginPage.tsx:254-263 — button t('back') → setStep('credentials'), setError('')"
+      - "src/i18n/translations.ts:5 — back: 'Zurück'"
+      - "src/App.tsx:22-26 — no user → / still redirects to /login"
+    tests: []
+    browser:
+      route: "/login"
+      steps:
+        - "With 2FA enabled (see UIR-AUTH-012) log in as forscher1 with the correct password and click \"Weiter\" to reach the OTP step."
+        - "Click \"Zurück\"."
+        - "Type http://<host>/ into the address bar."
+      expect: "Step 2 shows the first step again with \"Benutzerkennung\"/\"Passwort\"/\"Weiter\" (the previously typed values are still in the fields); step 3 redirects to /login — no session was created."
+    notes: "Username/password state is retained after Zurück (fields appear prefilled); the challengeToken is kept in state until the next credentials submit."
+  - id: UIR-AUTH-014
+    title: "Wrong OTP shows an error and returns to the credentials step"
+    statement: "The login page shows an invalid-OTP error after a wrong OTP code and returns the user to the username/password step; repeated OTP failures count toward the lockout."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-006 / N01.08", "code: src/pages/LoginPage.tsx:115-125", "manual: docs/Benutzerhandbuch.md §2.1"]
+    evidence:
+      - "src/pages/LoginPage.tsx:115-120 — invalid_otp → setStep('credentials'), clear otp/challenge, error loginErrorInvalidOtp"
+      - "src/pages/LoginPage.tsx:121-125 — account_locked on OTP step → only 'Zu viele Fehlversuche' text, no countdown, stays on OTP step"
+      - "src/context/AuthContext.tsx:257-275 — verify 401 → invalid_otp; 429 → account_locked"
+      - "server/auth/loginApi.ts:163-171,218-227 — OTP failures recorded in the same per-username limiter as password failures"
+      - "src/i18n/translations.ts:93-96 — 'Ungültiger OTP-Code. Bitte versuchen Sie es erneut.'"
+    tests: []
+    browser:
+      route: "/login"
+      steps:
+        - "With 2FA enabled log in as forscher2 with the correct password and click \"Weiter\"."
+        - "Enter 000000 into \"OTP-Code\" and click \"Anmelden\"."
+        - "Repeat steps 1-2 (re-entering the password each time) until the total of password+OTP failures reaches 5."
+      expect: "After step 2 the red box 'Ungültiger OTP-Code. Bitte versuchen Sie es erneut.' is shown above the \"Benutzerkennung\"/\"Passwort\" form (the OTP field is gone). After the 5th combined failure the response is a lockout ('Zu viele Fehlversuche. Bitte warten Sie.'); if it occurs on the OTP step no mm:ss countdown is shown and the OTP form stays visible."
+    notes: "Code and manual implement the fall-back-to-credentials behaviour (spec N01.08 'stays editable in place' is not what ships). Deviation: a lockout triggered on the OTP step shows no countdown and does not disable \"Anmelden\" (LoginPage.tsx:121-122). No test asserts /verify invalid-OTP handling."
+  - id: UIR-AUTH-015
+    title: "Sidebar footer shows logged-in user and opens /account"
+    statement: "After login the sidebar footer shows the user's initials, username and role as a button that opens /account; logged out it is not rendered."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-005 / N01.09", "code: src/components/Layout.tsx:34,123-141"]
+    evidence:
+      - "src/components/Layout.tsx:34 — initials = first two letters of username, uppercase"
+      - "src/components/Layout.tsx:123-141 — button title accountTitle 'Konto', navigate('/account'); shows user.username and user.role (CSS capitalize)"
+      - "src/App.tsx:46-60 — Layout only rendered inside ProtectedRoute; /account route"
+      - "src/i18n/translations.ts:691 — accountTitle 'Konto'"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as diz_manager and look at the bottom of the left sidebar."
+        - "Hover the block with the round avatar, then click it."
+        - "Click the sidebar logout icon (title \"Abmelden\") and look for the sidebar."
+      expect: "Step 1 shows a round badge 'DI', the username 'diz_manager' and the role 'data_manager' (CSS-capitalised). Step 2 shows tooltip 'Konto' and the URL becomes /account with heading 'Konto'. Step 3 returns to /login where no sidebar exists."
+    notes: "The footer shows the raw username, not the display name; the display name appears on /account and the Startseite. No test renders Layout."
+  - id: UIR-AUTH-016
+    title: "Abmelden logs out and returns to /login"
+    statement: "The user can log out via the sidebar logout icon button (title \"Abmelden\") and is returned to /login; browser Back or typing a protected route then redirects to /login."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-007 / N01.10", "code: src/components/Layout.tsx:142-148", "manual: docs/Benutzerhandbuch.md §2.2"]
+    evidence:
+      - "src/components/Layout.tsx:142-148 — LogOut icon button title navLogout; logout(); navigate('/login')"
+      - "src/context/AuthContext.tsx:144-165,323 — performLogout clears user/token/sessionStorage, calls serverLogout + broadcastLogout"
+      - "src/services/authHeaders.ts:80-94 — POST /api/auth/logout with CSRF"
+      - "server/auth/loginApi.ts:346-375 — bumps tokenVersion, clears cookies"
+      - "src/App.tsx:22-26 — protected routes redirect once user is null"
+      - "src/i18n/translations.ts:54 — navLogout 'Abmelden'"
+    tests:
+      - file: tests/authFetchRefresh.test.ts
+        name: "serverLogout posts to /api/auth/logout with X-CSRF-Token from cookie + Bearer header"
+      - file: tests/authRefresh.test.ts
+        name: "returns 200, clears both cookies, increments user.tokenVersion"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Log in as forscher1 and open /cohort."
+        - "Click the door/arrow icon at the bottom right of the sidebar (tooltip \"Abmelden\")."
+        - "Press the browser Back button."
+        - "Type http://<host>/cohort into the address bar."
+      expect: "Step 2 shows /login. Steps 3 and 4 both end on /login without rendering the cohort page."
+    notes: "The logout control is an icon-only button; its only accessible name is the title attribute 'Abmelden'. Cited tests cover the server/helper side, not the sidebar click."
+  - id: UIR-AUTH-017
+    title: "Logout clears session and recent-item storage"
+    statement: "The UI clears sessionStorage 'emd-token' and 'emd-cohort-filters' and every localStorage 'emd-recent:*' key on logout, so \"Weitermachen\" is empty after re-login."
+    status: implemented
+    sources: ["code: src/context/AuthContext.tsx:144-165"]
+    evidence:
+      - "src/context/AuthContext.tsx:152 — recentActivityStore.clearAll()"
+      - "src/context/AuthContext.tsx:162-163 — removeItem 'emd-token', 'emd-cohort-filters'"
+      - "src/services/recentActivityStore.ts:19,76-83 — key 'emd-recent:<username>'; clearAll removes all emd-recent:* keys"
+      - "src/context/AuthContext.tsx:259-262,289-295 — clearAll also on every login"
+      - "src/i18n/translations.ts:1059 — jumpBackIn 'Weitermachen'"
+    tests:
+      - file: tests/cohortFilterPersistence.test.tsx
+        name: "AuthContext logout() removes the emd-cohort-filters sessionStorage key"
+      - file: tests/recentActivityStore.test.ts
+        name: "removes all emd-recent:* keys"
+      - file: tests/sessionTimers.test.tsx
+        name: "10-minute inactivity triggers auto-logout"
+    browser:
+      route: "/"
+      steps:
+        - "Log in as forscher1, open a case from Kohortenbildung so it appears under \"Weitermachen\" on the Startseite, and set an age filter in Kohortenbildung."
+        - "Open devtools → Application → Session Storage and Local Storage; note 'emd-token', 'emd-cohort-filters' and 'emd-recent:forscher1'."
+        - "Click the sidebar logout icon (title \"Abmelden\"); refresh the storage view."
+        - "Log in again as forscher1 and look at the Startseite."
+      expect: "After step 3 none of 'emd-token', 'emd-cohort-filters' or any 'emd-recent:*' key remain. After step 4 the \"Weitermachen\" panel shows its empty state and the cohort filters are reset."
+    notes: "The jumpBackIn.test.tsx mapping was removed — it renders LandingPage with a mocked empty store and never exercises logout. The sessionTimers test asserts 'emd-token' is removed by performLogout (auto path)."
+  - id: UIR-AUTH-018
+    title: "Logout in one tab logs out sibling tabs"
+    statement: "The UI logs out sibling browser tabs and redirects them to /login when the user logs out in one tab (BroadcastChannel 'emd-auth')."
+    status: implemented
+    sources: ["code: src/services/authHeaders.ts:6-8,25-41,65-67"]
+    evidence:
+      - "src/services/authHeaders.ts:22-41 — BroadcastChannel 'emd-auth' listener: 'logout' → clearAll, remove token, window.location.href='/login'"
+      - "src/services/authHeaders.ts:65-67 — broadcastLogout"
+      - "src/context/AuthContext.tsx:158 — performLogout → broadcastLogout()"
+      - "src/services/authHeaders.ts:127-133 — handleAuthFailure also broadcasts logout"
+    tests:
+      - file: tests/authFetchRefresh.test.ts
+        name: "Test 8 — BroadcastChannel: logout message clears sessionStorage and redirects"
+      - file: tests/authFetchRefresh.test.ts
+        name: "broadcastLogout fires {type:logout} on the emd-auth BroadcastChannel"
+    browser:
+      route: "/analysis"
+      steps:
+        - "Log in as forscher1; open a second tab of the same browser profile at /analysis (sessionStorage is per tab, so log in there too if prompted)."
+        - "In the first tab click the sidebar logout icon (title \"Abmelden\")."
+        - "Switch to the second tab without interacting."
+      expect: "The second tab navigates to /login on its own within about a second."
+    notes: "Relies on BroadcastChannel; both tabs must be same-origin. The redirect also triggers on refresh failure (session cap exceeded, see UIR-AUTH-027)."
+  - id: UIR-AUTH-019
+    title: "New browser session requires a fresh login"
+    statement: "The UI keeps the session token only in sessionStorage ('emd-token') so a brand-new browser session shows the login page again."
+    status: implemented
+    sources: ["code: src/context/AuthContext.tsx:97-103,263,293"]
+    evidence:
+      - "src/context/AuthContext.tsx:97-103 — initial state read from sessionStorage only"
+      - "src/context/AuthContext.tsx:263,293 — token written to sessionStorage only"
+      - "src/services/authHeaders.ts:53-59 — headers built from sessionStorage"
+      - "grep: no localStorage access to 'emd-token' anywhere in src/"
+    tests: []
+    browser:
+      route: "/login"
+      steps:
+        - "Log in as forscher1 and open /cohort."
+        - "Quit the browser completely (all windows), then start it again and open http://<host>/cohort."
+      expect: "The login page is shown; no automatic re-login happens."
+    notes: "The ui-requirements.test.ts mapping ('JWT token stored in sessionStorage under emd-token key') was removed — it stubs sessionStorage and round-trips a literal, never touching app code. The server also sets an HttpOnly 'emd-refresh' cookie (8 h) but it is only used by authFetch after a 401 and never restores a UI session by itself. Browsers that restore sessions may preserve sessionStorage."
+  - id: UIR-AUTH-020
+    title: "Inactivity warning banner with mm:ss countdown"
+    statement: "Shortly before the inactivity timeout the UI shows an amber full-width banner \"Sie werden in Kürze wegen Inaktivität abgemeldet...\" with a live \"Automatische Abmeldung in mm:ss\" countdown."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-008 / N01.11", "code: src/components/Layout.tsx:67-77; src/context/AuthContext.tsx:179-192", "uat: v1.11 Phase 32 (inactivity 3-min countdown)", "manual: docs/Benutzerhandbuch.md §2.2; docs/Konfiguration.md auth.warningBeforeMs"]
+    evidence:
+      - "src/components/Layout.tsx:67-77 — fixed top banner bg amber, inactivityWarning text + mono mm:ss"
+      - "src/context/AuthContext.tsx:179-192 — warning timer at timeout-warning; 1 s countdown interval"
+      - "src/context/AuthContext.tsx:202-222 — timeout/warning read from settings auth.inactivityTimeoutMs / warningBeforeMs at session start"
+      - "src/services/settingsService.ts:56-60 — defaults 600000 / 180000"
+      - "config/settings.yaml:44-45 — 600000 / 180000"
+      - "src/i18n/translations.ts:556-564"
+    tests:
+      - file: tests/inactivitySettings.test.ts
+        name: "inactivityCountdown has non-empty de and en translations"
+      - file: tests/inactivitySettings.test.ts
+        name: "DEFAULTS.auth.warningBeforeMs is 180000 (3 min — AUTHCFG-02)"
+    browser:
+      route: "/"
+      steps:
+        - "On the verify container run: docker exec emd-verify sed -i 's/inactivityTimeoutMs: 600000/inactivityTimeoutMs: 120000/; s/warningBeforeMs: 180000/warningBeforeMs: 60000/' /data/settings.yaml (host deployment: edit ~/EMD/settings.yaml). No restart needed — GET /api/settings reads the file on every call (server/settingsApi.ts:45-46) and the timer values are read when a session starts; the Einstellungen page has no fields for these. Restore 600000/180000 afterwards."
+        - "Log out if logged in, then log in as forscher1 and do not touch mouse or keyboard for 60 seconds."
+      expect: "After ~60 s an amber bar appears fixed across the top of the window reading 'Sie werden in Kürze wegen Inaktivität abgemeldet. Bewegen Sie die Maus, um angemeldet zu bleiben.' followed by 'Automatische Abmeldung in 01:00' ticking down once per second."
+    notes: "Shipped default lead time is 3 min (warningBeforeMs 180000); Benutzerhandbuch §2.2 still says 1 min — manual is stale. The timer values are not editable on /settings (SettingsPage has no inactivity fields). No test asserts the banner render."
+  - id: UIR-AUTH-021
+    title: "Activity dismisses the inactivity warning"
+    statement: "The UI resets the inactivity timer, hides the warning banner and keeps the session on any mouse, keyboard, scroll or touch activity during the warning window."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-008 / N01.11", "code: src/context/AuthContext.tsx:167-172,225-240"]
+    evidence:
+      - "src/context/AuthContext.tsx:167-172 — resetInactivityTimer clears timers, hides warning, zeroes countdown"
+      - "src/context/AuthContext.tsx:225-240 — window listeners: mousedown, keydown, scroll, touchstart, mousemove"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "With the shortened timeouts from UIR-AUTH-020 log in and wait until the amber banner is visible."
+        - "Move the mouse a few centimetres (or press Shift)."
+        - "Keep working normally for longer than the configured inactivityTimeoutMs."
+      expect: "The banner disappears immediately on the mouse movement, the user stays logged in, and no logout happens while activity continues."
+    notes: "mousemove alone is sufficient (no click required)."
+  - id: UIR-AUTH-022
+    title: "Automatic logout when inactivity timeout elapses"
+    statement: "The UI logs the user out automatically when the configured inactivity timeout (auth.inactivityTimeoutMs, default 10 min) elapses without activity and shows the login page."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-008 / N01.11", "code: src/context/AuthContext.tsx:54-55,194-196,202-222", "uat: v1.11 Phase 32", "manual: docs/Benutzerhandbuch.md §2.2; docs/Konfiguration.md auth.inactivityTimeoutMs"]
+    evidence:
+      - "src/context/AuthContext.tsx:54-55 — INACTIVITY_TIMEOUT 10 min fallback"
+      - "src/context/AuthContext.tsx:194-196 — timeout → performLogout(true)"
+      - "src/context/AuthContext.tsx:202-222 — value from settings.auth.inactivityTimeoutMs"
+      - "src/App.tsx:22-26 — user null → Navigate to /login"
+      - "src/pages/audit/auditFormatters.ts:21 — POST /api/auth/logout labelled audit_action_logout 'Abmeldung'; no distinct auto-logout action is emitted"
+    tests:
+      - file: tests/sessionTimers.test.tsx
+        name: "10-minute inactivity triggers auto-logout"
+      - file: tests/authFetchRefresh.test.ts
+        name: "AuthContext source preserves INACTIVITY_TIMEOUT = 10 * 60 * 1000"
+      - file: tests/inactivitySettings.test.ts
+        name: "DEFAULTS.auth.inactivityTimeoutMs is 600000"
+    browser:
+      route: "/"
+      steps:
+        - "With auth.inactivityTimeoutMs: 120000 / warningBeforeMs: 60000 in config/settings.yaml, log in as forscher1 on the Startseite."
+        - "Leave the browser untouched for 2 minutes, watching the amber countdown."
+        - "When it reaches 00:00, observe the page; then type http://<host>/cohort."
+      expect: "At 00:00 the app switches to /login by itself; /cohort redirects to /login until a new login. In Protokoll (as admin) the event appears as a normal 'Abmeldung' entry for forscher1 — not 'Auto-Abmeldung'."
+    notes: "Corrected audit label: the Protokoll shows 'Abmeldung' (audit_action_logout), not 'Abmelden' (that is the sidebar button). The i18n label audit_action_auto_logout 'Auto-Abmeldung' (translations.ts:580) exists but no code path emits a distinct auto-logout action — the client calls the same POST /api/auth/logout. The AuthContext comment 'auto-logout logged server-side' is therefore misleading. The authFetchRefresh test is a static source-regex guard, not a behaviour test."
+  - id: UIR-AUTH-023
+    title: "Account page lets the user change their password"
+    statement: "The account page lets the user change their password via \"Passwort ändern\", requiring current password, a new password of at least 8 characters and a matching confirmation, with inline errors."
+    status: implemented
+    sources: ["code: src/pages/AccountPage.tsx:58-97,185-245", "manual: docs/Konfiguration.md Standardbenutzer (change passwords after first login)"]
+    evidence:
+      - "src/pages/AccountPage.tsx:58-74 — client checks: both required, length >= 8, confirmation match → pwError"
+      - "src/pages/AccountPage.tsx:76-97 — PUT /api/auth/users/me/password"
+      - "src/pages/AccountPage.tsx:185-245 — section 'Passwort ändern', fields 'Aktuelles Passwort', 'Neues Passwort', 'Passwort bestätigen', hint 'Mindestens 8 Zeichen.', red error box"
+      - "server/auth/userAdminApi.ts:286-295 — server 400 on missing fields or < 8 chars; verifies current password"
+      - "src/i18n/translations.ts:692-699"
+    tests:
+      - file: tests/credentialMutationInvalidation.test.ts
+        name: "self password change bumps tokenVersion + passwordChangedAt; old refresh → 401"
+    browser:
+      route: "/account"
+      steps:
+        - "Log in as forscher2 and click the user block in the sidebar footer to open /account."
+        - "Under \"Passwort ändern\" enter the current password, new password 'abcdefg' (7 chars), confirmation 'abcdefg'; click \"Passwort ändern\"."
+        - "Enter new password 'abcdefgh1' and confirmation 'abcdefgh2'; click \"Passwort ändern\"."
+        - "Enter new password 'Neu-Passwort-9' twice with the correct current password; click \"Passwort ändern\"."
+        - "Click the sidebar logout icon (title \"Abmelden\") and log in as forscher2 with 'Neu-Passwort-9'."
+      expect: "Step 2 shows the red inline error 'Neues Passwort muss mindestens 8 Zeichen lang sein.'; step 3 shows 'Die Passwörter stimmen nicht überein.'; step 4 clears the fields and shows a green success box; step 5 logs in successfully (and the old password no longer works)."
+    notes: "Client-side inline validation is not unit-tested; the cited test covers the server endpoint (200) and session invalidation. Leaving \"Aktuelles Passwort\" empty shows 'Bitte aktuelles und neues Passwort eingeben.'"
+  - id: UIR-AUTH-024
+    title: "Password change shows a success banner that clears after 30 s"
+    statement: "The account page shows a green success banner after a password change, stating other sessions were invalidated, and clears it after 30 seconds."
+    status: implemented
+    sources: ["code: src/pages/AccountPage.tsx:51-56,83-87,192-197"]
+    evidence:
+      - "src/pages/AccountPage.tsx:51-56 — setTimeout 30_000 → setPwSuccess(false)"
+      - "src/pages/AccountPage.tsx:83-87 — setPwSuccess(true) on 200"
+      - "src/pages/AccountPage.tsx:192-197 — green banner with accountPwSuccess"
+      - "src/i18n/translations.ts:700 — 'Passwort geändert. Andere offene Sitzungen wurden ungültig.'"
+    tests: []
+    browser:
+      route: "/account"
+      steps:
+        - "Log in as kliniker and open /account."
+        - "Submit a valid password change under \"Passwort ändern\" (correct current password, new password >= 8 chars entered twice)."
+        - "Start a stopwatch and keep the page open without reloading."
+      expect: "Immediately after step 2 a green box with a check icon reads 'Passwort geändert. Andere offene Sitzungen wurden ungültig.'; after about 30 seconds the box disappears by itself."
+    notes: "No test renders AccountPage."
+  - id: UIR-AUTH-025
+    title: "Account page shows TOTP status and allows enrol/disable"
+    statement: "The account page shows TOTP status and lets the user enrol (QR code, manual otpauth URI, recovery codes, 6-digit confirmation) or disable TOTP by entering a code."
+    status: implemented
+    sources: ["code: src/pages/AccountPage.tsx:247-347", "code: server/auth/totpApi.ts"]
+    evidence:
+      - "src/pages/AccountPage.tsx:39-49 — GET /api/auth/totp/status on mount"
+      - "src/pages/AccountPage.tsx:99-172 — enroll → confirm with /^\\d{6}$/ → disable with code"
+      - "src/pages/AccountPage.tsx:247-347 — states: 'TOTP ist nicht aktiv…' + \"TOTP aktivieren\"; enrolment with QR <img>, <details> 'Manueller Schlüssel', recovery-code grid, 'Bestätigen'; enabled state 'TOTP ist aktiv.' + remaining codes + \"TOTP deaktivieren\""
+      - "server/auth/totpApi.ts:25,43-65 — RECOVERY_CODE_COUNT = 10; enroll returns otpauth, qrDataUrl, recoveryCodes"
+      - "server/auth/totpApi.ts:162 — status returns recoveryCodesRemaining"
+      - "server/auth/loginApi.ts:118,193-211 — enrolled users must pass TOTP or recovery code at login"
+      - "src/i18n/translations.ts:703-717"
+    tests:
+      - file: tests/credentialMutationInvalidation.test.ts
+        name: "self TOTP confirm bumps tokenVersion + totpChangedAt; old refresh → 401"
+      - file: tests/credentialMutationInvalidation.test.ts
+        name: "self TOTP disable bumps tokenVersion + totpChangedAt; old refresh → 401"
+    browser:
+      route: "/account"
+      steps:
+        - "Log in as klinikleitung and open /account; read the section \"Zwei-Faktor-Authentifizierung (TOTP)\"."
+        - "Click \"TOTP aktivieren\"."
+        - "Scan the QR code with an authenticator app (or expand \"Manueller Schlüssel\" and copy the otpauth:// URI); note the ten recovery codes."
+        - "Enter the current 6-digit code into \"6-stelliger Code aus Authenticator\" and click \"Bestätigen\"."
+        - "Enter the current 6-digit code into \"Aktueller TOTP-Code oder Wiederherstellungscode\" and click \"TOTP deaktivieren\"."
+      expect: "Step 1 shows 'TOTP ist nicht aktiv. …' and the \"TOTP aktivieren\" button. Step 2 shows a 200x200 QR image, a collapsible 'Manueller Schlüssel' with an otpauth://… string, a two-column grid of 10 recovery codes and a confirmation input (maxlength 6). Step 4 switches to 'TOTP ist aktiv. · Verbleibende Wiederherstellungscodes: 10' with the red \"TOTP deaktivieren\" button. Step 5 returns to the 'TOTP ist nicht aktiv' state."
+    notes: "After enrolment the user's next login always includes the OTP step even when the global 2FA switch is off; the password change / TOTP change also invalidates other sessions (tokenVersion bump). Cited tests cover the server confirm/disable endpoints, not the rendered page."
+  - id: UIR-AUTH-026
+    title: "Empty login fields are rejected client-side with a hint"
+    statement: "The login page shows \"Bitte Benutzerkennung und Passwort eingeben.\" when \"Weiter\" is clicked with an empty field and \"Bitte OTP eingeben.\" when \"Anmelden\" is clicked with an empty OTP-Code."
+    status: implemented
+    sources: ["code: src/pages/LoginPage.tsx:52-55,108-111"]
+    evidence:
+      - "src/pages/LoginPage.tsx:52-55 — handleCredentials: !username || !password → setError(t('loginErrorEmpty')) before any fetch"
+      - "src/pages/LoginPage.tsx:108-111 — handleOtp: !otp → setError(t('loginErrorOtp'))"
+      - "src/pages/LoginPage.tsx:188-195,202-208,237-245 — inputs carry no `required` attribute, so the browser does not block submission itself"
+      - "src/i18n/translations.ts:75-79 — loginErrorEmpty 'Bitte Benutzerkennung und Passwort eingeben.', loginErrorOtp 'Bitte OTP eingeben.'"
+    tests: []
+    browser:
+      route: "/login"
+      steps:
+        - "Open /login logged out; leave both fields empty and click \"Weiter\"."
+        - "Type forscher1 into \"Benutzerkennung\", leave \"Passwort\" empty and click \"Weiter\" (watch the devtools Network tab)."
+        - "With 2FA enabled (see UIR-AUTH-012) log in with the correct password, then click \"Anmelden\" with an empty \"OTP-Code\"."
+      expect: "Steps 1 and 2 show the red box 'Bitte Benutzerkennung und Passwort eingeben.' and no request to /api/auth/login is sent; step 3 shows 'Bitte OTP eingeben.' and stays on the OTP step."
+    notes: "Added by the AUTH refute pass: clearly implemented and user-observable, missed by the sweep. No test renders LoginPage."
+  - id: UIR-AUTH-027
+    title: "Rejected token refresh ends the session and redirects to /login"
+    statement: "The UI clears the session and redirects to /login when a silent token refresh is rejected, e.g. after an admin password reset or the 12 h absolute session cap."
+    status: implemented
+    sources: ["code: src/services/authHeaders.ts:103-133,149-181", "uat: sessionTimers UAT-AUTO-05", "manual: docs/Konfiguration.md auth.refreshAbsoluteCapMs"]
+    evidence:
+      - "src/services/authHeaders.ts:149-181 — authFetch: 401 → refreshAccessToken(); refresh failure or retried 401 → handleAuthFailure()"
+      - "src/services/authHeaders.ts:127-133 — handleAuthFailure removes 'emd-token', broadcasts logout, sets window.location.href='/login'"
+      - "server/auth/loginApi.ts:326 — access token TTL 10 min, after which every authFetch triggers a refresh"
+      - "config/settings.yaml:38-39 — refreshTokenTtlMs 8 h, refreshAbsoluteCapMs 12 h"
+      - "src/i18n/translations.ts:687-688 — adminResetPassword 'Passwort zurücksetzen' (confirm text: existing sessions become invalid)"
+    tests:
+      - file: tests/sessionTimers.test.tsx
+        name: "refresh 401 'Session cap exceeded' clears session and redirects to /login"
+      - file: tests/credentialMutationInvalidation.test.ts
+        name: "admin password reset bumps tokenVersion + passwordChangedAt; old refresh → 401"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Log in as forscher1 in browser A and open /cohort."
+        - "In browser B log in as admin, open Verwaltung and use \"Passwort zurücksetzen\" for forscher1 (confirm the dialog)."
+        - "In browser A keep the session active (move the mouse every minute) for a little over 10 minutes so the access token expires, then click \"Analyse\" in the sidebar."
+      expect: "Browser A is redirected to /login on its own (the expired access token triggers a refresh that the server rejects with 401); typing /cohort afterwards also shows /login."
+    notes: "Added by the AUTH refute pass. The redirect happens only when a request is made after the 10-minute access-token TTL; the inactivity timer (default 10 min) must be kept alive meanwhile. Tests cover the client state machine and the server 401; nothing asserts the combined end-to-end flow."

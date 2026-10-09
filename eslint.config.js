@@ -7,7 +7,8 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', '.claude/worktrees/**']),
+  // .claude/workflows/*.js use the Workflow-tool dialect (top-level await/return) — not lintable.
+  globalIgnores(['dist', '.claude/**']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

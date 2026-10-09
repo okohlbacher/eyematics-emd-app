@@ -1,0 +1,918 @@
+# UI requirements registry — area COH. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+area: COH
+requirements:
+  - id: UIR-COH-001
+    title: "Non-admin users see only their assigned centres"
+    statement: "The UI shows a non-admin user only cases from that user's assigned centres: the Kohortenbildung case count and \"Zentren\" filter contain no other centre."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-004 / N10.02", "manual: Benutzerhandbuch §4.1"]
+    evidence:
+      - "server/fhirApi.ts:81-83 (isBypass: only role === 'admin' bypasses)"
+      - "server/fhirApi.ts:396-410 (GET /bundles filtered by req.auth.centers via filterBundlesByCenters)"
+      - "src/context/DataContext.tsx:124-126 (centers = extractCenters(filtered bundles); cases = extractPatientCases(filtered bundles))"
+      - "src/services/fhirLoader.ts:51-75 (centre name = Organization.name of the loaded bundle)"
+      - "src/pages/CohortBuilderPage.tsx:658-680 (\"Zentren\" checkboxes map over centers from context)"
+      - "src/pages/CohortBuilderPage.tsx:945-950 (count from activeCases)"
+      - "data/users.json:24-30 (forscher1 → centers [org-uka])"
+    tests:
+      - file: tests/fhirApi.test.ts
+        name: "Test 1: filterBundlesByCenters() with local bundles filters to user centers only"
+      - file: tests/fhirApi.test.ts
+        name: "Test 4: isBypass() returns false for non-admin even with all 6 org-* centers"
+      - file: tests/centerBypass.test.ts
+        name: "non-admin never bypasses, even with all valid centers"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Log in as forscher1 (single-centre user) and open /cohort."
+        - "Under \"Filterkriterien\" > \"Zentren\" read the listed centre checkboxes."
+        - "Read the header \"Kohorte: N Fälle\" / \"von M Gesamtfällen\" with no filter set."
+        - "Open the Startseite and read the case count of that centre's card."
+        - "Log out, log in as admin, open /cohort and count the \"Zentren\" checkboxes."
+      expect: "forscher1 sees exactly one checkbox \"Universitätsklinikum Aachen\" under \"Zentren\" and M equals the Aachen (UKA) case count on the Startseite; admin sees six centre checkboxes."
+    notes: "Centre list is derived client-side from the server-filtered bundles, so no other centre can appear. The checkbox label is Organization.name (\"Universitätsklinikum Aachen\"), not the shorthand UKA."
+  - id: UIR-COH-002
+    title: "Filter panel offers six filter groups"
+    statement: "The Kohortenbildung page offers the filter groups \"Diagnose\", \"Geschlecht\", \"Zentren\", \"Alter (Jahre)\", \"Visus (0.0 – 1.0)\" and \"Netzhautdicke (µm)\" under \"Filterkriterien\"."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-001 / N02.01", "code: src/pages/CohortBuilderPage.tsx:597-853", "manual: Benutzerhandbuch §4.1"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:597-853 (six labelled groups: t('diagnosis') 600, t('gender') 629, t('centers') 658, t('ageYears') 687, t('visusDecimal') 744, t('retinalThickness') 801)"
+      - "src/i18n/translations.ts:40,43,153-156 (German labels)"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Log in as admin and open /cohort."
+        - "In the left panel titled \"Filterkriterien\" scroll through all groups."
+      expect: "The six group labels \"Diagnose\", \"Geschlecht\", \"Zentren\", \"Alter (Jahre)\", \"Visus (0.0 – 1.0)\" and \"Netzhautdicke (µm)\" are rendered in that order below the \"Schnellauswahl\" presets."
+    notes: "No test asserts the presence of all six groups; the RTL tests only touch age/visus/CRT inputs and preset buttons."
+  - id: UIR-COH-003
+    title: "Diagnosis checkboxes AMD / DR filter the case list"
+    statement: "The user can tick the diagnosis checkboxes \"AMD (Altersbedingte Makuladegeneration)\" and \"Diabetische Retinopathie\" (multi-select) and the case list narrows to cases with a ticked diagnosis."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-002 / N02.02", "manual: Benutzerhandbuch §4.1"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:598-626 (two checkboxes for SNOMED_AMD / SNOMED_DR, array toggle)"
+      - "src/i18n/translations.ts:148-152 (labels 'AMD (Altersbedingte Makuladegeneration)', 'Diabetische Retinopathie')"
+      - "shared/patientCases.ts:139-142 (applyFilters: diagnosis OR within group)"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort, click \"Detailansicht\" and note the count in \"Kohorte: N Fälle\"."
+        - "Under \"Diagnose\" tick only \"AMD (Altersbedingte Makuladegeneration)\" (first checkbox)."
+        - "Read the \"Diagnose\" column of every table row and the new count."
+        - "Additionally tick \"Diabetische Retinopathie\"."
+      expect: "After step 2 the count drops and every row shows an AMD diagnosis; after step 4 the count rises again (OR within diagnosis) and rows show AMD or DR."
+    notes: "Statement sharpened: the first checkbox label is the full \"AMD (Altersbedingte Makuladegeneration)\". tests/ui-requirements.test.ts 'KOH-001/002' re-implements the filter inline and does not exercise the real applyFilters, so it is not cited."
+  - id: UIR-COH-004
+    title: "Gender checkboxes filter the case list"
+    statement: "The user can tick the gender checkboxes (\"Weiblich\", \"Männlich\") and the case list narrows to the selected genders."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-002 / N02.02", "manual: Benutzerhandbuch §4.1"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:627-655 (checkboxes for 'female','male' labelled t('female')/t('male'))"
+      - "src/i18n/translations.ts:34,36 ('Weiblich','Männlich')"
+      - "src/pages/CohortBuilderPage.tsx:1083-1085 (table cell shows femaleShort 'W' / maleShort 'M')"
+      - "shared/patientCases.ts:138 (applyFilters gender predicate)"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort and click \"Detailansicht\"."
+        - "Under \"Geschlecht\" tick only \"Weiblich\"."
+        - "Read the \"Geschlecht\" column of all rows."
+      expect: "Every row shows the female short label \"W\" and the count in \"Kohorte: N Fälle\" is below the unfiltered count."
+    notes: "Labels are capitalised \"Weiblich\" / \"Männlich\" (female listed first). The only gender-filter test (ui-requirements) uses an inline copy of the predicate, not the real code."
+  - id: UIR-COH-005
+    title: "Centre checkboxes filter the case list"
+    statement: "The user can multi-select centres under \"Zentren\" and the case list narrows to cases from the ticked centres."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-002 / N02.02", "manual: Benutzerhandbuch §4.1"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:656-684 (one checkbox per centers entry, filters.centers array)"
+      - "shared/patientCases.ts:137 (applyFilters centers predicate)"
+    tests:
+      - file: tests/cohortPresets.test.ts
+        name: "still filters by centers when no preset"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Log in as admin, open /cohort and click \"Detailansicht\"."
+        - "Under \"Zentren\" tick two centres."
+        - "Read the \"Zentrum\" column of every row and the count line."
+      expect: "Only the two ticked centre names appear in the \"Zentrum\" column and the count changes immediately after each tick."
+    notes: ""
+  - id: UIR-COH-006
+    title: "Age range filter (min–max years)"
+    statement: "The user can enter a minimum and maximum age in years and the case list narrows to cases whose age lies within the range."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-002 / N02.02", "manual: Benutzerhandbuch §4.1"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:685-740 (number inputs Min/Max; ageRange [min, max ?? 120] / [min ?? 0, max])"
+      - "shared/patientCases.ts:143-146 (applyFilters age predicate via getAge)"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort and click \"Detailansicht\"."
+        - "Under \"Alter (Jahre)\" type 60 into \"Min\" and 70 into \"Max\"."
+        - "Read the \"Alter\" column of every row and the count line."
+      expect: "\"Kohorte: N Fälle\" drops and every row shows an age between 60 and 70 inclusive."
+    notes: "tests/cohortFilterPersistence.test.tsx 'typing an age filter writes JSON…' asserts the input binds to ageRange but not the narrowing of the list. Default upper bound when only Min is set is 120."
+  - id: UIR-COH-007
+    title: "Visus range filter accepts comma or dot decimals"
+    statement: "The user can enter a visus range (0.0–1.0, decimal with comma or dot; placeholders \"0,0\" and \"1,0\") and the case list narrows accordingly."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-002 / N02.02", "code: src/pages/CohortBuilderPage.tsx:742-797", "manual: Benutzerhandbuch §4.1"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:742-797 (text inputs inputMode=decimal, placeholders \"0,0\"/\"1,0\", parseFloat(raw.replace(',', '.')))"
+      - "src/pages/CohortBuilderPage.tsx:182-197 (visus text state)"
+      - "shared/patientCases.ts:147-152 (applyFilters visus predicate on latest LOINC_VISUS)"
+    tests:
+      - file: tests/cohortFilterPersistence.test.tsx
+        name: "Reset button also clears visusMinText and visusMaxText"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort and click \"Detailansicht\"; note the count."
+        - "Under \"Visus (0.0 – 1.0)\" type 0,5 into the field with placeholder \"0,0\"."
+        - "Then type 0.3 into the field with placeholder \"1,0\"."
+      expect: "After step 2 the count drops and all rows show Visus ≥ 0.50; after step 3 the red alert \"Untergrenze darf die Obergrenze nicht überschreiten\" appears and the count returns to the unfiltered value (invalid range ignored)."
+    notes: "The cited test types a dot decimal into the \"0,0\" input and asserts the value is accepted; narrowing of the list is not asserted by any test. Cases without a visus observation are excluded whenever a visus range is active."
+  - id: UIR-COH-008
+    title: "CRT (retinal thickness) range filter"
+    statement: "The user can enter a minimum and maximum retinal thickness (µm) under \"Netzhautdicke (µm)\" and the case list narrows to cases within the range."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-002 / N02.02", "manual: Benutzerhandbuch §4.1"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:799-854 (number inputs; crtRange [min, max ?? 800] / [min ?? 0, max])"
+      - "shared/patientCases.ts:153-158 (applyFilters CRT predicate on latest LOINC_CRT)"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort and click \"Detailansicht\"; note the count."
+        - "Under \"Netzhautdicke (µm)\" type 400 into \"Min\"."
+        - "Read the \"CRT (µm)\" column of every row."
+      expect: "The count decreases and every row shows a CRT value ≥ 400 (no \"—\" rows, since cases without CRT are excluded)."
+    notes: "Default upper bound when only Min is set is 800 µm, so values above 800 are also excluded."
+  - id: UIR-COH-009
+    title: "All active filters combine; no filter shows all cases"
+    statement: "The Kohortenbildung page combines all active categorical and range filters (AND) and shows every case of the assigned centres when no filter is set."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-002 / N02.02", "manual: Benutzerhandbuch §4.1, §14"]
+    evidence:
+      - "shared/patientCases.ts:136-230 (applyFilters: sequential guard clauses, any failing predicate excludes the case)"
+      - "src/pages/CohortBuilderPage.tsx:317-325 (filteredCases = applyFilters(activeCases, validFilters))"
+    tests:
+      - file: tests/cohortPresets.test.ts
+        name: "passes all cases when filters is empty"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort, click \"Zurücksetzen\" and read \"Kohorte: N Fälle\"."
+        - "Open the Startseite and read \"Pseudonymisierte Fälle\"."
+        - "Back on /cohort tick \"AMD (Altersbedingte Makuladegeneration)\" and note N1; untick, tick \"Weiblich\" and note N2; untick, tick one centre and note N3."
+        - "Tick all three together."
+      expect: "Step 1 N equals the Startseite count (when no case is excluded on Datenqualität); the combined count in step 4 is ≤ min(N1, N2, N3)."
+    notes: "Startseite \"Pseudonymisierte Fälle\" uses cases.length (src/pages/LandingPage.tsx:52) whereas the cohort total uses activeCases (excluded cases removed), so the two differ by the number of excluded cases."
+  - id: UIR-COH-010
+    title: "Live case count \"Kohorte: N Fälle von M\""
+    statement: "The Kohortenbildung results header shows \"Kohorte: <n> Fälle\" and \"von <total> Gesamtfällen\" and the count and list update live as filters change, with no apply button."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-003 / N02.03", "code: src/pages/CohortBuilderPage.tsx:943-951"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:945-950 (header: t('cohortCases'): {filteredCases.length} t('cases'); t('of') {activeCases.length} t('totalCases'))"
+      - "src/i18n/translations.ts:200-202 ('Kohorte', 'Gesamtfällen', 'von')"
+      - "src/pages/CohortBuilderPage.tsx:317-325 (useMemo recomputes on every filter change)"
+    tests:
+      - file: tests/advancedFilterDialog.test.tsx
+        name: "flaggedQuality preset builds flaggedCaseIds from open qualityFlags"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort and click \"Detailansicht\"."
+        - "Tick one centre checkbox under \"Zentren\" and do not click anything else."
+      expect: "The header line \"Kohorte: N Fälle\" and the sub-line \"von M Gesamtfällen\" are visible; N and the table rows change immediately on the tick; there is no apply button anywhere in the filter panel."
+    notes: "The sub-line reads \"von <total> Gesamtfällen\". The cited test (tests/advancedFilterDialog.test.tsx:414-462) asserts the result count text shows 2 after a preset click without any apply step."
+  - id: UIR-COH-011
+    title: "Inline validation for invalid numeric ranges"
+    statement: "The Kohortenbildung page shows a red role=alert under an age, visus or CRT field whose value is negative, non-numeric, min > max or visus > 1, and ignores that invalid range for the live results."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-002 / N02.02", "code: src/pages/CohortBuilderPage.tsx:247-278,309-315,730-738,787-795,844-852", "uat: v1.10 A-03 / KOH-002"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:247-278 (ageError / visusError / crtError derivations)"
+      - "src/pages/CohortBuilderPage.tsx:309-315 (validFilters strips invalid ranges)"
+      - "src/pages/CohortBuilderPage.tsx:730-740,787-797,844-854 (role=\"alert\" red messages)"
+      - "src/pages/CohortBuilderPage.tsx:917 (\"Kohorte speichern\" disabled while hasAnyFilterError)"
+      - "src/i18n/translations.ts:1101-1106 (German messages)"
+    tests:
+      - file: tests/cohortBuilderValidation.test.tsx
+        name: "age min above age max shows cohortValidationAgeLowerExceedsUpper error and disables Save"
+      - file: tests/cohortBuilderValidation.test.tsx
+        name: "negative age min shows cohortValidationAgeNonNumeric and disables Save"
+      - file: tests/cohortBuilderValidation.test.tsx
+        name: "visus min above 1 shows cohortValidationVisusOutOfRange and disables Save"
+      - file: tests/cohortBuilderValidation.test.tsx
+        name: "CRT min above CRT max shows cohortValidationCrtLowerExceedsUpper and disables Save"
+      - file: tests/cohortBuilderValidation.test.tsx
+        name: "clearing invalid input removes the error"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort and note the unfiltered count."
+        - "Under \"Alter (Jahre)\" type 80 into \"Min\" and 20 into \"Max\"."
+        - "Clear both, then type -5 into \"Min\"."
+        - "Under \"Visus (0.0 – 1.0)\" type 1,5 into the \"0,0\" field."
+      expect: "Step 2: red text \"Untergrenze darf die Obergrenze nicht überschreiten\" under the age fields and the count equals the unfiltered count. Step 3: red \"Ungültige Eingabe: nur Zahlen ≥ 0 erlaubt\". Step 4: red \"Visus muss im Bereich 0–1 liegen\"; \"Kohorte speichern\" is disabled while any alert is shown."
+    notes: "Non-numeric text such as 'abc' cannot be entered into the type=number age/CRT inputs in a browser; the visus text input accepts letters but then simply leaves the range unset (no alert). The cited tests assert the message, role=alert and the disabled save button, not that the live count ignores the invalid range."
+  - id: UIR-COH-012
+    title: "Plausibility warning for out-of-range filter values"
+    statement: "The Kohortenbildung page validates filter values against the configured plausibility ranges and shows a warning for implausible values such as CRT 5000."
+    status: not_implemented
+    sources: ["uat: v1.12 roadmap (plausibility validation, closed by v1.11 Phase 33)"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:247-278 (only rules: ≥ 0, min ≤ max, visus ≤ 1; no upper bound for age/CRT)"
+      - "src/pages/CohortBuilderPage.tsx:318-322 (getSettings() is only read for therapy/CRT-implausibility thresholds; settings.plausibility is never referenced on this page)"
+      - "src/services/settingsService.ts:39-40 (plausibility config exists but is only consumed by SettingsPage/DocQualityPage)"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort."
+        - "Under \"Netzhautdicke (µm)\" type 5000 into \"Max\"."
+        - "Under \"Alter (Jahre)\" type 300 into \"Max\"."
+      expect: "Currently no warning appears for either value; the requirement expects a plausibility warning under the field."
+    notes: "The Phase 33 'plausibility validation' materialised as the structural rules of UIR-COH-011 only. The CFG-02 plausibility ranges (shared/thresholdConfig.ts) are not referenced by the cohort builder."
+  - id: UIR-COH-013
+    title: "\"Zurücksetzen\" clears all filters"
+    statement: "The \"Zurücksetzen\" button clears all filter criteria (including an active preset and advanced filters), restores the full case count and removes the stored filter state."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-002 / N02.02", "code: src/pages/CohortBuilderPage.tsx:68-76,91-104,180-197,856-866"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:856-866 (setFilters({}), clears visus texts, sessionStorage.removeItem('emd-cohort-filters'))"
+      - "src/pages/CohortBuilderPage.tsx:91-104 (empty filter object removes the storage key)"
+    tests:
+      - file: tests/cohortFilterPersistence.test.tsx
+        name: "Reset button clears filters and removes sessionStorage key"
+      - file: tests/cohortFilterPersistence.test.tsx
+        name: "Reset button also clears visusMinText and visusMaxText"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort; click \"Therapie-Abbrecher\", tick \"AMD (Altersbedingte Makuladegeneration)\", type 60 into age \"Min\", open \"Erweiterte Filter\", choose \"OD (rechtes Auge)\" and click \"Filter anwenden\"."
+        - "Click \"Zurücksetzen\"."
+        - "Reload the page."
+      expect: "After step 2 all checkboxes are unticked, all inputs empty, no preset has aria-pressed=true, the \"Erweiterte Filter\" button shows no badge and the count equals the unfiltered total; after reload the page is still empty."
+    notes: "Clicking \"Therapie-Abbrecher\" first and then ticking AMD clears the preset again (UIR-COH-016); the reset still covers every field. The unfiltered total equals Startseite \"Pseudonymisierte Fälle\" only when no case is excluded on Datenqualität (see UIR-COH-009)."
+  - id: UIR-COH-014
+    title: "Filter state survives reload and navigation"
+    statement: "The Kohortenbildung filter state (including visus text) is preserved across a page reload and when the user navigates to Analyse and back."
+    status: implemented
+    sources: ["code: src/pages/CohortBuilderPage.tsx:68-76,91-104,180-197 (sessionStorage 'emd-cohort-filters')", "uat: v1.12 roadmap (filter persistence, closed by v1.11 Phase 33); v1.10 KOH-003 backlog"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:68-76 (lazy init from sessionStorage via safePickCohortFilter)"
+      - "src/pages/CohortBuilderPage.tsx:91-104 (write on every change; Set→array)"
+      - "src/pages/CohortBuilderPage.tsx:182-197 (visus text inputs seeded from restored visusRange)"
+    tests:
+      - file: tests/cohortFilterPersistence.test.tsx
+        name: "on mount, filters initialize from sessionStorage (round-trip)"
+      - file: tests/cohortFilterPersistence.test.tsx
+        name: "typing an age filter writes JSON to sessionStorage under emd-cohort-filters"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort; tick \"AMD (Altersbedingte Makuladegeneration)\", type 60/70 into age, type 0,5 into the visus \"0,0\" field."
+        - "Reload the page."
+        - "Click \"Kohorte analysieren\", then use the browser Back button."
+      expect: "After step 2 and after step 3 the same checkbox, age and visus values (0.5 shown in the visus field) are still set and the count is unchanged."
+    notes: "Persistence is per browser tab (sessionStorage); clearing on logout is UIR-COH-043."
+  - id: UIR-COH-015
+    title: "\"Schnellauswahl\" presets filter with one click"
+    statement: "The Kohortenbildung presets \"Therapie-Abbrecher\", \"Unplausible CRT-Werte\", \"Markierte Qualitätsfälle\" and \"Implausible Visus\" filter with one click (aria-pressed); clicking the active one clears it."
+    status: implemented
+    sources: ["spec: EMDREQ-QUAL-010 / N06.03", "code: src/pages/CohortBuilderPage.tsx:559-595,205-224", "uat: v1.12 roadmap (cohort presets)"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:559-595 (four Buttons, aria-pressed, ring highlight, toggle via applyPreset/clearPreset)"
+      - "src/pages/CohortBuilderPage.tsx:205-224 (applyPreset / clearPreset)"
+      - "shared/patientCases.ts:160-183 (preset predicates incl. therapy-breaker thresholds from settings)"
+      - "src/i18n/translations.ts:1109-1113 (labels)"
+    tests:
+      - file: tests/advancedFilterDialog.test.tsx
+        name: "renders all four preset buttons"
+      - file: tests/advancedFilterDialog.test.tsx
+        name: "clicking a preset sets aria-pressed=true on that button"
+      - file: tests/advancedFilterDialog.test.tsx
+        name: "clicking the active preset again clears it (toggle off)"
+      - file: tests/cohortPresets.test.ts
+        name: "returns only breaker cases"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort and note the unfiltered count."
+        - "Click \"Therapie-Abbrecher\" under \"Schnellauswahl\"."
+        - "Open /quality?therapy=breaker and count the listed cases."
+        - "Back on /cohort click \"Therapie-Abbrecher\" again."
+      expect: "Step 2: button has aria-pressed=\"true\" with a teal ring and the count drops to the number of breaker cases seen in step 3; step 4: aria-pressed=\"false\" and the count returns to the unfiltered total."
+    notes: "The Startseite attention item \"Therapie-Abbrecher\" links to /quality?therapy=breaker (src/pages/QualityPage.tsx:92-95). That list is built from all cases incl. excluded ones (QualityPage.tsx:133-145), so the counts match only when no case is excluded."
+  - id: UIR-COH-016
+    title: "Editing a manual filter clears the active preset"
+    statement: "The Kohortenbildung page clears an active preset whenever the user edits any manual filter (diagnosis, gender, centre, age, visus, CRT)."
+    status: implemented
+    sources: ["code: src/pages/CohortBuilderPage.tsx:280-290"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:281-291 (clearPresetOnManualEdit strips preset + flaggedCaseIds)"
+      - "src/pages/CohortBuilderPage.tsx:608,637,666,700,710,756,776,812,826 (every manual filter onChange routes through clearPresetOnManualEdit)"
+    tests:
+      - file: tests/advancedFilterDialog.test.tsx
+        name: "editing a manual filter field (diagnosis checkbox) clears the active preset"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort and click \"Unplausible CRT-Werte\"."
+        - "Tick \"AMD (Altersbedingte Makuladegeneration)\" under \"Diagnose\"."
+      expect: "Immediately after step 2 the \"Unplausible CRT-Werte\" button has aria-pressed=\"false\" and no ring; only the AMD filter is applied."
+    notes: "Advanced-dialog filters do not clear the preset (they merge via setFilters)."
+  - id: UIR-COH-017
+    title: "\"Markierte Qualitätsfälle\" preset = open quality flags"
+    statement: "The \"Markierte Qualitätsfälle\" preset restricts the cohort to cases that have at least one open quality flag."
+    status: implemented
+    sources: ["code: src/pages/CohortBuilderPage.tsx:205-216"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:205-216 (flaggedCaseIds = open qualityFlags at click time)"
+      - "shared/patientCases.ts:173-175 (applyFilters keeps only ids in flaggedCaseIds)"
+    tests:
+      - file: tests/advancedFilterDialog.test.tsx
+        name: "flaggedQuality preset builds flaggedCaseIds from open qualityFlags"
+      - file: tests/cohortPresets.test.ts
+        name: "returns only cases whose id is in flaggedCaseIds Set"
+    browser:
+      route: "/cohort"
+      steps:
+        - "On /quality flag one case (note its pseudonym) and leave the flag open."
+        - "Open /cohort, click \"Markierte Qualitätsfälle\", then \"Detailansicht\"."
+      expect: "The table lists the flagged pseudonym and only cases with an open flag; the count equals the number of cases with open flags."
+    notes: "The flagged-id set is snapshotted when the preset is clicked; a flag opened afterwards requires re-clicking the preset. Saving this preset and re-running it via \"Ausführen\" or handing it to \"Kohorte analysieren\" is defective — see UIR-COH-035 and UIR-COH-027."
+  - id: UIR-COH-018
+    title: "Excluded cases are absent from the cohort list"
+    statement: "The Kohortenbildung page does not include cases that were excluded on the Datenqualität page."
+    status: implemented
+    sources: ["manual: Benutzerhandbuch §7.4"]
+    evidence:
+      - "src/context/DataContext.tsx:148-152 (activeCases = cases minus excludedCases)"
+      - "src/pages/CohortBuilderPage.tsx:62,317-325,949 (page uses activeCases for list and total)"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort, click \"Detailansicht\" and note the total in \"von M Gesamtfällen\" and the first pseudonym."
+        - "Open /quality, select that pseudonym and exclude it."
+        - "Return to /cohort."
+      expect: "The total M is lower by one and the excluded pseudonym is no longer in the table."
+    notes: "No RTL test renders CohortBuilderPage with a non-empty excludedCases; the exclusion is only covered indirectly through DataContext."
+  - id: UIR-COH-019
+    title: "\"Erweiterte Filter\" opens an accessible modal dialog"
+    statement: "The \"Erweiterte Filter\" button opens a modal titled \"Erweiterte Filterkriterien\" (role=dialog, aria-modal, focus moved inside, Tab trapped) and Escape closes it."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-001 / N02.01", "code: src/pages/AdvancedFilterDialog.tsx:68-106,155-179; src/pages/CohortBuilderPage.tsx:869-894"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:871-883 (button opens dialog)"
+      - "src/pages/AdvancedFilterDialog.tsx:68-94 (Escape → onClose; Tab/Shift+Tab wrap inside dialogRef)"
+      - "src/pages/AdvancedFilterDialog.tsx:96-106 (focus first focusable on open — the X close button)"
+      - "src/pages/AdvancedFilterDialog.tsx:155-170 (role=dialog, aria-modal, aria-labelledby title 'Erweiterte Filterkriterien')"
+    tests:
+      - file: tests/advancedFilterDialog.test.tsx
+        name: "pressing Escape calls onClose"
+      - file: tests/advancedFilterDialog.test.tsx
+        name: "renders advancedFiltersTitle when open=true"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort and click \"Erweiterte Filter\"."
+        - "Press Escape."
+        - "Click \"Erweiterte Filter\" again and press Tab about 20 times."
+      expect: "Step 1: a modal with heading \"Erweiterte Filterkriterien\" appears and the X close button (aria-label \"Änderungen verwerfen\") is focused; step 2: the modal disappears; step 3: focus cycles only among the modal's controls and never reaches the page behind."
+    notes: "Focus move and Tab trapping are not covered by tests."
+  - id: UIR-COH-020
+    title: "Advanced filter dialog sections"
+    statement: "The advanced filter dialog offers diagnosis-subtype checkboxes, a \"Komorbiditäten\" checkbox, \"HbA1c (%)\" min/max, \"Wirkstoff / Medikament\" checkboxes from data and \"Lateralität\" radios OD/OS/OU."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-001 / N02.01", "code: src/pages/AdvancedFilterDialog.tsx:20-30,181-297"]
+    evidence:
+      - "src/pages/AdvancedFilterDialog.tsx:20-30 (six subtype codes)"
+      - "src/pages/AdvancedFilterDialog.tsx:181-297 (five sections: Diagnose-Untertyp, Komorbiditäten/'Hat Komorbiditäten', HbA1c (%) Min/Max, Wirkstoff / Medikament, Lateralität OD/OS/OU)"
+      - "src/i18n/translations.ts:1121-1129 (section and radio labels)"
+      - "src/pages/CohortBuilderPage.tsx:227-244 (medicationOptions derived from activeCases medications)"
+    tests:
+      - file: tests/advancedFilterDialog.test.tsx
+        name: "renders one checkbox per medicationOptions entry"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort and click \"Erweiterte Filter\"."
+        - "Read the section headings and controls top to bottom."
+      expect: "Sections \"Diagnose-Untertyp\" (6 checkboxes), \"Komorbiditäten\" (checkbox \"Hat Komorbiditäten\"), \"HbA1c (%)\" (Min/Max + %), \"Wirkstoff / Medikament\" (one checkbox per medication present in the loaded cases) and \"Lateralität\" (radios \"OD (rechtes Auge)\", \"OS (linkes Auge)\", \"OU (beide Augen)\")."
+    notes: ""
+  - id: UIR-COH-021
+    title: "\"Filter anwenden\" applies and badges active groups"
+    statement: "The UI applies the advanced filters live on \"Filter anwenden\" and renders the \"Erweiterte Filter\" button in accent style with a badge counting the active advanced filter groups."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-001 / N02.01", "code: src/pages/CohortBuilderPage.tsx:292-306,871-882"]
+    evidence:
+      - "src/pages/AdvancedFilterDialog.tsx:118-143 (handleApply → onApply + onClose)"
+      - "src/pages/CohortBuilderPage.tsx:886-894 (onApply merges into filters)"
+      - "src/pages/CohortBuilderPage.tsx:293-307 (hasAdvancedFilters, activeAdvancedCount)"
+      - "src/pages/CohortBuilderPage.tsx:871-883 (variant accent + Badge with count)"
+    tests:
+      - file: tests/advancedFilterDialog.test.tsx
+        name: "clicking Apply with laterality OD calls onApply with laterality=OD"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort, note the count, click \"Erweiterte Filter\"."
+        - "Tick \"AMD trocken / Dry AMD\" and choose \"OD (rechtes Auge)\"."
+        - "Click \"Filter anwenden\"."
+      expect: "The dialog closes, the count decreases immediately and the \"Erweiterte Filter\" button is rendered in accent (teal) style with a badge reading \"2\"."
+    notes: "The badge and accent styling on the page are not asserted by tests; the cited test covers the dialog's onApply payload only."
+  - id: UIR-COH-022
+    title: "Advanced dialog HbA1c rules, clear and discard"
+    statement: "The advanced dialog ignores a single-bound HbA1c, refuses to apply when HbA1c min > max (dialog stays open), \"Felder leeren\" clears the fields and \"Änderungen verwerfen\" closes without applying."
+    status: implemented
+    sources: ["code: src/pages/AdvancedFilterDialog.tsx:108-141,299-310"]
+    evidence:
+      - "src/pages/AdvancedFilterDialog.tsx:108-116 (handleClear)"
+      - "src/pages/AdvancedFilterDialog.tsx:123-135 (both bounds required; min > max returns without apply/close)"
+      - "src/pages/AdvancedFilterDialog.tsx:299-310 (footer buttons 'Felder leeren', 'Änderungen verwerfen', 'Filter anwenden')"
+    tests:
+      - file: tests/advancedFilterDialog.test.tsx
+        name: "clicking Clear resets fields without closing (onApply/onClose not fired)"
+      - file: tests/advancedFilterDialog.test.tsx
+        name: "clicking Discard calls onClose without onApply"
+      - file: tests/advancedFilterDialog.test.tsx
+        name: "clicking Apply with HbA1c min/max calls onApply with hba1cRange"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort, click \"Erweiterte Filter\", type 9 into HbA1c Min and 7 into Max, click \"Filter anwenden\"."
+        - "Clear Max so only Min=9 remains, click \"Filter anwenden\"."
+        - "Reopen the dialog, tick a subtype, click \"Felder leeren\", then tick a subtype again and click \"Änderungen verwerfen\"."
+      expect: "Step 1: dialog stays open, nothing applied. Step 2: dialog closes and the \"Erweiterte Filter\" button shows no badge (HbA1c ignored). Step 3: \"Felder leeren\" unticks everything while the dialog stays open; \"Änderungen verwerfen\" closes it and the count/badge are unchanged."
+    notes: "The min > max block gives no visible message (silent block); the single-bound and min > max rules are not covered by tests."
+  - id: UIR-COH-023
+    title: "Toggle between \"Zusammenfassung\" and \"Detailansicht\""
+    statement: "The results panel defaults to a summary (age range, visus range, centres) and the \"Detailansicht\" button toggles a case table; its label flips to \"Zusammenfassung\"."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-003 / N02.03", "code: src/pages/CohortBuilderPage.tsx:953-970,1004-1033"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:199 (showDetailedView default false)"
+      - "src/pages/CohortBuilderPage.tsx:954-971 (toggle button; label summaryView/detailedView; blue when detailed)"
+      - "src/pages/CohortBuilderPage.tsx:1004-1033 (summary cards 'Altersbereich', 'Visusbereich', 'Zentren')"
+      - "src/pages/CohortBuilderPage.tsx:1035-1112 (table)"
+      - "src/i18n/translations.ts:207-212 (labels incl. 'Keine Fälle ausgewählt')"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort."
+        - "Click \"Detailansicht\"."
+        - "Click \"Zusammenfassung\"."
+      expect: "Initially three cards \"Altersbereich\", \"Visusbereich\", \"Zentren\" are shown; after step 2 they are replaced by a table and the button reads \"Zusammenfassung\" (blue); after step 3 the cards return and the button reads \"Detailansicht\"."
+    notes: "With an empty cohort the summary shows \"Keine Fälle ausgewählt\" instead of cards."
+  - id: UIR-COH-024
+    title: "Detail table columns per case"
+    statement: "The \"Detailansicht\" table shows one row per case with the columns Pseudonym, Geschlecht, Alter, Diagnose, Visus, CRT (µm) and Zentrum."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-003 / N02.03", "code: src/pages/CohortBuilderPage.tsx:1038-1108", "manual: Benutzerhandbuch §4.2"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:1038-1064 (thead: pseudonym, gender, age, diagnosis, visus, 'CRT (µm)', center)"
+      - "src/pages/CohortBuilderPage.tsx:1066-1108 (one tr per filteredCases entry)"
+      - "src/i18n/translations.ts:38,41,43,204-205 ('Alter', 'Zentrum', 'Geschlecht', 'Pseudonym', 'Visus')"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort and click \"Detailansicht\"."
+        - "Read the column headers and count the rows."
+      expect: "Headers read PSEUDONYM, GESCHLECHT, ALTER, DIAGNOSE, VISUS, CRT (µM), ZENTRUM (uppercase styling) and the row count equals N in \"Kohorte: N Fälle\"."
+    notes: ""
+  - id: UIR-COH-025
+    title: "Table row opens the Fallansicht; diagnosis chip tooltip"
+    statement: "The user can click a row in the detail table to open /case/<id> for that pseudonym, and hovering a diagnosis chip shows the full term as a tooltip."
+    status: implemented
+    sources: ["code: src/pages/CohortBuilderPage.tsx:1078-1082,1093-1095,53-60", "manual: Benutzerhandbuch §4.2"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:1078-1082 (tr onClick navigate(`/case/${c.id}`), cursor-pointer)"
+      - "src/pages/CohortBuilderPage.tsx:53-60 (DiagnosisCodeChip renders title={fullText} with dotted underline)"
+      - "src/pages/CohortBuilderPage.tsx:1093-1095 (chips per diagnosis code)"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort and click \"Detailansicht\"."
+        - "Hover the diagnosis text of the first row for about one second."
+        - "Click anywhere in the first row and compare the pseudonym."
+      expect: "Step 2: a native tooltip with the full diagnosis term appears; step 3: the URL becomes /case/<id> and the Fallansicht header shows the same pseudonym as the clicked row."
+    notes: "The tooltip is a native title attribute (no custom tooltip component)."
+  - id: UIR-COH-026
+    title: "CSV / JSON export of the filtered cohort"
+    statement: "The user can download the filtered cohort via the \"CSV\" / \"JSON\" buttons (tooltips \"Als CSV\" / \"Als JSON\"; file cohort-export-<date>) in pseudonymous form; both are disabled when the cohort is empty."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-007 / N08.01", "code: src/pages/CohortBuilderPage.tsx:372-404,972-989"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:372-404 (handleExportCsv headers Pseudonym/Gender/Age/Diagnosis/Visus/CRT/Center; handleExportJson)"
+      - "src/pages/CohortBuilderPage.tsx:972-990 (buttons labelled CSV / JSON, title downloadCsv/downloadJson, disabled when filteredCases.length === 0)"
+      - "src/utils/download.ts:52-54 (datedFilename → cohort-export-YYYY-MM-DD.ext)"
+      - "src/i18n/translations.ts:449-450 ('Als CSV', 'Als JSON')"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort, set a filter and note N in \"Kohorte: N Fälle\"."
+        - "Click the \"CSV\" button (tooltip \"Als CSV\") and open the downloaded file."
+        - "Set age Min 200 so the cohort is empty."
+      expect: "Step 2: a file cohort-export-<today>.csv downloads with N data rows and only pseudonyms (no names); step 3: both \"CSV\" and \"JSON\" buttons are disabled (greyed)."
+    notes: "The visible button labels are \"CSV\" and \"JSON\"; \"Als CSV\"/\"Als JSON\" are their title tooltips. The JSON export contains the full conditions/observations/procedures/medications per case."
+  - id: UIR-COH-027
+    title: "\"Kohorte analysieren\" opens Analyse with the cohort"
+    statement: "The \"Kohorte analysieren\" button navigates to /analysis?filters=<json> with the same case count and a synthesized cohort name, and is disabled when the cohort is empty."
+    status: partial
+    sources: ["code: src/pages/CohortBuilderPage.tsx:990-1000", "manual: Benutzerhandbuch §4.4, §5"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:991-1001 (navigate('/analysis?filters=' + JSON.stringify(filters)); disabled when empty)"
+      - "src/pages/AnalysisPage.tsx:114-119,128-144 (parseCohortFilterJson; displayCohortName = 'Gefilterte Kohorte · <summary>')"
+      - "src/pages/AnalysisPage.tsx:147-153 (applyFilters(activeCases, filters) → same count for ordinary filters)"
+      - "src/utils/cohortFilterSerialization.ts:41 (flaggedCaseIds only rehydrated from an array; JSON.stringify(Set) yields {} so it is dropped)"
+      - "shared/patientCases.ts:173-175 (preset flaggedQuality with flaggedCaseIds undefined excludes every case → Analyse shows 0 cases)"
+    tests:
+      - file: tests/AnalysisPage.test.tsx
+        name: "?filters= without ?name=: header shows \"Filtered cohort\" (English locale)"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort, tick \"AMD (Altersbedingte Makuladegeneration)\" and note N."
+        - "Click \"Kohorte analysieren\"."
+        - "Back on /cohort, click \"Zurücksetzen\", click \"Markierte Qualitätsfälle\" (with at least one open flag) and note N2; click \"Kohorte analysieren\"."
+        - "Back on /cohort, set age Min 200 (empty cohort) and look at the button."
+      expect: "Step 2: URL becomes /analysis?filters=%7B%22diagnosis%22… and the Analyse header shows a name starting with \"Gefilterte Kohorte\" with a case count equal to N. Step 3 (expected N2 cases; observed 0 cases because flaggedCaseIds is serialised as {}). Step 4: \"Kohorte analysieren\" is disabled."
+    notes: "Downgraded to partial: the button serialises the raw filters with JSON.stringify, which turns the flaggedCaseIds Set into {}; verified by probe (parseCohortFilterJson → flaggedCaseIds undefined → applyFilters count 0 vs 1 on the cohort page). Raw (not validFilters) serialisation also means a still-typed invalid range can change the Analyse count."
+  - id: UIR-COH-028
+    title: "Save current filters as a named search"
+    statement: "The user can save the current filter definition under a free name via \"Kohorte speichern\"; it appears in \"Gespeicherte Suchen\" with today's date and only the definition, not the result set, is stored."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-004 / N02.16", "manual: Benutzerhandbuch §4.3", "code: src/pages/CohortBuilderPage.tsx:124-178,903-935"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:343-363 (handleSave posts name + validFilters only)"
+      - "src/context/DataContext.tsx:159-171 (POST /api/data/saved-searches, adopts server record)"
+      - "server/dataApi.ts:192-256 (server generates id/createdAt, stores sanitized filters)"
+      - "src/pages/CohortBuilderPage.tsx:459-466 (list row shows name + formatDate(createdAt))"
+      - "src/i18n/translations.ts:157-159 (placeholder 'z.B. AMD Kohorte 2026', 'Kohorte speichern')"
+    tests:
+      - file: tests/dataApiSavedSearch.test.ts
+        name: "(a) server ignores client-supplied id and createdAt; generates its own"
+      - file: tests/dataDb.test.ts
+        name: "adds and retrieves a search"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort, tick \"AMD (Altersbedingte Makuladegeneration)\", type \"AMD Test\" into the field with placeholder \"z.B. AMD Kohorte 2026\" and click \"Kohorte speichern\"."
+        - "Click \"Gespeicherte Suchen (n)\"."
+        - "Reload the page and open the panel again."
+      expect: "The panel lists \"AMD Test\" with today's date (de format) after step 2 and still after the reload; the name input is empty after saving."
+    notes: "The cited tests cover the server-side persistence contract; no RTL test clicks \"Kohorte speichern\" and asserts the new list row."
+  - id: UIR-COH-029
+    title: "Cohort name validation: duplicates and colon forms"
+    statement: "The name input validates live: duplicates (\"Dieser Name ist bereits vergeben\") and bad colon forms show a red role=alert and disable save; an orphan \"Unknown:sub\" shows an amber role=status warning."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-004 / N02.16", "code: src/pages/CohortBuilderPage.tsx:124-178,903-935"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:124-178 (live validation: too many colons, empty parent/sub, duplicate, orphan)"
+      - "src/pages/CohortBuilderPage.tsx:915-935 (save disabled on hard error; role alert vs status, red vs amber)"
+      - "src/services/cohortNames.ts (isDuplicateName, parseSubcohortName)"
+      - "src/i18n/translations.ts:192-196 (messages)"
+    tests:
+      - file: tests/cohortBuilderEntryPoints.test.tsx
+        name: "SC1 (duplicate name): shows cohortNameDuplicate error and disables Save cohort button"
+      - file: tests/cohortBuilderEntryPoints.test.tsx
+        name: "SC1 (too many colons): shows cohortNameTooManyColons error and disables Save cohort button"
+      - file: tests/cohortBuilderEntryPoints.test.tsx
+        name: "SC5 (orphan warning): shows cohortNameOrphanWarning but Save cohort button stays ENABLED"
+      - file: tests/cohortNames.test.ts
+        name: "treats \"c1:male \" as a duplicate of \"C1:Male\""
+    browser:
+      route: "/cohort"
+      steps:
+        - "With a saved search \"AMD Test\" present, type \"amd test\" into the cohort name field."
+        - "Clear it and type \"A:B:C\"."
+        - "Clear it and type \"Unknown:sub\"."
+      expect: "Step 1: red text \"Dieser Name ist bereits vergeben\" and \"Kohorte speichern\" disabled; step 2: red \"Name darf nur einen Doppelpunkt enthalten\", disabled; step 3: amber \"Übergeordnete Kohorte nicht gefunden – Speichern trotzdem möglich\" and the button enabled."
+    notes: "Tests assert text and disabled state, not the role=alert/status attributes."
+  - id: UIR-COH-030
+    title: "Cohort name input is legible in both themes"
+    statement: "The cohort name input shows typed text left-aligned in a readable colour in both themes and the cursor does not stay stuck at the left edge."
+    status: implemented
+    sources: ["uat: v1.10 KOH-002"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:912 (className text-left text-gray-900 dark:text-white dark:bg-gray-700)"
+      - "src/pages/CohortBuilderPage.tsx:106-120 (cursor placed at end after split prefill)"
+      - "src/components/Layout.tsx:121 (ThemeToggle in the sidebar; menu \"Design\" with \"Hell\" / \"Dunkel\" / \"System\")"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "In light theme type \"Test Kohorte\" into the cohort name field."
+        - "Open the sidebar \"Design\" menu, choose \"Dunkel\" and type further characters."
+        - "Click \"Als Unterkohorte aufteilen\" on a saved search."
+      expect: "Text is left-aligned and dark-on-light in light mode, white-on-grey in dark mode; the caret follows the typed text; after step 3 the caret sits after the prefilled \"Name:\"."
+    notes: "Visual property; no automated test. Step 2 corrected: the theme switch is the sidebar \"Design\" menu (see THEME registry), not an account menu."
+  - id: UIR-COH-031
+    title: "Saved searches are per user and server-side"
+    statement: "The UI keeps saved searches per user on the server so they are visible after login from another browser and invisible to other users."
+    status: implemented
+    sources: ["manual: Benutzerhandbuch §1.3, §4.3"]
+    evidence:
+      - "server/dataApi.ts:157-189 (GET /saved-searches scoped by req.auth.preferred_username)"
+      - "server/dataDb.ts:59-66,83-101 (saved_searches PK (username, id))"
+      - "src/context/DataContext.tsx:120,128 (loaded from /api/data/saved-searches on login)"
+    tests:
+      - file: tests/dataDb.test.ts
+        name: "isolates by username (IDOR fix)"
+      - file: tests/dataApiSavedSearch.test.ts
+        name: "(a) scopes the DB update by the authenticated username (no client trust)"
+    browser:
+      route: "/cohort"
+      steps:
+        - "As forscher1 save a search \"Browser A\" on /cohort."
+        - "In a private window log in as forscher1 and open /cohort > \"Gespeicherte Suchen (n)\"."
+        - "In the private window log out, log in as admin and open the same panel."
+      expect: "Step 2 lists \"Browser A\"; step 3 does not list it (admin sees only admin's own searches)."
+    notes: ""
+  - id: UIR-COH-032
+    title: "No quality-check checklist; new cohort has all checks on"
+    statement: "The Kohortenbildung page shows no \"Qualitätsprüfungen\" checklist, and a newly saved cohort defaults to all quality checks enabled on Datenqualität."
+    status: implemented
+    sources: ["uat: v1.13 C2; confirmed by tester in v1.14"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:80-82,355-360 (C2 comment; handleSave omits qualityParams)"
+      - "server/dataApi.ts:272-300 (checklist edited via PATCH from Datenqualität only)"
+      - "src/pages/QualityPage.tsx:375-390 (checklist lives on QualityPage)"
+    tests:
+      - file: tests/qualityCohortScope.test.tsx
+        name: "(b) qualityParams=undefined → all applicable anomaly checks run (fallback)"
+      - file: tests/dataApiSavedSearch.test.ts
+        name: "(c3) absent qualityParams stores NULL (all default checks)"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open /cohort and scan the whole page for a checklist of quality checks."
+        - "Save a new cohort \"Checks Test\"."
+        - "Open /quality and choose \"Checks Test\" in the \"Kohorte\" dropdown."
+      expect: "Step 1: no checklist on Kohortenbildung; step 3: every quality-check checkbox on Datenqualität is ticked for the new cohort."
+    notes: ""
+  - id: UIR-COH-033
+    title: "\"Gespeicherte Suchen (n)\" panel lists saved searches"
+    statement: "The \"Gespeicherte Suchen (n)\" button toggles a panel headed \"Gespeicherte Suchdefinitionen\" listing each saved search with name and creation date (panel appears only when n > 0)."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-005 / N09.01", "code: src/pages/CohortBuilderPage.tsx:421-467"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:421-434 (toggle button with count)"
+      - "src/pages/CohortBuilderPage.tsx:437-467 (panel rendered when showSaved && savedSearches.length > 0; header t('savedSearchDefs'); rows with name + formatDate)"
+      - "src/i18n/translations.ts:142-146 ('Gespeicherte Suchen', 'Gespeicherte Suchdefinitionen')"
+    tests:
+      - file: tests/cohortBuilderEntryPoints.test.tsx
+        name: "per-row LineChart button navigates to /analysis?tab=trajectories&cohort=<id>"
+    browser:
+      route: "/cohort"
+      steps:
+        - "With at least one saved search, open /cohort and click \"Gespeicherte Suchen (n)\" at the top right."
+        - "Click it again."
+      expect: "Step 1: a panel headed \"Gespeicherte Suchdefinitionen\" opens listing n rows, each with a name and a date; the button count equals the row count; step 2: the panel closes."
+    notes: "The count is in the toggle button, the panel header is \"Gespeicherte Suchdefinitionen\", and with zero saved searches the click shows nothing. The cited test opens the panel via the \"(1)\" button and asserts the saved name is visible before clicking the row action."
+  - id: UIR-COH-034
+    title: "Sort saved searches \"Nach Datum\" / \"Nach Name\""
+    statement: "The user can toggle the saved-search ordering between \"Nach Datum\" and \"Nach Name\" and the list re-sorts."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-005 / N09.02", "code: src/pages/CohortBuilderPage.tsx:443-460"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:443-452 (toggle button; label shows current mode, title shows the other)"
+      - "src/pages/CohortBuilderPage.tsx:454-460 (sort: name localeCompare vs createdAt descending)"
+      - "src/i18n/translations.ts:552-553 ('Nach Datum', 'Nach Name')"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Have at least three saved searches with different names and creation dates; open \"Gespeicherte Suchen (n)\"."
+        - "Read the order (button reads \"Nach Datum\" = newest first)."
+        - "Click the \"Nach Datum\" button."
+      expect: "After step 3 the button reads \"Nach Name\" and rows are ordered alphabetically; clicking again restores newest-first with the label \"Nach Datum\"."
+    notes: "The button text shows the active sort mode, not the target mode."
+  - id: UIR-COH-035
+    title: "\"Ausführen\" re-applies a saved search"
+    statement: "The user can re-execute a saved search via \"Ausführen\"; its filters are loaded into the filter panel and applied to the current data."
+    status: partial
+    sources: ["spec: EMDREQ-KOH-006 / N09.03", "manual: Benutzerhandbuch §4.3", "code: src/pages/CohortBuilderPage.tsx:365-369,513-519"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:365-369 (handleLoadSearch: setFilters(s.filters) raw; closes panel; does NOT set visusMinText/visusMaxText; does NOT pass through safePickCohortFilter)"
+      - "src/pages/CohortBuilderPage.tsx:513-519 (Play button title 'Ausführen')"
+      - "src/pages/CohortBuilderPage.tsx:182-197 (visus text state only seeded from sessionStorage on mount)"
+      - "server/dataApi.ts:157-189 + shared/savedSearchSanitize.ts:59-62 (server returns flaggedCaseIds as string[] wire form)"
+      - "shared/patientCases.ts:174 (applyFilters calls filters.flaggedCaseIds?.has → TypeError on an array; probe-verified: 'filters.flaggedCaseIds?.has is not a function')"
+      - "src/pages/QualityPage.tsx:140 (contrast: QualityPage rehydrates via safePickCohortFilter before applyFilters)"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Save a search \"Visus Test\" with \"AMD (Altersbedingte Makuladegeneration)\" ticked and visus 0,2–0,6."
+        - "Click \"Zurücksetzen\"."
+        - "Open \"Gespeicherte Suchen (n)\" and click the \"Ausführen\" (play) icon on \"Visus Test\"."
+        - "Click \"Zurücksetzen\", click \"Markierte Qualitätsfälle\" (≥1 open flag), save as \"Flag Test\", click \"Zurücksetzen\", then \"Ausführen\" on \"Flag Test\"."
+      expect: "Step 3 expected: AMD ticked, visus fields show 0.2 and 0.6 and the count matches. Observed: AMD ticked and the count matches, but both visus fields stay empty although the range is applied. Step 4 expected: preset active with the flagged count. Observed: the page crashes (error boundary) with a TypeError."
+    notes: "Two defects: (1) handleLoadSearch does not update visusMinText/visusMaxText; (2) it passes the server's wire-form filters (flaggedCaseIds as array) straight into applyFilters, which calls Set.has — a saved \"Markierte Qualitätsfälle\" search cannot be re-executed. Checkbox, age and CRT inputs populate correctly."
+  - id: UIR-COH-036
+    title: "\"Löschen\" removes a saved search everywhere"
+    statement: "The user can delete a saved search via \"Löschen\"; it disappears from \"Gespeicherte Suchen\", stays gone after reload and is removed from cohort selectors elsewhere."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-005 / N09.01", "manual: Benutzerhandbuch §4.3", "code: src/pages/CohortBuilderPage.tsx:520-526"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:520-526 (Trash button title 'Löschen' → removeSavedSearch)"
+      - "src/context/DataContext.tsx:194-199 (optimistic removal + DELETE /api/data/saved-searches/:id)"
+      - "server/dataApi.ts:259-265 (delete scoped by username)"
+      - "src/pages/QualityPage.tsx:345-362 (\"Kohorte\" dropdown maps the same savedSearches)"
+    tests:
+      - file: tests/dataDb.test.ts
+        name: "removes a search"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open \"Gespeicherte Suchen (n)\" and click the red \"Löschen\" (trash) icon on \"AMD Test\"."
+        - "Reload /cohort and reopen the panel."
+        - "Open /quality and open the \"Kohorte\" dropdown."
+      expect: "\"AMD Test\" is gone immediately, still gone after reload (count n−1) and absent from the Datenqualität \"Kohorte\" dropdown."
+    notes: "No confirmation prompt before deletion."
+  - id: UIR-COH-037
+    title: "\"Outcomes anzeigen\" opens Verläufe for the cohort"
+    statement: "The \"Outcomes anzeigen\" action on a saved search opens Analyse → Verläufe scoped to that cohort (/analysis?tab=trajectories&cohort=<id>) with the cohort name in the header."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-006 / N09.03", "code: src/pages/CohortBuilderPage.tsx:504-512"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:504-512 (LineChart button aria-label 'Outcomes anzeigen' → navigate(/analysis?tab=trajectories&cohort=<id>))"
+      - "src/pages/AnalysisPage.tsx:97-119,128-130 (resolves ?cohort= to the saved search; displayCohortName = its name)"
+      - "src/components/outcomes/useOutcomesRouteState.ts:106-118 (resolveCohort applies saved.filters)"
+    tests:
+      - file: tests/cohortBuilderEntryPoints.test.tsx
+        name: "per-row LineChart button navigates to /analysis?tab=trajectories&cohort=<id>"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open \"Gespeicherte Suchen (n)\" and click the violet line-chart icon (tooltip \"Outcomes anzeigen\") on a saved search."
+      expect: "The URL becomes /analysis?tab=trajectories&cohort=<id>, the \"Verläufe\" tab is active and the Analyse header shows the saved search's name."
+    notes: "Known gap for the TRAJ/AGG sweeps: resolveCohort (useOutcomesRouteState.ts:116) and AnalysisPage.tsx:117 apply saved.filters without safePickCohortFilter, so a saved \"Markierte Qualitätsfälle\" cohort hits the same Set.has TypeError as UIR-COH-035 when opened here."
+  - id: UIR-COH-038
+    title: "\"Als Unterkohorte aufteilen\" creates one Parent:Sub"
+    statement: "The user can create a single sub-cohort of a saved cohort via \"Als Unterkohorte aufteilen\" (prefills \"Name:\"); it is named \"Parent:Sub\" (one level) and nested under the parent in the compare drawer."
+    status: implemented
+    sources: ["uat: v1.10 KOH-003 / ANL-002 (Phase 31)", "uat: v1.13 C3 / DECISIONS", "code: src/pages/CohortBuilderPage.tsx:488-503"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:488-503 (GitBranch button prefills `${name}:` and focuses the input)"
+      - "src/pages/CohortBuilderPage.tsx:106-120,124-178 (cursor at end; one-colon rule enforced)"
+      - "src/components/outcomes/CohortCompareDrawer.tsx:53 (groupByParent nests Parent:Sub rows)"
+      - "src/i18n/translations.ts:160 ('Als Unterkohorte aufteilen')"
+    tests:
+      - file: tests/cohortBuilderEntryPoints.test.tsx
+        name: "SC5 (Split pre-fill): clicking Split button pre-fills name input with \"ParentName:\""
+      - file: tests/cohortCompareDrawer.test.tsx
+        name: "SC2: subcohort row \"Cohort1:Male\" renders beneath the parent"
+      - file: tests/cohortNames.test.ts
+        name: "SC4: throws for a name with two or more colons"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open \"Gespeicherte Suchen (n)\" and click the teal branch icon (tooltip \"Als Unterkohorte aufteilen\") on \"AMD Test\"."
+        - "Type \"Jung\" after the prefilled \"AMD Test:\", tick \"Weiblich\", click \"Kohorte speichern\"."
+        - "Open /analysis?tab=trajectories&cohort=<id of AMD Test> and click \"Kohorten vergleichen\"."
+      expect: "Step 1: name input shows \"AMD Test:\" with the caret at the end; step 2: entry \"AMD Test:Jung\" appears in the list; step 3: \"AMD Test:Jung\" is indented beneath \"AMD Test\" in the compare drawer."
+    notes: "The sub-cohort row in the Kohortenbildung list itself is flat (see UIR-COH-041). Evidence line corrected: groupByParent is called at CohortCompareDrawer.tsx:53."
+  - id: UIR-COH-039
+    title: "\"Kohorte aufteilen\" dialog with attribute and preview"
+    statement: "The \"Kohorte aufteilen\" action (hidden for sub-cohorts) opens a dialog with parent select, six \"Aufteilen nach\" attributes, quantile groups 2–6 or \"Eigene Grenzwerte\" and a live \"Vorschau\"."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-003 / N02.15", "uat: v1.13 C3; confirmed by tester in v1.14", "code: src/pages/CohortSplitDialog.tsx:264-431"]
+    evidence:
+      - "src/pages/CohortBuilderPage.tsx:474-487 (split icon only for !isSubcohortName)"
+      - "src/pages/CohortSplitDialog.tsx:264-282 (parent select, plain cohorts only)"
+      - "src/pages/CohortSplitDialog.tsx:285-315 (attribute select, 3 categorical + 3 range)"
+      - "src/pages/CohortSplitDialog.tsx:318-375 (radio Quantile / 'Eigene Grenzwerte'; groups input min 2 max 6)"
+      - "src/pages/CohortSplitDialog.tsx:378-412 (live 'Vorschau' list with counts)"
+      - "src/i18n/translations.ts:162-182 (labels incl. cohortSplitAttrCrt 'Netzhautdicke (CRT)')"
+    tests:
+      - file: tests/cohortSplitDialog.test.tsx
+        name: "switching to age + custom cut points previews 3 bins"
+      - file: tests/cohortSplit.test.ts
+        name: "CRT tertiles split a spread cohort into 3 non-empty roughly-equal bins"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Open \"Gespeicherte Suchen (n)\"; note that rows named \"Parent:Sub\" have no green split icon."
+        - "Click the green split icon (tooltip \"Kohorte aufteilen\") on a plain cohort."
+        - "Under \"Aufteilen nach\" choose \"Alter\", keep \"Quantile (gleich große Gruppen)\" and set \"Anzahl Gruppen\" to 3."
+      expect: "A modal \"Kohorte aufteilen\" with \"Übergeordnete Kohorte\" select, \"Aufteilen nach\" select (Geschlecht, Diagnose, Zentrum, Alter, Visus, Netzhautdicke (CRT)), \"Bereichsmodus\" radios and a \"Vorschau\" listing three \"Parent:<range>\" rows with roughly equal counts."
+    notes: "Attribute label corrected: the CRT option reads \"Netzhautdicke (CRT)\" (translations.ts:175), not \"CRT\"."
+  - id: UIR-COH-040
+    title: "Categorical split yields one sub-cohort per value"
+    statement: "The \"Kohorte aufteilen\" dialog splits by Geschlecht, Diagnose or Zentrum into one sub-cohort per value in one step, previewing each group's count."
+    status: implemented
+    sources: ["uat: v1.13 C3; confirmed by tester in v1.14"]
+    evidence:
+      - "src/pages/CohortSplitDialog.tsx:138-158 (categorical spec; preview via computeSplitGroups)"
+      - "shared/cohortSplit.ts (computeSplitGroups categorical: one group per distinct value)"
+      - "src/pages/CohortSplitDialog.tsx:400-416 (preview rows: '<Parent>:<label>' left, '<n> Fälle' right)"
+    tests:
+      - file: tests/cohortSplitDialog.test.tsx
+        name: "previews gender groups with counts (default attribute = gender)"
+      - file: tests/cohortSplit.test.ts
+        name: "gender: one group per distinct value, child filter intersects parent"
+      - file: tests/cohortSplit.test.ts
+        name: "center: one group per distinct centerId present"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Click the green split icon on a plain cohort."
+        - "Keep \"Aufteilen nach\" = \"Geschlecht\" and read the \"Vorschau\"."
+      expect: "Two preview rows \"<Parent>:Weiblich\" and \"<Parent>:Männlich\" each followed by \"<n> Fälle\", before any confirm."
+    notes: ""
+  - id: UIR-COH-041
+    title: "Split confirm creates Parent:Group sub-cohorts"
+    statement: "The split dialog disables \"Unterkohorten erstellen\" unless ≥2 non-empty groups exist and on confirm creates \"Parent:Group\" sub-cohorts in \"Gespeicherte Suchen\" (flat list), each runnable or deletable."
+    status: implemented
+    sources: ["spec: EMDREQ-KOH-003 / N02.06", "uat: v1.13 C3 / DECISIONS", "code: src/pages/CohortSplitDialog.tsx:160-186,435-447"]
+    evidence:
+      - "src/pages/CohortSplitDialog.tsx:160-163 (canConfirm requires ≥2 non-empty groups)"
+      - "src/pages/CohortSplitDialog.tsx:165-186 (buildChildName Parent:label; addSavedSearch per group)"
+      - "src/pages/CohortSplitDialog.tsx:435-447 (confirm button 'Unterkohorten erstellen' disabled={!canConfirm})"
+      - "src/pages/CohortBuilderPage.tsx:453-530 (saved list is flat; each row has Ausführen + Löschen)"
+    tests:
+      - file: tests/cohortSplitDialog.test.tsx
+        name: "confirm creates one child per non-empty group with intersected filters"
+      - file: tests/cohortSplit.test.ts
+        name: "returns Parent:Sub when free"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Click the split icon on a plain cohort \"P\", choose \"Geschlecht\" and click \"Unterkohorten erstellen\"."
+        - "Return to /cohort, open \"Gespeicherte Suchen (n)\" and switch to \"Nach Name\"."
+        - "Click \"Ausführen\" on \"P:Weiblich\", then \"Löschen\" on \"P:Männlich\"."
+      expect: "Rows \"P:Männlich\" and \"P:Weiblich\" appear directly after \"P\"; \"Ausführen\" loads the female + parent filters (count matches the preview); \"Löschen\" removes the row. With a parent whose preview has <2 non-empty groups, \"Unterkohorten erstellen\" is disabled."
+    notes: "The Kohortenbildung list does not nest children; nesting exists only in the Verläufe compare drawer. The confirm label is \"Unterkohorten erstellen\". Adjacency under \"Nach Name\" holds unless another cohort name sorts between \"P\" and \"P:…\"."
+  - id: UIR-COH-042
+    title: "After split, Verläufe compare opens with children preselected"
+    statement: "The UI opens Analyse → Verläufe in compare mode after \"Kohorte aufteilen\" with the sub-cohorts pre-selected (max 4) and the parent unselected but selectable; nothing is locked."
+    status: implemented
+    sources: ["uat: v1.15 J7; confirmed by tester in v1.16", "code: src/pages/CohortSplitDialog.tsx:188-227 (/analysis?tab=trajectories&cohorts=…&compare=open)"]
+    evidence:
+      - "src/pages/CohortSplitDialog.tsx:188-227 (await created ids; slice(0, COMPARE_LIMIT=4); navigate with ?cohorts= and compare=open, no ?cohort=)"
+      - "src/components/outcomes/useOutcomesRouteState.ts:155-168 (crossCohortIds from ?cohorts, cap 4)"
+      - "src/components/outcomes/useOutcomesRouteState.ts:188-190 (compareOpen from ?compare=open)"
+      - "src/components/outcomes/CohortCompareDrawer.tsx:42,68,85 (only primaryCohortId is locked; null here)"
+    tests:
+      - file: tests/cohortSplitDialog.test.tsx
+        name: "pre-selects the SUB-cohorts in compare"
+      - file: tests/cohortSplitDialog.test.tsx
+        name: "caps the pre-selection at the compare limit (first 4) and logs the rest"
+      - file: tests/cohortCompareDrawer.test.tsx
+        name: "J7: with no primary, all pre-selected sub-cohorts are checked but NOT disabled (deselectable)"
+      - file: tests/cohortCompareDrawer.test.tsx
+        name: "J7: with no primary, an unselected cohort (the parent) is addable (not disabled)"
+      - file: tests/OutcomesViewRouting.test.tsx
+        name: "after deselecting all pre-selected sub-cohorts, a fresh pick registers (no lock)"
+      - file: tests/OutcomesViewRouting.test.tsx
+        name: "XCOHORT-04: ?cohorts= caps at 4 cohorts (fifth id dropped)"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "On /cohort split cohort \"P\" by \"Geschlecht\" and click \"Unterkohorten erstellen\"."
+        - "Observe the resulting URL and the open compare drawer."
+        - "Untick \"P:Weiblich\", tick \"P\", then tick \"P:Weiblich\" again."
+        - "Repeat with a split by \"Zentrum\" across six centres."
+      expect: "Step 2: URL is /analysis?tab=trajectories&cohorts=<id1>,<id2>&compare=open, the Verläufe tab is active, the drawer is open with both sub-cohorts ticked and \"P\" unticked; step 3: every toggle takes effect (no disabled checkbox); step 4: only the first four sub-cohorts are pre-selected."
+    notes: ""
+  - id: UIR-COH-043
+    title: "Logout clears the persisted cohort filter state"
+    statement: "The UI discards the persisted Kohortenbildung filter state on logout, so the next login (same tab) opens /cohort with no filter set."
+    status: implemented
+    sources: ["code: src/context/AuthContext.tsx:144-165 (performLogout; T-33-03 / D-05)"]
+    evidence:
+      - "src/context/AuthContext.tsx:163 (sessionStorage.removeItem('emd-cohort-filters') in performLogout)"
+      - "src/pages/CohortBuilderPage.tsx:68-76 (filters lazily restored from that key on mount)"
+    tests:
+      - file: tests/cohortFilterPersistence.test.tsx
+        name: "AuthContext logout() removes the emd-cohort-filters sessionStorage key"
+    browser:
+      route: "/cohort"
+      steps:
+        - "Log in as forscher1, open /cohort, tick \"Weiblich\" and type 60 into age \"Min\"; note the reduced count."
+        - "Log out via the sidebar logout icon (title \"Abmelden\")."
+        - "Log in again as forscher1 in the same tab and open /cohort."
+      expect: "After step 3 no checkbox is ticked, the age field is empty and \"Kohorte: N Fälle\" shows the unfiltered total; the filters from step 1 are not restored."
+    notes: "Added by the refute pass: the behaviour was only mentioned in UIR-COH-014 notes but is a distinct, tested, user-observable rule. Also applies to the inactivity auto-logout (same performLogout path)."

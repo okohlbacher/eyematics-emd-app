@@ -1,0 +1,282 @@
+# UI requirements registry — area NAV. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+area: NAV
+requirements:
+  - id: UIR-NAV-001
+    title: "Fixed sidebar with logo and independent content scroll"
+    statement: "The UI shows a fixed 232px sidebar with the EyeMatics logo, product name and the \"Klinischer Demonstrator\" (EN: \"Clinical Demonstrator\") caption while the main content scrolls independently."
+    status: implemented
+    sources: ["code: src/components/Layout.tsx:66,80-90,153-155"]
+    evidence:
+      - "src/components/Layout.tsx:66 — root <div className=\"flex h-screen …\">; the sidebar is a non-scrolling flex column, not CSS position:fixed"
+      - "src/components/Layout.tsx:80 — <aside className=\"shrink-0 …\" style={{ width: 232 }}>"
+      - "src/components/Layout.tsx:83-88 — <img src=\"/eyematics-logo.png\">, 'EyeMatics' name, t('clinicalDemonstrator') caption (uppercase via CSS class)"
+      - "src/components/Layout.tsx:153-155 — <main className=\"flex-1 overflow-auto\"><Outlet /></main>"
+      - "src/i18n/translations.ts:55 — clinicalDemonstrator: de 'Klinischer Demonstrator' / en 'Clinical Demonstrator'"
+      - "public/eyematics-logo.png exists"
+    tests: []
+    browser:
+      route: "/analysis"
+      steps:
+        - "Log in as forscher1 (seed password in README.md)."
+        - "Click \"Analyse\" in the sidebar, then open the \"Verläufe\" tab so the page is taller than the viewport."
+        - "Scroll the main content area to the bottom with the mouse wheel."
+        - "Observe the left sidebar and measure its width (DevTools: aside element, 232px)."
+      expect: "The main content scrolls while the sidebar stays in place; the EyeMatics logo, the name 'EyeMatics' and the caption 'KLINISCHER DEMONSTRATOR' ('CLINICAL DEMONSTRATOR' in English) remain visible; the aside is 232px wide."
+    notes: "Caption is localised. Sidebar is a non-scrolling flex column inside an h-screen root rather than position:fixed; the user-observable behaviour holds. No test renders Layout."
+  - id: UIR-NAV-002
+    title: "Research sidebar entries visible for every role"
+    statement: "The UI shows the sidebar entries \"Startseite\", \"Kohortenbildung\", \"Analyse\" and \"Datenqualität\" under the \"Forschung\" group for every logged-in user regardless of role."
+    status: implemented
+    sources: ["code: src/components/Layout.tsx:17-25,92-98", "manual: docs/Benutzerhandbuch.md §3, §4, §5, §7"]
+    evidence:
+      - "src/components/Layout.tsx:17-21 — research array: '/', '/cohort', '/analysis', '/quality' added unconditionally"
+      - "src/components/Layout.tsx:92-98 — t('navGroupResearch') heading + research.map(NavItem)"
+      - "src/i18n/translations.ts:50-53,1049 — navHome 'Startseite', navCohort 'Kohortenbildung', navAnalysis 'Analyse', navQuality 'Datenqualität', navGroupResearch 'Forschung'"
+      - "src/App.tsx:55-59 — routes /, /cohort, /analysis, /quality inside ProtectedRoute without any role gate"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as forscher1 (researcher)."
+        - "Read the sidebar group headed \"FORSCHUNG\"."
+        - "Log out via the sidebar logout icon (title \"Abmelden\"), log in as kliniker, then as admin, and repeat step 2."
+      expect: "In every case the group \"Forschung\" lists \"Startseite\", \"Kohortenbildung\", \"Analyse\", \"Datenqualität\" in that order (admin/diz_manager/klinikleitung additionally see \"Dokumentationsqualität\" as a fifth entry)."
+    notes: "No test renders Layout; tests that mock QUALITY_ROLES do not assert sidebar contents."
+  - id: UIR-NAV-003
+    title: "Active sidebar item marked with teal accent"
+    statement: "The UI marks the active sidebar item with a teal left bar, teal icon, bold label and light background, and only the current page's entry carries this accent."
+    status: implemented
+    sources: ["code: src/components/Layout.tsx:18,36-63", "manual: docs/Benutzerhandbuch.md §3"]
+    evidence:
+      - "src/components/Layout.tsx:42-47 — NavLink className: isActive → bg surface-2, text ink, font-semibold"
+      - "src/components/Layout.tsx:51-53 — isActive → absolute left-0 w-[2px] span with bg var(--color-teal)"
+      - "src/components/Layout.tsx:54-58 — icon color var(--color-teal) when active, var(--color-ink-2) otherwise"
+      - "src/components/Layout.tsx:18 — Startseite uses end: true so it is not active on sub-routes"
+    tests: []
+    browser:
+      route: "/analysis"
+      steps:
+        - "Log in as any user."
+        - "Click \"Analyse\" in the sidebar."
+        - "Compare the \"Analyse\" entry with \"Kohortenbildung\" and \"Startseite\"."
+        - "Click \"Kohortenbildung\" and compare again."
+      expect: "Only the current page's entry shows a thin teal bar at its left edge, a teal icon, a semibold label and a light background; after step 4 the accent moves to \"Kohortenbildung\" and \"Analyse\" returns to the plain grey style."
+    notes: "Because Startseite has end: true, opening /case/<id> leaves no sidebar entry highlighted."
+  - id: UIR-NAV-004
+    title: "Dokumentationsqualität entry gated to quality roles"
+    statement: "The UI shows the \"Dokumentationsqualität\" sidebar entry only for the admin, clinic_lead (klinikleitung) and data_manager (diz_manager) roles, and clicking it opens /doc-quality."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-004 / N10.01 (Abgleich: Umgesetzt)", "code: src/components/Layout.tsx:22-24; src/context/AuthContext.tsx:23", "manual: docs/Benutzerhandbuch.md §8"]
+    evidence:
+      - "src/components/Layout.tsx:22-24 — entry added only if QUALITY_ROLES.includes(user.role)"
+      - "src/context/AuthContext.tsx:23 — QUALITY_ROLES = ['admin', 'clinic_lead', 'data_manager']"
+      - "src/App.tsx:61 — /doc-quality route wrapped in QualityRoute"
+      - "src/i18n/translations.ts:645 — navDocQuality: de 'Dokumentationsqualität' / en 'Documentation Quality'"
+      - "data/users.json — seed users: diz_manager=data_manager, klinikleitung=clinic_lead, kliniker=clinician, forscher1=researcher, epidemiologe=epidemiologist"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as forscher1; inspect the \"Forschung\" sidebar group."
+        - "Log out; log in as kliniker; inspect again."
+        - "Log out; log in as diz_manager; inspect again and click \"Dokumentationsqualität\"."
+        - "Repeat step 3 with klinikleitung and with admin."
+      expect: "Steps 1-2: no \"Dokumentationsqualität\" entry. Steps 3-4: the entry is the fifth research item; clicking it changes the URL to /doc-quality and renders the documentation-quality page (completeness/plausibility cards)."
+    notes: "tests/ui-requirements.test.ts 'USM-004: Authorization roles' only asserts locally defined constant arrays, not the UI gate, so it is not cited."
+  - id: UIR-NAV-005
+    title: "Direct /doc-quality redirects non-quality roles"
+    statement: "The UI redirects a logged-in user outside the quality roles (admin, clinic_lead, data_manager) who opens /doc-quality directly to the Startseite \"/\"."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-004 / N10.01", "code: src/App.tsx:35-40,61", "manual: docs/Benutzerhandbuch.md §8"]
+    evidence:
+      - "src/App.tsx:35-40 — QualityRoute: !QUALITY_ROLES.includes(user.role) → <Navigate to=\"/\" replace />"
+      - "src/App.tsx:61 — /doc-quality element wrapped in QualityRoute"
+      - "src/context/AuthContext.tsx:23 — QUALITY_ROLES"
+    tests: []
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as forscher1."
+        - "Type <origin>/doc-quality into the address bar and press Enter."
+        - "Observe the address bar and the rendered page."
+        - "Repeat as kliniker, then as diz_manager."
+      expect: "For forscher1 and kliniker the URL immediately becomes / and the Startseite (centre cards/KPIs) renders; for diz_manager the URL stays /doc-quality and the documentation-quality page renders."
+    notes: "Redirect uses replace, so pressing Back does not return to /doc-quality. No test renders App routes."
+  - id: UIR-NAV-006
+    title: "Admin sidebar group only for admin role"
+    statement: "The UI shows the \"Verwaltung\" sidebar group with the entries \"Protokoll\", \"Verwaltung\" and \"Einstellungen\" only when the logged-in user has the admin role."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-004 / N10.01 (Abgleich: Umgesetzt)", "code: src/components/Layout.tsx:26-32,100-109", "manual: docs/Benutzerhandbuch.md §9, §11, §12"]
+    evidence:
+      - "src/components/Layout.tsx:26-32 — admin array populated only when user.role === 'admin': /audit, /admin, /settings"
+      - "src/components/Layout.tsx:100-109 — navGroupAdmin heading and entries rendered only if admin.length > 0"
+      - "src/i18n/translations.ts:403,454,475,1050 — navAdmin 'Verwaltung', navSettings 'Einstellungen', navAudit 'Protokoll', navGroupAdmin 'Verwaltung'"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin and read the sidebar below the \"Forschung\" group."
+        - "Log out; log in as forscher1 and read the sidebar."
+        - "Log out; log in as diz_manager (quality role but not admin) and read the sidebar."
+      expect: "Admin: a second group headed \"VERWALTUNG\" with the entries \"Protokoll\", \"Verwaltung\", \"Einstellungen\" in that order. forscher1 and diz_manager: no second group heading and none of the three entries."
+    notes: "Group heading and the second entry share the German label 'Verwaltung' (English: 'Admin' group vs 'Administration' entry)."
+  - id: UIR-NAV-007
+    title: "Direct admin routes redirect non-admins"
+    statement: "The UI redirects a logged-in non-admin user who opens /admin, /audit or /settings directly to the Startseite \"/\"."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-004 / N10.01", "code: src/App.tsx:28-33,62-64", "manual: docs/Benutzerhandbuch.md §11, §12"]
+    evidence:
+      - "src/App.tsx:28-33 — AdminRoute: user.role !== 'admin' → <Navigate to=\"/\" replace />"
+      - "src/App.tsx:62-64 — /admin, /audit, /settings each wrapped in AdminRoute"
+    tests: []
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as forscher1."
+        - "Type <origin>/settings into the address bar and press Enter; note URL and page."
+        - "Repeat with <origin>/admin and <origin>/audit."
+        - "Repeat all three as diz_manager, then as admin."
+      expect: "For forscher1 and diz_manager each attempt lands on URL / with the Startseite rendered. For admin the URLs stay /settings, /admin, /audit and the Einstellungen, Verwaltung and Protokoll pages render."
+    notes: "Server-side authorization is separate (centerBypass/authMiddleware tests); this requirement covers only the client redirect."
+  - id: UIR-NAV-008
+    title: "Unknown paths redirect to Startseite"
+    statement: "The UI redirects any unknown URL path to the Startseite \"/\" while the user is logged in."
+    status: implemented
+    sources: ["code: src/App.tsx:66"]
+    evidence:
+      - "src/App.tsx:66 — <Route path=\"*\" element={<Navigate to=\"/\" replace />} />"
+      - "src/App.tsx:22-26,46-54 — ProtectedRoute wraps '/' so a logged-out user ends at /login"
+    tests: []
+    browser:
+      route: "/does-not-exist"
+      steps:
+        - "Log in as any user."
+        - "Type <origin>/does-not-exist into the address bar and press Enter."
+        - "Type <origin>/case (no id) and <origin>/analysis/xyz and press Enter each time."
+        - "Press the browser Back button once."
+      expect: "Each unknown path is replaced by / and the Startseite renders; Back goes to the page before the unknown URL was entered, not to the unknown path (replace navigation)."
+    notes: "When logged out, an unknown path redirects to / and then to /login (ProtectedRoute). Manual citation (§3) removed — the manual does not describe this behaviour."
+  - id: UIR-NAV-009
+    title: "Unknown case id shows not-found with back button"
+    statement: "The case page shows the message \"Fall nicht gefunden.\" and a \"Zurück\" button instead of a blank page when the case id in the URL is unknown."
+    status: implemented
+    sources: ["code: src/pages/CaseDetailPage.tsx:203-212"]
+    evidence:
+      - "src/pages/CaseDetailPage.tsx:77 — patientCase = cases.find(c => c.id === caseId)"
+      - "src/pages/CaseDetailPage.tsx:203-212 — if !patientCase → <p>{t('caseNotFound')}</p> + <button onClick={() => navigate(-1)}>{t('back')}</button>"
+      - "src/i18n/translations.ts:245 — caseNotFound: de 'Fall nicht gefunden.' / en 'Case not found.'"
+      - "src/i18n/translations.ts:5 — back: de 'Zurück' / en 'Back'"
+      - "src/App.tsx:58 — /case/:caseId route"
+    tests: []
+    browser:
+      route: "/case/unknown-id"
+      steps:
+        - "Log in as forscher1 and open the Startseite."
+        - "Type <origin>/case/unknown-id into the address bar and press Enter."
+        - "Read the page content."
+        - "Click \"Zurück\"."
+      expect: "The page shows the grey text \"Fall nicht gefunden.\" and a blue \"Zurück\" link-button (no blank page, no error screen); clicking \"Zurück\" returns to the previously visited page (the Startseite)."
+    notes: "The button calls navigate(-1), so in a brand-new tab with no history it has no visible effect; the procedure therefore visits the Startseite first. The same text may flash briefly for a valid id while case data is still loading."
+  - id: UIR-NAV-010
+    title: "Sidebar language button toggles DE/EN immediately"
+    statement: "The user can toggle the interface language between German and English via the sidebar globe button, whose label reads \"English\" while German is active and \"Deutsch\" while English is active."
+    status: implemented
+    sources: ["code: src/components/Layout.tsx:114-120; src/context/LanguageContext.tsx:20-28", "manual: docs/Benutzerhandbuch.md §13"]
+    evidence:
+      - "src/components/Layout.tsx:114-120 — button with Globe icon; onClick setLocale(locale === 'de' ? 'en' : 'de'); label locale === 'de' ? 'English' : 'Deutsch'"
+      - "src/context/LanguageContext.tsx:20-28 — setLocale updates state; t is re-derived from locale so all labels re-render without reload"
+      - "src/i18n/translations.ts:50-53 — nav labels in both languages, e.g. navCohort 'Kohortenbildung' / 'Cohort Builder'"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as any user with the UI in German."
+        - "In the sidebar footer, locate the globe button; read its label."
+        - "Click it once and watch the sidebar without reloading."
+        - "Click it again."
+      expect: "Step 2: label \"English\". Step 3: sidebar entries change immediately to Home / Cohort Builder / Analysis / Data Quality, the caption to CLINICAL DEMONSTRATOR, and the button now reads \"Deutsch\"; no page reload occurs. Step 4: everything reverts to German and the button reads \"English\"."
+    notes: "The button labels 'English'/'Deutsch' are hard-coded in Layout.tsx, not translation keys."
+  - id: UIR-NAV-011
+    title: "Language choice persists; German is the default"
+    statement: "The UI persists the chosen language across reloads (localStorage key 'emd-locale') and defaults to German when no valid choice is stored."
+    status: implemented
+    sources: ["code: src/context/LanguageContext.tsx:15-23"]
+    evidence:
+      - "src/context/LanguageContext.tsx:15-18 — initial state from localStorage.getItem('emd-locale'); only 'en'/'de' accepted, else 'de'"
+      - "src/context/LanguageContext.tsx:20-23 — setLocale writes localStorage 'emd-locale'"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in; click the sidebar language button so the UI is English (\"Deutsch\" shown on the button)."
+        - "Reload the page (F5)."
+        - "Open DevTools → Application → Local Storage → the app origin; delete the key emd-locale (or set it to 'xx')."
+        - "Reload the page again."
+      expect: "After step 2 the UI is still English (localStorage emd-locale = 'en'). After step 4 the UI is German (sidebar 'Startseite', 'Kohortenbildung'); an invalid stored value also yields German."
+    notes: "tests/themeToggleCycle.test.tsx sets localStorage 'emd-locale' only as fixture setup and does not assert persistence, so no test is cited."
+  - id: UIR-NAV-012
+    title: "App chrome shows the current released version"
+    statement: "The UI shows the current application version from package.json (\"v1.20.x\") in the sidebar footer or on the login page, outside the \"Problem melden\" dialog."
+    status: not_implemented
+    sources: ["uat: v1.20 Phase 1 (__APP_VERSION__ was stale)", "code: src/components/Layout.tsx; src/pages/LoginPage.tsx"]
+    evidence:
+      - "src/components/Layout.tsx — no version string anywhere in the sidebar (brand block lines 82-90, footer lines 113-150)"
+      - "src/pages/LoginPage.tsx — no __APP_VERSION__ reference"
+      - "src/components/FeedbackButton.tsx:171-174 — the only place rendering 'v' + __APP_VERSION__ is inside the feedback dialog; covered by UIR-FEEDBACK-003"
+      - "vite.config.ts:18 — __APP_VERSION__ defined from package.json version (1.20.2)"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as any user."
+        - "Read the sidebar brand block and footer (user row) for a version string."
+        - "Log out and read the login page."
+      expect: "Currently no version indicator is shown in the sidebar or on the login page; the version is visible only inside the \"Problem melden\" dialog (see UIR-FEEDBACK-003). If a chrome-level version badge is added, it must equal the package.json version of the deployed build."
+    notes: "Downgraded from partial to not_implemented: the previous statement had been rewritten to describe the feedback dialog, which duplicates UIR-FEEDBACK-003. The stale-version regression from UAT v1.20 is tracked there; this entry records the still-missing sidebar/login version badge."
+  - id: UIR-NAV-013
+    title: "Render errors show bilingual error screen with reload"
+    statement: "The UI shows an \"Anwendungsfehler\" (browser language de) or \"Application Error\" card with the error message and a \"Neu laden\"/\"Reload\" button instead of a blank page on a render error."
+    status: implemented
+    sources: ["code: src/components/ErrorBoundary.tsx:17-35; src/App.tsx:77-79"]
+    evidence:
+      - "src/components/ErrorBoundary.tsx:11-13 — getDerivedStateFromError sets hasError/error"
+      - "src/components/ErrorBoundary.tsx:20-31 — de = navigator.language.startsWith('de'); heading, error.message paragraph, reload button calling window.location.reload()"
+      - "src/App.tsx:77-79 — ErrorBoundary wraps AppRoutes inside AuthProvider"
+    tests:
+      - file: tests/components.test.tsx
+        name: "renders error UI when child throws"
+      - file: tests/components.test.tsx
+        name: "shows German text when navigator.language is de"
+      - file: tests/components.test.tsx
+        name: "shows English text when navigator.language is en"
+    browser:
+      route: "/analysis"
+      steps:
+        - "Run the dev build (npm run dev) with the browser language set to German; log in."
+        - "Temporarily add `throw new Error('UAT render error')` at the top of a page component (e.g. src/pages/AnalysisPage.tsx) and navigate to \"Analyse\"."
+        - "Read the centred card."
+        - "Click \"Neu laden\"; then remove the injected throw."
+        - "Optionally repeat with browser language English."
+      expect: "Instead of a blank page a white card shows the red heading \"Anwendungsfehler\", the text \"UAT render error\" and a blue \"Neu laden\" button; clicking it reloads the app. With an English browser the card reads \"Application Error\" / \"Reload\"."
+    notes: "Error-screen language follows navigator.language, not the in-app DE/EN switch (hooks unavailable in the class boundary). Not reproducible in the production container without code injection; the cited unit tests (verified: tests/components.test.tsx:37,53,70 assert the message text, 'Anwendungsfehler'/'Neu laden' and 'Application Error'/'Reload') cover it."
+  - id: UIR-NAV-014
+    title: "Sidebar user row opens the account page"
+    statement: "The UI shows the logged-in user's initials, username and role in the sidebar footer, and the user can click this row to open the \"Konto\" (EN: \"Account\") page at /account."
+    status: implemented
+    sources: ["code: src/components/Layout.tsx:34,123-141; src/pages/AccountPage.tsx:175-182; src/App.tsx:60"]
+    evidence:
+      - "src/components/Layout.tsx:34 — initials = username.slice(0, 2).toUpperCase()"
+      - "src/components/Layout.tsx:124-141 — <button onClick={() => navigate('/account')} title={t('accountTitle')}> with initials avatar, username and capitalised role"
+      - "src/App.tsx:60 — /account route inside ProtectedRoute, no role gate"
+      - "src/pages/AccountPage.tsx:177-182 — <h1>{t('accountTitle')}</h1> with displayName · role subtitle"
+      - "src/i18n/translations.ts:691 — accountTitle: de 'Konto' / en 'Account'"
+    tests: []
+    browser:
+      route: "/account"
+      steps:
+        - "Log in as forscher1."
+        - "Read the bottom row of the sidebar (circle with initials, username, role)."
+        - "Hover the row to see its tooltip, then click it."
+      expect: "The row shows the teal circle \"FO\", the username \"forscher1\" and the role \"Researcher\" (CSS-capitalised); the tooltip reads \"Konto\"; clicking changes the URL to /account and renders the page headed \"Konto\" with \"forscher1 · researcher\" beneath it."
+    notes: "Added by the refutation pass: the /account entry point was not covered by any sweep. Password change and 2FA on that page belong to AUTH. No test renders Layout or AccountPage."

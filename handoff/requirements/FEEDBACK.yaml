@@ -1,0 +1,233 @@
+# UI requirements registry — area FEEDBACK. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+area: FEEDBACK
+requirements:
+  - id: UIR-FEEDBACK-001
+    title: "\"Problem melden\" tab visible on every authenticated page"
+    statement: "The UI shows a fixed amber \"Problem melden\" tab at the right edge of every authenticated page, for non-admin users as well as admins, and never on /login."
+    status: implemented
+    sources: ["code: src/components/FeedbackButton.tsx:125-135; src/components/Layout.tsx:157", "manual: docs/Benutzerhandbuch.md §10", "README: Reporting Feedback", "UAT v1.10 Teil A (in-app feedback emd-issues-2026-05-14.json)"]
+    evidence:
+      - "src/components/FeedbackButton.tsx:126-135 — <button> with className 'fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-amber-500 …', vertical writing-mode label t('feedbackButton')"
+      - "src/components/Layout.tsx:157 — <FeedbackButton /> rendered unconditionally inside Layout, after <main>; no role check"
+      - "src/App.tsx:48-66 — Layout is the element of the <ProtectedRoute> layout route, so the button appears on every authenticated route and on none of the public ones (/login)"
+      - "src/i18n/translations.ts:729 — feedbackButton: de 'Problem melden' / en 'Report Issue'"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as forscher1 (non-admin)."
+        - "Visit / (Startseite), /cohort (Kohortenbildung), /analysis (Analyse), /case/<any case id> (Fallansicht), /quality (Datenqualität)."
+        - "On each page look at the vertical centre of the right viewport edge."
+        - "Log out, log in as admin and additionally visit /settings (Einstellungen), /admin (Verwaltung), /audit (Protokoll)."
+        - "Log out and look at /login."
+      expect: "On every authenticated page an amber (orange) vertical tab with a message icon and the text \"Problem melden\" is attached to the right edge at mid-height; it is absent on /login."
+    notes: "No RTL test renders FeedbackButton; only the server-side issue API is unit-tested. Role independence follows from Layout mounting it without any role check. README wrongly says 'sidebar → message-square icon'; the control is the right-edge tab."
+  - id: UIR-FEEDBACK-002
+    title: "Screenshot captured automatically before the dialog opens"
+    statement: "The UI captures a screenshot of the <main> content area automatically when \"Problem melden\" is clicked, before the dialog opens, and shows it as a preview inside the dialog."
+    status: implemented
+    sources: ["code: src/components/FeedbackButton.tsx:77-99,177-189", "manual: docs/Benutzerhandbuch.md §10.1 step 2"]
+    evidence:
+      - "src/components/FeedbackButton.tsx:77-99 — handleOpen() awaits toPng(document.querySelector('main')) (html-to-image) and only afterwards setOpen(true); comment at :78-79 documents the ordering"
+      - "src/components/FeedbackButton.tsx:181-189 — <img src={screenshot} alt=\"Screenshot\" className=\"w-full h-32 object-cover object-top\"> preview inside the dialog"
+      - "src/components/FeedbackButton.tsx:90-92 — capture failure is logged and the dialog still opens without preview"
+      - "src/components/Layout.tsx:153 — <main className=\"flex-1 overflow-auto\"> is the page content next to the sidebar"
+    tests: []
+    browser:
+      route: "/analysis"
+      steps:
+        - "Log in and open /analysis (Analyse)."
+        - "Click the amber \"Problem melden\" tab at the right edge."
+        - "Wait until role=dialog \"Problem melden\" exists (≥ 2 s; the <main> screenshot is captured before the dialog mounts)."
+      expect: "The dialog contains an image preview (approx. 128 px high, top-cropped) showing the Analyse page content as it looked before the click; the preview contains neither the dialog nor the dark overlay nor the sidebar (only <main> is captured)."
+    notes: "The 'Capturing screenshot...' hint at :178-180 is never visible because `open` is set true in the same batch as capturing=false; alt text and hint are hard-coded English. If html-to-image fails (e.g. CSP in production), the dialog opens without preview — see DEPLOY area."
+  - id: UIR-FEEDBACK-003
+    title: "Dialog shows page label and build version"
+    statement: "The \"Problem melden\" dialog shows the current page label (\"Seite: …\") and the build version (\"Version: v…\") of the running app above the screenshot preview."
+    status: implemented
+    sources: ["code: src/components/FeedbackButton.tsx:165-175", "code: vite.config.ts:18"]
+    evidence:
+      - "src/components/FeedbackButton.tsx:166-175 — renders t('feedbackPage') + ':' + pageLabel(location.pathname) and t('feedbackVersion') + ':' + 'v' + __APP_VERSION__"
+      - "src/i18n/translations.ts:733-734 — feedbackPage: de 'Seite'; feedbackVersion: de 'Version'"
+      - "vite.config.ts:18 — __APP_VERSION__ defined from package.json version (currently \"1.20.2\", package.json:4)"
+    tests: []
+    browser:
+      route: "/analysis"
+      steps:
+        - "Log in and open /analysis."
+        - "Click \"Problem melden\"; wait until role=dialog \"Problem melden\" exists (≥ 2 s)."
+        - "Read the grey info line above the screenshot preview."
+      expect: "The line reads \"Seite: Analyse\" and \"Version: v1.20.2\" (the version equals the version field in package.json of the deployed build). A ?tab= query on /analysis does not change the label."
+    notes: "pageLabel() uses location.pathname only, so /analysis?tab=trajectories still shows 'Analyse'."
+  - id: UIR-FEEDBACK-004
+    title: "Case pages labelled with case id in the dialog"
+    statement: "The \"Problem melden\" dialog labels case pages as \"Vollständige Fallansicht (<caseId>)\" and mapped routes with their sidebar label; unmapped routes (e.g. /account) show the raw path."
+    status: implemented
+    sources: ["code: src/components/FeedbackButton.tsx:11-21,70-75"]
+    evidence:
+      - "src/components/FeedbackButton.tsx:71-75 — pageLabel(): pathname.startsWith('/case/') → `${t('fullCaseView')} (${pathname.slice(6)})`; otherwise PAGE_KEY_MAP lookup with fallback to the raw pathname"
+      - "src/components/FeedbackButton.tsx:12-21 — PAGE_KEY_MAP covers '/', /cohort, /analysis, /quality, /doc-quality, /audit, /admin, /settings (not /account)"
+      - "src/i18n/translations.ts:326 — fullCaseView: de 'Vollständige Fallansicht'; :51 navCohort: de 'Kohortenbildung'"
+      - "src/pages/CohortBuilderPage.tsx:1081 — case row onClick navigate(`/case/${c.id}`); src/components/Layout.tsx:125 — user chip navigate('/account')"
+    tests: []
+    browser:
+      route: "/case/:caseId"
+      steps:
+        - "Log in, open /cohort and click any case row in the result table to reach /case/<caseId>."
+        - "Click \"Problem melden\", wait until role=dialog \"Problem melden\" exists (≥ 2 s) and read the \"Seite:\" value; close with Escape."
+        - "Navigate to /cohort, click \"Problem melden\", wait until role=dialog \"Problem melden\" exists (≥ 2 s) and read the \"Seite:\" value; close."
+        - "Click the user chip at the bottom of the sidebar to open /account and repeat."
+      expect: "On the case page the line reads \"Seite: Vollständige Fallansicht (<caseId>)\" with the id from the URL; on /cohort it reads \"Seite: Kohortenbildung\"; on /account it reads \"Seite: /account\" (raw path, no nav label)."
+    notes: "/account is not in PAGE_KEY_MAP, so the dialog shows the raw pathname there."
+  - id: UIR-FEEDBACK-005
+    title: "Description field autofocused; \"Absenden\" disabled while empty"
+    statement: "The \"Problem melden\" dialog has an autofocused description text field and an \"Absenden\" button that stays disabled until the description contains non-whitespace text."
+    status: implemented
+    sources: ["code: src/components/FeedbackButton.tsx:96,196-216", "manual: docs/Benutzerhandbuch.md §10.1 steps 3-4", "code: server/issueApi.ts:59-65"]
+    evidence:
+      - "src/components/FeedbackButton.tsx:196-204 — <textarea … rows={4} autoFocus>"
+      - "src/components/FeedbackButton.tsx:209-216 — submit <button disabled={!description.trim()}> with label t('feedbackSubmit'); :102 handleSubmit also returns early on empty trimmed text"
+      - "src/components/FeedbackButton.tsx:96 — description reset to '' on every open"
+      - "src/i18n/translations.ts:735 — feedbackSubmit: de 'Absenden'"
+      - "server/issueApi.ts:62-63 — server-side counterpart: POST without non-empty description → 400"
+    tests:
+      - file: tests/issueApi.test.ts
+        name: "returns 400 for missing description"
+    browser:
+      route: "/"
+      steps:
+        - "Log in and open / (Startseite)."
+        - "Click \"Problem melden\"; wait until role=dialog \"Problem melden\" exists (≥ 2 s)."
+        - "Without clicking anywhere, type the letter x."
+        - "Select all text in the field and delete it; then type a single space."
+      expect: "After step 2 the text cursor blinks inside the description textarea and \"Absenden\" is greyed out (disabled). After step 3 \"Absenden\" is enabled. After step 4 (empty or whitespace-only) \"Absenden\" is disabled again."
+    notes: "Whitespace-only input keeps the button disabled (description.trim()). The mapped server test only covers the API guard (missing description → 400); the server accepts whitespace-only strings, the client never sends them. No RTL test covers the disabled state."
+  - id: UIR-FEEDBACK-006
+    title: "Dialog is an accessible modal that traps focus"
+    statement: "The \"Problem melden\" dialog is exposed as role=dialog with aria-modal=\"true\" and keeps Tab focus cycling between the X close button, the textarea and \"Absenden\"."
+    status: implemented
+    sources: ["code: src/components/FeedbackButton.tsx:40-68,138-156"]
+    evidence:
+      - "src/components/FeedbackButton.tsx:139-145 — overlay <div role=\"dialog\" aria-modal=\"true\" aria-label={t('feedbackTitle')}>"
+      - "src/components/FeedbackButton.tsx:46-60 — handleKeyDown: on Tab, queries 'button, textarea, input, [tabindex]:not([tabindex=\"-1\"])' inside modalRef and wraps first↔last with preventDefault"
+      - "src/components/FeedbackButton.tsx:63-68 — keydown listener registered on document only while open"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in, open / and click \"Problem melden\"; wait until role=dialog \"Problem melden\" exists (≥ 2 s)."
+        - "In the browser dev tools inspect the dark full-screen overlay element."
+        - "Press Tab three times, observing the focused element each time; then press Shift+Tab three times."
+      expect: "The overlay element has role=\"dialog\" and aria-modal=\"true\". Focus moves textarea → \"Absenden\" → X (close) → textarea … and backwards in reverse order; focus never lands on the sidebar, the amber tab or any other page element."
+    notes: "DOM order of focusables is X-close, textarea, Absenden. role=dialog is on the overlay, not the inner panel; the trap is Tab interception only (no inert/aria-hidden on the background). Focus is not restored to the amber tab after closing."
+  - id: UIR-FEEDBACK-007
+    title: "Dialog closes on Escape, overlay click or X"
+    statement: "The user can close the \"Problem melden\" dialog without submitting by pressing Escape, clicking the dark overlay outside the panel, or clicking the X button in the dialog header."
+    status: implemented
+    sources: ["code: src/components/FeedbackButton.tsx:35-44,141,153-155"]
+    evidence:
+      - "src/components/FeedbackButton.tsx:42-44 — Escape → closeModal()"
+      - "src/components/FeedbackButton.tsx:141 — overlay onClick closes only when e.target === e.currentTarget (click outside the panel)"
+      - "src/components/FeedbackButton.tsx:153-155 — header X button onClick={handleClose}"
+      - "src/components/FeedbackButton.tsx:101-110 — addIssue is called only from handleSubmit; no close path posts an issue"
+    tests: []
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as admin, open /settings and note the number in \"… gemeldete(s) Problem(e)\" under \"Issues exportieren\"."
+        - "Click \"Problem melden\", wait until role=dialog \"Problem melden\" exists (≥ 2 s), type text, press Escape."
+        - "Click \"Problem melden\" again, wait until role=dialog \"Problem melden\" exists (≥ 2 s), type text, click on the dark area outside the white panel."
+        - "Click \"Problem melden\" again, wait until role=dialog \"Problem melden\" exists (≥ 2 s), type text, click the X in the dialog header."
+        - "Reload /settings."
+      expect: "After each of steps 2-4 the dialog disappears. After step 5 the reported-issue count is unchanged (no issue was created)."
+    notes: "Typed text is discarded on close (description reset on next open)."
+  - id: UIR-FEEDBACK-008
+    title: "Submit shows success check and auto-closes after 2 s"
+    statement: "The UI shows a green success check with \"Problem wurde gemeldet. Vielen Dank!\" after \"Absenden\" is clicked and closes the \"Problem melden\" dialog automatically about 2 seconds later."
+    status: implemented
+    sources: ["code: src/components/FeedbackButton.tsx:101-119,158-162", "manual: docs/Benutzerhandbuch.md §10.1"]
+    evidence:
+      - "src/components/FeedbackButton.tsx:111-115 — after await addIssue(): setSubmitted(true); setTimeout(() => { setOpen(false); setSubmitted(false); }, 2000)"
+      - "src/components/FeedbackButton.tsx:158-162 — submitted ? <CheckCircle className=\"… text-green-500\"> + t('feedbackSuccess') replaces the form"
+      - "src/i18n/translations.ts:736 — feedbackSuccess: de 'Problem wurde gemeldet. Vielen Dank!'"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Log in, open /cohort and click \"Problem melden\"; wait until role=dialog \"Problem melden\" exists (≥ 2 s)."
+        - "Type 'Testmeldung' in the textarea."
+        - "Click \"Absenden\" and do not click anything else; watch the dialog for 3 seconds."
+      expect: "Immediately after the click the form is replaced by a large green check icon with the text \"Problem wurde gemeldet. Vielen Dank!\"; about 2 s later the dialog and overlay disappear by themselves."
+    notes: "On a failed POST the error is only logged to console; the dialog stays open with no visible error message (not_implemented behaviour, not a requirement). The 2 s timer is not cleared on unmount."
+  - id: UIR-FEEDBACK-009
+    title: "Submitted issue stored on server and counted in Einstellungen"
+    statement: "The UI stores each submitted issue on the server with user, page, description, screenshot, app version and timestamp, and the issue count on Einstellungen increments by one after reload."
+    status: implemented
+    sources: ["code: src/components/FeedbackButton.tsx:101-119", "code: src/services/issueService.ts:21-44", "code: server/issueApi.ts:67-75,111-115", "code: src/pages/SettingsPage.tsx:73-84,1016-1024", "manual: docs/Benutzerhandbuch.md §10.1", "README: Reporting Feedback", "UAT v1.10 Teil A (in-app feedback emd-issues-2026-05-14.json)"]
+    evidence:
+      - "src/components/FeedbackButton.tsx:104-110 — addIssue({ user: user?.username ?? 'unknown', page, description: description.trim(), screenshot, appVersion: __APP_VERSION__ })"
+      - "src/services/issueService.ts:21-33 — POST /api/issues via authFetch; :39-44 getIssueCount() reads the server 'total' field"
+      - "server/issueApi.ts:67-75 — createIssue() adds id (randomUUID) and ISO timestamp and writes feedback/issue-<ts>_<id>.json; :59-65 validates non-empty page/description"
+      - "server/issueApi.ts:111-115 — GET /api/issues returns { issues, total }"
+      - "server/index.ts:243,249 — authMiddleware on /api; express.json({limit:'10mb'}) + issueApiRouter on /api/issues"
+      - "src/pages/SettingsPage.tsx:73-84 — issueCount loaded via getIssueCount() once on mount; :1022-1024 renders t('feedbackCount') '{0} gemeldete(s) Problem(e)'"
+    tests:
+      - file: tests/issueApi.test.ts
+        name: "creates an issue with valid data"
+      - file: tests/issueApi.test.ts
+        name: "returns issues list with total"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as admin, open /settings and note N in \"N gemeldete(s) Problem(e)\" under \"Issues exportieren\"."
+        - "Log out, log in as forscher1, open /cohort, click \"Problem melden\", wait until role=dialog \"Problem melden\" exists (≥ 2 s), type 'Zähltest', click \"Absenden\", wait for the green check."
+        - "Log out, log in as admin, open /settings (full page reload)."
+      expect: "The count now reads N+1. (Server side: a new file feedback/issue-<timestamp>_<id>.json exists containing user 'forscher1', page 'Kohortenbildung', description 'Zähltest', a data:image/png screenshot, appVersion '1.20.2', id and timestamp.)"
+    notes: "The count is fetched once on mount, so a reload of Einstellungen is required. The server stores the user name sent by the client, not the JWT subject. The mapped tests assert 201 + id/filename and the list 'total' field; they do not assert that user/screenshot/appVersion are persisted."
+  - id: UIR-FEEDBACK-010
+    title: "Admin can export collected issues as JSON"
+    statement: "The user can, as admin, export all collected issues as a JSON file via \"Issues exportieren\" on Einstellungen; each entry contains page, user, timestamp, description and screenshot."
+    status: implemented
+    sources: ["code: src/pages/SettingsPage.tsx:1016-1033", "code: src/services/issueService.ts:50-58", "code: server/issueApi.ts:99-109", "UAT v1.10 Teil A (in-app feedback emd-issues-2026-05-14.json, source of A-01…A-09)", "manual: docs/Benutzerhandbuch.md §10.1", "README: Reporting Feedback"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:1016-1033 — card headed t('feedbackExport') with <button onClick={exportIssuesFull} disabled={issueCount === 0}>"
+      - "src/services/issueService.ts:50-58 — exportIssuesFull(): GET /api/issues/export, downloadBlob(blob, 'emd-issues-<YYYY-MM-DD>.json')"
+      - "server/issueApi.ts:99-109 — GET /export: 403 unless req.auth.role === 'admin'; loadAllIssues(true) keeps screenshots; Content-Disposition attachment; body { issues }"
+      - "server/issueApi.ts:32-57 — loadAllIssues reads every feedback/issue-*.json; entries carry id, timestamp + user/page/description/screenshot/appVersion from the client"
+      - "src/App.tsx:64 — /settings is wrapped in <AdminRoute>"
+      - "src/i18n/translations.ts:737 — feedbackExport: de 'Issues exportieren'"
+    tests:
+      - file: tests/issueApi.test.ts
+        name: "returns 403 for non-admin"
+      - file: tests/issueApi.test.ts
+        name: "returns issues for admin"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as forscher1, open any /case/<caseId> page, click \"Problem melden\", wait until role=dialog \"Problem melden\" exists (≥ 2 s), type 'Exporttest', click \"Absenden\"."
+        - "Log out, log in as admin, open /settings and scroll to the card \"Issues exportieren\"."
+        - "Click the amber button \"Issues exportieren\"."
+        - "Open the downloaded file emd-issues-<today>.json in a text editor."
+      expect: "A file emd-issues-YYYY-MM-DD.json is downloaded containing { \"issues\": [ … ] }; the last entry has page \"Vollständige Fallansicht (<caseId>)\", user \"forscher1\", an ISO timestamp, description \"Exporttest\", a screenshot starting with \"data:image/png;base64,\" and appVersion \"1.20.2\". The button is disabled when the count is 0."
+    notes: "The export JSON is a wrapper object { issues: [...] }, not a bare array. The admin test asserts only the presence of the issues array, not per-entry fields. README calls the card 'Feedback Export' / 'Download'; the real labels are 'Issues exportieren' (de) / 'Export Issues' (en)."
+  - id: UIR-FEEDBACK-011
+    title: "Feedback tab and dialog follow the language switch"
+    statement: "The UI labels the feedback tab and dialog in English (\"Report Issue\", \"Describe the issue:\", \"Submit\", \"Page\", \"Version\") after the sidebar language switch \"English\" is clicked."
+    status: implemented
+    sources: ["code: src/components/FeedbackButton.tsx:129-133,151,168-172,194,215", "code: src/i18n/translations.ts:729-738", "code: src/components/Layout.tsx:119"]
+    evidence:
+      - "src/components/FeedbackButton.tsx — every visible label goes through t(): feedbackButton, feedbackTitle, feedbackPage, feedbackVersion, feedbackDescription, feedbackPlaceholder, feedbackSubmit, feedbackSuccess"
+      - "src/i18n/translations.ts:729-738 — en values: 'Report Issue', 'Describe the issue:', 'What did you notice? What should be improved?', 'Page', 'Version', 'Submit', 'Issue has been reported. Thank you!', 'Export Issues'"
+      - "src/components/Layout.tsx:119 — sidebar language button shows 'English' while locale is de and 'Deutsch' while en"
+      - "src/components/FeedbackButton.tsx:72-74 — page label also translates (e.g. 'Full Case View', 'Cohort Builder')"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Log in, open /cohort and click the sidebar button \"English\"."
+        - "Look at the right-edge tab, then click it; wait until a role=dialog exists (≥ 2 s)."
+        - "Read the dialog title, the info line, the textarea label and placeholder, and the submit button."
+        - "Click the sidebar button \"Deutsch\" (close the dialog first with Escape)."
+      expect: "The tab reads \"Report Issue\"; the dialog title is \"Report Issue\", the info line reads \"Page: Cohort Builder\" and \"Version: v1.20.2\", the label \"Describe the issue:\", and the button \"Submit\". After step 4 all labels are German again (\"Problem melden\", \"Seite: Kohortenbildung\", \"Absenden\")."
+    notes: "Added by the refute pass (missed by the sweep). The stored issue's 'page' field is also language-dependent: an issue submitted in English stores 'Cohort Builder', not 'Kohortenbildung'. The img alt text 'Screenshot' is not translated."

@@ -1,0 +1,50 @@
+# Browser verification results — worked example, retro-filled 2026-10-08 from .planning/v1.19-DEV-RESPONSE-TO-UAT.md.
+# No live pass was re-run for this record; evidence quotes the dev response's own verification statements.
+round: v1.19
+verified_at: 2026-06-17
+deployment: "historical — Vite preview + production single-server build, per .planning/v1.19-DEV-RESPONSE-TO-UAT.md"
+results:
+  - id: N1
+    result: PASS
+    evidence: "By design (owner decision, round 7): line emphasis is anchored at the measurement points; hovering a line emphasises it there and no mid-segment emphasis exists (Plotly hoveron supports points/fills only). Verified live in the v1.19 dev-response pass."
+    notes: "by_design item — recorded PASS because the designed behaviour is observable; BLOCKED is reserved for procedures that could not be exercised."
+  - id: N2
+    result: PASS
+    evidence: "Dev response: 'Hovering a point in the cloud emphasises that point (an enlarged, ringed marker) in addition to the single detailed tooltip.' Closing statement: 'live in-browser checks of every item above — including a deployed production build (single-server)'."
+    notes: "No unit test covers the highlight overlay (requires live Plotly restyle)."
+  - id: N3
+    result: PASS
+    evidence: "Dev response: 'the header's top-right cluster is reordered — the implausible-data warnings sit to the left and the \"Kohorten-Referenz anzeigen\" toggle is the rightmost element.' Closing statement: 'live in-browser checks of every item above'."
+    notes: "Registry note (UIR-CASE-012): PatientHeader renders no 'implausible-data' warning — the adverse-event and critical-value badges are what sits left of the toggle."
+  - id: N4
+    result: PASS
+    evidence: "Dev response: 'the IOD plot now switches cleanly to the relative \"Monate seit Erstvisite\" axis with no residual calendar-date ticks (verified on EM-UKT-0027).'"
+    notes: ""
+  - id: N5
+    result: PASS
+    evidence: "Dev response, How to verify: 'open EM-UKT-0027 → enable \"Kohorten-Referenz anzeigen\" → … the Visus/CRT distribution plots show paired patient/cohort %-bars on a 0–% axis, with counts on hover.' Closing statement: 'The cohort-overlay distribution comparison is drawn with a lightweight grouped-bar renderer … it behaves identically and stays on the shared percentage scale.'"
+    notes: "Tester re-raised the tooltip in round 8 (styled tooltip had been lost with the CSS renderer); restored in v1.19.1, commit 8502a87 ('Verified live (hover shows the box)'). Confirmed with v1.19.1."
+  - id: N6
+    result: PASS
+    evidence: "Dev response, How to verify: 'pick \"Dunkel\" (or \"System\" on a dark OS) → open a case and the Verläufe view: every figure, table, collapsible and the OCT viewer render dark.' Tester confirmed the Analyse and quality surfaces in the following round (registry sources 'UAT v1.19 N6 (tester confirmed)' on UIR-THEME-007/009)."
+    notes: ""
+  - id: N7
+    result: PASS
+    evidence: "Dev response: 'the theme selector is now a collapsible menu with the three options (Hell / Dunkel / System) directly selectable, the active one marked. (The cycling button is retired.)' Closing statement: 'live in-browser checks of every item above'."
+    notes: ""
+  - id: N8
+    result: PASS
+    evidence: "Dev response, How to verify: 'Dokumentationsqualität → Zeitraum → \"Letztes Jahr\": the count and the % both update to the windowed population.'"
+    notes: "Registry note (UIR-DOCQ-011): with a window active the card reads ≈100 % by construction; no unit test covers countRawPatientsInWindow or the windowed denominator."
+  - id: N9
+    result: PASS
+    evidence: "Dev response: 'every trajectory panel now shows a y-axis label for the active metric (e.g. \"Δ logMAR\", \"logMAR\", \"Netzhautdicke (µm)\"), so the plotted quantity is clear without opening Diagramm-Anzeige.' Closing statement: 'live in-browser checks of every item above'."
+    notes: "No unit test asserts the Plotly axis titles (Plotly does not run in jsdom)."
+  - id: N10
+    result: PASS
+    evidence: "Dev response, How to verify: 'open a case → next to the overlay toggle, the selector lists the patient's cohorts and the header shows the chosen one's name + N.'"
+    notes: ""
+  - id: N11
+    result: PASS
+    evidence: "Dev response, How to verify: 'open a case → next to the overlay toggle, the selector lists the patient's cohorts and the header shows the chosen one's name + N.'"
+    notes: ""

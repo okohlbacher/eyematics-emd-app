@@ -1,0 +1,507 @@
+# UI requirements registry — area AUDIT. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+area: AUDIT
+requirements:
+  - id: UIR-AUDIT-001
+    title: "Protokoll shows loading card, then red error card on fetch failure"
+    statement: "The Protokoll page shows a \"Loading audit log…\" card on first load and, when a fetch fails, a red-bordered card with the error message (e.g. \"Server returned 500\") in place of the table."
+    status: implemented
+    sources: ["EMDREQ-PROT-001"]
+    evidence:
+      - "src/pages/AuditPage.tsx:145-149 (hardcoded 'Loading audit log…' card while state.loading)"
+      - "src/pages/AuditPage.tsx:151-155 (error card rendered when !loading && error)"
+      - "src/pages/AuditPage.tsx:158 (table rendered only when !loading && !error)"
+      - "src/pages/audit/auditPageState.ts:42-49 (initialState.loading === true)"
+      - "src/pages/audit/auditPageState.ts:79-82 (FETCH_ERROR clears loading, sets error, keeps entries in state)"
+      - "src/pages/audit/useAuditData.ts:56-63 (non-OK → 'Server returned <status>'; network error → err.message)"
+    tests:
+      - file: tests/auditPageCharacterization.test.tsx
+        name: "loading state on mount"
+      - file: tests/auditPageCharacterization.test.tsx
+        name: "error state on non-OK"
+      - file: tests/auditPageReducer.test.ts
+        name: "FETCH_ERROR with matching epoch sets error and clears loading"
+    browser:
+      route: "/audit"
+      steps:
+        - "Log in as admin and click \"Protokoll\" in the sidebar (or reload /audit)."
+        - "Observe the card below the \"Einträge:\" line before the table appears."
+        - "Stop the API container/process, then change \"Kategorie\" to \"Authentifizierung\"."
+        - "Observe the area below the \"Einträge:\" line."
+      expect: "Step 2: a grey card reading \"Loading audit log…\" is shown briefly, then the table. Step 4: after ~300 ms a red-bordered card with an error message (e.g. \"Failed to fetch\") replaces the table; the previously loaded rows are no longer visible."
+    notes: "The loading text is hardcoded English (not translated) in AuditPage.tsx:147. The reducer keeps old entries in state on FETCH_ERROR, but the table is unmounted while error is set, so 'old rows stay visible' is NOT user-observable; the registry records only the visible card."
+
+  - id: UIR-AUDIT-002
+    title: "Audit table has five columns, newest entry first"
+    statement: "The Protokoll page lists audit entries in a table with Zeitpunkt, Nutzer, Aktion (semantic label such as \"Anmeldung\"), Detail and Status columns, newest first."
+    status: implemented
+    sources: ["EMDREQ-PROT-001", "Benutzerhandbuch §11.1"]
+    evidence:
+      - "src/pages/AuditPage.tsx:164-183 (five <th>: auditTime, auditUser, auditAction, auditDetail, auditStatus)"
+      - "src/pages/AuditPage.tsx:185-210 (row cells: localized timestamp, user, describeAction, describeDetail, status badge)"
+      - "src/pages/audit/auditPageState.ts:101-105 (selectFilteredEntries sorts DESC by timestamp)"
+      - "src/pages/audit/auditFormatters.ts:16-43 (describeAction maps method+path to audit_action_* label; raw path not shown)"
+      - "src/i18n/translations.ts:481-490 (Zeitpunkt/Nutzer/Aktion/Detail/Status labels)"
+      - "server/auditDb.ts:192 (server also orders timestamp DESC)"
+    tests:
+      - file: tests/auditPageCharacterization.test.tsx
+        name: "populated table renders rows"
+      - file: tests/auditPageCharacterization.test.tsx
+        name: "describeAction outputs expected i18n key for POST /api/auth/login"
+      - file: tests/auditPageReducer.test.ts
+        name: "selectFilteredEntries hides noise GETs and sorts desc by timestamp"
+    browser:
+      route: "/audit"
+      steps:
+        - "Log in as admin."
+        - "Click \"Protokoll\" in the sidebar."
+        - "Read the table header row."
+        - "Compare the \"Zeitpunkt\" of the first and second rows."
+      expect: "The page heading reads \"Zugriffsprotokoll\". The header shows exactly Zeitpunkt, Nutzer, Aktion, Detail, Status. The top row is your just-performed login (Aktion \"Anmeldung\", Detail \"Anmeldung als admin\") and its Zeitpunkt is later than or equal to every row below it."
+    notes: "The sidebar item is \"Protokoll\" (navAudit) while the page heading is \"Zugriffsprotokoll\" (auditTitle). The Aktion column shows a translated semantic label (describeAction, e.g. \"Anmeldung\", \"Einstellungen geändert\", \"Sonstige Aktion\"), never the raw method + path; the raw path is only in the CSV/JSON export."
+
+  - id: UIR-AUDIT-003
+    title: "Status column is a colour-coded badge"
+    statement: "The Protokoll table shows the HTTP status of each entry as a colour-coded rounded badge (green for 2xx, amber for 4xx, red for 5xx)."
+    status: implemented
+    sources: ["EMDREQ-PROT-001"]
+    evidence:
+      - "src/pages/AuditPage.tsx:202-208 (status rendered inside <span> with statusBadgeClass)"
+      - "src/pages/audit/auditFormatters.ts:68-74 (≥500 red, 400-499 amber, 300-399 blue, 200-299 green, else gray)"
+    tests:
+      - file: tests/auditPageReducer.test.ts
+        name: "returns green classes for 200-299"
+      - file: tests/auditPageReducer.test.ts
+        name: "returns amber classes for 400-499"
+      - file: tests/auditPageReducer.test.ts
+        name: "returns red classes for status >= 500"
+    browser:
+      route: "/audit"
+      steps:
+        - "On /login, enter a wrong password for user admin once, then log in correctly."
+        - "Open \"Protokoll\" and set \"Kategorie\" to \"Authentifizierung\"."
+        - "Look at the Status cell of the top two rows."
+      expect: "The successful login row shows a green pill badge \"200\"; the failed login row shows an amber pill badge \"401\". Both are rounded badges, not plain text."
+    notes: ""
+
+  - id: UIR-AUDIT-004
+    title: "Routine GET noise is hidden from the table"
+    statement: "The Protokoll table hides routine GET polling noise (e.g. /api/auth/users/me, /api/fhir/centers) so that the list is dominated by logins, data accesses and admin actions."
+    status: implemented
+    sources: ["EMDREQ-PROT-001"]
+    evidence:
+      - "src/pages/audit/auditFormatters.ts:56-66 (isRelevantEntry: all non-GET shown; GET only for /api/settings, /api/audit*, /api/fhir/bundles)"
+      - "src/pages/audit/auditPageState.ts:101-105 (selectFilteredEntries applies isRelevantEntry)"
+      - "src/pages/AuditPage.tsx:27 (table renders filteredEntries)"
+      - "server/auditMiddleware.ts:90 (server-side: successful 200 POST /api/auth/refresh is not even logged)"
+    tests:
+      - file: tests/auditPageCharacterization.test.tsx
+        name: "isRelevantEntry filters out noise GETs from rendered table"
+      - file: tests/auditPageReducer.test.ts
+        name: "selectFilteredEntries hides noise GETs and sorts desc by timestamp"
+      - file: tests/auditMiddleware.test.ts
+        name: "skips successful (200) /api/auth/refresh"
+    browser:
+      route: "/audit"
+      steps:
+        - "Log in as admin and visit Startseite, Kohortenbildung, Analyse, Datenqualität and Verwaltung in turn."
+        - "Open \"Protokoll\"."
+        - "Scan the Aktion column of the first 20 rows."
+      expect: "No rows for /api/auth/users/me, /api/fhir/centers or quality-flag GETs appear; the rows are \"Anmeldung\", \"Datenzugriff\" (GET /api/fhir/bundles), \"Audit-Log\", settings/admin actions. The \"Einträge:\" line may read \"N von M\" with N < M because hidden GET rows still count in M."
+    notes: "The hidden rows are still stored server-side and included in the JSON export and in the server total M."
+
+  - id: UIR-AUDIT-005
+    title: "Count line reads 'N von M' when fewer rows shown than server total"
+    statement: "The Protokoll page shows an \"Einträge:\" count that reads \"N von M\" whenever fewer rows are displayed than the server total M (hidden GET noise), otherwise just the number M."
+    status: implemented
+    sources: ["EMDREQ-PROT-001"]
+    evidence:
+      - "src/pages/AuditPage.tsx:115-122 (filteredEntries.length === total ? total : `${filteredEntries.length} ${t('auditFilteredOf')} ${total}`)"
+      - "src/i18n/translations.ts:634 (auditFilteredOf: de 'von' — there is no 'gefiltert' word)"
+      - "src/i18n/translations.ts:487 (auditEntries: de 'Einträge')"
+      - "src/pages/audit/useAuditData.ts:47-58 (server filters change `total`; an active server filter with all rows relevant yields a plain number)"
+    tests: []
+    browser:
+      route: "/audit"
+      steps:
+        - "Log in as admin and open \"Protokoll\" with no filter set."
+        - "Read the line starting with \"Einträge:\" above the table."
+        - "Set \"Kategorie\" to \"Authentifizierung\" and read the line again."
+      expect: "Step 2: because routine GET rows are hidden client-side, the line typically reads \"Einträge: N von M\" with N < M. Step 3: the server total shrinks to the auth rows; if all of them are displayable the line shows a single number (e.g. \"Einträge: 12\"), not \"N gefiltert von M\"."
+    notes: "The comparison is filteredEntries.length (client relevance-filtered) vs. server total, not 'filter active'. The literal text is \"N von M\"; the word 'gefiltert' does not appear. No test asserts the count line. Note: total counts at most the 500 entries fetched (limit=500) — a deployment with >500 rows shows M capped by the server page size."
+
+  - id: UIR-AUDIT-006
+    title: "Own login appears as a new entry with username as actor"
+    statement: "The Protokoll page shows the user's own login as an \"Anmeldung\" entry (POST /api/auth/login) whose Nutzer column shows the logged-in username."
+    status: implemented
+    sources: ["UAT v1.12 AUDIT-02", "Benutzerhandbuch §11.1"]
+    evidence:
+      - "server/auditMiddleware.ts:102,223-235 (LOGIN_ACTOR_PATHS: actor = attempted username from body when no token)"
+      - "server/auditMiddleware.ts:201,279 (row written on res 'finish'; user ?? 'unauthenticated')"
+      - "src/pages/audit/auditFormatters.ts:18,46 (POST /api/auth/login → 'Anmeldung' / 'Anmeldung als {user}')"
+      - "src/pages/AuditPage.tsx:193-201 (Nutzer and Detail cells)"
+      - "src/i18n/translations.ts:577,604 (audit_action_login, audit_detail_login)"
+    tests:
+      - file: tests/auditMiddleware.test.ts
+        name: "records the attempted username as actor on /api/auth/login"
+      - file: tests/auditMiddleware.test.ts
+        name: "records the real username for authenticated requests"
+      - file: tests/auditPageReducer.test.ts
+        name: "returns audit_action_login for POST /api/auth/login"
+      - file: tests/auditPageCharacterization.test.tsx
+        name: "describeAction outputs expected i18n key for POST /api/auth/login"
+    browser:
+      route: "/audit"
+      steps:
+        - "Log out, then log in as admin."
+        - "Open \"Protokoll\" and set \"Kategorie\" to \"Authentifizierung\"."
+        - "Read the top row."
+      expect: "Top row: Zeitpunkt = the time of your login just now, Nutzer = \"admin\", Aktion = \"Anmeldung\", Detail = \"Anmeldung als admin\", Status = green 200."
+    notes: "With 2FA enabled the POST /api/auth/verify row stays actor 'unauthenticated' by design (auditMiddleware.ts:99-102); the preceding /login row carries the username."
+
+  - id: UIR-AUDIT-007
+    title: "Opening a case creates a 'Daten' audit entry"
+    statement: "The Protokoll page shows, under Kategorie \"Daten\", an entry with timestamp, username and case path each time the user opens a case page (/case/<caseId>)."
+    status: not_implemented
+    sources: ["EMDREQ-PROT-001", "Benutzerhandbuch §11.1"]
+    evidence:
+      - "src/pages/CaseDetailPage.tsx:27,40 (case page reads cases from DataContext via useData(); no per-case API call)"
+      - "src/services/dataSource.ts:16-19 (all bundles loaded once via GET /api/fhir/bundles — path carries no case id)"
+      - "src/hooks/useCaseData.ts:541 (only per-case request is GET /api/fhir/images/<file> for OCT)"
+      - "src/pages/audit/auditFormatters.ts:56-66 (GET /api/fhir/images/* is hidden as noise)"
+      - "server/auditDb.ts:281-283 (Kategorie 'Daten' = path LIKE '/api/data/%' — fhir image/bundle paths are excluded)"
+      - "src/components/outcomes/useOutcomesRouteState.ts:384 (view-open beacon exists only for the outcomes view, not for cases)"
+      - "src/i18n/translations.ts:584,610 (audit_action_view_case / audit_detail_view_case keys exist but no code path produces them)"
+    tests: []
+    browser:
+      route: "/case/<caseId>"
+      steps:
+        - "Log in as admin, open Kohortenbildung and click any case to open /case/<caseId>."
+        - "Open \"Protokoll\" and set \"Kategorie\" to \"Daten\"."
+        - "Look for a row whose Zeitpunkt is the moment you opened the case."
+      expect: "Currently: no row referencing the case appears. Under \"Daten\" only /api/data/* mutations (saved searches, quality flags, exclusions) are listed; the case open leaves no visible entry."
+    notes: "Not implemented in the working tree: there is no per-case request or view-open beacon for /case/:caseId, and the 'Daten' category only matches /api/data/*. Implementing it would need a handler-written row (like POST /api/audit/events/view-open) plus a 'data' category mapping and a describeAction arm using the dormant audit_action_view_case key."
+
+  - id: UIR-AUDIT-008
+    title: "Failed login shows attempted username, password redacted in export"
+    statement: "The Protokoll page shows a failed login with the attempted username as Nutzer and a 401 badge; the stored body (visible in the JSON export) carries \"[REDACTED]\" instead of the password."
+    status: implemented
+    sources: ["UAT v1.12 AUDIT-02", "UAT v1.13"]
+    evidence:
+      - "server/auditMiddleware.ts:36-45,118-132 (REDACT_PATHS incl. /api/auth/login; password/otp/challengeToken → '[REDACTED]')"
+      - "server/auditMiddleware.ts:223-235 (sanitised attempted username becomes actor)"
+      - "src/pages/AuditPage.tsx:193-201 (Nutzer = entry.user; Detail = 'Anmeldung als <user>'; body is never rendered)"
+      - "src/pages/audit/auditFormatters.ts:45-53 (describeDetail does not read the body)"
+      - "server/auditApi.ts:141-158 (JSON export returns rows incl. body)"
+    tests:
+      - file: tests/auditMiddleware.test.ts
+        name: "redacts password on /api/auth/login"
+      - file: tests/auditMiddleware.test.ts
+        name: "records the attempted username as actor on /api/auth/login"
+    browser:
+      route: "/audit"
+      steps:
+        - "On /login, enter username bob with a wrong password and submit."
+        - "Log in as admin, open \"Protokoll\", set \"Kategorie\" to \"Authentifizierung\" and tick \"Nur Fehler\"."
+        - "Read the top row."
+        - "Click \"JSON exportieren\" and open the downloaded file; find the entry with user \"bob\" and path /api/auth/login."
+      expect: "Step 3: Nutzer = \"bob\", Aktion = \"Anmeldung\", Detail = \"Anmeldung als bob\", Status = amber 401. Step 4: the entry's body field is {\"username\":\"bob\",\"password\":\"[REDACTED]\"} — the typed password never appears."
+    notes: "The Protokoll table never displays the request body, so \"[REDACTED]\" is only observable via the JSON export (or DB). Dropped the citation of tests/audit.test.ts 'must never store plaintext passwords' — that test inserts an already-redacted body and is a tautology; the middleware test is the real assertion."
+
+  - id: UIR-AUDIT-009
+    title: "Token-less 401 requests show actor 'unauthenticated'"
+    statement: "The Protokoll page shows \"unauthenticated\" (not \"anonymous\") as the Nutzer for 401 entries from requests that carried no token."
+    status: implemented
+    sources: ["UAT v1.12 AUDIT-01"]
+    evidence:
+      - "server/auditMiddleware.ts:279 (user = user ?? 'unauthenticated')"
+      - "server/auditMiddleware.ts:250-266 (expired-claim attribution only runs when an Authorization header is present)"
+      - "server/auditDb.ts:85 (column default 'unauthenticated')"
+      - "server/index.ts:238-243 (auditMiddleware mounted before authMiddleware so 401s are captured)"
+      - "src/pages/AuditPage.tsx:193-195 (Nutzer cell renders entry.user)"
+    tests:
+      - file: tests/auditMiddleware.test.ts
+        name: "records actor unauthenticated for a true no-auth request (401)"
+      - file: tests/auditMiddleware.test.ts
+        name: "stays unauthenticated when no Authorization header is present on a 401"
+      - file: tests/auditMiddleware.test.ts
+        name: "falls back to unauthenticated on /api/auth/login with no username"
+    browser:
+      route: "/audit"
+      steps:
+        - "In a fresh private window (no session) open <app-url>/api/fhir/bundles directly in the address bar (a token-less GET to a path the table shows)."
+        - "Log in as admin in the normal window, open \"Protokoll\" and tick \"Nur Fehler\"."
+        - "Read the top row."
+      expect: "A row with Nutzer = \"unauthenticated\", Aktion = \"Datenzugriff\", Status = amber 401. The string \"anonymous\" appears nowhere in the Nutzer column."
+    notes: "Only paths passing isRelevantEntry are visible: a token-less GET /api/auth/users/me is logged but hidden from the table; use GET /api/fhir/bundles or any non-GET to observe it."
+
+  - id: UIR-AUDIT-010
+    title: "Expired-token 401s attributed to the token's username"
+    statement: "The Protokoll page shows the token's username as Nutzer for 401 entries that carried a signature-valid but expired access token; forged or invalid-signature tokens stay \"unauthenticated\"."
+    status: implemented
+    sources: ["UAT v1.13 A5", "UAT v1.14"]
+    evidence:
+      - "server/auditMiddleware.ts:24 (import verifyAccessTokenIgnoringExpiry from jwtUtil)"
+      - "server/auditMiddleware.ts:250-277 (A5: 401 + Bearer header → verifyAccessTokenIgnoringExpiry; attribute if typ access, expired 0..24h, preferred_username present)"
+      - "src/pages/AuditPage.tsx:193-195 (Nutzer cell)"
+    tests:
+      - file: tests/auditMiddleware.test.ts
+        name: "attributes 401 to username when token is expired but signature is valid and within 24 h"
+      - file: tests/auditMiddleware.test.ts
+        name: "stays unauthenticated when token signature is invalid"
+      - file: tests/auditMiddleware.test.ts
+        name: "stays unauthenticated when token expired more than 24 h ago"
+      - file: tests/auditMiddleware.test.ts
+        name: "stays unauthenticated when token typ is refresh (not access)"
+    browser:
+      route: "/audit"
+      steps:
+        - "Log in as admin on http://127.0.0.1:3311; in DevTools → Application → Session Storage copy the value of 'emd-token' (the access token, valid 10 min)."
+        - "Wait until more than 10 minutes after that login (do not touch the tab, or log out — either way the stored token is now expired)."
+        - "From a shell: curl -s -o /dev/null -w '%{http_code}\\n' -H \"Authorization: Bearer <token>\" http://127.0.0.1:3311/api/fhir/bundles → 401. Repeat once with the last character of the token changed (invalid signature) → 401."
+        - "Log in again, open \"Protokoll\", tick \"Nur Fehler\" and find the two 401 rows with Aktion \"Datenzugriff\"."
+      expect: "The 401 row from the expired-but-valid token shows Nutzer = \"admin\"; the 401 row from the tampered token shows Nutzer = \"unauthenticated\"."
+    notes: "Visible only for 401s on paths that pass the client relevance filter (e.g. GET /api/fhir/bundles); 401s on /api/auth/users/me are logged with the attributed user but hidden from the table."
+
+  - id: UIR-AUDIT-011
+    title: "Admin can filter the Protokoll by user"
+    statement: "The user can, when logged in as admin, filter the Protokoll by \"Benutzer\" via a user select (default \"Alle Benutzer\"); the control is not offered to non-admin roles."
+    status: implemented
+    sources: ["EMDREQ-PROT-001"]
+    evidence:
+      - "src/pages/AuditPage.tsx:23-24,67-76 (isAdmin gate; select with 'Alle Benutzer' + distinct users)"
+      - "src/pages/audit/auditPageState.ts:93-95 (selectDistinctUsers from fetched entries)"
+      - "src/pages/audit/useAuditData.ts:48 (user → ?user= param)"
+      - "server/auditApi.ts:113-117 (user filter honoured for admin; non-admin auto-scoped to own user)"
+      - "src/i18n/translations.ts:1036-1037 (Benutzer / Alle Benutzer)"
+      - "src/App.tsx:28-33,63 (/audit is AdminRoute — non-admins are redirected to /)"
+      - "src/components/Layout.tsx:26-32 (Protokoll nav item only for admin)"
+    tests:
+      - file: tests/auditPageCharacterization.test.tsx
+        name: "6-dim filter URL params emit correctly"
+      - file: tests/auditApi.test.ts
+        name: "admin can filter by user"
+      - file: tests/auditApi.test.ts
+        name: "non-admin sees only own entries (auto-scoping)"
+      - file: tests/auditPageReducer.test.ts
+        name: "selectDistinctUsers dedups, sorts, and drops empty users"
+    browser:
+      route: "/audit"
+      steps:
+        - "Log in as admin and open \"Protokoll\"."
+        - "In the filter bar, open the \"Benutzer\" select and choose a username other than admin (e.g. a researcher who logged in earlier)."
+        - "Read the Nutzer column."
+        - "Log out, log in as a non-admin user and type <app-url>/audit in the address bar."
+      expect: "Step 3: every visible row has the chosen username in Nutzer and the \"Einträge:\" count drops. Step 4: the non-admin is redirected to the Startseite; neither the Protokoll sidebar item nor the \"Benutzer\" select is reachable."
+    notes: "The user select only lists users present in the currently fetched 500 entries (selectDistinctUsers), not all accounts. Because the whole /audit route is admin-only (App.tsx:63), the non-admin half is only testable via the redirect."
+
+  - id: UIR-AUDIT-012
+    title: "User can filter the Protokoll by category"
+    statement: "The user can filter the Protokoll by \"Kategorie\" (Authentifizierung, Daten, Administration, Outcomes) so that only entries of the chosen category remain."
+    status: implemented
+    sources: ["EMDREQ-PROT-001", "Benutzerhandbuch §11.2"]
+    evidence:
+      - "src/pages/AuditPage.tsx:77-87 (Kategorie select: '', auth, data, admin, outcomes)"
+      - "src/pages/audit/useAuditData.ts:49 (category → ?action_category=)"
+      - "server/auditApi.ts:77-83 (enum validation)"
+      - "server/auditDb.ts:276-291 (SQL per category: auth=/api/auth/% minus /api/auth/users/%; data=/api/data/%; admin=/api/auth/users/% + /api/settings; outcomes=/api/outcomes/% + view-open)"
+      - "src/i18n/translations.ts:630,633,1038-1041 (labels Authentifizierung/Administration/Kategorie/Daten/Outcomes)"
+    tests:
+      - file: tests/auditPageCharacterization.test.tsx
+        name: "debounced refetch on filter change"
+      - file: tests/audit.test.ts
+        name: "action_category: auth returns only /api/auth/* rows excluding /api/auth/users/*"
+      - file: tests/audit.test.ts
+        name: "action_category: admin returns /api/auth/users/* and /api/settings rows"
+      - file: tests/auditApi.test.ts
+        name: "action_category=auth returns only auth rows"
+    browser:
+      route: "/audit"
+      steps:
+        - "Log in as admin and open \"Protokoll\"."
+        - "Set \"Kategorie\" to \"Authentifizierung\"."
+        - "Read the Aktion column and the \"Einträge:\" line."
+        - "Set \"Kategorie\" to \"Administration\"."
+      expect: "Step 3: only \"Anmeldung\"/\"Abmeldung\"/\"Token erneuert\" rows (plus \"Nutzer angelegt\", see notes) remain; the count changes from the unfiltered value. Step 4: only \"Nutzer entfernt\", \"Einstellungen\" and \"Einstellungen geändert\" rows remain."
+    notes: "Quirk: POST /api/auth/users (\"Nutzer angelegt\") has no trailing segment, so the SQL arm 'path LIKE /api/auth/users/%' does not match it — it is classified as Authentifizierung, not Administration (auditDb.ts:279,285). Only DELETE /api/auth/users/<name> lands in Administration. Manual §11.2 is outdated (describes a method filter GET/POST/PUT/DELETE that no longer exists)."
+
+  - id: UIR-AUDIT-013
+    title: "User can filter the Protokoll by date range"
+    statement: "The user can restrict the Protokoll to a period with \"Von\"/\"Bis\" date inputs so that entries outside the range disappear."
+    status: implemented
+    sources: ["EMDREQ-PROT-001", "Benutzerhandbuch §11.2"]
+    evidence:
+      - "src/pages/AuditPage.tsx:88-97 (two <input type=\"date\"> labelled Von / Bis)"
+      - "src/pages/audit/useAuditData.ts:50-51 (fromTime=YYYY-MM-DD; toTime=YYYY-MM-DDT23:59:59)"
+      - "server/auditApi.ts:61-74 (ISO-8601 validation, 400 otherwise)"
+      - "server/auditDb.ts:268-275 (timestamp >= / <=)"
+      - "src/i18n/translations.ts:1042-1043 (Von / Bis)"
+    tests:
+      - file: tests/auditPageCharacterization.test.tsx
+        name: "6-dim filter URL params emit correctly"
+      - file: tests/auditApi.test.ts
+        name: "accepts date-only ISO 8601 for fromTime/toTime"
+      - file: tests/auditApi.test.ts
+        name: "rejects fromTime that is not ISO 8601 with 400"
+    browser:
+      route: "/audit"
+      steps:
+        - "Log in as admin on a deployment that has entries from previous days and open \"Protokoll\"."
+        - "Note the \"Einträge:\" count."
+        - "Set \"Von\" to today's date."
+        - "Set \"Bis\" to yesterday's date (with Von still today)."
+      expect: "Step 3: all visible rows have today's date in Zeitpunkt and the count is lower than in step 2. Step 4: the table shows \"Keine Audit-Einträge entsprechen Ihren Filtern.\""
+    notes: "Manual §11.2 period presets (Heute/7 Tage/30 Tage/Gesamt) do not exist in the UI (their i18n keys auditToday/auditAllTime are dormant); the implementation is free Von/Bis dates. The Bis bound is inclusive of the whole day (T23:59:59, server-local ISO string comparison)."
+
+  - id: UIR-AUDIT-014
+    title: "Admin can search the Protokoll by cohort hash"
+    statement: "The user can, when logged in as admin, filter the Protokoll by cohort hash via the \"Kohorten-Hash suchen…\" field (max 128 characters); the field is not offered to non-admins."
+    status: implemented
+    sources: ["EMDREQ-PROT-001"]
+    evidence:
+      - "src/pages/AuditPage.tsx:98-106 (isAdmin-gated <input type=\"search\" maxLength={128}> with placeholder 'Kohorten-Hash suchen…')"
+      - "src/pages/audit/useAuditData.ts:52 (search → ?body_search=)"
+      - "server/auditApi.ts:51,85-102 (403 for non-admin, 400 if >128 chars or contains % / _)"
+      - "server/auditDb.ts:293 (body LIKE OR query LIKE)"
+      - "src/i18n/translations.ts:1044 (label/placeholder)"
+    tests:
+      - file: tests/auditPageCharacterization.test.tsx
+        name: "6-dim filter URL params emit correctly"
+      - file: tests/auditApi.test.ts
+        name: "rejects body_search longer than 128 chars with 400"
+      - file: tests/auditApi.test.ts
+        name: "rejects body_search for non-admin with 403"
+      - file: tests/auditApi.test.ts
+        name: "accepts well-formed body_search from admin"
+      - file: tests/audit.test.ts
+        name: "body_search: xyz matches via body column"
+    browser:
+      route: "/audit"
+      steps:
+        - "Log in as admin, open Analyse → Verläufe with a saved cohort so an outcomes view-open/aggregate row is written."
+        - "Click \"JSON exportieren\" and copy a 16-hex cohortHash from an /api/outcomes/aggregate or view-open entry's body."
+        - "Open \"Protokoll\", set \"Kategorie\" to \"Outcomes\" and paste the hash into \"Kohorten-Hash suchen…\"."
+        - "Try to type a 129-character string into the same field."
+      expect: "Step 3: after ~300 ms only rows whose body/query contains that hash remain. Step 4: the field stops accepting input at 128 characters. Entering % or _ makes the server reply 400 and the page shows the red error card \"Server returned 400\"."
+    notes: "The search is a generic substring match on body/query (not hash-specific). Non-admin absence is only observable via the AdminRoute redirect (App.tsx:63)."
+
+  - id: UIR-AUDIT-015
+    title: "'Nur Fehler' shows only failed entries"
+    statement: "The user can tick \"Nur Fehler\" so that only Protokoll entries with status ≥ 400 remain."
+    status: implemented
+    sources: ["EMDREQ-PROT-001"]
+    evidence:
+      - "src/pages/AuditPage.tsx:107-110 (checkbox bound to filters.failuresOnly)"
+      - "src/pages/audit/useAuditData.ts:53 (failuresOnly → ?status_gte=400)"
+      - "server/auditApi.ts:104-111 (status_gte parsed, 100-599)"
+      - "server/auditDb.ts:296-299 (status >= @filterStatusGte)"
+      - "src/i18n/translations.ts:1045 (Nur Fehler)"
+    tests:
+      - file: tests/auditPageCharacterization.test.tsx
+        name: "6-dim filter URL params emit correctly"
+      - file: tests/auditPageReducer.test.ts
+        name: "FILTER_SET on boolean key flips failuresOnly"
+      - file: tests/audit.test.ts
+        name: "status_gte: 400 returns only rows with status >= 400"
+      - file: tests/auditApi.test.ts
+        name: "status_gte=400 returns only rows with status>=400"
+    browser:
+      route: "/audit"
+      steps:
+        - "Cause one failed login (wrong password) and then log in as admin."
+        - "Open \"Protokoll\" and tick the \"Nur Fehler\" checkbox."
+        - "Read the Status column of every visible row and the \"Einträge:\" line."
+      expect: "Every badge is amber or red (401/403/404/5xx); no green 2xx rows remain, and the count is lower than before ticking. Unticking restores the full list."
+    notes: ""
+
+  - id: UIR-AUDIT-016
+    title: "'CSV exportieren' downloads the displayed entries"
+    statement: "The user can download the currently displayed Protokoll rows as audit-log-<YYYY-MM-DD>.csv via \"CSV exportieren\"; the button is disabled when the table is empty."
+    status: implemented
+    sources: ["EMDREQ-PROT-001", "Benutzerhandbuch §11.3"]
+    evidence:
+      - "src/pages/AuditPage.tsx:29-39 (handleExportCsv: headers = Zeitpunkt/Nutzer/Aktion/Detail/Status; rows = filteredEntries)"
+      - "src/pages/AuditPage.tsx:124-131 (button disabled={filteredEntries.length === 0})"
+      - "src/utils/download.ts:22-35,50-52 (buildCsv with BOM, datedFilename 'audit-log-<date>.csv')"
+      - "src/i18n/translations.ts:625 (CSV exportieren)"
+    tests:
+      - file: tests/auditPageCharacterization.test.tsx
+        name: "admin-gated export buttons"
+    browser:
+      route: "/audit"
+      steps:
+        - "Log in as admin, open \"Protokoll\" and set \"Kategorie\" to \"Authentifizierung\"."
+        - "Click \"CSV exportieren\" and open the downloaded file."
+        - "Set \"Von\" to a future date so the table shows \"Keine Audit-Einträge entsprechen Ihren Filtern.\" and look at the button."
+      expect: "Step 2: a file named audit-log-<today>.csv downloads; its header row is Zeitpunkt,Nutzer,Aktion,Detail,Status and its data rows equal the rows shown in the table (same count, same Aktion labels). Step 3: \"CSV exportieren\" is greyed out and not clickable."
+    notes: "The only test asserts presence of the button; nothing asserts the CSV content or the disabled state. The CSV contains the displayed (relevance-filtered) rows, not the hidden GET rows."
+
+  - id: UIR-AUDIT-017
+    title: "Admin-only 'JSON exportieren' downloads the full log"
+    statement: "The user can, when logged in as admin, download the complete audit log as audit-export-<date>.json ({entries,total,truncated}) via \"JSON exportieren\"; the button is not offered to non-admins."
+    status: implemented
+    sources: ["EMDREQ-PROT-001", "Benutzerhandbuch §11.3"]
+    evidence:
+      - "src/pages/AuditPage.tsx:41-53 (handleExportJson: authFetch('/api/audit/export') → downloadBlob 'audit-export-<date>.json')"
+      - "src/pages/AuditPage.tsx:132-140 (button only when user.role === 'admin')"
+      - "server/auditApi.ts:138-158 (403 for non-admin; JSON {entries,total,truncated}; Content-Disposition attachment)"
+      - "server/auditDb.ts:217,224-235 (MAX_EXPORT_ROWS 100000, ordered timestamp DESC, uncapped total)"
+      - "src/i18n/translations.ts:491 (JSON exportieren)"
+    tests:
+      - file: tests/auditPageCharacterization.test.tsx
+        name: "admin-gated export buttons"
+      - file: tests/auditApi.test.ts
+        name: "returns 403 for non-admin"
+      - file: tests/auditApi.test.ts
+        name: "returns all entries for admin"
+    browser:
+      route: "/audit"
+      steps:
+        - "Log in as admin, open \"Protokoll\" and set \"Kategorie\" to \"Authentifizierung\" (to prove the export ignores filters)."
+        - "Click \"JSON exportieren\" and open the downloaded file."
+        - "Log in as a non-admin user and open <app-url>/audit."
+      expect: "Step 2: a file audit-export-<today>.json downloads containing an object with keys entries (array of all rows incl. hidden GETs, with id/timestamp/method/path/user/status/duration_ms/body/query), total and truncated:false. Step 3: non-admin is redirected to Startseite; no \"JSON exportieren\" button exists."
+    notes: "The payload is a wrapper object {entries, total, truncated}, not a bare array, and it is capped at 100,000 rows (truncated flag / X-Max-Export-Rows header). The export is unfiltered. A failed export is only logged to the console (AuditPage.tsx:45,51) — no visible error."
+
+  - id: UIR-AUDIT-018
+    title: "No edit or delete control for audit entries"
+    statement: "The Protokoll page offers no control to edit or delete audit entries (no row actions, no bulk delete), and the API has no write route for existing entries."
+    status: implemented
+    sources: ["EMDREQ-PROT-001", "Benutzerhandbuch §1.3", "Benutzerhandbuch §11.1"]
+    evidence:
+      - "src/pages/AuditPage.tsx:123-141 (only CSV/JSON export buttons in the controls row)"
+      - "src/pages/AuditPage.tsx:185-210 (rows have five data cells, no action cell/buttons)"
+      - "src/i18n/translations.ts:485 (auditClear 'Protokoll löschen' key exists but is referenced by no component)"
+      - "server/auditApi.ts (router defines GET /, GET /export, POST /events/view-open only; no PUT/PATCH/DELETE)"
+      - "server/index.ts:301-304 (unmatched /api/* → 404 JSON {error:'Not found'})"
+      - "server/auditDb.ts:103,132-142 (only deletion path is the server-side retention purge)"
+    tests: []
+    browser:
+      route: "/audit"
+      steps:
+        - "Log in as admin and open \"Protokoll\"."
+        - "Inspect the controls row above the table and hover over several rows."
+        - "Right-click a row and check for any context/row menu."
+        - "Open browser devtools and send DELETE <app-url>/api/audit/<id> with the session token."
+      expect: "Steps 2-3: only \"CSV exportieren\" and \"JSON exportieren\" exist; rows have no buttons, checkboxes or menus. Step 4: the server answers 404 {\"error\":\"Not found\"} and the entry remains in the table after reload."
+    notes: "Removed the citation of tests/ui-requirements.test.ts 'audit is server-side only' — it asserts a hardcoded literal list, not the router, so it does not test this behaviour. No automated test covers the absence of write routes; the evidence is the router definition in server/auditApi.ts. The unused 'auditClear' translation key is dead i18n, not a control."
+
+  - id: UIR-AUDIT-019
+    title: "Empty-filter state message when no entries match"
+    statement: "The Protokoll page shows \"Keine Audit-Einträge entsprechen Ihren Filtern.\" inside the table card when the active filters leave no displayable entries."
+    status: implemented
+    sources: ["EMDREQ-PROT-001"]
+    evidence:
+      - "src/pages/AuditPage.tsx:160-161 (filteredEntries.length === 0 → t('auditEmptyFiltered'))"
+      - "src/i18n/translations.ts:1046 (auditEmptyFiltered: 'Keine Audit-Einträge entsprechen Ihren Filtern.')"
+    tests:
+      - file: tests/auditPageCharacterization.test.tsx
+        name: "empty state when no entries match filters"
+    browser:
+      route: "/audit"
+      steps:
+        - "Log in as admin and open \"Protokoll\"."
+        - "Set \"Von\" to a date in the future."
+        - "Read the card below the \"Einträge:\" line."
+      expect: "The table is replaced by a single grey line \"Keine Audit-Einträge entsprechen Ihren Filtern.\"; the \"Einträge:\" count reads 0 and \"CSV exportieren\" is disabled."
+    notes: "Added by the refute pass: clearly implemented and covered by an existing characterization test, but missing from the sweep. The same message appears when the server returns rows that are all hidden by isRelevantEntry (count then reads \"0 von M\")."

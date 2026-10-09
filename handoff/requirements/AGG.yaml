@@ -1,0 +1,476 @@
+# UI requirements registry — area AGG. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+area: AGG
+requirements:
+  - id: UIR-AGG-001
+    title: "Analyse page reachable with Aggregiert/Verläufe tabs"
+    statement: "The Analyse page is reachable via the \"Analyse\" sidebar entry and shows a tablist with \"Aggregiert\" and \"Verläufe\"; \"Aggregiert\" is selected by default."
+    status: implemented
+    sources: ["manual: docs/Benutzerhandbuch.md §5", "code: src/pages/AnalysisPage.tsx:57-88,362-369"]
+    evidence:
+      - "src/App.tsx:57 — <Route path=\"/analysis\" element={<AnalysisPage />}>"
+      - "src/components/Layout.tsx:17-23 — research nav array contains '/analysis' labelled t('navAnalysis') for every role"
+      - "src/pages/AnalysisPage.tsx:57-61,73-77 — isAnalysisTab guard; tab falls back to 'aggregate' when ?tab= is absent or invalid"
+      - "src/pages/AnalysisPage.tsx:311-330 — tabButton renders <button role=\"tab\" aria-selected={active}>"
+      - "src/pages/AnalysisPage.tsx:362-369 — <div role=\"tablist\" aria-label={t('analysisTitle')}> with the two tabs"
+      - "src/i18n/translations.ts:52,216-218 — navAnalysis 'Analyse'; analysisTitle 'Kohortenanalyse'; analysisTabAggregate 'Aggregiert'; analysisTabTrajectories 'Verläufe'"
+    tests:
+      - file: tests/AnalysisPage.test.tsx
+        name: "single-cohort: renders aggregate tab without cross-mode elements"
+    browser:
+      route: "/analysis"
+      steps:
+        - "Log in as admin and click \"Analyse\" in the left sidebar."
+        - "Read the page heading \"Kohortenanalyse\" and the tab bar beneath the header block."
+        - "Inspect the tab bar (DevTools): role=tablist with aria-label \"Kohortenanalyse\" containing two role=tab buttons \"Aggregiert\" and \"Verläufe\"."
+        - "Without clicking any tab, check which tab has aria-selected=true (blue text, blue underline)."
+      expect: "Both tabs \"Aggregiert\" and \"Verläufe\" are present; \"Aggregiert\" is aria-selected=true, the five single-cohort chart cards are shown and the URL carries no ?tab= param."
+    notes: "The h1 is \"Kohortenanalyse\" (analysisTitle) while the sidebar entry reads \"Analyse\". The cited test only asserts that data-testid analysis-tab-aggregate renders when ?tab= is absent; it does not query the tablist or aria-selected."
+  - id: UIR-AGG-002
+    title: "Tab selection is driven by ?tab= URL param"
+    statement: "The UI drives the Analyse tab via ?tab=: selecting \"Verläufe\" sets ?tab=trajectories, selecting \"Aggregiert\" removes the param, and an unknown value falls back to \"Aggregiert\"."
+    status: implemented
+    sources: ["code: src/pages/AnalysisPage.tsx:57-88"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:57-61 — isAnalysisTab accepts only 'aggregate' | 'trajectories'"
+      - "src/pages/AnalysisPage.tsx:73-77 — tab derived from searchParams.get('tab') with 'aggregate' fallback"
+      - "src/pages/AnalysisPage.tsx:79-87 — selectTab deletes 'tab' for aggregate, sets 'tab'=next otherwise; setSearchParams(sp, { replace: true })"
+      - "src/pages/AnalysisPage.tsx:371-396 — tab === 'trajectories' mounts OutcomesView, otherwise the aggregate section"
+    tests: []
+    browser:
+      route: "/analysis"
+      steps:
+        - "Open /analysis (no query params) while logged in."
+        - "Click the \"Verläufe\" tab and read the browser address bar."
+        - "Click the \"Aggregiert\" tab and read the address bar again."
+        - "Manually open /analysis?tab=bogus and check which tab is selected."
+      expect: "After step 2 the URL is /analysis?tab=trajectories and the trajectory panels are shown; after step 3 the URL is /analysis without ?tab= and the aggregate charts return; in step 4 \"Aggregiert\" is selected."
+    notes: "No automated test covers the URL round-trip: tests/AnalysisPage.test.tsx mocks useSearchParams with a no-op setter, so selectTab is never asserted."
+  - id: UIR-AGG-003
+    title: "?filters= applies cohort filters to the Analyse page"
+    statement: "The Analyse page opened via ?filters=<json> (e.g. from \"Kohorte analysieren\") applies those filters, dropping unknown keys, so the header case count equals the Kohortenbildung count."
+    status: implemented
+    sources: ["EMDREQ-ANL-001 / N02.07 (docs/Anforderungsabgleich.md: Umgesetzt)", "manual: docs/Benutzerhandbuch.md §4.4", "code: src/pages/AnalysisPage.tsx:114-119,146-153"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:114-119 — filters = activeSavedSearch.filters, else parseCohortFilterJson(searchParams.get('filters'))"
+      - "src/pages/AnalysisPage.tsx:146-153 — cohort = applyFilters(activeCases, filters, settings-derived options)"
+      - "src/pages/CohortBuilderPage.tsx:318-323 — Kohortenbildung count uses applyFilters with the same getSettings() options"
+      - "src/utils/cohortFilterSerialization.ts:27-50 — safePickCohortFilter whitelist: unknown keys dropped, preset/laterality literal-restricted"
+      - "src/utils/cohortFilterSerialization.ts:56-63 — parseCohortFilterJson returns {} on malformed JSON"
+      - "src/pages/CohortBuilderPage.tsx:991-999 — \"Kohorte analysieren\" button navigates to /analysis?filters=<JSON.stringify(filters)>"
+      - "src/pages/AnalysisPage.tsx:341-342 — header count = centeredCohort.length"
+      - "src/i18n/translations.ts:203 — analyzeCohort 'Kohorte analysieren'"
+    tests: []
+    browser:
+      route: "/analysis?filters={\"gender\":[\"female\"]}"
+      steps:
+        - "Open \"Kohortenbildung\", under \"Geschlecht\" select \"Weiblich\" and note the case count shown in the results header."
+        - "Click \"Kohorte analysieren\"."
+        - "Read the address bar and the Analyse header line ending in \"Fälle in der aktuellen Kohorte\"."
+        - "Separately open /analysis?filters={\"gender\":[\"female\"],\"__proto__\":{\"x\":1},\"foo\":1} and read the same header line."
+      expect: "After step 2 the URL contains ?filters=%7B%22gender%22… and the Analyse case count equals the Kohortenbildung count from step 1; in step 4 the count is identical (unknown keys ignored) and no error is shown."
+    notes: "tests/AnalysisPage.test.tsx stubs applyFilters to return all cases, so no test asserts the count equals the filtered cohort; the invalid-JSON test only checks that the derived name renders without crashing. The safePickCohortFilter whitelist is exercised in tests/qualityFlaggedCohortRoundTrip.test.tsx (flaggedCaseIds Set reconstruction), not for the ?filters= path."
+  - id: UIR-AGG-004
+    title: "Derived cohort name shown for ?filters= cohorts"
+    statement: "The Analyse page opened via ?filters= shows a blue line \"Gefilterte Kohorte · <filter summary>\" under the title (capped at 80 characters); an optional ?name= replaces it with the supplied name."
+    status: implemented
+    sources: ["uat: v1.12 ANL-012", "code: src/pages/AnalysisPage.tsx:121-144,336-340"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:128-144 — displayCohortName: saved name → ?name= override → t('analysisFilteredCohort') + ' · ' + summarizeCohortFilter, sliced to 79 chars + '…'"
+      - "src/pages/AnalysisPage.tsx:336-340 — blue <p> under the h1 rendered when displayCohortName !== null"
+      - "src/utils/cohortFilterSerialization.ts:77-122 — summarizeCohortFilter: fixed field order, German literals, flaggedCaseIds as count only"
+      - "src/i18n/translations.ts:1005 — analysisFilteredCohort 'Gefilterte Kohorte'"
+    tests:
+      - file: tests/AnalysisPage.test.tsx
+        name: "?filters= without ?name=: header shows \"Filtered cohort\" (English locale)"
+      - file: tests/AnalysisPage.test.tsx
+        name: "?filters= with ?name=: header shows the supplied name"
+      - file: tests/AnalysisPage.test.tsx
+        name: "no ?cohort= and no ?filters=: no cohort name line rendered"
+      - file: tests/AnalysisPage.test.tsx
+        name: "returns summary for diagnosis + ageRange separated by ·"
+      - file: tests/AnalysisPage.test.tsx
+        name: "summarizes flaggedCaseIds as count only, not raw ids"
+    browser:
+      route: "/analysis?filters={\"gender\":[\"female\"],\"ageRange\":[60,80]}"
+      steps:
+        - "Open the route above while logged in."
+        - "Read the blue line directly below the \"Kohortenanalyse\" heading."
+        - "Open /analysis?filters={\"gender\":[\"female\"]}&name=Meine%20Kohorte and read the same line."
+        - "Open /analysis (no params) and check that no blue name line is shown."
+      expect: "Step 2 shows \"Gefilterte Kohorte · Geschlecht: female · Alter 60–80\"; step 3 shows \"Meine Kohorte\"; step 4 shows no name line. A summary longer than 80 characters ends with \"…\"."
+    notes: "The summary literals (\"Geschlecht:\", \"Alter\", \"Diagnose:\") stay German under the EN language switch and filter values are echoed raw (e.g. \"female\"). The last two cited tests are summarizeCohortFilter unit tests living in tests/AnalysisPage.test.tsx."
+  - id: UIR-AGG-005
+    title: "?cohort=<savedId> resolves saved search and shows its name"
+    statement: "The Analyse page opened via ?cohort=<savedId> (e.g. via the \"Outcomes anzeigen\" icon of a saved search) applies the saved filters and shows the saved cohort name under the page title."
+    status: implemented
+    sources: ["uat: v1.10 A-04 / KOH-005", "code: src/pages/AnalysisPage.tsx:96-119,128-130"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:97-101 — activeSavedSearch = savedSearches.find(s.id === ?cohort)"
+      - "src/pages/AnalysisPage.tsx:114-117 — filters = activeSavedSearch.filters when resolved"
+      - "src/pages/AnalysisPage.tsx:130,336-340 — displayCohortName = activeSavedSearch.name rendered under the h1"
+      - "src/pages/CohortBuilderPage.tsx:504-512 — per-saved-search icon button title/aria-label t('outcomesOpenForCohort') navigates to /analysis?tab=trajectories&cohort=<id>"
+      - "src/i18n/translations.ts:142,836 — savedSearches 'Gespeicherte Suchen'; outcomesOpenForCohort 'Outcomes anzeigen'"
+    tests:
+      - file: tests/AnalysisPage.test.tsx
+        name: "saved-search path: shows activeSavedSearch.name in header (unchanged)"
+      - file: tests/cohortBuilderEntryPoints.test.tsx
+        name: "per-row LineChart button navigates to /analysis?tab=trajectories&cohort=<id>"
+    browser:
+      route: "/analysis?cohort=<savedId>"
+      steps:
+        - "On \"Kohortenbildung\" set a filter (e.g. Diagnose AMD), note the case count, and save it under \"Gespeicherte Suchen\" as \"AMD-Test\"."
+        - "In the saved-search row click the violet line-chart icon button titled \"Outcomes anzeigen\"."
+        - "Read the address bar and the blue line under the \"Kohortenanalyse\" heading."
+        - "Click the \"Aggregiert\" tab and read the \"… Fälle in der aktuellen Kohorte\" line."
+      expect: "The URL contains ?tab=trajectories&cohort=<id>; the blue line reads \"AMD-Test\"; the case count equals the count noted in step 1; the name persists after switching to \"Aggregiert\"."
+    notes: "The saved-search entry point is the icon button \"Outcomes anzeigen\" (no text link \"Analysieren\") and it lands on the \"Verläufe\" tab. Unknown ids leave activeSavedSearch null, so the page falls back to ?filters= (or all cases) without an error."
+  - id: UIR-AGG-006
+    title: "Header shows case count of current cohort"
+    statement: "The Analyse header shows \"N Fälle in der aktuellen Kohorte\" where N is the case count of the current cohort after centre-chip narrowing."
+    status: implemented
+    sources: ["EMDREQ-ANL-001 / N02.07 (docs/Anforderungsabgleich.md: Umgesetzt)", "code: src/pages/AnalysisPage.tsx:341-348"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:341-342 — {centeredCohort.length} {t('casesInCohort')}"
+      - "src/pages/AnalysisPage.tsx:146-153 — cohort = applyFilters(activeCases, filters, …)"
+      - "src/pages/AnalysisPage.tsx:200-204 — centeredCohort = cohort narrowed by selected centre chips (empty selection = cohort)"
+      - "src/i18n/translations.ts:219 — casesInCohort 'Fälle in der aktuellen Kohorte'"
+    tests:
+      - file: tests/AnalysisPage.test.tsx
+        name: "client-side narrowing: clicking a center button narrows visible case count"
+      - file: tests/AnalysisPage.test.tsx
+        name: "empty center selection = all cases shown (no narrowing)"
+    browser:
+      route: "/analysis?cohort=<savedId>"
+      steps:
+        - "On \"Kohortenbildung\" apply a filter, note the displayed number of cases, and save the search."
+        - "Open the saved search via the \"Outcomes anzeigen\" icon, then click \"Aggregiert\"."
+        - "Read the grey line under the heading."
+      expect: "The line reads \"<N> Fälle in der aktuellen Kohorte\" where N equals the Kohortenbildung count from step 1."
+    notes: "German label is \"Fälle in der aktuellen Kohorte\" (EN: \"cases in current cohort\"). The cited tests assert the leading number via /^2 / and /^1 / text matches."
+  - id: UIR-AGG-007
+    title: "Header shows red critical-value count (CRT > 400 µm)"
+    statement: "The Analyse header shows a red \"N Fälle mit kritischen Werten (CRT > 400 µm)\" segment after the case count when at least one case of the current cohort has any CRT measurement above 400 µm."
+    status: implemented
+    sources: ["EMDREQ-ANL-004 / N02.14 (docs/Anforderungsabgleich.md: Umgesetzt)", "manual: docs/Benutzerhandbuch.md §5.2", "code: src/pages/AnalysisPage.tsx:304-309,343-347"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:304-309 — criticalCount = centeredCohort cases with any LOINC_CRT observation value > 400"
+      - "src/pages/AnalysisPage.tsx:343-347 — <span className=\"ml-3 text-red-600 …\"> rendered only when criticalCount > 0"
+      - "src/i18n/translations.ts:220-223 — casesWithCritical 'Fälle mit kritischen Werten (CRT > 400 µm)'"
+      - "scripts/generate-center-bundle.ts:209-230,521-523 — seed CRT baselines 280–650 µm (clamped 200–700), so critical cases exist in the demo data"
+    tests: []
+    browser:
+      route: "/analysis"
+      steps:
+        - "Log in as admin and open \"Analyse\" (all centres, no filter)."
+        - "Read the grey line under the \"Kohortenanalyse\" heading."
+        - "Under the heading \"Zentrum\" click the chip \"Universitätsklinikum Aachen\" and re-read the line."
+      expect: "Step 2 shows, in red after the case count, \"<N> Fälle mit kritischen Werten (CRT > 400 µm)\" with 0 < N ≤ case count; after step 3 both numbers change to the Aachen subset and the red N is still ≤ the new case count."
+    notes: "The red segment is rendered inline in the same <p> as the case count, not on its own line. criticalCount checks ANY CRT observation of a case, whereas the Kohortenbildung CRT range filter checks only the LATEST CRT — so a cohort filtered to latest CRT ≤ 300 µm may still show a red count (previous step 3 of this procedure was invalid and has been replaced). tests/AnalysisPage.test.tsx stubs getObservationsByCode to [], so criticalCount is never asserted."
+  - id: UIR-AGG-008
+    title: "Critical count uses the CRT threshold from Einstellungen"
+    statement: "The Analyse critical-value count and its label use the CRT threshold saved under \"Klinische Schwellenwerte\" in Einstellungen, so lowering the threshold increases the count after a reload."
+    status: not_implemented
+    sources: ["EMDREQ-ANL-004 / N02.14 (docs/Anforderungsabgleich.md: Umgesetzt — claims configurable thresholds)", "uat: v1.12 CFG-03 / Q-40-1 (no per-cohort snapshot by design)", "manual: docs/Benutzerhandbuch.md §5.2"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:303-308 — criticalCount compares against the literal 400 (line 306), not a settings value"
+      - "src/pages/AnalysisPage.tsx:39 — only CHART_COLORS is imported from config/clinicalThresholds; CRITICAL_CRT_THRESHOLD() is unused on this page"
+      - "src/config/clinicalThresholds.ts:15-17 — CRITICAL_CRT_THRESHOLD() reads getSettings().thresholds.criticalCrtUm (exists, used elsewhere)"
+      - "src/hooks/useCaseData.ts:521-525; src/components/quality/QualityCaseDetail.tsx:154; src/components/case-detail/VisusCrtChart.tsx:304 — other pages DO use the configurable threshold"
+      - "src/i18n/translations.ts:220-223 — label hardcodes 'CRT > 400 µm'"
+      - "src/pages/SettingsPage.tsx:666-689; src/i18n/translations.ts:1149-1151 — \"Klinische Schwellenwerte\" form field \"CRT kritischer Schwellenwert (µm)\" saves thresholds.criticalCrtUm"
+    tests: []
+    browser:
+      route: "/analysis"
+      steps:
+        - "Log in as admin, open \"Analyse\" and note the red \"N Fälle mit kritischen Werten (CRT > 400 µm)\" count."
+        - "Open \"Einstellungen\", scroll to the card \"Klinische Schwellenwerte\", set \"CRT kritischer Schwellenwert (µm)\" to 250 and click the \"Speichern\" button at the bottom of THAT card; a green banner \"Einstellungen gespeichert\" appears at the top of the page."
+        - "Reload the browser, open \"Analyse\" again and read the red count and its label."
+        - "Restore the threshold to 400 afterwards."
+      expect: "CURRENT BEHAVIOUR (gap): count and label \"(CRT > 400 µm)\" are unchanged after step 3. REQUIRED BEHAVIOUR: the count increases and the label reads \"(CRT > 250 µm)\"."
+    notes: "Not implemented on the Analyse page: computation (literal 400 at AnalysisPage.tsx:306) and label are hardcoded although CRITICAL_CRT_THRESHOLD() is available and used by Fallansicht/Datenqualität. CFG-03 concerns server-side outcome aggregation options and Q-40-1 the no-snapshot decision — neither wires the Analyse critical count to thresholds.criticalCrtUm."
+  - id: UIR-AGG-009
+    title: "Centre multi-select chips narrow count and charts"
+    statement: "The Analyse page shows a centre chip row headed \"Zentrum\" (only when the cohort spans >1 centre) that narrows the case count and all charts, with a count badge and a \"Zurücksetzen\" link."
+    status: implemented
+    sources: ["uat: v1.12 QUAL-024 / Q-42 (tester confirmed in v1.13: works in Analyse)", "code: src/pages/AnalysisPage.tsx:188-215,351-359; src/components/common/CenterMultiSelect.tsx:52-96"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:188-193 — centerOptions = sorted distinct centerName of activeCases"
+      - "src/pages/AnalysisPage.tsx:195-215 — selectedCenters state; centeredCohort / centeredCrossCohorts narrowing"
+      - "src/pages/AnalysisPage.tsx:229-302 — centerDist, diagDist, visusTrend, crtDistribution, ageVisusScatter, medianVisus all derive from centeredCohort"
+      - "src/pages/AnalysisPage.tsx:351-359 — chip row rendered only when centerOptions.length > 1 (data-testid analysis-center-filter)"
+      - "src/components/common/CenterMultiSelect.tsx:54-76 — heading t('qualityFilterCenter') (CSS uppercase), count badge when selected.length > 0, 'Alle Zentren' text or 'Zurücksetzen' button"
+      - "src/components/common/CenterMultiSelect.tsx:77-95 — one toggle button per centre name"
+      - "src/i18n/translations.ts:541,547-548 — qualityFilterCenter 'Zentrum'; qualityFilterCentersAll 'Alle Zentren'; qualityFilterCentersClear 'Zurücksetzen'"
+    tests:
+      - file: tests/AnalysisPage.test.tsx
+        name: "renders center filter widget when activeCases span multiple centers"
+      - file: tests/AnalysisPage.test.tsx
+        name: "does not render center filter widget when all activeCases share one center"
+      - file: tests/AnalysisPage.test.tsx
+        name: "client-side narrowing: clicking a center button narrows visible case count"
+      - file: tests/CenterMultiSelect.test.tsx
+        name: "shows count indicator when more than zero centers are selected"
+      - file: tests/CenterMultiSelect.test.tsx
+        name: "clear affordance calls onChange with empty array"
+    browser:
+      route: "/analysis"
+      steps:
+        - "Log in as admin (6 centres) and open \"Analyse\"; note the case count and that \"Verteilung über Zentren\" has 6 bars."
+        - "Under the heading \"ZENTRUM\" click the chip \"Universitätsklinikum Aachen\"."
+        - "Read the case count, the badge next to the heading, and the bar chart."
+        - "Click \"Zurücksetzen\" at the right of the heading."
+      expect: "After step 2 the count drops to the Aachen subset, the badge shows \"1\", the bar chart shows only the UKA bar and the other charts shrink accordingly; after step 4 the badge disappears, \"Alle Zentren\" is shown and the original count/charts return."
+    notes: "Chip labels are full centre names (e.g. \"Universitätsklinikum Aachen\") while the bar chart uses shorthands (UKA). The heading is rendered uppercase by CSS. Chip selection is component state only — not persisted in the URL; it resets on navigation."
+  - id: UIR-AGG-010
+    title: "Centre chips never list unassigned centres"
+    statement: "The Analyse centre chip row never lists a centre the user is not assigned to, and deselecting all chips shows all authorised centres."
+    status: implemented
+    sources: ["uat: v1.12 QUAL-024 / Q-42 (tester confirmed in v1.13: works in Analyse)", "code: src/pages/AnalysisPage.tsx:188-204; server/fhirApi.ts"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:188-193 — centerOptions derived solely from activeCases, which the server already restricted"
+      - "src/pages/AnalysisPage.tsx:200-204 — empty selection → centeredCohort = cohort (all authorised cases)"
+      - "src/components/common/CenterMultiSelect.tsx:6-10 — client-side narrowing only; never sends centres to the server"
+      - "server/fhirApi.ts — filterBundlesByCenters applied by req.auth.centers (admin bypass only)"
+      - "data/users.json — seed: forscher1 → org-uka only; epidemiologe → org-uka + org-ukc; admin/klinikleitung → all 6"
+    tests:
+      - file: tests/AnalysisPage.test.tsx
+        name: "does not render center filter widget when all activeCases share one center"
+      - file: tests/AnalysisPage.test.tsx
+        name: "empty center selection = all cases shown (no narrowing)"
+      - file: tests/fhirApi.test.ts
+        name: "filterBundlesByCenters() with local bundles filters to user centers only"
+      - file: tests/centerBypass.test.ts
+        name: "non-admin never bypasses, even with all valid centers"
+    browser:
+      route: "/analysis"
+      steps:
+        - "Log in as \"epidemiologe\" (assigned Aachen + Chemnitz) and open \"Analyse\"."
+        - "Read the chips under \"ZENTRUM\"."
+        - "Click \"Universitätsklinikum Aachen\", then click it again to deselect; read the case count."
+        - "Log out, log in as \"forscher1\" (Aachen only) and open \"Analyse\"."
+      expect: "Step 2 shows exactly two chips (Aachen, Chemnitz); step 3 returns to the combined Aachen+Chemnitz count with \"Alle Zentren\" shown; step 4 shows no chip row at all (single centre) and only Aachen cases."
+    notes: "Enforcement is server-side (bundles filtered by req.auth.centers); the chip list is a pure projection of the already-authorised activeCases. The two server tests cover the authorisation mechanism, not the chip row itself. With a single assigned centre the chip row is hidden entirely."
+  - id: UIR-AGG-011
+    title: "Centre distribution bar chart"
+    statement: "The \"Aggregiert\" tab shows a \"Verteilung über Zentren\" bar chart with one bar per centre shorthand (e.g. UKA); hovering shows \"Fälle : N\" and the bars sum to the header case count."
+    status: implemented
+    sources: ["EMDREQ-ANL-001 / N02.07 (docs/Anforderungsabgleich.md: Umgesetzt)", "manual: docs/Benutzerhandbuch.md §5.1", "code: src/pages/AnalysisPage.tsx:229-236,545-561"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:229-236 — centerDist: Map keyed by getCenterShorthand(centerId, centerName) → {name, count}"
+      - "src/pages/AnalysisPage.tsx:545-561 — card t('centerDistribution'); BarChart; Bar dataKey=count name=t('cases'); default Recharts Tooltip"
+      - "src/services/fhirLoader.ts:198-200 — getCenterShorthand → UKA/UKC/… with centerName fallback (data/centers.json shorthands)"
+      - "src/i18n/translations.ts:42,224 — cases 'Fälle'; centerDistribution 'Verteilung über Zentren'"
+    tests: []
+    browser:
+      route: "/analysis?tab=aggregate"
+      steps:
+        - "Log in as admin and open /analysis (Aggregiert tab)."
+        - "Locate the card \"Verteilung über Zentren\" (top-left)."
+        - "Count the bars and read the x-axis labels."
+        - "Hover each bar, add up the tooltip values and compare with the \"… Fälle in der aktuellen Kohorte\" header."
+      expect: "Six bars labelled UKA, UKC, UKG, UKL, UKM, UKT; each tooltip shows \"Fälle : <N>\" (default Recharts name/value format); the sum of all N equals the header case count."
+    notes: "Bars are labelled with centre shorthands; the default Recharts tooltip renders \"Fälle : N\" (spaces around the colon). tests/AnalysisPage.test.tsx stubs all recharts components, so the chart is not asserted."
+  - id: UIR-AGG-012
+    title: "Diagnosis distribution pie with legend and full-text tooltip"
+    statement: "The \"Aggregiert\" tab shows a \"Diagnoseverteilung\" pie with a scrollable legend list; hovering a slice shows \"Fälle: N\" and the full diagnosis name including the SNOMED code."
+    status: implemented
+    sources: ["EMDREQ-ANL-003 / N02.10 (docs/Anforderungsabgleich.md: Umgesetzt)", "manual: docs/Benutzerhandbuch.md §5.1", "code: src/pages/AnalysisPage.tsx:238-256,563-617"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:238-256 — diagDist with label via getCachedDisplay and fullText via getCachedFullText, sorted by count"
+      - "src/pages/AnalysisPage.tsx:563-591 — PieChart with custom Tooltip rendering d.fullText and `${t('cases')}: ${d.value}`"
+      - "src/pages/AnalysisPage.tsx:592-617 — <ul aria-label=t('diagnosisLegendAriaLabel')> with max-h-[250px] overflow-y-auto, one entry per diagnosis with count and full text"
+      - "src/services/terminology.ts:38-56 — seed fullText e.g. 'Altersbedingte Makuladegeneration (267718000)'; unresolved codes fall back to the raw code"
+      - "src/i18n/translations.ts:225-227 — diagnosisDistribution, diagnosisHoverHint, diagnosisLegendAriaLabel"
+    tests: []
+    browser:
+      route: "/analysis?tab=aggregate"
+      steps:
+        - "Open /analysis as admin and locate the card \"Diagnoseverteilung\" with the hint \"Fahren Sie mit der Maus über die Kuchenstücke …\"."
+        - "Hover the largest pie slice and read the tooltip."
+        - "Inspect the list to the right of the pie (aria-label \"Diagnoselegende mit Abkürzungen und vollständigen Namen\") and scroll it if it overflows."
+      expect: "The tooltip shows two lines, e.g. \"Altersbedingte Makuladegeneration (267718000)\" and \"Fälle: <N>\"; the legend lists each diagnosis as \"<Kurzname> (<N>)\" plus its full text in a 250px-high scrollable box."
+    notes: "Full text with SNOMED code comes from the terminology seed map or the server lookup; an unresolved code shows the bare code. Not asserted by tests (recharts stubbed)."
+  - id: UIR-AGG-013
+    title: "Mean visus per quarter line chart"
+    statement: "The \"Aggregiert\" tab shows a \"Visus im zeitlichen Verlauf (Mittelwert)\" line chart with quarter labels on the x-axis and a \"Quartal:\" tooltip prefix; it is a cohort mean, not per-patient trajectories."
+    status: implemented
+    sources: ["EMDREQ-ANL-002 / N02.08 (docs/Anforderungsabgleich.md: Umgesetzt)", "manual: docs/Benutzerhandbuch.md §5.1", "uat: v1.10 ANL-002 (differs from Verläufe median by design)", "code: src/pages/AnalysisPage.tsx:258-277,619-650"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:258-277 — visusTrend: all LOINC_VISUS observations bucketed by 'YYYY-Qn', mean to 3 decimals, sorted"
+      - "src/pages/AnalysisPage.tsx:619-650 — card t('visusTrend'); XAxis dataKey=quarter; Tooltip labelFormatter `${t('quarter')}: ${l}`, formatter toFixed(3); Line dataKey=mean name=t('meanVisus') stroke #10b981"
+      - "src/i18n/translations.ts:228-231,240,242 — visusTrend 'Visus im zeitlichen Verlauf (Mittelwert)'; meanVisus 'Mittlerer Visus'; quarter 'Quartal'"
+    tests: []
+    browser:
+      route: "/analysis?tab=aggregate"
+      steps:
+        - "Open /analysis as admin and locate the card \"Visus im zeitlichen Verlauf (Mittelwert)\"."
+        - "Read the x-axis tick labels."
+        - "Hover a data point and read the tooltip."
+        - "Switch to \"Verläufe\" and compare the Visus median curve shape."
+      expect: "X-axis ticks are quarters like \"2024-Q1\"; the tooltip header reads \"Quartal: 2024-Q1\" with a line \"Mittlerer Visus : 0.xxx\"; a single green line (legend \"Mittlerer Visus\") is drawn; it differs from the Verläufe median without any error."
+    notes: "Mean is over all observations in the quarter (not per patient first), which is why it differs from the Verläufe median."
+  - id: UIR-AGG-014
+    title: "CRT distribution histogram with visible bars"
+    statement: "The \"Aggregiert\" tab shows a \"Netzhautdicke (CRT) Verteilung\" histogram with the bins <200, 200–250, 250–300, 300–350, 350–400, >400 whose bars render with visible, non-zero heights."
+    status: implemented
+    sources: ["EMDREQ-ANL-003 / N02.10 (docs/Anforderungsabgleich.md: Umgesetzt)", "manual: docs/Benutzerhandbuch.md §5.1", "code: src/pages/AnalysisPage.tsx:279-282,652-666"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:279-282 — crtDistribution = computeCrtDistribution(all LOINC_CRT observations of centeredCohort)"
+      - "src/pages/AnalysisPage.tsx:652-666 — card t('crtDistribution'); BarChart XAxis dataKey=range; Bar dataKey=count name=t('measurements') fill #8b5cf6"
+      - "src/utils/distributionBins.ts:93-110 — six fixed bins; counts observations with value in [min, max)"
+      - "src/i18n/translations.ts:232-235,241 — crtDistribution 'Netzhautdicke (CRT) Verteilung'; measurements 'Messungen'"
+    tests: []
+    browser:
+      route: "/analysis?tab=aggregate"
+      steps:
+        - "Open /analysis as admin and locate the card \"Netzhautdicke (CRT) Verteilung\"."
+        - "Read the x-axis labels."
+        - "Visually check that every bin with a non-zero count has a visible violet bar; hover a bar and read the tooltip."
+      expect: "Six bins labelled \"<200\", \"200–250\", \"250–300\", \"300–350\", \"350–400\", \">400\"; bars have visible heights proportional to counts; the tooltip reads \"Messungen : <N>\"."
+    notes: "Rendering height cannot be verified statically; this is a plain BarChart (not the cohort-overlay histogram where the Recharts height-0 regression was observed in Fallansicht), so the browser check is the only guard. computeCrtDistribution has no unit test and is stubbed to [] in tests/AnalysisPage.test.tsx."
+  - id: UIR-AGG-015
+    title: "Age vs. visus scatter with median line and ascending axis"
+    statement: "The \"Aggregiert\" tab shows an \"Alter vs. Visus (letzter Messwert)\" scatter with one point per case, a monotonically ascending age x-axis and a dashed red \"Median: x.xx\" reference line."
+    status: implemented
+    sources: ["EMDREQ-ANL-003 / N02.10 (docs/Anforderungsabgleich.md: Umgesetzt)", "manual: docs/Benutzerhandbuch.md §5.1", "uat: v1.10 ANL-003", "code: src/pages/AnalysisPage.tsx:284-302,668-700"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:284-294 — ageVisusScatter: latest LOINC_VISUS per case → {age, visus}, cases without visus skipped, sorted ascending by age"
+      - "src/pages/AnalysisPage.tsx:296-302 — medianVisus over the scatter points"
+      - "src/pages/AnalysisPage.tsx:668-700 — card t('ageVsVisus'); XAxis type=number dataKey=age name=t('age') unit=' J.' domain dataMin–dataMax; Scatter fill #f59e0b; ReferenceLine y=medianVisus stroke #dc2626 strokeDasharray='4 4' label `${t('outcomesLayerMedian')}: ${medianVisus.toFixed(2)}`"
+      - "src/i18n/translations.ts:38,205,236-239,863 — age 'Alter'; visus 'Visus'; ageVsVisus 'Alter vs. Visus (letzter Messwert)'; outcomesLayerMedian 'Median'"
+    tests: []
+    browser:
+      route: "/analysis?tab=aggregate"
+      steps:
+        - "Open /analysis as admin and locate the full-width card \"Alter vs. Visus (letzter Messwert)\"."
+        - "Read the x-axis ticks from left to right (unit \"J.\")."
+        - "Locate the dashed red horizontal line and its label in the top-right."
+        - "Hover a point and read the tooltip."
+      expect: "Orange points; x-axis ages increase strictly left to right; a dashed red line labelled \"Median: 0.xx\" is drawn; the tooltip shows \"Alter : <n> J.\" and \"Visus : <v>\"."
+    notes: "One point per case (cases without a visus observation are skipped). Not asserted by tests (recharts stubbed)."
+  - id: UIR-AGG-016
+    title: "Comparison layout for two or more cohorts"
+    statement: "When ?cohorts= resolves to ≥2 saved cohorts (max 4), the \"Aggregiert\" tab shows a cohort legend plus \"Diagnoseverteilung nach Kohorte\" and \"Alter vs. Visus nach Kohorte\" comparison charts."
+    status: implemented
+    sources: ["EMDREQ-ANL-003 / N02.11b (docs/Anforderungsabgleich.md: Umgesetzt)", "uat: v1.12 ANL-011", "code: src/pages/AnalysisPage.tsx:156-186,402-540"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:159-170 — crossCohortIds: split, keep known ids, prepend ?cohort= if missing, cap at 4"
+      - "src/pages/AnalysisPage.tsx:173-186 — crossCohorts with COHORT_PALETTES colour, name, patientCount, cases"
+      - "src/pages/AnalysisPage.tsx:402-430 — rendered when isCrossMode && centeredCrossCohorts.length >= 2; <ul aria-label=t('analysisCompareLegendAriaLabel')> with name and (count)"
+      - "src/pages/AnalysisPage.tsx:432-491 — data-testid compare-diagnosis: one pie per cohort under t('analysisCompareDiagnosisTitle')"
+      - "src/pages/AnalysisPage.tsx:493-540 — data-testid compare-age-visus: one ScatterChart with a Scatter series per cohort"
+      - "src/i18n/translations.ts:1000-1002 — 'Diagnoseverteilung nach Kohorte'; 'Alter vs. Visus nach Kohorte'; legend aria-label 'Kohortenlegende (Farbe → Name)'"
+    tests:
+      - file: tests/AnalysisPage.test.tsx
+        name: "cross-mode: renders comparison sections when ?cohorts= has 2+ known ids"
+      - file: tests/AnalysisPage.test.tsx
+        name: "cross-mode: cohort names are visible in comparison legend"
+      - file: tests/AnalysisPage.test.tsx
+        name: "cross-mode: unknown cohort ids are silently dropped"
+      - file: tests/AnalysisPage.test.tsx
+        name: "cross-mode: primary cohort is included first when not explicitly in ?cohorts="
+      - file: tests/AnalysisPage.test.tsx
+        name: "cross-mode: capped at 4 cohorts"
+      - file: tests/AnalysisPage.test.tsx
+        name: "single-cohort: falls back gracefully when ?cohorts= has only 1 known id"
+    browser:
+      route: "/analysis?cohorts=<id1>,<id2>&tab=aggregate"
+      steps:
+        - "On \"Kohortenbildung\" save two searches (e.g. \"AMD\" and \"DR\") and copy their ids from the \"Outcomes anzeigen\" link URLs."
+        - "Open /analysis?cohorts=<id1>,<id2>&tab=aggregate."
+        - "Inspect the legend row at the top of the tab panel and the two cards below."
+      expect: "A legend (aria-label \"Kohortenlegende (Farbe → Name)\") lists \"AMD (N1)\" and \"DR (N2)\" with colour squares; the card \"Diagnoseverteilung nach Kohorte\" shows one pie per cohort headed by the cohort name; \"Alter vs. Visus nach Kohorte\" shows one scatter with a legend entry per cohort; the single-cohort five-chart grid is not shown."
+    notes: "Capped at 4 cohorts, unknown ids dropped, ?cohort= primary prepended if missing. Centre chips also narrow each compared cohort (centeredCrossCohorts), and the legend counts follow that narrowing."
+  - id: UIR-AGG-017
+    title: "Aggregiert and Verläufe share the same cohort"
+    statement: "The \"Aggregiert\" and \"Verläufe\" tabs always operate on the same selected cohort: the trajectory patient count matches the Aggregiert case count after switching tabs."
+    status: partial
+    sources: ["uat: v1.10 ANL-002/003; v1.12 ANL-012", "code: src/pages/AnalysisPage.tsx:114-119; src/components/outcomes/useOutcomesRouteState.ts:106-125"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:333-348 — header name/count rendered outside the tab panels (identical for both tabs by construction, so not a valid parity check)"
+      - "src/pages/AnalysisPage.tsx:97-101,114-119 — Aggregiert resolves ?cohort= and ?filters= (plural)"
+      - "src/components/outcomes/useOutcomesRouteState.ts:106-125 — Verläufe resolveCohort resolves ?cohort= and ?filter= (singular); with neither it returns ALL activeCases"
+      - "src/pages/AnalysisPage.tsx:371-396 — Verläufe tab mounts OutcomesView, which uses useOutcomesRouteState rather than the page's cohort"
+      - "src/pages/CohortBuilderPage.tsx:991-995 — \"Kohorte analysieren\" emits ?filters= (plural), which Verläufe does not read"
+    tests: []
+    browser:
+      route: "/analysis?filters={\"gender\":[\"female\"]}"
+      steps:
+        - "On \"Kohortenbildung\" select \"Weiblich\" under \"Geschlecht\", note the count, click \"Kohorte analysieren\"."
+        - "On \"Aggregiert\" read the header count and the \"Verteilung über Zentren\" bar total."
+        - "Click \"Verläufe\" and compare the number of patients/points reported inside the trajectory panels with the step-1 count."
+        - "Repeat steps 2–3 with a saved search opened via \"Outcomes anzeigen\" (?cohort=<id>)."
+      expect: "EXPECTED: both tabs use the female cohort. CURRENT: for ?cohort= (step 4) both tabs match; for ?filters= (steps 1–3) the header stays consistent but the Verläufe panels operate on ALL authorised cases (resolveCohort reads only ?filter=), so the trajectory patient count exceeds the Aggregiert count."
+    notes: "Partial: shared for saved cohorts (?cohort=) and ?cohorts= compare mode, but a filter-based cohort from \"Kohorte analysieren\" (?filters=) is not carried into Verläufe because useOutcomesRouteState reads the singular ?filter= (see tests/OutcomesPage.test.tsx '4. parses ?filter= valid JSON')."
+  - id: UIR-AGG-018
+    title: "Aggregate charts restyle for dark mode"
+    statement: "The aggregate charts restyle grid lines, axis tick labels, tooltip and legend colours for dark mode so they remain legible on a dark background."
+    status: implemented
+    sources: ["code: src/pages/AnalysisPage.tsx:69-72; src/components/outcomes/palette.ts:88-107", "manual: .planning v1.18 WS-A M12"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:69-72 — ct = rechartsTheme(effectiveTheme === 'dark') via useThemeSafe"
+      - "src/components/outcomes/palette.ts:88-107 — rechartsTheme dark tokens: grid #374151, axisTick #9ca3af, legend #d1d5db, tooltipBg #1f2937, tooltipText #f3f4f6"
+      - "src/pages/AnalysisPage.tsx:553-556,625-636,657-660,677-680 — CartesianGrid stroke=ct.grid; XAxis/YAxis tick fill + stroke=ct.axisTick; Tooltip contentStyle/itemStyle/labelStyle from ct; Legend wrapperStyle color=ct.legend"
+      - "src/pages/AnalysisPage.tsx:516-520 — same tokens on the compare scatter"
+      - "src/pages/AnalysisPage.tsx:332,548,564,578 — page/card containers and the custom pie tooltip use dark:bg-gray-900 / dark:bg-gray-800"
+      - "src/components/ThemeToggle.tsx:55-80; src/i18n/translations.ts:1032-1035 — sidebar-footer trigger titled \"Design\" opens a menu with \"Hell\" / \"Dunkel\" / \"System\""
+    tests:
+      - file: tests/rechartsDarkTheme.test.tsx
+        name: "returns distinct dark vs light tokens"
+    browser:
+      route: "/analysis?tab=aggregate"
+      steps:
+        - "Open /analysis as admin in light mode and note grid/tick colours in \"Verteilung über Zentren\"."
+        - "In the sidebar footer click the theme trigger (title \"Design\", shows the current mode name) and choose \"Dunkel\" from the menu."
+        - "Re-inspect the grid lines, axis tick labels and the legend \"Mittlerer Visus\" in the visus trend card."
+        - "Hover a bar in \"Verteilung über Zentren\" and a pie slice in \"Diagnoseverteilung\"."
+      expect: "On the dark background the grid is dark grey (#374151), tick labels light grey (#9ca3af), the legend text light; tooltips have a dark (#1f2937) background with light text; the custom pie tooltip uses dark:bg-gray-800 with light text."
+    notes: "The cited test covers only the rechartsTheme token map that AnalysisPage consumes (plus dark smoke renders of IntervalHistogram/ResponderView); no test renders AnalysisPage under a dark ThemeProvider. The theme control is a menu button titled \"Design\" (themeMenuLabel), not a button titled \"Zum dunklen Modus wechseln\"."
+  - id: UIR-AGG-019
+    title: "Opening Analyse records a Weitermachen entry"
+    statement: "Opening the Analyse page records a \"Weitermachen\" entry on the Startseite labelled with the saved cohort name (else \"Analyse\") whose link restores the full URL including cohort/filter params."
+    status: implemented
+    sources: ["code: src/pages/AnalysisPage.tsx:103-110; src/pages/LandingPage.tsx:307-323"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:103-110 — mount effect: record({ id: savedSearchId ?? 'analysis', label: activeSavedSearch?.name ?? t('navAnalysis'), sub: t('navAnalysis'), path: pathname + search })"
+      - "src/hooks/useRecentActivity.ts:28-34 — record → store.record(username, …visitedAt)"
+      - "src/pages/LandingPage.tsx:307-323 — \"Weitermachen\" tile; row onClick/Enter → navigate(entry.path)"
+      - "src/i18n/translations.ts:1059 — jumpBackIn 'Weitermachen'"
+    tests:
+      - file: tests/jumpBackIn.test.tsx
+        name: "navigates to entry.path when a row is clicked"
+      - file: tests/jumpBackIn.test.tsx
+        name: "hides jump-back-in-empty and shows entry rows when entries exist"
+      - file: tests/recentActivityStore.test.ts
+        name: "dedupes by id and moves repeated entry to index 0"
+    browser:
+      route: "/analysis?tab=trajectories&cohort=<savedId>"
+      steps:
+        - "On \"Kohortenbildung\" save a search named \"AMD-Test\" and open it via the \"Outcomes anzeigen\" icon."
+        - "Click \"Startseite\" in the sidebar and locate the \"Weitermachen\" panel."
+        - "Click the row labelled \"AMD-Test\" (sub-label \"Analyse\")."
+        - "Read the address bar."
+      expect: "The Weitermachen panel lists \"AMD-Test\" at the top; clicking it returns to /analysis?tab=trajectories&cohort=<savedId> with the same cohort name and count shown."
+    notes: "The label is the saved-search name only when ?cohort= resolves; a ?filters= cohort is recorded with label \"Analyse\" and id 'analysis', so all filter-based visits dedupe into one entry. No test asserts that AnalysisPage itself calls record (tests/AnalysisPage.test.tsx mocks useRecentActivity as a no-op); the cited tests cover the store dedupe and the Startseite row navigation."
+  - id: UIR-AGG-020
+    title: "Diagnosis labels follow the UI language"
+    statement: "The \"Diagnoseverteilung\" pie labels, legend and tooltip follow the UI language: after switching to English via the sidebar \"English\" button the diagnosis names and full texts are shown in English."
+    status: implemented
+    sources: ["code: src/pages/AnalysisPage.tsx:238-256; src/services/terminology.ts:38-56", "manual: docs/Benutzerhandbuch.md §13"]
+    evidence:
+      - "src/pages/AnalysisPage.tsx:238-256 — diagDist calls getCachedDisplay(system, code, locale) and getCachedFullText(system, code, locale); memo depends on locale"
+      - "src/services/terminology.ts:38-56 — seed map holds de/en label and fullText per code (e.g. 'Diabetische Retinopathie' / 'Diabetic Retinopathy')"
+      - "src/components/Layout.tsx:114-120 — sidebar-footer button toggles locale ('English' / 'Deutsch')"
+      - "src/pages/AnalysisPage.tsx:566-575,592-617 — pie label `${name}: ${value}` and legend entries render the locale-resolved name and fullText"
+    tests:
+      - file: tests/terminology.test.ts
+        name: "SNOMED 312903003 — DME (label + fullText, de + en)"
+    browser:
+      route: "/analysis?tab=aggregate"
+      steps:
+        - "Open /analysis as admin (German UI) and read the legend of \"Diagnoseverteilung\" (e.g. \"Diabetische Retinopathie\", full text \"Diabetische Retinopathie (312898008)\")."
+        - "Click \"English\" in the sidebar footer."
+        - "Read the card title, the pie slice labels and the legend again; hover a slice."
+      expect: "The card is titled \"Diagnosis Distribution\"; the legend and slice labels switch to English names (e.g. \"Diabetic Retinopathy\"); the tooltip shows the English full text with the SNOMED code and \"Cases: <N>\"."
+    notes: "Added by the refute pass: locale-aware terminology resolution is specific to this chart and not covered by any other AGG item. The cited test covers only the seed map (de + en strings), not the AnalysisPage rendering."

@@ -1,0 +1,971 @@
+# UI requirements registry — area TRAJ. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+area: TRAJ
+requirements:
+  - id: UIR-TRAJ-001
+    title: "Metric tablist Visus/CRT/Behandlungsintervall/Responder via ?metric="
+    statement: "The Verläufe tab shows a metric tablist \"Visus\", \"CRT\", \"Behandlungsintervall\", \"Responder\" driven by ?metric= (default visus), and ArrowLeft/ArrowRight move between tabs."
+    status: implemented
+    sources: ["spec: EMDREQ-ANL-002 / N02.08", "code: src/components/outcomes/OutcomesView.tsx:99-134", "code: src/components/outcomes/useOutcomesRouteState.ts:58-60,273-277,488-507"]
+    evidence:
+      - "src/components/outcomes/OutcomesView.tsx:99-135 — role=tablist nav, role=tab buttons, data-testid metric-tab-<m>, onKeyDown → handleMetricKeyDown; non-active tabs tabIndex -1"
+      - "src/components/outcomes/useOutcomesRouteState.ts:58-67 — VALID_METRICS, METRIC_TAB_ORDER; 273-277 activeMetric from ?metric=, invalid → visus; 488-507 handleMetricChange sets ?metric=, handleMetricKeyDown ArrowLeft/Right with wrap"
+      - "src/components/outcomes/useOutcomesRouteState.ts:416-442 — resetToMetricDefaults: a metric-tab switch to visus/crt resets Y to delta and X to days (layers keep explicit overrides)"
+      - "src/i18n/translations.ts:941-944 — metricsVisus/Crt/Interval/Responder DE labels 'Visus', 'CRT', 'Behandlungsintervall', 'Responder'"
+      - "src/components/outcomes/OutcomesPanel.tsx:138-145 — CRT y-axis title 'Netzhautdicke (µm)' / 'Δ µm'"
+    tests:
+      - file: tests/metricSelector.test.tsx
+        name: "renders visus by default when no ?metric= param"
+      - file: tests/metricSelector.test.tsx
+        name: "reads ?metric=crt on mount and preselects CRT tab"
+      - file: tests/metricSelector.test.tsx
+        name: "writes ?metric=interval when Treatment Interval tab is clicked"
+      - file: tests/metricSelector.test.tsx
+        name: "defaults to visus when ?metric=invalidvalue"
+      - file: tests/metricSelector.test.tsx
+        name: "ArrowRight advances metric and updates URL"
+      - file: tests/metricSelector.test.tsx
+        name: "ArrowLeft retreats to previous metric"
+      - file: tests/metricSelector.test.tsx
+        name: "ArrowRight wraps from responder back to visus"
+      - file: tests/metricSelector.test.tsx
+        name: "ArrowLeft wraps from visus back to responder"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Log in and open Analyse → tab \"Verläufe\" (URL /analysis?tab=trajectories)."
+        - "Observe the tab strip under the header: \"Visus\" (underlined/active), \"CRT\", \"Behandlungsintervall\", \"Responder\"."
+        - "Click \"CRT\"."
+        - "Click into the \"CRT\" tab to focus it and press ArrowRight; then press ArrowLeft once."
+      expect: "After step 3 the URL contains metric=crt and the OD panel y-axis title reads 'Δ µm' (a metric switch resets to Δ/days). After ArrowRight the \"Behandlungsintervall\" tab is active (metric=interval) and is document.activeElement with tabIndex 0; after the single ArrowLeft the \"CRT\" tab is active again (metric=crt) and is document.activeElement with tabIndex 0."
+    notes: "The keyboard handler fires on the focused tab button; non-active tabs have tabIndex -1, so Tab-key focus lands only on the active tab. Switching to Visus/CRT also resets the Y-metric to Δ and the X-axis to days (explicit layer toggles survive, see UIR-TRAJ-019). Known deviation (backlog, found 2026-10-08): focus does not follow the selection — after ArrowRight document.activeElement stays on the previously focused tab (tabIndex -1) and handleMetricKeyDown (useOutcomesRouteState.ts:499-507) computes the next tab from the focused one, so a second press is off by one (CRT → ArrowRight → ArrowLeft lands on Visus, not CRT; ArrowRight twice stays on Behandlungsintervall). The focus check in expect fails until this is fixed; tests/metricSelector.test.tsx:122-147 fire a single keyDown only."
+  - id: UIR-TRAJ-002
+    title: "Header buttons Kohorten vergleichen and Diagramm-Anzeige"
+    statement: "The Verläufe header has a \"Kohorten vergleichen\" button and a \"Diagramm-Anzeige\" button with a tooltip listing the drawn layers and axes, aria-expanded and aria-controls=outcomes-settings-drawer."
+    status: implemented
+    sources: ["UAT v1.16 K1d; confirmed v1.17", "code: src/components/outcomes/OutcomesView.tsx:311-336"]
+    evidence:
+      - "src/components/outcomes/OutcomesView.tsx:311-336 — compare button aria-label outcomesCompareOpenDrawer; settings button title=outcomesSettingsButtonTooltip, aria-expanded={drawerOpen}, aria-controls=outcomes-settings-drawer"
+      - "src/components/outcomes/OutcomesSettingsDrawer.tsx:100-103 — aside id=outcomes-settings-drawer, translate-x toggle; 105-108 title 'Einstellungen'"
+      - "src/components/outcomes/CohortCompareDrawer.tsx:99-107 — aside id=outcomes-compare-drawer titled outcomesCompareDrawerTitle"
+      - "src/i18n/translations.ts:828-831,919 — DE 'Diagramm-Anzeige', tooltip 'Anzeigeebenen & Achsen einstellen (Median, Einzelverläufe, Streupunkte, IQR-Band, Zeitachse)', 'Kohorten vergleichen'"
+    tests:
+      - file: tests/OutcomesPage.test.tsx
+        name: "9. toggling x-axis to treatments in drawer causes axis label to appear"
+      - file: tests/OutcomesViewRouting.test.tsx
+        name: "after deselecting all pre-selected sub-cohorts, a fresh pick registers (no lock)"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\"."
+        - "Hover the \"Diagramm-Anzeige\" button (gear icon) in the header for ~1 s."
+        - "Click \"Diagramm-Anzeige\"; inspect the button in DevTools."
+        - "Click \"Kohorten vergleichen\"."
+      expect: "Step 2: native tooltip 'Anzeigeebenen & Achsen einstellen (Median, Einzelverläufe, Streupunkte, IQR-Band, Zeitachse)'. Step 3: a right-hand drawer titled \"Einstellungen\" slides in; the button has aria-expanded=\"true\" and aria-controls=\"outcomes-settings-drawer\". Step 4: a drawer titled \"Kohorten vergleichen\" slides in."
+    notes: "The cited tests only click the two buttons by their accessible name and then interact with the opened drawer (existence + opens). The tooltip text, aria-expanded and aria-controls attributes are not asserted by any test. Both drawers are always in the DOM and slide in via translate-x."
+  - id: UIR-TRAJ-003
+    title: "Visus shows four summary cards above three panels OD/OS/combined"
+    statement: "The Visus metric shows four aria-live summary cards (patients, measurements, OD, OS with excluded hints) above three titled panels OD, OS and combined, each subtitled '<patients> · <measurements>'."
+    status: implemented
+    sources: ["spec: EMDREQ-ANL-002 / N02.08", "code: src/components/outcomes/OutcomesSummaryCards.tsx:63-95", "code: src/components/outcomes/VisusMetricContainer.tsx:86-146"]
+    evidence:
+      - "src/components/outcomes/OutcomesSummaryCards.tsx:35-96 — aria-live=polite grid; cards outcomes-card-patients/-total/-od/-os; excluded hints via outcomesCardExcluded"
+      - "src/components/outcomes/VisusMetricContainer.tsx:86-146 — summary cards then 3-column grid of OutcomesPanel od/os/combined with titleKey outcomesPanelOd/Os/Combined"
+      - "src/components/outcomes/OutcomesPanel.tsx:131,547-548 — subtitle `${patientCount} · ${measurementCount}`"
+      - "src/i18n/translations.ts:840-851 — DE card labels 'Patient:innen', 'Messungen gesamt', 'Messungen OD', 'Messungen OS'; panel titles 'Rechtes Auge (OD)', 'Linkes Auge (OS)', 'OD + OS kombiniert'"
+    tests:
+      - file: tests/OutcomesPage.test.tsx
+        name: "8. OD panel renders and its subtree contains the chart fallback"
+      - file: tests/OutcomesPage.test.tsx
+        name: "12. summary cards display values matching the aggregate for all-OD cohort"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" with the \"Visus\" tab active."
+        - "Wait until 'Verläufe werden berechnet…' disappears."
+        - "Count the cards in the first row and the chart panels below."
+      expect: "Four cards labelled \"Patient:innen\", \"Messungen gesamt\", \"Messungen OD\", \"Messungen OS\" (OD/OS cards may show '<n> ausgeschlossen'); below them three panels titled \"Rechtes Auge (OD)\", \"Linkes Auge (OS)\", \"OD + OS kombiniert\", each with a grey subtitle of the form '<patients> · <measurements>' (numbers only)."
+    notes: "The panel subtitle is '<n> · <m>' (two numbers, no words). Test 12 asserts card values; test 8 asserts only the OD panel — the OS/combined panels and the four card labels are not asserted."
+  - id: UIR-TRAJ-004
+    title: "Computing status shown; no blank cards; controls stay responsive"
+    statement: "The Verläufe tab shows a role=status 'Verläufe werden berechnet…' label before panels mount for cohorts >50 cases, never blank white cards, and layer toggles stay responsive meanwhile."
+    status: implemented
+    sources: ["UAT v1.14 I2; v1.15 J2; v1.17 L1/L2; confirmed v1.18", "code: src/components/outcomes/OutcomesView.tsx:41-90,142-194"]
+    evidence:
+      - "src/components/outcomes/OutcomesView.tsx:46 — CLIENT_RENDER_STATUS_THRESHOLD_CASES=50; 61-89 setTimeout(0)-armed deferral keyed on cohort|metric|layers; 164-176 role=status data-testid outcomes-client-computing while !clientRenderReady || clientWorkerPending"
+      - "src/components/outcomes/useOutcomesAggregation.ts:96-99,420 — client path for ad-hoc / below-threshold cohorts; clientWorkerPending keeps the status up until the Web Worker aggregate lands"
+      - "src/components/outcomes/OutcomesPanelProgressive.tsx:16-42 — PanelPlaceholder with role=status instead of a blank card"
+      - "src/i18n/translations.ts:820 — 'Verläufe werden berechnet…'"
+    tests:
+      - file: tests/OutcomesPerfI2.test.tsx
+        name: "shows a role=\"status\" client-computing indicator on first paint of a large client-side cohort"
+      - file: tests/OutcomesPerfI2.test.tsx
+        name: "clears the client-computing indicator once the deferred render arms (no permanent spinner)"
+      - file: tests/OutcomesPerfI2.test.tsx
+        name: "does NOT show the client-computing indicator for a small cohort (no flash)"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" with no ?cohort= (all 245 cases)."
+        - "Immediately watch the area below the tab strip."
+        - "While charts are still building, click \"Diagramm-Anzeige\" and untick \"Streuband (IQR)\"."
+      expect: "Step 2: an italic grey text 'Verläufe werden berechnet…' appears first (element role=status), then the three panels replace it; no empty white card is shown. Step 3: the drawer opens and the checkbox unticks immediately (no multi-second freeze)."
+    notes: "Responsiveness during build is not asserted by tests (jsdom cannot measure it). The status is the client path; a saved cohort above the serverAggregationThresholdPatients (config/settings.yaml, default 1000) shows 'Berechnung auf Server…' instead."
+  - id: UIR-TRAJ-005
+    title: "Heavy cohorts mount panels one at a time with placeholders"
+    statement: "The Verläufe tab mounts the three panels one at a time with placeholders for heavy cohorts so the drawer controls stay responsive."
+    status: implemented
+    sources: ["UAT v1.15 J2; v1.16 K7", "code: src/components/outcomes/VisusMetricContainer.tsx:45-65,95-145"]
+    evidence:
+      - "src/components/outcomes/VisusMetricContainer.tsx:56-65 — progressiveActive when cases > PROGRESSIVE_PANEL_THRESHOLD_CASES; stageKey includes layers so a toggle re-arms staging; 95-145 mountedPanels >= 1/2/3 else PanelPlaceholder"
+      - "src/components/outcomes/CrtMetricContainer.tsx:49-58,66-119 — same staging for CRT"
+      - "src/components/outcomes/useProgressivePanels.ts:28-57 — setTimeout(0) staged mount, re-arm on key change"
+      - "src/components/outcomes/OutcomesPanelProgressive.tsx:14,16-42 — threshold 50; placeholder testid outcomes-panel-placeholder-<eye> with role=status and the panel title"
+    tests:
+      - file: tests/useProgressivePanels.test.tsx
+        name: "mounts one panel first, then stages the rest on later macrotasks"
+      - file: tests/useProgressivePanels.test.tsx
+        name: "re-arms staging (drops back to 1) when the stage key changes"
+      - file: tests/useProgressivePanels.test.tsx
+        name: "mounts all panels at once when staging is inactive"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" on all 245 cases."
+        - "Open \"Diagramm-Anzeige\", tick \"Streupunkte\" and \"Individuelle Kurven\" (heavy render)."
+        - "Watch the three panel slots immediately after the toggle."
+      expect: "The \"Rechtes Auge (OD)\" panel draws first while the \"Linkes Auge (OS)\" and \"OD + OS kombiniert\" slots show a card with the title and the text 'Verläufe werden berechnet…'; they fill in one after another."
+    notes: "Tests cover the hook only; the container wiring (placeholder cards) is verified by code reading."
+  - id: UIR-TRAJ-006
+    title: "First visit defaults to X-axis days and Y-metric Δ from baseline"
+    statement: "The Verläufe tab on a first visit defaults to X-axis \"Tage seit Baseline\" and Y-metric Δ (delta from baseline) with grid 120."
+    status: implemented
+    sources: ["code: src/components/outcomes/useOutcomesRouteState.ts:193-196"]
+    evidence:
+      - "src/components/outcomes/useOutcomesRouteState.ts:193-196 — useState defaults axisMode 'days', yMetric 'delta', gridPoints 120 when nothing persisted"
+      - "src/components/outcomes/OutcomesPanel.tsx:138-145 — yLabel 'Δ logMAR' for visus delta"
+      - "src/i18n/translations.ts:856,860,931 — DE 'Tage seit Baseline', 'Δ (Differenz zur Baseline)', 'Δ logMAR'"
+    tests: []
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "In DevTools → Application → Session Storage, delete all keys starting with 'emd.outcomesView.v1' (or open a fresh private window and log in)."
+        - "Open Analyse → \"Verläufe\" (Visus)."
+        - "Read the OD panel's y-axis title; then click \"Diagramm-Anzeige\"."
+      expect: "The y-axis title reads 'Δ logMAR'; in the drawer the radio \"Tage seit Baseline\" is selected, \"Δ (Differenz zur Baseline)\" is selected and the slider caption reads '120 Stützstellen'."
+    notes: "No test asserts the first-visit defaults (tests only assert y-domain for explicitly passed yMetric props). Note the drawer's \"Auf Standard zurücksetzen\" resets Y to absolute, not Δ (UIR-TRAJ-014)."
+  - id: UIR-TRAJ-007
+    title: "Every panel shows Y- and X-axis titles matching metric and mode"
+    statement: "The Verläufe panels show a Y-axis title naming metric and mode ('Visus (logMAR)', 'Δ logMAR', 'Δ logMAR %', 'Netzhautdicke (µm)', 'Δ µm', 'Δ %') and an X-axis title 'Tag' or 'Behandlung #'."
+    status: implemented
+    sources: ["UAT v1.19 N9", "code: src/components/outcomes/OutcomesPanel.tsx:131-145,345-359,565-571", "manual: .planning/v1.20-ROADMAP.md v1.20.2"]
+    evidence:
+      - "src/components/outcomes/OutcomesPanel.tsx:132 — xLabel from outcomesTooltipDay / outcomesTooltipTreatmentIndex; 138-145 yLabelKey per metric × yMetric; 345-359 xaxis.title / yaxis.title in the Plotly layout; 567-571 hidden marker outcomes-panel-<eye>-ylabel data-ylabel"
+      - "src/components/outcomes/useOutcomesRouteState.ts:416-442 — metric switch resets axis to days and Y to delta"
+      - "src/i18n/translations.ts:893-894,930-935 — DE 'Tag', 'Behandlung #', 'Visus (logMAR)', 'Δ logMAR', 'Δ logMAR %', 'Netzhautdicke (µm)', 'Δ µm', 'Δ %'"
+    tests: []
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" (Visus); open \"Diagramm-Anzeige\"."
+        - "Select Y radio \"Δ % (prozentuale Änderung)\"; then X radio \"Anzahl Behandlungen\"."
+        - "Click metric tab \"CRT\" (resets to Δ/days: 'Δ µm' / 'Tag'); then select Y radio \"Absolut (µm)\"."
+        - "In DevTools inspect [data-testid=outcomes-panel-od-ylabel]."
+      expect: "Step 2: all three panels' y-axis title becomes 'Δ logMAR %' and x-axis title 'Behandlung #'. Step 3: y-axis title 'Netzhautdicke (µm)' and x-axis 'Tag'. Step 4: data-ylabel equals the visible y-axis title."
+    notes: "Label list matches the exact strings in translations.ts. No test asserts the ylabel marker or the Plotly axis titles (Plotly does not run in jsdom)."
+  - id: UIR-TRAJ-008
+    title: "Plotly modebar: zoom, pan, box/lasso, autoscale, reset; no logo/camera"
+    statement: "The user can zoom, pan, box-select and lasso on each Verläufe panel via the Plotly modebar and autoscale/reset the view; no Plotly logo or image-export button is shown and the legend sits below."
+    status: implemented
+    sources: ["UAT v1.17 L12; confirmed v1.18", "code: src/components/outcomes/OutcomesPanel.tsx:331-373"]
+    evidence:
+      - "src/components/outcomes/OutcomesPanel.tsx:342 — dragmode 'zoom'; 343-344 legend orientation h, y -0.2 (below plot); 365-373 config displaylogo false, modeBarButtonsToRemove ['toImage'], modeBarButtons zoom2d/pan2d/select2d/lasso2d/zoomIn2d/zoomOut2d/autoScale2d/resetScale2d"
+      - "src/components/outcomes/PlotlyChart.tsx:124-128 — Plotly.react with displaylogo:false + config"
+      - "src/components/outcomes/plotlyTraces.ts:144-155 — median trace showlegend true, name 'Median'"
+    tests: []
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" (Visus) and wait for the panels."
+        - "Hover the top-right corner of the \"Rechtes Auge (OD)\" panel to reveal the modebar."
+        - "Drag a rectangle inside the plot area."
+        - "Click the modebar 'Reset axes' (home) icon."
+        - "Click the pan (hand) icon and drag; click the box-select and lasso icons."
+      expect: "Modebar shows zoom, pan, box select, lasso, zoom-in, zoom-out, autoscale and reset icons only; no camera/'Download plot' icon and no 'Produced with Plotly' logo. Step 3 zooms into the box; step 4 restores the original extent; the 'Median' legend entry is rendered below the plot."
+    notes: "Not testable in jsdom (Plotly never executes there); the config is verified by code reading only."
+  - id: UIR-TRAJ-009
+    title: "Panel has role=img aria-label with count and drill-down hint"
+    statement: "The Verläufe panels have role=img with an aria-label naming the panel, patient count and, in single-cohort mode only, the hint \"Datenpunkt anklicken, um den Fall zu öffnen\"."
+    status: implemented
+    sources: ["code: src/components/outcomes/OutcomesPanel.tsx:526-536"]
+    evidence:
+      - "src/components/outcomes/OutcomesPanel.tsx:526-536 — role=img; aria-label `${title} — ${panel.summary.patientCount} ${outcomesCardPatients} — ${outcomesDrillDownHint}` only when onPointClick is set"
+      - "src/components/outcomes/VisusMetricContainer.tsx:107,124,141 — onPointClick passed only when !isCrossMode"
+      - "src/i18n/translations.ts:938 — DE 'Datenpunkt anklicken, um den Fall zu öffnen'"
+    tests:
+      - file: tests/OutcomesPanel.test.tsx
+        name: "renders role=\"img\" element with aria-label containing patientCount for eye=\"od\""
+      - file: tests/OutcomesPanel.test.tsx
+        name: "aria-label includes the titleKey and patient count"
+      - file: tests/OutcomesPanelDrillDown.test.tsx
+        name: "aria-label includes drill-down hint key when onPointClick is provided"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" (single cohort); in DevTools inspect [data-testid=outcomes-panel-od]."
+        - "Click \"Kohorten vergleichen\", tick a second saved cohort, wait for the charts; inspect the same element again."
+      expect: "Step 1: role=\"img\" and aria-label of the form 'Rechtes Auge (OD) — <n> Patient:innen — Datenpunkt anklicken, um den Fall zu öffnen' where <n> equals the number on the panel subtitle. Step 2: aria-label ends after the patient count; the hint text is absent."
+    notes: "<n> is the panel's own patient count (patients with a measurement for that eye), not the cohort size."
+  - id: UIR-TRAJ-010
+    title: "Settings drawer offers axis, Y-mode, layer and grid controls"
+    statement: "The settings drawer (Visus/CRT) offers X-axis radios \"Tage seit Baseline\"/\"Anzahl Behandlungen\", Y radios absolute/Δ/Δ %, checkboxes for the four layers and a grid slider 20–300."
+    status: implemented
+    sources: ["spec: EMDREQ-ANL-002 / N02.08", "code: src/components/outcomes/OutcomesSettingsDrawer.tsx:124-239"]
+    evidence:
+      - "src/components/outcomes/OutcomesSettingsDrawer.tsx:124-154 — X-axis radios with aria-labels; 157-173 Y radios absolute/delta/delta_percent (CRT-specific labels via yMetricKey 40-50); 176-204 four layer checkboxes; 223-239 range min 20 max 300 step 10 with '{n} Stützstellen'"
+      - "src/i18n/translations.ts:855-871,954-956 — DE section/control labels 'X-Achse', 'Y-Metrik', 'Anzeigeebenen', 'Interpolationsraster', 'Absolut (logMAR)', 'Δ (Differenz zur Baseline)', 'Δ % (prozentuale Änderung)'"
+    tests:
+      - file: tests/OutcomesPage.test.tsx
+        name: "9. toggling x-axis to treatments in drawer causes axis label to appear"
+      - file: tests/OutcomesPage.test.tsx
+        name: "10. toggling spreadBand off removes the IQR marker from the OD panel"
+      - file: tests/OutcomesPage.test.tsx
+        name: "11. with 31-patient cohort, scatter checkbox is unchecked in drawer on mount"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" (Visus); click \"Diagramm-Anzeige\"."
+        - "Read the drawer sections top to bottom."
+        - "Select \"Δ % (prozentuale Änderung)\"."
+        - "Drag the slider fully left, then fully right."
+      expect: "Sections \"X-Achse\" (radios \"Tage seit Baseline\", \"Anzahl Behandlungen\"), \"Y-Metrik\" (\"Absolut (logMAR)\", \"Δ (Differenz zur Baseline)\", \"Δ % (prozentuale Änderung)\"), \"Anzeigeebenen\" (checkboxes \"Median\", \"Individuelle Kurven\", \"Streupunkte\", \"Streuband (IQR)\"), \"Interpolationsraster\" slider. Step 3: panel y-axis title becomes 'Δ logMAR %'. Step 4: caption reads '20 Stützstellen' then '300 Stützstellen'."
+    notes: "The grid slider range and the Y radios are not covered by any test. On the CRT metric the Y radios read 'Absolut (µm)', 'Δ (µm zur Baseline)', 'Δ % (prozentuale Änderung)'."
+  - id: UIR-TRAJ-011
+    title: "Settings drawer focuses first radio on open and closes on Escape"
+    statement: "The settings drawer moves focus to the first X-axis radio when opened and closes on Escape."
+    status: implemented
+    sources: ["code: src/components/outcomes/OutcomesSettingsDrawer.tsx:72-86"]
+    evidence:
+      - "src/components/outcomes/OutcomesSettingsDrawer.tsx:72 — firstRadioRef; 74-81 window keydown Escape → onClose; 83-86 focus firstRadioRef when open; 132-133 ref on the 'Tage seit Baseline' radio"
+      - "src/components/outcomes/OutcomesView.tsx:346-348 — onClose → setDrawerOpen(false)"
+    tests: []
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" (Visus); click \"Diagramm-Anzeige\"."
+        - "Without clicking anything, press Space."
+        - "Press Escape."
+      expect: "Step 2: the \"Tage seit Baseline\" radio is the focused element (focus ring visible; Space keeps it selected). Step 3: the drawer slides out and the \"Diagramm-Anzeige\" button shows aria-expanded=\"false\"."
+    notes: "The Escape listener is registered on window even while the drawer is closed (harmless). For the Behandlungsintervall/Responder metrics no radio exists, so no focus move occurs. No test asserts focus or Escape for this drawer."
+  - id: UIR-TRAJ-012
+    title: "Settings drawer shows no-controls note for Behandlungsintervall"
+    statement: "The settings drawer shows a \"no controls\" note when the Behandlungsintervall metric is active."
+    status: implemented
+    sources: ["code: src/components/outcomes/OutcomesSettingsDrawer.tsx:243-251"]
+    evidence:
+      - "src/components/outcomes/OutcomesSettingsDrawer.tsx:124 — axis/layer sections only for visus|crt; 243-251 activeMetric==='interval' → <p data-testid=drawer-interval-no-settings>{metricsSettingsNoControls}; 278-286 reset link always rendered"
+      - "src/i18n/translations.ts:1022 — DE 'Keine Einstellungen für dieses Intervall-Diagramm.'"
+    tests: []
+    browser:
+      route: "/analysis?tab=trajectories&metric=interval"
+      steps:
+        - "Open /analysis?tab=trajectories&metric=interval."
+        - "Click \"Diagramm-Anzeige\"."
+      expect: "The drawer body contains only the italic note 'Keine Einstellungen für dieses Intervall-Diagramm.' (no radios, checkboxes or slider); the footer link \"Auf Standard zurücksetzen\" is still present."
+    notes: "No test renders the drawer with activeMetric='interval'."
+  - id: UIR-TRAJ-013
+    title: "Settings drawer shows responder-threshold input for Responder"
+    statement: "The settings drawer shows a responder-threshold number input (letters, min 0) when the Responder metric is active and the bars recompute on change."
+    status: implemented
+    sources: ["code: src/components/outcomes/OutcomesSettingsDrawer.tsx:253-275"]
+    evidence:
+      - "src/components/outcomes/OutcomesSettingsDrawer.tsx:254-275 — section drawer-responder-threshold; heading 'Responder-Schwelle'; input type=number min=0 step=1 testid responder-threshold-input; onChange clamps to ≥0"
+      - "src/components/outcomes/useOutcomesRouteState.ts:280 — thresholdLetters state default 5 (session-only)"
+      - "src/components/outcomes/OutcomesView.tsx:259-273 — ResponderView and OutcomesDataPreview receive thresholdLetters"
+      - "src/components/outcomes/ResponderView.tsx:131-133 — classifyResponders memos keyed on thresholdLetters"
+      - "src/i18n/translations.ts:991-993 — DE 'Responder-Schwelle: Δvisus ≥ {letters} Buchstaben @ 12 Monate', helper 'Nur für aktive Kohorte, setzt sich bei Reload zurück.'"
+    tests: []
+    browser:
+      route: "/analysis?tab=trajectories&metric=responder"
+      steps:
+        - "Open /analysis?tab=trajectories&metric=responder."
+        - "Hover the bars of the \"Responder-Klassifikation\" chart and note the Responder/Partial/Non-Responder counts for 'OD + OS'."
+        - "Click \"Diagramm-Anzeige\"; change the number input under \"Responder-Schwelle\" from 5 to 15."
+        - "Hover the bars again."
+      expect: "The drawer shows the label 'Responder-Schwelle: Δvisus ≥ 5 Buchstaben @ 12 Monate' with a number input (min 0); after step 3 the label reads '… ≥ 15 …' and the bar heights/tooltip counts change (fewer Responder, more Partial/Non-Responder)."
+    notes: "Tests render ResponderView with a fixed threshold prop; no test asserts the drawer input or recomputation on change. The threshold is session-only (resets on reload, not persisted)."
+  - id: UIR-TRAJ-014
+    title: "Auf Standard zurücksetzen restores axis, Y, grid and layer defaults"
+    statement: "The drawer's \"Auf Standard zurücksetzen\" resets X-axis to days, Y to absolute, grid to 120 and layers to the cohort-size-derived defaults, clearing user overrides and persisted layer choices."
+    status: implemented
+    sources: ["code: src/components/outcomes/OutcomesSettingsDrawer.tsx:88-97", "code: src/components/outcomes/useOutcomesRouteState.ts:447-462"]
+    evidence:
+      - "src/components/outcomes/OutcomesSettingsDrawer.tsx:88-97 — resetDefaults: setAxisMode('days'), setYMetric('absolute'), setGridPoints(120), onResetLayersDefaults; 278-286 button outcomesResetSettings"
+      - "src/components/outcomes/useOutcomesRouteState.ts:447-462 — resetLayersToDefaults clears both override refs, re-derives perPatient/scatter, writePersistedViewState(…, { layers: {} }); 466-486 the axis/y/grid setters passed to the drawer persist their values"
+      - "src/components/outcomes/outcomesViewStatePersist.ts:59-75 — empty layers patch merges to {}"
+      - "src/i18n/translations.ts:871 — DE 'Auf Standard zurücksetzen'"
+    tests:
+      - file: tests/outcomesViewStatePersist.test.ts
+        name: "an empty layers patch clears the persisted layer choices (reset)"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" on all 245 cases; click \"Diagramm-Anzeige\"."
+        - "Select \"Δ % (prozentuale Änderung)\", select \"Anzahl Behandlungen\", tick \"Streupunkte\", move the slider to 200."
+        - "Click \"Auf Standard zurücksetzen\"."
+        - "In DevTools → Session Storage read key 'emd.outcomesView.v1.__adhoc__'."
+      expect: "After step 3: \"Tage seit Baseline\" and \"Absolut (logMAR)\" radios selected, slider caption '120 Stützstellen', \"Streupunkte\" unticked (size default for 245 cases), panel y-axis 'Visus (logMAR)'. Step 4: the stored JSON has \"layers\":{} and axisMode 'days', yMetric 'absolute', gridPoints 120."
+    notes: "Code-confirmed inconsistency: reset sets Y to 'absolute' whereas the first-visit default (UIR-TRAJ-006) is 'delta'. No test clicks the reset button; tests/OutcomesPerfA6 'reset-defaults respects the large-cohort default' only exercises the derived-default helper and was dropped from this mapping."
+  - id: UIR-TRAJ-015
+    title: "Layer toggles add/remove traces in place on all panels"
+    statement: "The user can toggle \"Median\", \"Individuelle Kurven\", \"Streupunkte\" and \"Streuband (IQR)\" and the corresponding traces are added or removed in place on every panel without a blank redraw."
+    status: implemented
+    sources: ["spec: EMDREQ-ANL-002 / N02.08", "code: src/components/outcomes/OutcomesSettingsDrawer.tsx:176-204", "manual: .planning/v1.20-ROADMAP.md v1.20.1 / v1.20.2"]
+    evidence:
+      - "src/components/outcomes/OutcomesSettingsDrawer.tsx:180-204 — checkbox onChange → setLayers toggle"
+      - "src/components/outcomes/plotlyTraces.ts:88-114,117-141,144-155,158-180 — each trace gated on layers.spreadBand/perPatient/median/scatter"
+      - "src/components/outcomes/PlotlyChart.tsx:109-128,181-187,190-202 — Plotly.react updates the same graph div; purge only on unmount → in-place diff, no blank redraw"
+      - "src/components/outcomes/OutcomesPanel.tsx:247-312 — traces memo rebuilt on layers change"
+    tests:
+      - file: tests/OutcomesPage.test.tsx
+        name: "10. toggling spreadBand off removes the IQR marker from the OD panel"
+      - file: tests/OutcomesPanelScatterCap.test.tsx
+        name: "renders no scatter when the layer is off"
+      - file: tests/OutcomesPanelLineClick.test.tsx
+        name: "does NOT render per-patient lines when the layer is hidden (gate)"
+      - file: tests/plotlyTracesHover.test.ts
+        name: "emits NO scatter / per-patient traces when the toggles are off"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "On /cohort set a filter that yields ≤30 cases (e.g. one centre + \"Weiblich\"), save it, then click the violet \"Outcomes anzeigen\" icon of that saved search in the saved-searches list; the Verläufe tab opens with all four layers ticked. Click \"Diagramm-Anzeige\"."
+        - "Untick \"Median\"; re-tick it."
+        - "Untick \"Streuband (IQR)\"; untick \"Streupunkte\"; untick \"Individuelle Kurven\"; re-tick each."
+      expect: "Each untick removes exactly that element (thick coloured median line / shaded band / dots / thin grey lines) from all three panels while the rest of the chart stays visible; re-ticking brings it back. Panels never go blank or show a white card between states."
+    notes: "'In place, no blank redraw' is a browser-only observation (the jsdom fallback cannot render Plotly). On cohorts >50 cases a toggle re-arms the progressive mount (UIR-TRAJ-005), so OS/combined briefly show the placeholder card, not a blank one. tests/plotlyTracesHover.test.ts \"emits NO scatter / per-patient traces…\" covers buildCrossCohortTraces (compare mode); the single-cohort gate is covered by the OutcomesPanel tests."
+  - id: UIR-TRAJ-016
+    title: "All layers off shows an empty-state card instead of panels"
+    statement: "The Verläufe tab shows an \"all layers off\" empty-state card ('Keine Augen entsprechen den aktuellen Filtern.') in place of the Visus panels when every layer checkbox is unticked."
+    status: partial
+    sources: ["code: src/components/outcomes/VisusMetricContainer.tsx:76-85", "code: src/components/outcomes/OutcomesEmptyState.tsx:19-62", "code: src/components/outcomes/CrtMetricContainer.tsx:60-62"]
+    evidence:
+      - "src/components/outcomes/VisusMetricContainer.tsx:76-85 — all four layers false → OutcomesEmptyState variant='all-eyes-filtered'"
+      - "src/components/outcomes/OutcomesEmptyState.tsx:30-34,52-63 — title/body keys, no action link"
+      - "src/i18n/translations.ts:911-912 — DE copy"
+      - "src/components/outcomes/CrtMetricContainer.tsx:60-62 — CRT has only the no-crt guard; no all-layers-off empty state"
+    tests:
+      - file: tests/outcomesEmptyState.test.tsx
+        name: "renders DE copy for the all-eyes-filtered variant verbatim"
+      - file: tests/outcomesEmptyState.test.tsx
+        name: "renders NO action link for the all-eyes-filtered variant (D-08)"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" (Visus); click \"Diagramm-Anzeige\"."
+        - "Untick \"Median\", \"Individuelle Kurven\", \"Streupunkte\", \"Streuband (IQR)\" (all four)."
+        - "Tick \"Median\" again."
+        - "Repeat steps 1–2 on the \"CRT\" tab."
+      expect: "Step 2 (Visus): the summary cards and panels are replaced by a centred card 'Keine Augen entsprechen den aktuellen Filtern.' / 'Passen Sie die OD/OS- oder Layer-Filter an, um Daten zu sehen.' with no link. Step 3: panels return. Step 4 (CRT): NO empty-state card — the three CRT panels stay mounted with empty plots (known gap)."
+    notes: "Partial: the all-layers-off empty state is implemented in VisusMetricContainer only; CrtMetricContainer has no equivalent guard. Tests cover the empty-state component, not the container switch."
+  - id: UIR-TRAJ-017
+    title: "Empty states for no cohort, no visus data and no CRT data"
+    statement: "The Verläufe tab shows empty states for no cohort (with a link to /cohort), no visus data and no CRT data."
+    status: implemented
+    sources: ["code: src/components/outcomes/OutcomesView.tsx:138-140,196-199,216-219", "code: src/components/outcomes/VisusMetricContainer.tsx:67-75", "code: src/components/outcomes/OutcomesEmptyState.tsx:19-62"]
+    evidence:
+      - "src/components/outcomes/OutcomesView.tsx:138-140 — no cohort / 0 cases → variant no-cohort; 197-199 no aggregate → no-cohort; 216-219 no crtAggregate → no-crt"
+      - "src/components/outcomes/VisusMetricContainer.tsx:67-75 — 0 OD and 0 OS measurements → no-visus"
+      - "src/components/outcomes/CrtMetricContainer.tsx:60-62 — 0 CRT measurements → no-crt"
+      - "src/components/outcomes/OutcomesEmptyState.tsx:20-24,57-61 — no-cohort has Link to /cohort 'Zur Kohortenbildung'"
+      - "src/components/outcomes/useOutcomesRouteState.ts:109-115 — unknown ?cohort= id resolves to null cohort"
+      - "src/i18n/translations.ts:906-910,959-960 — DE copy"
+    tests:
+      - file: tests/OutcomesPage.test.tsx
+        name: "2. renders no-cohort empty state when activeCases is [] and no query params"
+      - file: tests/OutcomesPage.test.tsx
+        name: "3. renders no-cohort empty state when ?cohort=does-not-exist"
+      - file: tests/OutcomesPage.test.tsx
+        name: "5. renders no-cohort empty state when ?filter= is invalid JSON"
+      - file: tests/outcomesEmptyState.test.tsx
+        name: "still renders an action link for the no-cohort variant (regression guard)"
+    browser:
+      route: "/analysis?tab=trajectories&cohort=does-not-exist"
+      steps:
+        - "Open /analysis?tab=trajectories&cohort=does-not-exist."
+        - "Click the link in the card."
+        - "In Kohortenbildung save a search whose patients have no CRT observations (e.g. restrict to a centre without OCT data) and open it with ?tab=trajectories&metric=crt."
+      expect: "Step 1: card 'Keine Patient:innen in dieser Kohorte' with link 'Zur Kohortenbildung'. Step 2: navigates to /cohort. Step 3: card 'Keine CRT-Messungen in dieser Kohorte' without a link. (A cohort without any visus observation shows 'Keine Visus-Messungen in dieser Kohorte'.)"
+    notes: "Without any query params the view resolves ALL authorised cases, so the no-cohort state needs an unknown ?cohort= id or an empty saved search. The no-visus / no-crt states have no test."
+  - id: UIR-TRAJ-018
+    title: "Large cohorts default scatter and per-patient curves off with note"
+    statement: "The Verläufe tab defaults \"Streupunkte\" off above 30 cases and \"Individuelle Kurven\" off above 100 distinct patients (with the 'Einzelverläufe … ausgeblendet' note); both remain opt-in."
+    status: implemented
+    sources: ["spec: EMDREQ-ANL-002 / N02.08", "UAT v1.13 A6; v1.14 I2", "code: src/components/outcomes/useOutcomesRouteState.ts:47,90-97", "code: shared/cohortTrajectory.ts:220-222", "code: src/components/outcomes/OutcomesSettingsDrawer.tsx:210-219"]
+    evidence:
+      - "shared/cohortTrajectory.ts:220-222 — defaultScatterOn: count ≤ 30"
+      - "src/components/outcomes/useOutcomesRouteState.ts:47 — PER_PATIENT_DEFAULT_OFF_THRESHOLD=100; 90-97 deriveDefaultLayers; 208-219 lazy initial layers; 235-237 perPatientDefaultedOff"
+      - "src/components/outcomes/OutcomesSettingsDrawer.tsx:210-219 — note perpatient-large-cohort-note (only while per-patient is off); scatter advisory whenever patientCount > 30"
+      - "src/i18n/translations.ts:865,868 — DE note strings"
+    tests:
+      - file: tests/OutcomesPerfI2.test.tsx
+        name: "large cohort (>100 distinct, e.g. the 245-cohort) → scatter AND per-patient OFF"
+      - file: tests/OutcomesPerfI2.test.tsx
+        name: "mid cohort (31–100) → scatter OFF, per-patient still ON"
+      - file: tests/OutcomesPage.test.tsx
+        name: "7. with 31-patient cohort, scatter layer initializes to false (D-37)"
+      - file: tests/OutcomesPage.test.tsx
+        name: "11. with 31-patient cohort, scatter checkbox is unchecked in drawer on mount"
+      - file: tests/OutcomesPerfA6.test.tsx
+        name: "threshold is 100 → small cohort below, large cohort above"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" on all 245 cases (no ?cohort=); clear session storage first."
+        - "Click \"Diagramm-Anzeige\"."
+        - "Tick \"Individuelle Kurven\" and \"Streupunkte\"."
+      expect: "Step 2: \"Individuelle Kurven\" and \"Streupunkte\" are unticked; the note 'Einzelverläufe bei großen Kohorten standardmäßig ausgeblendet' and the advisory 'Streupunkte bei Kohorten > 30 Patient:innen standardmäßig aus (Performance)' are shown under the checkboxes. Step 3: thin grey lines and dots appear in all panels; the 'Einzelverläufe…' note disappears (the scatter advisory stays)."
+    notes: "The per-patient threshold counts distinct pseudonyms, the scatter threshold counts cases. The note texts are not asserted by any test."
+  - id: UIR-TRAJ-019
+    title: "Layer toggles survive metric-tab and compare-selection changes"
+    statement: "The UI keeps an explicitly toggled layer (scatter or per-patient) across metric-tab switches and compare-selection changes while Verläufe stays mounted, not reverting to the size default."
+    status: implemented
+    sources: ["UAT v1.13 F3; v1.14 I2", "code: src/components/outcomes/useOutcomesRouteState.ts:221-266,347-367,416-442", "manual: .planning/v1.20-ROADMAP.md v1.20.2"]
+    evidence:
+      - "src/components/outcomes/useOutcomesRouteState.ts:225,231 — perPatient/scatter override refs; 241-266 setLayersWithOverride marks refs + persists; 347-367 cohort-change effect (fires on any searchParams change) skips overridden layers; 416-442 resetToMetricDefaults keeps overridden layer values"
+      - "src/components/outcomes/useOutcomesRouteState.ts:182-184,225-231 — on a remount (new ?cohort= via address bar) the override is re-armed only from that cohort's persisted sessionStorage entry"
+    tests:
+      - file: tests/OutcomesPerfI2.test.tsx
+        name: "keeps a manually-enabled scatter layer ON across a metric switch on a large cohort"
+      - file: tests/OutcomesViewPersist.test.tsx
+        name: "restores a persisted explicit scatter=ON on a large cohort (wins over size-derived OFF)"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" on all 245 cases; click \"Diagramm-Anzeige\"; tick \"Streupunkte\"."
+        - "Click metric tab \"CRT\", then \"Visus\"."
+        - "Click \"Kohorten vergleichen\", tick two saved cohorts (compare mode), then click \"Einzelne Kohorte anzeigen\"."
+        - "Re-open \"Diagramm-Anzeige\"."
+      expect: "After step 2 the dots are still drawn and \"Streupunkte\" stays ticked; in compare mode (step 3) per-cohort coloured dots are drawn; after returning to the single cohort the dots are still drawn and the checkbox is still ticked (the size-derived OFF default is not re-applied)."
+    notes: "Changing ?cohort= in the address bar reloads/remounts the view: the in-memory override is gone and the new cohort uses its own sessionStorage entry (UIR-TRAJ-020), so an override made on cohort A does not carry over to cohort B. Compare-selection survival is not covered by tests (only metric switch and remount restore)."
+  - id: UIR-TRAJ-020
+    title: "View state persists per cohort when leaving and returning"
+    statement: "The UI persists axis, Y-metric, grid and toggled layers per cohort in sessionStorage 'emd.outcomesView.v1.<cohortId|__adhoc__>' and restores them on return to Verläufe; metric is not restored."
+    status: partial
+    sources: ["UAT v1.15 J2", "code: src/components/outcomes/outcomesViewStatePersist.ts:25-75", "code: src/components/outcomes/useOutcomesRouteState.ts:177-219,466-497"]
+    evidence:
+      - "src/components/outcomes/outcomesViewStatePersist.ts:25-40 — prefix emd.outcomesView.v1, __adhoc__ fallback; 43-75 read/write merge"
+      - "src/components/outcomes/useOutcomesRouteState.ts:182-184 — read once at mount; 193-196,208-219 seed axis/y/grid/spread/layers from persisted; 256-261 persist explicit layer toggles; 466-486 persisting axis/y/grid setters; 494-496 metric written"
+      - "src/components/outcomes/useOutcomesRouteState.ts:273-277 — activeMetric derived from URL only; persisted.metric is never read"
+      - "src/components/outcomes/useOutcomesRouteState.ts:416-424 — the metric-switch reset to days/delta uses the non-persisting setters, so storage keeps the previous explicit axis/Y choice"
+    tests:
+      - file: tests/outcomesViewStatePersist.test.ts
+        name: "round-trips axis/y/grid/metric for a cohort"
+      - file: tests/outcomesViewStatePersist.test.ts
+        name: "keys state PER cohort (one cohort does not see another cohort state)"
+      - file: tests/OutcomesViewPersist.test.tsx
+        name: "persists an explicit toggle so a fresh remount restores it"
+      - file: tests/OutcomesViewPersist.test.tsx
+        name: "a cohort with NO persisted choice keeps the size-derived default (scatter OFF on large)"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" (no ?cohort=); click \"Diagramm-Anzeige\"; tick \"Streupunkte\", select \"Anzahl Behandlungen\", set the slider to 200."
+        - "In the sidebar open \"Startseite\", then return via the sidebar to \"Analyse\" and click the \"Verläufe\" tab."
+        - "Click \"Diagramm-Anzeige\"; in DevTools → Session Storage open key 'emd.outcomesView.v1.__adhoc__'."
+      expect: "Step 3: \"Streupunkte\" ticked, \"Anzahl Behandlungen\" selected, '200 Stützstellen'; the stored JSON contains axisMode 'treatments', gridPoints 200 and layers.scatter true. Note: the active metric is NOT restored from storage — returning without ?metric= shows \"Visus\"."
+    notes: "Partial: metric is written to storage (handleMetricChange) but never read back; the active metric comes solely from ?metric=. Returning via the sidebar lands on the \"Aggregiert\" tab first. A metric-tab switch resets axis/Y in memory without updating storage, so after e.g. CRT→Visus the view shows days/Δ while storage still holds 'treatments'; the stored value is applied again on the next mount."
+  - id: UIR-TRAJ-021
+    title: "Scatter renders full cloud via WebGL, downsampled only above 6000"
+    statement: "The Verläufe scatter renders the full point cloud via WebGL (no 1,500-point cap), downsampling evenly only above 6000 points per panel with a console.info line, and stays responsive."
+    status: implemented
+    sources: ["UAT v1.17 L1/L2; confirmed v1.18", "code: src/components/outcomes/OutcomesPanel.tsx:228-240", "code: src/components/outcomes/plotlyTraces.ts:49"]
+    evidence:
+      - "src/components/outcomes/plotlyTraces.ts:28-41 — even-stride downsampleScatter; 49 SCATTER_RENDER_CAP=6000; 158-179 type 'scattergl'"
+      - "src/components/outcomes/OutcomesPanel.tsx:230-240 — downsample + console.info '[OutcomesPanel] scatter downsampled …'"
+      - "src/components/outcomes/PlotlyChart.tsx:1-8,118 — plotly.js-strict-dist-min, CSP-safe WebGL"
+    tests:
+      - file: tests/OutcomesPanelScatterCap.test.tsx
+        name: "renders ALL points unchanged when below the cap"
+      - file: tests/OutcomesPanelScatterCap.test.tsx
+        name: "downsamples to at most the cap for a very large cohort (and logs, never silent)"
+      - file: tests/OutcomesPanelScatterCap.test.tsx
+        name: "downsample is even-stride (spans the range), not a truncated prefix"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" on all 245 cases; open DevTools console."
+        - "Click \"Diagramm-Anzeige\" and tick \"Streupunkte\"."
+        - "Inspect a panel: count <canvas> elements inside [data-testid=outcomes-plotly-od]."
+        - "Toggle \"Streuband (IQR)\" off and on three times."
+      expect: "Dense dot clouds in all three panels (thousands of points, not a sparse 1,500 sample); the console shows a '[OutcomesPanel] scatter downsampled for eye=…' info line only if a panel exceeds 6000 points; each panel contains WebGL canvases (canvas.gl-canvas); each toggle redraws within ~1 s without freezing."
+    notes: "Responsiveness is a browser-only observation; tests cover the cap, logging and even-stride sampling on the jsdom fallback."
+  - id: UIR-TRAJ-022
+    title: "No WebGL context accumulation on repeated toggles and tab switches"
+    statement: "The Verläufe view does not accumulate WebGL contexts: repeated layer toggles and metric switches never log 'Too many active WebGL contexts' and all canvases keep rendering."
+    status: implemented
+    sources: ["UAT v1.20.2", "manual: .planning/v1.20-ROADMAP.md v1.20.2", "code: src/components/outcomes/PlotlyChart.tsx:73-78,123-129,181-202"]
+    evidence:
+      - "src/components/outcomes/PlotlyChart.tsx:73-78 — glCanvases + releaseGl via WEBGL_lose_context; 123-129 release canvases Plotly detached after react; 181-187 no purge per update; 190-202 purge + release on unmount only"
+      - "src/components/outcomes/plotlyRenderable.ts — the feature-detection probe releases its own context (covered by tests/plotlyRenderable.test.ts)"
+    tests: []
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" on all 245 cases with DevTools console open; tick \"Individuelle Kurven\" and \"Streupunkte\" in \"Diagramm-Anzeige\"."
+        - "Toggle \"Streuband (IQR)\" off/on six times."
+        - "Click metric tabs CRT → Visus → CRT → Visus."
+        - "Scroll through all three panels."
+      expect: "No console warning containing 'Too many active WebGL contexts' or '[PlotlyChart] render failed'; after step 3 every panel still shows its median, lines and dots (no black/blank canvas)."
+    notes: "tests/plotlyRenderable.test.ts 'probes once and releases the WebGL probe context' covers only the feature-detection probe, not the panel contexts; no test exercises the release path in PlotlyChart (browser-only)."
+  - id: UIR-TRAJ-023
+    title: "Tooltip shows hovered point's pseudonym, x and y with unit"
+    statement: "The UI shows, on scatter-point hover, a tooltip with that exact point's pseudonym, x (\"<n> d\" or \"#<n>\") and y value with unit, not the nearest point on the X-axis, and hides it on unhover."
+    status: implemented
+    sources: ["UAT v1.15 J1a; v1.16 K1", "code: src/components/outcomes/OutcomesPanel.tsx:147-199,449-487,539-546", "manual: .planning/v1.20-ROADMAP.md v1.20.1"]
+    evidence:
+      - "src/components/outcomes/OutcomesPanel.tsx:149-163 — valueLabel is always outcomesTooltipLogmar ('logMAR'); valueUnit 'logMAR' / 'Δ logMAR' / '%' for visus, 'Absolute CRT (µm)' / 'Δ CRT (µm)' / 'Δ CRT (%)' for CRT; 165-179 formatHoverTooltip: pseudonym, '<xLabel>: <n> d' or '#<n>', '<valueLabel>: <y> <unit>'; 181-199 show/hide; 340 hovermode 'closest'; 449-487 plotly_hover uses points[0].customdata/x/y; unhover hides; 539-546 single tooltip div"
+      - "src/components/outcomes/plotlyTraces.ts:164-176 — customdata = patientId, hoverinfo 'none'"
+    tests:
+      - file: tests/OutcomesPanelHoverTooltip.test.tsx
+        name: "shows the HOVERED point in the tooltip"
+      - file: tests/OutcomesPanelHoverTooltip.test.tsx
+        name: "hides the hover tooltip on mouse leave"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\"; click \"Diagramm-Anzeige\"; tick \"Streupunkte\"."
+        - "Hover two vertically stacked dots at the same x position one after the other."
+        - "Move the mouse off the plot."
+      expect: "A white tooltip appears next to the cursor with three lines: the pseudonym, 'Tag: <n> d' (or 'Behandlung #: #<n>' in treatments mode) and 'logMAR: <value> Δ logMAR' (unit follows the Y mode; on the CRT metric the line reads 'logMAR: <value> Δ CRT (µm)'). The pseudonym changes between the two stacked dots. Step 3: the tooltip disappears."
+    notes: "Tests assert the pseudonym and show/hide only; the x/y text format is not asserted. Code quirk: the value line is prefixed 'logMAR:' even for CRT (the unit then says 'Δ CRT (µm)')."
+  - id: UIR-TRAJ-024
+    title: "Exactly one tooltip; no nearest-x tooltip"
+    statement: "The Verläufe chart shows at most one tooltip at a time; there is no X-axis-bound (nearest-x) pseudonym-only label beside the detailed one."
+    status: implemented
+    sources: ["UAT v1.16 K1a; v1.18 M2; confirmed v1.17", "code: src/components/outcomes/plotlyTraces.ts:131-136,171-176"]
+    evidence:
+      - "src/components/outcomes/plotlyTraces.ts:131-136,171-176 — hoverinfo 'none' on per-patient lines and scattergl → native Plotly label suppressed"
+      - "src/components/outcomes/OutcomesPanel.tsx:340 — hovermode 'closest', not 'x'; 539-546 one imperative tooltip div per panel; plotlyTraces.ts:144-155 median keeps a hovertemplate '<name>' (native 'Median' label)"
+    tests:
+      - file: tests/OutcomesPanelHoverTooltip.test.tsx
+        name: "renders exactly ONE tooltip element (no second nearest-x pop-up)"
+      - file: tests/plotlyTracesHover.test.ts
+        name: "scattergl trace uses hoverinfo:\"none\" and no hovertemplate"
+      - file: tests/plotlyTracesHover.test.ts
+        name: "per-patient line uses hoverinfo:\"none\" and no hovertemplate"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\"; tick \"Streupunkte\" and \"Individuelle Kurven\" in \"Diagramm-Anzeige\"."
+        - "Hover slowly across dense regions of the OD panel, including over the median line and in empty space between dots."
+      expect: "At most one tooltip box is visible at any moment; hovering the median line shows only Plotly's small 'Median' label; no second pseudonym-only label is attached to the x-axis."
+    notes: ""
+  - id: UIR-TRAJ-025
+    title: "Hovered scatter point gets an enlarged ringed highlight marker"
+    statement: "The hovered scatter point in Verläufe is highlighted with an enlarged, ringed marker that disappears on unhover, even when several points share the same date."
+    status: implemented
+    sources: ["UAT v1.14 I1; v1.19 N2; confirmed v1.15", "code: src/components/outcomes/OutcomesPanel.tsx:290-310,426-447,464-471,482-487"]
+    evidence:
+      - "src/components/outcomes/OutcomesPanel.tsx:290-310 — 'scatter-highlight' scattergl overlay trace, size 16, 3px ring (#111827 light / #f9fafb dark); 314-319 highlightIndex; 430-447 highlightPoint/restoreHighlight via Plotly.restyle x/y; 464-471 hover on a scatter trace → highlightPoint; 482-487 unhover → restoreHighlight"
+    tests: []
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\"; tick \"Streupunkte\" in \"Diagramm-Anzeige\"."
+        - "Hover a dot inside a cluster of dots at the same x; move to the neighbouring dot above/below it."
+        - "Move the mouse out of the plot."
+      expect: "The hovered dot is drawn with a larger hollow ring (dark ring in light mode, light ring in dark mode) and the ring jumps to the neighbour when the mouse moves; the tooltip pseudonym matches the ringed dot. Step 3: the ring vanishes."
+    notes: "No test covers the highlight overlay (requires live Plotly restyle)."
+  - id: UIR-TRAJ-026
+    title: "Hovering a per-patient line thickens it and shows patient tooltip"
+    statement: "The UI thickens a hovered per-patient line and shows that patient's tooltip when \"Streupunkte\" is off and \"Individuelle Kurven\" is on; with both layers on, the scatter-point tooltip wins."
+    status: implemented
+    sources: ["UAT v1.16 K1b/K1c; v1.18 M1; confirmed v1.19", "code: src/components/outcomes/OutcomesPanel.tsx:392-424,472-477"]
+    evidence:
+      - "src/components/outcomes/OutcomesPanel.tsx:394-424 — restoreEmphasis / emphasizeLine restyle line.width ×2.5, opacity 0.95; 472-477 only when !isCrossMode && perPatient && !scatter; 519 fallback lineHoverActive gate"
+      - "src/components/outcomes/plotlyTraces.ts:117-141 — per-patient traces carry customdata pseudonym, hoverinfo 'none'"
+    tests:
+      - file: tests/OutcomesPanelLineClick.test.tsx
+        name: "wires line hover when scatter is OFF and per-patient is ON"
+      - file: tests/OutcomesPanelLineClick.test.tsx
+        name: "does NOT wire line hover when scatter is ON (scatter takes precedence)"
+      - file: tests/OutcomesPanelLineClick.test.tsx
+        name: "hovering a line shows that patient tooltip; leaving hides it"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" on a cohort ≤100 patients; in \"Diagramm-Anzeige\" untick \"Streupunkte\", tick \"Individuelle Kurven\"."
+        - "Hover a grey thin line near one of its vertices."
+        - "Tick \"Streupunkte\" and hover a dot that lies on a line."
+      expect: "Step 2: the hovered line becomes thicker and darker and a tooltip with that patient's pseudonym appears; moving away restores the line. Step 3: the tooltip shows the dot's pseudonym/values and no line is thickened."
+    notes: "The thickening itself (Plotly.restyle) is browser-only; tests cover the hover wiring and tooltip on the jsdom fallback."
+  - id: UIR-TRAJ-027
+    title: "Line emphasis only at measurement points, not between visits"
+    statement: "The hovered per-patient line is emphasised only near measurement points, not along empty stretches between visits (no synthetic values)."
+    status: implemented
+    sources: ["UAT v1.19 N1 (kept by design)", "code: src/components/outcomes/OutcomesPanel.tsx:213-226,340"]
+    evidence:
+      - "src/components/outcomes/OutcomesPanel.tsx:213-226 — per-patient series x/y are the raw measurements only (no interpolation); 340 hovermode 'closest' → Plotly fires hover on data points only"
+      - "src/components/outcomes/plotlyTraces.ts:117-141 — mode 'lines' with customdata per measurement; no synthetic points"
+    tests: []
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" on a cohort ≤100 patients; untick \"Streupunkte\", tick \"Individuelle Kurven\"."
+        - "Hover the middle of a long straight segment between two visits of a line."
+        - "Move the cursor onto a vertex (visit) of the same line."
+      expect: "Step 2: no line thickening and no tooltip. Step 3: the line thickens and the patient tooltip appears."
+    notes: "Behaviour follows from Plotly hovering on data points only; not unit-testable in jsdom."
+  - id: UIR-TRAJ-028
+    title: "Click a scatter point opens that patient's Fallansicht"
+    statement: "The user can single-click a scatter point in Verläufe to open /case/<id> for that pseudonym, even among clustered points; only cases within the user's authorised centres are reachable."
+    status: implemented
+    sources: ["UAT v1.12 FALL-010; v1.13 A1; v1.14 I1; confirmed v1.14/v1.15", "code: src/components/outcomes/OutcomesPanel.tsx:375-390", "code: src/components/outcomes/useOutcomesRouteState.ts:305-317"]
+    evidence:
+      - "src/components/outcomes/OutcomesPanel.tsx:376-390 — knownPatientIds + resolveDrillDownId gate → onPointClick; 579 onPointClick wired to the Plotly click"
+      - "src/components/outcomes/plotlyTraces.ts:53-62 — resolveDrillDownId IDOR gate"
+      - "src/components/outcomes/useOutcomesRouteState.ts:308-317 — pseudonym → cohort.cases (from authorised activeCases) → navigate /case/<id>"
+    tests:
+      - file: tests/OutcomesPanelDrillDown.test.tsx
+        name: "calls onPointClick with patientId when a scatter point is clicked"
+      - file: tests/OutcomesPanelDrillDown.test.tsx
+        name: "navigates only for a scatter pseudonym that is in the panel set"
+      - file: tests/OutcomesPanelDrillDown.test.tsx
+        name: "navigates to /case/CASE-7 when patientId PSN-7 is in cohort"
+      - file: tests/OutcomesPanelDrillDown.test.tsx
+        name: "does NOT navigate when patientId is unknown (IDOR gate)"
+      - file: tests/plotlyDrillDownGate.test.ts
+        name: "returns null for an UNKNOWN pseudonym (the hostile/crafted customdata vector)"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\"; tick \"Streupunkte\" in \"Diagramm-Anzeige\"."
+        - "Hover a dot inside a cluster until the ring highlights it and note the tooltip pseudonym."
+        - "Single-click that dot."
+      expect: "The browser navigates to /case/<id> and the Fallansicht header shows the same pseudonym as the tooltip. Logged in as a user restricted to one centre, only cases of that centre appear in the cohort and are reachable."
+    notes: "The 'navigates to /case/CASE-7' / 'does NOT navigate' tests exercise a local re-implementation of the hook's handler (same logic), not useOutcomesRouteState itself."
+  - id: UIR-TRAJ-029
+    title: "Click an individual curve opens that patient's case"
+    statement: "The user can click an individual per-patient trajectory line (\"Individuelle Kurven\") to open that patient's case."
+    status: implemented
+    sources: ["UAT v1.15 J1b; confirmed v1.16", "code: src/components/outcomes/OutcomesPanel.tsx:375-390"]
+    evidence:
+      - "src/components/outcomes/OutcomesPanel.tsx:383-390 — handlePlotlyClick resolves customdata for any trace; 520 lineClickActive gate; 579 onPointClick"
+      - "src/components/outcomes/plotlyTraces.ts:131 — per-patient customdata = pseudonym per point"
+    tests:
+      - file: tests/OutcomesPanelLineClick.test.tsx
+        name: "clicking a patient line calls onPointClick with that patient pseudonym"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" on a cohort ≤100 patients; untick \"Streupunkte\", tick \"Individuelle Kurven\"."
+        - "Hover a grey line near a vertex until it thickens and the tooltip shows a pseudonym."
+        - "Click there."
+      expect: "The browser navigates to /case/<id> whose Fallansicht shows that pseudonym."
+    notes: "In the live chart Plotly only registers clicks on line data points (vertices), consistent with UIR-TRAJ-027."
+  - id: UIR-TRAJ-030
+    title: "Drill-down is disabled in cross-cohort compare mode"
+    statement: "The UI disables drill-down in cross-cohort compare mode: clicking a scatter point or line does not navigate to a case."
+    status: implemented
+    sources: ["code: src/components/outcomes/OutcomesPanel.tsx:375-390", "code: src/components/outcomes/VisusMetricContainer.tsx:107"]
+    evidence:
+      - "src/components/outcomes/VisusMetricContainer.tsx:107,124,141 and CrtMetricContainer.tsx:79,97,115 — onPointClick={!isCrossMode ? handlePointDrillDown : undefined}"
+      - "src/components/outcomes/OutcomesPanel.tsx:385 — handlePlotlyClick returns when !onPointClick; 520-521 fallback click gates include !isCrossMode"
+    tests:
+      - file: tests/OutcomesPanelLineClick.test.tsx
+        name: "does NOT wire line onClick when onPointClick is absent (e.g. cross-mode)"
+      - file: tests/OutcomesPanelDrillDown.test.tsx
+        name: "does NOT mark scatter clickable when onPointClick is absent"
+      - file: tests/OutcomesPanelDrillDown.test.tsx
+        name: "clicking a scatter point with no onPointClick is a no-op (no crash)"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" with a saved cohort; click \"Kohorten vergleichen\" and tick a second cohort."
+        - "Tick \"Streupunkte\" in \"Diagramm-Anzeige\"."
+        - "Click any coloured dot; then tick \"Individuelle Kurven\" and click a line vertex."
+      expect: "The URL stays on /analysis?…cohorts=…; no Fallansicht opens; the panel aria-label carries no 'Datenpunkt anklicken…' hint."
+    notes: "Tests exercise the panel contract (no onPointClick → no click wiring); the container's cross-mode gating is verified by code reading only."
+  - id: UIR-TRAJ-031
+    title: "Compare drawer lists saved cohorts, locks primary, max 4, subgroups"
+    statement: "The \"Kohorten vergleichen\" drawer lists saved cohorts with \"(N=<n> patients)\" checkboxes, locks the primary, caps at 4, nests subcohorts under collapsible parents and has \"Einzelne Kohorte anzeigen\"."
+    status: implemented
+    sources: ["spec: EMDREQ-ANL-002 / N02.09", "code: src/components/outcomes/CohortCompareDrawer.tsx:39-49,66-186"]
+    evidence:
+      - "src/components/outcomes/CohortCompareDrawer.tsx:39-49 — isMaxReached ≥4, primary locked in toggle; 67-93 label `${name} (N=${count} patients)` + ' · Basis-Kohorte (fest)' for primary; disabled when primary or max reached; 124-174 groupByParent tree with chevron aria-expanded, collapsed set; 177-185 footer outcomesCompareReset"
+      - "src/components/outcomes/useOutcomesRouteState.ts:549-556 — handleCompareReset deletes ?cohorts= and closes the drawer"
+      - "src/i18n/translations.ts:915-921 — DE 'Kohorten vergleichen', 'Bis zu 4 Kohorten auswählen', 'Basis-Kohorte (fest)', 'Einzelne Kohorte anzeigen'"
+    tests:
+      - file: tests/cohortCompareDrawer.test.tsx
+        name: "XCOHORT-01: primary cohort checkbox is checked and disabled"
+      - file: tests/cohortCompareDrawer.test.tsx
+        name: "XCOHORT-01: max 4 cohorts — 5th checkbox is disabled when 4 already selected"
+      - file: tests/cohortCompareDrawer.test.tsx
+        name: "XCOHORT-03: displays patient count next to each cohort name"
+      - file: tests/cohortCompareDrawer.test.tsx
+        name: "SC2: subcohort row \"Cohort1:Male\" renders beneath the parent"
+      - file: tests/cohortCompareDrawer.test.tsx
+        name: "D-R5: each entry (parent or subcohort) counts individually — 5th entry disabled when 4 selected"
+      - file: tests/cohortCompareDrawer.test.tsx
+        name: "onReset fires when the footer link is clicked"
+    browser:
+      route: "/analysis?tab=trajectories&cohort=<savedId>"
+      steps:
+        - "In Kohortenbildung have ≥5 saved searches including a split parent with sub-cohorts (names 'Parent:Sub'); open one as ?cohort=<id>&tab=trajectories."
+        - "Click \"Kohorten vergleichen\"."
+        - "Tick three more cohorts (4 total)."
+        - "Click the chevron left of the parent cohort row."
+        - "Click \"Einzelne Kohorte anzeigen\"."
+      expect: "Rows read '<Name> (N=<n> patients)'; the opened cohort is ticked, disabled and suffixed '· Basis-Kohorte (fest)'; after step 3 all remaining unticked checkboxes are disabled (greyed); step 4 hides the indented sub-cohort rows; step 5 closes the drawer and the URL loses ?cohorts=."
+    notes: "The '(N=… patients)' suffix is English literal text even in the German UI (by code). Collapse chevron behaviour has no test."
+  - id: UIR-TRAJ-032
+    title: "Compare drawer keeps any non-empty selection and stays interactive"
+    statement: "The compare drawer keeps any non-empty selection: a single in-progress pick stays in ?cohorts= with its checkbox checked, and the user can deselect down to one cohort and re-select freely."
+    status: implemented
+    sources: ["UAT v1.16 K7; v1.17 L3; confirmed v1.18", "code: src/components/outcomes/useOutcomesRouteState.ts:170-175,519-546"]
+    evidence:
+      - "src/components/outcomes/useOutcomesRouteState.ts:175 — isCrossMode only at ≥2; 519-546 handleCompareChange keeps ?cohorts= for ≥1 pick, clears only on empty"
+      - "src/components/outcomes/OutcomesView.tsx:95-97 — compareSelection falls back to primary; 178-194 cross computing status while the worker runs — drawer stays interactive"
+    tests:
+      - file: tests/OutcomesViewRouting.test.tsx
+        name: "after deselecting all pre-selected sub-cohorts, a fresh pick registers (no lock)"
+      - file: tests/cohortCompareDrawer.test.tsx
+        name: "J7: with no primary, all pre-selected sub-cohorts are checked but NOT disabled (deselectable)"
+    browser:
+      route: "/analysis?tab=trajectories&cohorts=<id1>,<id2>"
+      steps:
+        - "Open /analysis?tab=trajectories&cohorts=<id1>,<id2> (two saved cohort ids, no ?cohort=)."
+        - "Click \"Kohorten vergleichen\"; untick <id2>."
+        - "Read the URL; tick <id2> again, then tick a third cohort."
+      expect: "Step 2: no checkbox becomes disabled; the URL still contains cohorts=<id1> and the view shows the single-cohort layout. Step 3: the comparison re-renders with two, then three coloured medians and the drawer stays usable throughout."
+    notes: ""
+  - id: UIR-TRAJ-033
+    title: "≥2 cohorts enter cross mode with one coloured median per cohort"
+    statement: "The UI enters cross mode at ≥2 selected cohorts: ?cohorts= in the URL, subtitle '<n> Kohorten verglichen · names', one median per cohort in a distinct palette colour, cohort names in the legend."
+    status: implemented
+    sources: ["spec: EMDREQ-ANL-002 / N02.09", "code: src/components/outcomes/useOutcomesRouteState.ts:155-175,519-546", "code: src/components/outcomes/OutcomesView.tsx:289-299", "code: src/components/outcomes/OutcomesPanel.tsx:249-277"]
+    evidence:
+      - "src/components/outcomes/useOutcomesRouteState.ts:160-175 — parse ?cohorts=, drop unknown ids, cap 4, isCrossMode ≥2"
+      - "src/components/outcomes/OutcomesView.tsx:289-299 — subtitle outcomesCrossMode '{count} Kohorten verglichen' + ' · ' + names, truncated at 50 chars"
+      - "src/components/outcomes/useOutcomesAggregation.ts:249-257 — cohort colour = COHORT_PALETTES[idx] in selection order"
+      - "src/components/outcomes/plotlyTraces.ts:290-303 — one median per cohort, name `${cohortName} (N=… patients)`, showlegend true"
+      - "src/components/outcomes/palette.ts:37-42,65-70 — COHORT_PALETTES (emerald, amber, cyan, fuchsia) / DARK_COHORT_PALETTES"
+      - "src/i18n/translations.ts:920 — DE '{count} Kohorten verglichen'"
+    tests:
+      - file: tests/OutcomesViewRouting.test.tsx
+        name: "XCOHORT-04: ?cohorts=p1,p2 enters cross-cohort mode without user interaction"
+      - file: tests/OutcomesViewRouting.test.tsx
+        name: "XCOHORT-04: ?cohorts= caps at 4 cohorts (fifth id dropped)"
+      - file: tests/OutcomesPanel.test.tsx
+        name: "XCOHORT-02: renders one median trace per cohortSeries entry"
+      - file: tests/OutcomesPanel.test.tsx
+        name: "XCOHORT-03: median trace name uses \"(N=X patients)\" format"
+    browser:
+      route: "/analysis?tab=trajectories&cohorts=<id1>,<id2>"
+      steps:
+        - "On /cohort save two searches (e.g. \"AMD/F\" and \"AMD/M\"). In the saved-searches list click the violet icon \"Outcomes anzeigen\" of the first one — the URL becomes /analysis?tab=trajectories&cohort=<id1>."
+        - "Click \"Kohorten vergleichen\" (header, right) and tick the second search in the drawer \"Kohorten vergleichen\" — the URL now contains cohorts=<id1>,<id2>."
+        - "Read the header subtitle and the legend below the OD panel."
+      expect: "Subtitle reads '2 Kohorten verglichen · <name1>, <name2>'; each panel draws two thick median lines in different colours (emerald and amber in light mode) and the legend lists '<name1> (N=<n> patients)' and '<name2> (N=<n> patients)'."
+    notes: "Subtitle wording matches the actual string '{count} Kohorten verglichen'; names are truncated to 50 characters with an ellipsis. ids are UUIDs (data/data.db saved_searches); obtain them via the UI path above or from the address bar."
+  - id: UIR-TRAJ-034
+    title: "Compare mode renders scatter and curves per cohort colour, opt-in"
+    statement: "The UI renders, in compare mode, \"Streupunkte\" and \"Individuelle Kurven\" per cohort in that cohort's colour when ticked; both remain opt-in and a drawer note explains the colours."
+    status: implemented
+    sources: ["UAT v1.18 M3", "code: src/components/outcomes/OutcomesPanel.tsx:249-277"]
+    evidence:
+      - "src/components/outcomes/OutcomesPanel.tsx:249-277 — cross traces receive per-cohort scatterPoints / perPatientSeries only when toggles on"
+      - "src/components/outcomes/plotlyTraces.ts:244-289 — per-cohort lines and scattergl in s.color"
+      - "src/components/outcomes/OutcomesSettingsDrawer.tsx:188-191,205-209 — toggles shown in cross mode; note compare-layers-note"
+      - "src/i18n/translations.ts:925 — DE note 'Streupunkte und Einzelkurven werden im Vergleichsmodus je Kohorte in ihrer Farbe angezeigt.'"
+    tests:
+      - file: tests/OutcomesPanel.test.tsx
+        name: "M3: scatter toggle ON renders one cross-cohort scatter cloud per cohort (in cohort colour)"
+      - file: tests/OutcomesPanel.test.tsx
+        name: "M3: scatter toggle OFF emits no cross-cohort scatter clouds"
+      - file: tests/OutcomesPanel.test.tsx
+        name: "M3: per-patient toggle ON renders cross-cohort per-patient lines per cohort (in cohort colour)"
+      - file: tests/plotlyTracesHover.test.ts
+        name: "emits scattergl + per-patient line per cohort when both toggles are on"
+    browser:
+      route: "/analysis?tab=trajectories&cohorts=<id1>,<id2>"
+      steps:
+        - "On /cohort save two searches (e.g. \"AMD/F\" and \"AMD/M\"). In the saved-searches list click the violet icon \"Outcomes anzeigen\" of the first one — the URL becomes /analysis?tab=trajectories&cohort=<id1>."
+        - "Click \"Kohorten vergleichen\" (header, right) and tick the second search in the drawer \"Kohorten vergleichen\" — the URL now contains cohorts=<id1>,<id2>."
+        - "Click \"Diagramm-Anzeige\"."
+        - "Tick \"Streupunkte\"; then tick \"Individuelle Kurven\"; then untick both."
+      expect: "The drawer shows the note 'Streupunkte und Einzelkurven werden im Vergleichsmodus je Kohorte in ihrer Farbe angezeigt.'; ticking adds dots and thin lines coloured like each cohort's median (not grey); unticking removes them."
+    notes: "The drawer note is not asserted by tests. ids are UUIDs (data/data.db saved_searches); obtain them via the UI path above or from the address bar."
+  - id: UIR-TRAJ-035
+    title: "?compare=open auto-opens the compare drawer"
+    statement: "The UI auto-opens the compare drawer when the page is opened with ?compare=open."
+    status: implemented
+    sources: ["code: src/components/outcomes/useOutcomesRouteState.ts:188-190"]
+    evidence:
+      - "src/components/outcomes/useOutcomesRouteState.ts:188-190 — compareOpen initial state = searchParams.get('compare') === 'open'"
+      - "src/components/outcomes/OutcomesView.tsx:368-378 — CohortCompareDrawer open={s.compareOpen}"
+    tests: []
+    browser:
+      route: "/analysis?tab=trajectories&compare=open"
+      steps:
+        - "Open /analysis?tab=trajectories&compare=open directly in the address bar."
+        - "Observe the right edge of the page on load."
+      expect: "The \"Kohorten vergleichen\" drawer is already slid in (title 'Kohorten vergleichen', hint 'Bis zu 4 Kohorten auswählen') without clicking the header button."
+    notes: "tests/cohortSplitDialog.test.tsx asserts only that the split wizard navigates to a URL containing compare=open; no test asserts the drawer opens on that param."
+  - id: UIR-TRAJ-036
+    title: "Behandlungsintervall histogram with eye toggle and median text"
+    statement: "The Behandlungsintervall histogram has an eye toggle group (aria-label \"Auge\", OD/OS/combined, aria-pressed) and a median-gap text line that recompute on toggle."
+    status: implemented
+    sources: ["code: src/components/outcomes/IntervalHistogram.tsx:128-157,280-287"]
+    evidence:
+      - "src/components/outcomes/IntervalHistogram.tsx:69 — eye state default combined; 78-81 distribution memo on eye; 133-157 role=group aria-label metricsIntervalEyeSelector, buttons aria-pressed (active bg-violet-700), testids interval-eye-od/os/combined; 281-287 interval-median 'Median {days}d'"
+      - "src/i18n/translations.ts:963-971 — DE 'Behandlungsintervalle (Injektionsgaps)', 'Auge', 'OD', 'OS', 'OD + OS', 'Median {days}d'"
+    tests:
+      - file: tests/intervalHistogram.test.tsx
+        name: "switches computation when eye toggle is clicked"
+      - file: tests/intervalHistogram.test.tsx
+        name: "renders median annotation text with day value"
+    browser:
+      route: "/analysis?tab=trajectories&metric=interval"
+      steps:
+        - "Open /analysis?tab=trajectories&metric=interval."
+        - "Note the 'Median <n>d' line above the chart and the bar heights."
+        - "Click \"OD\" in the toggle group right of the title 'Behandlungsintervalle (Injektionsgaps)'; then \"OS\"."
+      expect: "The toggle group has aria-label 'Auge'; the clicked button turns violet with aria-pressed=\"true\" and the others false; the bars and the 'Median <n>d' text change with each click."
+    notes: "aria-pressed is not asserted by tests (they click by testid and check the median value)."
+  - id: UIR-TRAJ-037
+    title: "Interval histogram groups bars per cohort with legend in cross mode"
+    statement: "The Behandlungsintervall histogram in cross mode shows grouped bars per cohort labelled by name and colour with a legend and per-cohort medians."
+    status: implemented
+    sources: ["UAT v1.12 ANL-010", "code: src/components/outcomes/IntervalHistogram.tsx:180-259"]
+    evidence:
+      - "src/components/outcomes/IntervalHistogram.tsx:75 — isCrossMode ≥2 series; 85-114 grouped rows + per-cohort medians; 180-210 legend list with swatch, name and ' · Median <n> Tage' (only when medianGap > 0; testid interval-median-<cohortId>); 244-257 Recharts Legend + one Bar per cohort named by cohortName in cohort colour"
+      - "src/components/outcomes/OutcomesView.tsx:239-244 — cohortSeries passed when isCrossMode"
+    tests:
+      - file: tests/intervalHistogram.test.tsx
+        name: "renders cohort legend with each cohort name"
+      - file: tests/intervalHistogram.test.tsx
+        name: "renders per-cohort median annotations in cross mode"
+      - file: tests/intervalHistogram.test.tsx
+        name: "suppresses the single-eye median element in cross mode"
+    browser:
+      route: "/analysis?tab=trajectories&metric=interval&cohorts=<id1>,<id2>"
+      steps:
+        - "Open /analysis?tab=trajectories&metric=interval&cohorts=<id1>,<id2> (two saved cohorts)."
+        - "Look above the chart and below the x-axis."
+      expect: "Above the chart one line per cohort with a colour swatch, the cohort name and ' · Median <n> Tage'; each x-bin shows side-by-side bars in the two cohort colours; the Recharts legend below the chart lists both cohort names."
+    notes: "The median suffix text is built from 'Median {name}: {days} Tage' with the name blanked, so it reads 'Median <n> Tage'; it is omitted when a cohort has no calculable gap."
+  - id: UIR-TRAJ-038
+    title: "Responder view: grouped bars, overlay, per-cohort small multiples"
+    statement: "The Responder view shows a grouped bar chart (Responder/Partial/Non-Responder per eye), three bucket median lines and, in cross mode, per-cohort small multiples labelled by name and colour."
+    status: implemented
+    sources: ["UAT v1.12 ANL-010", "code: src/components/outcomes/ResponderView.tsx:174-196,240-325"]
+    evidence:
+      - "src/components/outcomes/ResponderView.tsx:50-54 — BUCKET_COLORS green #16a34a / yellow #ca8a04 / red #dc2626; 257-282 responder-bar-section grouped BarChart per eye; 286-315 responder-trajectory-section ComposedChart with three median lines; 66-119 CohortResponderPanel small multiple with coloured heading, (N=…); 174-196 cross mode maps cohortSeries to panels"
+      - "src/i18n/translations.ts:984-990 — DE 'Responder-Klassifikation', bucket names, 'Medianverlauf nach Bucket'"
+    tests:
+      - file: tests/responderView.test.tsx
+        name: "renders both chart sections when classifications exist"
+      - file: tests/responderView.test.tsx
+        name: "exposes bucket counts as data attrs (combined eye)"
+    browser:
+      route: "/analysis?tab=trajectories&metric=responder"
+      steps:
+        - "Open /analysis?tab=trajectories&metric=responder."
+        - "Scroll through the card 'Responder-Klassifikation'."
+        - "Open /analysis?tab=trajectories&metric=responder&cohorts=<id1>,<id2>."
+      expect: "Step 2: a grouped bar chart with x categories OD / OS / OD + OS and legend Responder / Partial / Non-Responder (green/yellow/red), a divider, then 'Medianverlauf nach Bucket' with three coloured lines. Step 3: one bordered small-multiple per cohort, headed by a swatch, the cohort name and '(N=<n>)' in the cohort colour."
+    notes: "Cross-mode small multiples (responder-cohort-<id>) have no test. The trajectory overlay's x-axis label is the hardcoded string 'Tage' (not localised)."
+  - id: UIR-TRAJ-039
+    title: "Responder ℹ tooltip states the responder definition"
+    statement: "The Responder tab has an ℹ icon whose tooltip defines Responder as 'Visus-Verbesserung ≥ 5 Buchstaben ETDRS oder CRT-Reduktion ≥ 10 % gegenüber Baseline'."
+    status: implemented
+    sources: ["UAT v1.10 ANL-002", "code: src/components/outcomes/OutcomesView.tsx:124-130", "code: src/components/outcomes/ResponderView.tsx:247-254"]
+    evidence:
+      - "src/components/outcomes/OutcomesView.tsx:124-130 — ℹ span with title/aria-label metricsResponderTooltip inside the Responder tab button"
+      - "src/components/outcomes/ResponderView.tsx:247-254 — second ℹ next to the chart title, same tooltip"
+      - "src/i18n/translations.ts:996 — DE 'Responder: Visus-Verbesserung ≥ 5 Buchstaben ETDRS oder CRT-Reduktion ≥ 10 % gegenüber Baseline'"
+    tests:
+      - file: tests/ResponderTooltipPlacement.test.tsx
+        name: "renders an info affordance with metricsResponderTooltip adjacent to the plot (inside responder-view)"
+      - file: tests/ResponderTooltipPlacement.test.tsx
+        name: "info affordance contains ℹ character"
+    browser:
+      route: "/analysis?tab=trajectories&metric=responder"
+      steps:
+        - "Open /analysis?tab=trajectories&metric=responder."
+        - "Hover the ℹ glyph inside the \"Responder\" tab label for ~1 s."
+        - "Hover the ℹ glyph next to the title 'Responder-Klassifikation'."
+      expect: "Both show the native tooltip 'Responder: Visus-Verbesserung ≥ 5 Buchstaben ETDRS oder CRT-Reduktion ≥ 10 % gegenüber Baseline'."
+    notes: "Tests cover the plot-adjacent ℹ only; the tab-strip ℹ in OutcomesView is untested. The tooltip text is static and does not follow the drawer's threshold input (UIR-TRAJ-013)."
+  - id: UIR-TRAJ-040
+    title: "Rohdaten anzeigen table with CSV export per metric"
+    statement: "The user can open a collapsible \"Rohdaten anzeigen\" table per metric with metric-specific columns, a row-count caption and a \"CSV exportieren\" button saving outcomes-<metric>-<date>.csv."
+    status: implemented
+    sources: ["UAT v1.19 N6", "code: src/components/outcomes/OutcomesDataPreview.tsx:99-183,195-267"]
+    evidence:
+      - "src/components/outcomes/OutcomesDataPreview.tsx:99-184 — per-metric columns, exportLabelKey, filenameBase outcomes-crt / outcomes-intervals / outcomes-responder / outcomes-cohort; 189-193 downloadCsv with datedFilename; 196-219 <details> summary 'Rohdaten anzeigen', caption '{rows} Messzeilen …', export button"
+      - "src/utils/download.ts:50-52 — datedFilename `${prefix}-YYYY-MM-DD.${ext}`"
+      - "src/components/outcomes/VisusMetricContainer.tsx:147-153, CrtMetricContainer.tsx:121-127, OutcomesView.tsx:245-251,266-273 — preview mounted for all four metrics"
+      - "src/i18n/translations.ts:874-877,1008-1018 — DE labels incl. 'CSV exportieren (CRT)', 'CRT (µm)'"
+    tests:
+      - file: tests/OutcomesPage.test.tsx
+        name: "13. <details> data preview renders collapsed by default"
+      - file: tests/OutcomesPage.test.tsx
+        name: "14. expanding <details> shows 8 column headers and row-count caption"
+      - file: tests/OutcomesPage.test.tsx
+        name: "15. Export CSV button calls downloadCsv with 8 D-28 column headers in order"
+      - file: tests/OutcomesPage.test.tsx
+        name: "17. CSV filename matches outcomes-cohort-YYYY-MM-DD.csv shape"
+    browser:
+      route: "/analysis?tab=trajectories&metric=crt"
+      steps:
+        - "Open /analysis?tab=trajectories&metric=crt; scroll below the panels."
+        - "Click \"Rohdaten anzeigen\"."
+        - "Click \"CSV exportieren (CRT)\" and open the downloaded file."
+        - "Repeat on metric=interval and metric=responder."
+      expect: "Step 2: a table with columns Pseudonym, Auge, Datum, 'CRT (µm)', 'Δ CRT (µm)' and a caption '<n> Messzeilen · identisch zum CSV-Export'. Step 3: a file outcomes-crt-YYYY-MM-DD.csv with the same headers and n rows. Step 4: files outcomes-intervals-… (Lücken-Index, Tage (Lücke), Behandlungsdatum) and outcomes-responder-… (Responder-Bucket, Δ Visus (Buchstaben), Messdatum); Visus exports outcomes-cohort-….csv."
+    notes: "Tests cover the Visus variant only; CRT/interval/responder column sets and filenames are verified by code reading."
+  - id: UIR-TRAJ-041
+    title: "Dark mode uses lighter eye colours and light axis/legend text"
+    statement: "The trajectory panels use lighter eye colours and light axis, grid and legend text in dark mode."
+    status: implemented
+    sources: ["code: src/components/outcomes/OutcomesPanel.tsx:100-129", "code: src/components/outcomes/palette.ts:46-60"]
+    evidence:
+      - "src/components/outcomes/OutcomesPanel.tsx:100-101 — useThemeSafe → isDark; 118-129 grid #374151, tick #9ca3af, axisLabel/legend #d1d5db in dark; eyeColors = DARK_EYE_COLORS; 336-359 colours applied to layout font/axes/legend"
+      - "src/components/outcomes/palette.ts:54-58 — DARK_EYE_COLORS OD #93c5fd blue-300, OS #fca5a5, OD+OS #c4b5fd"
+      - "src/components/outcomes/IntervalHistogram.tsx:70-72, ResponderView.tsx:127-128 — rechartsTheme(dark) for the Recharts metrics"
+    tests:
+      - file: tests/outcomesPalette.contrast.test.ts
+        name: "DARK_EYE_COLORS["
+      - file: tests/rechartsDarkTheme.test.tsx
+        name: "returns distinct dark vs light tokens"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" (Visus) in light mode and note the OD median colour (dark blue) and axis text (dark grey)."
+        - "Switch the theme to \"Dunkel\" via the account/theme control."
+        - "Look at the OD, OS and combined panels."
+      expect: "OD median becomes light blue (#93c5fd), OS light red, combined light violet; axis titles, tick labels and the 'Median' legend text turn light grey on the dark card background; grid lines are a subtle dark grey."
+    notes: "Cited tests assert the dark palette contrast values and theme tokens, not that OutcomesPanel applies them (Plotly layout is not rendered in jsdom). The palette test title is generated from a template literal (`DARK_EYE_COLORS['OD']=#93c5fd ratio >= 4.5` etc.); the substring 'DARK_EYE_COLORS[' matches all three."
+  - id: UIR-TRAJ-042
+    title: "Header shows Outcomes title with cohort name and patient count"
+    statement: "The Verläufe header shows 'Outcomes: <cohort name>' for a saved cohort (plain 'Outcomes' otherwise) and a subtitle 'Gespeicherte Kohorte · <n> Patient:innen' or 'Ad-hoc-Filter · <n> Patient:innen'."
+    status: implemented
+    sources: ["code: src/components/outcomes/OutcomesView.tsx:283-299"]
+    evidence:
+      - "src/components/outcomes/OutcomesView.tsx:285-287 — h2 `${outcomesTitle}: ${cohort.name}` when the cohort has a name, else outcomesTitle"
+      - "src/components/outcomes/OutcomesView.tsx:288-299 — subtitle outcomesSubtitleSaved / outcomesSubtitleAdhoc with {count} = cohort.cases.length (cross mode replaces it, see UIR-TRAJ-033)"
+      - "src/i18n/translations.ts:816,822-823 — DE 'Outcomes', 'Gespeicherte Kohorte · {count} Patient:innen', 'Ad-hoc-Filter · {count} Patient:innen'"
+    tests:
+      - file: tests/OutcomesPage.test.tsx
+        name: "1. renders outcomesTitle heading when cohort resolves via fallback (activeCases)"
+      - file: tests/OutcomesPage.test.tsx
+        name: "4. parses ?filter= valid JSON and renders outcomesTitle"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" with no ?cohort= and read the header."
+        - "In Kohortenbildung open a saved search via \"Outcomes anzeigen\" (or set ?cohort=<savedId>&tab=trajectories) and read the header again."
+      expect: "Step 1: heading 'Outcomes' with subtitle 'Ad-hoc-Filter · 245 Patient:innen' (count = cases in the cohort). Step 2: heading 'Outcomes: <saved search name>' with subtitle 'Gespeicherte Kohorte · <n> Patient:innen'."
+    notes: "Added by the refute pass (all sweeps missed it). Tests assert only that the title key renders; the ': <name>' suffix and subtitle counts are not asserted. The count is cohort.cases.length (cases), labelled Patient:innen."

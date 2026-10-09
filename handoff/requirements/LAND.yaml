@@ -1,0 +1,460 @@
+# UI requirements registry — area LAND. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+area: LAND
+requirements:
+  - id: UIR-LAND-001
+    title: "Startseite is the post-login landing page"
+    statement: "The UI lands on the Startseite (/) automatically after a successful login (password step or 2FA step), and any unknown route redirects to /."
+    status: implemented
+    sources: ["spec: EMDREQ-DAT-001 / N11.01 (Anforderungsabgleich: Umgesetzt)", "manual: docs/Benutzerhandbuch.md §2, §3"]
+    evidence:
+      - "src/pages/LoginPage.tsx:66 (navigate('/') after credential login)"
+      - "src/pages/LoginPage.tsx:114 (navigate('/') after OTP login)"
+      - "src/App.tsx:55 (route / → LandingPage inside ProtectedRoute + Layout)"
+      - "src/App.tsx:66 (catch-all * → Navigate to / replace)"
+    tests: []
+    browser:
+      route: "/login"
+      steps:
+        - "Open /login and log in as admin (password step; enter the OTP if the account has 2FA enabled)."
+        - "Read the address bar and the page heading."
+        - "While logged in, open /does-not-exist in the address bar."
+      expect: "After step 2 the URL is exactly / and the heading starts with \"Willkommen,\" followed by the user's name. Step 3 lands on / again with the same heading."
+    notes: "No unit test renders LoginPage and asserts navigate('/'); tests/sessionTimers.test.tsx only covers the reverse redirect to /login. Unknown routes while logged out go / → /login."
+  - id: UIR-LAND-002
+    title: "Loading text while FHIR bundles load"
+    statement: "The Startseite content area shows only the centred loading text \"Daten werden geladen...\" while the FHIR bundles load; no KPI tiles, centre rows or right rail render before that."
+    status: implemented
+    sources: ["code: src/pages/LandingPage.tsx:44-50"]
+    evidence:
+      - "src/pages/LandingPage.tsx:44-50 (early return with t('dataLoading') while loading)"
+      - "src/context/DataContext.tsx:97 (loading initialised true) and :107-137 (set false after Promise.all of bundles + data endpoints)"
+      - "src/i18n/translations.ts:134 (dataLoading: 'Daten werden geladen...' / 'Loading data...')"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin, open DevTools → Network and set throttling to 'Slow 3G'."
+        - "Reload /."
+        - "Watch the content area right of the sidebar during the first seconds."
+      expect: "A single centred grey line \"Daten werden geladen...\" is shown in the content area with no KPI tiles, centre rows or right rail (the sidebar itself stays visible); once the bundles arrive the full page replaces it."
+    notes: "Layout (sidebar) is rendered by App.tsx around the page, so only the <main> content is replaced by the loading text. German text carries a trailing three-dot ellipsis. No test mocks loading:true for LandingPage."
+  - id: UIR-LAND-003
+    title: "Greeting by display name from the server"
+    statement: "The Startseite greets the user with \"Willkommen, <Vorname Nachname>.\" using the name loaded from /api/auth/users/me; only when no name is stored (or the call fails) does it fall back to the username."
+    status: implemented
+    sources: ["code: src/pages/LandingPage.tsx:132-137; src/context/AuthContext.tsx:116-142", "manual: docs/Benutzerhandbuch.md §3", "spec: EMDREQ-DAT-001 / N11.01"]
+    evidence:
+      - "src/pages/LandingPage.tsx:39 (displayName from useAuth) and :132-134 (h1 '{t('welcome')}, {displayName}.')"
+      - "src/pages/LandingPage.tsx:135-137 (subtitle t('landingSubtitle') directly under the h1)"
+      - "src/context/AuthContext.tsx:116-142 (fetch /api/auth/users/me, join firstName+lastName, fallback to username when both missing or on fetch error)"
+      - "server/index.ts:109-115 (seed users carry firstName/lastName, e.g. forscher1 = Anna Müller, admin = System Administrator)"
+      - "src/i18n/translations.ts:115-118 (welcome: 'Willkommen'; landingSubtitle: 'Klinischer Demonstrator — Datenübersicht')"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as forscher1 (seeded with Vorname 'Anna', Nachname 'Müller')."
+        - "Read the h1 heading on the Startseite and the line directly below it."
+      expect: "The heading reads \"Willkommen, Anna Müller.\" (not 'forscher1'); the line below reads \"Klinischer Demonstrator — Datenübersicht\"."
+    notes: "The username fallback is not reachable through the UI: the Verwaltung create and edit forms validate Vorname and Nachname as Pflichtfeld (src/pages/AdminPage.tsx:288-289, 397-398). It only triggers for a users.json entry without names or when /users/me fails. tests/userCrud.test.ts covers the endpoint but no test asserts the greeting."
+  - id: UIR-LAND-004
+    title: "Today's date in the active locale"
+    statement: "The Startseite shows today's date in the uppercase caption line above the greeting as a long date with weekday for the active locale (de-DE or en-US)."
+    status: implemented
+    sources: ["code: src/pages/LandingPage.tsx:121-131"]
+    evidence:
+      - "src/pages/LandingPage.tsx:123-131 (caption: t('clinicalDemonstrator') · toLocaleDateString(getDateLocale(locale), {weekday:'long', day:'numeric', month:'long', year:'numeric'}))"
+      - "src/utils/dateFormat.ts:9-11 (getDateLocale: de → 'de-DE', else 'en-US')"
+      - "src/i18n/translations.ts:55 (clinicalDemonstrator: 'Klinischer Demonstrator' / 'Clinical Demonstrator')"
+      - "src/components/Layout.tsx:115 (language switch button toggles de/en)"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin with language DE."
+        - "Read the small uppercase caption line above the \"Willkommen\" heading."
+        - "Switch the language to EN via the DE/EN switch at the bottom of the sidebar and read the line again."
+      expect: "DE shows e.g. 'KLINISCHER DEMONSTRATOR · Donnerstag, 8. Oktober 2026'; EN shows 'CLINICAL DEMONSTRATOR · Thursday, October 8, 2026' for the same day."
+    notes: "The caption is uppercased by CSS (class uppercase); the DOM text is mixed case. No test asserts the date formatting."
+  - id: UIR-LAND-005
+    title: "Four KPI tiles for the user's visible data"
+    statement: "The Startseite shows four KPI tiles: \"Angeschlossene Zentren\", \"Pseudonymisierte Fälle\", \"Messwerte gesamt\" and \"OCT-Aufnahmen\" (last two locale-formatted), computed from the user's visible data."
+    status: implemented
+    sources: ["spec: EMDREQ-DAT-003 / N11.02 (Anforderungsabgleich: Abweichend)", "code: src/pages/LandingPage.tsx:52-116,151-173"]
+    evidence:
+      - "src/pages/LandingPage.tsx:52-63 (totalPatients, totalObservations, totalOctImages derived from cases)"
+      - "src/pages/LandingPage.tsx:81-116 (stats array; measurements and OCT use toLocaleString(locale), centres/cases are raw numbers; sub-captions '<n> online', 'FHIR-Bundles', 'LOINC-Beobachtungen', 'modalitätenübergreifend')"
+      - "src/pages/LandingPage.tsx:151-173 (grid of 4 Tiles)"
+      - "src/i18n/translations.ts:120-123 (tile labels) and :1053-1056 (sub-captions)"
+      - "server/fhirApi.ts:396-410 (bundles already filtered per user, so 'visible data')"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin (DE)."
+        - "Count the tiles in the row directly below the header and read their labels, values and small right-hand sub-captions."
+        - "Switch to EN and read the \"Messwerte gesamt\" / \"Total Measurements\" value again."
+      expect: "Exactly four tiles: Angeschlossene Zentren = 6 (sub '6 online'), Pseudonymisierte Fälle > 0 (sub 'FHIR-Bundles'), Messwerte gesamt (sub 'LOINC-Beobachtungen') and OCT-Aufnahmen (sub 'modalitätenübergreifend') > 0. Thousands separator is '.' in DE (12.345) and ',' in EN (12,345)."
+    notes: "Only 'Messwerte gesamt' and 'OCT-Aufnahmen' are locale-formatted; the two count tiles render the raw number. tests/datenvollstaendigkeitCard.test.tsx only smoke-renders the page and does not assert the tiles."
+  - id: UIR-LAND-006
+    title: "Fälle KPI equals unfiltered cohort count"
+    statement: "The Startseite \"Pseudonymisierte Fälle\" KPI shows the number of loaded non-stub cases and equals the unfiltered Kohortenbildung total only while no case is excluded in Datenqualität."
+    status: partial
+    sources: ["uat: v1.10 DAT-003", "spec: EMDREQ-DAT-003 / N11.02"]
+    evidence:
+      - "src/pages/LandingPage.tsx:52 (totalPatients = cases.length) and :95-101 (tile)"
+      - "src/context/DataContext.tsx:149-151 (activeCases = cases minus excludedCases)"
+      - "src/pages/CohortBuilderPage.tsx:63-64 (uses activeCases) and :945-950 (header '{t('cohortCases')}: N {t('cases')}', footer '{t('of')} {activeCases.length} {t('totalCases')}')"
+      - "src/i18n/translations.ts:200-202 (cohortCases: 'Kohorte', totalCases: 'Gesamtfällen', of: 'von')"
+      - "src/components/quality/QualityCaseDetail.tsx:410 (\"Von Analysen ausschließen\" button adds a case to excludedCases)"
+      - "shared/patientCases.ts:81 (stubs excluded from cases)"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin; in \"Datenqualität\" check that the \"Ausgeschlossene Fälle\" summary card shows 0."
+        - "Note the \"Pseudonymisierte Fälle\" value on the Startseite."
+        - "Click \"Kohortenbildung\" and, with no filters set, read the grey line under the \"Kohorte: N Fälle\" heading ('von N Gesamtfällen')."
+        - "In Datenqualität open one case and click \"Von Analysen ausschließen\"; repeat steps 2-3."
+      expect: "Steps 2 and 3 show the same number. After step 4 the cohort total ('von N Gesamtfällen') is one lower than the KPI (documented deviation)."
+    notes: "Partial: the landing KPI uses cases.length while the cohort builder total uses activeCases.length (cases excluded via Datenqualität removed). The two numbers diverge by the number of excluded cases. No test asserts the parity."
+  - id: UIR-LAND-007
+    title: "Datenvollzähligkeit card with % and n / m"
+    statement: "The Startseite \"DATENVOLLZÄHLIGKEIT\" card shows the completeness percentage (cases / all Patients incl. stubs), \"n / m Patienten\" and a colour-coded role=progressbar with aria-valuenow."
+    status: implemented
+    sources: ["uat: v1.14 I5; v1.12 roadmap (two-number completeness, Phase 34); confirmed by tester in v1.15", "code: src/pages/LandingPage.tsx:31-35,175-228", "spec: EMDREQ-DAT-003 / N11.02"]
+    evidence:
+      - "src/pages/LandingPage.tsx:31-35 (completenessColor: sage >= 0.5, amber >= 0.25, coral below)"
+      - "src/pages/LandingPage.tsx:65-71 (fraction = cases.length / countRawPatients(bundles))"
+      - "src/pages/LandingPage.tsx:175-228 (card, '{pct} %', '{n} / {m} Patienten', progressbar with aria-valuenow/min/max)"
+      - "src/services/fhirLoader.ts:96-102 (countRawPatients includes stubs)"
+      - "src/i18n/translations.ts:1091-1098 (caption, patients, aria-label keys)"
+    tests:
+      - file: tests/datenvollstaendigkeitCard.test.tsx
+        name: "renders the completeness percentage (70 % for 7 of 10 patients)"
+      - file: tests/datenvollstaendigkeitCard.test.tsx
+        name: "renders the n / m patients sub-label"
+      - file: tests/datenvollstaendigkeitCard.test.tsx
+        name: "renders progressbar with correct aria-valuenow"
+      - file: tests/datenvollstaendigkeitCard.test.tsx
+        name: "renders the DATENVOLLZÄHLIGKEIT caption"
+      - file: tests/stubIsolation.test.ts
+        name: "returns total Patient count including stubs (denominator)"
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin."
+        - "Locate the full-width card between the KPI row and the centre list, headed \"DATENVOLLZÄHLIGKEIT\"."
+        - "Read the large percentage and the small text next to it; inspect the bar (DevTools: role=progressbar, aria-valuenow)."
+      expect: "The card shows e.g. '83 %' and '415 / 500 Patienten'; aria-valuenow equals the shown percentage; the bar and percentage are green (sage) at >= 50 %, amber at 25-49 %, coral below 25 %."
+    notes: "Rendered as '{n} / {m} Patienten', not 'n von m'. The SKIP_REASON comments in the test file are stale: all card assertions are plain it() and pass (verified 2026-10-08, 84/84 in the cited files)."
+  - id: UIR-LAND-008
+    title: "Completeness info tooltip"
+    statement: "The user can hover (or Tab-focus) the info icon next to \"DATENVOLLZÄHLIGKEIT\" and sees a native title tooltip explaining the completeness metric; the text is also exposed as aria-label."
+    status: implemented
+    sources: ["spec: EMDREQ-DAT-003 / N11.02", "code: src/pages/LandingPage.tsx:190-193"]
+    evidence:
+      - "src/pages/LandingPage.tsx:190-193 (<InfoTooltip text={t('datenvollstaendigkeitTooltip')} /> next to the caption)"
+      - "src/components/primitives/InfoTooltip.tsx:17-25 (span role=img, title + aria-label = text, tabIndex 0, Info icon)"
+      - "src/i18n/translations.ts:1095-1098 (tooltip text DE/EN)"
+    tests:
+      - file: tests/datenvollstaendigkeitCard.test.tsx
+        name: "renders the definition tooltip as an accessible info icon"
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin (DE)."
+        - "Hover the small (i) icon right of the \"DATENVOLLZÄHLIGKEIT\" caption for about one second."
+      expect: "A native tooltip appears starting with 'Vollzähligkeit: Anteil der Patient:innen mit Daten im System an allen registrierten Patient:innen (inkl. noch ohne Messwerte).'"
+    notes: "Native browser title tooltip (usual ~1 s hover delay), not a custom popover; keyboard focus shows the ring but browsers do not open title tooltips on focus."
+  - id: UIR-LAND-009
+    title: "Kohortenbildung button navigates to /cohort"
+    statement: "The user can click the \"Kohortenbildung\" button (with + icon) in the Startseite header and is navigated to the cohort builder at /cohort."
+    status: implemented
+    sources: ["uat: v1.10 A-01", "code: src/pages/LandingPage.tsx:139-142"]
+    evidence:
+      - "src/pages/LandingPage.tsx:140-142 (Button onClick navigate('/cohort'), label t('navCohort'), Plus icon)"
+      - "src/App.tsx:56 (route /cohort → CohortBuilderPage)"
+      - "src/i18n/translations.ts:51 (navCohort: 'Kohortenbildung')"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin."
+        - "Click the \"Kohortenbildung\" button at the top right of the Startseite header."
+      expect: "The URL becomes /cohort and the Kohortenbildung page with its filter panel renders."
+    notes: "tests/LandingPage.test.tsx registers a /cohort route in its MemoryRouter but no it() clicks the button."
+  - id: UIR-LAND-010
+    title: "Export button disabled with not-available hint"
+    statement: "The Startseite \"Export\" button is rendered disabled (dimmed, not-allowed cursor) with the title \"Funktion noch nicht verfügbar\"; clicking it has no effect and raises no console error."
+    status: implemented
+    sources: ["uat: v1.10 A-02", "code: src/pages/LandingPage.tsx:143-146"]
+    evidence:
+      - "src/pages/LandingPage.tsx:143-146 (Button disabled title=\"Funktion noch nicht verfügbar\", no onClick)"
+      - "src/components/primitives/Button.tsx:36-37 (spreads props; disabled:opacity-50 disabled:cursor-not-allowed)"
+      - "src/i18n/translations.ts:1057 (export: 'Export')"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin and open DevTools → Console."
+        - "Hover the \"Export\" button in the Startseite header for about one second."
+        - "Click the button."
+      expect: "The button is dimmed with a not-allowed cursor, the tooltip 'Funktion noch nicht verfügbar' appears, the URL stays / and the console shows no new error."
+    notes: "The title text is hard-coded German and does not switch with the language toggle."
+  - id: UIR-LAND-011
+    title: "One centre row per visible centre"
+    statement: "The Startseite \"Angeschlossene Zentren und Standorte\" tile shows one row per visible centre with its shorthand badge (UKA, UKC, …), the centre name and \"<Stadt>, <Bundesland>\"."
+    status: implemented
+    sources: ["spec: EMDREQ-DAT-002 / N11.01 (Anforderungsabgleich: Umgesetzt)", "manual: docs/Benutzerhandbuch.md §3", "code: src/pages/LandingPage.tsx:235-301"]
+    evidence:
+      - "src/pages/LandingPage.tsx:247-277 (centers.map → badge getCenterShorthand, name, city/state)"
+      - "src/services/fhirLoader.ts:51-87 (extractCenters from Organization resources: id, name, city, state)"
+      - "src/services/fhirLoader.ts:181-200 (loadCenterShorthands from /api/fhir/centers, getCenterShorthand)"
+      - "data/centers.json (six centres with shorthands UKA..UKT)"
+    tests:
+      - file: tests/generatedBundles.test.ts
+        name: "loads via fhirLoader and yields extractable centers/cases"
+      - file: tests/constants.test.ts
+        name: "getCenterShorthands returns id→shorthand map"
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin."
+        - "Count the rows in the \"Angeschlossene Zentren und Standorte\" tile below the Datenvollzähligkeit card and read each badge, name and location."
+      expect: "Six rows: UKA Universitätsklinikum Aachen, UKC Chemnitz, UKG Greifswald, UKL Leipzig, UKM Münster, UKT Tübingen, each with '<Stadt>, <Bundesland>' under the name, matching data/centers.json."
+    notes: "Rows are role=button rows inside one Tile, not separate cards. Both tests are indirect: generatedBundles asserts extractCenters on 4 of the 6 shipped bundles (Aachen/Tübingen not covered); constants.test covers the server-side shorthand map behind /api/fhir/centers, not the rendered badge."
+  - id: UIR-LAND-012
+    title: "Centre rows limited to the user's centres"
+    statement: "The Startseite shows only the centres assigned to the logged-in user (server-filtered bundles); admins and users assigned all six centres see all six rows."
+    status: implemented
+    sources: ["manual: docs/Benutzerhandbuch.md §3, §15", "code: server/fhirApi.ts:396-410"]
+    evidence:
+      - "server/fhirApi.ts:396-410 (GET /api/fhir/bundles: admin bypass, else filterBundlesByCenters(req.auth.centers))"
+      - "src/context/DataContext.tsx:122-129 (centers = extractCenters(filtered bundles))"
+      - "src/pages/LandingPage.tsx:89-94,247 (KPI centers.length; rows rendered as delivered)"
+      - "server/index.ts:109-115 (seed: forscher1 → org-uka; epidemiologe → uka/ukc/ukg; admin + klinikleitung → all six)"
+    tests:
+      - file: tests/fhirApi.test.ts
+        name: "Test 1: filterBundlesByCenters() with local bundles filters to user centers only"
+      - file: tests/fhirApi.test.ts
+        name: "Test 3: isBypass() returns true for role=admin regardless of centers"
+      - file: tests/centerBypass.test.ts
+        name: "admin always bypasses regardless of centers"
+      - file: tests/centerBypass.test.ts
+        name: "non-admin never bypasses, even with all valid centers"
+    browser:
+      route: "/"
+      steps:
+        - "Log in as forscher1 and count the centre rows; log out."
+        - "Log in as epidemiologe and count; log out."
+        - "Log in as klinikleitung and count; log out."
+        - "Log in as admin and count."
+      expect: "forscher1: 1 row (UKA); epidemiologe: 3 rows (UKA, UKC, UKG); klinikleitung and admin: 6 rows. The 'Angeschlossene Zentren' KPI shows the same number as rows."
+    notes: "Enforcement is server-side; the landing page has no own filter. The cited tests cover the server filter and bypass logic, not the rendered row count."
+  - id: UIR-LAND-013
+    title: "Centre row case count from local data"
+    statement: "The Startseite shows per centre row the number of non-stub cases (\"Fälle\") from local bundles, equal to the Kohortenbildung count filtered on that centre while none of its cases is excluded."
+    status: partial
+    sources: ["spec: EMDREQ-DAT-003 / N11.02 (Anforderungsabgleich: Abweichend)", "manual: docs/Benutzerhandbuch.md §3"]
+    evidence:
+      - "src/pages/LandingPage.tsx:278-285 (label t('cases') + center.patientCount)"
+      - "src/services/fhirLoader.ts:79-83 (patientCount = patients of the org with >= 1 Observation, D-04)"
+      - "shared/patientCases.ts:81 (same stub rule for extractPatientCases, D-03)"
+      - "src/pages/CohortBuilderPage.tsx:63,655-680 (centre checkboxes under 'Zentren' labelled with the full centre name; filters applied to activeCases)"
+      - "src/context/DataContext.tsx:149-151 (activeCases = cases minus excludedCases)"
+    tests:
+      - file: tests/stubIsolation.test.ts
+        name: "patientCount reflects only clinical (non-stub) patients"
+      - file: tests/generatedBundles.test.ts
+        name: "loads via fhirLoader and yields extractable centers/cases"
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin with no excluded cases; note the \"Fälle\" number on the UKA row."
+        - "Open \"Kohortenbildung\" and, under the \"Zentren\" heading in the filter panel, tick only the checkbox \"Universitätsklinikum Aachen\"; read the \"Kohorte: N Fälle\" heading."
+        - "Compare the two numbers."
+      expect: "Both numbers are equal (e.g. 50). If a UKA case was excluded in Datenqualität (\"Von Analysen ausschließen\"), the cohort count is lower by that number (documented deviation)."
+    notes: "Partial for the same reason as LAND-006: patientCount ignores the Datenqualität exclusion list, the cohort builder respects it. The cohort centre filter is a checkbox list of full names, not a 'UKA' selector."
+  - id: UIR-LAND-014
+    title: "Centre row last-update date in locale format"
+    statement: "The Startseite shows on each centre row a clock icon with the bundle's last-update date in short numeric form for the active locale (dd.mm.yy in DE, mm/dd/yy in EN) or \"—\" when none."
+    status: implemented
+    sources: ["spec: EMDREQ-DAT-004 / N07.06 (Anforderungsabgleich: Teilweise)", "manual: docs/Benutzerhandbuch.md §3", "code: src/pages/LandingPage.tsx:286-295"]
+    evidence:
+      - "src/pages/LandingPage.tsx:286-295 (Clock icon + toLocaleDateString(getDateLocale(locale), {day:'2-digit', month:'2-digit', year:'2-digit'}) or '—')"
+      - "src/services/fhirLoader.ts:84 (lastUpdated = bundle.meta.lastUpdated ?? '')"
+      - "src/utils/dateFormat.ts:9-11 (getDateLocale)"
+      - "public/data/center-*.json meta.lastUpdated (all six bundles carry a timestamp, e.g. Aachen 2026-04-08T06:00:00Z)"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin (DE) and read the clock-icon column of the centre rows."
+        - "Switch the language to EN and read it again."
+      expect: "DE shows dates like '08.04.26' on the UKA row; EN shows '04/08/26' for the same row. No DSF delivery timestamp column is present."
+    notes: "Source is Bundle.meta.lastUpdated; one Organization per bundle is assumed (fhirLoader.ts:57-65). The '—' fallback is not observable with the shipped bundles because all carry meta.lastUpdated. No test asserts the date formatting."
+  - id: UIR-LAND-015
+    title: "Centre row opens Dokumentationsqualität"
+    statement: "The user can, with a quality role (admin, clinic_lead, data_manager), click or Tab+Enter any centre row on the Startseite and is navigated to /doc-quality; other roles are bounced back to /."
+    status: partial
+    sources: ["uat: v1.10 A-01", "code: src/pages/LandingPage.tsx:251-256"]
+    evidence:
+      - "src/pages/LandingPage.tsx:251-256 (role=button, tabIndex 0, onClick and Enter → navigate('/doc-quality'))"
+      - "src/App.tsx:35-40,61 (QualityRoute redirects non-QUALITY_ROLES users to /)"
+      - "src/context/AuthContext.tsx:23 (QUALITY_ROLES = admin, clinic_lead, data_manager)"
+      - "src/i18n/translations.ts:646 (docQualityTitle: 'Dokumentationsqualität')"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin and click the UKA centre row."
+        - "Go back to /, press Tab until a centre row has the focus ring and press Enter."
+        - "Log in as forscher1 and click the UKA row."
+      expect: "Steps 1 and 2: URL is /doc-quality and the \"Dokumentationsqualität\" page renders. Step 3: the URL stays / (redirected back) and nothing else happens."
+    notes: "Partial against the original 'any user' wording: every row navigates to /doc-quality, but for researcher/epidemiologist/clinician the QualityRoute immediately redirects back to /, so the click is a visible no-op. Only Enter (not Space) activates the row. No it() clicks a row."
+  - id: UIR-LAND-016
+    title: "Weitermachen tile lists recent entries"
+    statement: "The Startseite \"Weitermachen\" tile lists up to 5 recent entries per user (newest first, deduplicated by id, localStorage emd-recent:<username>) and navigates to the entry's stored path on click."
+    status: implemented
+    sources: ["code: src/pages/LandingPage.tsx:305-342; src/services/recentActivityStore.ts:16-19,61-68", "uat: v1.10 DAT (FB-02/FB-03, Phase 29)"]
+    evidence:
+      - "src/pages/LandingPage.tsx:309-341 (entries.map → role=button rows, onClick/Enter navigate(entry.path))"
+      - "src/services/recentActivityStore.ts:16-19,61-68 (MAX_ENTRIES 5, key emd-recent:<username>, dedupe + newest first)"
+      - "src/hooks/useRecentActivity.ts:12-42 (per-user hydration)"
+      - "src/pages/QualityPage.tsx:117-128 (records opened case with sub 'Datenqualität' and path '/quality')"
+      - "src/pages/AnalysisPage.tsx:103-110 (records 'Analyse' with full URL incl. query) and src/components/outcomes/useOutcomesRouteState.ts:322-330"
+    tests:
+      - file: tests/jumpBackIn.test.tsx
+        name: "hides jump-back-in-empty and shows entry rows when entries exist"
+      - file: tests/jumpBackIn.test.tsx
+        name: "navigates to entry.path when a row is clicked"
+      - file: tests/recentActivityStore.test.ts
+        name: "caps the list at 5 entries, dropping the oldest"
+      - file: tests/recentActivityStore.test.ts
+        name: "dedupes by id and moves repeated entry to index 0"
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin, open \"Datenqualität\" and click a case row to open its detail; then open \"Analyse\" in the sidebar."
+        - "Click \"Startseite\" in the sidebar and read the \"Weitermachen\" tile in the right rail."
+        - "Click the entry with the pseudonym from step 1."
+      expect: "The tile lists 'Analyse' (sub-line 'Analyse') and the case pseudonym (sub-line 'Datenqualität') as the two newest entries, never more than 5; clicking the pseudonym entry opens /quality (list view, case not pre-selected)."
+    notes: "Datenqualität entries deliberately store path '/quality' (QualityPage.tsx:118-119), so clicking such an entry opens Datenqualität WITHOUT re-selecting the case. Analyse/Verläufe entries restore their full URL."
+  - id: UIR-LAND-017
+    title: "Weitermachen empty state"
+    statement: "The Startseite \"Weitermachen\" tile shows the empty-state text \"Noch keine kürzlichen Aktivitäten\" (data-testid jump-back-in-empty, no pointer cursor) when the user has no recent activity."
+    status: implemented
+    sources: ["code: src/pages/LandingPage.tsx:309-315"]
+    evidence:
+      - "src/pages/LandingPage.tsx:309-315 (entries.length === 0 → data-testid=\"jump-back-in-empty\" with t('jumpBackInEmpty'))"
+      - "src/i18n/translations.ts:1060-1063 (jumpBackInEmpty DE/EN)"
+      - "src/services/recentActivityStore.ts:48-59 (getEntries returns [] when key missing/invalid)"
+      - "src/context/AuthContext.tsx:144-152 (clearAll() of emd-recent:* on logout)"
+    tests:
+      - file: tests/jumpBackIn.test.tsx
+        name: "shows jump-back-in-empty element when there are no entries"
+      - file: tests/LandingPage.test.tsx
+        name: "renders the empty-state copy when no recent-activity state exists"
+      - file: tests/LandingPage.test.tsx
+        name: "contains no dead Jump Back In rows"
+      - file: tests/recentActivityStore.test.ts
+        name: "returns empty array when no key exists"
+    browser:
+      route: "/"
+      steps:
+        - "Log in as forscher1 (fresh session; logout purges recent entries)."
+        - "Read the \"Weitermachen\" tile in the right rail."
+      expect: "The tile shows the centred grey text 'Noch keine kürzlichen Aktivitäten' and no clickable rows."
+    notes: "Because logout purges all emd-recent:* keys, every fresh login starts with the empty state; no need to clear localStorage manually."
+  - id: UIR-LAND-018
+    title: "Attention tile lists breakers and CRT without counts"
+    statement: "The Startseite \"Aufmerksamkeit erforderlich\" tile lists \"Therapie-Abbrecher\" and \"Unplausible CRT-Werte\", each with a static sub-line and a \"Prüfen\" button; no counts are displayed."
+    status: partial
+    sources: ["spec: EMDREQ-QUAL-010 / N06.05 (Anforderungsabgleich: Umgesetzt)", "code: src/pages/LandingPage.tsx:344-376"]
+    evidence:
+      - "src/pages/LandingPage.tsx:344-376 (two static rows: title, sub text, ghost Button t('review'))"
+      - "src/i18n/translations.ts:1065-1076 (attentionNeeded, attentionTherapyBreakers + Sub 'Fälle mit Lücke > 365 Tagen prüfen', attentionImplausibleCrt + Sub 'Für Qualitätsprüfung markiert', review 'Prüfen')"
+    tests:
+      - file: tests/LandingPage.test.tsx
+        name: "renders the Attention panel header"
+      - file: tests/landingPageAlerts.test.tsx
+        name: "implausible-CRT button uses the reviewImplausibleCrt aria-label"
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin."
+        - "Read the \"Aufmerksamkeit erforderlich\" tile at the bottom of the right rail."
+      expect: "Two rows: 'Therapie-Abbrecher' (sub 'Fälle mit Lücke > 365 Tagen prüfen', red dot) and 'Unplausible CRT-Werte' (sub 'Für Qualitätsprüfung markiert', amber dot), each with a 'Prüfen' button; no numeric count is shown."
+    notes: "Partial: the source requirement expects a count per item, but the code renders no number — only a fixed sub-line. The sub-line also hard-codes '> 365 Tagen' regardless of the configurable therapyBreakerDays setting."
+  - id: UIR-LAND-019
+    title: "Prüfen buttons open pre-filtered Datenqualität"
+    statement: "The user can click \"Prüfen\" on an attention row: Therapie-Abbrecher opens /quality?therapy=breaker and Unplausible CRT opens /quality?crt=implausible with that filter seeded and the filter panel open."
+    status: implemented
+    sources: ["spec: EMDREQ-QUAL-010 / N06.05", "uat: v1.12 roadmap (Therapie-Abbrecher routing, closed by v1.11 Phase 33); v1.10 FB-02", "code: src/pages/LandingPage.tsx:358,372"]
+    evidence:
+      - "src/pages/LandingPage.tsx:358 (aria-label reviewTherapyBreakers, navigate('/quality?therapy=breaker'))"
+      - "src/pages/LandingPage.tsx:372 (aria-label reviewImplausibleCrt, navigate('/quality?crt=implausible'))"
+      - "src/pages/QualityPage.tsx:92-98 (filterTherapy/filterCrt seeded from search params) and :109-115 (showFilters auto-open when therapy/status/crt param present)"
+      - "src/components/quality/QualityCaseList.tsx:159-179 (select 'Therapiestatus' option 'Therapieabbrecher'; select 'CRT-Wert' option 'Unplausibel (> 400 µm)')"
+      - "src/App.tsx:59 (/quality is ProtectedRoute for all roles)"
+    tests:
+      - file: tests/landingPageAlerts.test.tsx
+        name: "therapy-breaker Review button navigates to /quality?therapy=breaker"
+      - file: tests/landingPageAlerts.test.tsx
+        name: "implausible-CRT Review button navigates to /quality?crt=implausible"
+      - file: tests/LandingPage.test.tsx
+        name: "therapy-breakers Review button navigates to /quality?therapy=breaker (Plan 04)"
+      - file: tests/LandingPage.test.tsx
+        name: "implausible-CRT Review button is present for all roles"
+      - file: tests/qualityPageDeepLink.test.tsx
+        name: "seeds filterTherapy to \"breaker\" when ?therapy=breaker is in the URL"
+      - file: tests/qualityPageDeepLink.test.tsx
+        name: "seeds filterCrt to \"implausible\" when ?crt=implausible is in the URL"
+      - file: tests/qualityPageDeepLink.test.tsx
+        name: "auto-opens the filter panel when ?crt=implausible is in the URL"
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin and click \"Prüfen\" on the 'Therapie-Abbrecher' row."
+        - "Read the URL and the open filter panel on Datenqualität."
+        - "Return to / and click \"Prüfen\" on the 'Unplausible CRT-Werte' row."
+      expect: "Step 2: URL /quality?therapy=breaker, filter panel open with the \"Therapiestatus\" select showing 'Therapieabbrecher' and only breaker cases listed. Step 3: URL /quality?crt=implausible, panel open with the \"CRT-Wert\" select showing 'Unplausibel (> 400 µm)' and only cases above the CRT threshold listed."
+    notes: "Buttons are identified for assistive tech by aria-label 'Therapie-Abbrecher prüfen' / 'Unplausible CRT-Werte prüfen' while the visible label is 'Prüfen'. The '> 400 µm' in the option label follows the configured CRT threshold."
+  - id: UIR-LAND-020
+    title: "Return to Startseite via sidebar"
+    statement: "The user can return to the Startseite from any page via the \"Startseite\" sidebar entry, which is marked active (teal left bar, bold) only on / and not on other routes."
+    status: implemented
+    sources: ["spec: EMDREQ-DAT-001 / N11.01 (Anforderungsabgleich: Umgesetzt)", "code: src/components/Layout.tsx:17-18,36-63"]
+    evidence:
+      - "src/components/Layout.tsx:17-18 (research nav: { to: '/', label: t('navHome'), icon: Home, end: true })"
+      - "src/components/Layout.tsx:36-63 (NavItem = NavLink with end, isActive → bg surface-2 + font-semibold + teal 2px left bar)"
+      - "src/i18n/translations.ts:50 (navHome: 'Startseite' / 'Home')"
+      - "src/App.tsx:46-55 (Layout wraps all protected routes)"
+    tests: []
+    browser:
+      route: "/cohort"
+      steps:
+        - "Log in as admin and open /cohort."
+        - "Observe the sidebar: \"Kohortenbildung\" is highlighted, \"Startseite\" is not."
+        - "Click \"Startseite\" in the sidebar."
+      expect: "The URL becomes /, the Willkommen heading renders, and the 'Startseite' entry now shows the teal left bar and bold text while 'Kohortenbildung' is no longer highlighted."
+    notes: "The `end` prop ensures the entry is not marked active on /cohort etc. No component test renders Layout."
+  - id: UIR-LAND-021
+    title: "Centres tile heading, subtitle and Alle aktiv badge"
+    statement: "The Startseite centres tile is headed \"Angeschlossene Zentren und Standorte\" with the subtitle \"Übersicht der verfügbaren Datengrundlage je Zentrum\" and a green \"Alle aktiv\" badge at the right."
+    status: implemented
+    sources: ["spec: EMDREQ-DAT-002 / N11.01", "code: src/pages/LandingPage.tsx:235-245"]
+    evidence:
+      - "src/pages/LandingPage.tsx:236-245 (SectionHead title t('centersAndLocations'), sub t('centersSubtitle'), right Badge tone sage with green dot + t('allLive'))"
+      - "src/i18n/translations.ts:124-131 (centersAndLocations / centersSubtitle DE+EN) and :1058 (allLive: 'Alle aktiv' / 'All live')"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "Log in as admin (DE)."
+        - "Read the header of the large tile below the Datenvollzähligkeit card."
+        - "Switch to EN and read it again."
+      expect: "DE: heading 'Angeschlossene Zentren und Standorte', subtitle 'Übersicht der verfügbaren Datengrundlage je Zentrum', green badge 'Alle aktiv'. EN: 'Connected Centers and Locations', 'Overview of available data basis per center', badge 'All live'."
+    notes: "Added by the LAND refutation pass: earlier sweeps paraphrased the heading as 'Zentren & Standorte' and the badge as 'alle live'; neither string exists in translations.ts. The badge is static and does not reflect any live-status check."

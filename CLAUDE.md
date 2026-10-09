@@ -5,6 +5,7 @@ Minimal project conventions for Claude sessions.
 ## Commands
 
 - Test (safety net): `npm run test:ci` (all must pass — 1 327 tests at v1.20.2)
+- UI requirements harness: `npm run requirements [-- --round handoff/rounds/<vX.Y>]` (registry + round items vs tests/browser records)
 - Container: `bash scripts/container-smoke.sh` (build + 18 checks)
 - Build: `npm run build`
 - Dev: `npm run dev` (Vite) + `npm start` (Express API on :3000)
@@ -34,3 +35,4 @@ Minimal project conventions for Claude sessions.
 - `.planning/ROADMAP.md` — milestones + current phase
 - `.planning/STATE.md` — active position
 - `.planning/GLOSSARY.md` — terminology (sites, centers, patients, cases, cohort)
+- `handoff/HANDOFF.md` — the UAT user-study loop (tester docx → triage → implement → verify → release); skills `/uat-round`, `/uat-triage`, `/uat-implement`, `/uat-verify`, `/uat-release`

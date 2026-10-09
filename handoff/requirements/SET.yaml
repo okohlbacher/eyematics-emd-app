@@ -1,0 +1,566 @@
+# UI requirements registry — area SET. Generated 2026-10-08 by the ui-requirements-registry workflow;
+# maintained by the uat-triage skill (promotion and amendment of tester-confirmed behaviour; see handoff/HANDOFF.md §4).
+area: SET
+requirements:
+  - id: UIR-SET-001
+    title: "Einstellungen reachable only by administrators"
+    statement: "The UI shows the \"Einstellungen\" sidebar entry only to administrators and redirects non-admin users from /settings to the Startseite."
+    status: implemented
+    sources: ["manual: docs/Konfiguration.md — Änderung über die UI (als Administrator)"]
+    evidence:
+      - "src/App.tsx:28-33 (AdminRoute: no user → /login, role !== 'admin' → Navigate to '/')"
+      - "src/App.tsx:64 (/settings wrapped in AdminRoute)"
+      - "src/components/Layout.tsx:28-34 (admin nav group /audit, /admin, /settings only when user.role === 'admin')"
+      - "server/settingsApi.ts:308-312 (PUT /api/settings 403 for non-admin — server-side backstop)"
+      - "server/index.ts:110 and data/users.json:24 (seed user forscher1, role researcher)"
+    tests:
+      - file: tests/settingsApi.test.ts
+        name: "returns 403 for non-admin"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as forscher1 (non-admin)."
+        - "Inspect the sidebar: there is no \"Einstellungen\" entry (and no \"Protokoll\"/\"Verwaltung\")."
+        - "Type /settings into the address bar and press Enter."
+        - "Log out, log in as admin and open /settings."
+      expect: "As forscher1 the browser lands on the Startseite (/) without rendering the settings page; as admin the sidebar shows \"Einstellungen\" and /settings renders the page with the heading \"Einstellungen\"."
+    notes: "No test covers the client-side AdminRoute/sidebar gating; only the server 403 on PUT /api/settings is tested."
+  - id: UIR-SET-002
+    title: "\"YAML exportieren\" downloads current settings.yaml"
+    statement: "The user can download the current configuration as a settings.yaml file via \"YAML exportieren\"; the page footer states settings are loaded from and saved to settings.yaml."
+    status: implemented
+    sources: ["uat: v1.12 CFG-01/02 (settings.yaml single source); v1.20 (settings on volume)", "code: src/pages/SettingsPage.tsx:362-384", "manual: docs/Benutzerhandbuch.md §9.4"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:362-365 (handleExportYaml → exportSettingsYaml() + downloadYaml(…, 'settings.yaml'))"
+      - "src/pages/SettingsPage.tsx:378-384 (header button t('settingsExportYaml'))"
+      - "src/pages/SettingsPage.tsx:1035-1038 (footer hint t('settingsFileHint'))"
+      - "src/services/settingsService.ts:174-177 (exportSettingsYaml dumps the cached merged settings)"
+      - "src/utils/download.ts:43-47 (downloadYaml → Blob text/yaml + anchor click)"
+      - "src/i18n/translations.ts:720-721 ('YAML exportieren', 'Einstellungen werden in settings.yaml geladen und gespeichert.')"
+    tests: []
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings."
+        - "Click \"YAML exportieren\" in the page header (top right)."
+        - "Open the downloaded file."
+        - "Scroll to the bottom of the page."
+      expect: "A file named settings.yaml is downloaded containing keys such as twoFactorEnabled, therapyInterrupterDays, thresholds, plausibility, dataSource and auth with the currently displayed values; the page footer reads \"Einstellungen werden in settings.yaml geladen und gespeichert.\""
+    notes: "Export serialises the client-side cached settings (merged defaults + server YAML), not the raw file bytes; comments from the server file are not preserved."
+  - id: UIR-SET-003
+    title: "Successful save shows \"Einstellungen gespeichert\" for 3 s"
+    statement: "The Einstellungen page confirms a successful save with a green \"Einstellungen gespeichert\" banner that disappears after about 3 seconds."
+    status: implemented
+    sources: ["code: src/pages/SettingsPage.tsx:172-175,387-393", "manual: docs/Benutzerhandbuch.md §9, §15", "spec: EMDREQ-QUAL-009 / N06.01"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:172-175 (showSaved: setSavedBanner(true) + setTimeout 3000 ms)"
+      - "src/pages/SettingsPage.tsx:387-393 (green banner rendering t('settingsSaved'))"
+      - "src/pages/SettingsPage.tsx:143,162,192,214,233,252,277,303,323,343 (every save path calls showSaved on success)"
+      - "src/i18n/translations.ts:462 ('Einstellungen gespeichert')"
+    tests: []
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings."
+        - "Under \"Therapieunterbrechung\" change \"Therapieunterbrecher-Schwellenwert (Tage)\" from 120 to 121."
+        - "Click \"Speichern\" in that section and start a stopwatch."
+      expect: "A green banner \"Einstellungen gespeichert\" appears directly below the page header and is gone again after roughly 3 seconds without any user action."
+    notes: "The 3 s timer is not reset on repeated saves (each save schedules its own timeout). No component test exists for the banner."
+  - id: UIR-SET-004
+    title: "Failed save shows red error banner"
+    statement: "The Einstellungen page shows a red role=alert banner with the error message when a save fails."
+    status: implemented
+    sources: ["code: src/pages/SettingsPage.tsx:395-400"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:395-400 (div role=\"alert\" red banner: t('settingsSaveError') + ': ' + saveError)"
+      - "src/pages/SettingsPage.tsx:193-194,215-216,234-235,253-254,278-279,304-306,324-326,344-345 (catch blocks set saveError from err.message)"
+      - "src/services/settingsService.ts:121-131,139-151 (persistSettings throws 'Failed to persist settings: <status>'; updateSettings resyncs cache and rethrows)"
+      - "src/i18n/translations.ts:463 ('Einstellungen konnten nicht gespeichert werden')"
+    tests: []
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings."
+        - "Open the browser DevTools Network tab and enable request blocking for the URL pattern */api/settings (or stop the API container)."
+        - "Change \"Therapieunterbrecher-Schwellenwert (Tage)\" to 121 and click \"Speichern\" under \"Therapieunterbrechung\"."
+        - "Remove the block and click \"Speichern\" again."
+      expect: "A red banner \"Einstellungen konnten nicht gespeichert werden: Failed to persist settings: …\" (or a fetch error message) appears below the header; after unblocking, the next save shows the green \"Einstellungen gespeichert\" banner and the red one disappears."
+    notes: ""
+  - id: UIR-SET-005
+    title: "Saved settings persist across reload and browsers"
+    statement: "The UI keeps saved settings values after a page reload and after a login from another browser, because they are stored server-side in settings.yaml."
+    status: implemented
+    sources: ["manual: docs/Benutzerhandbuch.md §9, §15; docs/Konfiguration.md (server-side settings.yaml)", "uat: v1.12 CFG-01 (ANL-004); D1 global scope locked"]
+    evidence:
+      - "src/services/settingsService.ts:94-109 (loadSettings GET /api/settings, merged over DEFAULTS)"
+      - "src/services/settingsService.ts:121-131 (persistSettings PUT /api/settings as text/yaml)"
+      - "server/settingsApi.ts:45-47,60-64 (readSettings/writeSettings on SETTINGS_FILE)"
+      - "server/settingsApi.ts:282-306,308-346 (GET / PUT handlers)"
+      - "src/pages/SettingsPage.tsx:85-101 (page re-reads server values on mount)"
+      - "deploy/settings.yaml:10 (dataDir /data — settings on the persistent volume)"
+    tests:
+      - file: tests/settingsApi.test.ts
+        name: "persists auth.refreshTokenTtlMs and auth.refreshAbsoluteCapMs (round-trip lock)"
+      - file: tests/settingsApi.test.ts
+        name: "accepts valid settings from admin"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings."
+        - "Under \"Klinische Schwellenwerte\" change \"CRT kritischer Schwellenwert (µm)\" from 400 to 410 and click \"Speichern\" in that section; wait for \"Einstellungen gespeichert\"."
+        - "Press F5 to reload and scroll to \"Klinische Schwellenwerte\"."
+        - "On the server/host open settings.yaml (container: ~/EMD/settings.yaml) and search for criticalCrtUm."
+        - "In a second browser (or private window) log in as an administrator and open /settings."
+      expect: "After the reload the CRT field shows 410; settings.yaml contains criticalCrtUm: 410; the second browser also shows 410."
+    notes: ""
+  - id: UIR-SET-006
+    title: "2FA switch is off by default and controls OTP step"
+    statement: "The admin can switch \"OTP-Prüfung bei Anmeldung\" on or off (off on a fresh deployment); when on, login requires the OTP step, when off, login completes after the password step."
+    status: implemented
+    sources: ["spec: EMDREQ-USM-005 / N01.03 (Abgleich: Umgesetzt)", "manual: docs/Benutzerhandbuch.md §9.1; docs/Konfiguration.md twoFactorEnabled"]
+    evidence:
+      - "config/settings.yaml:1 and deploy/settings.yaml:6 (twoFactorEnabled: false)"
+      - "src/services/settingsService.ts:44 (client DEFAULTS twoFactorEnabled: false)"
+      - "src/pages/SettingsPage.tsx:297-308,408-427 (toggle + updateSettings({twoFactorEnabled}))"
+      - "server/settingsApi.ts:329 (updateAuthConfig after PUT — takes effect without restart)"
+      - "server/auth/loginApi.ts:114-128 (twoFactorEnabled || user.totpEnabled → challengeToken, else full session token)"
+      - "src/pages/LoginPage.tsx:64-72 (otp_required → step 'otp')"
+    tests: []
+    browser:
+      route: "/settings"
+      steps:
+        - "On a fresh deployment log in as an administrator (no OTP prompt appears) and open /settings."
+        - "In \"Zwei-Faktor-Authentisierung\" check the switch next to \"OTP-Prüfung bei Anmeldung\": it is off (grey)."
+        - "Click the switch to turn it on (blue); wait for \"Einstellungen gespeichert\"."
+        - "Log out, log in again with username and password."
+        - "Complete the OTP step, open /settings, turn the switch off, log out and log in again."
+      expect: "Fresh deployment: switch off and login needs only password. With the switch on, after the password step a second screen asks for the OTP code; with the switch off again, login goes straight to the Startseite."
+    notes: "Users with a personal TOTP enrolled are always asked for the OTP regardless of the global switch (loginApi.ts:116-118). No automated test asserts the on/off → challengeToken/token branch."
+  - id: UIR-SET-007
+    title: "2FA switch saves immediately, amber warning while off"
+    statement: "The \"OTP-Prüfung bei Anmeldung\" switch (role=switch, aria-checked) saves immediately on toggle and shows an amber warning text while two-factor is off."
+    status: implemented
+    sources: ["code: src/pages/SettingsPage.tsx:297-308,402-433"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:297-308 (handleTwoFactorToggle: optimistic set, updateSettings, showSaved; reverts on error)"
+      - "src/pages/SettingsPage.tsx:413-426 (button role=\"switch\" aria-checked={twoFactorEnabled})"
+      - "src/pages/SettingsPage.tsx:428-432 (amber text t('settings2faWarning') when !twoFactorEnabled)"
+      - "src/i18n/translations.ts:669-671 (label, hint, '⚠ Zwei-Faktor-Authentisierung ist deaktiviert…')"
+    tests: []
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings."
+        - "In \"Zwei-Faktor-Authentisierung\" click the switch next to \"OTP-Prüfung bei Anmeldung\" so it is off (grey)."
+        - "Do not click any \"Speichern\" button."
+        - "Inspect the switch element in DevTools."
+      expect: "Immediately after the click the green \"Einstellungen gespeichert\" banner appears and an amber text \"⚠ Zwei-Faktor-Authentisierung ist deaktiviert. Anmeldung erfolgt nur mit Benutzername und Passwort.\" is shown under the switch; the element has role=\"switch\" and aria-checked=\"false\". Turning it on removes the amber text and shows aria-checked=\"true\"."
+    notes: ""
+  - id: UIR-SET-008
+    title: "2FA setting change is recorded in the Protokoll"
+    statement: "The UI records a change of the two-factor setting as a Protokoll row \"Einstellungen geändert\" for the acting admin, whose stored body is searchable for twoFactorEnabled."
+    status: implemented
+    sources: ["manual: docs/Benutzerhandbuch.md §9.1"]
+    evidence:
+      - "server/auditMiddleware.ts:42,55-56 (/api/settings listed for body redaction; YAML body stored with cohortHashSecret/otpCode redacted)"
+      - "src/pages/audit/auditFormatters.ts:25 (PUT /api/settings → t('audit_action_update_settings'))"
+      - "src/pages/audit/auditFormatters.ts:45-53 (describeDetail returns '' for PUT /api/settings — Detail column empty)"
+      - "src/pages/AuditPage.tsx:66-72,100-104 (admin-only \"Benutzer\" dropdown and search box; useAuditData.ts:52 maps search → body_search)"
+      - "server/auditDb.ts:292-294 (body_search LIKE filter on stored body)"
+      - "src/i18n/translations.ts:596 ('Einstellungen geändert'), 1044 (search placeholder 'Kohorten-Hash suchen…')"
+      - "src/pages/SettingsPage.tsx:302 (toggle triggers PUT /api/settings via updateSettings)"
+    tests:
+      - file: tests/auditPageReducer.test.ts
+        name: "returns audit_action_update_settings for PUT /api/settings"
+      - file: tests/auditMiddleware.test.ts
+        name: "redacts cohortHashSecret/otpCode from YAML body on PUT /api/settings (H4)"
+      - file: tests/auditMiddleware.test.ts
+        name: "logs /api/ requests"
+    browser:
+      route: "/audit"
+      steps:
+        - "Log in as an administrator and open /settings."
+        - "Click the \"OTP-Prüfung bei Anmeldung\" switch once; wait for \"Einstellungen gespeichert\"."
+        - "Open \"Protokoll\" (/audit) from the sidebar."
+        - "Select your username in the \"Benutzer\" dropdown and look at the newest rows."
+        - "Type twoFactorEnabled into the search field (placeholder \"Kohorten-Hash suchen…\")."
+      expect: "The newest row shows your admin username under \"Nutzer\", \"Einstellungen geändert\" under \"Aktion\", an empty \"Detail\" cell and status 200; with twoFactorEnabled in the search field the row is still listed (body search), while an unrelated term such as zzzz hides it."
+    notes: "Statement sharpened: the Protokoll table has no method/path/body columns (Zeit, Nutzer, Aktion, Detail, Status only); the stored YAML body is observable only via the search box (body_search) or the JSON export. The row is generic for any settings change."
+  - id: UIR-SET-009
+    title: "Per-user TOTP enrollment with QR and recovery codes"
+    statement: "The user can enroll a personal TOTP authenticator in the Einstellungen TOTP section: a QR code and recovery codes are shown and enrollment is confirmed with a 6-digit code."
+    status: implemented
+    sources: ["code: src/pages/SettingsPage.tsx:435-489"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:116-147 (handleTotpEnroll POST /api/auth/totp/enroll → qrDataUrl + recoveryCodes; handleTotpConfirm requires exactly six digits, then POST /api/auth/totp/confirm)"
+      - "src/pages/SettingsPage.tsx:448-489 (\"TOTP einrichten\" button, <img alt=\"TOTP QR\">, recovery code list, input placeholder 123456 maxLength 6, \"Bestätigen\")"
+      - "server/auth/totpApi.ts:36-65 (enroll stores secret, returns otpauth/qrDataUrl/recoveryCodes)"
+      - "server/auth/totpApi.ts:71-103 (confirm sets totpEnabled=true, bumps tokenVersion)"
+      - "src/i18n/translations.ts:672-679 (section title 'Meine Authenticator-App (TOTP)', labels)"
+    tests:
+      - file: tests/credentialMutationInvalidation.test.ts
+        name: "self TOTP confirm bumps tokenVersion + totpChangedAt"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator (TOTP not yet enrolled) and open /settings."
+        - "In \"Meine Authenticator-App (TOTP)\" verify the status text starts with \"TOTP ist nicht eingerichtet\"."
+        - "Click \"TOTP einrichten\"."
+        - "Scan the QR code with an authenticator app; note the \"Recovery-Codes (einmalig anzeigen)\" list."
+        - "Enter the current 6-digit code into the input (placeholder 123456) and click \"Bestätigen\"."
+      expect: "After step 3 a QR image, the scan hint and a two-column list of recovery codes in an amber box are shown; after step 5 the QR disappears, the status text changes to \"TOTP ist aktiv. Login erfordert einen 6-stelligen Code oder einen Recovery-Code.\" and the green \"Einstellungen gespeichert\" banner appears. A non-6-digit entry shows \"Ungültiger Code.\""
+    notes: "The cited test asserts the server /totp/confirm side effect (tokenVersion bump), not the SettingsPage UI; no component test exists. Only the SettingsPage (admin-only) variant is covered here; a separate self-service TOTP section exists on the account page (NAV area)."
+  - id: UIR-SET-010
+    title: "Per-user TOTP can be disabled with a code"
+    statement: "The user can disable an enrolled personal TOTP authenticator in the Einstellungen TOTP section by entering a valid code."
+    status: implemented
+    sources: ["code: src/pages/SettingsPage.tsx:491-507"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:149-166 (handleTotpDisable: requires non-empty code, POST /api/auth/totp/disable, sets totpEnabled=false, showSaved)"
+      - "src/pages/SettingsPage.tsx:491-507 (input placeholder t('totpDisablePlaceholder') 'Aktueller Code' + \"Deaktivieren\" button, rendered only when totpEnabled)"
+      - "server/auth/totpApi.ts:105-148 (disable verifies OTP/recovery code, clears secret, bumps tokenVersion)"
+      - "src/i18n/translations.ts:680-684 ('Deaktivieren', 'Aktueller Code', 'Ungültiger Code.', 'Bitte aktuellen Code eingeben.')"
+    tests:
+      - file: tests/credentialMutationInvalidation.test.ts
+        name: "self TOTP disable bumps tokenVersion + totpChangedAt"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator with TOTP enrolled and open /settings."
+        - "In \"Meine Authenticator-App (TOTP)\" confirm the status reads \"TOTP ist aktiv…\"."
+        - "Click \"Deaktivieren\" with the \"Aktueller Code\" field empty."
+        - "Enter a wrong code (e.g. 000000) and click \"Deaktivieren\"."
+        - "Enter the current code from the authenticator app and click \"Deaktivieren\"."
+      expect: "Step 3 shows \"Bitte aktuellen Code eingeben.\"; step 4 shows \"Ungültiger Code.\"; step 5 shows \"Einstellungen gespeichert\", the status text returns to \"TOTP ist nicht eingerichtet…\" and the \"TOTP einrichten\" button is back."
+    notes: "The cited test covers the server disable endpoint, not the SettingsPage UI."
+  - id: UIR-SET-011
+    title: "Session section shows token lifetime fields only"
+    statement: "The \"Sitzungstoken-Gültigkeiten\" section shows only editable refresh token TTL and absolute cap (hours) with a Save button; no max-login-attempts, inactivity-timeout or warning fields."
+    status: implemented
+    sources: ["uat: v1.10 USM-008 / Phase 28", "manual: docs/Konfiguration.md UI-set key auth; settings.yaml auth.inactivityTimeoutMs/warningBeforeMs", "spec: EMDREQ-USM-008 / N01.11 ('konfigurierbare Zeit' — satisfied via settings.yaml)"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:509-595 (section t('settingsSessionTitle') with only the refreshTtlHours and absoluteCapHours inputs + Save)"
+      - "src/pages/SettingsPage.tsx (no occurrence of inactivityTimeoutMs/warningBeforeMs/maxLoginAttempts — grep returns nothing)"
+      - "src/pages/SettingsPage.tsx:200-220 (handleSaveTtl writes only auth.refreshTokenTtlMs/refreshAbsoluteCapMs)"
+      - "src/context/AuthContext.tsx:205-214 (inactivity/warning read from settings.yaml auth.* at load time — YAML-only)"
+      - "src/i18n/translations.ts:1174-1176 ('Sitzungstoken-Gültigkeiten', 'Refresh-Token-Gültigkeit (Stunden)', 'Maximale Sitzungsdauer (Stunden)')"
+    tests: []
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings."
+        - "Scroll to the sub-section \"Sitzungstoken-Gültigkeiten\" at the bottom of the \"Meine Authenticator-App (TOTP)\" card."
+        - "List all input fields in that sub-section."
+      expect: "Exactly two numeric fields are shown: \"Refresh-Token-Gültigkeit (Stunden)\" (default 8) and \"Maximale Sitzungsdauer (Stunden)\" (default 12), each with a hint, plus one \"Speichern\" button; there is no max-login-attempts field and no inactivity-timeout or warning-lead-time field."
+    notes: "Status corrected to implemented: the statement describes the shipped UI exactly, and EMDREQ-USM-008 only requires a configurable inactivity time (settings.yaml auth.inactivityTimeoutMs / warningBeforeMs). Two earlier test mappings were dropped: loginLockout 'does NOT expose maxLoginAttempts' asserts GET /api/auth/config, and inactivitySettings asserts DEFAULTS constants — neither concerns this section."
+  - id: UIR-SET-012
+    title: "Session lifetime inputs validate live, Save disabled"
+    statement: "The session lifetime inputs validate live with role=alert messages and disable the Save button while invalid (e.g. absolute cap below refresh TTL)."
+    status: implemented
+    sources: ["code: src/pages/SettingsPage.tsx:200-220,509-595"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:526-532,558-564 (onChange runs validateTtl and sets ttlValidationError live)"
+      - "src/pages/SettingsPage.tsx:542-546,574-583 (<p role=\"alert\"> for refreshMin / capMin / capMax)"
+      - "src/pages/SettingsPage.tsx:587-590 (Save disabled={ttlSaving || ttlValidationError !== null})"
+      - "src/pages/SettingsPage.tsx:97-99 (validate on load so bad persisted values are flagged)"
+      - "src/services/ttlConversion.ts:15-23 (validateTtl rules: refresh ≥ 1 int, cap ≥ refresh int, cap ≤ 720)"
+      - "src/i18n/translations.ts:1179-1181 (German alert texts)"
+    tests:
+      - file: tests/ttlConversion.test.ts
+        name: "returns 'capMin' when cap < refresh"
+      - file: tests/ttlConversion.test.ts
+        name: "returns 'capMax' when cap exceeds 720 hours (30 days)"
+      - file: tests/ttlConversion.test.ts
+        name: "returns 'refreshMin' when refresh < 1"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings; scroll to \"Sitzungstoken-Gültigkeiten\"."
+        - "Set \"Maximale Sitzungsdauer (Stunden)\" to 4 while \"Refresh-Token-Gültigkeit (Stunden)\" is 8 (do not click Save)."
+        - "Observe the field and the \"Speichern\" button of this sub-section."
+        - "Set the cap back to 12."
+      expect: "As soon as 4 is typed the cap field turns red and the text \"Absolute Grenze muss ≥ Refresh-TTL sein.\" appears (role=alert); the \"Speichern\" button is greyed out and not clickable. After setting 12 the message disappears and Save is enabled."
+    notes: "Only the pure validator is unit-tested; the disabled-button behaviour has no component test."
+  - id: UIR-SET-013
+    title: "Therapy thresholds editable with defaults 120/365"
+    statement: "The admin can edit \"Therapieunterbrecher-Schwellenwert (Tage)\" (default 120) and \"Therapieabbrecher-Schwellenwert (Tage)\" (default 365) under \"Therapieunterbrechung\" and save with \"Speichern\"."
+    status: implemented
+    sources: ["spec: EMDREQ-QUAL-009 / N06.01 (Abgleich: Umgesetzt)", "manual: docs/Benutzerhandbuch.md §9.2; docs/Konfiguration.md therapyInterrupterDays/therapyBreakerDays", "uat: v1.12 CFG-01 (ANL-004)"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:38-39 (initial 120/365), 89-90 (loaded from server)"
+      - "src/pages/SettingsPage.tsx:598-652 (section t('settingsTherapy'), inputs #interrupter-days/#breaker-days, Save button → handleSave)"
+      - "src/pages/SettingsPage.tsx:177-198 (handleSave persists therapyInterrupterDays/therapyBreakerDays together with twoFactorEnabled and dataSource)"
+      - "src/services/settingsService.ts:45-46 and config/settings.yaml:27-28 (defaults 120/365)"
+      - "server/settingsApi.ts:74-75 (schema requires finite numbers)"
+      - "src/i18n/translations.ts:457-459 (German labels)"
+    tests: []
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings; scroll to \"Therapieunterbrechung\"."
+        - "Read the two fields \"Therapieunterbrecher-Schwellenwert (Tage)\" (t) and \"Therapieabbrecher-Schwellenwert (Tage)\" (t')."
+        - "Change them to 90 and 300 and click \"Speichern\" in this section."
+        - "Reload the page."
+      expect: "On a fresh deployment the fields show 120 and 365; after saving the green \"Einstellungen gespeichert\" banner appears and after the reload the fields show 90 and 300."
+    notes: "Two earlier test mappings were dropped: ui-requirements 'clinical thresholds are imported from config' asserts the clinical (CRT/Visus) thresholds, and thresholdParity 'raised threshold (450)' asserts cohort filter output for a given option — neither exercises this form. The effect of the saved values on cohort presets belongs to the COH area."
+  - id: UIR-SET-014
+    title: "Therapy thresholds require 0 < t < t'"
+    statement: "The therapy threshold form shows a validation error when interrupter or breaker days are not > 0 or when the interrupter value is not smaller than the breaker value."
+    status: implemented
+    sources: ["code: src/pages/SettingsPage.tsx:168-198,285-295,598-642", "manual: docs/Benutzerhandbuch.md §9.2", "spec: EMDREQ-QUAL-009 / N06.01"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:168-170 (validate: interrupter > 0 && breaker > 0 && interrupter < breaker)"
+      - "src/pages/SettingsPage.tsx:177-181 (handleSave aborts and sets validationError before any PUT)"
+      - "src/pages/SettingsPage.tsx:285-295 (empty/NaN input parsed to 0 → fails > 0 check)"
+      - "src/pages/SettingsPage.tsx:614-616,633-635,640-642 (red input borders + error text t('settingsValidationError'))"
+      - "src/i18n/translations.ts:465 ('Unterbrecher-Schwellenwert muss kleiner als Abbrecher-Schwellenwert sein.')"
+    tests: []
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings; scroll to \"Therapieunterbrechung\"."
+        - "Set \"Therapieunterbrecher-Schwellenwert (Tage)\" to 400 and \"Therapieabbrecher-Schwellenwert (Tage)\" to 365."
+        - "Click \"Speichern\" in this section."
+        - "Open DevTools Network tab and confirm no PUT /api/settings was sent; reload the page."
+      expect: "Both inputs turn red and the text \"Unterbrecher-Schwellenwert muss kleiner als Abbrecher-Schwellenwert sein.\" appears; no green banner; after reload the previous values (120/365) are still shown. Clearing a field (value 0) and saving produces the same error."
+    notes: "The same single message is used for all three failure cases (t ≤ 0, t' ≤ 0, t ≥ t'); the error text is not role=alert."
+  - id: UIR-SET-015
+    title: "\"Auf Standardwerte zurücksetzen\" restores defaults"
+    statement: "The user can restore all settings (therapy, clinical and plausibility thresholds, session TTLs, 2FA, data source) to built-in defaults with \"Auf Standardwerte zurücksetzen\", which saves immediately."
+    status: implemented
+    sources: ["code: src/pages/SettingsPage.tsx:260-283,653-660", "manual: docs/Benutzerhandbuch.md §9.4"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:260-283 (handleReset → resetSettings(), then resets every section's state incl. thresholds/plausibility/TTL/2FA/dataSource, showSaved)"
+      - "src/pages/SettingsPage.tsx:653-660 (button t('settingsReset') in the \"Therapieunterbrechung\" card)"
+      - "src/services/settingsService.ts (resetSettings: UI-managed keys back to DEFAULTS, every other section kept — v1.21)"
+      - "server/settingsApi.ts (PUT /api/settings carries over top-level sections the body omits — v1.21)"
+      - "src/services/settingsService.ts:43-66 and shared/thresholdConfig.ts:45-59 (defaults 120/365, 400/0.1/21/0.3, 0–2/100–800/5–40)"
+      - "src/i18n/translations.ts:464 ('Auf Standardwerte zurücksetzen')"
+    tests:
+      - file: tests/settingsResetKeepsSections.test.ts
+        name: "carries server/stubs/audit from the loaded YAML"
+      - file: tests/settingsApi.test.ts
+        name: "keeps top-level sections the body omits"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings."
+        - "Change \"Therapieunterbrecher-Schwellenwert (Tage)\" to 90, save; change \"CRT kritischer Schwellenwert (µm)\" to 410, save; change \"CRT Maximum (µm)\" to 900, save."
+        - "Click \"Auf Standardwerte zurücksetzen\" (next to \"Speichern\" in the \"Therapieunterbrechung\" card)."
+        - "Reload the page and check all three sections."
+        - "On the verify container: docker exec emd-verify sh -c 'grep -A3 \"^server:\" /data/settings.yaml; grep -c \"^stubs:\" /data/settings.yaml'."
+      expect: "Immediately after the click the green \"Einstellungen gespeichert\" banner appears and the fields show 120/365, 400/0.1/21/0.3 and 0–2.0/100–800/5–40; after the reload the same default values are shown (the reset was persisted). Step 5 still prints server.host 0.0.0.0 / dataDir /data / serveFrontend true and 1 — the sections the UI does not manage survive the reset."
+    notes: "The reset button lives in the therapy card but rewrites the whole settings document and persists immediately without a separate Save. Until v1.21 the reset dropped the sections the client does not model (server:, stubs:, audit:) from settings.yaml, so the next container restart lost serveFrontend/dataDir; fixed on both layers (client resets UI keys only, PUT carries omitted top-level sections over). Comments in settings.yaml are still lost on any save (YAML re-serialised)."
+  - id: UIR-SET-016
+    title: "Clinical thresholds editable with defaults"
+    statement: "The \"Klinische Schwellenwerte\" section shows editable critical CRT (400 µm), critical Visus (0.1), critical IOD (21 mmHg) and Visus jump (0.3) with a Save button; saved values go to settings.yaml."
+    status: implemented
+    sources: ["uat: v1.12 CFG-01 (ANL-004); D1 global scope locked", "code: src/pages/SettingsPage.tsx:222-239,664-777", "manual: docs/Benutzerhandbuch.md §6.1 thresholds; docs/Konfiguration.md UI-set key outcomes"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:60,100 (state from THRESHOLD_DEFAULTS / server)"
+      - "src/pages/SettingsPage.tsx:664-777 (section t('settingsThresholdTitle'), inputs #threshold-crt/-visus/-iop/-visusjump, Save → handleSaveThresholds)"
+      - "src/pages/SettingsPage.tsx:222-239 (updateSettings({ thresholds }))"
+      - "shared/thresholdConfig.ts:45-50 (400 / 0.1 / 21 / 0.3)"
+      - "config/settings.yaml:9-13 (thresholds block)"
+      - "server/settingsApi.ts:150-160 (thresholds block validated on PUT)"
+      - "src/i18n/translations.ts:1149-1157 (German labels)"
+    tests:
+      - file: tests/thresholdConfig.test.ts
+        name: "matches production defaults (400, 0.1, 21, 0.3)"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings; scroll to \"Klinische Schwellenwerte\"."
+        - "Read the four fields \"CRT kritischer Schwellenwert (µm)\", \"Visus kritischer Schwellenwert\", \"IOD kritischer Schwellenwert (mmHg)\", \"Visus-Sprung Schwellenwert\"."
+        - "Change CRT to 410 and click \"Speichern\" in this section."
+        - "Reload the page; optionally open settings.yaml on the host."
+      expect: "Defaults shown are 400, 0.1, 21 and 0.3; after saving the green \"Einstellungen gespeichert\" banner appears; after reload CRT shows 410 and settings.yaml contains thresholds.criticalCrtUm: 410."
+    notes: "The cited test pins the shared THRESHOLD_DEFAULTS constants, not the form."
+  - id: UIR-SET-017
+    title: "Clinical thresholds show inline validation error"
+    statement: "The \"Klinische Schwellenwerte\" form shows an inline role=alert validation error for invalid input and does not save it."
+    status: implemented
+    sources: ["code: src/pages/SettingsPage.tsx:222-239,664-777", "manual: translations settingsThresholdValidationError"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:222-228 (validateThresholds !== 'ok' → setThresholdValidationError, return before PUT)"
+      - "src/pages/SettingsPage.tsx:763-765 (<p role=\"alert\">{thresholdValidationError}</p>)"
+      - "src/pages/SettingsPage.tsx:680-687 (empty/NaN parsed to 0; error cleared on edit; red border on all four inputs while the error is set)"
+      - "shared/thresholdConfig.ts:89-105 (rules: all > 0, visus in (0, 2])"
+      - "src/i18n/translations.ts:1158 ('Ungültige Schwellenwerte. Bitte Eingaben prüfen.')"
+    tests:
+      - file: tests/thresholdConfig.test.ts
+        name: "returns criticalCrtUmPositive when criticalCrtUm <= 0"
+      - file: tests/thresholdConfig.test.ts
+        name: "returns criticalVisusBounds when criticalVisus exceeds 2"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings; scroll to \"Klinische Schwellenwerte\"."
+        - "Clear \"CRT kritischer Schwellenwert (µm)\" (or type -5) and click \"Speichern\" in this section."
+        - "Type 400 again and click \"Speichern\"."
+      expect: "After step 2 all four inputs get a red border and the red text \"Ungültige Schwellenwerte. Bitte Eingaben prüfen.\" appears (role=alert); no green banner and no PUT /api/settings. After step 3 the error disappears and \"Einstellungen gespeichert\" is shown."
+    notes: "The inputs carry min attributes, so the browser may block typing negative values; emptying the field reliably triggers the error. Only the pure validator is unit-tested."
+  - id: UIR-SET-018
+    title: "Plausibility ranges editable with defaults"
+    statement: "The \"Plausibilitätsbereiche\" section shows editable min/max for Visus (0–2.0), CRT (100–800 µm) and IOD (5–40 mmHg) with a Save button."
+    status: implemented
+    sources: ["uat: v1.12 CFG-02 (D1b); v1.15 J5a", "code: src/pages/SettingsPage.tsx:241-258,779-934", "manual: docs/Konfiguration.md UI-set key outcomes"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:65,101 (state from PLAUSIBILITY_DEFAULTS / server)"
+      - "src/pages/SettingsPage.tsx:779-934 (section t('settingsPlausibilityTitle'), six inputs #plausibility-visus-min … #plausibility-iop-max, Save → handleSavePlausibility)"
+      - "src/pages/SettingsPage.tsx:241-258 (updateSettings({ plausibility }))"
+      - "shared/thresholdConfig.ts:52-59 (0/2.0, 100/800, 5/40)"
+      - "config/settings.yaml:15-21"
+      - "src/i18n/translations.ts:1161-1170 (German labels: 'Visus Minimum', 'CRT Maximum (µm)', 'IOD Minimum (mmHg)' …)"
+    tests:
+      - file: tests/thresholdConfig.test.ts
+        name: "matches production defaults (visus 0..2, crt 100..800, iop 5..40)"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings; scroll to \"Plausibilitätsbereiche\"."
+        - "Read the six fields \"Visus Minimum\"/\"Visus Maximum\", \"CRT Minimum (µm)\"/\"CRT Maximum (µm)\", \"IOD Minimum (mmHg)\"/\"IOD Maximum (mmHg)\"."
+        - "Change \"CRT Maximum (µm)\" to 900 and click \"Speichern\" in this section."
+        - "Reload the page."
+      expect: "Defaults shown are 0 / 2, 100 / 800 and 5 / 40; after saving the green \"Einstellungen gespeichert\" banner appears and after reload CRT Maximum shows 900."
+    notes: "The cited test pins the shared PLAUSIBILITY_DEFAULTS constants, not the form."
+  - id: UIR-SET-019
+    title: "Plausibility ranges require min < max"
+    statement: "The \"Plausibilitätsbereiche\" form shows an inline role=alert validation error when a minimum is not smaller than its maximum and does not save."
+    status: implemented
+    sources: ["code: src/pages/SettingsPage.tsx:241-258,779-934", "manual: docs/Konfiguration.md UI-set key outcomes"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:241-247 (validatePlausibility !== 'ok' → error, return before PUT)"
+      - "src/pages/SettingsPage.tsx:920-922 (<p role=\"alert\">{plausibilityValidationError}</p>)"
+      - "shared/thresholdConfig.ts:111-131 (visusMin >= visusMax / crtMin >= crtMax / iopMin >= iopMax → error; negative bounds rejected)"
+      - "server/settingsApi.ts:162-172 (same validation server-side)"
+      - "src/i18n/translations.ts:1171 ('Ungültige Plausibilitätsbereiche. Bitte Eingaben prüfen.')"
+    tests:
+      - file: tests/thresholdConfig.test.ts
+        name: "returns visusMinMax when visusMin >= visusMax"
+      - file: tests/thresholdConfig.test.ts
+        name: "returns crtMinMax when crtMin >= crtMax"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings; scroll to \"Plausibilitätsbereiche\"."
+        - "Set \"Visus Minimum\" to 2.5 (above \"Visus Maximum\" 2) and click \"Speichern\" in this section."
+        - "Set \"Visus Minimum\" back to 0 and click \"Speichern\"."
+      expect: "After step 2 all six inputs get a red border and the red text \"Ungültige Plausibilitätsbereiche. Bitte Eingaben prüfen.\" appears (role=alert) with no green banner; after step 3 the error disappears and \"Einstellungen gespeichert\" is shown."
+    notes: "Only the pure validator is unit-tested."
+  - id: UIR-SET-020
+    title: "Plausibility ranges feed Dokumentationsqualität"
+    statement: "The UI applies saved plausibility ranges in the Dokumentationsqualität plausibility metric and its \"Plausibilitätsbereiche\" tables (main view and per-centre panel)."
+    status: implemented
+    sources: ["uat: v1.12 CFG-02 (D1b); v1.15 J5a"]
+    evidence:
+      - "src/components/doc-quality/PlausibilityRangesTable.tsx:28-40 (reads getSettings().plausibility; rows formatted '<min> – <max> µm')"
+      - "src/components/doc-quality/PlausibilityRangesTable.tsx:73-83 (collapsible <details>, collapsed by default in the main view)"
+      - "src/utils/qualityMetrics.ts:111-124 (plausibility checks use getSettings().plausibility ?? PLAUSIBILITY_DEFAULTS)"
+      - "src/pages/DocQualityPage.tsx:324 and src/components/doc-quality/CenterDetailPanel.tsx:166 (table rendered in main view and centre panel)"
+      - "src/services/settingsService.ts:139-151 (updateSettings refreshes the shared cache, so SPA navigation sees the new ranges)"
+      - "src/context/AuthContext.tsx:23 (QUALITY_ROLES includes admin — /doc-quality reachable for the admin running this check)"
+    tests:
+      - file: tests/docQualityMainCentreParity.test.tsx
+        name: "renders the configured global ranges (not hardcoded values)"
+      - file: tests/docQualityMainCentreParity.test.tsx
+        name: "still renders the plausibility ranges table inside the centre panel"
+    browser:
+      route: "/doc-quality"
+      steps:
+        - "Log in as an administrator and open /settings; under \"Plausibilitätsbereiche\" set \"CRT Maximum (µm)\" to 600 and click \"Speichern\"."
+        - "Open \"Dokumentationsqualität\" (/doc-quality) from the sidebar."
+        - "Locate the \"Plausibilitätsbereiche\" table (expand the collapsed section) and read the CRT row."
+        - "Compare the \"Plausibilität\" card value with the value seen before the change (optional)."
+      expect: "The CRT row reads \"100 – 600 µm\"; the plausibility percentage is recomputed against the new range (it drops if any CRT values lie between 600 and 800 µm). A centre detail panel shows the same \"100 – 600 µm\"."
+    notes: "Status corrected to implemented: the statement (Dokumentationsqualität only) is fully met by the code and covered by RTL tests. The cohort builder validation does NOT read these ranges (fixed visus 0–1 rules, see tests/cohortBuilderValidation.test.tsx) — a gap for the COH area, not for this requirement."
+  - id: UIR-SET-021
+    title: "Data source choice, Blaze URL and \"Verbindung testen\""
+    statement: "The user can choose \"Lokale Dateien\" or \"FHIR-Server (Blaze)\", enter a \"FHIR-Server URL\" (committed on blur) and check it with \"Verbindung testen\", which shows success or failure with detail."
+    status: implemented
+    sources: ["code: src/pages/SettingsPage.tsx:310-360,936-1014", "manual: docs/Benutzerhandbuch.md §9.3; docs/Konfiguration.md dataSource"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:936-966 (radios name 'data-source-type' local/blaze → handleDataSourceTypeChange)"
+      - "src/pages/SettingsPage.tsx:968-983 (URL input #blaze-url only when blaze; onBlur → handleBlazeUrlCommit)"
+      - "src/pages/SettingsPage.tsx:336-347 (commit persists dataSource.blazeUrl)"
+      - "src/pages/SettingsPage.tsx:349-360,984-1011 (\"Verbindung testen\" → testBlazeConnection; green 'Verbindung erfolgreich — <detail>' / red 'Verbindung fehlgeschlagen — <detail>')"
+      - "src/services/dataSource.ts:45-55 (GET /api/settings/fhir-connection-test, error body → thrown message)"
+      - "server/settingsApi.ts:353-389 (admin-only probe of <blazeUrl>/metadata with 10 s timeout; detail = software name/version + FHIR version)"
+      - "src/i18n/translations.ts:466-472 ('Datenquelle', 'Lokale Dateien', 'FHIR-Server (Blaze)', 'FHIR-Server URL', 'Verbindung testen', 'Verbindung erfolgreich', 'Verbindung fehlgeschlagen')"
+    tests: []
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator and open /settings; scroll to \"Datenquelle\"."
+        - "Select the radio \"FHIR-Server (Blaze)\"."
+        - "In \"FHIR-Server URL\" enter http://localhost:9/fhir and click elsewhere (blur) so the URL is committed (\"Einstellungen gespeichert\")."
+        - "Click \"Verbindung testen\"."
+        - "If a Blaze server is available, enter its URL, blur, and click \"Verbindung testen\" again."
+        - "Select \"Lokale Dateien\" again."
+      expect: "After step 2 the URL field and the \"Verbindung testen\" button appear; step 4 shows a red \"Verbindung fehlgeschlagen — Cannot reach FHIR server at http://localhost:9/fhir/metadata: …\"; step 5 shows a green \"Verbindung erfolgreich — Blaze <version> (FHIR 4.0.1)\"; step 6 hides the URL field."
+    notes: "The connection test uses the URL last persisted in settings.yaml, so the field must lose focus (blur) before testing. The earlier test mapping settingsApi 'rejects invalid dataSource.type enum' was dropped: it asserts server rejection of an unknown type, not any of the three UI behaviours; no test covers the connection-test endpoint."
+  - id: UIR-SET-022
+    title: "Switching data source reloads all data"
+    statement: "The UI invalidates the bundle cache and reloads all data immediately when the data source is switched."
+    status: implemented
+    sources: ["code: src/pages/SettingsPage.tsx:310-328"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:310-328 (handleDataSourceTypeChange: updateSettings → invalidateBundleCache() → reloadData() → showSaved; reverts radio on error)"
+      - "src/pages/SettingsPage.tsx:336-347 (same on URL commit)"
+      - "src/services/fhirLoader.ts:36-38 (invalidateBundleCache sets cachedBundles = null)"
+      - "src/context/DataContext.tsx:144 (reloadData callback re-fetches bundles)"
+      - "server/settingsApi.ts:60-63 (writeSettings → invalidateFhirCache() server-side)"
+    tests: []
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator, open the Startseite and note the KPI values (e.g. total patients)."
+        - "Open /settings and under \"Datenquelle\" select \"FHIR-Server (Blaze)\" with a reachable Blaze URL that holds a different dataset (blur to commit)."
+        - "Without pressing reload, click \"Startseite\" in the sidebar."
+        - "Return to /settings and select \"Lokale Dateien\"; open the Startseite again."
+      expect: "Directly after switching, the Startseite KPIs and centre cards reflect the newly selected source (a loading state may appear briefly), and switching back restores the local-file numbers — all without a browser reload. If the Blaze URL is unreachable, the pages show the loading error state instead of stale data."
+    notes: "Requires a second data source to observe a difference; with no Blaze server the observable effect is the data error state after the switch."
+  - id: UIR-SET-023
+    title: "Issues section shows count, export disabled at zero"
+    statement: "The \"Issues exportieren\" section shows the number of reported issues and its export button is disabled when the count is zero."
+    status: implemented
+    sources: ["code: src/pages/SettingsPage.tsx:75-84,1016-1033", "manual: docs/Benutzerhandbuch.md §9.5"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:78-84 (getIssueCount on mount)"
+      - "src/pages/SettingsPage.tsx:1016-1033 (heading t('feedbackExport'), text t('feedbackCount') '{0} gemeldete(s) Problem(e)', button disabled={issueCount === 0})"
+      - "src/services/issueService.ts:39-44 (GET /api/issues → total)"
+      - "server/issueApi.ts:7,111-114 (list without screenshots, total field)"
+      - "src/i18n/translations.ts:737-738"
+    tests:
+      - file: tests/issueApi.test.ts
+        name: "returns issues list with total"
+    browser:
+      route: "/settings"
+      steps:
+        - "On a deployment with an empty feedback/ directory log in as an administrator and open /settings; scroll to \"Issues exportieren\"."
+        - "Read the count text and try to click the \"Issues exportieren\" button."
+        - "Click \"Problem melden\" (right-edge tab), enter a description and click \"Absenden\"."
+        - "Reload /settings and look at the section again."
+      expect: "Step 2 shows \"0 gemeldete(s) Problem(e)\" and the button is greyed out (disabled); after step 4 the text reads \"1 gemeldete(s) Problem(e)\" and the button is enabled."
+    notes: "The count is fetched once on mount, hence the reload in step 4."
+  - id: UIR-SET-024
+    title: "\"Issues exportieren\" downloads JSON bundle"
+    statement: "The user can download all reported issues as one JSON bundle including base64 screenshots via \"Issues exportieren\"."
+    status: implemented
+    sources: ["manual: docs/Benutzerhandbuch.md §9.5; README Reporting Feedback", "code: src/pages/SettingsPage.tsx:1025-1032"]
+    evidence:
+      - "src/pages/SettingsPage.tsx:1025-1032 (button onClick={exportIssuesFull})"
+      - "src/services/issueService.ts:50-58 (GET /api/issues/export → blob → download emd-issues-<YYYY-MM-DD>.json)"
+      - "server/issueApi.ts:8,98-108 (GET /api/issues/export, admin-only, loadAllIssues(true) incl. screenshots, Content-Disposition emd-issues-<date>.json)"
+      - "src/utils/download.ts:7-19 (downloadBlob)"
+    tests:
+      - file: tests/issueApi.test.ts
+        name: "returns issues for admin"
+    browser:
+      route: "/settings"
+      steps:
+        - "Log in as an administrator; via \"Problem melden\" submit one issue (the dialog captures a screenshot automatically)."
+        - "Open /settings, scroll to \"Issues exportieren\" and click the \"Issues exportieren\" button."
+        - "Open the downloaded file in a text editor and search for \"screenshot\"."
+      expect: "A single file emd-issues-<today's date>.json is downloaded; it contains an issues array with the submitted issue (id, timestamp, user, page, description, appVersion) and a screenshot field holding a base64 data URL (data:image/…;base64,…)."
+    notes: "The cited API test checks only that the admin export returns an issues property; it does not assert screenshot inclusion. The earlier mapping issueApi 'returns 403 for non-admin' was dropped (access control, not the download). On a non-OK response the UI logs to console and shows no error banner."
