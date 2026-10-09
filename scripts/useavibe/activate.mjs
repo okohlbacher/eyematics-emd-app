@@ -27,7 +27,9 @@ if (args.includes('--review')) {
 if (args.includes('--clear')) {
   const a = readActive(root);
   if (!a) process.exit(0);
-  const last = readJsonl(path.join(root, STATE_DIR, `Z${a.cycle}`, 'attempts.jsonl')).filter((r) => r.id === a.id).at(-1);
+  // Last gate entry of this problem; review verdicts (step 5) come after the passing gate and do not count.
+  const last = readJsonl(path.join(root, STATE_DIR, `Z${a.cycle}`, 'attempts.jsonl'))
+    .filter((r) => r.id === a.id && r.result !== 'review').at(-1);
   if (!last || !['pass', 'blocked'].includes(last.result)) die(`${a.id}: no passed gate attempt or Blocked report yet`);
   if (last.result === 'pass' && git(root, 'status', '--porcelain', '--', '.', ':(exclude).planning/useavibe')) {
     die('uncommitted changes — commit with the trailers first');
