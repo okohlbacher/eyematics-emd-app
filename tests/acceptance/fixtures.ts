@@ -11,14 +11,15 @@ const PASSWORD = process.env.USEAVIBE_TEST_PASSWORD ?? 'changeme2025!';
 const REFERENCE_DATE = process.env.USEAVIBE_REFERENCE_DATE ?? '2026-10-01T10:00:00+02:00';
 
 type Task = 'A1' | 'A2' | 'A3' | 'A4' | 'A5';
-// Start route and account per FB-P task. Accounts are [unverified]: the study team confirms which seeded users
-// participants use (override with USEAVIBE_TASK_USERS='{"A1":"forscher1",…}').
+// Start route per FB-P task. Participants use one account for all tasks — `klinikleitung` (widest non-admin
+// permissions, all sites; no re-login during a session; decision O-11). Override with USEAVIBE_TASK_USERS='{"A1":…}'.
+const TASK_USER = 'klinikleitung';
 const TASKS: Record<Task, { route: string; user: string }> = {
-  A1: { route: '/cohort', user: 'forscher1' },      // Kohorte filtern und als „Testkohorte“ speichern
-  A2: { route: '/analysis', user: 'forscher1' },    // CRT-Verlauf der Kohorte vs. Grundgesamtheit
-  A3: { route: '/cohort', user: 'forscher1' },      // Patient*in aus der „Testkohorte“ auswählen, vergleichen
-  A4: { route: '/quality', user: 'forscher1' },     // Therapieunterbrecher in „Datenqualität“ ausschließen
-  A5: { route: '/doc-quality', user: 'kliniker' },  // Dokumentationsqualität des UKT (Klinikleitung)
+  A1: { route: '/cohort', user: TASK_USER },      // Kohorte filtern und als „Testkohorte“ speichern
+  A2: { route: '/analysis', user: TASK_USER },    // CRT-Verlauf der Kohorte vs. Grundgesamtheit
+  A3: { route: '/cohort', user: TASK_USER },      // Patient*in aus der „Testkohorte“ auswählen, vergleichen
+  A4: { route: '/quality', user: TASK_USER },     // Therapieunterbrecher in „Datenqualität“ ausschließen
+  A5: { route: '/doc-quality', user: TASK_USER }, // Dokumentationsqualität des UKT (Rolle Klinikleitung)
 };
 const taskUsers: Partial<Record<Task, string>> = JSON.parse(process.env.USEAVIBE_TASK_USERS ?? '{}');
 

@@ -55,7 +55,7 @@
     "scripts/useavibe/hook-session-start.mjs": "81a47d05a8b34b16e27b58395426c2cfd3f1108bde5f354d8717c99d2683ea03",
     "scripts/useavibe/lib.mjs": "062a881572a8aba67d27d804731aa20e2912cd8ebb61522ee56204b1099705bc",
     "scripts/useavibe/node22.sh": "ef74183d22f5fc198242d06838a166e23433ac0c1beb519c8f93a6647479fa74",
-    "tests/acceptance/fixtures.ts": "5fcd8ebf88009e5bbd424a38501d0a87d0e0d98c7dc74984578eb7c9574538c1",
+    "tests/acceptance/fixtures.ts": "7ce8cd14b8fb557c11a58dcdf329eb7ebf25846383ae7d7091aa7fcdb22d8bd6",
     "tests/acceptance/harness.spec.ts": "4c41a61dc59cb17bb224e5470ba4766a5c5bba8d3e5afa5d9625668a50703e54"
   },
   "handoff": {
@@ -63,9 +63,26 @@
     "zip_sha256": "4a8b415c1624790677f8862d96bdfe8c96e10e50901e75b83aeb648df164e1d1"
   },
   "harness_version": "0.1.0",
+  "local_settings": {
+    "permissions": {
+      "deny": [
+        "Read(//home/nils/Documents/Entwicklung/UseAVibeV2/data/**)",
+        "Read(//home/nils/Documents/Entwicklung/UseAVibeV2/study/**)"
+      ]
+    },
+    "sandbox": {
+      "enabled": true,
+      "filesystem": {
+        "denyRead": [
+          "/home/nils/Documents/Entwicklung/UseAVibeV2/data",
+          "/home/nils/Documents/Entwicklung/UseAVibeV2/study"
+        ]
+      }
+    }
+  },
   "patch": {
     "file": "repo-changes.patch",
     "sha256": "c488d016b95e45866cc59153e7c4f569013153b91752b1573478dd19cc2d988f"
   },
-  "pseudonym_guard": false
+  "pseudonym_guard": true
 }
