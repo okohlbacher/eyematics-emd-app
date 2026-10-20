@@ -67,16 +67,16 @@
   "local_settings": {
     "permissions": {
       "deny": [
-        "Read(//home/nils/Documents/Entwicklung/UseAVibeV2/data/**)",
-        "Read(//home/nils/Documents/Entwicklung/UseAVibeV2/study/**)"
+        "Read(//home/nils/Documents/Entwicklung/UseAVibe-Parent/UseAVibeV2/data/**)",
+        "Read(//home/nils/Documents/Entwicklung/UseAVibe-Parent/UseAVibeV2/study/**)"
       ]
     },
     "sandbox": {
       "enabled": true,
       "filesystem": {
         "denyRead": [
-          "/home/nils/Documents/Entwicklung/UseAVibeV2/data",
-          "/home/nils/Documents/Entwicklung/UseAVibeV2/study"
+          "/home/nils/Documents/Entwicklung/UseAVibe-Parent/UseAVibeV2/data",
+          "/home/nils/Documents/Entwicklung/UseAVibe-Parent/UseAVibeV2/study"
         ]
       }
     }
