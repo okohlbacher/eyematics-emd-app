@@ -175,7 +175,19 @@ test('[AT-USM-003-01] duplicate user ID is rejected with a message about the ID 
   await expect(page.getByText(/already exists|bereits (vergeben|vorhanden|existiert)/i), 'message: ID already in use').toBeVisible();
   await page.goto('/admin');
   await expect(userRow(page, 'test\\.user1'), 'still exactly one account test.user1').toHaveCount(1);
-  // Variant with different letter case: handling is unspecified (workbook note) — deliberately not asserted.
+
+  // Variant with different letter case is a duplicate too; the message need not differ (test lead, O-21 point 4).
+  const g = await openAddUserForm(page);
+  await g.username.fill('TEST.User1');
+  await g.firstName.fill('Test');
+  await g.lastName.fill('Grossschreibung');
+  await g.site('UKA').click();
+  await g.save.click();
+  await expect(page.getByText('Benutzer erfolgreich erstellt')).toHaveCount(0);
+  await expect(page.getByText(/already exists|bereits (vergeben|vorhanden|existiert)/i), 'message: ID already in use (case-insensitive)').toBeVisible();
+  await page.goto('/admin');
+  const anyCase = page.locator('tbody tr').filter({ has: page.locator('td:first-child', { hasText: /^test\.user1\b/i }) });
+  await expect(anyCase, 'no second account differing only in letter case').toHaveCount(1);
 });
 
 test('[AT-USM-003-02] every account has exactly one unique ID; audit entries attributable to exactly one account', async ({ page, loginAs, request }) => {
