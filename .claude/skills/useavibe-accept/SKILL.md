@@ -23,3 +23,9 @@ Team acceptance round for cycle Z$ARGUMENTS (build prompt §5.12). The team chec
    `/useavibe-fix <ID>`, then `/useavibe-release`, then the next round; class C → the study team amends the `.feature`
    (deviation, re-freeze); no findings → `/useavibe-close`. From round 3 on, the team decides per open problem:
    continue or defer (PL06 = 2 with PL11; deferral of implemented work requires a trailered `git revert`).
+5. A fix session that cannot reproduce a finding ends with `## Blocked` and proposes "not reproducible"; it changes
+   no code. The operator then makes the disposition commit outside the sandbox, so the release check finds the finding
+   addressed: `git commit --allow-empty` with the body "not reproducible — no code change" and the trailer
+   `Round-Finding: <finding ID>` (O-29). The team decides in the next round on the re-test item
+   (`disposition: confirmed | not reproducible | withdrawn`, reason unless confirmed); not reproducible or withdrawn
+   findings do not count for PL09 and are reported separately.

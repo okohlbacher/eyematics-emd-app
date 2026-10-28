@@ -26,6 +26,14 @@ For every problem to implement write `## <ID>` with:
 
 Then `## Order` (with justification), `## Conflicts` (between problems, or with Pflichtenheft/Lastenheft/earlier
 scenarios — never resolve them yourself) and `## Open questions` (everything the study team must decide; no assumptions).
+Write each conflict and question as one item `- **C<n>:** …` / `- **Q<n>:** …`, followed by an indented empty
+`  Answer:` line for the study team (`useavibe plan-approve` refuses while an item has no answer, O-27). In a problem's
+section, name the items it depends on (`Depends on: C1, Q1`).
 
 Write `.planning/useavibe/Z$ARGUMENTS/PLAN.md` and stop. The study team edits and approves it with
 `useavibe plan-approve` (ZA05); no implementation before that.
+
+In a real cycle the operator runs this skill interactively in plan mode (`claude --permission-mode plan`, R3,
+decision O-24): present the complete PLAN.md content as your plan; once the operator accepts it, write it unchanged
+to `.planning/useavibe/Z$ARGUMENTS/PLAN.md` — the only file you write — and stop. Headless runs (rehearsal,
+evaluation) cannot write in plan mode; they run in `acceptEdits` and write PLAN.md directly.

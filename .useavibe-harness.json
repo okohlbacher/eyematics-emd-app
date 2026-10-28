@@ -1,23 +1,24 @@
 {
   "blocks": {
-    ".gitignore": "122ae3840406d361f30bddf71be2bd50edd5ea117f9686d7de87ad9845eedef6",
+    ".gitignore": "a53e13052072829a21fc1469c16f66419e29794ad9158ce500507d2184bd436f",
     "CLAUDE.md": "6e3780bfdd5c6c33601b1363cfe41b76ac0d21283e820221b6e9155b8b3c36ab"
   },
   "files": {
     ".claude/agents/ac-reviewer.md": "62e93ae94a1ce62cfe30f65e3e38c3da6e312de683491edfcd0560c60b4940f4",
     ".claude/launch.json": "75c600a870297992fa948eb12e861b25c44f424ec3ab53d767c6bacf780a7faf",
-    ".claude/settings.json": "fa944e6e9fd5c6581aaa19656961a66b083341746d4e2a7ed89f6a7e8f3e00a6",
+    ".claude/settings.json": "4ffd10cda720bffa9417a83bc9fa28964ff11b19bb0a6a8a02090272b5b3b14d",
     ".claude/skills/uat-implement/SKILL.md": "a6c644cd7eb13e2ac74727182191fa33c64a8ffdff8d7970902d417881f07180",
     ".claude/skills/uat-release/SKILL.md": "daceaac3a436479181982021e48fc8d1dd4b8ca85064768141b3f27626b6ee8a",
     ".claude/skills/uat-round/SKILL.md": "71ec105c30fe2c9d9219b1e59484b9cc0efd48f56555a2769bc92c1568a299b5",
     ".claude/skills/uat-triage/SKILL.md": "34dc49fb180ae7f1301723be2c5963d2ee3d7bb422ccf4cf47ada9717578f08b",
     ".claude/skills/uat-verify/SKILL.md": "2c7d223df22fddbb038223bbca3fc902b7d571fb2dfe58a4328f2022a82992f8",
-    ".claude/skills/useavibe-accept/SKILL.md": "10bec4e029762787b5bf1e6a61da79e7e986b96d013de901c49a0a9048e476b0",
-    ".claude/skills/useavibe-close/SKILL.md": "bbb93830e7e45a8520966f3230aab94d38b540c1097624f0516bfa81588081c6",
+    ".claude/skills/useavibe-accept/SKILL.md": "35787ec76566e1906e7a07818c134c931c41f5eb3b0e0fac3ebdd712ecb1ad89",
+    ".claude/skills/useavibe-close/SKILL.md": "3414d451428ef7afb5b0769b3305b82213acd863e9383a209471d815a587d77e",
     ".claude/skills/useavibe-cycle-open/SKILL.md": "922b1fee33ab44b8b7674740b5219729b3acebfe73743fdc8b8489887eb64ba3",
-    ".claude/skills/useavibe-fix/SKILL.md": "5b45cc3194be0131cec713a88c7f5beb1cb455c0867a5a6ea0f0d47f2f761be6",
-    ".claude/skills/useavibe-plan/SKILL.md": "5ad38e214669858dc29463bb0f9c0190ce0205fb3d008ca9851283b411f49295",
-    ".claude/skills/useavibe-release/SKILL.md": "7df9d866ae09d58da666875df073f9dd113f1c858a2a3c2abb3ea32e5080bee3",
+    ".claude/skills/useavibe-defect/SKILL.md": "8b3ac6dedb3b82ea76133069c7f7b203f609df9a518952b4700f303de8511d8c",
+    ".claude/skills/useavibe-fix/SKILL.md": "7933346b132eff928ee6ac2391ef703dcf98d40e1630fc14e175ea2315752ab8",
+    ".claude/skills/useavibe-plan/SKILL.md": "f42522e06fc0660d3aececcca10af2becc7021ac76fa3b8d908b4caf6f7fa941",
+    ".claude/skills/useavibe-release/SKILL.md": "1e4f87599e19733762c95276bcec56dd4369b8e21b336ebfcccb9be49e786678",
     ".claude/workflows/uat-verify.js": "5d61fece8c6cafe97b401fadfb060120917852d53d63614e4556c937343a8313",
     ".github/workflows-proposed/useavibe-test.yml": "88986d2778ba4a987af1d33baa0addcd5264e9ac5d912ceda183edb866b66714",
     "handoff/HANDOFF.md": "749797de9680a2d4fe3fd5e0f19d86c39e816eb68fc7361fe90935ff00c61f64",
@@ -45,9 +46,10 @@
     "handoff/rounds/v1.19/verification.yaml": "c85af1942facc8c8ab5d39ff51f50277a627c4f6ec5141ef381bc2c8637cd014",
     "playwright.config.ts": "c3db666e910167f9cc6a3740a8c952e21bfabee8899baf11b31faa84b815040b",
     "scripts/requirements-check.mjs": "f7e912eec014535f771288b418b7757a5f668bcee922a20a31703bfaccabb49e",
-    "scripts/useavibe/activate.mjs": "b1774c5cba5112952912c963d3234afcf3904d7f0d19dbf3eb520978c4e21387",
+    "scripts/useavibe/activate.mjs": "e6948a55564ca7393919ff95e7d175e4a8481a6c3488b3c378230697851688df",
+    "scripts/useavibe/deploy-smoke.mjs": "bbb49bdca78578ac13c99ea588bd99d8c6bc4b29b09eab13302bbea17fbf8e30",
     "scripts/useavibe/e2e-container.sh": "5910dfded33352d4a18a852ccdd16355c522b08724e4b405b63fa79f4b4ea7f3",
-    "scripts/useavibe/gate.mjs": "7dcede6ad6c398393778a44430bb0025586e33a10526c5a440283bd4ea873c65",
+    "scripts/useavibe/gate.mjs": "a0b1359faa437b7e2db93923ad4501c04c3420db6efe303fb94221cc9fcb0b94",
     "scripts/useavibe/gate.sh": "9ee301bf2ed8b65d8241264ff08c9d98ee02eb97e849ea3306061afc1b39f134",
     "scripts/useavibe/guard-pseudonyms.mjs": "b368360613b0e7a41317efd791a4077abd4994038b8e98054de9817876dcdf37",
     "scripts/useavibe/hide-workspace.sh": "a14aa5399b5b352a048f6b1cde835e1035fedc7edaa2dc01446e01a433ffafb2",
@@ -64,23 +66,6 @@
     "zip_sha256": "4a8b415c1624790677f8862d96bdfe8c96e10e50901e75b83aeb648df164e1d1"
   },
   "harness_version": "0.1.0",
-  "local_settings": {
-    "permissions": {
-      "deny": [
-        "Read(//home/nils/Documents/Entwicklung/UseAVibe-Parent/UseAVibeV2/data/**)",
-        "Read(//home/nils/Documents/Entwicklung/UseAVibe-Parent/UseAVibeV2/study/**)"
-      ]
-    },
-    "sandbox": {
-      "enabled": true,
-      "filesystem": {
-        "denyRead": [
-          "/home/nils/Documents/Entwicklung/UseAVibe-Parent/UseAVibeV2/data",
-          "/home/nils/Documents/Entwicklung/UseAVibe-Parent/UseAVibeV2/study"
-        ]
-      }
-    }
-  },
   "patch": {
     "file": "repo-changes.patch",
     "sha256": "c488d016b95e45866cc59153e7c4f569013153b91752b1573478dd19cc2d988f"

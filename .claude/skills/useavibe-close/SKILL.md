@@ -14,5 +14,13 @@ Close cycle Z$ARGUMENTS.
    `useavibe fbi-sheet`. Report its summary.
 2. Propose the promotion of the cycle's passed scenarios into the requirements registry following `/uat-triage` §5
    (one UIR entry per scenario, mapped to the Playwright test). Write the proposal; the owner/study lead approves it.
-3. Remind the operator: the accepted digest is the test object of Z<k+1> (`/useavibe-cycle-open`), FB-I is entered
-   from the transcription sheet, then `useavibe fbi-crosscheck`.
+3. Defect phase (O-32): if the cycle has class-D defects (`findings/defects.md`) or AT defect fixes, the next user
+   test must wait. The test lead enters each defect as `acceptance/AT/AT-M-<nnn>.feature` (header `Source:` = the
+   round defect ID, `Cause:` per O-38) or defers it (`useavibe defect-defer --defect … --reason … --by …`); each is
+   fixed in a fresh `/useavibe-defect AT-M-<nnn>` session; then `/useavibe-release` (a patch release), a defect round
+   (`/useavibe-accept`; the checklist lists the defect fixes and regression checks) until a round is clean, and
+   `useavibe defect-close --app . --cycle $ARGUMENTS --workspace <path>`.
+4. Remind the operator: the test object of Z<k+1> (`/useavibe-cycle-open`) is the release of the last clean defect
+   round, or the accepted digest when there was no defect phase; `cycle-open` refuses anything else. FB-I is entered
+   from the transcription sheet, then `useavibe fbi-crosscheck`. Readable CSV exports of all endpoint figures are in
+   the workspace `study/Z<k>/export/` (problems, rounds, findings, defects, cycle).

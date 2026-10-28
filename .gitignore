@@ -54,6 +54,7 @@ feedback/issue-*.json
 !.claude/agents/
 .planning/useavibe/*/PROBLEMS.md
 .planning/useavibe/ACTIVE
+.planning/useavibe/COMMIT_MSG
 .planning/useavibe/sessions.jsonl
 .planning/useavibe/*/gate-logs/
 .planning/useavibe/.cache/

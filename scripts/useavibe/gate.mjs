@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Per-attempt gate (Stop hook). Steps: integrity → unit (skip guard, vitest, bundle audits) → build → lint → knip →
 // audit delta → Playwright (if configured) → requirements --changed. Appends one record per attempt to
-// .planning/useavibe/Z<k>/attempts.jsonl; failure → exit 2 with the failing step (the turn continues).
+// .planning/useavibe/Z<k>/attempts.jsonl; failure → exit 2 with the failing step (the turn continues); a pass also exits 2
+// and continues the turn with review and staging; an unchanged tree after a pass is a re-check, not an attempt (O-26 a).
 // At the attempt cap the session must end with a "## Blocked" report (workflow plan step 7).
 // USEAVIBE_GATE_STEPS='[["name","shell command"],…]' replaces the default steps (harness level-2 tests only).
 import { spawnSync } from 'node:child_process';
@@ -39,13 +40,34 @@ const record = (extra) => appendJsonl(attemptsFile, {
 });
 const fail = (text) => { process.stderr.write(`UseAVibe gate: ${text}\n`); process.exit(2); };
 
+// After a passing attempt the turn continues with review and staging (steps 5–6); the session is done when COMMIT_MSG
+// exists (O-25 a). This chains a headless session through to the commit hand-over without a resume (O-26 a).
+const NEXT = 'Not done yet: run the ac-reviewer and log its verdict (step 5), then stage the fix and write ' +
+  '.planning/useavibe/COMMIT_MSG (step 6) and end the turn. The next gate run on an unchanged tree is a re-check ' +
+  'and does not count as an attempt; changes after review findings do.';
+const commitMsgReady = () => existsSync(path.join(root, STATE_DIR, 'COMMIT_MSG'));
+
 if (/^#{1,3}\s*Blocked\b/m.test(msg)) { record({ result: 'blocked', attempt: runs.length }); process.exit(0); }
+const fp = fingerprint();
+// Re-check (O-26 a): the tree is unchanged since this problem's last gate run, in any session, and that run passed.
+// The steps are not re-run and nothing is counted — so a continuation for review/commit does not inflate PL09's
+// auxiliary count, and a pass at the cap does not turn into a cap refusal.
+const ofProblem = readJsonl(attemptsFile).filter((a) => a.id === active.id);
+const lastRun = ofProblem.filter((a) => a.result === 'pass' || a.result === 'fail').at(-1);
+if (lastRun?.result === 'pass' && lastRun.fingerprint === fp) {
+  const remindedBefore = ofProblem.at(-1)?.result === 'recheck';
+  record({ result: 'recheck', attempt: lastRun.attempt, fingerprint: fp });
+  if (commitMsgReady() || remindedBefore) {
+    console.log(`UseAVibe gate: unchanged since the passed attempt ${lastRun.attempt} — re-check, not counted`);
+    process.exit(0);
+  }
+  fail(`unchanged since the passed attempt ${lastRun.attempt} (re-check, not counted). ${NEXT}`);
+}
 if (runs.length >= cap) {
   if (input.stop_hook_active) process.exit(0); // already told once; never loop past the cap
   fail(`attempt cap ${cap} reached for ${active.id}. Do not change code any more: end with a "## Blocked" report ` +
     '(what fails, why, which criterion or plan item the study team must refine).');
 }
-const fp = fingerprint();
 const last = runs.at(-1);
 if (last?.result === 'fail' && last.fingerprint === fp) {
   fail(`no change since the failed attempt ${last.attempt} (${last.failing_step}). Fix the cause, or end with "## Blocked".`);
@@ -162,8 +184,10 @@ const changedNow = [...new Set([
   ...git(root, 'diff', '--name-only', active.base, '--', '.', OWN).split('\n'),
   ...git(root, 'ls-files', '--others', '--exclude-standard', '--', '.', OWN).split('\n'),
 ])].filter(Boolean);
-const ownTests = new RegExp(`^tests/acceptance/Z${k}/${active.id}\\.`);
-if (active.kind === 'usability' && changedNow.length && changedNow.every((f) => ownTests.test(f))) {
+const ownTests = active.kind === 'at'   // AT defects: red evidence too (O-34)
+  ? new RegExp(`^tests/acceptance-at/${active.id}\\.`)
+  : new RegExp(`^tests/acceptance/Z${k}/${active.id}\\.`);
+if (changedNow.length && changedNow.every((f) => ownTests.test(f))) {
   const specs = changedNow.filter((f) => f.endsWith('.spec.ts')).join(' ');
   const units = changedNow.filter((f) => f.endsWith('.test.ts')).join(' ');
   const redCmd = process.env.USEAVIBE_RED_CMD   // harness level-2 tests only
@@ -204,4 +228,4 @@ if (failing) {
   fail(`attempt ${attempt}/${cap} failed at step "${failing}":\n${detail}\n` +
     `Logs: ${path.relative(root, logDir)}/${active.id}-a${attempt}-*.log. Fix the root cause; never weaken a test.`);
 }
-console.log(`UseAVibe gate: attempt ${attempt} passed (${Object.entries(durations).map(([n, s]) => `${n} ${s}s`).join(', ')})`);
+fail(`attempt ${attempt} passed (${Object.entries(durations).map(([n, s]) => `${n} ${s}s`).join(', ')}). ${NEXT}`);
