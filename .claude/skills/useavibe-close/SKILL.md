@@ -21,6 +21,9 @@ Close cycle Z$ARGUMENTS.
    (`/useavibe-accept`; the checklist lists the defect fixes and regression checks) until a round is clean, and
    `useavibe defect-close --app . --cycle $ARGUMENTS --workspace <path>`.
 4. Remind the operator: the test object of Z<k+1> (`/useavibe-cycle-open`) is the release of the last clean defect
-   round, or the accepted digest when there was no defect phase; `cycle-open` refuses anything else. FB-I is entered
+   round, or the accepted digest when there was no defect phase; `cycle-open` refuses anything else. Promote exactly
+   that version to `:latest` (release channel, O-37; `close`/`defect-close` print the command:
+   `gh workflow run container.yml -f promote_version=<v> -f promote_digest=<sha256>`; the workflow verifies the
+   digest before and after, no rebuild). The study and acceptance units stay pinned by digest (C-24). FB-I is entered
    from the transcription sheet, then `useavibe fbi-crosscheck`. Readable CSV exports of all endpoint figures are in
    the workspace `study/Z<k>/export/` (problems, rounds, findings, defects, cycle).
