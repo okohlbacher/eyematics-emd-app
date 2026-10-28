@@ -5,7 +5,8 @@
 // At the attempt cap the session must end with a "## Blocked" report (workflow plan step 7).
 // USEAVIBE_GATE_STEPS='[["name","shell command"],…]' replaces the default steps (harness level-2 tests only).
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import {
@@ -90,19 +91,42 @@ async function integrity() {
   return problems;
 }
 
-function auditDelta() {
-  const base = JSON.parse(readFileSync(path.join(cdir, 'audit-baseline.json'), 'utf8')); // written at cycle open
-  const r = spawnSync('npm', ['audit', '--json'], { cwd: root, encoding: 'utf8' });
+// High/critical advisory ids of a lockfile (npm audit against the registry, no install), or an error string.
+function advisories(cwd) {
+  const r = spawnSync('npm', ['audit', '--json', '--package-lock-only'], { cwd, encoding: 'utf8' });
   let doc;
-  try { doc = JSON.parse(r.stdout); } catch { return [`npm audit produced no JSON (offline?): ${(r.stderr || '').slice(-200)}`]; }
-  const now = new Set();
+  try { doc = JSON.parse(r.stdout); } catch { return `npm audit produced no JSON (offline?): ${(r.stderr || '').slice(-200)}`; }
+  const ids = new Set();
   for (const v of Object.values(doc.vulnerabilities ?? {})) {
     for (const via of v.via ?? []) {
-      if (typeof via === 'object' && ['high', 'critical'].includes(via.severity)) now.add(String(via.source ?? via.url));
+      if (typeof via === 'object' && ['high', 'critical'].includes(via.severity)) ids.add(String(via.source ?? via.url));
     }
   }
-  const known = new Set((base.advisories ?? []).map(String));
-  return [...now].filter((a) => !known.has(a)).map((a) => `new high/critical advisory ${a}`);
+  return ids;
+}
+
+// Delta against the base lockfile audited now (decision O-33 a): only advisories the session's dependency change
+// brings in fail; advisories published after the cycle baseline on unchanged dependencies are logged as warnings.
+function auditDelta() {
+  const now = advisories(root);
+  if (typeof now === 'string') return [now];
+  const tmp = mkdtempSync(path.join(os.tmpdir(), 'useavibe-audit-'));
+  let atBase;
+  try {
+    for (const f of ['package.json', 'package-lock.json']) {
+      writeFileSync(path.join(tmp, f), git(root, 'show', `${active.base}:${f}`));
+    }
+    atBase = advisories(tmp);
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+  if (typeof atBase === 'string') return [atBase];
+  const known = new Set((JSON.parse(readFileSync(path.join(cdir, 'audit-baseline.json'), 'utf8')).advisories ?? []).map(String));
+  const late = [...now].filter((a) => atBase.has(a) && !known.has(a));
+  writeFileSync(path.join(logDir, `${active.id}-a${attempt}-audit-delta.log`), late.length
+    ? `WARNING: published after the cycle baseline, dependencies unchanged (owner/release): ${late.join(', ')}\n`
+    : 'no advisories beyond the cycle baseline\n');
+  return [...now].filter((a) => !atBase.has(a)).map((a) => `new high/critical advisory ${a} (introduced by this change)`);
 }
 
 // Static security (decision C-12): pinned Semgrep on the files changed in this session, delta against the cycle

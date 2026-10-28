@@ -63,8 +63,9 @@ export function filterGroup(page: Page, label: string): Locator {
   return page.locator('label', { hasText: label }).first().locator('xpath=..');
 }
 
-/** Number N of the results header "Kohorte: N Fälle". */
+/** Number N of the results header "Kohorte: N Fälle", read once the cases are loaded ("von M Gesamtfällen", M > 0). */
 export async function cohortCount(page: Page): Promise<number> {
+  await expect(page.getByText(/^von [1-9]\d* Gesamtfällen$/)).toBeVisible();
   const text = await page.getByRole('heading', { name: /^Kohorte: \d+ Fälle$/ }).innerText();
   return Number(/(\d+)/.exec(text)![1]);
 }
