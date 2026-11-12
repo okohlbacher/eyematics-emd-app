@@ -23,7 +23,8 @@ Close cycle Z$ARGUMENTS.
 4. Remind the operator: the test object of Z<k+1> (`/useavibe-cycle-open`) is the release of the last clean defect
    round, or the accepted digest when there was no defect phase; `cycle-open` refuses anything else. Promote exactly
    that version to `:latest` (release channel, O-37; `close`/`defect-close` print the command:
-   `gh workflow run container.yml -f promote_version=<v> -f promote_digest=<sha256>`; the workflow verifies the
+   `gh workflow run container.yml --ref <app branch, e.g. useavibe/harness> -f promote_version=<v> -f promote_digest=<sha256>`;
+   `--ref` is required, because only the branch's `container.yml` has the promote inputs; the workflow verifies the
    digest before and after, no rebuild). Deployment (O-46): `EMD` follows `:latest`, `EMD-accept` follows `:dev`,
    both with `AutoUpdate=registry`; the digest check before every session and round replaces the pin. `:dev`
    follows push order (re-pushing an older tag moves it back); a rollback of `:latest` is a promotion of the previous
