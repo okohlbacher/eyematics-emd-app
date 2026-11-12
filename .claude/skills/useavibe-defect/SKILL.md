@@ -44,15 +44,17 @@ changing code.
 
 ## 5. Review
 When the gate has passed, run the `ac-reviewer` subagent with: defect ID, `git diff <base>..` (base in
-`.planning/useavibe/ACTIVE`), the .feature and the test file. Its findings go back to step 3 (the next gate run is a
-new attempt). Log its verdict with `node scripts/useavibe/activate.mjs --review pass|findings`.
+`.planning/useavibe/ACTIVE`), the .feature and the test file. Findings inside the defect's .feature: fix them (back
+to §3 *Implement*); the next gate run counts as a new attempt. Findings outside it or needing a study-team decision:
+change nothing; list them under `## Observed, not changed`. Log
+`node scripts/useavibe/activate.mjs --review pass|findings-fixed|findings-open`.
 
 ## 6. Record — stage, do not commit
 Do not run `git commit` (the pseudonym guard cannot run in the sandbox; the operator commits, O-25). Stage the whole
 fix (`git add` of every changed and new file; nothing may stay unstaged), then write the commit message to
 `.planning/useavibe/COMMIT_MSG` (handoff §9 types/scopes), body ends with `Verified: …`, trailers:
 `Acceptance-Defect: $ARGUMENTS` · `Acceptance-Test: <AT case ID or —>` · `Attempts: <gate attempts>` ·
-`Reviewer: pass|findings` · `Regression-Of: <ID>` when the .feature's `Cause:` is `latent Z<j>-P<nn>` or
+`Reviewer: pass|findings-fixed|findings-open` · `Regression-Of: <ID>` when the .feature's `Cause:` is `latent Z<j>-P<nn>` or
 `defect-fix AT-M-<nnn>` · Co-Authored-By as in the session's system reminder. Never a `Usability-Problem:` trailer.
 End the report with `Ready to commit: node scripts/useavibe/activate.mjs --commit`.
 

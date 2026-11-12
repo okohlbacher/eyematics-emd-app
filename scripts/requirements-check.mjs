@@ -243,8 +243,11 @@ const evidencePaths = (e) => [...(e.evidence ?? []), ...(e.tests ?? []).map((t) 
 
 function changedFiles(ref) {
   try {
-    return new Set(execFileSync('git', ['diff', '--name-only', `${ref}..HEAD`, '--', 'src', 'server', 'shared', 'public', 'index.html'], { cwd: ROOT, encoding: 'utf8' })
-      .split('\n').filter(Boolean));
+    // UseAVibe (O-40 a): working tree against <ref> plus untracked files — fix sessions stage, they do not commit.
+    const scope = ['--', 'src', 'server', 'shared', 'public', 'index.html'];
+    const names = (a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean);
+    return new Set([...names(['diff', '--name-only', ref, ...scope]),
+      ...names(['ls-files', '--others', '--exclude-standard', ...scope])]);
   } catch (e) { errors.push(`--changed ${ref}: ${e.message.split('\n')[0]}`); return new Set(); }
 }
 

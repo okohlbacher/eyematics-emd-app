@@ -16,8 +16,16 @@ PORT=${USEAVIBE_E2E_PORT:-$(node -e "const s=require('net').createServer().liste
 NAME="emd-e2e-$$"; VOL="emd-e2e-vol-$$"
 cleanup() { "$CLI" rm -f "$NAME" >/dev/null 2>&1 || true; "$CLI" volume rm "$VOL" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
+trap 'exit 143' INT TERM   # stopped from outside (eval runner timeout): the EXIT trap removes container and volume
 "$CLI" build -q -f Containerfile -t "$IMAGE" . >/dev/null
 "$CLI" run -d --name "$NAME" -p "127.0.0.1:$PORT:3000" -v "$VOL:/data" "$IMAGE" >/dev/null
-for _ in $(seq 1 120); do curl -fsS "http://127.0.0.1:$PORT/healthz" >/dev/null 2>&1 && break; sleep 0.5; done
-curl -fsS "http://127.0.0.1:$PORT/healthz" >/dev/null || { echo "e2e: container not healthy" >&2; "$CLI" logs "$NAME" | tail -30 >&2; exit 1; }
+for _ in $(seq 1 120); do curl -fsS --max-time 2 "http://127.0.0.1:$PORT/healthz" >/dev/null 2>&1 && break; sleep 0.5; done
+if ! curl -fsS --max-time 5 "http://127.0.0.1:$PORT/healthz" >/dev/null; then
+  echo "e2e: container not healthy" >&2
+  # A VPN that routes 172.16.0.0/12 (e.g. Cisco cscotun0) makes every Docker bridge unreachable from the host.
+  IP=$("$CLI" inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$NAME" 2>/dev/null || true)
+  DEV=$([ -n "$IP" ] && ip route get "$IP" 2>/dev/null | sed -n 's/.* dev \([^ ]*\).*/\1/p' | head -1)
+  case "$DEV" in docker*|br-*|"") ;; *) echo "e2e: the container address $IP is routed via '$DEV', not a Docker bridge — probably a VPN; disconnect it and re-run (not a defect of the change)" >&2 ;; esac
+  "$CLI" logs "$NAME" | tail -30 >&2; exit 1
+fi
 PLAYWRIGHT_BASE_URL="http://127.0.0.1:$PORT" npx playwright test "$@"

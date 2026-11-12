@@ -2,7 +2,7 @@
 // Start or end the gated fix session of one problem (called by /useavibe-fix; installed by the UseAVibe harness).
 //   node scripts/useavibe/activate.mjs Z1-P03          → writes .planning/useavibe/ACTIVE (base = HEAD)
 //   node scripts/useavibe/activate.mjs AT-M-004 --at   → acceptance-test defect session (cycle from CURRENT.json)
-//   node scripts/useavibe/activate.mjs --review pass|findings → logs the ac-reviewer verdict (PL09 auxiliary count)
+//   node scripts/useavibe/activate.mjs --review pass|findings-fixed|findings-open → logs the ac-reviewer verdict (PL09 auxiliary count)
 //   node scripts/useavibe/activate.mjs --commit        → operator, outside the session sandbox: commits the staged fix
 //                                                         with .planning/useavibe/COMMIT_MSG, then clears (O-25 a)
 //   node scripts/useavibe/activate.mjs --clear         → only after a passed gate attempt or a "## Blocked" stop
@@ -21,7 +21,7 @@ const args = process.argv.slice(2);
 if (args.includes('--review')) {
   const a = readActive(root);
   const verdict = args[args.indexOf('--review') + 1];
-  if (!a || !['pass', 'findings'].includes(verdict)) die('usage: --review pass|findings (inside an active session)');
+  if (!a || !['pass', 'findings-fixed', 'findings-open'].includes(verdict)) die('usage: --review pass|findings-fixed|findings-open (inside an active session)');
   appendJsonl(path.join(root, STATE_DIR, `Z${a.cycle}`, 'attempts.jsonl'), {
     id: a.id, ts: new Date().toISOString(), head: git(root, 'rev-parse', 'HEAD'), result: 'review', verdict,
   });

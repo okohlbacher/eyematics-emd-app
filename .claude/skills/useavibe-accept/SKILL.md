@@ -10,9 +10,10 @@ Team acceptance round for cycle Z$ARGUMENTS (build prompt §5.12). The team chec
 1. `useavibe round-open --app . --cycle $ARGUMENTS` — creates `acceptance-rounds/Z$ARGUMENTS/round-<r>/` with
    `CHECKLIST.md` (all scenarios of the implemented problems incl. `@visual`, the previous round's open findings,
    regression checks selected via the files changed in the cycle, Must requirements without automated coverage),
-   `DEPLOYMENT.md` (published image by digest; acceptance container next to the study container, own port and own
-   `/data` volume, decision C-23; production settings with `auth.refreshCookieSecure: true`) and an empty
-   `RESULT.yaml` template. Run the release-only checks of `/uat-release` §2 against the published image and attach
+   `DEPLOYMENT.md` (acceptance container `EMD-accept` next to the study container, following `:dev`, own port and
+   own fresh `/data` volume, decisions C-23, O-46; `podman auto-update`, then the running digest must equal the
+   release's recorded digest — the team enters it under `deployment_check` in `RESULT.yaml`, round-validate refuses
+   a mismatch; production settings with `auth.refreshCookieSecure: true`) and an empty `RESULT.yaml` template. Run the release-only checks of `/uat-release` §2 against the published image and attach
    their output to the round directory.
 2. Hand over to the team. Stop here until the team says the round is recorded.
 3. `useavibe round-validate --app . --cycle $ARGUMENTS` — checks completeness (every checklist item has a result,

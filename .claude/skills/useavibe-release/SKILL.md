@@ -23,7 +23,8 @@ running cycle may receive it.
    the operator commits outside the sandbox with `git commit -F .planning/useavibe/COMMIT_MSG`.
 4. Stop and ask the operator for the go-ahead before `/uat-release` §2 (tag → CI → GHCR). Release channel (O-37):
    CI publishes a candidate as `:<version>` and `:dev` only — it does **not** move `:latest`; where `/uat-release` §2
-   checks `latest`, check `dev` instead (`dev` digest = `<version>` digest). `:latest` is promoted only at the
+   checks `latest`, check `dev` instead (`dev` digest = `<version>` digest). The acceptance container follows `:dev`
+   (O-46), so push the tag only while no acceptance round runs. `:latest` is promoted only at the
    hand-over after the cycle close or the defect phase (`/useavibe-close`). After CI, record the published digest
    with `useavibe release-record --app . --cycle $ARGUMENTS --version <v> --digest <sha256>`.
    Skip `/uat-release` §3–§4 (no developer response to participants).

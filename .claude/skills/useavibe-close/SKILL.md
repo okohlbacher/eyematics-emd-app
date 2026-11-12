@@ -24,6 +24,9 @@ Close cycle Z$ARGUMENTS.
    round, or the accepted digest when there was no defect phase; `cycle-open` refuses anything else. Promote exactly
    that version to `:latest` (release channel, O-37; `close`/`defect-close` print the command:
    `gh workflow run container.yml -f promote_version=<v> -f promote_digest=<sha256>`; the workflow verifies the
-   digest before and after, no rebuild). The study and acceptance units stay pinned by digest (C-24). FB-I is entered
+   digest before and after, no rebuild). Deployment (O-46): `EMD` follows `:latest`, `EMD-accept` follows `:dev`,
+   both with `AutoUpdate=registry`; the digest check before every session and round replaces the pin. `:dev`
+   follows push order (re-pushing an older tag moves it back); a rollback of `:latest` is a promotion of the previous
+   version with its recorded digest. Promote only while no session or round runs. FB-I is entered
    from the transcription sheet, then `useavibe fbi-crosscheck`. Readable CSV exports of all endpoint figures are in
    the workspace `study/Z<k>/export/` (problems, rounds, findings, defects, cycle).

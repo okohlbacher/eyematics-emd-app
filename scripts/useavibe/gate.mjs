@@ -30,10 +30,16 @@ const runs = mine.filter((a) => a.result === 'pass' || a.result === 'fail');
 const msg = String(input.last_assistant_message ?? '');
 
 const OWN = ':(exclude).planning/useavibe';   // the gate's and hooks' own records do not count as a change
+// Content of every path that differs from HEAD, independent of the index: staging (`git add`) is not a change (O-42 f).
 const fingerprint = () => {
-  const untracked = git(root, 'ls-files', '--others', '--exclude-standard', '--', '.', OWN).split('\n').filter(Boolean);
-  return sha256(git(root, 'rev-parse', 'HEAD') + git(root, 'diff', 'HEAD', '--', '.', OWN) +
-    untracked.map((f) => `${f}\0${sha256(readFileSync(path.join(root, f)))}`).join('\n'));
+  const changed = [...new Set([
+    ...git(root, 'diff', 'HEAD', '--name-only', '--', '.', OWN).split('\n'),
+    ...git(root, 'ls-files', '--others', '--exclude-standard', '--', '.', OWN).split('\n'),
+  ])].filter(Boolean).sort();
+  return sha256(git(root, 'rev-parse', 'HEAD') + changed.map((f) => {
+    const p = path.join(root, f);
+    return `${f}\0${existsSync(p) ? sha256(readFileSync(p)) : 'deleted'}`;
+  }).join('\n'));
 };
 const record = (extra) => appendJsonl(attemptsFile, {
   id: active.id, ts: new Date().toISOString(), session_id: session, head: git(root, 'rev-parse', 'HEAD'), ...extra,
@@ -187,22 +193,64 @@ const changedNow = [...new Set([
 const ownTests = active.kind === 'at'   // AT defects: red evidence too (O-34)
   ? new RegExp(`^tests/acceptance-at/${active.id}\\.`)
   : new RegExp(`^tests/acceptance/Z${k}/${active.id}\\.`);
+
+// Failed tests of the given files in the red run's JSON report (Playwright or Vitest), or null if there is none.
+// Red needs at least one: a non-zero exit alone may be a failed image build or an unhealthy container (O-41 a).
+function failedOwnTests(report, files) {
+  let doc;
+  try { doc = JSON.parse(readFileSync(report, 'utf8')); } catch { return null; }
+  const own = (file) => files.some((f) => f.endsWith(file) || String(file).endsWith(f));
+  if (Array.isArray(doc.testResults)) {   // Vitest
+    return doc.testResults.filter((t) => own(t.name))
+      .flatMap((t) => (t.assertionResults ?? []).filter((a) => a.status === 'failed').map((a) => a.fullName ?? a.title));
+  }
+  const failed = [];
+  const walk = (s, file) => {
+    for (const c of s.suites ?? []) walk(c, c.file ?? file);
+    for (const sp of s.specs ?? []) {
+      if (own(sp.file ?? file) && (sp.tests ?? []).some((t) => t.status === 'unexpected')) failed.push(sp.title);
+    }
+  };
+  for (const s of doc.suites ?? []) walk(s, s.file);
+  return failed;
+}
+
 if (changedNow.length && changedNow.every((f) => ownTests.test(f))) {
-  const specs = changedNow.filter((f) => f.endsWith('.spec.ts')).join(' ');
-  const units = changedNow.filter((f) => f.endsWith('.test.ts')).join(' ');
+  const specList = changedNow.filter((f) => f.endsWith('.spec.ts'));
+  const unitList = changedNow.filter((f) => /\.test\.tsx?$/.test(f));   // Vitest includes .test.ts and .test.tsx
+  const priorErrors = mine.filter((a) => a.result === 'red-error' && a.fingerprint === fp).length;
+  if (priorErrors >= 2) {
+    if (input.stop_hook_active) process.exit(0);   // told already; never loop
+    fail('red check could not run twice on this unchanged tree — end with "## Blocked" (red check not possible) ' +
+      `and quote ${path.relative(root, logDir)}/${active.id}-red.log.`);
+  }
+  const redJson = path.join(logDir, `${active.id}-red.json`);   // own file: never a stale report of an earlier run
+  rmSync(redJson, { force: true });
   const redCmd = process.env.USEAVIBE_RED_CMD   // harness level-2 tests only
-    ?? (specs ? `PLAYWRIGHT_JSON_OUTPUT_NAME=${JSON.stringify(pwJson)} bash scripts/useavibe/e2e-container.sh ${specs}`
-      : `npx vitest run ${units}`);
-  const r = spawnSync('bash', ['-c', redCmd], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    ?? (specList.length
+      ? `PLAYWRIGHT_JSON_OUTPUT_NAME=${JSON.stringify(redJson)} bash scripts/useavibe/e2e-container.sh ${specList.join(' ')} --reporter=list,json`
+      : `npx vitest run ${unitList.join(' ')} --reporter=default --reporter=json --outputFile.json=${JSON.stringify(redJson)}`);
+  const r = spawnSync('bash', ['-c', redCmd], {
+    cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, env: { ...process.env, USEAVIBE_RED_JSON: redJson },
+  });
   const out = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim().split('\n').slice(-25).join('\n');
   writeFileSync(path.join(logDir, `${active.id}-red.log`), out);
   if (r.status === 0) {
     record({ result: 'green-before-fix', attempt: runs.length, fingerprint: fp });
     fail(`the new acceptance tests PASS before any fix — stop and report (problem fixed already or misdescribed):\n${out}`);
   }
-  record({ result: 'red', attempt: runs.length, fingerprint: fp });
-  fail(`red check confirmed — the new acceptance tests fail before the fix (not counted as an attempt):\n${out}\n` +
-    'Quote this failing output in your report, then implement the fix.');
+  const failedTests = failedOwnTests(redJson, [...specList, ...unitList]);
+  if (!failedTests?.length) {
+    record({ result: 'red-error', attempt: runs.length, fingerprint: fp });
+    fail(`red check could not run — ${failedTests ? 'no test of the new files failed or ran' : 'no test report'} ` +
+      `(exit ${r.status}; infrastructure such as the image build or container, or the test files do not load). ` +
+      'Not counted as an attempt and not red evidence.\n' + `${out}\n` +
+      (priorErrors ? 'Second time on the unchanged tree: end with "## Blocked" (red check not possible) and quote this output.'
+        : 'If the test files are at fault, fix them; otherwise end the turn once more to retry.'));
+  }
+  record({ result: 'red', attempt: runs.length, fingerprint: fp, failed_tests: failedTests });
+  fail(`red check confirmed — ${failedTests.length} new test(s) fail before the fix (not counted as an attempt): ` +
+    `${failedTests.join('; ')}\n${out}\nQuote this failing output in your report, then implement the fix.`);
 }
 
 const attempt = runs.length + 1;

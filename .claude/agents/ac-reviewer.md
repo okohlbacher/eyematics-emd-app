@@ -16,7 +16,10 @@ Report ONLY these findings, each with evidence (file:line or command output) and
 (c) an earlier-cycle scenario, registry requirement (UIR-*), EMDREQ requirement or acceptance-test case now at risk — name it;
 (d) a test that passes trivially — mocked component, presence-only assertion, expected value copied from the implementation,
     changed or weakened existing test;
-(e) a security-relevant change — auth, data access, site restriction, input handling, secrets.
+(e) a security-relevant change — auth, data access, site restriction, input handling, secrets;
+(f) state the change sets that is not reset where its scope ends (unmount, navigation away, logout, browser Back), so a
+    page outside the problem's scope now behaves differently — name the state and the path that shows it;
+(g) an expected result the implementation chose although the .feature leaves it open (e.g. an unstated sort key).
 
 No style, naming or architecture comments. If there is nothing to report, answer exactly
 "No gaps against <ID>.feature and PLAN §<ID>" and nothing else.

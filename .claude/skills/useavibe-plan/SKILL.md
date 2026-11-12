@@ -19,13 +19,23 @@ For every problem to implement write `## <ID>` with:
 3. **Proposed change** — ≤ 5 sentences, minimal, naming every file to touch.
 4. **Regression risk** — earlier-cycle scenarios on the same components (file, scenario name); registry requirements
    at risk, listed with the command of `/uat-implement` §1 for the files you will touch; affected EMDREQ IDs and
-   acceptance-test cases (`AT-…`). If the change would contradict a Pflichtenheft requirement, flag it under Conflicts.
+   acceptance-test cases (`AT-…`). Read each listed registry entry (`handoff/requirements/*.yaml`): if the change
+   would make its statement or `browser` expectation untrue, that is a conflict, not only a risk — flag it under
+   Conflicts, as for a contradicted Pflichtenheft requirement or earlier scenario. Every statement that a test or
+   `AT-…` case is, or is not, affected cites the `file:line` you opened; a search hit alone is not evidence.
 5. **Test approach per scenario** — Playwright (`tests/acceptance/Z$ARGUMENTS/<ID>.spec.ts`, title `[<ID>] <scenario>`)
    or Vitest for pure logic; selectors, synthetic data, `@visual` scenarios that need the human/agent browser pass.
 6. **Size** S/M/L and dependencies on other problems.
 
-Then `## Order` (with justification), `## Conflicts` (between problems, or with Pflichtenheft/Lastenheft/earlier
-scenarios — never resolve them yourself) and `## Open questions` (everything the study team must decide; no assumptions).
+Then `## Order` (with justification), `## Conflicts` (between problems, or with Pflichtenheft/Lastenheft, registry
+requirements or earlier scenarios — never resolve them yourself) and `## Open questions` (everything the study team must
+decide; no assumptions). Where the problem and its scenarios leave a choice open that users would see or the tests
+would check (e.g. a default value, a label or message, how far a change reaches), ask it as a question; the proposed
+change names the options, not your pick. Do not ask what is yours to decide: code structure (where a helper lives,
+which of two equivalent implementations), test set-up, and the English counterpart of a German text — every UI text
+change applies to both UI languages; propose the English text and test both languages. Defects you find next to a
+problem go under `## Observed, not changed`, unless they share the problem's root cause or would leave the fixed flow
+showing the user inconsistent data; only then ask whether they are in scope.
 Write each conflict and question as one item `- **C<n>:** …` / `- **Q<n>:** …`, followed by an indented empty
 `  Answer:` line for the study team (`useavibe plan-approve` refuses while an item has no answer, O-27). In a problem's
 section, name the items it depends on (`Depends on: C1, Q1`).
