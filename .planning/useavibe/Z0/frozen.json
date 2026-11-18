@@ -1,12 +1,72 @@
 {
   "files": {
-    ".planning/useavibe/Z0/PROBLEMS.md": "a42fa3cfe89b00da96507daab1653e082f2d9a817a196eeb01c93543a0c24bea"
+    ".planning/useavibe/Z0/PROBLEMS.md": "a42fa3cfe89b00da96507daab1653e082f2d9a817a196eeb01c93543a0c24bea",
+    "acceptance/Z0/Z0-P01.feature": "b7451becf3b6b5e3787502ae808063c4fa0279daebc0b5e02993e335d0d650ac",
+    "acceptance/Z0/Z0-P02.feature": "4bddb279e9a67b519caaf025396426680f133808bed2e1994598d9e547c5823f",
+    "acceptance/Z0/Z0-P03.feature": "434d7eff5b2bf7c22d96c094978bf8bc2b11fc8cfd56534a0826d034f13c5d34",
+    "acceptance/Z0/Z0-P04.feature": "d12c302a1b78676325d2ff66ab01bde7af0a0c2afd5aa0609eb2049389493ae6",
+    "acceptance/Z0/Z0-P05.feature": "643540d49ff633fac0151fff6e5e94594a0e7e49f6104c0f0e11c193cf60b445",
+    "acceptance/Z0/Z0-P06.feature": "d6cda32f15c0b4eb520022fe264d253d9f37dbef393131878fd185fbac48f808",
+    "acceptance/Z0/Z0-P07.feature": "e28c40e235fbee3639f72db916316eddec3ada2c0e5d31681b39c762b51bc95c",
+    "acceptance/Z0/Z0-P08.feature": "688a150143ea92680339877cee1792b71ef4dc2e660b8f0129b5d9d897e8fdc9",
+    "acceptance/Z0/Z0-P09.feature": "c7c29354e16f1632b21930a4511ed1b1c05b6c66d2b2a15f130cbad5abb4a4f7",
+    "acceptance/Z0/Z0-P10.feature": "5fdec5393fd7686bc2bd437209de4a9a00c83a541d2173c3eb8c8b75b24013c3",
+    "acceptance/Z0/Z0-P11.feature": "866de649b52460e605da8203b67adc4cfcb07336c861143bebc3510cfc0c4566",
+    "acceptance/Z0/Z0-P12.feature": "cd3ff96703a4a610aecf849a9ca471e75c89cc475904e24918e18bd927ca5876",
+    "acceptance/Z0/Z0-P13.feature": "ea0f7beb85dd4d88d06ad56b493707a5181e1aa6ddb4c8da6163083d5db9ba78",
+    "acceptance/Z0/Z0-P14.feature": "adc72631972110dbd32d7ac1b1c0a174d6a598318a6b34733c3d8033395a8c96",
+    "acceptance/Z0/Z0-P15.feature": "4ca7a0f9ad55ae503a290f1631b52a4c5275fb69682de1e9acd716075fe2a618",
+    "acceptance/Z0/Z0-P16.feature": "dcd02be57fdaf096294c34c3e9e73b8cb1a9f87d36797f2f33c7b54f1dcaedf0",
+    "acceptance/Z0/Z0-P17.feature": "a41a2390cfe0a6a8e5c82d8db7f4ee3b1f9ce9d71a7cee09a669693b025e7247",
+    "acceptance/Z0/Z0-P18.feature": "847963a124b57c546a031a516d98d0922ae826831ece44e0f5c62b299dbd7e26",
+    "acceptance/Z0/Z0-P19.feature": "f042f320aabc6af06d9daa31572df917e22baa73ac806c7c0f2c531128f7caf5",
+    "acceptance/Z0/Z0-P20.feature": "2f85e95c7a83bc4930a271a17a7d93d5bc9dac29da73227c96b5c77510e4c2ac",
+    "acceptance/Z0/Z0-P21.feature": "9b1aab52b71b07c9ec96f541d368ab72945cdc880656a3dd9007188123ca79ea",
+    "acceptance/Z0/Z0-P22.feature": "528d902d267c564c2d4425da859c479024e3c46ad6af741806bda1a70806a15c",
+    "acceptance/Z0/Z0-P23.feature": "2bbe5d830a38a9401be5c6d08efbc77ddfd8ea89c3fbf83e15d877e2f6075d7f",
+    "acceptance/Z0/Z0-P24.feature": "0259ce3cf4204efc536a4961a44e019dcacb85703aa4bfa829e8453783be6803",
+    "acceptance/Z0/Z0-P25.feature": "54187f8dd82dacd237cd14b49ac3db68ce269cbff3fc297b66d39219ae44dbf5",
+    "acceptance/Z0/Z0-P26.feature": "09bf49df7fc8778849d1f2b69bf4daa353e172e09e9913b02679f9fa07b457f9"
   },
   "events": [
     {
       "ts": "2026-11-18T11:54:51Z",
       "kind": "problem-list freeze",
       "files": [
+        ".planning/useavibe/Z0/PROBLEMS.md"
+      ],
+      "operator": "NF"
+    },
+    {
+      "ts": "2026-11-18T12:07:02Z",
+      "kind": "criteria-freeze",
+      "files": [
+        "acceptance/Z0/Z0-P01.feature",
+        "acceptance/Z0/Z0-P02.feature",
+        "acceptance/Z0/Z0-P03.feature",
+        "acceptance/Z0/Z0-P04.feature",
+        "acceptance/Z0/Z0-P05.feature",
+        "acceptance/Z0/Z0-P06.feature",
+        "acceptance/Z0/Z0-P07.feature",
+        "acceptance/Z0/Z0-P08.feature",
+        "acceptance/Z0/Z0-P09.feature",
+        "acceptance/Z0/Z0-P10.feature",
+        "acceptance/Z0/Z0-P11.feature",
+        "acceptance/Z0/Z0-P12.feature",
+        "acceptance/Z0/Z0-P13.feature",
+        "acceptance/Z0/Z0-P14.feature",
+        "acceptance/Z0/Z0-P15.feature",
+        "acceptance/Z0/Z0-P16.feature",
+        "acceptance/Z0/Z0-P17.feature",
+        "acceptance/Z0/Z0-P18.feature",
+        "acceptance/Z0/Z0-P19.feature",
+        "acceptance/Z0/Z0-P20.feature",
+        "acceptance/Z0/Z0-P21.feature",
+        "acceptance/Z0/Z0-P22.feature",
+        "acceptance/Z0/Z0-P23.feature",
+        "acceptance/Z0/Z0-P24.feature",
+        "acceptance/Z0/Z0-P25.feature",
+        "acceptance/Z0/Z0-P26.feature",
         ".planning/useavibe/Z0/PROBLEMS.md"
       ],
       "operator": "NF"
