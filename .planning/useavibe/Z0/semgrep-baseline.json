@@ -1,6 +1,0 @@
-{
-  "ts": "2026-11-18T10:09:55Z",
-  "findings": [
-    "planning.useavibe..cache.semgrep.javascript.express.security.audit.express-res-sendfile.express-res-sendfile|server/fhirApi.ts|c7959891b52dd7bc"
-  ]
-}
