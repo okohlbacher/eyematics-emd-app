@@ -46,7 +46,7 @@
     "handoff/rounds/v1.19/verification.yaml": "c85af1942facc8c8ab5d39ff51f50277a627c4f6ec5141ef381bc2c8637cd014",
     "playwright.config.ts": "c3db666e910167f9cc6a3740a8c952e21bfabee8899baf11b31faa84b815040b",
     "scripts/requirements-check.mjs": "87190bb551d9b8ea7ea2de0506195299cdc535e973c4f67fe8eb1a51dfbd28f4",
-    "scripts/useavibe/activate.mjs": "007a1520f2304f7553d9a4637d6b8ea0e3ee779a725cdb6409133db6f738601b",
+    "scripts/useavibe/activate.mjs": "cff6b1d0cc92c5a703aea5f43ae4a61e8ef5e6f96208d3aab044a5726b179262",
     "scripts/useavibe/deploy-smoke.mjs": "bbb49bdca78578ac13c99ea588bd99d8c6bc4b29b09eab13302bbea17fbf8e30",
     "scripts/useavibe/e2e-container.sh": "f3a19c6b1bdefb450ef8d890f3de3cbe4ecd23862e9a06393c94b2c5ab30f056",
     "scripts/useavibe/gate.mjs": "ff6239a44e1a32912813e098ef648369b135a8490d129e63306b55ad0fc81851",

@@ -28,9 +28,10 @@ if (args.includes('--review')) {
   process.exit(0);
 }
 
-// Last gate entry of the active problem; review verdicts (step 5) come after the passing gate and do not count.
+// Last gate entry of the active problem; review verdicts (step 5) and re-checks (O-26 a: unchanged tree after a pass,
+// so they only confirm it) come after the passing gate and do not count.
 const lastGate = (a) => readJsonl(path.join(root, STATE_DIR, `Z${a.cycle}`, 'attempts.jsonl'))
-  .filter((r) => r.id === a.id && r.result !== 'review').at(-1);
+  .filter((r) => r.id === a.id && !['review', 'recheck'].includes(r.result)).at(-1);
 
 if (args.includes('--commit')) {
   // The session's sandbox hides the workspace, so the pseudonym pre-commit guard cannot run there (O-25): the session
