@@ -111,7 +111,7 @@ requirements:
     status: implemented
     sources: ["spec: EMDREQ-KOH-002 / N02.02", "manual: Benutzerhandbuch §4.1"]
     evidence:
-      - "src/pages/CohortBuilderPage.tsx:685-740 (number inputs Min/Max; ageRange [min, max ?? 120] / [min ?? 0, max])"
+      - "src/pages/CohortBuilderPage.tsx:685-740 (number inputs Min/Max; ageRange [min | null, max | null]; an empty field is an open bound, Z0-P01)"
       - "shared/patientCases.ts:143-146 (applyFilters age predicate via getAge)"
     tests: []
     browser:
@@ -121,7 +121,7 @@ requirements:
         - "Under \"Alter (Jahre)\" type 60 into \"Min\" and 70 into \"Max\"."
         - "Read the \"Alter\" column of every row and the count line."
       expect: "\"Kohorte: N Fälle\" drops and every row shows an age between 60 and 70 inclusive."
-    notes: "tests/cohortFilterPersistence.test.tsx 'typing an age filter writes JSON…' asserts the input binds to ageRange but not the narrowing of the list. Default upper bound when only Min is set is 120."
+    notes: "tests/cohortFilterPersistence.test.tsx 'typing an age filter writes JSON…' asserts the input binds to ageRange but not the narrowing of the list. An empty Min or Max is an open bound; there is no default upper bound of 120 (amended per Z0 C1 after Z0-P01)."
   - id: UIR-COH-007
     title: "Visus range filter accepts comma or dot decimals"
     statement: "The user can enter a visus range (0.0–1.0, decimal with comma or dot; placeholders \"0,0\" and \"1,0\") and the case list narrows accordingly."
@@ -355,7 +355,7 @@ requirements:
         - "On /quality flag one case (note its pseudonym) and leave the flag open."
         - "Open /cohort, click \"Markierte Qualitätsfälle\", then \"Detailansicht\"."
       expect: "The table lists the flagged pseudonym and only cases with an open flag; the count equals the number of cases with open flags."
-    notes: "The flagged-id set is snapshotted when the preset is clicked; a flag opened afterwards requires re-clicking the preset. Saving this preset and re-running it via \"Ausführen\" or handing it to \"Kohorte analysieren\" is defective — see UIR-COH-035 and UIR-COH-027."
+    notes: "The flagged-id set is snapshotted when the preset is clicked; a flag opened afterwards requires re-clicking the preset. Saving this preset and re-running it via \"Kohorte „<Name>“ laden\" or handing it to \"Kohorte analysieren\" is defective — see UIR-COH-035 and UIR-COH-027."
   - id: UIR-COH-018
     title: "Excluded cases are absent from the cohort list"
     statement: "The Kohortenbildung page does not include cases that were excluded on the Datenqualität page."
@@ -709,13 +709,13 @@ requirements:
       expect: "After step 3 the button reads \"Nach Name\" and rows are ordered alphabetically; clicking again restores newest-first with the label \"Nach Datum\"."
     notes: "The button text shows the active sort mode, not the target mode."
   - id: UIR-COH-035
-    title: "\"Ausführen\" re-applies a saved search"
-    statement: "The user can re-execute a saved search via \"Ausführen\"; its filters are loaded into the filter panel and applied to the current data."
+    title: "\"Kohorte „<Name>“ laden\" re-applies a saved search"
+    statement: "The user can re-execute a saved search via its load button \"Kohorte „<Name>“ laden\" (label until Z0-P02: \"Ausführen\"); its filters are loaded into the filter panel and applied to the current data."
     status: partial
     sources: ["spec: EMDREQ-KOH-006 / N09.03", "manual: Benutzerhandbuch §4.3", "code: src/pages/CohortBuilderPage.tsx:365-369,513-519"]
     evidence:
       - "src/pages/CohortBuilderPage.tsx:365-369 (handleLoadSearch: setFilters(s.filters) raw; closes panel; does NOT set visusMinText/visusMaxText; does NOT pass through safePickCohortFilter)"
-      - "src/pages/CohortBuilderPage.tsx:513-519 (Play button title 'Ausführen')"
+      - "src/pages/CohortBuilderPage.tsx:513-519 (Play button; title and accessible name 'Kohorte „<Name>“ laden' per Z0-P02, before: 'Ausführen')"
       - "src/pages/CohortBuilderPage.tsx:182-197 (visus text state only seeded from sessionStorage on mount)"
       - "server/dataApi.ts:157-189 + shared/savedSearchSanitize.ts:59-62 (server returns flaggedCaseIds as string[] wire form)"
       - "shared/patientCases.ts:174 (applyFilters calls filters.flaggedCaseIds?.has → TypeError on an array; probe-verified: 'filters.flaggedCaseIds?.has is not a function')"
@@ -726,8 +726,8 @@ requirements:
       steps:
         - "Save a search \"Visus Test\" with \"AMD (Altersbedingte Makuladegeneration)\" ticked and visus 0,2–0,6."
         - "Click \"Zurücksetzen\"."
-        - "Open \"Gespeicherte Suchen (n)\" and click the \"Ausführen\" (play) icon on \"Visus Test\"."
-        - "Click \"Zurücksetzen\", click \"Markierte Qualitätsfälle\" (≥1 open flag), save as \"Flag Test\", click \"Zurücksetzen\", then \"Ausführen\" on \"Flag Test\"."
+        - "Open \"Gespeicherte Suchen (n)\" and click the \"Kohorte „Visus Test“ laden\" (play) icon."
+        - "Click \"Zurücksetzen\", click \"Markierte Qualitätsfälle\" (≥1 open flag), save as \"Flag Test\", click \"Zurücksetzen\", then \"Kohorte „Flag Test“ laden\"."
       expect: "Step 3 expected: AMD ticked, visus fields show 0.2 and 0.6 and the count matches. Observed: AMD ticked and the count matches, but both visus fields stay empty although the range is applied. Step 4 expected: preset active with the flagged count. Observed: the page crashes (error boundary) with a TypeError."
     notes: "Two defects: (1) handleLoadSearch does not update visusMinText/visusMaxText; (2) it passes the server's wire-form filters (flaggedCaseIds as array) straight into applyFilters, which calls Set.has — a saved \"Markierte Qualitätsfälle\" search cannot be re-executed. Checkbox, age and CRT inputs populate correctly."
   - id: UIR-COH-036
@@ -851,7 +851,7 @@ requirements:
       - "src/pages/CohortSplitDialog.tsx:160-163 (canConfirm requires ≥2 non-empty groups)"
       - "src/pages/CohortSplitDialog.tsx:165-186 (buildChildName Parent:label; addSavedSearch per group)"
       - "src/pages/CohortSplitDialog.tsx:435-447 (confirm button 'Unterkohorten erstellen' disabled={!canConfirm})"
-      - "src/pages/CohortBuilderPage.tsx:453-530 (saved list is flat; each row has Ausführen + Löschen)"
+      - "src/pages/CohortBuilderPage.tsx:453-530 (saved list is flat; each row has the load button 'Kohorte „<Name>“ laden' (before Z0-P02: 'Ausführen') + Löschen)"
     tests:
       - file: tests/cohortSplitDialog.test.tsx
         name: "confirm creates one child per non-empty group with intersected filters"
@@ -862,8 +862,8 @@ requirements:
       steps:
         - "Click the split icon on a plain cohort \"P\", choose \"Geschlecht\" and click \"Unterkohorten erstellen\"."
         - "Return to /cohort, open \"Gespeicherte Suchen (n)\" and switch to \"Nach Name\"."
-        - "Click \"Ausführen\" on \"P:Weiblich\", then \"Löschen\" on \"P:Männlich\"."
-      expect: "Rows \"P:Männlich\" and \"P:Weiblich\" appear directly after \"P\"; \"Ausführen\" loads the female + parent filters (count matches the preview); \"Löschen\" removes the row. With a parent whose preview has <2 non-empty groups, \"Unterkohorten erstellen\" is disabled."
+        - "Click \"Kohorte „P:Weiblich“ laden\", then \"Löschen\" on \"P:Männlich\"."
+      expect: "Rows \"P:Männlich\" and \"P:Weiblich\" appear directly after \"P\"; the load button loads the female + parent filters (count matches the preview); \"Löschen\" removes the row. With a parent whose preview has <2 non-empty groups, \"Unterkohorten erstellen\" is disabled."
     notes: "The Kohortenbildung list does not nest children; nesting exists only in the Verläufe compare drawer. The confirm label is \"Unterkohorten erstellen\". Adjacency under \"Nach Name\" holds unless another cohort name sorts between \"P\" and \"P:…\"."
   - id: UIR-COH-042
     title: "After split, Verläufe compare opens with children preselected"

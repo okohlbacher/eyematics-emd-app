@@ -41,7 +41,7 @@ test('[AT-KOH-003-02] subcohorts are subsets of the parent cohort; two-level sub
 
   // 2. Ebene: the saved Subkohorte, further divided by one centre
   const sub = page.locator('div.rounded-lg').filter({ has: page.getByText(`${name}:weiblich`, { exact: true }) });
-  await sub.getByTitle('Ausführen').click();
+  await sub.getByRole('button', { name: `Kohorte „${name}:weiblich“ laden`, exact: true }).click(); // label per Z0-P02 (C2 a)
   await expect.poll(() => cohortCount(page), 'saved subcohort reloads the same cases').toBe(n1);
   await filterGroup(page, 'Zentren').getByText('Universitätsklinikum Aachen').click();
   const level2 = await cohortPseudonyms(page);
