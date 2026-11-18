@@ -160,7 +160,8 @@ export interface PatientCase {
 export interface CohortFilter {
   diagnosis?: string[];
   gender?: string[];
-  ageRange?: [number, number];
+  // Z0-P01: either bound may be open (null); [lo, hi] closed tuples from older saved searches stay valid.
+  ageRange?: [number | null, number | null];
   visusRange?: [number, number];
   crtRange?: [number, number];
   centers?: string[];

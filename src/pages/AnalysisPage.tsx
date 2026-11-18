@@ -136,12 +136,12 @@ export default function AnalysisPage() {
         return urlName.length > 80 ? urlName.slice(0, 79) + '…' : urlName;
       }
       const base = t('analysisFilteredCohort');
-      const summary = summarizeCohortFilter(filters);
+      const summary = summarizeCohortFilter(filters, locale);
       const full = summary ? `${base} · ${summary}` : base;
       return full.length > 80 ? full.slice(0, 79) + '…' : full;
     }
     return null;
-  }, [activeSavedSearch, searchParams, filters, t]);
+  }, [activeSavedSearch, searchParams, filters, t, locale]);
 
   const cohort = useMemo(() => {
     const s = getSettings();

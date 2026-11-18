@@ -144,7 +144,9 @@ export function applyFilters(
     }
     if (filters.ageRange) {
       const age = getAge(c.birthDate);
-      if (age < filters.ageRange[0] || age > filters.ageRange[1]) return false;
+      const [lo, hi] = filters.ageRange;
+      if (lo != null && age < lo) return false;
+      if (hi != null && age > hi) return false;
     }
     if (filters.visusRange) {
       const latest = getLatestObservation(c.observations, LOINC_VISUS);

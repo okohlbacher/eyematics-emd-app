@@ -210,6 +210,13 @@ const translations = {
   cohortSummaryVisusRange: { de: 'Visusbereich', en: 'Visual acuity range' },
   cohortSummaryCenters: { de: 'Zentren', en: 'Centers' },
   cohortSummaryNoData: { de: 'Keine Fälle ausgewählt', en: 'No cases selected' },
+  // Z0-P01 Q1: localised filter summary (summarizeCohortFilter) — '{n}' is the count.
+  cohortFilterSummarySubtype: { de: 'Subtyp', en: 'Subtype' },
+  cohortFilterSummaryCentersCount: { de: '{n} Zentren', en: '{n} centers' },
+  cohortFilterSummarySide: { de: 'Seite', en: 'Side' },
+  cohortFilterSummaryComorbidity: { de: 'Komorbidität', en: 'Comorbidity' },
+  cohortFilterSummaryMedications: { de: '{n} Medikamente', en: '{n} medications' },
+  cohortFilterSummaryFlagged: { de: '{n} Fälle markiert', en: '{n} cases flagged' },
   yearsShort: { de: 'J.', en: 'yr' },
 
   // Analysis page

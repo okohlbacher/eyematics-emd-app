@@ -45,6 +45,17 @@ import CohortSplitDialog from './CohortSplitDialog';
 type SortField = 'date' | 'name';
 
 /**
+ * Z0-P01: set one age bound (0 = Min, 1 = Max) without touching the other; null = open bound.
+ * The ageRange key is dropped when both bounds are open.
+ */
+function setAgeBound(f: CohortFilter, index: 0 | 1, value: number | null): CohortFilter {
+  const next: [number | null, number | null] = [f.ageRange?.[0] ?? null, f.ageRange?.[1] ?? null];
+  next[index] = value;
+  const { ageRange: _, ...rest } = f;
+  return next[0] == null && next[1] == null ? rest : { ...rest, ageRange: next };
+}
+
+/**
  * Per-code diagnosis chip rendered with the terminology resolver hook (Phase 25 D-19).
  * Extracted so `useDiagnosisDisplay` lives at the top of a component.
  * `system` is undefined here — this map iterates raw codes pulled from
@@ -247,9 +258,10 @@ export default function CohortBuilderPage() {
   const ageError = (() => {
     const min = filters.ageRange?.[0];
     const max = filters.ageRange?.[1];
-    if (min !== undefined && (isNaN(min) || min < 0)) return t('cohortValidationAgeNonNumeric');
-    if (max !== undefined && (isNaN(max) || max < 0)) return t('cohortValidationAgeNonNumeric');
-    if (min !== undefined && max !== undefined && min > max) return t('cohortValidationAgeLowerExceedsUpper');
+    // Z0-P01: either bound may be open (null); lower > upper is checked only when both are set.
+    if (min != null && (isNaN(min) || min < 0)) return t('cohortValidationAgeNonNumeric');
+    if (max != null && (isNaN(max) || max < 0)) return t('cohortValidationAgeNonNumeric');
+    if (min != null && max != null && min > max) return t('cohortValidationAgeLowerExceedsUpper');
     return '';
   })();
 
@@ -694,13 +706,14 @@ export default function CohortBuilderPage() {
                   value={filters.ageRange?.[0] ?? ''}
                   onChange={(e) => {
                     const raw = e.target.value;
+                    // Z0-P01: never fill in the other bound — an empty field is an open bound.
                     if (raw === '') {
-                      clearPresetOnManualEdit((f) => { const { ageRange: _, ...rest } = f; return rest; });
+                      clearPresetOnManualEdit((f) => setAgeBound(f, 0, null));
                       return;
                     }
                     const v = Number(raw);
                     if (isNaN(v)) return; // skip NaN — leave current state so live results don't freeze
-                    clearPresetOnManualEdit((f) => ({ ...f, ageRange: [v, f.ageRange?.[1] ?? 120] }));
+                    clearPresetOnManualEdit((f) => setAgeBound(f, 0, v));
                   }}
                   className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />
@@ -713,16 +726,12 @@ export default function CohortBuilderPage() {
                   onChange={(e) => {
                     const raw = e.target.value;
                     if (raw === '') {
-                      clearPresetOnManualEdit((f) => {
-                        const { ageRange } = f;
-                        if (!ageRange) return f;
-                        return { ...f, ageRange: [ageRange[0], 120] };
-                      });
+                      clearPresetOnManualEdit((f) => setAgeBound(f, 1, null));
                       return;
                     }
                     const v = Number(raw);
                     if (isNaN(v)) return;
-                    clearPresetOnManualEdit((f) => ({ ...f, ageRange: [f.ageRange?.[0] ?? 0, v] }));
+                    clearPresetOnManualEdit((f) => setAgeBound(f, 1, v));
                   }}
                   className="w-20 px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                 />

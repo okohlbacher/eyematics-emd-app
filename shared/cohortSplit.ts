@@ -335,11 +335,12 @@ function rangeGroups(
   // filter would discard the parent's bound and later evaluate against the full
   // dataset (preview count is right because parentCohort is pre-filtered, but the
   // saved object would diverge). C3 review HIGH-1.
-  const parentRange = parentFilter[key] as [number, number] | undefined;
+  // Z0-P01: a parent age bound may be open (null) — treat it as unbounded, not as 0.
+  const parentRange = parentFilter[key] as [number | null, number | null] | undefined;
   return bins.map((bin) => {
     const [binLo, binHi] = rangeFilterForBin(bin, attribute);
     const range: [number, number] = parentRange
-      ? [Math.max(binLo, parentRange[0]), Math.min(binHi, parentRange[1])]
+      ? [Math.max(binLo, parentRange[0] ?? Number.NEGATIVE_INFINITY), Math.min(binHi, parentRange[1] ?? Number.POSITIVE_INFINITY)]
       : [binLo, binHi];
     const filter: CohortFilter = { ...parentFilter, [key]: range };
     const count = applyFilters(parentCohort, filter, filterOptions).length;

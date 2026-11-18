@@ -37,7 +37,8 @@ export function sanitizeSavedSearchFilters(raw: unknown): Record<string, unknown
   }
   if (Array.isArray(parsed['ageRange']) && (parsed['ageRange'] as unknown[]).length === 2) {
     const r = parsed['ageRange'] as unknown[];
-    safe['ageRange'] = [Number(r[0]), Number(r[1])];
+    // Z0-P01: an open bound stays null (Number(null) would turn it into 0).
+    safe['ageRange'] = [r[0] == null ? null : Number(r[0]), r[1] == null ? null : Number(r[1])];
   }
   if (Array.isArray(parsed['visusRange']) && (parsed['visusRange'] as unknown[]).length === 2) {
     const r = parsed['visusRange'] as unknown[];

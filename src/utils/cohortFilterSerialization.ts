@@ -15,6 +15,7 @@
  * prevents prototype pollution from untrusted session/URL payloads. `preset`
  * and `laterality` are restricted to their literal unions.
  */
+import { type Locale, t, type TranslationKey } from '../i18n/translations';
 import type { CohortFilter } from '../types/fhir';
 
 const PRESET_LITERALS = ['therapyBreaker', 'implausibleCrt', 'flaggedQuality', 'implausibleVisus'] as const;
@@ -24,13 +25,18 @@ const LATERALITY_LITERALS = ['OD', 'OS', 'OU'] as const;
  * Whitelist-copy a raw value into a CohortFilter. Returns `{}` for non-object
  * or array input. `flaggedCaseIds` (string[] on the wire) is reconstructed as a Set.
  */
+function openBound(v: unknown): number | null {
+  return v == null ? null : Number(v);
+}
+
 export function safePickCohortFilter(raw: unknown): CohortFilter {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
   const parsed = raw as Record<string, unknown>;
   const safe: CohortFilter = {};
   if (Array.isArray(parsed.diagnosis)) safe.diagnosis = parsed.diagnosis.map(String);
   if (Array.isArray(parsed.gender)) safe.gender = parsed.gender.map(String);
-  if (Array.isArray(parsed.ageRange) && parsed.ageRange.length === 2) safe.ageRange = [Number(parsed.ageRange[0]), Number(parsed.ageRange[1])];
+  // Z0-P01: an open age bound stays null (Number(null) would turn it into 0).
+  if (Array.isArray(parsed.ageRange) && parsed.ageRange.length === 2) safe.ageRange = [openBound(parsed.ageRange[0]), openBound(parsed.ageRange[1])];
   if (Array.isArray(parsed.visusRange) && parsed.visusRange.length === 2) safe.visusRange = [Number(parsed.visusRange[0]), Number(parsed.visusRange[1])];
   if (Array.isArray(parsed.crtRange) && parsed.crtRange.length === 2) safe.crtRange = [Number(parsed.crtRange[0]), Number(parsed.crtRange[1])];
   if (Array.isArray(parsed.centers)) safe.centers = parsed.centers.map(String);
@@ -71,23 +77,29 @@ export function parseCohortFilterJson(raw: string | null): CohortFilter {
  * Set-valued fields (flaggedCaseIds) are summarised as a count to avoid echoing
  * patient identifiers (security: T-42-05).
  *
- * Pure function; does not mutate input; no i18n inside (caller prepends the
- * localised "Gefilterte Kohorte" prefix); throw-only on programmer error.
+ * Pure function; does not mutate input; localised via `locale` (default 'de'; Z0-P01 Q1) — the caller prepends
+ * the localised "Gefilterte Kohorte" prefix; throw-only on programmer error.
  */
-export function summarizeCohortFilter(f: CohortFilter): string {
+export function summarizeCohortFilter(f: CohortFilter, locale: Locale = 'de'): string {
   const parts: string[] = [];
+  const tr = (key: TranslationKey) => t(key, locale);
+  const n = (key: TranslationKey, count: number) => tr(key).replace('{n}', String(count));
 
   if (f.diagnosis && f.diagnosis.length > 0) {
-    parts.push(`Diagnose: ${f.diagnosis.join(', ')}`);
+    parts.push(`${tr('diagnosis')}: ${f.diagnosis.join(', ')}`);
   }
   if (f.diagnosisSubtype && f.diagnosisSubtype.length > 0) {
-    parts.push(`Subtyp: ${f.diagnosisSubtype.join(', ')}`);
+    parts.push(`${tr('cohortFilterSummarySubtype')}: ${f.diagnosisSubtype.join(', ')}`);
   }
   if (f.gender && f.gender.length > 0) {
-    parts.push(`Geschlecht: ${f.gender.join(', ')}`);
+    parts.push(`${tr('gender')}: ${f.gender.join(', ')}`);
   }
   if (f.ageRange) {
-    parts.push(`Alter ${f.ageRange[0]}–${f.ageRange[1]}`);
+    // Z0-P01 Q1: open bounds read "Alter ≥ 70" / "Alter ≤ 60".
+    const [lo, hi] = f.ageRange;
+    if (lo != null && hi != null) parts.push(`${tr('age')} ${lo}–${hi}`);
+    else if (lo != null) parts.push(`${tr('age')} ≥ ${lo}`);
+    else if (hi != null) parts.push(`${tr('age')} ≤ ${hi}`);
   }
   if (f.visusRange) {
     parts.push(`Visus ${f.visusRange[0]}–${f.visusRange[1]}`);
@@ -99,23 +111,25 @@ export function summarizeCohortFilter(f: CohortFilter): string {
     parts.push(`HbA1c ${f.hba1cRange[0]}–${f.hba1cRange[1]}`);
   }
   if (f.centers && f.centers.length > 0) {
-    parts.push(f.centers.length <= 2 ? `Zentren: ${f.centers.join(', ')}` : `${f.centers.length} Zentren`);
+    parts.push(f.centers.length <= 2
+      ? `${tr('centers')}: ${f.centers.join(', ')}`
+      : n('cohortFilterSummaryCentersCount', f.centers.length));
   }
   if (f.preset) {
     parts.push(`Preset: ${f.preset}`);
   }
   if (f.laterality) {
-    parts.push(`Seite: ${f.laterality}`);
+    parts.push(`${tr('cohortFilterSummarySide')}: ${f.laterality}`);
   }
   if (f.hasComorbidity === true) {
-    parts.push('Komorbidität');
+    parts.push(tr('cohortFilterSummaryComorbidity'));
   }
   if (f.medicationCodes && f.medicationCodes.length > 0) {
-    parts.push(`${f.medicationCodes.length} Medikamente`);
+    parts.push(n('cohortFilterSummaryMedications', f.medicationCodes.length));
   }
   // flaggedCaseIds: count only — never echo raw identifiers (T-42-05)
   if (f.flaggedCaseIds && f.flaggedCaseIds.size > 0) {
-    parts.push(`${f.flaggedCaseIds.size} Fälle markiert`);
+    parts.push(n('cohortFilterSummaryFlagged', f.flaggedCaseIds.size));
   }
 
   return parts.join(' · ');
