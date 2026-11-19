@@ -37,8 +37,8 @@ requirements:
         - "Observe the tab strip under the header: \"Visus\" (underlined/active), \"CRT\", \"Behandlungsintervall\", \"Responder\"."
         - "Click \"CRT\"."
         - "Click into the \"CRT\" tab to focus it and press ArrowRight; then press ArrowLeft once."
-      expect: "After step 3 the URL contains metric=crt and the OD panel y-axis title reads 'Δ µm' (a metric switch resets to Δ/days). After ArrowRight the \"Behandlungsintervall\" tab is active (metric=interval) and is document.activeElement with tabIndex 0; after the single ArrowLeft the \"CRT\" tab is active again (metric=crt) and is document.activeElement with tabIndex 0."
-    notes: "The keyboard handler fires on the focused tab button; non-active tabs have tabIndex -1, so Tab-key focus lands only on the active tab. Switching to Visus/CRT also resets the Y-metric to Δ and the X-axis to days (explicit layer toggles survive, see UIR-TRAJ-019). Known deviation (backlog, found 2026-10-08): focus does not follow the selection — after ArrowRight document.activeElement stays on the previously focused tab (tabIndex -1) and handleMetricKeyDown (useOutcomesRouteState.ts:499-507) computes the next tab from the focused one, so a second press is off by one (CRT → ArrowRight → ArrowLeft lands on Visus, not CRT; ArrowRight twice stays on Behandlungsintervall). The focus check in expect fails until this is fixed; tests/metricSelector.test.tsx:122-147 fire a single keyDown only."
+      expect: "After step 3 the URL contains metric=crt and the OD panel y-axis title reads 'Δ µm' (default Δ/days; since Z0-P06 a metric switch keeps the current x-axis/y-mode/layers instead of resetting them, see UIR-TRAJ-020). After ArrowRight the \"Behandlungsintervall\" tab is active (metric=interval) and is document.activeElement with tabIndex 0; after the single ArrowLeft the \"CRT\" tab is active again (metric=crt) and is document.activeElement with tabIndex 0."
+    notes: "The keyboard handler fires on the focused tab button; non-active tabs have tabIndex -1, so Tab-key focus lands only on the active tab. Since Z0-P06 (C7, Q24 b, 2026-11-19) switching the metric tab no longer resets the Y-metric to Δ and the X-axis to days; all chart settings survive (UIR-TRAJ-019/-020). Known deviation (backlog, found 2026-10-08): focus does not follow the selection — after ArrowRight document.activeElement stays on the previously focused tab (tabIndex -1) and handleMetricKeyDown (useOutcomesRouteState.ts:531-539) computes the next tab from the focused one, so a second press is off by one (CRT → ArrowRight → ArrowLeft lands on Visus, not CRT; ArrowRight twice stays on Behandlungsintervall). The focus check in expect fails until this is fixed; tests/metricSelector.test.tsx:122-147 fire a single keyDown only."
   - id: UIR-TRAJ-002
     title: "Header buttons Kohorten vergleichen and Diagramm-Anzeige"
     statement: "The Verläufe header has a \"Kohorten vergleichen\" button and a \"Diagramm-Anzeige\" button with a tooltip listing the drawn layers and axes, aria-expanded and aria-controls=outcomes-settings-drawer."
@@ -432,7 +432,8 @@ requirements:
     sources: ["UAT v1.13 F3; v1.14 I2", "code: src/components/outcomes/useOutcomesRouteState.ts:221-266,347-367,416-442", "manual: .planning/v1.20-ROADMAP.md v1.20.2"]
     evidence:
       - "src/components/outcomes/useOutcomesRouteState.ts:225,231 — perPatient/scatter override refs; 241-266 setLayersWithOverride marks refs + persists; 347-367 cohort-change effect (fires on any searchParams change) skips overridden layers; 416-442 resetToMetricDefaults keeps overridden layer values"
-      - "src/components/outcomes/useOutcomesRouteState.ts:182-184,225-231 — on a remount (new ?cohort= via address bar) the override is re-armed only from that cohort's persisted sessionStorage entry"
+      - "src/components/outcomes/useOutcomesRouteState.ts:237-238,282,288 — on a remount (e.g. new ?cohort= via address bar) the override is re-armed from the session-wide persisted entry (Z0-P06), so it applies to every cohort"
+      - "src/components/outcomes/useOutcomesRouteState.ts:520-529 — Z0-P06 (Q24 b): handleMetricChange no longer resets axis/y/layers"
     tests:
       - file: tests/OutcomesPerfI2.test.tsx
         name: "keeps a manually-enabled scatter layer ON across a metric switch on a large cohort"
@@ -446,17 +447,18 @@ requirements:
         - "Click \"Kohorten vergleichen\", tick two saved cohorts (compare mode), then click \"Einzelne Kohorte anzeigen\"."
         - "Re-open \"Diagramm-Anzeige\"."
       expect: "After step 2 the dots are still drawn and \"Streupunkte\" stays ticked; in compare mode (step 3) per-cohort coloured dots are drawn; after returning to the single cohort the dots are still drawn and the checkbox is still ticked (the size-derived OFF default is not re-applied)."
-    notes: "Changing ?cohort= in the address bar reloads/remounts the view: the in-memory override is gone and the new cohort uses its own sessionStorage entry (UIR-TRAJ-020), so an override made on cohort A does not carry over to cohort B. Compare-selection survival is not covered by tests (only metric switch and remount restore)."
+    notes: "Since Z0-P06 (C7, Q24 a/c, 2026-11-19) the persisted state is session-wide (UIR-TRAJ-020): changing ?cohort= remounts the view, and the explicit override made on cohort A is restored for cohort B too; an explicit choice still wins over the size-derived default. Compare-selection survival is not covered by tests (only metric switch and remount restore)."
   - id: UIR-TRAJ-020
-    title: "View state persists per cohort when leaving and returning"
-    statement: "The UI persists axis, Y-metric, grid and toggled layers per cohort in sessionStorage 'emd.outcomesView.v1.<cohortId|__adhoc__>' and restores them on return to Verläufe; metric is not restored."
+    title: "View state persists for the session across cohorts, metric tabs and navigation"
+    statement: "The UI persists axis, Y-metric, grid, explicitly toggled layers and the header's centre selection session-wide (one sessionStorage key 'emd.outcomesView.v1.session', not per cohort), restores them on return to Verläufe and for any other cohort, keeps them across metric-tab switches, and clears them on logout/session end; metric is not restored."
     status: partial
-    sources: ["UAT v1.15 J2", "code: src/components/outcomes/outcomesViewStatePersist.ts:25-75", "code: src/components/outcomes/useOutcomesRouteState.ts:177-219,466-497"]
+    sources: ["UAT v1.15 J2", "Z0-P06 (C7, Q24 a/b/c, NF 2026-11-19)", "code: src/components/outcomes/outcomesViewStatePersist.ts:28-92", "code: src/components/outcomes/useOutcomesRouteState.ts:232-317,489-529"]
     evidence:
-      - "src/components/outcomes/outcomesViewStatePersist.ts:25-40 — prefix emd.outcomesView.v1, __adhoc__ fallback; 43-75 read/write merge"
-      - "src/components/outcomes/useOutcomesRouteState.ts:182-184 — read once at mount; 193-196,208-219 seed axis/y/grid/spread/layers from persisted; 256-261 persist explicit layer toggles; 466-486 persisting axis/y/grid setters; 494-496 metric written"
-      - "src/components/outcomes/useOutcomesRouteState.ts:273-277 — activeMetric derived from URL only; persisted.metric is never read"
-      - "src/components/outcomes/useOutcomesRouteState.ts:416-424 — the metric-switch reset to days/delta uses the non-persisting setters, so storage keeps the previous explicit axis/Y choice"
+      - "src/components/outcomes/outcomesViewStatePersist.ts:28,43 — one session-wide key emd.outcomesView.v1.session (cohort id accepted but ignored); 49-85 read/write merge (empty layers patch clears); 88-92 clearPersistedViewState"
+      - "src/components/outcomes/useOutcomesRouteState.ts:237-238 — read once at mount; 248-251,268 seed axis/y/grid/spread/layers from persisted; 313-317 persist explicit layer toggles; 489-492 reset clears layers; 495-516 persisting axis/y/grid setters; 520-529 metric switch keeps settings, metric written"
+      - "src/pages/AnalysisPage.tsx:267-271 — the header's centre selection is read from / written to the same store"
+      - "src/context/AuthContext.tsx:165, src/services/authHeaders.ts:38,131 — store cleared on logout, sibling-tab logout and refresh failure"
+      - "activeMetric is derived from ?metric= only; persisted.metric is never read"
     tests:
       - file: tests/outcomesViewStatePersist.test.ts
         name: "round-trips axis/y/grid/metric for a cohort"
@@ -466,14 +468,18 @@ requirements:
         name: "persists an explicit toggle so a fresh remount restores it"
       - file: tests/OutcomesViewPersist.test.tsx
         name: "a cohort with NO persisted choice keeps the size-derived default (scatter OFF on large)"
+      - file: tests/acceptance/Z0/Z0-P06.test.ts
+        name: "[Z0-P06] all settings (axis, y-mode, grid, layers, centres) are shared by every cohort"
     browser:
       route: "/analysis?tab=trajectories"
       steps:
         - "Open Analyse → \"Verläufe\" (no ?cohort=); click \"Diagramm-Anzeige\"; tick \"Streupunkte\", select \"Anzahl Behandlungen\", set the slider to 200."
         - "In the sidebar open \"Startseite\", then return via the sidebar to \"Analyse\" and click the \"Verläufe\" tab."
-        - "Click \"Diagramm-Anzeige\"; in DevTools → Session Storage open key 'emd.outcomesView.v1.__adhoc__'."
-      expect: "Step 3: \"Streupunkte\" ticked, \"Anzahl Behandlungen\" selected, '200 Stützstellen'; the stored JSON contains axisMode 'treatments', gridPoints 200 and layers.scatter true. Note: the active metric is NOT restored from storage — returning without ?metric= shows \"Visus\"."
-    notes: "Partial: metric is written to storage (handleMetricChange) but never read back; the active metric comes solely from ?metric=. Returning via the sidebar lands on the \"Aggregiert\" tab first. A metric-tab switch resets axis/Y in memory without updating storage, so after e.g. CRT→Visus the view shows days/Δ while storage still holds 'treatments'; the stored value is applied again on the next mount."
+        - "Click \"Diagramm-Anzeige\"; in DevTools → Session Storage open key 'emd.outcomesView.v1.session'."
+        - "Click metric tab \"CRT\" and back to \"Visus\"; then open a saved cohort via \"Kohorte wählen\" and re-open \"Diagramm-Anzeige\"."
+        - "Log out and log in again; open \"Verläufe\" and \"Diagramm-Anzeige\"."
+      expect: "Step 3: \"Streupunkte\" ticked, \"Anzahl Behandlungen\" selected, '200 Stützstellen'; the stored JSON contains axisMode 'treatments', gridPoints 200 and layers.scatter true. Step 4: the same settings are still active after the metric switch and for the other cohort. Step 5: the defaults are back (key removed). Note: the active metric is NOT restored from storage — returning without ?metric= shows \"Visus\"."
+    notes: "Partial: metric is written to storage (handleMetricChange) but never read back; the active metric comes solely from ?metric=. Returning via the sidebar lands on the \"Aggregiert\" tab first. Since Z0-P06 (C7, Q24, 2026-11-19) the state is session-wide instead of per cohort ('<cohortId|__adhoc__>' keys are gone) and a metric-tab switch keeps it. Not covered by tests: survival across a metric-tab switch, the centre restore in AnalysisPage, and that the three logout paths call the clear (P06 review, findings-open)."
   - id: UIR-TRAJ-021
     title: "Scatter renders full cloud via WebGL, downsampled only above 6000"
     statement: "The Verläufe scatter renders the full point cloud via WebGL (no 1,500-point cap), downsampling evenly only above 6000 points per panel with a console.info line, and stays responsive."
