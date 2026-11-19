@@ -35,9 +35,10 @@ describe('outcomesViewStatePersist', () => {
     expect(got?.metric).toBe('crt');
   });
 
-  it('keys state PER cohort (one cohort does not see another cohort state)', () => {
+  // Z0-P06 (C7, released by the study team, NF 2026-11-18/19): settings are session-wide, not per cohort.
+  it('keeps state per session, not per cohort (another cohort sees the same state)', () => {
     writePersistedViewState('cohort-a', { axisMode: 'treatments' });
-    expect(readPersistedViewState('cohort-b')).toBeNull();
+    expect(readPersistedViewState('cohort-b')?.axisMode).toBe('treatments');
   });
 
   it('merges layer patches rather than replacing the whole layers object', () => {

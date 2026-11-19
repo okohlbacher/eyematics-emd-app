@@ -461,7 +461,7 @@ requirements:
       - file: tests/outcomesViewStatePersist.test.ts
         name: "round-trips axis/y/grid/metric for a cohort"
       - file: tests/outcomesViewStatePersist.test.ts
-        name: "keys state PER cohort (one cohort does not see another cohort state)"
+        name: "keeps state per session, not per cohort (another cohort sees the same state)"
       - file: tests/OutcomesViewPersist.test.tsx
         name: "persists an explicit toggle so a fresh remount restores it"
       - file: tests/OutcomesViewPersist.test.tsx
