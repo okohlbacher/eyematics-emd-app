@@ -132,6 +132,36 @@ export function resolveCohort(
   return { name: null, cases: activeCases };
 }
 
+/**
+ * Z0-P22: switch the base cohort (?cohort=) from the analysis header's "Kohorte wählen".
+ * `nextId` = a saved cohort id, or null for no saved cohort ("Alle Patienten" / the unsaved filtered cohort).
+ * A running comparison (?cohorts=) is kept: the previous base is replaced by the new one, the other
+ * comparison cohorts stay (deduplicated, capped at 4). `compareBaseId` = the id that takes the base's place in
+ * ?cohorts= (defaults to `nextId`; "Alle Patienten" passes its reserved compare id). Mutates and returns `p`
+ * (setSearchParams updater).
+ */
+export function withBaseCohort(
+  p: URLSearchParams,
+  nextId: string | null,
+  compareBaseId: string | null = nextId,
+): URLSearchParams {
+  // Without ?cohort= and ?filters= the base is "Alle Patienten" (header, Z0-P17), compared as its reserved id.
+  const previous = p.get('cohort') ?? (p.get('filters') === null ? ALL_PATIENTS_COHORT_ID : null);
+  const rawCohorts = p.get('cohorts');
+  if (rawCohorts !== null) {
+    const others = rawCohorts
+      .split(',')
+      .map((s) => s.trim())
+      .filter((id) => id && id !== previous && id !== compareBaseId);
+    const ids = (compareBaseId ? [compareBaseId, ...others] : others).slice(0, 4);
+    if (ids.length > 0) p.set('cohorts', ids.join(','));
+    else p.delete('cohorts');
+  }
+  if (nextId) p.set('cohort', nextId);
+  else p.delete('cohort');
+  return p;
+}
+
 const NO_CENTERS: string[] = [];
 
 type FilterOptions = {

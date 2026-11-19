@@ -1022,6 +1022,8 @@ const translations = {
   // Z0-P17: active-cohort line under the "Kohortenanalyse" title ("Alle Patienten" reuses overlayCohortAllPatients).
   analysisActiveCohort: { de: 'Aktive Kohorte:', en: 'Active cohort:' },
   analysisComparedWith: { de: 'verglichen mit:', en: 'compared with:' },
+  // Z0-P22: cohort selector in the analysis header.
+  analysisSelectCohort: { de: 'Kohorte wählen', en: 'Select cohort' },
 
   // ---- Phase 13: CSV Export (METRIC-05 / D-07) ----
   metricsPreviewExportCsvCrt: { de: 'CSV exportieren (CRT)', en: 'Export CSV (CRT)' },

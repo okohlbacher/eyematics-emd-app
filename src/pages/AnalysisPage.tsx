@@ -36,13 +36,14 @@ import {
 import { CenterMultiSelect } from '../components/common/CenterMultiSelect';
 import OutcomesView from '../components/outcomes/OutcomesView';
 import { COHORT_PALETTES, rechartsTheme } from '../components/outcomes/palette';
-import { distinctPatientCount } from '../components/outcomes/useOutcomesRouteState';
+import { distinctPatientCount, withBaseCohort } from '../components/outcomes/useOutcomesRouteState';
 import { CHART_COLORS } from '../config/clinicalThresholds';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useThemeSafe } from '../context/ThemeContext';
 import { useRecentActivity } from '../hooks/useRecentActivity';
-import { withAllPatientsCohort } from '../services/allPatientsCohort';
+import { ALL_PATIENTS_COHORT_ID, withAllPatientsCohort } from '../services/allPatientsCohort';
+import { groupByParent } from '../services/cohortNames';
 import {
   applyFilters,
   getAge,
@@ -53,11 +54,15 @@ import {
 } from '../services/fhirLoader';
 import { getSettings } from '../services/settingsService';
 import { getCachedDisplay, getCachedFullText } from '../services/terminology';
-import type { CohortFilter, PatientCase } from '../types/fhir';
+import type { CohortFilter, PatientCase, SavedSearch } from '../types/fhir';
 import { parseCohortFilterJson, summarizeCohortFilter } from '../utils/cohortFilterSerialization';
 import { computeCrtDistribution } from '../utils/distributionBins';
 
 type AnalysisTab = 'aggregate' | 'trajectories';
+
+// Z0-P22: "Kohorte wählen" values that are not saved-cohort ids.
+const ALL_PATIENTS_OPTION = '';
+const FILTERED_COHORT_OPTION = '__filtered__';
 
 function isAnalysisTab(v: string | null): v is AnalysisTab {
   return v === 'aggregate' || v === 'trajectories';
@@ -113,37 +118,73 @@ export default function AnalysisPage() {
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps -- mount-only; record/t/savedSearchId are stable at mount
 
-  const filters: CohortFilter = useMemo(() => {
-    // If a saved search is referenced, use its stored filters (KOH-005 / Issue 4 fix).
-    if (activeSavedSearch) return activeSavedSearch.filters;
-    // M-04: explicitly pick known CohortFilter keys to prevent prototype pollution (F-04 shared serializer).
-    return parseCohortFilterJson(searchParams.get('filters'));
-  }, [activeSavedSearch, searchParams]);
+  // M-04: explicitly pick known CohortFilter keys to prevent prototype pollution (F-04 shared serializer).
+  // Z0-P22: ?filters= (the unsaved filtered cohort) stays in the URL while a saved cohort is chosen in
+  // "Kohorte wählen", so it remains selectable; ?cohort= takes precedence.
+  const urlFilters: CohortFilter = useMemo(
+    () => parseCohortFilterJson(searchParams.get('filters')),
+    [searchParams],
+  );
+  // If a saved search is referenced, use its stored filters (KOH-005 / Issue 4 fix).
+  const filters: CohortFilter = activeSavedSearch ? activeSavedSearch.filters : urlFilters;
 
   /**
-   * ANL-012: Display name for the active cohort / filter set.
-   * - Saved search path: activeSavedSearch.name (unchanged)
-   * - Direct ?filters= path with ?name=: use the supplied name (React auto-escapes text content — T-42-06)
-   * - Direct ?filters= path without ?name=: synthesize from t('analysisFilteredCohort') + summarizeCohortFilter
-   * - No cohort/filter active: null (the header names "Alle Patienten", Z0-P17)
+   * ANL-012: name of the unsaved filtered cohort (?filters=), null without one.
+   * - with ?name=: the supplied name (React auto-escapes text content — T-42-06)
+   * - without ?name=: synthesized from t('analysisFilteredCohort') + summarizeCohortFilter
    * Total length is capped at 80 chars with ellipsis to mirror OutcomesView cross-mode truncation.
+   * Z0-P22 (Q26 a): the header and the "Kohorte wählen" option use this same text.
    */
-  const displayCohortName: string | null = useMemo(() => {
-    if (activeSavedSearch) return activeSavedSearch.name;
-    const filtersParam = searchParams.get('filters');
-    if (filtersParam !== null) {
-      const urlName = searchParams.get('name')?.trim();
-      if (urlName) {
-        // User-supplied name — React text content auto-escapes (T-42-06); cap length
-        return urlName.length > 80 ? urlName.slice(0, 79) + '…' : urlName;
-      }
-      const base = t('analysisFilteredCohort');
-      const summary = summarizeCohortFilter(filters, locale);
-      const full = summary ? `${base} · ${summary}` : base;
-      return full.length > 80 ? full.slice(0, 79) + '…' : full;
-    }
-    return null;
-  }, [activeSavedSearch, searchParams, filters, t, locale]);
+  const filteredCohortName: string | null = useMemo(() => {
+    if (searchParams.get('filters') === null) return null;
+    const urlName = searchParams.get('name')?.trim();
+    if (urlName) return urlName.length > 80 ? urlName.slice(0, 79) + '…' : urlName;
+    const base = t('analysisFilteredCohort');
+    const summary = summarizeCohortFilter(urlFilters, locale);
+    const full = summary ? `${base} · ${summary}` : base;
+    return full.length > 80 ? full.slice(0, 79) + '…' : full;
+  }, [searchParams, urlFilters, t, locale]);
+
+  /** ANL-012: display name — saved name, else the filtered cohort, else null ("Alle Patienten", Z0-P17). */
+  const displayCohortName: string | null = activeSavedSearch ? activeSavedSearch.name : filteredCohortName;
+
+  // Z0-P22 (Q16): "Kohorte wählen" options — "Alle Patienten", the unsaved filtered cohort (if any), then the saved
+  // cohorts by name with sub-cohorts indented under their parent.
+  const cohortOptions: Array<{ value: string; label: string }> = useMemo(() => {
+    const byName = (a: SavedSearch, b: SavedSearch) => a.name.localeCompare(b.name, locale);
+    const { parents, flat, subcohortsByParentId } = groupByParent(savedSearches);
+    const saved = [...parents, ...flat].sort(byName).flatMap((s) => [
+      { value: s.id, label: s.name },
+      ...[...(subcohortsByParentId.get(s.id) ?? [])].sort(byName).map((sub) => ({
+        value: sub.id,
+        label: `\u00A0\u00A0\u00A0↳ ${sub.name}`,
+      })),
+    ]);
+    return [
+      { value: ALL_PATIENTS_OPTION, label: t('overlayCohortAllPatients') },
+      ...(filteredCohortName ? [{ value: FILTERED_COHORT_OPTION, label: filteredCohortName }] : []),
+      ...saved,
+    ];
+  }, [savedSearches, filteredCohortName, t, locale]);
+
+  const selectedCohortOption = savedSearchId ?? (filteredCohortName ? FILTERED_COHORT_OPTION : ALL_PATIENTS_OPTION);
+
+  // Z0-P22: choosing a cohort writes ?cohort= (both tabs follow); "Alle Patienten" also drops the filtered cohort.
+  // A running comparison keeps its other cohorts (withBaseCohort); "Alle Patienten" enters it as its reserved id.
+  const selectCohort = useCallback(
+    (value: string) => {
+      setSearchParams((p) => {
+        const savedId = value === ALL_PATIENTS_OPTION || value === FILTERED_COHORT_OPTION ? null : value;
+        const next = withBaseCohort(p, savedId, value === ALL_PATIENTS_OPTION ? ALL_PATIENTS_COHORT_ID : savedId);
+        if (value === ALL_PATIENTS_OPTION) {
+          next.delete('filters');
+          next.delete('name');
+        }
+        return next;
+      });
+    },
+    [setSearchParams],
+  );
 
   const cohort = useMemo(() => {
     const s = getSettings();
@@ -373,6 +414,24 @@ export default function AnalysisPage() {
             </span>
           )}
         </p>
+        {/* Z0-P22: switch the active cohort for both tabs. */}
+        <div className="mt-3 flex items-center gap-2">
+          <label htmlFor="analysis-cohort-select" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t('analysisSelectCohort')}
+          </label>
+          <select
+            id="analysis-cohort-select"
+            value={selectedCohortOption}
+            onChange={(e) => selectCohort(e.target.value)}
+            className="max-w-md rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus-visible:outline-2 focus-visible:outline-blue-600"
+          >
+            {cohortOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Center multi-select — SC-4: client-side narrowing only (server is sole authority). */}
