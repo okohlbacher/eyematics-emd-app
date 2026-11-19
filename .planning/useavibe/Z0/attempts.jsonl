@@ -45,3 +45,6 @@
 {"id":"Z0-P17","ts":"2026-11-19T09:50:17.918Z","head":"91f00022c7f46335992fd88e735616eda5aa8d93","result":"review","verdict":"findings-open"}
 {"id":"Z0-P17","ts":"2026-11-19T09:50:44.669Z","session_id":"8b6af527-a265-45d9-9247-8d26e4b71f84","head":"91f00022c7f46335992fd88e735616eda5aa8d93","result":"recheck","attempt":1,"fingerprint":"5db28bad25c2f19fa46f9384c3b949a7addc2fd5676f813ae032ce4ba4b11539"}
 {"id":"Z0-P22","ts":"2026-11-19T09:55:57.464Z","session_id":"4e7c2356-6851-48ee-b619-1f129100fcff","head":"6293adb7c08138530f2c127843be00bc2b81363f","result":"blocked","attempt":0}
+{"id":"Z0-P05","ts":"2026-11-19T10:00:13.490Z","session_id":"8c9fbdc1-b1ea-481a-960a-3cc9587b2875","head":"91cc78106bece3f1a92990ddd08b409c6df94de5","result":"blocked","attempt":0}
+{"id":"Z0-P05","ts":"2026-11-19T10:04:43.675Z","session_id":"8c9fbdc1-b1ea-481a-960a-3cc9587b2875","head":"91cc78106bece3f1a92990ddd08b409c6df94de5","result":"blocked","attempt":0}
+{"id":"Z0-P05","ts":"2026-11-19T10:08:29.328Z","session_id":"92ac5c51-1394-402e-8e36-eb1780737d4d","head":"91cc78106bece3f1a92990ddd08b409c6df94de5","result":"blocked","attempt":0}

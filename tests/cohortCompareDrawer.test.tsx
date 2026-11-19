@@ -5,6 +5,10 @@ import { afterEach,describe, expect, it, vi } from 'vitest';
 afterEach(cleanup);
 import CohortCompareDrawer from '../src/components/outcomes/CohortCompareDrawer';
 
+// Identity t, except the row-label unit key introduced with Z0-P05 (all drawer rows translated): it renders the
+// English unit, so the row assertions below read the same before and after Z0-P05 (operator amendment, NF 2026-11-19).
+const tUnit = (k: string): string => (k === 'outcomesComparePatientsUnit' ? 'patients' : k);
+
 /**
  * Phase 16 Plan 03 — XCOHORT-01, XCOHORT-03 drawer tests.
  *
@@ -37,7 +41,7 @@ describe('CohortCompareDrawer (Wave 0 scaffold)', () => {
         selectedIds={selected}
         onChange={onChange}
         onReset={onReset}
-        t={(k) => k}
+        t={tUnit}
       />
     );
     return { ...utils, onChange, onReset, onClose };
@@ -90,7 +94,7 @@ describe('CohortCompareDrawer (Wave 0 scaffold)', () => {
         selectedIds={['p2', 'p3']}
         onChange={onChange}
         onReset={vi.fn()}
-        t={(k) => k}
+        t={tUnit}
       />,
     );
     const b = screen.getByLabelText(/Cohort B \(N=17 patients\)/i) as HTMLInputElement;
@@ -113,7 +117,7 @@ describe('CohortCompareDrawer (Wave 0 scaffold)', () => {
         selectedIds={['p2', 'p3']}
         onChange={onChange}
         onReset={vi.fn()}
-        t={(k) => k}
+        t={tUnit}
       />,
     );
     // p1 stands in for the (unselected) parent — addable, not locked.
@@ -164,7 +168,7 @@ describe('CohortCompareDrawer subcohort tree (SC2, SC3, D-R5)', () => {
         selectedIds={selected}
         onChange={onChange}
         onReset={onReset}
-        t={(k) => k}
+        t={tUnit}
       />,
     );
     return { ...utils, onChange, onReset, onClose };
@@ -205,7 +209,7 @@ describe('CohortCompareDrawer subcohort tree (SC2, SC3, D-R5)', () => {
         selectedIds={['flat']}
         onChange={onChange}
         onReset={vi.fn()}
-        t={(k) => k}
+        t={tUnit}
       />,
     );
     const parentCheckbox = screen.getByLabelText(/Cohort1 \(N=100 patients\)/i) as HTMLInputElement;
@@ -230,7 +234,7 @@ describe('CohortCompareDrawer subcohort tree (SC2, SC3, D-R5)', () => {
         selectedIds={['flat']}
         onChange={onChange}
         onReset={vi.fn()}
-        t={(k) => k}
+        t={tUnit}
       />,
     );
     const subCheckbox = screen.getByLabelText(/Cohort1:Male \(N=60 patients\)/i) as HTMLInputElement;
@@ -267,7 +271,7 @@ describe('CohortCompareDrawer subcohort tree (SC2, SC3, D-R5)', () => {
         selectedIds={['c1', 'c1m', 'c1f', 'flat']}
         onChange={onChange}
         onReset={vi.fn()}
-        t={(k) => k}
+        t={tUnit}
       />,
     );
     // All 4 are selected; isMaxReached === true. A non-selected entry (if any) would be disabled.
@@ -298,7 +302,7 @@ describe('CohortCompareDrawer subcohort tree (SC2, SC3, D-R5)', () => {
         selectedIds={['c1', 'c1m', 'c1f', 'flat']}
         onChange={vi.fn()}
         onReset={vi.fn()}
-        t={(k) => k}
+        t={tUnit}
       />,
     );
     // ExtraCohort is the 5th (unselected); max-4 reached — must be disabled

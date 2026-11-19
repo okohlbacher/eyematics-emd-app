@@ -74,7 +74,13 @@ test('[Z0-P17] Vergleich wird im Kopf benannt', async ({ page }) => {
   await openSavedCohortAnalysis(page, 'Testkohorte');
   await openTab(page, 'Verläufe');
   await page.getByRole('button', { name: 'Kohorten vergleichen', exact: true }).click();
-  await page.getByRole('checkbox', { name: /^Vergleichskohorte \(N=/ }).check();
+  const vergleich = page.getByRole('checkbox', { name: /^Vergleichskohorte \(N=/ });
+  await expect(vergleich).toBeVisible();
+  // The scenario compares with "Vergleichskohorte" only; since Z0-P05 "Alle Patienten" is preselected when the
+  // drawer opens, so it is unticked first (operator amendment, NF 2026-11-19).
+  const allPatients = page.getByRole('checkbox', { name: /^Alle Patienten \(N=/ });
+  if ((await allPatients.count()) > 0 && (await allPatients.isChecked())) await allPatients.uncheck();
+  await vergleich.check();
   await expect(activeCohortLine(page)).toHaveText('Aktive Kohorte: Testkohorte · verglichen mit: Vergleichskohorte');
 });
 
