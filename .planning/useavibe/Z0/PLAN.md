@@ -786,6 +786,12 @@ If C8 is answered "no migration", the chart fixes move to step 6 on Plotly. P23 
 - **Q30 (Q15a → P18/P19):** Since one case is one Patient (`shared/patientCases.ts:94`), the question "which case opens" does not arise. The suggestion "show data case-wise, newest first, with pages per case" is a new feature outside P18/P19. Options: (a) record it under "Observed, not changed" for a later cycle; (b) put it in scope for Z0, which needs a problem/scenario definition by the team.
   Answer: a)
 
+### Follow-up questions (round 3, 2026-11-19, from the Z0-P23 Blocked report; addendum after approval)
+- **Q31 (P23 → UIR-CASE-022/-023):** The P23 scenario "Gleiche Achsenbeschriftung in Verläufe und Einzelfallansicht" requires "Visus (logMAR)" and "Netzhautdicke (µm)" in the case view, which today shows decimal Visus (axis 0–1, "Visus", legend "Visus (Dezimal, bestkorrigiert)", "CRT (µm)"; mapped test `tests/VisusCrtChartLabels.test.tsx`). Elsewhere only Verläufe uses logMAR; Aggregiert, case-view distribution/scatter and the cohort-builder filter are decimal; the data are stored as decimal. Options: Visus/CRT chart of the case view only; whole case view; all charts; keep decimal and amend the feature.
+  Answer: Visus/CRT chart of the case view only, converted to logMAR (axis values, tooltip, "Visus Ø", legend). Case-view distribution/scatter, Aggregiert and the filter stay decimal. UIR-CASE-022/-023 are superseded; their mapped tests are released for amendment.
+- **Q32 (P23 → UIR-CASE-013):** The case-view `<select>` "Vergleichskohorte wählen" is replaced by the always-visible "Kohorten vergleichen" button with a radio panel (C11, Q22). Are UIR-CASE-013 and the mapped tests `tests/CaseDetailRound7.test.tsx` "N11: renders a selector listing the patient-containing cohorts" / "N11: omits the selector when there is no real choice (single cohort)" superseded and released?
+  Answer: yes
+
 ## Decisions applied from the study team's answers (2026-11-18)
 Settled answers are applied here per problem; they take precedence over the option lists in the problem sections above. Items that are still ambiguous are only referenced (Q20–Q30). Registry and AT amendments that the team approved (C1–C4, C7–C10, C14–C17) are made in the fix session of the problem that triggers them, in the same commit series, and named in the commit body. The registry-mapped Vitest tests named in C4 and C7 are released for amendment by those answers. No registry or test file is changed during planning.
 
@@ -842,3 +848,4 @@ Settled answers are applied here per problem; they take precedence over the opti
 ## Blocked
 - Nothing is blocked so far. P04, P06, P17 and P23 cannot be completed without answers to C4, C7 and C8, because registry-mapped tests would go red.
 - Update 2026-11-18 (round 2): all items C1–C17 and Q1–Q30 are answered. Nothing is blocked. The only remaining conditional path is the P23 performance fallback (Q21 b), which is decided by measurement in the P23 session.
+- Update 2026-11-19 (round 3): the Z0-P23 session blocked on UIR-CASE-022/-023 and UIR-CASE-013 (not covered by C8/C15); answered by NF as Q31/Q32. Released tests in Z0 are amended by the operator outside the session (O-49, workaround c).
