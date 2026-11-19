@@ -11,7 +11,7 @@
  * Pattern mirrors tests/intervalHistogram.test.tsx:
  *   jsdom + RTL, no jest-dom — use queryByText().not.toBeNull() / .toBeNull()
  */
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { TranslationKey } from '../src/i18n/translations';
@@ -257,11 +257,14 @@ describe('AnalysisPage — cross-cohort resolution (ANL-011 Task 1)', () => {
     };
     setSearchParams({ cohort: 's1', cohorts: 's1,s2,s3,s4,s5' });
     render(<AnalysisPage />);
+    // Since Z0-P22 the header's "Kohorte wählen" selector lists every saved cohort as an <option>; the cap concerns
+    // the compared cohorts, so options are not counted (operator amendment released by the study team, NF 2026-11-19).
+    const shown = (name: string) => screen.queryAllByText(name).filter((el) => el.tagName !== 'OPTION');
     // Cohort 5 should NOT appear (capped at 4)
-    expect(screen.queryAllByText('Cohort 5').length).toBe(0);
+    expect(shown('Cohort 5').length).toBe(0);
     // First 4 should appear in legend / chart headings
-    expect(screen.queryAllByText('Cohort 1').length).toBeGreaterThan(0);
-    expect(screen.queryAllByText('Cohort 4').length).toBeGreaterThan(0);
+    expect(shown('Cohort 1').length).toBeGreaterThan(0);
+    expect(shown('Cohort 4').length).toBeGreaterThan(0);
   });
 
   it('single-cohort: falls back gracefully when ?cohorts= has only 1 known id', () => {
@@ -425,6 +428,9 @@ describe('AnalysisPage — CenterMultiSelect center filter (SC-4)', () => {
 // ---------------------------------------------------------------------------
 
 describe('AnalysisPage — direct ?filters= cohort name display (ANL-012 Task 2)', () => {
+  // Since Z0-P22 the "Kohorte wählen" selector repeats the cohort names as options; the name checks are scoped to the
+  // header line (Z0-P17 test id) they are about (operator amendment released by the study team, NF 2026-11-19).
+  const header = () => within(screen.getByTestId('analysis-active-cohort'));
   it('saved-search path: shows activeSavedSearch.name in header (unchanged)', () => {
     mockDataContextValue = {
       activeCases: makeCases(5),
@@ -432,14 +438,14 @@ describe('AnalysisPage — direct ?filters= cohort name display (ANL-012 Task 2)
     };
     setSearchParams({ cohort: 's1' });
     render(<AnalysisPage />);
-    expect(screen.queryByText('AMD Cohort')).not.toBeNull();
+    expect(header().queryByText('AMD Cohort')).not.toBeNull();
   });
 
   it('?filters= with ?name=: header shows the supplied name', () => {
     mockDataContextValue = { activeCases: makeCases(3), savedSearches: [] };
     setSearchParams({ filters: '{"diagnosis":["E11"]}', name: 'My Cohort' });
     render(<AnalysisPage />);
-    expect(screen.queryByText('My Cohort')).not.toBeNull();
+    expect(header().queryByText('My Cohort')).not.toBeNull();
   });
 
   it('?filters= without ?name=: header shows "Filtered cohort" (English locale)', () => {
@@ -447,7 +453,7 @@ describe('AnalysisPage — direct ?filters= cohort name display (ANL-012 Task 2)
     setSearchParams({ filters: '{"diagnosis":["E11"]}' });
     render(<AnalysisPage />);
     // Should show some form of the filtered cohort label
-    const el = screen.queryByText((text) => text.includes('Filtered cohort'));
+    const el = header().queryByText((text) => text.includes('Filtered cohort'));
     expect(el).not.toBeNull();
   });
 
@@ -455,7 +461,7 @@ describe('AnalysisPage — direct ?filters= cohort name display (ANL-012 Task 2)
     mockDataContextValue = { activeCases: makeCases(0), savedSearches: [] };
     setSearchParams({ filters: 'not-valid-json' });
     render(<AnalysisPage />);
-    const el = screen.queryByText((text) => text.includes('Filtered cohort'));
+    const el = header().queryByText((text) => text.includes('Filtered cohort'));
     expect(el).not.toBeNull();
   });
 
