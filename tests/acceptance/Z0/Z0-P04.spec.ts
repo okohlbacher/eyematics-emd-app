@@ -71,7 +71,9 @@ test.beforeEach(async ({ loginAs }) => {
 test('[Z0-P04] Gefilterte, nicht gespeicherte Kohorte erscheint in Verläufe', async ({ page }) => {
   await openFilteredCohortAnalysis(page);
   await expect(headerName(page)).toContainText('Gefilterte Kohorte');
-  const name = (await headerName(page).innerText()).trim();
+  // The scenario compares the cohort named in both views; the header prefix "Aktive Kohorte: " (Z0-P17) is not part
+  // of the name (operator amendment, Z0 PLAN Q4/C4, NF 2026-11-19).
+  const name = (await headerName(page).innerText()).trim().replace(/^Aktive Kohorte:\s*/, '');
   await headerCaseCount(page);
 
   await openTab(page, 'Verläufe');
