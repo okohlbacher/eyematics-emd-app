@@ -931,6 +931,8 @@ const translations = {
   outcomesCompareDrawerHint: { de: 'Bis zu 4 Kohorten auswählen', en: 'Select up to 4 cohorts' },
   outcomesComparePrimaryLabel: { de: 'Basis-Kohorte (fest)', en: 'Primary cohort (locked)' },
   outcomesCompareOpenDrawer: { de: 'Kohorten vergleichen', en: 'Compare cohorts' },
+  // Z0-P05: unit of the drawer row label "<Name> (N=<n> <unit>)".
+  outcomesComparePatientsUnit: { de: 'Patient:innen', en: 'patients' },
   outcomesCrossMode: { de: '{count} Kohorten verglichen', en: '{count} cohorts compared' },
   outcomesCompareReset: { de: 'Einzelne Kohorte anzeigen', en: 'Reset to single cohort' },
   // --- v1.18 WS-A (outcomes Plotly round-6) keys ---

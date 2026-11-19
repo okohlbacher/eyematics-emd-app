@@ -28,12 +28,10 @@ import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useThemeSafe } from '../context/ThemeContext';
 import { useCaseData } from '../hooks/useCaseData';
+import { ALL_PATIENTS_COHORT_ID } from '../services/allPatientsCohort';
 import { applyFilters, SNOMED_EYE_RIGHT } from '../services/fhirLoader';
 import { getDateLocale } from '../utils/dateFormat';
 
-/** N11 (v1.19 WS-B): sentinel id for the default overlay cohort = all patients
- *  (the v1.18 behaviour). Kept distinct from any saved-search id. */
-const ALL_PATIENTS_COHORT_ID = '__all_patients__';
 
 export default function CaseDetailPage() {
   const { caseId } = useParams<{ caseId: string }>();
@@ -88,8 +86,9 @@ export default function CaseDetailPage() {
     const all = {
       id: ALL_PATIENTS_COHORT_ID,
       label: t('overlayCohortAllPatients'),
-      patientCount: cases.length,
-      cases,
+      // Z0-P05 (Q23): "Alle Patienten" = the included cases (without the user's exclusions), as in the compare drawer.
+      patientCount: activeCases.length,
+      cases: activeCases,
     };
     if (!patientCase) return [all];
     const containing = savedSearches
@@ -99,7 +98,7 @@ export default function CaseDetailPage() {
       })
       .filter((c) => c.cases.some((pc) => pc.id === patientCase.id));
     return [all, ...containing];
-  }, [savedSearches, activeCases, cases, patientCase, t]);
+  }, [savedSearches, activeCases, patientCase, t]);
 
   // Resolve the active overlay cohort (falls back to "all patients" if the
   // chosen cohort no longer contains the patient — e.g. after a data reload).

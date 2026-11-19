@@ -42,6 +42,7 @@ import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useThemeSafe } from '../context/ThemeContext';
 import { useRecentActivity } from '../hooks/useRecentActivity';
+import { withAllPatientsCohort } from '../services/allPatientsCohort';
 import {
   applyFilters,
   getAge,
@@ -157,17 +158,23 @@ export default function AnalysisPage() {
   // Phase 42 / ANL-011: cross-cohort series resolution
   // ---------------------------------------------------------------------------
 
+  // Z0-P05: compare ids resolve against the saved searches plus "Alle Patienten" (reserved id, no filters).
+  const compareSearches = useMemo(
+    () => withAllPatientsCohort(savedSearches, t('overlayCohortAllPatients')),
+    [savedSearches, t],
+  );
+
   /** Parse, deduplicate, cap at 4, drop unknown ids, always include primary first. */
   const crossCohortIds: string[] = useMemo(() => {
     if (!rawCohortsParam) return [];
     const raw = rawCohortsParam.split(',').map((s) => s.trim()).filter(Boolean);
-    const known = raw.filter((id) => savedSearches.some((s) => s.id === id));
+    const known = raw.filter((id) => compareSearches.some((s) => s.id === id));
     const withPrimary =
       primaryCohortId && !known.includes(primaryCohortId)
         ? [primaryCohortId, ...known]
         : known;
     return withPrimary.slice(0, 4);
-  }, [rawCohortsParam, primaryCohortId, savedSearches]);
+  }, [rawCohortsParam, primaryCohortId, compareSearches]);
 
   /** Per-cohort series: cases + color + name. Active when crossCohortIds.length >= 2. */
   const crossCohorts: Array<{
@@ -185,13 +192,13 @@ export default function AnalysisPage() {
       crtImplausibleThresholdUm: s.crtImplausibleThresholdUm,
     };
     return crossCohortIds.flatMap((id, idx) => {
-      const saved = savedSearches.find((s) => s.id === id);
+      const saved = compareSearches.find((s) => s.id === id);
       if (!saved) return [];
       const cases = applyFilters(activeCases, saved.filters, filterOptions);
       const color = COHORT_PALETTES[idx % COHORT_PALETTES.length];
       return [{ cohortId: id, cohortName: saved.name, patientCount: cases.length, color, cases }];
     });
-  }, [crossCohortIds, savedSearches, activeCases]);
+  }, [crossCohortIds, compareSearches, activeCases]);
 
   // Z0-P17: cohorts compared with the active cohort (compare mode only), in selection order.
   const comparedCohortNames: string[] = useMemo(

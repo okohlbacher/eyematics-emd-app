@@ -36,15 +36,29 @@ export default function CohortCompareDrawer({
     return () => window.removeEventListener('keydown', h);
   }, [onClose]);
 
-  const isMaxReached = selectedIds.length >= 4;
+  // Z0-P05: onChange updates the URL inside a router transition; leaving compare mode re-renders the single-cohort
+  // chart synchronously, so the controlled checkbox kept its old state until that commit. Show the clicked selection
+  // at once; the prop takes over as soon as it changes (keyed by its contents, not its identity). The drawer stays
+  // mounted, so the pending selection is dropped on every prop change (reset during render) and never reused later.
+  const selectedKey = selectedIds.join(',');
+  const [pending, setPending] = useState<string[] | null>(null);
+  const [pendingKey, setPendingKey] = useState(selectedKey);
+  if (selectedKey !== pendingKey) {
+    setPendingKey(selectedKey);
+    setPending(null);
+  }
+  const selected = pending ?? selectedIds;
+
+  const isMaxReached = selected.length >= 4;
 
   const toggle = (id: string) => {
     if (id === primaryCohortId) return; // primary is locked
-    const next = selectedIds.includes(id)
-      ? selectedIds.filter((x) => x !== id)
+    const next = selected.includes(id)
+      ? selected.filter((x) => x !== id)
       : isMaxReached
-        ? selectedIds
-        : [...selectedIds, id];
+        ? selected
+        : [...selected, id];
+    setPending(next);
     onChange(next);
   };
 
@@ -66,12 +80,11 @@ export default function CohortCompareDrawer({
   /** Renders a single cohort label row (shared between flat, parent, and subcohort renders) */
   function renderLabel(s: SavedSearch, extraClass?: string) {
     const isPrimary = s.id === primaryCohortId;
-    const checked = isPrimary || selectedIds.includes(s.id);
-    const disabled = isPrimary || (isMaxReached && !selectedIds.includes(s.id));
+    const checked = isPrimary || selected.includes(s.id);
+    const disabled = isPrimary || (isMaxReached && !selected.includes(s.id));
     const count = patientCounts[s.id] ?? 0;
-    const label = isPrimary
-      ? `${s.name} (N=${count} patients) · ${t('outcomesComparePrimaryLabel')}`
-      : `${s.name} (N=${count} patients)`;
+    const name = `${s.name} (N=${count} ${t('outcomesComparePatientsUnit')})`;
+    const label = isPrimary ? `${name} · ${t('outcomesComparePrimaryLabel')}` : name;
     return (
       <label
         key={s.id}

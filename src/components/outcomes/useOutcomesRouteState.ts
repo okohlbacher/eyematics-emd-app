@@ -18,6 +18,7 @@ import type { PatientCase, SavedSearch } from '../../../shared/types/fhir';
 import { useData } from '../../context/DataContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useRecentActivity } from '../../hooks/useRecentActivity';
+import { ALL_PATIENTS_COHORT_ID, withAllPatientsCohort } from '../../services/allPatientsCohort';
 import { authFetch } from '../../services/authHeaders';
 import { applyFilters } from '../../services/fhirLoader';
 import { getSettings, loadSettings } from '../../services/settingsService';
@@ -149,7 +150,7 @@ type FilterOptions = {
  * @param centers Z0-P04 (Q5): the header's centre narrowing (empty = all authorized centres).
  */
 export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, centers: string[] = NO_CENTERS) {
-  const { activeCases: authorizedCases, savedSearches } = useData();
+  const { activeCases: authorizedCases, savedSearches: userSavedSearches } = useData();
   // Z0-P04 (Q5): the analysis header's "Zentren" narrowing also applies to compare cohorts and drawer counts.
   const activeCases = useMemo(
     () => (centers.length === 0 ? authorizedCases : authorizedCases.filter((c) => centers.includes(c.centerName))),
@@ -157,6 +158,11 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
   );
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale } = useLanguage();
+  // Z0-P05: "Alle Patienten" is the first comparison option; it resolves like a saved search with no filters.
+  const savedSearches = useMemo(
+    () => withAllPatientsCohort(userSavedSearches, t('overlayCohortAllPatients')),
+    [userSavedSearches, t],
+  );
   const { record } = useRecentActivity();
   const navigate = useNavigate();
 
@@ -539,7 +545,7 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
   }, [savedSearches, activeCases, filterOptions]);
 
   // Phase 16: drawer onChange + onReset handlers.
-  const handleCompareChange = (nextIds: string[]) => {
+  const handleCompareChange = (nextIds: string[], options?: { replace?: boolean }) => {
     setSearchParams((p) => {
       // J7 (v1.15-p3): only KEEP an already-locked primary (the ?cohort= the view was
       // opened with). Do NOT promote nextIds[0] to a new locked primary — the cohort-
@@ -565,7 +571,20 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
         if (primary) p.set('cohort', primary);
       }
       return p;
-    });
+    }, options);
+  };
+
+  // Z0-P05: opening the compare drawer without an active comparison preselects "Alle Patienten" (each time;
+  // not in the cohort-split flow, which opens the drawer via ?compare=open). It counts toward the cap of 4.
+  const openCompare = () => {
+    if (!isCrossMode) {
+      const current = crossCohortIds.length > 0 ? crossCohortIds : (primaryCohortId ? [primaryCohortId] : []);
+      // replace: opening the drawer adds no history entry, so browser Back leaves the page as before.
+      if (!current.includes(ALL_PATIENTS_COHORT_ID)) {
+        handleCompareChange([...current, ALL_PATIENTS_COHORT_ID], { replace: true });
+      }
+    }
+    setCompareOpen(true);
   };
 
   const handleCompareReset = () => {
@@ -600,6 +619,7 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
     setDrawerOpen,
     compareOpen,
     setCompareOpen,
+    openCompare,
     axisMode,
     // J2: persisting wrappers so an explicit axis/y/grid choice survives navigation.
     setAxisMode: setAxisModePersist,
