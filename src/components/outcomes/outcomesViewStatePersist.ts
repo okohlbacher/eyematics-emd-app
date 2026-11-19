@@ -4,7 +4,10 @@
  * Tester: "The view is reset when leaving to another view." Leaving Analyse and
  * returning re-mounts OutcomesView, dropping its session-only useState (layers,
  * metric, axis/spread/y modes) back to defaults. This stores the view state in
- * sessionStorage keyed PER COHORT so returning restores it.
+ * sessionStorage so returning restores it.
+ *
+ * Z0-P06 (C7, Q24): ONE session-wide key, not per cohort — a newly chosen cohort
+ * shows the same chart settings. The header's centre selection is kept here too.
  *
  * Composition with the v1.14 size-derived layer defaults / override semantics
  * (constraint): persistence layers ON TOP of, not instead of, the derived defaults.
@@ -32,20 +35,23 @@ export interface PersistedOutcomesViewState {
   gridPoints?: number;
   spreadMode?: SpreadMode;
   metric?: MetricType;
+  /** Z0-P06 (Q24 a): the analysis header's centre narrowing (empty = all authorized centres). */
+  centers?: string[];
 }
 
-/** Stable per-cohort key. Falls back to an ad-hoc bucket when no saved cohort id. */
-function storageKey(cohortId: string | null): string {
-  return `${STORAGE_PREFIX}.${cohortId ?? '__adhoc__'}`;
-}
+/** Z0-P06: a single session-wide key (the former per-cohort suffix is dropped). */
+const STORAGE_KEY = `${STORAGE_PREFIX}.session`;
 
-/** Read persisted view state for a cohort; null on any error / absence (D-03 safe). */
+/**
+ * Read the persisted view state; null on any error / absence (D-03 safe).
+ * The cohort id is accepted for call-site compatibility but ignored (Z0-P06: session-wide).
+ */
 export function readPersistedViewState(
-  cohortId: string | null,
+  _cohortId?: string | null,
 ): PersistedOutcomesViewState | null {
   try {
     if (typeof sessionStorage === 'undefined') return null;
-    const raw = sessionStorage.getItem(storageKey(cohortId));
+    const raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
     if (parsed && typeof parsed === 'object') return parsed as PersistedOutcomesViewState;
@@ -55,21 +61,34 @@ export function readPersistedViewState(
   }
 }
 
-/** Persist (merge) view state for a cohort. Silently no-ops on storage failure. */
+/**
+ * Persist (merge) the view state. Silently no-ops on storage failure.
+ * An EMPTY `layers` patch clears the persisted layer choices (reset); a non-empty one merges.
+ */
 export function writePersistedViewState(
-  cohortId: string | null,
+  _cohortId: string | null,
   patch: PersistedOutcomesViewState,
 ): void {
   try {
     if (typeof sessionStorage === 'undefined') return;
-    const prev = readPersistedViewState(cohortId) ?? {};
+    const prev = readPersistedViewState() ?? {};
+    const resetLayers = patch.layers !== undefined && Object.keys(patch.layers).length === 0;
     const next: PersistedOutcomesViewState = {
       ...prev,
       ...patch,
-      layers: { ...(prev.layers ?? {}), ...(patch.layers ?? {}) },
+      layers: resetLayers ? {} : { ...(prev.layers ?? {}), ...(patch.layers ?? {}) },
     };
-    sessionStorage.setItem(storageKey(cohortId), JSON.stringify(next));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   } catch {
     /* storage unavailable / quota — persistence is best-effort (D-03) */
+  }
+}
+
+/** Z0-P06: drop the session view state (logout — the next user starts from the defaults). */
+export function clearPersistedViewState(): void {
+  try {
+    if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* storage unavailable — nothing to clear (D-03) */
   }
 }

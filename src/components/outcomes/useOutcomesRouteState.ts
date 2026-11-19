@@ -229,8 +229,8 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
   // entirely, which "locked" the drawer (the tester's report).
   const isCrossMode = crossCohortIds.length >= 2;
 
-  // J2 (v1.15-p4): persisted trajectory view state for the mount-time cohort, read
-  // ONCE at mount (lazy initializer). Used to seed the session-only toggles below so
+  // J2 (v1.15-p4): persisted trajectory view state, read ONCE at mount (lazy
+  // initializer). Z0-P06: session-wide, so a newly chosen cohort sees it too. Used to seed the session-only toggles below so
   // leaving Analyse and returning restores the view instead of resetting it. The lazy
   // initializer reads the mount-time ?cohort= id directly from searchParams (a value,
   // not a ref) so the restore targets the correct per-cohort bucket.
@@ -310,7 +310,7 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
         }
         if (next.median !== prev.median) explicit.median = next.median;
         if (next.spreadBand !== prev.spreadBand) explicit.spreadBand = next.spreadBand;
-        // J2: persist ONLY the layers the user explicitly toggled (keyed per cohort),
+        // J2: persist ONLY the layers the user explicitly toggled (session-wide, Z0-P06),
         // so the choice survives navigation while never-toggled layers keep deriving
         // from cohort size on a fresh visit.
         if (Object.keys(explicit).length > 0) {
@@ -458,7 +458,7 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
   const cohortId = searchParams.get('cohort');
 
   // A6 (F3): re-derive the large-cohort per-patient default from the CURRENT cohort
-  // rather than forcing perPatient ON. A reset (metric switch or the drawer's
+  // rather than forcing perPatient ON. A reset (the drawer's
   // "reset defaults" button) must NOT defeat the >100-distinct-patient auto-off —
   // it resets to the DERIVED default, not to true. Also resets the override ref so
   // the cohort-change effect can keep deriving (the reset itself is not a user
@@ -470,35 +470,6 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
     setPerPatientDefaultedOff(large);
     return !large;
   }, [cohort]);
-
-  // Phase 13 / METRIC-04: metric change handler (preserves cohort/filter params).
-  const resetToMetricDefaults = (m: MetricType) => {
-    if (m === 'visus' || m === 'crt') {
-      setYMetric('delta');
-      setAxisMode('days');
-      // I2 (v1.14-p4) — override-persistence: a metric-tab switch must NOT revert a
-      // layer the user explicitly toggled (the F3 wedge, re-confirmed for scatter:
-      // the old code reset scatter to the size-derived default on every switch,
-      // silently disabling a manually-enabled scatter on a large cohort).
-      //   - A layer with an active user-override ref keeps its CURRENT value.
-      //   - A non-overridden layer is re-derived from cohort size (NOT forced true —
-      //     preserves the original F3 fix: a large cohort keeps per-patient OFF).
-      // The override refs are NOT cleared here (only the explicit "reset defaults"
-      // button clears them). perPatientDefaultedOff is kept accurate via
-      // derivePerPatientDefaultOn only when per-patient is not overridden.
-      setLayers((prev) => ({
-        median: true,
-        perPatient: perPatientUserOverriddenRef.current
-          ? prev.perPatient
-          : derivePerPatientDefaultOn(),
-        scatter: scatterUserOverriddenRef.current
-          ? prev.scatter
-          : defaultScatterOn(cohort?.cases.length ?? 0),
-        spreadBand: true,
-      }));
-    }
-    // interval / responder: no reset needed — they ignore yMetric/axisMode/layers.
-  };
 
   // F3: the Settings "reset defaults" button routes through here instead of the
   // override-marking setLayersWithOverride. Re-derives the large-cohort per-patient
@@ -515,13 +486,14 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
       scatter: defaultScatterOn(cohort?.cases.length ?? 0),
       spreadBand: true,
     }));
-    // J2: a deliberate reset clears the persisted layer choices so the cohort
-    // returns to its pure size-derived defaults on the next visit too.
+    // J2: a deliberate reset clears the persisted layer choices so every cohort
+    // returns to its pure size-derived defaults on the next visit too (Z0-P06: an
+    // empty layers patch now really clears them instead of merging).
     writePersistedViewState(searchParams.get('cohort'), { layers: {} });
   }, [cohort, derivePerPatientDefaultOn, searchParams]);
 
   // J2 (v1.15-p4): persisting wrappers for the explicit axis/y/grid choices so they
-  // survive navigation (keyed per cohort). The drawer routes through these.
+  // survive navigation (session-wide, Z0-P06). The drawer routes through these.
   const setAxisModePersist = useCallback(
     (v: AxisMode) => {
       setAxisMode(v);
@@ -549,7 +521,8 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
       p.set('metric', m);
       return p;
     });
-    resetToMetricDefaults(m);
+    // Z0-P06 (Q24 b): the chart settings (x-axis, y-mode, layers, grid) survive a metric-tab
+    // switch — no reset to Δ/days here any more (supersedes UIR-TRAJ-001's reset).
     // J2: persist the active metric (belt-and-braces — the URL already carries it,
     // but a return via the nav menu without the query restores it from here too).
     writePersistedViewState(searchParams.get('cohort'), { metric: m });

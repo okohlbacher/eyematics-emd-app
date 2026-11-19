@@ -35,6 +35,7 @@ import {
 
 import { CenterMultiSelect } from '../components/common/CenterMultiSelect';
 import OutcomesView from '../components/outcomes/OutcomesView';
+import { readPersistedViewState, writePersistedViewState } from '../components/outcomes/outcomesViewStatePersist';
 import { COHORT_PALETTES, rechartsTheme } from '../components/outcomes/palette';
 import { distinctPatientCount, withBaseCohort } from '../components/outcomes/useOutcomesRouteState';
 import { CHART_COLORS } from '../config/clinicalThresholds';
@@ -261,7 +262,14 @@ export default function AnalysisPage() {
     return Array.from(names).sort();
   }, [activeCases]);
 
-  const [selectedCenters, setSelectedCenters] = useState<string[]>([]);
+  // Z0-P06 (Q24 a): the centre selection is kept for the session (same store as the chart settings).
+  const [selectedCenters, setSelectedCentersState] = useState<string[]>(
+    () => readPersistedViewState()?.centers ?? [],
+  );
+  const setSelectedCenters = useCallback((next: string[]) => {
+    setSelectedCentersState(next);
+    writePersistedViewState(null, { centers: next });
+  }, []);
 
   // Apply center narrowing to the single-cohort view (no effect on cross-cohort
   // since each cohort operates on activeCases through applyFilters independently;

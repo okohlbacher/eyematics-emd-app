@@ -1,5 +1,6 @@
 import { createContext, type ReactNode,useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
+import { clearPersistedViewState } from '../components/outcomes/outcomesViewStatePersist';
 import { broadcastLogout, serverLogout } from '../services/authHeaders';
 import { invalidateBundleCache } from '../services/fhirLoader';
 import * as recentActivityStore from '../services/recentActivityStore';
@@ -161,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setInactivityWarning(false);
     sessionStorage.removeItem('emd-token');
     sessionStorage.removeItem('emd-cohort-filters'); // D-05: clear persisted cohort context on logout (T-33-03)
+    clearPersistedViewState(); // Z0-P06: session-wide chart settings + centre selection belong to this user
     invalidateBundleCache(); // L-12: clear stale data from previous user's center scope
   }, []);
 

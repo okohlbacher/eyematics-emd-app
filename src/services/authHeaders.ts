@@ -10,6 +10,7 @@
  * - refreshPromise resets in `finally` so a failed refresh never permanently blocks the tab.
  */
 
+import { clearPersistedViewState } from '../components/outcomes/outcomesViewStatePersist';
 import * as recentActivityStore from './recentActivityStore';
 
 const RETRY_GUARD_HEADER = 'X-EMD-Retry-After-Refresh';
@@ -34,6 +35,7 @@ bc?.addEventListener('message', (e: MessageEvent) => {
     // the username from the token (RESEARCH Pitfall 2).
     recentActivityStore.clearAll();
     sessionStorage.removeItem('emd-token');
+    clearPersistedViewState(); // Z0-P06: session-wide chart settings + centre selection end with the session
     if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
       window.location.href = '/login';
     }
@@ -126,6 +128,7 @@ export async function refreshAccessToken(): Promise<string> {
 
 function handleAuthFailure(): void {
   sessionStorage.removeItem('emd-token');
+  clearPersistedViewState(); // Z0-P06: as on logout — the next login starts from the defaults
   bc?.postMessage({ type: 'logout' });
   if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
     window.location.href = '/login';
