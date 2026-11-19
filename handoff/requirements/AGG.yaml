@@ -72,7 +72,7 @@ requirements:
     notes: "tests/AnalysisPage.test.tsx stubs applyFilters to return all cases, so no test asserts the count equals the filtered cohort; the invalid-JSON test only checks that the derived name renders without crashing. The safePickCohortFilter whitelist is exercised in tests/qualityFlaggedCohortRoundTrip.test.tsx (flaggedCaseIds Set reconstruction), not for the ?filters= path."
   - id: UIR-AGG-004
     title: "Derived cohort name shown for ?filters= cohorts"
-    statement: "The Analyse page opened via ?filters= shows a blue line \"Gefilterte Kohorte · <filter summary>\" under the title (capped at 80 characters); an optional ?name= replaces it with the supplied name."
+    statement: "The Analyse page opened via ?filters= shows a blue line \"Aktive Kohorte: Gefilterte Kohorte · <filter summary>\" under the title (summary capped at 80 characters); an optional ?name= replaces the cohort name with the supplied name. Without a cohort or filter the line reads \"Aktive Kohorte: Alle Patienten\" (amended per Z0 C4 after Z0-P17)."
     status: implemented
     sources: ["uat: v1.12 ANL-012", "code: src/pages/AnalysisPage.tsx:121-144,336-340"]
     evidence:
@@ -97,8 +97,8 @@ requirements:
         - "Open the route above while logged in."
         - "Read the blue line directly below the \"Kohortenanalyse\" heading."
         - "Open /analysis?filters={\"gender\":[\"female\"]}&name=Meine%20Kohorte and read the same line."
-        - "Open /analysis (no params) and check that no blue name line is shown."
-      expect: "Step 2 shows \"Gefilterte Kohorte · Geschlecht: female · Alter 60–80\"; step 3 shows \"Meine Kohorte\"; step 4 shows no name line. A summary longer than 80 characters ends with \"…\"."
+        - "Open /analysis (no params) and read the same line."
+      expect: "Step 2 shows \"Aktive Kohorte: Gefilterte Kohorte · Geschlecht: female · Alter 60–80\"; step 3 shows \"Aktive Kohorte: Meine Kohorte\"; step 4 shows \"Aktive Kohorte: Alle Patienten\". A summary longer than 80 characters ends with \"…\"."
     notes: "The summary literals (\"Geschlecht:\", \"Alter\", \"Diagnose:\") stay German under the EN language switch and filter values are echoed raw (e.g. \"female\"). The last two cited tests are summarizeCohortFilter unit tests living in tests/AnalysisPage.test.tsx."
   - id: UIR-AGG-005
     title: "?cohort=<savedId> resolves saved search and shows its name"

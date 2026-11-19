@@ -949,14 +949,14 @@ requirements:
       expect: "OD median becomes light blue (#93c5fd), OS light red, combined light violet; axis titles, tick labels and the 'Median' legend text turn light grey on the dark card background; grid lines are a subtle dark grey."
     notes: "Cited tests assert the dark palette contrast values and theme tokens, not that OutcomesPanel applies them (Plotly layout is not rendered in jsdom). The palette test title is generated from a template literal (`DARK_EYE_COLORS['OD']=#93c5fd ratio >= 4.5` etc.); the substring 'DARK_EYE_COLORS[' matches all three."
   - id: UIR-TRAJ-042
-    title: "Header shows Outcomes title with cohort name and patient count"
-    statement: "The Verläufe header shows 'Outcomes: <cohort name>' for a saved cohort (plain 'Outcomes' otherwise) and a subtitle 'Gespeicherte Kohorte · <n> Patient:innen' or 'Ad-hoc-Filter · <n> Patient:innen'."
+    title: "Header shows Outcomes title with cohort name, patient and case count"
+    statement: "The Verläufe header shows 'Outcomes: <cohort name>' for a named cohort — a saved cohort or the filtered cohort 'Gefilterte Kohorte · <filter summary>' (plain 'Outcomes' otherwise) — and the subtitle '<p> Patient:innen · <c> Fälle' (amended per Z0 C4/C5 a after Z0-P04 and Z0-P17; the shared analysis header above both tabs names the active cohort, UIR-AGG-004)."
     status: implemented
     sources: ["code: src/components/outcomes/OutcomesView.tsx:283-299"]
     evidence:
-      - "src/components/outcomes/OutcomesView.tsx:285-287 — h2 `${outcomesTitle}: ${cohort.name}` when the cohort has a name, else outcomesTitle"
-      - "src/components/outcomes/OutcomesView.tsx:288-299 — subtitle outcomesSubtitleSaved / outcomesSubtitleAdhoc with {count} = cohort.cases.length (cross mode replaces it, see UIR-TRAJ-033)"
-      - "src/i18n/translations.ts:816,822-823 — DE 'Outcomes', 'Gespeicherte Kohorte · {count} Patient:innen', 'Ad-hoc-Filter · {count} Patient:innen'"
+      - "src/components/outcomes/OutcomesView.tsx:289-291 — h2 `${outcomesTitle}: ${cohort.name}` when the cohort has a name, else outcomesTitle"
+      - "src/components/outcomes/OutcomesView.tsx:292-304 — subtitle outcomesSubtitleCounts with {patients} = distinctPatientCount(cohort.cases), {cases} = cohort.cases.length (cross mode replaces it, see UIR-TRAJ-033)"
+      - "src/i18n/translations.ts:830,837 — DE 'Outcomes', '{patients} Patient:innen · {cases} Fälle'"
     tests:
       - file: tests/OutcomesPage.test.tsx
         name: "1. renders outcomesTitle heading when cohort resolves via fallback (activeCases)"
@@ -967,5 +967,5 @@ requirements:
       steps:
         - "Open Analyse → \"Verläufe\" with no ?cohort= and read the header."
         - "In Kohortenbildung open a saved search via \"Outcomes anzeigen\" (or set ?cohort=<savedId>&tab=trajectories) and read the header again."
-      expect: "Step 1: heading 'Outcomes' with subtitle 'Ad-hoc-Filter · 245 Patient:innen' (count = cases in the cohort). Step 2: heading 'Outcomes: <saved search name>' with subtitle 'Gespeicherte Kohorte · <n> Patient:innen'."
-    notes: "Added by the refute pass (all sweeps missed it). Tests assert only that the title key renders; the ': <name>' suffix and subtitle counts are not asserted. The count is cohort.cases.length (cases), labelled Patient:innen."
+      expect: "Step 1: heading 'Outcomes' with subtitle '<p> Patient:innen · <c> Fälle'. Step 2: heading 'Outcomes: <saved search name>' with subtitle '<p> Patient:innen · <c> Fälle' (p = distinct patients, c = cases of the cohort)."
+    notes: "Added by the refute pass (all sweeps missed it). Tests assert only that the title key renders; the ': <name>' suffix and subtitle counts are not asserted. Since Z0-P04 the subtitle shows patients and cases separately (C5 a)."

@@ -43,3 +43,5 @@
 {"id":"Z0-P17","ts":"2026-11-19T09:48:50.629Z","session_id":"8b6af527-a265-45d9-9247-8d26e4b71f84","head":"91f00022c7f46335992fd88e735616eda5aa8d93","result":"recheck","attempt":1,"fingerprint":"5db28bad25c2f19fa46f9384c3b949a7addc2fd5676f813ae032ce4ba4b11539"}
 {"id":"Z0-P17","ts":"2026-11-19T09:48:55.914Z","session_id":"8b6af527-a265-45d9-9247-8d26e4b71f84","head":"91f00022c7f46335992fd88e735616eda5aa8d93","result":"recheck","attempt":1,"fingerprint":"5db28bad25c2f19fa46f9384c3b949a7addc2fd5676f813ae032ce4ba4b11539"}
 {"id":"Z0-P17","ts":"2026-11-19T09:50:17.918Z","head":"91f00022c7f46335992fd88e735616eda5aa8d93","result":"review","verdict":"findings-open"}
+{"id":"Z0-P17","ts":"2026-11-19T09:50:44.669Z","session_id":"8b6af527-a265-45d9-9247-8d26e4b71f84","head":"91f00022c7f46335992fd88e735616eda5aa8d93","result":"recheck","attempt":1,"fingerprint":"5db28bad25c2f19fa46f9384c3b949a7addc2fd5676f813ae032ce4ba4b11539"}
+{"id":"Z0-P22","ts":"2026-11-19T09:55:57.464Z","session_id":"4e7c2356-6851-48ee-b619-1f129100fcff","head":"6293adb7c08138530f2c127843be00bc2b81363f","result":"blocked","attempt":0}
