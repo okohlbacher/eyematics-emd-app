@@ -124,7 +124,7 @@ export default function AnalysisPage() {
    * - Saved search path: activeSavedSearch.name (unchanged)
    * - Direct ?filters= path with ?name=: use the supplied name (React auto-escapes text content — T-42-06)
    * - Direct ?filters= path without ?name=: synthesize from t('analysisFilteredCohort') + summarizeCohortFilter
-   * - No cohort/filter active: null (no name line rendered)
+   * - No cohort/filter active: null (the header names "Alle Patienten", Z0-P17)
    * Total length is capped at 80 chars with ellipsis to mirror OutcomesView cross-mode truncation.
    */
   const displayCohortName: string | null = useMemo(() => {
@@ -192,6 +192,12 @@ export default function AnalysisPage() {
       return [{ cohortId: id, cohortName: saved.name, patientCount: cases.length, color, cases }];
     });
   }, [crossCohortIds, savedSearches, activeCases]);
+
+  // Z0-P17: cohorts compared with the active cohort (compare mode only), in selection order.
+  const comparedCohortNames: string[] = useMemo(
+    () => crossCohorts.filter((c) => c.cohortId !== savedSearchId).map((c) => c.cohortName),
+    [crossCohorts, savedSearchId],
+  );
 
   // ---------------------------------------------------------------------------
   // Phase 42 / SC-4: center multi-select — CLIENT-SIDE NARROWING ONLY.
@@ -340,11 +346,15 @@ export default function AnalysisPage() {
     <div className="p-8 dark:bg-gray-900 min-h-screen">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('analysisTitle')}</h1>
-        {displayCohortName !== null && (
-          <p className="text-sm font-medium text-blue-700 dark:text-blue-400 mt-0.5">
-            {displayCohortName}
-          </p>
-        )}
+        {/* Z0-P17 (Q4/Q27): the active cohort is always named above both tabs — saved name, "Gefilterte Kohorte …"
+            or "Alle Patienten" — followed by the compared cohorts in compare mode. */}
+        <p
+          data-testid="analysis-active-cohort"
+          className="text-sm font-medium text-blue-700 dark:text-blue-400 mt-0.5"
+        >
+          {t('analysisActiveCohort')} <span>{displayCohortName ?? t('overlayCohortAllPatients')}</span>
+          {comparedCohortNames.length > 0 && ` · ${t('analysisComparedWith')} ${comparedCohortNames.join(', ')}`}
+        </p>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           {centeredCohort.length} {t('casesInCohort')}
           {/* Z0-P04 (C5 a): the header names patients and cases. */}

@@ -1017,6 +1017,9 @@ const translations = {
 
   // ---- Phase 42 / ANL-012: direct ?filters= load — derived cohort name ----
   analysisFilteredCohort: { de: 'Gefilterte Kohorte', en: 'Filtered cohort' },
+  // Z0-P17: active-cohort line under the "Kohortenanalyse" title ("Alle Patienten" reuses overlayCohortAllPatients).
+  analysisActiveCohort: { de: 'Aktive Kohorte:', en: 'Active cohort:' },
+  analysisComparedWith: { de: 'verglichen mit:', en: 'compared with:' },
 
   // ---- Phase 13: CSV Export (METRIC-05 / D-07) ----
   metricsPreviewExportCsvCrt: { de: 'CSV exportieren (CRT)', en: 'Export CSV (CRT)' },
