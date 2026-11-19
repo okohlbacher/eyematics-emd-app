@@ -140,6 +140,12 @@ const translations = {
     en: 'Define filter criteria and build cohorts',
   },
   savedSearches: { de: 'Gespeicherte Suchen', en: 'Saved Searches' },
+  savedSearchesHint: {
+    de: 'Gespeicherte Kohorten anzeigen und laden',
+    en: 'Show and load saved cohorts',
+  },
+  savedSearchLoad: { de: 'Kohorte „{0}“ laden', en: 'Load cohort “{0}”' },
+  savedSearchLoaded: { de: 'Geladene Kohorte: {0}', en: 'Loaded cohort: {0}' },
   savedSearchDefs: {
     de: 'Gespeicherte Suchdefinitionen',
     en: 'Saved Search Definitions',

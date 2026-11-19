@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 
 import Badge from '../components/primitives/Badge';
 import Button from '../components/primitives/Button';
+import Tooltip from '../components/primitives/Tooltip';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { isDuplicateName, isSubcohortName, parseSubcohortName } from '../services/cohortNames';
@@ -86,6 +87,9 @@ export default function CohortBuilderPage() {
     } catch { return {}; }
   });
   const [showSaved, setShowSaved] = useState(false);
+  // Z0-P02: the saved cohort last loaded, shown while its filters are unchanged (any filter edit
+  // replaces the `filters` object, so the reference check hides the line on the next change).
+  const [loadedSearch, setLoadedSearch] = useState<{ name: string; filters: CohortFilter } | null>(null);
   const [saveName, setSaveName] = useState('');
 
   // C2: the per-cohort quality-check selection moved to the Datenqualität tab
@@ -376,6 +380,7 @@ export default function CohortBuilderPage() {
 
   const handleLoadSearch = (s: SavedSearch) => {
     setFilters(s.filters);
+    setLoadedSearch({ name: s.name, filters: s.filters });
     // C2: qualityParams are no longer edited here — they live on the Datenqualität tab.
     setShowSaved(false);
   };
@@ -430,18 +435,24 @@ export default function CohortBuilderPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowSaved(!showSaved)}
-            className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:text-gray-300"
-          >
-            <Search className="w-4 h-4" />
-            {t('savedSearches')} ({savedSearches.length})
-            {showSaved ? (
-              <ChevronUp className="w-3 h-3" />
-            ) : (
-              <ChevronDown className="w-3 h-3" />
+          {/* Z0-P02: shared hover/focus tooltip (Q12 a); the visible text stays the accessible name. */}
+          <Tooltip text={t('savedSearchesHint')} align="end">
+            {(tooltipId) => (
+              <button
+                onClick={() => setShowSaved(!showSaved)}
+                aria-describedby={tooltipId}
+                className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:text-gray-300"
+              >
+                <Search className="w-4 h-4" />
+                {t('savedSearches')} ({savedSearches.length})
+                {showSaved ? (
+                  <ChevronUp className="w-3 h-3" />
+                ) : (
+                  <ChevronDown className="w-3 h-3" />
+                )}
+              </button>
             )}
-          </button>
+          </Tooltip>
         </div>
       </div>
 
@@ -522,13 +533,18 @@ export default function CohortBuilderPage() {
                   >
                     <LineChart className="w-4 h-4" />
                   </button>
-                  <button
-                    onClick={() => handleLoadSearch(s)}
-                    className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-                    title={t('execute')}
-                  >
-                    <Play className="w-4 h-4" />
-                  </button>
+                  {/* Z0-P02: names action and cohort; same text as tooltip (Q12 a) and accessible name. */}
+                  <Tooltip text={t('savedSearchLoad').replace('{0}', s.name)} align="end">
+                    {() => (
+                      <button
+                        onClick={() => handleLoadSearch(s)}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                        aria-label={t('savedSearchLoad').replace('{0}', s.name)}
+                      >
+                        <Play className="w-4 h-4" />
+                      </button>
+                    )}
+                  </Tooltip>
                   <button
                     onClick={() => removeSavedSearch(s.id)}
                     className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
@@ -567,6 +583,13 @@ export default function CohortBuilderPage() {
               <Filter className="w-4 h-4" />
               {t('filterCriteria')}
             </h3>
+
+            {/* Z0-P02 (Q2 a): name of the loaded saved cohort until the next filter change */}
+            {loadedSearch && loadedSearch.filters === filters && (
+              <p role="status" className="mb-3 text-sm text-blue-700 dark:text-blue-300">
+                {t('savedSearchLoaded').replace('{0}', loadedSearch.name)}
+              </p>
+            )}
 
             {/* COH-03: Quick presets */}
             <div className="mb-3">
