@@ -688,7 +688,7 @@ requirements:
     notes: "Tests exercise the panel contract (no onPointClick → no click wiring); the container's cross-mode gating is verified by code reading only."
   - id: UIR-TRAJ-031
     title: "Compare drawer lists saved cohorts, locks primary, max 4, subgroups"
-    statement: "The \"Kohorten vergleichen\" drawer lists saved cohorts with \"(N=<n> patients)\" checkboxes, locks the primary, caps at 4, nests subcohorts under collapsible parents and has \"Einzelne Kohorte anzeigen\"."
+    statement: "The \"Kohorten vergleichen\" drawer lists \"Alle Patienten\" first (preselected when opened without an active comparison, counts toward the cap) and the saved cohorts, each with a \"(N=<n> Patient:innen)\" checkbox (EN \"patients\"; amended per Z0 C6/Q23 after Z0-P05), locks the primary, caps at 4, nests subcohorts under collapsible parents and has \"Einzelne Kohorte anzeigen\"."
     status: implemented
     sources: ["spec: EMDREQ-ANL-002 / N02.09", "code: src/components/outcomes/CohortCompareDrawer.tsx:39-49,66-186"]
     evidence:
@@ -716,8 +716,8 @@ requirements:
         - "Tick three more cohorts (4 total)."
         - "Click the chevron left of the parent cohort row."
         - "Click \"Einzelne Kohorte anzeigen\"."
-      expect: "Rows read '<Name> (N=<n> patients)'; the opened cohort is ticked, disabled and suffixed '· Basis-Kohorte (fest)'; after step 3 all remaining unticked checkboxes are disabled (greyed); step 4 hides the indented sub-cohort rows; step 5 closes the drawer and the URL loses ?cohorts=."
-    notes: "The '(N=… patients)' suffix is English literal text even in the German UI (by code). Collapse chevron behaviour has no test."
+      expect: "The first row reads 'Alle Patienten (N=<n> Patient:innen)' and is ticked; rows read '<Name> (N=<n> Patient:innen)'; the opened cohort is ticked, disabled and suffixed '· Basis-Kohorte (fest)'; after step 3 all remaining unticked checkboxes are disabled (greyed); step 4 hides the indented sub-cohort rows; step 5 closes the drawer and the URL loses ?cohorts=."
+    notes: "Since Z0-P05 the unit is translated (key outcomesComparePatientsUnit); 'Alle Patienten' counts the patients of the included cases (exclusions removed). Collapse chevron behaviour has no test."
   - id: UIR-TRAJ-032
     title: "Compare drawer keeps any non-empty selection and stays interactive"
     statement: "The compare drawer keeps any non-empty selection: a single in-progress pick stays in ?cohorts= with its checkbox checked, and the user can deselect down to one cohort and re-select freely."
