@@ -21,7 +21,7 @@ import { useRecentActivity } from '../../hooks/useRecentActivity';
 import { authFetch } from '../../services/authHeaders';
 import { applyFilters } from '../../services/fhirLoader';
 import { getSettings, loadSettings } from '../../services/settingsService';
-import { safePickCohortFilter } from '../../utils/cohortFilterSerialization';
+import { parseCohortFilterJson, safePickCohortFilter } from '../../utils/cohortFilterSerialization';
 import {
   type AxisMode,
   defaultScatterOn,
@@ -103,12 +103,14 @@ export function deriveDefaultLayers(cases: { pseudonym?: string }[]): LayerState
  * the initial cohort size BEFORE the first render (the memo runs after useState, too
  * late to seed the initializer). Pure — no hooks.
  */
+export type ResolvedCohort = { name: string | null; cases: PatientCase[] };
+
 export function resolveCohort(
   searchParams: URLSearchParams,
   activeCases: PatientCase[],
   savedSearches: SavedSearch[],
   filterOptions: FilterOptions,
-): { name: string | null; cases: PatientCase[] } | null {
+): ResolvedCohort | null {
   const cohortId = searchParams.get('cohort');
   const filterParam = searchParams.get('filter');
   if (cohortId) {
@@ -121,8 +123,15 @@ export function resolveCohort(
       return { name: null, cases: applyFilters(activeCases, safePickCohortFilter(parsed), filterOptions) };
     } catch { return null; }
   }
+  // Z0-P04: "Kohorte analysieren" writes the unsaved filter cohort as ?filters= (shared parser).
+  const filtersParam = searchParams.get('filters');
+  if (filtersParam !== null) {
+    return { name: null, cases: applyFilters(activeCases, parseCohortFilterJson(filtersParam), filterOptions) };
+  }
   return { name: null, cases: activeCases };
 }
+
+const NO_CENTERS: string[] = [];
 
 type FilterOptions = {
   therapyInterrupterDays: number;
@@ -134,8 +143,18 @@ type FilterOptions = {
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useOutcomesRouteState() {
-  const { activeCases, savedSearches } = useData();
+/**
+ * @param cohortFromPage Z0-P04: the cohort the analysis page header shows (name + centre-narrowed cases),
+ *   resolved once in AnalysisPage. `undefined` = resolve from the URL here (standalone use).
+ * @param centers Z0-P04 (Q5): the header's centre narrowing (empty = all authorized centres).
+ */
+export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, centers: string[] = NO_CENTERS) {
+  const { activeCases: authorizedCases, savedSearches } = useData();
+  // Z0-P04 (Q5): the analysis header's "Zentren" narrowing also applies to compare cohorts and drawer counts.
+  const activeCases = useMemo(
+    () => (centers.length === 0 ? authorizedCases : authorizedCases.filter((c) => centers.includes(c.centerName))),
+    [authorizedCases, centers],
+  );
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale } = useLanguage();
   const { record } = useRecentActivity();
@@ -206,7 +225,9 @@ export function useOutcomesRouteState() {
   // defaults; no F3 wedge). Per-layer persistence means a never-toggled cohort
   // still gets the correct size-derived defaults.
   const [layers, setLayers] = useState<LayerState>(() => {
-    const initialCohort = resolveCohort(searchParams, activeCases, savedSearches, filterOptions);
+    const initialCohort = cohortFromPage !== undefined
+      ? cohortFromPage
+      : resolveCohort(searchParams, activeCases, savedSearches, filterOptions);
     const derived = deriveDefaultLayers(initialCohort?.cases ?? []);
     const p = persisted?.layers;
     if (!p) return derived;
@@ -298,8 +319,10 @@ export function useOutcomesRouteState() {
   // (I2 v1.14-p4) so the lazy layer-state initializer above derives from the SAME
   // cohort the panels render.
   const cohort = useMemo(
-    () => resolveCohort(searchParams, activeCases, savedSearches, filterOptions),
-    [activeCases, savedSearches, searchParams, filterOptions],
+    () => (cohortFromPage !== undefined
+      ? cohortFromPage
+      : resolveCohort(searchParams, activeCases, savedSearches, filterOptions)),
+    [cohortFromPage, activeCases, savedSearches, searchParams, filterOptions],
   );
 
   // FALL-010: drill-down handler — resolves scatter patientId (pseudonym) to PatientCase.id
@@ -603,6 +626,8 @@ export function useOutcomesRouteState() {
     setThresholdLetters,
     // Also expose activeCases + savedSearches so aggregation hook can use them
     activeCases,
+    // Z0-P04 (Q5): centre narrowing from the analysis header (empty = none).
+    centers,
     savedSearches,
   };
 }

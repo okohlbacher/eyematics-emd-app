@@ -32,8 +32,10 @@ import OutcomesSettingsDrawer from './OutcomesSettingsDrawer';
 import ResponderView from './ResponderView';
 import { useOutcomesAggregation } from './useOutcomesAggregation';
 import {
+  distinctPatientCount,
   METRIC_TAB_ORDER,
   metricTitleKey,
+  type ResolvedCohort,
   useOutcomesRouteState,
 } from './useOutcomesRouteState';
 import VisusMetricContainer from './VisusMetricContainer';
@@ -45,9 +47,11 @@ import VisusMetricContainer from './VisusMetricContainer';
 // the render is fast enough that the deferral would only add a perceptible flash.
 const CLIENT_RENDER_STATUS_THRESHOLD_CASES = 50;
 
-export default function OutcomesView() {
+export default function OutcomesView(
+  { cohort, centers }: { cohort?: ResolvedCohort | null; centers?: string[] } = {},
+) {
   // WR-01 / Pitfall 3: both hooks called unconditionally before any return.
-  const s = useOutcomesRouteState();
+  const s = useOutcomesRouteState(cohort, centers);
   const a = useOutcomesAggregation(s);
 
   // I2 (v1.14-p4): client-path loading/status. The server path already shows a
@@ -285,7 +289,7 @@ export default function OutcomesView() {
           <h2 className="text-lg font-semibold text-gray-900">
             {s.cohort?.name ? `${s.t('outcomesTitle')}: ${s.cohort.name}` : s.t('outcomesTitle')}
           </h2>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 text-sm mt-1" data-testid="outcomes-subtitle">
             {s.isCrossMode && a.crossCohortAggregates
               ? (() => {
                   const names = a.crossCohortAggregates.combined.map((c) => c.cohortName);
@@ -294,8 +298,9 @@ export default function OutcomesView() {
                   const base = s.t('outcomesCrossMode').replace('{count}', String(names.length));
                   return `${base} · ${namesStr}`;
                 })()
-              : (s.cohort?.name ? s.t('outcomesSubtitleSaved') : s.t('outcomesSubtitleAdhoc'))
-                  .replace('{count}', String(s.cohort?.cases.length ?? 0))}
+              : s.t('outcomesSubtitleCounts')
+                  .replace('{patients}', String(distinctPatientCount(s.cohort?.cases ?? [])))
+                  .replace('{cases}', String(s.cohort?.cases.length ?? 0))}
           </p>
           {a.routeServerSide && s.serverLoading && (
             <span

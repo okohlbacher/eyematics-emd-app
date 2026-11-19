@@ -64,6 +64,8 @@ interface RouteState {
     therapyBreakerDays: number;
     crtImplausibleThresholdUm: number;
   };
+  /** Z0-P04 (Q5): centre narrowing from the analysis header (absent/empty = none). */
+  centers?: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -90,11 +92,13 @@ export function useOutcomesAggregation(state: RouteState) {
     savedSearches,
     activeCases,
     filterOptions,
+    centers = [],
   } = state;
 
   // Phase 12 / AGG-03 / D-13 — size-based routing to server endpoint.
   // Phase 16 / Pitfall 6: bypass server routing in cross-cohort mode.
-  const routeServerSide = !isCrossMode && Boolean(
+  // Z0-P04 (Q5): the server aggregates the whole saved cohort, so a centre-narrowed cohort stays client-side.
+  const routeServerSide = !isCrossMode && centers.length === 0 && Boolean(
     cohort && cohortId && cohort.cases.length > threshold
   );
 
@@ -185,6 +189,9 @@ export function useOutcomesAggregation(state: RouteState) {
     !routeServerSide && (activeMetric === 'visus' || activeMetric === 'crt')
       ? activeMetric
       : null;
+  // Z0-P04: the page-supplied cohort (?filters= or centre-narrowed) has no id of its own, so the worker key
+  // fingerprints the exact case set — a different cohort of the same size never reuses a stale result.
+  const cohortFingerprint = useMemo(() => (cohort ? cohort.cases.map((c) => c.id).join(',') : ''), [cohort]);
   const isClientWorkerHeavy =
     clientWorkerMetric !== null &&
     workerAvailable() &&
@@ -193,7 +200,7 @@ export function useOutcomesAggregation(state: RouteState) {
   // Key identifies the exact aggregation inputs — a change supersedes any in-flight
   // worker response (matched by id; stale ids are ignored in the client wrapper).
   const workerKey = isClientWorkerHeavy
-    ? `${clientWorkerMetric}|${cohortId ?? ''}|${cohort!.cases.length}|${axisMode}|${yMetric}|${gridPoints}|${spreadMode}`
+    ? `${clientWorkerMetric}|${cohortId ?? ''}|${centers.join(',')}|${cohort!.cases.length}|${cohortFingerprint}|${axisMode}|${yMetric}|${gridPoints}|${spreadMode}`
     : null;
   const [workerResult, setWorkerResult] = useState<{ key: string; result: TrajectoryResult } | null>(null);
   useEffect(() => {

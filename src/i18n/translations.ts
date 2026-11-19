@@ -230,6 +230,7 @@ const translations = {
   analysisTabAggregate: { de: 'Aggregiert', en: 'Aggregate' },
   analysisTabTrajectories: { de: 'Verläufe', en: 'Trajectories' },
   casesInCohort: { de: 'Fälle in der aktuellen Kohorte', en: 'cases in current cohort' },
+  analysisPatientCount: { de: '{count} Patient:innen', en: '{count} patients' },
   casesWithCritical: {
     de: 'Fälle mit kritischen Werten (CRT > 400 µm)',
     en: 'cases with critical values (CRT > 400 µm)',
@@ -832,8 +833,8 @@ const translations = {
   // frozen with no feedback while the heavy trajectory/scatter work mounts.
   outcomesClientComputingLabel: { de: 'Verl\u00e4ufe werden berechnet\u2026', en: 'Computing trajectories\u2026' },
   outcomesTitleWithCohort: { de: 'Outcomes: {cohortName}', en: 'Outcomes: {cohortName}' },
-  outcomesSubtitleSaved: { de: 'Gespeicherte Kohorte · {count} Patient:innen', en: 'Saved cohort · {count} patients' },
-  outcomesSubtitleAdhoc: { de: 'Ad-hoc-Filter · {count} Patient:innen', en: 'Ad-hoc filter · {count} patients' },
+  // Z0-P04 (C5 a): the cohort name is in the heading; the subtitle names patients and cases.
+  outcomesSubtitleCounts: { de: '{patients} Patient:innen · {cases} Fälle', en: '{patients} patients · {cases} cases' },
   outcomesOpenSettings: { de: 'Einstellungen öffnen', en: 'Open settings' },
   outcomesCloseSettings: { de: 'Einstellungen schließen', en: 'Close settings' },
   // K1d (v1.16-A): the bare gear button was "not self-explanatory" (tester). Give it

@@ -36,6 +36,7 @@ import {
 import { CenterMultiSelect } from '../components/common/CenterMultiSelect';
 import OutcomesView from '../components/outcomes/OutcomesView';
 import { COHORT_PALETTES, rechartsTheme } from '../components/outcomes/palette';
+import { distinctPatientCount } from '../components/outcomes/useOutcomesRouteState';
 import { CHART_COLORS } from '../config/clinicalThresholds';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -216,6 +217,13 @@ export default function AnalysisPage() {
     return cohort.filter((c) => selectedCenters.includes(c.centerName));
   }, [cohort, selectedCenters]);
 
+  // Z0-P04: the cohort the header shows (name + centre narrowing, Q5) is the cohort Verläufe renders.
+  // An unknown ?cohort= id keeps the Verläufe empty state (null), as before.
+  const trajectoriesCohort = useMemo(
+    () => (savedSearchId && !activeSavedSearch ? null : { name: displayCohortName, cases: centeredCohort }),
+    [savedSearchId, activeSavedSearch, displayCohortName, centeredCohort],
+  );
+
   // Cross-cohort narrowing: apply center filter to each cohort's cases.
   const centeredCrossCohorts = useMemo(() => {
     if (selectedCenters.length === 0) return crossCohorts;
@@ -339,6 +347,9 @@ export default function AnalysisPage() {
         )}
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           {centeredCohort.length} {t('casesInCohort')}
+          {/* Z0-P04 (C5 a): the header names patients and cases. */}
+          {' · '}
+          {t('analysisPatientCount').replace('{count}', String(distinctPatientCount(centeredCohort)))}
           {criticalCount > 0 && (
             <span className="ml-3 text-red-600 font-medium">
               {criticalCount} {t('casesWithCritical')}
@@ -388,7 +399,7 @@ export default function AnalysisPage() {
               </span>
             </div>
           ) : (
-            <OutcomesView />
+            <OutcomesView cohort={trajectoriesCohort} centers={selectedCenters} />
           )}
         </section>
       ) : (
