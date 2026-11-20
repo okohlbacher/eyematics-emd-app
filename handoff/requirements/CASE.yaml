@@ -61,12 +61,12 @@ requirements:
     notes: "When the page was opened directly (no history entry) navigate(-1) may leave the page unchanged; open it from an in-app page first to see the back navigation."
   - id: UIR-CASE-004
     title: "Patient header fields and Zurück button"
-    statement: "The case page shows a \"Zurück\" button and a patient header with pseudonym, age (\"Alter: N Jahre\"), gender, centre, eye badge (OD/OS) and contact count (\"N Kontakte\")."
+    statement: "The case page shows a \"Zurück\" button and a patient header with the pseudonym as heading under a small caption \"Pseudonym\" (Z0-P09, Q35 a), age (\"Alter: N Jahre\"), gender, centre, eye badge (OD/OS) and contact count (\"N Kontakte\")."
     status: implemented
     sources: ["spec: EMDREQ-FALL-002 / N05.01", "code: src/pages/CaseDetailPage.tsx:216-254; src/components/case-detail/PatientHeader.tsx:152-184", "manual: Benutzerhandbuch §6.1"]
     evidence:
       - "src/pages/CaseDetailPage.tsx:216-221 (Zurück), 224-254 (PatientHeader props)"
-      - "src/components/case-detail/PatientHeader.tsx:160-184 (h1 pseudonym; '{t('age')}: {getAge(birthDate)} {t('years')}'; t('female')/t('male'); centerName; eye badge t('rightEye')/t('leftEye'); '{totalEncounters} {t('contacts')}')"
+      - "src/components/case-detail/PatientHeader.tsx:172-177 (caption t('pseudonym') 'Pseudonym' above the h1 pseudonym, Z0-P09); 160-190 ( '{t('age')}: {getAge(birthDate)} {t('years')}'; t('female')/t('male'); centerName; eye badge t('rightEye')/t('leftEye'); '{totalEncounters} {t('contacts')}')"
       - "src/i18n/translations.ts:34-44 (female 'Weiblich', male 'Männlich', age 'Alter', years 'Jahre', contacts 'Kontakte'), :271-272 (rightEye 'Rechtes Auge (OD)', leftEye 'Linkes Auge (OS)')"
       - "src/hooks/useCaseData.ts:517-518 (totalEncounters = observations + procedures), :227 (eyeLaterality from the first visus observation's bodySite)"
     tests: []
@@ -75,7 +75,7 @@ requirements:
       steps:
         - "Open /cohort, switch to \"Detailansicht\", click any row (or open /case/pat-uka-003 directly)."
         - "Inspect the top white card."
-      expect: "A \"Zurück\" button sits above the card; the card shows the pseudonym (EM-UKA-0003 for pat-uka-003) as heading, \"Alter: N Jahre\", 'Weiblich' or 'Männlich', the centre name, a badge \"Rechtes Auge (OD)\" or \"Linkes Auge (OS)\", and a badge \"N Kontakte\"."
+      expect: "A \"Zurück\" button sits above the card; the card shows the caption \"Pseudonym\" and below it the pseudonym (EM-UKA-0003 for pat-uka-003) as heading, \"Alter: N Jahre\", 'Weiblich' or 'Männlich', the centre name, a badge \"Rechtes Auge (OD)\" or \"Linkes Auge (OS)\", and a badge \"N Kontakte\"."
     notes: "The eye badge is shown only when the first visus observation carries a body site. 'N Kontakte' counts observations + procedures, not encounters. The previously cited test 'calculates age from birthDate' (tests/ui-requirements.test.ts:276) exercises a local copy of getAge, not the component or fhirLoader — mapping removed."
   - id: UIR-CASE-005
     title: "No identifying data anywhere on the case page"

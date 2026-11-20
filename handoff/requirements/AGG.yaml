@@ -149,46 +149,55 @@ requirements:
       expect: "The line reads \"<N> Fälle in der aktuellen Kohorte\" where N equals the Kohortenbildung count from step 1."
     notes: "German label is \"Fälle in der aktuellen Kohorte\" (EN: \"cases in current cohort\"). The cited tests assert the leading number via /^2 / and /^1 / text matches."
   - id: UIR-AGG-007
-    title: "Header shows red critical-value count (CRT > 400 µm)"
-    statement: "The Analyse header shows a red \"N Fälle mit kritischen Werten (CRT > 400 µm)\" segment after the case count when at least one case of the current cohort has any CRT measurement above 400 µm."
+    title: "Header critical-value count opens the list of critical cases"
+    statement: "The Analyse header shows, after the case count, a red button \"N Fälle mit kritischen Werten (CRT > <Schwelle> µm)\" when at least one case of the current cohort has any CRT measurement above the critical threshold; it opens the dialog \"Fälle mit kritischen Werten\" listing those cases (pseudonym, \"Höchster CRT: <n> µm\", sorted descending) with a button \"Vollständige Fallansicht\" each; \"Zurück\" in the case view returns to the same analysis. In compare mode there is one count per cohort (\"<Kohorte>: N …\"), each opening its own cohort's list (Z0-P09, Q9, Q28, Q36)."
     status: implemented
-    sources: ["EMDREQ-ANL-004 / N02.14 (docs/Anforderungsabgleich.md: Umgesetzt)", "manual: docs/Benutzerhandbuch.md §5.2", "code: src/pages/AnalysisPage.tsx:304-309,343-347"]
+    sources: ["EMDREQ-ANL-004 / N02.14 (docs/Anforderungsabgleich.md: Umgesetzt)", "manual: docs/Benutzerhandbuch.md §5.2", "Z0-P09 (Q9, Q28, Q35, Q36, Q37)", "code: src/pages/AnalysisPage.tsx:341-362,478-499"]
     evidence:
-      - "src/pages/AnalysisPage.tsx:304-309 — criticalCount = centeredCohort cases with any LOINC_CRT observation value > 400"
-      - "src/pages/AnalysisPage.tsx:343-347 — <span className=\"ml-3 text-red-600 …\"> rendered only when criticalCount > 0"
-      - "src/i18n/translations.ts:220-223 — casesWithCritical 'Fälle mit kritischen Werten (CRT > 400 µm)'"
+      - "src/pages/AnalysisPage.tsx:341-362 — crtThreshold = thresholds.criticalCrtUm (UIR-AGG-008); criticalLists: one per cohort in compare mode, else one for the centred cohort, via shared/criticalCases.ts criticalCasesOf (any CRT > threshold, highest CRT descending)"
+      - "src/pages/AnalysisPage.tsx:478-499 — one red button per non-empty list (aria-haspopup dialog), '<Kohorte>: ' prefix in compare mode; CriticalCasesDialog for the opened list"
+      - "src/components/analysis/CriticalCasesDialog.tsx — role=dialog aria-modal, title 'Fälle mit kritischen Werten', focus trap, Escape closes and focus returns to the opener; entries pseudonym, 'Höchster CRT', button 'Vollständige Fallansicht' → /case/:id"
+      - "src/i18n/translations.ts:234-240 — casesWithCritical 'Fälle mit kritischen Werten (CRT > {threshold} µm)', criticalCasesTitle, criticalCasesMaxCrt 'Höchster CRT'"
       - "scripts/generate-center-bundle.ts:209-230,521-523 — seed CRT baselines 280–650 µm (clamped 200–700), so critical cases exist in the demo data"
-    tests: []
+    tests:
+      - file: tests/acceptance/Z0/Z0-P09.test.tsx
+        name: "[Z0-P09] threshold from settings; count and list cover only the cohort, highest CRT descending"
+      - file: tests/acceptance/Z0/Z0-P09.test.tsx
+        name: "[Z0-P09] compare mode: one count per cohort, each opening the list of its own cohort"
+      - file: tests/acceptance/Z0/Z0-P09.test.tsx
+        name: "[Z0-P09] \"Vollständige Fallansicht\" opens the case view of the entry"
     browser:
       route: "/analysis"
       steps:
         - "Log in as admin and open \"Analyse\" (all centres, no filter)."
-        - "Read the grey line under the \"Kohortenanalyse\" heading."
-        - "Under the heading \"Zentrum\" click the chip \"Universitätsklinikum Aachen\" and re-read the line."
-      expect: "Step 2 shows, in red after the case count, \"<N> Fälle mit kritischen Werten (CRT > 400 µm)\" with 0 < N ≤ case count; after step 3 both numbers change to the Aachen subset and the red N is still ≤ the new case count."
-    notes: "The red segment is rendered inline in the same <p> as the case count, not on its own line. criticalCount checks ANY CRT observation of a case, whereas the Kohortenbildung CRT range filter checks only the LATEST CRT — so a cohort filtered to latest CRT ≤ 300 µm may still show a red count (previous step 3 of this procedure was invalid and has been replaced). tests/AnalysisPage.test.tsx stubs getObservationsByCode to [], so criticalCount is never asserted."
+        - "Click the red \"<N> Fälle mit kritischen Werten (CRT > 400 µm)\" button under the \"Kohortenanalyse\" heading."
+        - "Click \"Vollständige Fallansicht\" on the first entry, then \"Zurück\"."
+        - "Activate a cohort comparison and re-read the header."
+      expect: "Step 2: a dialog \"Fälle mit kritischen Werten\" lists N entries, the first with the highest \"Höchster CRT\"; Escape closes it and focus returns to the button. Step 3: the case view header shows \"Pseudonym\" above that entry's pseudonym; \"Zurück\" returns to the same analysis URL. Step 4: one red count per cohort, each prefixed with the cohort name and opening that cohort's list."
+    notes: "criticalCasesOf checks ANY CRT observation of a case, whereas the Kohortenbildung CRT range filter checks only the LATEST CRT, so a cohort filtered to latest CRT ≤ 300 µm may still show a red count. The same predicate drives the Verläufe highlight (UIR-TRAJ-010, Z0-P12). Mapping these Z0-P09 tests protects them from later sessions."
   - id: UIR-AGG-008
     title: "Critical count uses the CRT threshold from Einstellungen"
-    statement: "The Analyse critical-value count and its label use the CRT threshold saved under \"Klinische Schwellenwerte\" in Einstellungen, so lowering the threshold increases the count after a reload."
-    status: not_implemented
-    sources: ["EMDREQ-ANL-004 / N02.14 (docs/Anforderungsabgleich.md: Umgesetzt — claims configurable thresholds)", "uat: v1.12 CFG-03 / Q-40-1 (no per-cohort snapshot by design)", "manual: docs/Benutzerhandbuch.md §5.2"]
+    statement: "The Analyse critical-value count, its label, its case list and the Verläufe highlight of critical cases use the CRT threshold saved under \"Klinische Schwellenwerte\" in Einstellungen (thresholds.criticalCrtUm), so lowering the threshold increases the count after a reload."
+    status: implemented
+    sources: ["EMDREQ-ANL-004 / N02.14 (docs/Anforderungsabgleich.md: Umgesetzt — claims configurable thresholds)", "uat: v1.12 CFG-03 / Q-40-1 (no per-cohort snapshot by design)", "manual: docs/Benutzerhandbuch.md §5.2", "Z0-P09 correction (Q37, NF 2026-11-20)"]
     evidence:
-      - "src/pages/AnalysisPage.tsx:303-308 — criticalCount compares against the literal 400 (line 306), not a settings value"
-      - "src/pages/AnalysisPage.tsx:39 — only CHART_COLORS is imported from config/clinicalThresholds; CRITICAL_CRT_THRESHOLD() is unused on this page"
-      - "src/config/clinicalThresholds.ts:15-17 — CRITICAL_CRT_THRESHOLD() reads getSettings().thresholds.criticalCrtUm (exists, used elsewhere)"
-      - "src/hooks/useCaseData.ts:521-525; src/components/quality/QualityCaseDetail.tsx:154; src/components/case-detail/VisusCrtChart.tsx:304 — other pages DO use the configurable threshold"
-      - "src/i18n/translations.ts:220-223 — label hardcodes 'CRT > 400 µm'"
+      - "src/pages/AnalysisPage.tsx:345 — crtThreshold = getSettings().thresholds?.criticalCrtUm ?? THRESHOLD_DEFAULTS.criticalCrtUm (same source and default as CRITICAL_CRT_THRESHOLD(); read directly because tests/AnalysisPage.test.tsx mocks config/clinicalThresholds without it); used for count, label and list (352, 359, 489)"
+      - "src/components/outcomes/OutcomesView.tsx:62 — Verläufe highlight (Z0-P12) uses CRITICAL_CRT_THRESHOLD()"
+      - "src/config/clinicalThresholds.ts:15-17 — CRITICAL_CRT_THRESHOLD() reads getSettings().thresholds.criticalCrtUm; also used by the case view (VisusCrtChart.tsx:316) and Datenqualität (QualityCaseDetail.tsx:154)"
       - "src/pages/SettingsPage.tsx:666-689; src/i18n/translations.ts:1149-1151 — \"Klinische Schwellenwerte\" form field \"CRT kritischer Schwellenwert (µm)\" saves thresholds.criticalCrtUm"
-    tests: []
+      - "config/settings.yaml:10 vs :29 — crtImplausibleThresholdUm (cohort-builder implausibility limit) is a separate setting and not used here"
+    tests:
+      - file: tests/acceptance/Z0/Z0-P09.test.tsx
+        name: "[Z0-P09] threshold from settings; count and list cover only the cohort, highest CRT descending"
     browser:
       route: "/analysis"
       steps:
         - "Log in as admin, open \"Analyse\" and note the red \"N Fälle mit kritischen Werten (CRT > 400 µm)\" count."
         - "Open \"Einstellungen\", scroll to the card \"Klinische Schwellenwerte\", set \"CRT kritischer Schwellenwert (µm)\" to 250 and click the \"Speichern\" button at the bottom of THAT card; a green banner \"Einstellungen gespeichert\" appears at the top of the page."
-        - "Reload the browser, open \"Analyse\" again and read the red count and its label."
+        - "Reload the browser, open \"Analyse\" again and read the red count and its label; open Verläufe → \"Diagramm-Anzeige\", tick \"Fälle mit kritischen Werten hervorheben\"."
         - "Restore the threshold to 400 afterwards."
-      expect: "CURRENT BEHAVIOUR (gap): count and label \"(CRT > 400 µm)\" are unchanged after step 3. REQUIRED BEHAVIOUR: the count increases and the label reads \"(CRT > 250 µm)\"."
-    notes: "Not implemented on the Analyse page: computation (literal 400 at AnalysisPage.tsx:306) and label are hardcoded although CRITICAL_CRT_THRESHOLD() is available and used by Fallansicht/Datenqualität. CFG-03 concerns server-side outcome aggregation options and Q-40-1 the no-snapshot decision — neither wires the Analyse critical count to thresholds.criticalCrtUm."
+      expect: "After step 3 the count increases and the label reads \"(CRT > 250 µm)\"; more cases are highlighted red in Verläufe."
+    notes: "Implemented by Z0-P09 (9581308) with the correction e997044 (Q37): the first P09/P12 commits read crtImplausibleThresholdUm by a planning error. The unit test mocks criticalCrtUm 350 and crtImplausibleThresholdUm 400 and asserts 350. The Verläufe highlight has no test with differing thresholds (code reading only)."
   - id: UIR-AGG-009
     title: "Centre multi-select chips narrow count and charts"
     statement: "The Analyse page shows a centre chip row headed \"Zentrum\" (only when the cohort spans >1 centre) that narrows the case count and all charts, with a count badge and a \"Zurücksetzen\" link."

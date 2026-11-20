@@ -218,11 +218,13 @@ requirements:
     notes: "<n> is the panel's own patient count (patients with a measurement for that eye), not the cohort size."
   - id: UIR-TRAJ-010
     title: "Settings drawer offers axis, Y-mode, layer and grid controls"
-    statement: "The settings drawer (Visus/CRT) offers X-axis radios \"Tage seit Baseline\"/\"Anzahl Behandlungen\", Y radios absolute/Δ/Δ %, checkboxes for the four layers and a grid slider 20–300; with X \"Anzahl Behandlungen\" the slider is disabled and a hint says the grid is fixed to whole treatment counts (Z0-P08, Q8)."
+    statement: "The settings drawer (Visus/CRT) offers X-axis radios \"Tage seit Baseline\"/\"Anzahl Behandlungen\", Y radios absolute/Δ/Δ %, checkboxes for the four layers, a checkbox \"Fälle mit kritischen Werten hervorheben\" (default off; draws every measurement of each critical case as a red line with points and a legend entry \"Fälle mit kritischen Werten\", also in compare mode; kept for the session, reset by \"Zurücksetzen\"; Z0-P12, Q11) and a grid slider 20–300; with X \"Anzahl Behandlungen\" the slider is disabled and a hint says the grid is fixed to whole treatment counts (Z0-P08, Q8)."
     status: implemented
     sources: ["spec: EMDREQ-ANL-002 / N02.08", "code: src/components/outcomes/OutcomesSettingsDrawer.tsx:124-239"]
     evidence:
       - "src/components/outcomes/OutcomesSettingsDrawer.tsx:124-154 — X-axis radios with aria-labels; 157-173 Y radios absolute/delta/delta_percent (CRT-specific labels via yMetricKey 40-50); 176-204 four layer checkboxes; 223-239 range min 20 max 300 step 10 with '{n} Stützstellen'; 235-236 disabled in treatments mode, aria-describedby outcomes-grid-hint; 239-242 hint outcomesGridFixedTreatments instead of the caption"
+      - "src/components/outcomes/OutcomesSettingsDrawer.tsx:208-221 — checkbox outcomesHighlightCritical; OutcomesView.tsx:60-67 critical pseudonyms via shared/criticalCases.ts with CRITICAL_CRT_THRESHOLD() (UIR-AGG-008); trajectoryTraces.ts:59-68 criticalSeriesOf; OutcomesPanel.tsx:185,643,655 CRITICAL_HIGHLIGHT colour, stroke and point radius (palette.ts)"
+      - "src/i18n/translations.ts:888-889 — DE 'Fälle mit kritischen Werten hervorheben', legend 'Fälle mit kritischen Werten'"
       - "shared/cohortTrajectory.ts:198 — buildGrid(…, axisMode): treatments → every integer from ceil(min) to floor(max), gridPoints ignored (client and server)"
       - "src/i18n/translations.ts:887 — DE 'Bei „Anzahl Behandlungen“ ist das Raster auf ganze Behandlungszahlen festgelegt.'"
       - "src/i18n/translations.ts:855-871,954-956 — DE section/control labels 'X-Achse', 'Y-Metrik', 'Anzeigeebenen', 'Interpolationsraster', 'Absolut (logMAR)', 'Δ (Differenz zur Baseline)', 'Δ % (prozentuale Änderung)'"
