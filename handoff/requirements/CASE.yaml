@@ -236,8 +236,8 @@ requirements:
       expect: "Step 3: dashed median lines/bands (Visus/CRT, baseline, IOD), grouped % bars (distributions) and grey cloud (scatter) appear. Step 4: all of them vanish and the count histograms return."
     notes: "Statement corrected: PatientHeader renders no 'implausible-data' warning — only the adverse-event and critical-value badges sit left of the toggle. The toggle does NOT govern the always-visible grey 'Visus Ø' / 'CRT Ø' average lines (see UIR-CASE-056)."
   - id: UIR-CASE-013
-    title: "Vergleichskohorte wählen selector"
-    statement: "The user can choose the overlay cohort via \"Vergleichskohorte wählen\" (\"Alle Patienten\" default plus saved searches containing the patient); the select appears only with more than one option."
+    title: "Kohorten vergleichen button with the Vergleichskohorte wählen panel"
+    statement: "The user chooses the overlay cohort via the always-visible button \"Kohorten vergleichen\", which opens the radio panel \"Vergleichskohorte wählen\" with exactly one selectable cohort: \"Alle Patienten\" first, then the saved searches containing the patient by name (Z0-P23, C11, Q22, Q32; supersedes the select)."
     status: implemented
     sources: ["spec: EMDREQ-FALL-006 / N05.23", "uat: v1.19 N11", "code: src/components/case-detail/PatientHeader.tsx:217-233"]
     evidence:
@@ -256,8 +256,8 @@ requirements:
         - "Open that patient's case page; tick \"Kohorten-Referenz anzeigen\"."
         - "Open the select left of the checkbox (aria-label \"Vergleichskohorte wählen\")."
         - "Choose the saved search."
-      expect: "Options read \"Alle Patienten (N=…)\" first and the saved search \"<name> (N=…)\"; after choosing it, the band/median shape in the Visus/CRT chart changes. For a patient in no saved search the select is absent."
-    notes: "The select is rendered regardless of the toggle state (as long as >1 option exists); only the active-label badge needs the toggle on. Saved searches are materialised against activeCases (excluded cases are never members)."
+      expect: "The button is present for every case; the panel lists \"Alle Patienten (N=<n> Patient:innen)\" first and the saved search \"<name> (N=<n> Patient:innen)\" as radios; after choosing it the band/median shape in the Visus/CRT chart changes. For a patient in no saved search only \"Alle Patienten\" is listed."
+    notes: "Rewritten for Z0-P23. The panel closes on a new case view. Saved searches are materialised against activeCases (excluded cases are never members). N10 label still shows (N=n) without the unit (observed in P23, not changed)."
   - id: UIR-CASE-014
     title: "Active cohort label with name and N"
     statement: "With the reference on, the patient header names the active overlay cohort as \"Vergleichskohorte: <name> (N=…)\" beneath the toggle, and the label updates when the cohort is changed."
@@ -378,7 +378,7 @@ requirements:
     notes: ""
   - id: UIR-CASE-020
     title: "Dual-axis Visus/CRT time-course chart"
-    statement: "The case page shows a \"Visusverlauf und Netzhautdicke (CRT)\" chart with visus on the left axis (green) and CRT on the right axis (violet) over time, with a tooltip naming both metrics."
+    statement: "The case page shows a \"Visusverlauf und Netzhautdicke (CRT)\" chart with Visus in logMAR on the left axis (green, \"Visus (logMAR)\") and CRT on the right axis (violet, \"Netzhautdicke (µm)\") over time, with one tooltip box naming both metrics (Z0-P23, Q31, C15)."
     status: implemented
     sources: ["spec: EMDREQ-FALL-003 / N05.24", "manual: Benutzerhandbuch §6.3", "code: src/components/case-detail/VisusCrtChart.tsx:239-337"]
     evidence:
@@ -394,7 +394,7 @@ requirements:
       steps:
         - "Open the case page; find the card \"Visusverlauf und Netzhautdicke (CRT)\"."
         - "Hover a data point."
-      expect: "Left axis 0–1 titled 'Visus' in green, right axis titled 'CRT (µm)' in violet, a green and a violet line; the tooltip shows the date, 'Visus: 0.xx' and 'CRT (µm): NNN µm'."
+      expect: "Left axis in logMAR titled 'Visus (logMAR)' in green, right axis titled 'Netzhautdicke (µm)' in violet, a green and a violet line; the tooltip box shows the date as heading and rows '<Bezeichnung>: <Wert>' for Visus (logMAR) and CRT."
     notes: "The second test only asserts ≥2 Line elements render; Recharts Tooltip is mocked to null in all chart tests, so the tooltip rows are unverified by the suite."
   - id: UIR-CASE-021
     title: "Clickable injection markers on the time axis"
@@ -418,7 +418,7 @@ requirements:
     notes: "The clickable area is the thin SVG line itself; aim precisely. With 22 injections the IVI labels overlap heavily on a 300 px chart."
   - id: UIR-CASE-022
     title: "CRT legend label and upright right-axis title"
-    statement: "The Visus/CRT chart labels CRT as \"CRT (µm)\" in the legend and the right-hand CRT axis title is upright and readable, not mirrored."
+    statement: "The Visus/CRT chart labels CRT as \"CRT (µm)\" in the legend and titles the right-hand axis \"Netzhautdicke (µm)\", upright and readable, not mirrored (axis title per Z0-P23, C15)."
     status: implemented
     sources: ["uat: v1.10 A-07 / FALL-003; v1.12 FALL-012"]
     evidence:
@@ -432,11 +432,11 @@ requirements:
       route: "/case/pat-uka-003"
       steps:
         - "Open the case page; look at the \"Visusverlauf und Netzhautdicke (CRT)\" legend and the right axis."
-      expect: "Legend entry 'CRT (µm)'; the right axis title 'CRT (µm)' is rotated like the left axis title (reads bottom-to-top), not mirrored or upside-down."
+      expect: "Legend entry 'CRT (µm)'; the right axis title 'Netzhautdicke (µm)' is rotated like the left axis title (reads bottom-to-top), not mirrored or upside-down."
     notes: "Both axis titles use angle -90 (bottom-to-top). 'Upright' is satisfied in the sense of not mirrored; the test checks the label text only, not the angle."
   - id: UIR-CASE-023
-    title: "Visus axis title and full legend label"
-    statement: "The Visus axis is titled \"Visus\" and the legend carries the full label \"Visus (Dezimal, bestkorrigiert)\" without being cut off."
+    title: "Visus axis title and full legend label (logMAR)"
+    statement: "The Visus axis is titled \"Visus (logMAR)\" and the legend carries the full label \"Visus (logMAR, bestkorrigiert)\" without being cut off (Z0-P23, Q31; supersedes the decimal labels)."
     status: implemented
     sources: ["uat: v1.14 I4; v1.13 A4"]
     evidence:
@@ -452,8 +452,8 @@ requirements:
       route: "/case/pat-uka-003"
       steps:
         - "Open the case page and look at the \"Visusverlauf und Netzhautdicke (CRT)\" card."
-      expect: "Left axis title reads 'Visus'; the legend under the chart contains the complete text 'Visus (Dezimal, bestkorrigiert)'."
-    notes: ""
+      expect: "Left axis title reads 'Visus (logMAR)'; the legend under the chart contains the complete text 'Visus (logMAR, bestkorrigiert)'."
+    notes: "Rewritten for Z0-P23 (Q31): only this chart is logMAR; the case-view distribution/scatter charts, Aggregiert and the cohort-builder filter stay decimal. translations.ts visusShortLabel is orphaned (observed in P23)."
   - id: UIR-CASE-024
     title: "Filled markers only, no 'Offene Kreise'"
     statement: "The Visus/CRT trajectory uses filled markers only, draws interpolated gaps through the line itself, and shows no 'Offene Kreise' explanation anywhere."
@@ -687,7 +687,7 @@ requirements:
         - "Tick \"Kohorten-Referenz anzeigen\"."
         - "Hover a visit point in \"Visusverlauf und Netzhautdicke (CRT)\"; then hover the same relative month in \"Veränderung zum Ausgangswert\" and in IOD."
       expect: "Tooltips show a header like '7 Monate seit Erstvisite', the patient values and rows 'Kohorten-Median Visus/CRT' (or 'Kohorten-Median Änderung', 'Kohorten-Median IOD'); no comma-separated pairs such as '12,14'."
-    notes: "All chart tests mock the Recharts Tooltip to null, so the tooltip content is unverified by the suite. In the baseline tooltip both median rows carry the same name 'Kohorten-Median Änderung' and are distinguished by colour only."
+    notes: "Since Z0-P23 all case-view tooltips use the shared box (heading + '<Bezeichnung>: <Wert>'). In the baseline tooltip both median rows still carry the same name 'Kohorten-Median Änderung' (CaseDetailPage.tsx:399-400) and are distinguished by colour only (observed, not changed)."
   - id: UIR-CASE-035
     title: "Info icons explain plots and overlay aggregation"
     statement: "Info icons next to plot titles (role=img, title, aria-label, focusable) explain each plot; with the overlay on, the Visus/CRT, baseline and IOD icons also explain the IQR band and relative time."
@@ -1092,7 +1092,7 @@ requirements:
     notes: "The cited middleware test covers /api/* generically (a synthetic /api/protected route), not the images route specifically."
   - id: UIR-CASE-056
     title: "Cohort average reference lines always shown on Visus/CRT"
-    statement: "The Visus/CRT chart always draws grey dashed horizontal lines labelled \"Visus Ø <mean>\" and \"CRT Ø <mean>\" for the selected comparison cohort, independent of the overlay toggle."
+    statement: "The Visus/CRT chart always draws grey dashed horizontal lines labelled \"Visus Ø <mean>\" (mean of the cohort's logMAR values since Z0-P23, Q31) and \"CRT Ø <mean>\" for the selected comparison cohort, independent of the overlay toggle."
     status: implemented
     sources: ["spec: EMDREQ-FALL-006 (cohort comparison)", "code: src/components/case-detail/VisusCrtChart.tsx:288-301"]
     evidence:
@@ -1105,7 +1105,7 @@ requirements:
       steps:
         - "Open the case with \"Kohorten-Referenz anzeigen\" unticked; look at the \"Visusverlauf und Netzhautdicke (CRT)\" chart."
         - "Tick the toggle, choose a saved cohort in \"Vergleichskohorte wählen\" (if offered) and look again."
-      expect: "Step 1: a grey dashed line labelled 'Visus Ø 0.xx' (top-left, visus axis) and a lilac dashed line 'CRT Ø NNN' (top-right, CRT axis) are present even with the overlay off. Step 2: the lines stay and their values change with the selected cohort."
+      expect: "Step 1: a grey dashed line labelled 'Visus Ø 0.xx' (logMAR, top-left, visus axis) and a lilac dashed line 'CRT Ø NNN' (top-right, CRT axis) are present even with the overlay off. Step 2: the lines stay and their values change with the selected cohort."
     notes: "Added by the refute pass. Unlike the median/IQR overlay these averages are plain means that INCLUDE the index patient, have no legend entry and ignore the toggle — a likely source of tester confusion ('Kohorten-Referenz aus, aber Kohortenlinie sichtbar')."
   - id: UIR-CASE-057
     title: "Visus measurement method line under the chart title"

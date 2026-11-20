@@ -197,7 +197,7 @@ requirements:
         - "Hover a point in the Visus/CRT chart and in the distribution charts; check grid lines, tick labels and the tooltip box. Optionally toggle \"Kohorten-Referenz anzeigen\" and inspect the overlay band."
         - "Scroll to the \"Anamnese\", \"Befunde\", \"Unerwünschte Ereignisse\", \"Medikation\" and \"OCT-Aufnahmen\" cards."
       expect: "Header, timeline, chart grids/ticks (grey on dark), tooltip boxes (dark background, light text) and all listed cards are dark; no white card or white tooltip remains."
-    notes: "No test asserts dark styling of case-detail components; CaseDetailRound5/7 tests render the components in light mode only."
+    notes: "No test asserts dark styling of case-detail components; CaseDetailRound5/7 tests render the components in light mode only. Since Z0-P23 the case-view tooltips use the shared ChartTooltipBox with theme colours (caseChartColors); the comparison panel is the drawer of UIR-THEME-016 (no dark classes yet)."
 
   - id: UIR-THEME-009
     title: "Dark mode restyles quality and doc-quality pages"
@@ -376,4 +376,4 @@ requirements:
         - "Click the amber \"Problem melden\" tab at the right edge of the page; wait until role=dialog \"Problem melden\" exists (≥ 2 s)."
         - "Look at the dialog panel, its header and its text colours against the dark page; close with Escape."
       expect: "REQUIRED BEHAVIOUR: panel, header, textarea and buttons use dark surfaces with light text. CURRENT BEHAVIOUR (gap): the panel is white with a light-grey header on the dark page."
-    notes: "found 2026-10-08 during handoff review — backlog. Only the Problem melden dialog was checked; the Verläufe drawers (\"Diagramm-Anzeige\", \"Kohorten vergleichen\") and the theme menu should be re-checked when the fix lands."
+    notes: "found 2026-10-08 during handoff review — backlog. Only the Problem melden dialog was checked. Re-check 2026-11-20 (Z0-P23 review): the \"Kohorten vergleichen\" drawer (CohortCompareDrawer.tsx:150, now also on Aggregiert and in the case view) has no dark-mode classes (bg-white, border-gray-200); not changed in P23."

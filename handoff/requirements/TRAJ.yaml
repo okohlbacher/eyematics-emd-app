@@ -174,8 +174,8 @@ requirements:
       expect: "Step 2: all three panels' y-axis title becomes 'Δ logMAR %' and x-axis title 'Behandlung #'. Step 3: y-axis title 'Netzhautdicke (µm)' and x-axis 'Tag'. Step 4: data-ylabel equals the visible y-axis title."
     notes: "Label list matches the exact strings in translations.ts. No test asserts the ylabel marker or the Plotly axis titles (Plotly does not run in jsdom)."
   - id: UIR-TRAJ-008
-    title: "Plotly modebar: zoom, pan, box/lasso, autoscale, reset; no logo/camera"
-    statement: "The user can zoom, pan, box-select and lasso on each Verläufe panel via the Plotly modebar and autoscale/reset the view; no Plotly logo or image-export button is shown and the legend sits below."
+    title: "Drag-to-zoom and Brush with \"Zoom zurücksetzen\" (Plotly modebar removed)"
+    statement: "The user can zoom each Verläufe panel by dragging across the plot or with the Brush below it and restore the full extent with \"Zoom zurücksetzen\"; pan, box-select and lasso are not offered (Z0-P23, C8 a, Q21 a; supersedes the Plotly modebar)."
     status: implemented
     sources: ["UAT v1.17 L12; confirmed v1.18", "code: src/components/outcomes/OutcomesPanel.tsx:331-373"]
     evidence:
@@ -191,8 +191,8 @@ requirements:
         - "Drag a rectangle inside the plot area."
         - "Click the modebar 'Reset axes' (home) icon."
         - "Click the pan (hand) icon and drag; click the box-select and lasso icons."
-      expect: "Modebar shows zoom, pan, box select, lasso, zoom-in, zoom-out, autoscale and reset icons only; no camera/'Download plot' icon and no 'Produced with Plotly' logo. Step 3 zooms into the box; step 4 restores the original extent; the 'Median' legend entry is rendered below the plot."
-    notes: "Not testable in jsdom (Plotly never executes there); the config is verified by code reading only."
+      expect: "Dragging across a panel zooms the x-range to the dragged span and the Brush handles follow; dragging the Brush handles narrows the range; \"Zoom zurücksetzen\" restores the full extent with the complete median line and IQR band; changing x-axis, y-mode or cohort also resets the zoom. No Plotly modebar or logo."
+    notes: "Rewritten for Z0-P23 (C8 a, Q21 a, NF 2026-11-18/19). The Brush index range is derived from the zoom (re-review fix in c8d3cbd, tests/acceptance/Z0/Z0-P23.test.tsx). The zoom reset on a y-mode change is not specified by the feature/PLAN (open, severity 1). Browser check pending."
   - id: UIR-TRAJ-009
     title: "Panel has role=img aria-label with count and drill-down hint"
     statement: "The Verläufe panels have role=img with an aria-label naming the panel, patient count and, in single-cohort mode only, the hint \"Datenpunkt anklicken, um den Fall zu öffnen\"."
@@ -481,8 +481,8 @@ requirements:
       expect: "Step 3: \"Streupunkte\" ticked, \"Anzahl Behandlungen\" selected, '200 Stützstellen'; the stored JSON contains axisMode 'treatments', gridPoints 200 and layers.scatter true. Step 4: the same settings are still active after the metric switch and for the other cohort. Step 5: the defaults are back (key removed). Note: the active metric is NOT restored from storage — returning without ?metric= shows \"Visus\"."
     notes: "Partial: metric is written to storage (handleMetricChange) but never read back; the active metric comes solely from ?metric=. Returning via the sidebar lands on the \"Aggregiert\" tab first. Since Z0-P06 (C7, Q24, 2026-11-19) the state is session-wide instead of per cohort ('<cohortId|__adhoc__>' keys are gone) and a metric-tab switch keeps it. Not covered by tests: survival across a metric-tab switch, the centre restore in AnalysisPage, and that the three logout paths call the clear (P06 review, findings-open)."
   - id: UIR-TRAJ-021
-    title: "Scatter renders full cloud via WebGL, downsampled only above 6000"
-    statement: "The Verläufe scatter renders the full point cloud via WebGL (no 1,500-point cap), downsampling evenly only above 6000 points per panel with a console.info line, and stays responsive."
+    title: "Scatter and individual curves render the full cloud (SVG, no cap)"
+    statement: "The Verläufe scatter and individual curves render every point in one SVG layer without a point cap or downsampling, and a layer toggle on \"Alle Patienten\" with individual curves completes within 1 s (Z0-P23, C8 b/d, Q21 b; supersedes the WebGL cloud with a 6000-point cap)."
     status: implemented
     sources: ["UAT v1.17 L1/L2; confirmed v1.18", "code: src/components/outcomes/OutcomesPanel.tsx:228-240", "code: src/components/outcomes/plotlyTraces.ts:49"]
     evidence:
@@ -499,11 +499,11 @@ requirements:
         - "Click \"Diagramm-Anzeige\" and tick \"Streupunkte\"."
         - "Inspect a panel: count <canvas> elements inside [data-testid=outcomes-plotly-od]."
         - "Toggle \"Streuband (IQR)\" off and on three times."
-      expect: "Dense dot clouds in all three panels (thousands of points, not a sparse 1,500 sample); the console shows a '[OutcomesPanel] scatter downsampled for eye=…' info line only if a panel exceeds 6000 points; each panel contains WebGL canvases (canvas.gl-canvas); each toggle redraws within ~1 s without freezing."
-    notes: "Responsiveness is a browser-only observation; tests cover the cap, logging and even-stride sampling on the jsdom fallback."
+      expect: "Dense dot clouds in all panels with every point drawn; no 'scatter downsampled' console line; no WebGL canvas; each toggle redraws within 1 s without freezing."
+    notes: "Rewritten for Z0-P23. Measured in the P23 session: 'Alle Patienten' + individual curves, IQR off/on 105–125 ms locally (first stage of Q21 b). Responsiveness in the release container is a browser observation."
   - id: UIR-TRAJ-022
-    title: "No WebGL context accumulation on repeated toggles and tab switches"
-    statement: "The Verläufe view does not accumulate WebGL contexts: repeated layer toggles and metric switches never log 'Too many active WebGL contexts' and all canvases keep rendering."
+    title: "Repeated toggles and tab switches keep all panels rendering"
+    statement: "Repeated layer toggles and metric switches in Verläufe keep every panel rendering its median, lines and points; since Z0-P23 the panels are SVG (Recharts), so no WebGL context is created."
     status: implemented
     sources: ["UAT v1.20.2", "manual: .planning/v1.20-ROADMAP.md v1.20.2", "code: src/components/outcomes/PlotlyChart.tsx:73-78,123-129,181-202"]
     evidence:
@@ -517,8 +517,8 @@ requirements:
         - "Toggle \"Streuband (IQR)\" off/on six times."
         - "Click metric tabs CRT → Visus → CRT → Visus."
         - "Scroll through all three panels."
-      expect: "No console warning containing 'Too many active WebGL contexts' or '[PlotlyChart] render failed'; after step 3 every panel still shows its median, lines and dots (no black/blank canvas)."
-    notes: "tests/plotlyRenderable.test.ts 'probes once and releases the WebGL probe context' covers only the feature-detection probe, not the panel contexts; no test exercises the release path in PlotlyChart (browser-only)."
+      expect: "After step 3 every panel still shows its median, lines and dots; the console shows no render error and no WebGL warning."
+    notes: "Rewritten for Z0-P23 (C8 a: Plotly/WebGL removed); the former WebGL-context concern no longer applies. No dedicated test."
   - id: UIR-TRAJ-023
     title: "Tooltip shows hovered point's pseudonym, x and y with unit"
     statement: "The UI shows, on scatter-point hover, a tooltip with that exact point's pseudonym, x (\"<n> d\" or \"#<n>\") and y value with unit, not the nearest point on the X-axis, and hides it on unhover."
@@ -717,7 +717,7 @@ requirements:
         - "Click the chevron left of the parent cohort row."
         - "Click \"Einzelne Kohorte anzeigen\"."
       expect: "The first row reads 'Alle Patienten (N=<n> Patient:innen)' and is ticked; rows read '<Name> (N=<n> Patient:innen)'; the opened cohort is ticked, disabled and suffixed '· Basis-Kohorte (fest)'; after step 3 all remaining unticked checkboxes are disabled (greyed); step 4 hides the indented sub-cohort rows; step 5 closes the drawer and the URL loses ?cohorts=."
-    notes: "Since Z0-P05 the unit is translated (key outcomesComparePatientsUnit); 'Alle Patienten' counts the patients of the included cases (exclusions removed). Collapse chevron behaviour has no test."
+    notes: "Since Z0-P05 the unit is translated (key outcomesComparePatientsUnit); 'Alle Patienten' counts the patients of the included cases (exclusions removed). Since Z0-P23 (C15) the options are sorted 'Alle Patienten' first, then by name, each with its cohort colour swatch, and the same drawer is used on Aggregiert (radio variant in the case view, UIR-CASE-013). Collapse chevron behaviour has no test."
   - id: UIR-TRAJ-032
     title: "Compare drawer keeps any non-empty selection and stays interactive"
     statement: "The compare drawer keeps any non-empty selection: a single in-progress pick stays in ?cohorts= with its checkbox checked, and the user can deselect down to one cohort and re-select freely."

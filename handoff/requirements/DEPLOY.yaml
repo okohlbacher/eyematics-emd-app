@@ -294,8 +294,8 @@ requirements:
       expect: "Both reloads render the same page (Verläufe tab / case detail) with HTTP 200; no 404 page and no 'No built frontend found' text."
     notes: ""
   - id: UIR-DEPLOY-014
-    title: "Verläufe WebGL renders under the production CSP"
-    statement: "The Verläufe \"Individuelle Kurven\" and \"Streupunkte\" layers render WebGL canvases under the production CSP via the strict Plotly bundle; Plotly never reports 'WebGL is not supported'."
+    title: "Verläufe renders under the production CSP without Plotly"
+    statement: "The Verläufe charts, including \"Individuelle Kurven\" and \"Streupunkte\", render as SVG (Recharts) under the production CSP; the bundle contains no Plotly chunk (Z0-P23, C8 a; supersedes the strict Plotly bundle)."
     status: implemented
     sources: ["uat: v1.20.1 (NF report, emd.ukaachen.de)", "code: src/components/outcomes/PlotlyChart.tsx:1-9,118", "manual: .planning/v1.20-ROADMAP.md v1.20.1; docs/Deployment.md:128"]
     evidence:
@@ -313,8 +313,8 @@ requirements:
         - "On the container (not Vite dev) log in, open \"Analyse\" → \"Verläufe\" with a cohort loaded."
         - "Open the panel \"Einstellungen\" (gear) and enable \"Individuelle Kurven\" and \"Streupunkte\"."
         - "Open DevTools → Console; in Elements count <canvas> elements inside the trajectory panels."
-      expect: "Curves and scatter points are drawn; WebGL canvases exist for the panels (9 with all three metrics × panels visible); the console shows no 'WebGL is not supported', no EvalError and no CSP violation."
-    notes: "tests/plotlyRenderable.test.ts asserts the WebGL probe only, not CSP compatibility, so it is not cited."
+      expect: "Curves and scatter points are drawn; no WebGL canvas; the console shows no EvalError and no CSP violation; scripts/container-smoke.sh check \"no Plotly chunk in the bundle\" passes."
+    notes: "Rewritten for Z0-P23. The container check (container-smoke.sh:54-55) replaced the former Plotly-chunk check in 3b20d77."
   - id: UIR-DEPLOY-015
     title: "Direct /data/* requests return 403"
     statement: "The production server blocks direct browser access to /data/* with a 403 JSON error; the UI loads bundles only via the authenticated /api/fhir/* endpoints."

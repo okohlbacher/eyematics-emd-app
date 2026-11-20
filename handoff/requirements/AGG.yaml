@@ -253,7 +253,7 @@ requirements:
     notes: "Enforcement is server-side (bundles filtered by req.auth.centers); the chip list is a pure projection of the already-authorised activeCases. The two server tests cover the authorisation mechanism, not the chip row itself. With a single assigned centre the chip row is hidden entirely."
   - id: UIR-AGG-011
     title: "Centre distribution bar chart"
-    statement: "The \"Aggregiert\" tab shows a \"Verteilung über Zentren\" bar chart with one bar per centre shorthand (e.g. UKA); hovering shows \"Fälle : N\" and the bars sum to the header case count."
+    statement: "The \"Aggregiert\" tab shows a \"Verteilung über Zentren\" bar chart with one bar per centre shorthand (e.g. UKA); hovering shows \"Fälle: N\" and the bars sum to the header case count."
     status: implemented
     sources: ["EMDREQ-ANL-001 / N02.07 (docs/Anforderungsabgleich.md: Umgesetzt)", "manual: docs/Benutzerhandbuch.md §5.1", "code: src/pages/AnalysisPage.tsx:229-236,545-561"]
     evidence:
@@ -269,8 +269,8 @@ requirements:
         - "Locate the card \"Verteilung über Zentren\" (top-left)."
         - "Count the bars and read the x-axis labels."
         - "Hover each bar, add up the tooltip values and compare with the \"… Fälle in der aktuellen Kohorte\" header."
-      expect: "Six bars labelled UKA, UKC, UKG, UKL, UKM, UKT; each tooltip shows \"Fälle : <N>\" (default Recharts name/value format); the sum of all N equals the header case count."
-    notes: "Bars are labelled with centre shorthands; the default Recharts tooltip renders \"Fälle : N\" (spaces around the colon). tests/AnalysisPage.test.tsx stubs all recharts components, so the chart is not asserted."
+      expect: "Six bars labelled UKA, UKC, UKG, UKL, UKM, UKT; each tooltip shows \"Fälle: <N>\" (shared tooltip box, Z0-P23 C15); the sum of all N equals the header case count."
+    notes: "Bars are labelled with centre shorthands; since Z0-P23 the shared tooltip box renders \"Fälle: N\" (C15). tests/AnalysisPage.test.tsx stubs all recharts components, so the chart is not asserted."
   - id: UIR-AGG-012
     title: "Diagnosis distribution pie with legend and full-text tooltip"
     statement: "The \"Aggregiert\" tab shows a \"Diagnoseverteilung\" pie with a scrollable legend list; hovering a slice shows \"Fälle: N\" and the full diagnosis name including the SNOMED code."
@@ -308,7 +308,7 @@ requirements:
         - "Read the x-axis tick labels."
         - "Hover a data point and read the tooltip."
         - "Switch to \"Verläufe\" and compare the Visus median curve shape."
-      expect: "X-axis ticks are quarters like \"2024-Q1\"; the tooltip header reads \"Quartal: 2024-Q1\" with a line \"Mittlerer Visus : 0.xxx\"; a single green line (legend \"Mittlerer Visus\") is drawn; it differs from the Verläufe median without any error."
+      expect: "X-axis ticks are quarters like \"2024-Q1\"; the tooltip header reads \"Quartal: 2024-Q1\" with a line \"Mittlerer Visus: 0.xxx\"; a single green line (legend \"Mittlerer Visus\") is drawn; it differs from the Verläufe median without any error."
     notes: "Mean is over all observations in the quarter (not per patient first), which is why it differs from the Verläufe median."
   - id: UIR-AGG-014
     title: "CRT distribution histogram with visible bars"
@@ -327,7 +327,7 @@ requirements:
         - "Open /analysis as admin and locate the card \"Netzhautdicke (CRT) Verteilung\"."
         - "Read the x-axis labels."
         - "Visually check that every bin with a non-zero count has a visible violet bar; hover a bar and read the tooltip."
-      expect: "Six bins labelled \"<200\", \"200–250\", \"250–300\", \"300–350\", \"350–400\", \">400\"; bars have visible heights proportional to counts; the tooltip reads \"Messungen : <N>\"."
+      expect: "Six bins labelled \"<200\", \"200–250\", \"250–300\", \"300–350\", \"350–400\", \">400\"; bars have visible heights proportional to counts; the tooltip reads \"Messungen: <N>\"."
     notes: "Rendering height cannot be verified statically; this is a plain BarChart (not the cohort-overlay histogram where the Recharts height-0 regression was observed in Fallansicht), so the browser check is the only guard. computeCrtDistribution has no unit test and is stubbed to [] in tests/AnalysisPage.test.tsx."
   - id: UIR-AGG-015
     title: "Age vs. visus scatter with median line and ascending axis"
@@ -347,11 +347,11 @@ requirements:
         - "Read the x-axis ticks from left to right (unit \"J.\")."
         - "Locate the dashed red horizontal line and its label in the top-right."
         - "Hover a point and read the tooltip."
-      expect: "Orange points; x-axis ages increase strictly left to right; a dashed red line labelled \"Median: 0.xx\" is drawn; the tooltip shows \"Alter : <n> J.\" and \"Visus : <v>\"."
+      expect: "Orange points; x-axis ages increase strictly left to right; a dashed red line labelled \"Median: 0.xx\" is drawn; the tooltip shows \"Alter: <n> J.\" and \"Visus: <v>\"."
     notes: "One point per case (cases without a visus observation are skipped). Not asserted by tests (recharts stubbed)."
   - id: UIR-AGG-016
-    title: "Comparison layout for two or more cohorts"
-    statement: "When ?cohorts= resolves to ≥2 saved cohorts (max 4), the \"Aggregiert\" tab shows a cohort legend plus \"Diagnoseverteilung nach Kohorte\" and \"Alter vs. Visus nach Kohorte\" comparison charts."
+    title: "Comparison on Aggregiert: button, drawer and every chart per cohort"
+    statement: "The \"Aggregiert\" tab has the \"Kohorten vergleichen\" button and drawer of Verläufe (shared ?cohorts= selection); with ≥2 cohorts (max 4) it shows a cohort legend \"<Name> (N=<n> Patient:innen)\" and every chart per cohort: centre and CRT as grouped bars, diagnosis as one pie per cohort, visus trend as one line per cohort, age vs. visus as one scatter per cohort (Z0-P23, Q17)."
     status: implemented
     sources: ["EMDREQ-ANL-003 / N02.11b (docs/Anforderungsabgleich.md: Umgesetzt)", "uat: v1.12 ANL-011", "code: src/pages/AnalysisPage.tsx:156-186,402-540"]
     evidence:
@@ -380,8 +380,8 @@ requirements:
         - "On \"Kohortenbildung\" save two searches (e.g. \"AMD\" and \"DR\") and copy their ids from the \"Outcomes anzeigen\" link URLs."
         - "Open /analysis?cohorts=<id1>,<id2>&tab=aggregate."
         - "Inspect the legend row at the top of the tab panel and the two cards below."
-      expect: "A legend (aria-label \"Kohortenlegende (Farbe → Name)\") lists \"AMD (N1)\" and \"DR (N2)\" with colour squares; the card \"Diagnoseverteilung nach Kohorte\" shows one pie per cohort headed by the cohort name; \"Alter vs. Visus nach Kohorte\" shows one scatter with a legend entry per cohort; the single-cohort five-chart grid is not shown."
-    notes: "Capped at 4 cohorts, unknown ids dropped, ?cohort= primary prepended if missing. Centre chips also narrow each compared cohort (centeredCrossCohorts), and the legend counts follow that narrowing."
+      expect: "The button sits at the rightmost header position as on Verläufe; after choosing two cohorts the legend lists both with colour squares; all five charts show one series per cohort in the Verläufe cohort colours (dark palette in dark mode)."
+    notes: "Rewritten for Z0-P23. Capped at 4 cohorts, unknown ids dropped, ?cohort= primary prepended if missing. Centre chips also narrow each compared cohort. The legend count is cases.length (equal to patients, one case per patient; observed in P23)."
   - id: UIR-AGG-017
     title: "Aggregiert and Verläufe share the same cohort"
     statement: "The \"Aggregiert\" and \"Verläufe\" tabs always operate on the same selected cohort: the trajectory patient count matches the Aggregiert case count after switching tabs."
