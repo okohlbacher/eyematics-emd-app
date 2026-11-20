@@ -167,7 +167,7 @@ describe('Z0-P23 OutcomesPanel (Recharts)', () => {
     const box = container.querySelector('[data-testid="outcomes-hover-tooltip-od"] [data-testid="chart-tooltip"]');
     expect(box).not.toBeNull();
     expect(box!.querySelectorAll('[data-tooltip-heading]').length).toBe(1);
-    expect(box!.querySelector('[data-tooltip-heading]')!.textContent).toBe('Tag 10');
+    expect(box!.querySelector('[data-tooltip-heading]')!.textContent).toBe('Tage seit Baseline: 10'); // Z0-P08 (Q33 b, NF 2026-11-20; was 'Tag 10')
     const rows = Array.from(box!.querySelectorAll('[data-tooltip-row]')).map((r) => r.textContent);
     expect(rows[0]).toBe('Patient: PSN-0');
     for (const r of rows) expect(r).toMatch(/^[^:]+: \S/);

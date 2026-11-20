@@ -301,7 +301,8 @@ test('[Z0-P23] Gleiches Mouseover-Format in Aggregiert, Verläufe und Einzelfall
   await openMetric(page, 'visus');
   await hoverPlotCentre(trajectoriesPanel(page).getByTestId('outcomes-panel-od'));
   // x axis = days; the hovered point is a median point (its row names the cohort median).
-  const verlaeufeTip = await expectTooltipFormat(page, /^Tag -?\d+$/);
+  // Heading "<x-axis label>: <x>" since Z0-P08 (Q33 b, NF 2026-11-20; was /^Tag -?\d+$/).
+  const verlaeufeTip = await expectTooltipFormat(page, /^Tage seit Baseline: -?\d+$/);
   await expect(verlaeufeTip.locator('[data-tooltip-row]').filter({ hasText: /^Kohorten-Median Visus: / })).toHaveCount(1);
 
   await openCaseOfTestkohorte(page);
