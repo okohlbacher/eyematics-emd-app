@@ -908,11 +908,13 @@ requirements:
     notes: "Tests cover the plot-adjacent ℹ only; the tab-strip ℹ in OutcomesView is untested. The tooltip text is static and does not follow the drawer's threshold input (UIR-TRAJ-013)."
   - id: UIR-TRAJ-040
     title: "Rohdaten anzeigen table with CSV export per metric"
-    statement: "The user can open a collapsible \"Rohdaten anzeigen\" table per metric with metric-specific columns, a row-count caption and a \"CSV exportieren\" button saving outcomes-<metric>-<date>.csv."
+    statement: "The user can open a collapsible \"Rohdaten anzeigen\" table per metric with metric-specific columns, a row-count caption and a \"CSV exportieren\" button saving outcomes-<metric>-<date>.csv; each value in the column \"Pseudonym\" is a link that opens that case's Einzelfallansicht (also in compare mode; modified clicks open a new tab), while the CSV keeps the plain pseudonym (Z0-P19)."
     status: implemented
-    sources: ["UAT v1.19 N6", "code: src/components/outcomes/OutcomesDataPreview.tsx:99-183,195-267"]
+    sources: ["UAT v1.19 N6", "Z0-P19 (Q15/Q30)", "code: src/components/outcomes/OutcomesDataPreview.tsx:99-183,195-267"]
     evidence:
       - "src/components/outcomes/OutcomesDataPreview.tsx:99-184 — per-metric columns, exportLabelKey, filenameBase outcomes-crt / outcomes-intervals / outcomes-responder / outcomes-cohort; 189-193 downloadCsv with datedFilename; 196-219 <details> summary 'Rohdaten anzeigen', caption '{rows} Messzeilen …', export button"
+      - "src/components/outcomes/OutcomesDataPreview.tsx:44-45,93-118 — optional onOpenCase; pseudonymCell renders <a href=\"/case/<id>\"> (first case per pseudonym, as handlePointDrillDown); plain left-click calls onOpenCase, modified/middle clicks keep native link behaviour; csv getters unchanged (plain text); without onOpenCase the cell stays text"
+      - "src/components/outcomes/VisusMetricContainer.tsx, CrtMetricContainer.tsx, OutcomesView.tsx — pass handlePointDrillDown as onOpenCase for all four metrics"
       - "src/utils/download.ts:50-52 — datedFilename `${prefix}-YYYY-MM-DD.${ext}`"
       - "src/components/outcomes/VisusMetricContainer.tsx:147-153, CrtMetricContainer.tsx:121-127, OutcomesView.tsx:245-251,266-273 — preview mounted for all four metrics"
       - "src/i18n/translations.ts:874-877,1008-1018 — DE labels incl. 'CSV exportieren (CRT)', 'CRT (µm)'"
@@ -932,8 +934,9 @@ requirements:
         - "Click \"Rohdaten anzeigen\"."
         - "Click \"CSV exportieren (CRT)\" and open the downloaded file."
         - "Repeat on metric=interval and metric=responder."
-      expect: "Step 2: a table with columns Pseudonym, Auge, Datum, 'CRT (µm)', 'Δ CRT (µm)' and a caption '<n> Messzeilen · identisch zum CSV-Export'. Step 3: a file outcomes-crt-YYYY-MM-DD.csv with the same headers and n rows. Step 4: files outcomes-intervals-… (Lücken-Index, Tage (Lücke), Behandlungsdatum) and outcomes-responder-… (Responder-Bucket, Δ Visus (Buchstaben), Messdatum); Visus exports outcomes-cohort-….csv."
-    notes: "Tests cover the Visus variant only; CRT/interval/responder column sets and filenames are verified by code reading."
+        - "Click a pseudonym in the table, then \"Zurück\"."
+      expect: "Step 2: a table with columns Pseudonym, Auge, Datum, 'CRT (µm)', 'Δ CRT (µm)' and a caption '<n> Messzeilen · identisch zum CSV-Export'. Step 3: a file outcomes-crt-YYYY-MM-DD.csv with the same headers and n rows. Step 4: files outcomes-intervals-… (Lücken-Index, Tage (Lücke), Behandlungsdatum) and outcomes-responder-… (Responder-Bucket, Δ Visus (Buchstaben), Messdatum); Visus exports outcomes-cohort-….csv. Step 5: the Einzelfallansicht of that pseudonym opens (header \"Pseudonym\" + the same value); \"Zurück\" returns to Verläufe. The CSV contains plain pseudonyms, no links."
+    notes: "Tests cover the Visus variant only; CRT/interval/responder column sets and filenames are verified by code reading. The pseudonym link and the unchanged CSV are covered by tests/acceptance/Z0/Z0-P19.spec.ts (container e2e, 13dfe78). In compare mode the table links work although the chart drill-down is off (Q12 b concerns the charts)."
   - id: UIR-TRAJ-041
     title: "Dark mode uses lighter eye colours and light axis/legend text"
     statement: "The trajectory panels use lighter eye colours and light axis, grid and legend text in dark mode."
