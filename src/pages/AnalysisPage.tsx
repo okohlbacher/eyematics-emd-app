@@ -34,6 +34,7 @@ import {
 } from 'recharts';
 
 import { criticalCasesOf } from '../../shared/criticalCases';
+import { THRESHOLD_DEFAULTS } from '../../shared/thresholdConfig';
 import CriticalCasesDialog from '../components/analysis/CriticalCasesDialog';
 import ChartLegend from '../components/charts/ChartLegend';
 import {
@@ -337,9 +338,11 @@ export default function AnalysisPage() {
     return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
   }, [ageVisusScatter]);
 
-  // Z0-P09 (Q28/Q36): cases with a CRT above the settings threshold, one list per cohort in compare mode
+  // Z0-P09 (Q28/Q36/Q37): cases with a CRT above the critical threshold (thresholds.criticalCrtUm), one list per cohort in compare mode
   // (each count opens the list of its own cohort); without comparison one list for the active cohort.
-  const crtThreshold = getSettings().crtImplausibleThresholdUm;
+  // Same source and default as CRITICAL_CRT_THRESHOLD() (Q37), read here directly: the accessor module is
+  // mocked without it in tests/AnalysisPage.test.tsx.
+  const crtThreshold = getSettings().thresholds?.criticalCrtUm ?? THRESHOLD_DEFAULTS.criticalCrtUm;
   const criticalLists = useMemo(() => {
     if (centeredCrossCohorts.length >= 2) {
       return centeredCrossCohorts.map((c) => ({

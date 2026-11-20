@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // Z0-P09 — plan decisions not exercised by the container scenarios (PLAN §Z0-P09, Q28/Q36). Synthetic data only.
-// - The threshold comes from settings (`crtImplausibleThresholdUm`), here mocked to 350, in the count and its label.
+// - The threshold comes from settings (`thresholds.criticalCrtUm` via CRITICAL_CRT_THRESHOLD(), Q37), here mocked to 350
+//   while the cohort-builder limit `crtImplausibleThresholdUm` is 400; count, label and list follow 350.
 // - Count and list contain only cases of the cohort, with their highest CRT, sorted descending.
 // - Compare mode: one count per cohort; each count opens the list of its own cohort.
 // Mock set mirrors tests/AnalysisPage.test.tsx (no jest-dom).
@@ -24,7 +25,12 @@ vi.mock('react-router-dom', () => ({
 vi.mock('../../../src/hooks/useRecentActivity', () => ({ useRecentActivity: () => ({ record: vi.fn() }) }));
 vi.mock('../../../src/context/LanguageContext', () => ({ useLanguage: () => ({ locale: 'de', t }) }));
 vi.mock('../../../src/services/settingsService', () => ({
-  getSettings: () => ({ therapyInterrupterDays: 90, therapyBreakerDays: 365, crtImplausibleThresholdUm: THRESHOLD }),
+  getSettings: () => ({
+    therapyInterrupterDays: 90,
+    therapyBreakerDays: 365,
+    crtImplausibleThresholdUm: 400,
+    thresholds: { criticalCrtUm: THRESHOLD },
+  }),
   loadSettings: vi.fn(),
 }));
 // applyFilters: a saved cohort is the set of cases at the centres named in its filter (empty = all).
@@ -52,7 +58,10 @@ vi.mock('recharts', () => {
       'CartesianGrid', 'Tooltip', 'Legend', 'Cell', 'ResponsiveContainer', 'ReferenceLine'].map((n) => [n, stub()]),
   );
 });
-vi.mock('../../../src/config/clinicalThresholds', () => ({ CHART_COLORS: ['#a', '#b', '#c'] }));
+vi.mock('../../../src/config/clinicalThresholds', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../src/config/clinicalThresholds')>()),
+  CHART_COLORS: ['#a', '#b', '#c'],
+}));
 vi.mock('../../../src/components/outcomes/OutcomesView', () => ({ default: () => null }));
 
 function crtCase(id: string, center: string, values: number[]): PatientCase {

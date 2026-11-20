@@ -23,8 +23,8 @@ import { Settings } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { criticalCasesOf } from '../../../shared/criticalCases';
+import { CRITICAL_CRT_THRESHOLD } from '../../config/clinicalThresholds';
 import type { TranslationKey } from '../../i18n/translations';
-import { getSettings } from '../../services/settingsService';
 import CompareCohortsButton from '../charts/CompareCohortsButton';
 import CohortCompareDrawer from './CohortCompareDrawer';
 import CrtMetricContainer from './CrtMetricContainer';
@@ -59,7 +59,7 @@ export default function OutcomesView(
 
   // Z0-P12: pseudonyms of the cases with critical values (the predicate and threshold of the header count, Z0-P09),
   // over the shown cohort and, in compare mode, every compared cohort; null while the option is off.
-  const crtThreshold = getSettings().crtImplausibleThresholdUm;
+  const crtThreshold = CRITICAL_CRT_THRESHOLD();
   const criticalIds = useMemo<ReadonlySet<string> | null>(() => {
     if (!s.highlightCritical) return null;
     const cases = s.isCrossMode ? a.crossCohortCaseSeries.flatMap((c) => c.cases) : (s.cohort?.cases ?? []);
