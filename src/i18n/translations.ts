@@ -232,9 +232,12 @@ const translations = {
   casesInCohort: { de: 'Fälle in der aktuellen Kohorte', en: 'cases in current cohort' },
   analysisPatientCount: { de: '{count} Patient:innen', en: '{count} patients' },
   casesWithCritical: {
-    de: 'Fälle mit kritischen Werten (CRT > 400 µm)',
-    en: 'cases with critical values (CRT > 400 µm)',
+    de: 'Fälle mit kritischen Werten (CRT > {threshold} µm)',
+    en: 'cases with critical values (CRT > {threshold} µm)',
   },
+  // Z0-P09: list behind the critical-value count.
+  criticalCasesTitle: { de: 'Fälle mit kritischen Werten', en: 'Cases with critical values' },
+  criticalCasesMaxCrt: { de: 'Höchster CRT', en: 'Highest CRT' },
   centerDistribution: { de: 'Verteilung über Zentren', en: 'Distribution across Centers' },
   diagnosisDistribution: { de: 'Diagnoseverteilung', en: 'Diagnosis Distribution' },
   diagnosisHoverHint: { de: 'Fahren Sie mit der Maus über die Kuchenstücke, um die vollständige Diagnose anzuzeigen.', en: 'Hover over the pie segments to see the full diagnosis name.' },

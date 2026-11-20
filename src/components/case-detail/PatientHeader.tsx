@@ -169,6 +169,10 @@ export default function PatientHeader({
             <User className="w-6 h-6 text-blue-600 dark:text-blue-300" />
           </div>
           <div>
+            {/* Z0-P09 (Q35 a): visible caption above the bare pseudonym. */}
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+              {t('pseudonym')}
+            </p>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
               {pseudonym}
             </h1>

@@ -33,6 +33,7 @@ import {
   YAxis,
 } from 'recharts';
 
+import CriticalCasesDialog from '../components/analysis/CriticalCasesDialog';
 import ChartLegend from '../components/charts/ChartLegend';
 import {
   AXIS_TICK_FONT_SIZE,
@@ -58,7 +59,7 @@ import { useThemeSafe } from '../context/ThemeContext';
 import { useRecentActivity } from '../hooks/useRecentActivity';
 import { ALL_PATIENTS_COHORT_ID, withAllPatientsCohort } from '../services/allPatientsCohort';
 import { groupByParent } from '../services/cohortNames';
-import { applyFilters, getObservationsByCode, LOINC_CRT } from '../services/fhirLoader';
+import { applyFilters } from '../services/fhirLoader';
 import { getSettings } from '../services/settingsService';
 import type { CohortFilter, PatientCase, SavedSearch } from '../types/fhir';
 import {
@@ -71,6 +72,7 @@ import {
   visusTrendOf,
 } from '../utils/aggregateDistributions';
 import { parseCohortFilterJson, summarizeCohortFilter } from '../utils/cohortFilterSerialization';
+import { criticalCasesOf } from '../utils/criticalCases';
 
 type AnalysisTab = 'aggregate' | 'trajectories';
 
@@ -335,12 +337,28 @@ export default function AnalysisPage() {
     return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
   }, [ageVisusScatter]);
 
-  const criticalCount = useMemo(() => {
-    return centeredCohort.filter((c) => {
-      const crt = getObservationsByCode(c.observations, LOINC_CRT);
-      return crt.some((o) => (o.valueQuantity?.value ?? 0) > 400);
-    }).length;
-  }, [centeredCohort]);
+  // Z0-P09 (Q28/Q36): cases with a CRT above the settings threshold, one list per cohort in compare mode
+  // (each count opens the list of its own cohort); without comparison one list for the active cohort.
+  const crtThreshold = getSettings().crtImplausibleThresholdUm;
+  const criticalLists = useMemo(() => {
+    if (centeredCrossCohorts.length >= 2) {
+      return centeredCrossCohorts.map((c) => ({
+        key: c.cohortId,
+        cohortName: c.cohortName,
+        compare: true,
+        cases: criticalCasesOf(c.cases, crtThreshold),
+      }));
+    }
+    return [{
+      key: '',
+      cohortName: displayCohortName ?? t('overlayCohortAllPatients'),
+      compare: false,
+      cases: criticalCasesOf(centeredCohort, crtThreshold),
+    }];
+  }, [centeredCrossCohorts, centeredCohort, crtThreshold, displayCohortName, t]);
+  const [openCriticalKey, setOpenCriticalKey] = useState<string | null>(null);
+  const openCriticalList = criticalLists.find((l) => l.key === openCriticalKey) ?? null;
+  const closeCriticalList = useCallback(() => setOpenCriticalKey(null), []);
 
   // ---------------------------------------------------------------------------
   // Z0-P23: comparison on Aggregiert — the same ?cohorts= selection, drawer and handlers as on Verläufe.
@@ -455,12 +473,27 @@ export default function AnalysisPage() {
           {/* Z0-P04 (C5 a): the header names patients and cases. */}
           {' · '}
           {t('analysisPatientCount').replace('{count}', String(distinctPatientCount(centeredCohort)))}
-          {criticalCount > 0 && (
-            <span className="ml-3 text-red-600 font-medium">
-              {criticalCount} {t('casesWithCritical')}
-            </span>
-          )}
+          {/* Z0-P09: each count opens its list "Fälle mit kritischen Werten". */}
+          {criticalLists.filter((l) => l.cases.length > 0).map((l) => (
+            <button
+              key={l.key}
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => setOpenCriticalKey(l.key)}
+              className="ml-3 text-red-600 dark:text-red-400 font-medium underline decoration-dotted underline-offset-2 hover:decoration-solid focus-visible:outline-2 focus-visible:outline-blue-600"
+            >
+              {l.compare && `${l.cohortName}: `}
+              {l.cases.length} {t('casesWithCritical').replace('{threshold}', String(crtThreshold))}
+            </button>
+          ))}
         </p>
+        {openCriticalList && (
+          <CriticalCasesDialog
+            cohortName={openCriticalList.cohortName}
+            cases={openCriticalList.cases}
+            onClose={closeCriticalList}
+          />
+        )}
         {/* Z0-P22: switch the active cohort for both tabs. */}
         <div className="mt-3 flex items-center gap-2">
           <label htmlFor="analysis-cohort-select" className="text-sm font-medium text-gray-700 dark:text-gray-300">
