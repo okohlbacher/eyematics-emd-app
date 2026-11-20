@@ -157,3 +157,4 @@
 {"id":"Z0-P19","ts":"2026-11-20T16:32:00.740Z","session_id":"7e59ad9b-6700-45e8-92f3-b13a99b924a7","head":"cdf86c983e0a011d6f734a169e1283efa73ffd91","result":"recheck","attempt":2,"fingerprint":"11d35f5715f8d25dc94285a1a0eda2b21ca185f805767a8082c53cea1a32c065"}
 {"id":"Z0-P19","ts":"2026-11-20T16:32:18.088Z","head":"cdf86c983e0a011d6f734a169e1283efa73ffd91","result":"review","verdict":"findings-fixed"}
 {"id":"Z0-P19","ts":"2026-11-20T16:32:27.126Z","session_id":"7e59ad9b-6700-45e8-92f3-b13a99b924a7","head":"cdf86c983e0a011d6f734a169e1283efa73ffd91","result":"recheck","attempt":2,"fingerprint":"11d35f5715f8d25dc94285a1a0eda2b21ca185f805767a8082c53cea1a32c065"}
+{"id":"Z0-P13","ts":"2026-11-20T17:11:31.125Z","session_id":"8bf72050-e631-470f-b27a-c77c8027ff7c","head":"02f412e5c8b9957d52cf14c6015417ec1582d42a","result":"blocked","attempt":0}
