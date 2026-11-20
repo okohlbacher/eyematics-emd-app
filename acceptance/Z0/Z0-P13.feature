@@ -10,6 +10,7 @@ Feature: Z0-P13 Sichtbarer Hinweis zur Einzelfallauswahl in den Verläufen
     And I open the tab "Verläufe"
 
   Scenario: Hinweis ohne Interaktion sichtbar
+    Given "Individuelle Kurven" is ticked in "Diagramm-Anzeige"
     Then the text "Klicken Sie auf eine Kurve oder einen Messpunkt, um die Einzelfallansicht zu öffnen." is visible directly above the chart
 
   Scenario: Hinweis bei ausgeblendeten Einzelverläufen
@@ -18,4 +19,5 @@ Feature: Z0-P13 Sichtbarer Hinweis zur Einzelfallauswahl in den Verläufen
 
   Scenario: Englische Oberfläche
     Given the UI language is "English"
+    And "Per-patient curves" is ticked in "Chart display"
     Then the text "Click a curve or a measurement point to open the case view." is visible directly above the chart
