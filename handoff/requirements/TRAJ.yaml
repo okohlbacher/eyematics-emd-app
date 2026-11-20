@@ -218,11 +218,13 @@ requirements:
     notes: "<n> is the panel's own patient count (patients with a measurement for that eye), not the cohort size."
   - id: UIR-TRAJ-010
     title: "Settings drawer offers axis, Y-mode, layer and grid controls"
-    statement: "The settings drawer (Visus/CRT) offers X-axis radios \"Tage seit Baseline\"/\"Anzahl Behandlungen\", Y radios absolute/Δ/Δ %, checkboxes for the four layers and a grid slider 20–300."
+    statement: "The settings drawer (Visus/CRT) offers X-axis radios \"Tage seit Baseline\"/\"Anzahl Behandlungen\", Y radios absolute/Δ/Δ %, checkboxes for the four layers and a grid slider 20–300; with X \"Anzahl Behandlungen\" the slider is disabled and a hint says the grid is fixed to whole treatment counts (Z0-P08, Q8)."
     status: implemented
     sources: ["spec: EMDREQ-ANL-002 / N02.08", "code: src/components/outcomes/OutcomesSettingsDrawer.tsx:124-239"]
     evidence:
-      - "src/components/outcomes/OutcomesSettingsDrawer.tsx:124-154 — X-axis radios with aria-labels; 157-173 Y radios absolute/delta/delta_percent (CRT-specific labels via yMetricKey 40-50); 176-204 four layer checkboxes; 223-239 range min 20 max 300 step 10 with '{n} Stützstellen'"
+      - "src/components/outcomes/OutcomesSettingsDrawer.tsx:124-154 — X-axis radios with aria-labels; 157-173 Y radios absolute/delta/delta_percent (CRT-specific labels via yMetricKey 40-50); 176-204 four layer checkboxes; 223-239 range min 20 max 300 step 10 with '{n} Stützstellen'; 235-236 disabled in treatments mode, aria-describedby outcomes-grid-hint; 239-242 hint outcomesGridFixedTreatments instead of the caption"
+      - "shared/cohortTrajectory.ts:198 — buildGrid(…, axisMode): treatments → every integer from ceil(min) to floor(max), gridPoints ignored (client and server)"
+      - "src/i18n/translations.ts:887 — DE 'Bei „Anzahl Behandlungen“ ist das Raster auf ganze Behandlungszahlen festgelegt.'"
       - "src/i18n/translations.ts:855-871,954-956 — DE section/control labels 'X-Achse', 'Y-Metrik', 'Anzeigeebenen', 'Interpolationsraster', 'Absolut (logMAR)', 'Δ (Differenz zur Baseline)', 'Δ % (prozentuale Änderung)'"
     tests:
       - file: tests/OutcomesPage.test.tsx
@@ -541,13 +543,15 @@ requirements:
       expect: "A white tooltip appears next to the cursor with three lines: the pseudonym, 'Tag: <n> d' (or 'Behandlung #: #<n>' in treatments mode) and 'logMAR: <value> Δ logMAR' (unit follows the Y mode; on the CRT metric the line reads 'logMAR: <value> Δ CRT (µm)'). The pseudonym changes between the two stacked dots. Step 3: the tooltip disappears."
     notes: "Tests assert the pseudonym and show/hide only; the x/y text format is not asserted. Code quirk: the value line is prefixed 'logMAR:' even for CRT (the unit then says 'Δ CRT (µm)')."
   - id: UIR-TRAJ-024
-    title: "Exactly one tooltip; no nearest-x tooltip"
-    statement: "The Verläufe chart shows at most one tooltip at a time; there is no X-axis-bound (nearest-x) pseudonym-only label beside the detailed one."
+    title: "Exactly one tooltip; heading names the x-axis, rows name the series"
+    statement: "The Verläufe chart shows at most one tooltip box at a time (no nearest-x label beside it). Its heading reads \"<x-axis setting>: <x>\" (\"Tage seit Baseline: 30\", \"Anzahl Behandlungen: 5\") for median and patient tooltips alike; in compare mode each median row reads \"<Kohorte> · Median: <Wert> <Einheit>\" in the cohort colour, without a comparison the row stays \"Kohorten-Median Visus/CRT\"; the active median point is enlarged like the case view's (Z0-P08, C9, Q33 b, Q34; supersedes the Plotly 'Median' label)."
     status: implemented
-    sources: ["UAT v1.16 K1a; v1.18 M2; confirmed v1.17", "code: src/components/outcomes/plotlyTraces.ts:131-136,171-176"]
+    sources: ["UAT v1.16 K1a; v1.18 M2; confirmed v1.17", "Z0-P08 (C9, Q33 b, Q34)", "code: src/components/outcomes/OutcomesPanel.tsx:160-167,328-357,477-500"]
     evidence:
-      - "src/components/outcomes/plotlyTraces.ts:131-136,171-176 — hoverinfo 'none' on per-patient lines and scattergl → native Plotly label suppressed"
-      - "src/components/outcomes/OutcomesPanel.tsx:340 — hovermode 'closest', not 'x'; 539-546 one imperative tooltip div per panel; plotlyTraces.ts:144-155 median keeps a hovertemplate '<name>' (native 'Median' label)"
+      - "src/components/outcomes/OutcomesPanel.tsx:160-167 — tooltipXLabel from outcomesXAxisTime / outcomesXAxisTreatments; formatX '<label>: <round(x)>'; 164 yUnit µm/logMAR/%"
+      - "src/components/outcomes/OutcomesPanel.tsx:328 — compare-mode median row '<Kohorte> · Median' with value, unit and cohort colour; 338 one ChartTooltipBox for the median tooltip; 357 one ChartTooltipBox for the patient tooltip"
+      - "src/components/outcomes/OutcomesPanel.tsx:477-500 — median points carry data-median-point/data-series/data-x; activeDot r 4 with white 2 px ring like the case view"
+      - "src/i18n/translations.ts:872-873,912 — DE 'Tage seit Baseline', 'Anzahl Behandlungen', 'Median'"
     tests:
       - file: tests/OutcomesPanelHoverTooltip.test.tsx
         name: "renders exactly ONE tooltip element (no second nearest-x pop-up)"
@@ -558,8 +562,8 @@ requirements:
       steps:
         - "Open Analyse → \"Verläufe\"; tick \"Streupunkte\" and \"Individuelle Kurven\" in \"Diagramm-Anzeige\"."
         - "Hover slowly across dense regions of the OD panel, including over the median line and in empty space between dots."
-      expect: "At most one tooltip box is visible at any moment; hovering the median line shows only Plotly's small 'Median' label; no second pseudonym-only label is attached to the x-axis."
-    notes: ""
+      expect: "At most one tooltip box is visible at any moment; its heading reads 'Tage seit Baseline: <n>' (after switching X to \"Anzahl Behandlungen\": 'Anzahl Behandlungen: <n>'); hovering the median line shows the row 'Kohorten-Median Visus: <Wert>', and with a comparison active one row per cohort '<Kohorte> · Median: <Wert> logMAR' in the cohort colour; the hovered median point is enlarged with a white ring; no second label is attached to the x-axis."
+    notes: "Since Z0-P08 the acceptance spec tests/acceptance/Z0/Z0-P08.spec.ts covers heading, rows, integer x and the active-point proxy in the container e2e run. The mapped unit test's heading assertion was replaced ('Tag 10' → 'Tage seit Baseline: 10', eef86a2, Q33 b). The @visual scenario (enlarged point, box layout like the case view) is checked by DOM proxy only; browser check pending."
   - id: UIR-TRAJ-025
     title: "Hovered scatter point gets an enlarged ringed highlight marker"
     statement: "The hovered scatter point in Verläufe is highlighted with an enlarged, ringed marker that disappears on unhover, even when several points share the same date."
