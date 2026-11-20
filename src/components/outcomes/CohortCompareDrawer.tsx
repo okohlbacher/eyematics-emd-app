@@ -1,8 +1,11 @@
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { useThemeSafe } from '../../context/ThemeContext';
+import { ALL_PATIENTS_COHORT_ID } from '../../services/allPatientsCohort';
 import { groupByParent } from '../../services/cohortNames';
 import type { SavedSearch } from '../../types/fhir';
+import { cohortColor } from '../charts/chartStyle';
 
 export interface CohortCompareDrawerProps {
   open: boolean;
@@ -12,8 +15,15 @@ export interface CohortCompareDrawerProps {
   primaryCohortId: string | null;
   selectedIds: string[];
   onChange: (next: string[]) => void;
-  onReset: () => void;
+  /** Without it the reset button is not shown (case view). */
+  onReset?: () => void;
   t: (key: string) => string;
+  /** Z0-P23: panel title and accessible name (default "Kohorten vergleichen"). */
+  title?: string;
+  /** Z0-P23 (Q22): 1 = exactly one comparison cohort (radio group, case view); default 4 (checkboxes). */
+  maxSelections?: number;
+  /** Swatch colour of a selected option by its comparison order; default: the cohort palette of the charts. */
+  swatchColor?: (order: number) => string;
 }
 
 export default function CohortCompareDrawer({
@@ -26,7 +36,14 @@ export default function CohortCompareDrawer({
   onChange,
   onReset,
   t,
+  title,
+  maxSelections = 4,
+  swatchColor,
 }: CohortCompareDrawerProps) {
+  const { effectiveTheme } = useThemeSafe();
+  const isDark = effectiveTheme === 'dark';
+  const single = maxSelections === 1;
+  const drawerTitle = title ?? t('outcomesCompareDrawerTitle');
   // Escape-to-close, identical to OutcomesSettingsDrawer
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -49,10 +66,15 @@ export default function CohortCompareDrawer({
   }
   const selected = pending ?? selectedIds;
 
-  const isMaxReached = selected.length >= 4;
+  const isMaxReached = !single && selected.length >= maxSelections;
 
   const toggle = (id: string) => {
     if (id === primaryCohortId) return; // primary is locked
+    if (single) {
+      setPending([id]);
+      onChange([id]);
+      return;
+    }
     const next = selected.includes(id)
       ? selected.filter((x) => x !== id)
       : isMaxReached
@@ -64,6 +86,9 @@ export default function CohortCompareDrawer({
 
   // Derive the tree grouping at render time — no persisted state (anti-pattern per RESEARCH)
   const { parents, subcohortsByParentId } = groupByParent(savedSearches);
+  // Z0-P23: the same order in every view — "Alle Patienten" first, then by name (sub-cohorts by name under their parent).
+  const byName = (a: SavedSearch, b: SavedSearch) =>
+    a.id === ALL_PATIENTS_COHORT_ID ? -1 : b.id === ALL_PATIENTS_COHORT_ID ? 1 : a.name.localeCompare(b.name);
   const parentIds = new Set(parents.map((p) => p.id));
 
   // Subcohort id set for filtering top-level items
@@ -85,38 +110,51 @@ export default function CohortCompareDrawer({
     const count = patientCounts[s.id] ?? 0;
     const name = `${s.name} (N=${count} ${t('outcomesComparePatientsUnit')})`;
     const label = isPrimary ? `${name} · ${t('outcomesComparePrimaryLabel')}` : name;
+    // Z0-P23: colour swatch = the cohort's colour in the charts (comparison order); empty while not selected.
+    const order = selected.indexOf(s.id);
+    const swatch = checked && order >= 0 ? (swatchColor ? swatchColor(order) : cohortColor(order, isDark)) : null;
     return (
       <label
         key={s.id}
         className={`flex items-center gap-2 text-sm${extraClass ? ` ${extraClass}` : ''}`}
       >
         <input
-          type="checkbox"
+          type={single ? 'radio' : 'checkbox'}
+          name={single ? 'compare-cohort' : undefined}
           aria-label={label}
           className="accent-blue-600"
           checked={checked}
           disabled={disabled}
           onChange={() => toggle(s.id)}
         />
+        <span
+          aria-hidden="true"
+          data-compare-swatch
+          className="w-3 h-3 shrink-0 rounded-sm border border-gray-300 dark:border-gray-600"
+          style={swatch ? { backgroundColor: swatch, borderColor: swatch } : undefined}
+        />
         <span className={disabled && !isPrimary ? 'text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200'}>
-          {label}
+          <span data-compare-option-label>{name}</span>
+          {isPrimary && (
+            <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">· {t('outcomesComparePrimaryLabel')}</span>
+          )}
         </span>
       </label>
     );
   }
 
   // Top-level items: parents and flat cohorts (subcohorts are rendered inside parent groups)
-  const topLevelItems = savedSearches.filter((s) => !subcohortIdSet.has(s.id));
+  const topLevelItems = savedSearches.filter((s) => !subcohortIdSet.has(s.id)).sort(byName);
 
   return (
     <aside
       id="outcomes-compare-drawer"
-      aria-label={t('outcomesCompareDrawerTitle')}
+      aria-label={drawerTitle}
       className={`fixed right-0 top-0 h-screen w-full sm:w-96 bg-white border-l border-gray-200 shadow-lg z-40 transition-transform duration-200 ease-out ${open ? 'translate-x-0' : 'translate-x-full'}`}
     >
       <div className="flex items-center justify-between p-6 pb-4">
         <h2 className="text-base font-semibold text-gray-900">
-          {t('outcomesCompareDrawerTitle')}
+          {drawerTitle}
         </h2>
         <button
           type="button"
@@ -132,7 +170,9 @@ export default function CohortCompareDrawer({
         className="p-6 pt-0 space-y-4 overflow-y-auto"
         style={{ maxHeight: 'calc(100vh - 120px)' }}
       >
-        <p className="text-sm text-gray-500">{t('outcomesCompareDrawerHint')}</p>
+        <p data-testid="compare-hint" className="text-sm text-gray-500">
+          {single ? t('overlayCohortCompareHint') : t('outcomesCompareDrawerHint')}
+        </p>
 
         {topLevelItems.map((s) => {
           const isParent = parentIds.has(s.id);
@@ -144,7 +184,7 @@ export default function CohortCompareDrawer({
 
           // Parent with subcohorts — render tree group with chevron
           const isExpanded = !collapsedIds.has(s.id);
-          const subcohorts = subcohortsByParentId.get(s.id) ?? [];
+          const subcohorts = [...(subcohortsByParentId.get(s.id) ?? [])].sort(byName);
 
           return (
             <div key={s.id}>
@@ -187,15 +227,17 @@ export default function CohortCompareDrawer({
         })}
       </div>
 
-      <div className="border-t border-gray-100 p-6 pt-4">
-        <button
-          type="button"
-          onClick={onReset}
-          className="text-sm text-gray-600 hover:text-gray-900 underline"
-        >
-          {t('outcomesCompareReset')}
-        </button>
-      </div>
+      {onReset && (
+        <div className="border-t border-gray-100 p-6 pt-4">
+          <button
+            type="button"
+            onClick={onReset}
+            className="text-sm text-gray-600 hover:text-gray-900 underline"
+          >
+            {t('outcomesCompareReset')}
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

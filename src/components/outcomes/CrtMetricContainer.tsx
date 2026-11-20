@@ -52,9 +52,10 @@ export default function CrtMetricContainer({
   const progressiveActive = isCrossMode
     ? crossWork > PROGRESSIVE_PANEL_THRESHOLD_CASES
     : cohort.cases.length > PROGRESSIVE_PANEL_THRESHOLD_CASES;
+  // Z0-P23 (Q21 b): the IQR band and median toggles are cheap and do not re-arm staging, so the panels stay mounted.
   const stageKey = isCrossMode
     ? `crt-cross|${crossCohortAggregates?.combined.map((c) => `${c.cohortId}:${c.patientCount}`).join(',') ?? ''}|${axisMode}|${yMetric}`
-    : `crt|${cohort.cases.length}|${axisMode}|${yMetric}|${layers.perPatient}|${layers.scatter}|${layers.median}|${layers.spreadBand}`;
+    : `crt|${cohort.cases.length}|${axisMode}|${yMetric}|${layers.perPatient}|${layers.scatter}`;
   const mountedPanels = useProgressivePanels(3, progressiveActive, stageKey);
 
   if (!crtAggregate || crtAggregate.od.summary.measurementCount + crtAggregate.os.summary.measurementCount === 0) {

@@ -1,37 +1,63 @@
 /**
- * OutcomesPanel — cohort Verläufe trajectory chart (WS-1 / v1.17).
+ * OutcomesPanel — cohort Verläufe trajectory chart.
  *
- * Rewritten from Recharts ComposedChart + canvas-scatter to Plotly.js (scattergl).
- * The v1.16 canvas scatter was broken (canvas never sized, SVG node wall intact,
- * ~46k DOM nodes, ~10s toggle). Plotly draws the scatter cloud to WebGL — one canvas,
- * no per-point DOM — and adds zoom/pan/box-select.
+ * Z0-P23: Recharts (formerly Plotly) — the same library, card, tooltip box, legend and quantity colours as Aggregiert
+ * and the case view (team rule in the feature header; C8, Q18, Q21).
+ * - Median (Line) and IQR band (range Area) are Recharts series over one merged row per x.
+ * - Per-patient lines and the scatter cloud are drawn by one plain SVG layer (PatientLayer) from the chart's axis
+ *   scales — one element per patient/point, no Recharts series each — and memoised, so toggling the IQR band or the
+ *   median does not re-render them (performance, Q21 b). No point cap (C8 b).
+ * - Zoom: drag across the plot (ReferenceArea) or the Brush below it; "Zoom zurücksetzen" restores (Q21 a).
+ * - Hover: the shared tooltip box — median rows on the axis tooltip; a patient line/point shows its own box.
+ *   Click on a patient line/point → IDOR-gated drill-down (single-cohort only).
  *
- * jsdom: Plotly cannot render without a WebGL/2D context. The PlotlyChart wrapper
- * feature-detects and renders a lightweight testable fallback (built here) so the
- * test suite never touches Plotly. The fallback preserves the data-testids tests
- * rely on (panel container, hover tooltip, IQR marker, y-domain marker) and adds
- * semantic per-trace markers the rewritten outcomes tests assert against.
- *
- * K1 contract preserved: median line, IQR band (shaded range), per-patient lines,
- * scattergl points; single layer-aware tooltip (scatter-priority); click → IDOR-gated
- * drill-down; 3 panels; x/y axis modes + yDomain; dark mode via useThemeSafe.
+ * jsdom has no layout (no ResizeObserver): the panel then renders a marker DOM from the same series descriptors
+ * (data-testids per series) and wires hover/click to the same handlers, so unit tests never need an SVG layout.
  */
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { memo, type MouseEvent as ReactMouseEvent, useCallback, useMemo, useRef, useState } from 'react';
+import {
+  Area,
+  Brush,
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  ReferenceArea,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  useXAxisInverseScale,
+  useXAxisScale,
+  useYAxisScale,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 import { useThemeSafe } from '../../context/ThemeContext';
 import type { AxisMode, GridPoint, PanelResult, YMetric } from '../../utils/cohortTrajectory';
-import { DARK_EYE_COLORS, EYE_COLORS, SERIES_STYLES } from './palette';
-import PlotlyChart, { type PlotlyImperativeHandle } from './PlotlyChart';
+import { caseChartColors } from '../case-detail/chartTheme';
+import ChartLegend from '../charts/ChartLegend';
+import {
+  AXIS_TICK_FONT_SIZE,
+  CHART_CARD_CLASS,
+  CHART_TITLE_CLASS,
+  CRT_COLOR,
+  themedCohortColor,
+  VISUS_COLOR,
+} from '../charts/chartStyle';
+import ChartTooltipBox, { type ChartTooltipRow } from '../charts/ChartTooltipBox';
+import { SERIES_STYLES } from './palette';
 import {
   buildCrossCohortTraces,
   buildSingleCohortTraces,
-  downsampleScatter,
   type LayerState,
+  mergeSeriesRows,
+  perPatientSeriesOf,
   resolveDrillDownId,
-  SCATTER_RENDER_CAP,
+  rgba,
   type ScatterDatum,
-} from './plotlyTraces';
-import type { PlotlyData, PlotlyLayout, PlotlyMouseEvent } from './plotlyTypes';
+  type TraceDescriptor,
+  xExtent,
+} from './trajectoryTraces';
 
 export interface CohortSeriesEntry {
   cohortId: string;
@@ -44,7 +70,8 @@ export interface CohortSeriesEntry {
 interface Props {
   panel: PanelResult;
   eye: 'od' | 'os' | 'combined';
-  color: string;
+  /** Kept for callers; the series colour is the quantity colour (Visus/CRT, Q18), cohort colours in compare mode. */
+  color?: string;
   axisMode: AxisMode;
   yMetric: YMetric;
   layers: LayerState;
@@ -73,20 +100,32 @@ function yDomain(
     const maxAbs = Math.max(...vals.map(Math.abs)) * 1.15;
     return [-Math.max(maxAbs, 10), Math.max(maxAbs, 10)];
   }
-  // yMetric === 'delta'
-  if (metric === 'visus') {
-    return [-1, 1];
-  }
+  if (metric === 'visus') return [-1, 1];
   const vals = medianGrid.flatMap((g) => [g.y, g.p25 ?? g.y, g.p75 ?? g.y]).filter(Number.isFinite);
   if (vals.length === 0) return [-1, 1];
   const maxAbs = Math.max(...vals.map(Math.abs)) * 1.15;
   return [-Math.max(maxAbs, 5), Math.max(maxAbs, 5)];
 }
 
+/** Hovered patient (line or point) for the patient tooltip and the emphasis overlay. */
+interface PatientHover {
+  patientId: string;
+  x?: number;
+  y?: number;
+  clientX: number;
+  clientY: number;
+  /** Index into the per-patient traces (line emphasis) or -1 for a scatter point. */
+  lineIndex: number;
+  /** Tooltip position in the panel (set by the hover handler). */
+  left?: number;
+  top?: number;
+}
+
+const canLayout = () => typeof ResizeObserver !== 'undefined';
+
 export default function OutcomesPanel({
   panel,
   eye,
-  color,
   axisMode,
   yMetric,
   layers,
@@ -99,278 +138,84 @@ export default function OutcomesPanel({
 }: Props) {
   const { effectiveTheme } = useThemeSafe();
   const isDark = effectiveTheme === 'dark';
-
+  const colors = caseChartColors(isDark);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const tooltipRef = useRef<HTMLDivElement | null>(null);
-  // Hovered patient drives the imperative tooltip + the click drill-down target.
-  // A ref (not state) so hover never re-renders the chart subtree.
-  const hoveredDatumRef = useRef<{ patientId: string } | null>(null);
-  // M1 (v1.18 WS-A): imperative Plotly restyle handle + the per-patient trace index
-  // currently emphasised (so unhover/hover-switch can restore exactly that one trace
-  // to its natural width/opacity). Refs, never state — emphasis is a cheap in-place
-  // restyle that must NOT re-render the chart subtree.
-  const plotlyHandleRef = useRef<PlotlyImperativeHandle | null>(null);
-  const emphasizedRef = useRef<{ index: number; width: number; opacity: number } | null>(null);
-
   const isCrossMode = Array.isArray(cohortSeries) && cohortSeries.length > 0;
-
-  // Theme-resolved colours.
-  const chartColors = {
-    grid:      isDark ? '#374151' : '#e5e7eb',
-    axisTick:  isDark ? '#9ca3af' : '#6b7280',
-    axisLabel: isDark ? '#d1d5db' : '#374151',
-    legend:    isDark ? '#d1d5db' : '#374151',
-    paper:     'rgba(0,0,0,0)',
-  };
-  const eyeColors = isDark ? DARK_EYE_COLORS : EYE_COLORS;
-  const resolvedColor = eye === 'od' ? eyeColors.OD : eye === 'os' ? eyeColors.OS : eyeColors['OD+OS'];
-  // Use resolved theme color unless the caller passes an explicit cohort-compare color.
-  const ALL_EYE_HEX = new Set([...Object.values(EYE_COLORS), ...Object.values(DARK_EYE_COLORS)]);
-  const seriesColor = ALL_EYE_HEX.has(color) ? resolvedColor : color;
+  const seriesColor = metric === 'crt' ? CRT_COLOR : VISUS_COLOR;
 
   const subtitle = `${panel.summary.patientCount} · ${panel.summary.measurementCount}`;
   const xLabel = axisMode === 'days' ? t('outcomesTooltipDay') : t('outcomesTooltipTreatmentIndex');
 
-  // N9 (v1.19 WS-A): y-axis title reflecting the active metric + mode, so the plotted
-  // quantity is self-evident without opening the settings drawer. Visus → logMAR /
-  // Δ logMAR / Δ logMAR %; CRT → Netzhautdicke (µm) / Δ µm / Δ %. The title font uses
-  // the theme-resolved axis-label colour so it stays readable in light + dark.
+  // N9: y-axis title reflecting the active metric + mode.
   const yLabelKey = metric === 'crt'
-    ? (yMetric === 'absolute'
-        ? 'outcomesYAxisCrtAbsolute'
-        : yMetric === 'delta' ? 'outcomesYAxisCrtDelta' : 'outcomesYAxisCrtDeltaPercent')
-    : (yMetric === 'absolute'
-        ? 'outcomesYAxisVisusAbsolute'
-        : yMetric === 'delta' ? 'outcomesYAxisVisusDelta' : 'outcomesYAxisVisusDeltaPercent');
+    ? (yMetric === 'absolute' ? 'outcomesYAxisCrtAbsolute' : yMetric === 'delta' ? 'outcomesYAxisCrtDelta' : 'outcomesYAxisCrtDeltaPercent')
+    : (yMetric === 'absolute' ? 'outcomesYAxisVisusAbsolute' : yMetric === 'delta' ? 'outcomesYAxisVisusDelta' : 'outcomesYAxisVisusDeltaPercent');
   const yLabel = t(yLabelKey);
+  // Z0-P23 (C15): the single-cohort median is named like the case view's ("Kohorten-Median Visus/CRT").
+  const medianName = t(metric === 'crt' ? 'cohortReferenceMedianCrt' : 'cohortReferenceMedianVisus');
 
-  // Imperative tooltip formatting context — kept current in a ref so handlers read
-  // the latest labels without re-binding.
-  const hoverFmtRef = useRef<{ xLabel: string; valueLabel: string; valueUnit: string }>(
-    { xLabel: '', valueLabel: '', valueUnit: '' },
+  const numberFmt = useMemo(() => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }), [locale]);
+  const formatX = useCallback(
+    (x: number) => (axisMode === 'days' ? `${xLabel} ${Math.round(x)}` : `${xLabel}${Math.round(x)}`),
+    [axisMode, xLabel],
   );
-  useEffect(() => {
-    const valLabelKey = metric === 'crt'
-      ? (yMetric === 'absolute' ? 'metricsCrtYAxisAbsolute' : yMetric === 'delta' ? 'metricsCrtYAxisDelta' : 'metricsCrtYAxisDeltaPercent')
-      : undefined;
-    hoverFmtRef.current = {
-      xLabel: axisMode === 'days' ? t('outcomesTooltipDay') : t('outcomesTooltipTreatmentIndex'),
-      valueLabel: t('outcomesTooltipLogmar'),
-      valueUnit: valLabelKey
-        ? t(valLabelKey)
-        : yMetric === 'absolute' ? 'logMAR' : yMetric === 'delta' ? 'Δ logMAR' : '%',
-    };
-  }, [axisMode, yMetric, metric, t]);
+  const formatY = useCallback((y: number) => numberFmt.format(y), [numberFmt]);
 
-  const formatHoverTooltip = useCallback(
-    (p: { patientId?: string; x?: number; y?: number }): string => {
-      const fmt = hoverFmtRef.current;
-      const xPart =
-        typeof p.x === 'number'
-          ? `${fmt.xLabel}: ${axisMode === 'days' ? `${Math.round(p.x)} d` : `#${Math.round(p.x)}`}`
-          : '';
-      const yPart =
-        typeof p.y === 'number'
-          ? `${fmt.valueLabel}: ${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(p.y)}${fmt.valueUnit ? ` ${fmt.valueUnit}` : ''}`
-          : '';
-      return [p.patientId ?? '', xPart, yPart].filter(Boolean).join('\n');
-    },
-    [axisMode, locale],
-  );
-
-  const showHoverTooltip = useCallback(
-    (clientX: number, clientY: number, p: { patientId?: string; x?: number; y?: number }) => {
-      const el = tooltipRef.current;
-      const container = containerRef.current;
-      if (!el || !container) return;
-      const rect = container.getBoundingClientRect();
-      el.textContent = formatHoverTooltip(p);
-      const left = Math.max(0, Math.min(clientX - rect.left + 12, rect.width - 8));
-      const top = Math.max(0, clientY - rect.top + 12);
-      el.style.left = `${left}px`;
-      el.style.top = `${top}px`;
-      el.style.display = 'block';
-    },
-    [formatHoverTooltip],
-  );
-  const hideHoverTooltip = useCallback(() => {
-    const el = tooltipRef.current;
-    if (el) el.style.display = 'none';
-  }, []);
-
-  // F7: clear the stashed drill-down target when the panel's patient set changes
-  // (cohort switch). Defense-in-depth — the IDOR gate below still rejects unknown ids.
-  const patientsRef = useRef(panel.patients);
-  useEffect(() => {
-    if (patientsRef.current !== panel.patients) {
-      patientsRef.current = panel.patients;
-      hoveredDatumRef.current = null;
-    }
-  }, [panel.patients]);
-
-  // Per-patient line series (skipped entirely when the layer is hidden or in cross
-  // mode). Memoised on panel.patients so a non-cohort rerender reuses the arrays.
   const perPatientSeries = useMemo(
-    () =>
-      (!layers.perPatient || isCrossMode)
-        ? []
-        : panel.patients
-            .filter((p) => !p.excluded && p.measurements.length >= 2)
-            .map((p) => ({
-              id: p.pseudonym,
-              sparse: p.sparse,
-              x: p.measurements.map((m) => m.x),
-              y: p.measurements.map((m) => (typeof m.y === 'number' ? m.y : null)),
-            })),
-    [panel.patients, layers.perPatient, isCrossMode],
+    () => (!layers.perPatient || isCrossMode ? [] : perPatientSeriesOf(panel)),
+    [panel, layers.perPatient, isCrossMode],
   );
-
-  // Scatter cloud — downsampled to the cap (even-stride) when the layer is on. Logged,
-  // never silently truncated. Drill-down/hover work on every rendered point.
-  const scatterRenderPoints = useMemo<ScatterDatum[]>(() => {
-    if (!layers.scatter || isCrossMode) return [];
-    const all = panel.scatterPoints as ScatterDatum[];
-    const shown = downsampleScatter(all, SCATTER_RENDER_CAP);
-    if (shown.length < all.length) {
-      console.info(
-        `[OutcomesPanel] scatter downsampled for eye=${eye}: rendering ${shown.length} of ${all.length} points (cap=${SCATTER_RENDER_CAP}, even-stride). Drill-down/hover available on rendered points.`,
-      );
-    }
-    return shown;
-  }, [layers.scatter, isCrossMode, panel.scatterPoints, eye]);
+  const scatterPoints = useMemo<ScatterDatum[]>(
+    () => (!layers.scatter || isCrossMode ? [] : (panel.scatterPoints as ScatterDatum[])),
+    [layers.scatter, isCrossMode, panel.scatterPoints],
+  );
 
   const totalPatients = isCrossMode
     ? cohortSeries!.reduce((n, s) => n + s.panel.summary.patientCount, 0)
     : panel.summary.patientCount;
 
-  // Build Plotly traces (memoised so identity is stable across hover/unrelated renders).
-  const traces = useMemo<PlotlyData[]>(() => {
-    const built: PlotlyData[] = (() => {
+  const traces = useMemo<TraceDescriptor[]>(() => {
     if (isCrossMode) {
       return buildCrossCohortTraces({
         layers,
+        legendName: (s) => `${s.cohortName} (N=${s.patientCount} ${t('outcomesComparePatientsUnit')})`,
         series: cohortSeries!.map((s) => ({
           cohortId: s.cohortId,
           cohortName: s.cohortName,
           patientCount: s.patientCount,
-          color: s.color,
+          color: themedCohortColor(s.color, isDark),
           medianGrid: s.panel.medianGrid,
-          // M3 (v1.18 WS-A): supply per-cohort scatter + per-patient data so the
-          // layer toggles actually render in compare mode. Scatter is downsampled to
-          // the same per-panel cap; per-patient lines reuse the single-cohort filter
-          // (>=2 measurements, not excluded). buildCrossCohortTraces only emits these
-          // when the matching toggle is on.
-          scatterPoints: layers.scatter
-            ? downsampleScatter(s.panel.scatterPoints as ScatterDatum[], SCATTER_RENDER_CAP)
-            : undefined,
-          perPatientSeries: layers.perPatient
-            ? s.panel.patients
-                .filter((p) => !p.excluded && p.measurements.length >= 2)
-                .map((p) => ({
-                  id: p.pseudonym,
-                  sparse: p.sparse,
-                  x: p.measurements.map((m) => m.x),
-                  y: p.measurements.map((m) => (typeof m.y === 'number' ? m.y : null)),
-                }))
-            : undefined,
+          scatterPoints: layers.scatter ? (s.panel.scatterPoints as ScatterDatum[]) : undefined,
+          perPatientSeries: layers.perPatient ? perPatientSeriesOf(s.panel) : undefined,
         })),
       });
     }
     return buildSingleCohortTraces({
       panel,
       layers,
-      scatterPoints: scatterRenderPoints,
+      scatterPoints,
       colors: { series: seriesColor, perPatient: SERIES_STYLES.perPatient.color },
-      medianName: t('outcomesLayerMedian'),
-      hovertemplate: (name) => `${name}<extra></extra>`,
+      medianName,
       perPatientSeries,
     });
-    })();
+  }, [isCrossMode, cohortSeries, panel, layers, scatterPoints, seriesColor, medianName, perPatientSeries, t, isDark]);
 
-    // N2 (v1.19 WS-A): dedicated single-point "highlight" overlay trace, ALWAYS the
-    // last trace (stable index) whenever the scatter layer is on. It starts empty and
-    // is positioned at the hovered marker via a cheap Plotly.restyle (x/y) — never a
-    // redraw — then cleared on unhover. A larger, ringed marker reads as an emphasised
-    // point on top of the cloud. Mirrors the M1 line-emphasis imperative pattern.
-    if (layers.scatter) {
-      built.push({
-        type: 'scattergl',
-        mode: 'markers',
-        x: [],
-        y: [],
-        marker: {
-          size: 16,
-          color: 'rgba(0,0,0,0)',           // transparent fill — the ring carries it
-          line: { width: 3, color: isDark ? '#f9fafb' : '#111827' },  // contrast ring
-        },
-        hoverinfo: 'skip',
-        showlegend: false,
-        name: 'scatter-highlight',
-      });
-    }
-    return built;
-  }, [isCrossMode, cohortSeries, panel, layers, scatterRenderPoints, seriesColor, t, perPatientSeries, isDark]);
-
-  // N2 (v1.19 WS-A): index of the highlight overlay trace (always the last trace when
-  // scatter is on; -1 otherwise). Computed from the trace list so it tracks rebuilds.
-  const highlightIndex = useMemo(
-    () => (traces.length > 0 && traces[traces.length - 1]?.name === 'scatter-highlight' ? traces.length - 1 : -1),
-    [traces],
+  // Heavy layers keep their identity across IQR/median toggles (memoised on their own inputs).
+  const lineTraces = useMemo(
+    () => traces.filter((tr): tr is Extract<TraceDescriptor, { kind: 'perpatient' }> => tr.kind === 'perpatient'),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the per-patient inputs, not on IQR/median toggles
+    [isCrossMode, cohortSeries, perPatientSeries, layers.perPatient, isDark],
   );
-
-  // M1 (review LOW): a trace-set rebuild (layer toggle, eye/metric/data change)
-  // makes PlotlyChart purge+redraw, resetting all line widths to natural — so any
-  // stored emphasis index is now stale and points at a possibly-different trace.
-  // Clear it on rebuild so a later plotly_unhover can't restyle the wrong trace.
-  useEffect(() => {
-    emphasizedRef.current = null;
-  }, [traces]);
-
+  const scatterTraces = useMemo(
+    () => traces.filter((tr): tr is Extract<TraceDescriptor, { kind: 'scatter' }> => tr.kind === 'scatter'),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the scatter inputs, not on IQR/median toggles
+    [isCrossMode, cohortSeries, scatterPoints, layers.scatter, isDark],
+  );
+  const medianTraces = traces.filter((tr): tr is Extract<TraceDescriptor, { kind: 'median' }> => tr.kind === 'median');
+  const iqrTraces = traces.filter((tr): tr is Extract<TraceDescriptor, { kind: 'iqr' }> => tr.kind === 'iqr');
+  const rows = useMemo(() => mergeSeriesRows(traces), [traces]);
+  const fullXDomain = useMemo(() => xExtent(traces), [traces]);
   const [yMin, yMax] = yDomain(yMetric, panel.medianGrid, metric);
-
-  const layout = useMemo<PlotlyLayout>(
-    () => ({
-      autosize: true,
-      height: 320,
-      // N9: wider left margin so the rotated y-axis title clears the tick labels.
-      margin: { l: 64, r: 16, t: 8, b: 40 },
-      paper_bgcolor: chartColors.paper,
-      plot_bgcolor: chartColors.paper,
-      font: { color: chartColors.axisLabel, size: 11 },
-      hovermode: 'closest',
-      // L12: default to zoom; pan/box-select/lasso/reset live on the modebar.
-      dragmode: 'zoom',
-      showlegend: true,
-      legend: { orientation: 'h', y: -0.2, font: { color: chartColors.legend, size: 12 } },
-      xaxis: {
-        title: { text: xLabel, font: { size: 11, color: chartColors.axisLabel } },
-        gridcolor: chartColors.grid,
-        zerolinecolor: chartColors.grid,
-        tickfont: { size: 11, color: chartColors.axisTick },
-      },
-      yaxis: {
-        // N9: y-axis title — active metric + mode, theme-coloured for light/dark.
-        title: { text: yLabel, font: { size: 11, color: chartColors.axisLabel } },
-        range: [yMin, yMax],
-        gridcolor: chartColors.grid,
-        zeroline: yMetric !== 'absolute',
-        zerolinecolor: '#94a3b8',
-        tickfont: { size: 11, color: chartColors.axisTick },
-      },
-    }),
-    [chartColors.paper, chartColors.axisLabel, chartColors.grid, chartColors.legend, chartColors.axisTick, xLabel, yLabel, yMin, yMax, yMetric],
-  );
-
-  // L12: modebar — zoom, pan, box-select, lasso, reset/autoscale enabled.
-  const config = useMemo<Record<string, unknown>>(
-    () => ({
-      displaylogo: false,
-      responsive: true,
-      modeBarButtonsToRemove: ['toImage'],
-      modeBarButtons: [['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d']],
-    }),
-    [],
-  );
 
   // IDOR gate: only navigate for a pseudonym known to THIS panel.
   const knownPatientIds = useMemo(() => {
@@ -379,120 +224,79 @@ export default function OutcomesPanel({
     for (const sp of panel.scatterPoints) ids.add(sp.patientId);
     return ids;
   }, [panel.patients, panel.scatterPoints]);
-
-  const handlePlotlyClick = useCallback(
-    (raw: unknown) => {
-      if (!onPointClick) return;
-      const pid = resolveDrillDownId(raw, knownPatientIds);
-      if (pid) onPointClick(pid);
+  const drillDownActive = !!onPointClick && !isCrossMode;
+  const handlePatientClick = useCallback(
+    (pid: string) => {
+      if (!onPointClick || isCrossMode) return;
+      const known = resolveDrillDownId(pid, knownPatientIds);
+      if (known) onPointClick(known);
     },
-    [onPointClick, knownPatientIds],
+    [onPointClick, isCrossMode, knownPatientIds],
   );
 
-  // M1 (v1.18 WS-A): restore the currently-emphasised per-patient line to its natural
-  // width/opacity (cheap single-trace restyle). Safe to call when nothing is emphasised.
-  const restoreEmphasis = useCallback(() => {
-    const prev = emphasizedRef.current;
-    if (!prev) return;
-    emphasizedRef.current = null;
-    plotlyHandleRef.current?.restyle(
-      { 'line.width': prev.width, opacity: prev.opacity },
-      [prev.index],
-    );
+  // Patient hover (tooltip + emphasis). Hover over the median axis tooltip is Recharts' own state.
+  const [hover, setHover] = useState<PatientHover | null>(null);
+  const handlePatientHover = useCallback((h: PatientHover | null) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!h || !rect) {
+      setHover(h);
+      return;
+    }
+    setHover({
+      ...h,
+      left: Math.max(0, Math.min(h.clientX - rect.left + 12, rect.width - 160)),
+      top: Math.max(0, h.clientY - rect.top + 12),
+    });
   }, []);
+  // Line emphasis only when the scatter layer is off (scatter keeps hover priority), single-cohort only.
+  const lineHoverActive = !isCrossMode && layers.perPatient && !layers.scatter;
 
-  // M1: emphasise ONE per-patient line (bump width + opacity) via in-place restyle.
-  // Gated by the caller (only when scatter is OFF, so scatter keeps hover priority)
-  // and only for a trace that is actually a per-patient line. Restores any prior one
-  // first so switching lines never leaves a stuck-emphasised trace.
-  const emphasizeLine = useCallback(
-    (index: number) => {
-      if (index < 0 || index >= traces.length) return;
-      const tr = traces[index];
-      if (!String(tr?.name ?? '').startsWith('perpatient-')) return;
-      if (emphasizedRef.current?.index === index) return;
-      restoreEmphasis();
-      const naturalWidth = (tr.line as { width?: number } | undefined)?.width ?? SERIES_STYLES.perPatient.strokeWidth;
-      const naturalOpacity = typeof tr.opacity === 'number' ? tr.opacity : 1;
-      emphasizedRef.current = { index, width: naturalWidth, opacity: naturalOpacity };
-      plotlyHandleRef.current?.restyle(
-        { 'line.width': SERIES_STYLES.perPatient.strokeWidth * 2.5, opacity: 0.95 },
-        [index],
-      );
-    },
-    [traces, restoreEmphasis],
-  );
+  // Zoom (Q21 a): drag across the plot or use the Brush.
+  const [zoom, setZoom] = useState<[number, number] | null>(null);
+  const [dragFrom, setDragFrom] = useState<number | null>(null);
+  const [dragTo, setDragTo] = useState<number | null>(null);
+  // The Brush is uncontrolled; a zoom set outside it (drag, reset, new axis/series) remounts it so its handles
+  // follow (key = brushEpoch).
+  const [brushEpoch, setBrushEpoch] = useState(0);
+  const setZoomOutsideBrush = (z: [number, number] | null) => {
+    setZoom(z);
+    setBrushEpoch((n) => n + 1);
+  };
+  // A zoom belongs to one x-axis and one series set: changing the axis, the y-mode or the compared cohorts resets it.
+  const zoomScope = `${axisMode}|${yMetric}|${fullXDomain[0]}|${fullXDomain[1]}|${isCrossMode ? cohortSeries!.map((c) => c.cohortId).join(',') : ''}`;
+  const [zoomScopeSeen, setZoomScopeSeen] = useState(zoomScope);
+  if (zoomScopeSeen !== zoomScope) {
+    setZoomScopeSeen(zoomScope);
+    setZoom(null);
+    setBrushEpoch((n) => n + 1);
+  }
+  const xDomain = zoom ?? fullXDomain;
+  // The Brush index range lives in Recharts' chart state (dataStartIndex/dataEndIndex) and survives a remount, so it
+  // is passed explicitly: all rows without a zoom, else the rows of the zoom plus the neighbour just outside each edge
+  // (the median/IQR stay drawn up to the plot border; a Brush zoom's edges are rows, so its range is exact).
+  let brushStart = 0;
+  let brushEnd = rows.length - 1;
+  if (zoom) {
+    for (let i = 0; i < rows.length; i++) {
+      const x = rows[i].x as number;
+      if (x <= zoom[0]) brushStart = i;
+      if (x >= zoom[1]) { brushEnd = i; break; }
+    }
+  }
+  const finishDrag = () => {
+    if (dragFrom != null && dragTo != null && dragFrom !== dragTo) {
+      setZoomOutsideBrush([Math.min(dragFrom, dragTo), Math.max(dragFrom, dragTo)]);
+    }
+    setDragFrom(null);
+    setDragTo(null);
+  };
 
-  // N2 (v1.19 WS-A): move the single-point highlight overlay to (x, y) via a cheap
-  // in-place Plotly.restyle — no relayout/redraw. Cleared by restoreHighlight (empty
-  // arrays → nothing drawn). Tracked in a ref purely to skip a redundant restyle when
-  // hovering the same point repeatedly. Mirrors the M1 line-emphasis pattern.
-  const highlightedPointRef = useRef<{ x: number; y: number } | null>(null);
-  const restoreHighlight = useCallback(() => {
-    if (highlightIndex < 0) return;
-    if (!highlightedPointRef.current) return;
-    highlightedPointRef.current = null;
-    plotlyHandleRef.current?.restyle({ x: [[]], y: [[]] }, [highlightIndex]);
-  }, [highlightIndex]);
-  const highlightPoint = useCallback(
-    (x: number, y: number) => {
-      if (highlightIndex < 0) return;
-      const prev = highlightedPointRef.current;
-      if (prev && prev.x === x && prev.y === y) return;
-      highlightedPointRef.current = { x, y };
-      // restyle expects per-trace arrays; wrap the single x/y in nested arrays.
-      plotlyHandleRef.current?.restyle({ x: [[x]], y: [[y]] }, [highlightIndex]);
-    },
-    [highlightIndex],
-  );
-
-  const handlePlotlyHover = useCallback(
-    (raw: unknown) => {
-      const e = raw as PlotlyMouseEvent;
-      const pt = e.points?.[0];
-      const pid = pt?.customdata;
-      if (typeof pid !== 'string') return;
-      hoveredDatumRef.current = { patientId: pid };
-      const ev = pt?.event ?? e.event;
-      const cx = ev?.clientX ?? 0;
-      const cy = ev?.clientY ?? 0;
-      showHoverTooltip(cx, cy, {
-        patientId: pid,
-        x: typeof pt?.x === 'number' ? pt.x : undefined,
-        y: typeof pt?.y === 'number' ? pt.y : undefined,
-      });
-      // N2: when the hovered curve is a scatter cloud (single- or cross-cohort) and we
-      // have an (x, y), overlay the highlight marker on that point. The hovered trace
-      // is identified by name so per-patient lines / medians never trigger it.
-      const hoveredName = String(pt?.data?.name ?? '');
-      const isScatterPoint = hoveredName === 'scatter' || hoveredName.startsWith('scatter-');
-      if (layers.scatter && isScatterPoint && typeof pt?.x === 'number' && typeof pt?.y === 'number') {
-        highlightPoint(pt.x, pt.y);
-      }
-      // M1: highlight the hovered per-patient line — only when the scatter layer is
-      // OFF (preserve scatter-priority) and the hovered curve is a per-patient line.
-      // `curveNumber` is the trace index; we re-check the trace name in emphasizeLine.
-      if (!isCrossMode && layers.perPatient && !layers.scatter && typeof pt?.curveNumber === 'number') {
-        emphasizeLine(pt.curveNumber);
-      }
-    },
-    [showHoverTooltip, isCrossMode, layers.perPatient, layers.scatter, emphasizeLine, highlightPoint],
-  );
-
-  const handlePlotlyUnhover = useCallback(() => {
-    hoveredDatumRef.current = null;
-    hideHoverTooltip();
-    restoreEmphasis();
-    restoreHighlight();
-  }, [hideHoverTooltip, restoreEmphasis, restoreHighlight]);
+  const legendEntries = medianTraces.map((tr) => ({ key: tr.seriesKey, label: tr.name, color: tr.color, glyph: 'line' as const }));
 
   if (totalPatients === 0) {
     return (
-      <div
-        data-testid={`outcomes-panel-${eye}`}
-        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
-      >
-        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t(titleKey)}</h3>
+      <div data-testid={`outcomes-panel-${eye}`} className={CHART_CARD_CLASS}>
+        <h3 className={CHART_TITLE_CLASS}>{t(titleKey)}</h3>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
         <div className="h-80 flex items-center justify-center">
           <p className="text-sm text-gray-400 dark:text-gray-500">{t('outcomesPanelEmpty')}</p>
@@ -501,32 +305,51 @@ export default function OutcomesPanel({
     );
   }
 
-  // jsdom fallback DOM: emits the testids the rewritten tests assert against, and
-  // wires hover/click to the SAME tooltip + drill-down handlers as the live path.
-  const fallback = (
-    <ChartFallback
-      eye={eye}
-      isCrossMode={isCrossMode}
-      traces={traces}
-      hasScatter={!isCrossMode && layers.scatter}
-      scatterPoints={scatterRenderPoints}
-      onScatterHover={(pt, ev) => handlePlotlyHover({ points: [{ customdata: pt.patientId, x: pt.x, y: pt.y, event: ev }] })}
-      onScatterLeave={handlePlotlyUnhover}
-      onScatterClick={(pt) => handlePlotlyClick({ points: [{ customdata: pt.patientId }] })}
-      onLineHover={(pid, ev) => handlePlotlyHover({ points: [{ customdata: pid, event: ev }] })}
-      onLineLeave={handlePlotlyUnhover}
-      onLineClick={(pid) => handlePlotlyClick({ points: [{ customdata: pid }] })}
-      lineHoverActive={!isCrossMode && layers.perPatient && !layers.scatter}
-      lineClickActive={!!onPointClick && !isCrossMode && layers.perPatient}
-      scatterClickActive={!!onPointClick && !isCrossMode && layers.scatter}
-    />
+  const medianTooltip = (props: { active?: boolean; label?: unknown; payload?: ReadonlyArray<{ dataKey?: unknown; value?: unknown }> }) => {
+    if (!props.active || hover || !Array.isArray(props.payload) || props.payload.length === 0) return null;
+    const out: ChartTooltipRow[] = [];
+    for (const e of props.payload) {
+      const key = String(e.dataKey ?? '');
+      if (key.startsWith('m_') && typeof e.value === 'number') {
+        const tr = medianTraces.find((m) => `m_${m.seriesKey}` === key);
+        if (!tr) continue;
+        const label = isCrossMode ? (cohortSeries!.find((c) => c.cohortId === tr.cohortId)?.cohortName ?? tr.name) : tr.name;
+        out.push({ key, label, value: formatY(e.value), color: tr.color });
+      } else if (key.startsWith('iqr_') && Array.isArray(e.value) && !isCrossMode) {
+        const [lo, hi] = e.value as [number, number];
+        out.push({ key, label: 'IQR', value: `${formatY(lo)} – ${formatY(hi)}` });
+      }
+    }
+    if (out.length === 0 || typeof props.label !== 'number') return null;
+    return <ChartTooltipBox heading={formatX(props.label)} rows={out} />;
+  };
+
+  // One tooltip element per panel (always present; shown while a patient line/point is hovered).
+  const patientRows: ChartTooltipRow[] = hover
+    ? [
+        { key: 'p', label: t('outcomesTooltipPatient'), value: hover.patientId },
+        ...(typeof hover.y === 'number' ? [{ key: 'y', label: yLabel, value: formatY(hover.y) }] : []),
+      ]
+    : [];
+  const patientTooltip = (
+    <div
+      data-testid={`outcomes-hover-tooltip-${eye}`}
+      role="tooltip"
+      aria-hidden="true"
+      className="pointer-events-none absolute z-10"
+      style={{ display: hover ? 'block' : 'none', left: hover?.left ?? 0, top: hover?.top ?? 0 }}
+    >
+      {hover && (
+        <ChartTooltipBox heading={typeof hover.x === 'number' ? formatX(hover.x) : hover.patientId} rows={patientRows} />
+      )}
+    </div>
   );
 
   return (
     <div
       ref={containerRef}
       data-testid={`outcomes-panel-${eye}`}
-      className="relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
+      className={`relative ${CHART_CARD_CLASS}`}
       role="img"
       aria-label={
         onPointClick
@@ -534,202 +357,353 @@ export default function OutcomesPanel({
           : `${t(titleKey)} — ${panel.summary.patientCount} ${t('outcomesCardPatients')}`
       }
     >
-      {/* Single imperative hover tooltip — populated by hover handlers (DOM writes,
-          no React state → no chart re-render). Scatter-priority by event ordering. */}
-      <div
-        ref={tooltipRef}
-        data-testid={`outcomes-hover-tooltip-${eye}`}
-        role="tooltip"
-        aria-hidden="true"
-        className="pointer-events-none absolute z-10 hidden whitespace-pre rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-lg"
-        style={{ display: 'none' }}
-      />
-      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t(titleKey)}</h3>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
+      {patientTooltip}
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h3 className={CHART_TITLE_CLASS}>{t(titleKey)}</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
+        </div>
+        {zoom && (
+          <button
+            type="button"
+            onClick={() => setZoomOutsideBrush(null)}
+            className="text-xs text-blue-700 dark:text-blue-300 underline"
+          >
+            {t('outcomesZoomReset')}
+          </button>
+        )}
+      </div>
 
       {/* IQR marker for presence/absence tests. */}
-      {layers.spreadBand && (
-        <div data-testid={`outcomes-panel-${eye}-iqr`} aria-hidden="true" hidden />
-      )}
-
+      {layers.spreadBand && <div data-testid={`outcomes-panel-${eye}-iqr`} aria-hidden="true" hidden />}
       {/* y-domain regression marker. */}
-      <div
-        hidden
-        data-testid="outcomes-panel-ydomain"
-        data-metric={metric}
-        data-ymetric={yMetric}
-        data-min={yMin}
-        data-max={yMax}
-      />
+      <div hidden data-testid="outcomes-panel-ydomain" data-metric={metric} data-ymetric={yMetric} data-min={yMin} data-max={yMax} />
+      {/* N9: y-axis title marker. */}
+      <div hidden data-testid={`outcomes-panel-${eye}-ylabel`} data-ylabel={yLabel} />
 
-      {/* N9 (v1.19 WS-A): y-axis title marker — exposes the resolved label so the
-          active metric/mode is assertable without introspecting the Plotly canvas. */}
-      <div
-        hidden
-        data-testid={`outcomes-panel-${eye}-ylabel`}
-        data-ylabel={yLabel}
-      />
-
-      <div className="relative" style={{ width: '100%', height: 320 }}>
-        <PlotlyChart
-          testId={`outcomes-plotly-${eye}`}
-          data={traces}
-          layout={layout}
-          config={config}
-          onPointClick={onPointClick ? handlePlotlyClick : undefined}
-          onHover={handlePlotlyHover}
-          onUnhover={handlePlotlyUnhover}
-          handleRef={plotlyHandleRef}
-          style={{ width: '100%', height: '100%' }}
-          fallback={fallback}
+      {canLayout() ? (
+        <div style={{ width: '100%', height: 340 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart
+              data={rows}
+              margin={{ top: 8, right: 16, bottom: 16, left: 8 }}
+              onMouseDown={(s) => { if (typeof s?.activeLabel === 'number') setDragFrom(s.activeLabel); }}
+              onMouseMove={(s) => { if (dragFrom != null && typeof s?.activeLabel === 'number') setDragTo(s.activeLabel); }}
+              onMouseUp={finishDrag}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
+              <XAxis
+                type="number"
+                dataKey="x"
+                domain={xDomain}
+                allowDataOverflow
+                tick={{ fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisTick }}
+                stroke={colors.grid}
+                label={{ value: xLabel, position: 'insideBottom', offset: -8, fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisLabel }}
+              />
+              <YAxis
+                type="number"
+                domain={[yMin, yMax]}
+                allowDataOverflow
+                tick={{ fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisTick }}
+                tickFormatter={(v: number) => formatY(v)}
+                stroke={colors.grid}
+                label={{ value: yLabel, angle: -90, position: 'insideLeft', fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisLabel, style: { textAnchor: 'middle' } }}
+              />
+              {yMetric !== 'absolute' && <ReferenceLine y={0} stroke="#94a3b8" />}
+              {iqrTraces.map((tr) => (
+                <Area
+                  key={`iqr-${tr.seriesKey}`}
+                  dataKey={`iqr_${tr.seriesKey}`}
+                  className="series-iqr"
+                  stroke="none"
+                  fill={tr.color}
+                  fillOpacity={tr.fillOpacity}
+                  connectNulls
+                  activeDot={false}
+                  isAnimationActive={false}
+                  legendType="none"
+                />
+              ))}
+              <PatientLayer
+                lines={lineTraces}
+                scatter={scatterTraces}
+                hover={hover}
+                lineHoverActive={lineHoverActive}
+                drillDownActive={drillDownActive}
+                onHover={handlePatientHover}
+                onClick={handlePatientClick}
+                ringColor={isDark ? '#f9fafb' : '#111827'}
+              />
+              {medianTraces.map((tr) => (
+                <Line
+                  key={`m-${tr.seriesKey}`}
+                  dataKey={`m_${tr.seriesKey}`}
+                  className="series-median"
+                  name={tr.name}
+                  stroke={tr.color}
+                  strokeWidth={tr.width}
+                  dot={false}
+                  connectNulls
+                  isAnimationActive={false}
+                />
+              ))}
+              <Tooltip content={medianTooltip} isAnimationActive={false} cursor={{ stroke: colors.grid }} />
+              {dragFrom != null && dragTo != null && (
+                <ReferenceArea x1={dragFrom} x2={dragTo} strokeOpacity={0.3} fill={colors.axisTick} fillOpacity={0.15} />
+              )}
+              {rows.length > 2 && (
+                <Brush
+                  key={`brush-${brushEpoch}`}
+                  dataKey="x"
+                  startIndex={brushStart}
+                  endIndex={brushEnd}
+                  height={18}
+                  stroke={colors.axisTick}
+                  fill="transparent"
+                  tickFormatter={() => ''}
+                  onChange={(r: { startIndex?: number; endIndex?: number }) => {
+                    if (r.startIndex == null || r.endIndex == null) return;
+                    if (r.startIndex === 0 && r.endIndex === rows.length - 1) setZoom(null);
+                    else setZoom([rows[r.startIndex].x as number, rows[r.endIndex].x as number]);
+                  }}
+                />
+              )}
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      ) : (
+        <SeriesMarkers
+          eye={eye}
+          isCrossMode={isCrossMode}
+          traces={traces}
+          lineHoverActive={lineHoverActive}
+          drillDownActive={drillDownActive}
+          onHover={handlePatientHover}
+          onClick={handlePatientClick}
         />
-      </div>
+      )}
+      <ChartLegend entries={legendEntries} />
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// jsdom fallback render. Emits semantic, layer-aware testids the rewritten
-// outcomes tests assert against, and wires hover/click to the panel's handlers.
+// Per-patient lines and scatter cloud as one plain SVG layer.
 // ---------------------------------------------------------------------------
 
-interface ChartFallbackProps {
-  eye: string;
-  isCrossMode: boolean;
-  traces: PlotlyData[];
-  hasScatter: boolean;
-  scatterPoints: ScatterDatum[];
-  onScatterHover: (pt: ScatterDatum, ev: MouseEvent) => void;
-  onScatterLeave: () => void;
-  onScatterClick: (pt: ScatterDatum) => void;
-  onLineHover: (pid: string, ev: MouseEvent) => void;
-  onLineLeave: () => void;
-  onLineClick: (pid: string) => void;
-  lineHoverActive: boolean;
-  lineClickActive: boolean;
-  scatterClickActive: boolean;
+type LineTrace = Extract<TraceDescriptor, { kind: 'perpatient' }>;
+type ScatterTrace = Extract<TraceDescriptor, { kind: 'scatter' }>;
+
+function pathOf(tr: LineTrace, sx: (v: number) => number, sy: (v: number) => number): string {
+  let d = '';
+  let pen = false;
+  for (let i = 0; i < tr.x.length; i++) {
+    const y = tr.y[i];
+    if (y == null || !Number.isFinite(y)) {
+      pen = false;
+      continue;
+    }
+    d += `${pen ? 'L' : 'M'}${sx(tr.x[i]).toFixed(1)},${sy(y).toFixed(1)}`;
+    pen = true;
+  }
+  return d;
 }
 
-function ChartFallback({
+interface PatientLayerProps {
+  lines: LineTrace[];
+  scatter: ScatterTrace[];
+  hover: PatientHover | null;
+  lineHoverActive: boolean;
+  drillDownActive: boolean;
+  onHover: (h: PatientHover | null) => void;
+  onClick: (pid: string) => void;
+  ringColor: string;
+}
+
+function PatientLayer({ lines, scatter, hover, lineHoverActive, drillDownActive, onHover, onClick, ringColor }: PatientLayerProps) {
+  const xScale = useXAxisScale();
+  const yScale = useYAxisScale();
+  const xInverse = useXAxisInverseScale();
+  if (!xScale || !yScale) return null;
+  const sx = (v: number) => xScale(v) as number;
+  const sy = (v: number) => yScale(v) as number;
+  const emphasised = hover && hover.lineIndex >= 0 ? lines[hover.lineIndex] : null;
+  return (
+    <g data-perpatient-layer>
+      <PatientPaths
+        lines={lines}
+        scatter={scatter}
+        sx={sx}
+        sy={sy}
+        xInverse={xInverse}
+        lineHoverActive={lineHoverActive}
+        drillDownActive={drillDownActive}
+        onHover={onHover}
+        onClick={onClick}
+      />
+      {emphasised && (
+        <path
+          d={pathOf(emphasised, sx, sy)}
+          fill="none"
+          stroke={emphasised.color}
+          strokeWidth={emphasised.width * 2.5}
+          strokeOpacity={0.95}
+          pointerEvents="none"
+        />
+      )}
+      {hover && hover.lineIndex < 0 && typeof hover.x === 'number' && typeof hover.y === 'number' && (
+        <circle cx={sx(hover.x)} cy={sy(hover.y)} r={8} fill="none" stroke={ringColor} strokeWidth={3} pointerEvents="none" />
+      )}
+    </g>
+  );
+}
+
+interface PatientPathsProps {
+  lines: LineTrace[];
+  scatter: ScatterTrace[];
+  sx: (v: number) => number;
+  sy: (v: number) => number;
+  xInverse: ((px: number) => unknown) | undefined;
+  lineHoverActive: boolean;
+  drillDownActive: boolean;
+  onHover: (h: PatientHover | null) => void;
+  onClick: (pid: string) => void;
+}
+
+/** The heavy part — re-rendered only when its series or the scales change, not on hover or IQR/median toggles. */
+const PatientPaths = memo(
+  function PatientPaths({ lines, scatter, sx, sy, xInverse, lineHoverActive, drillDownActive, onHover, onClick }: PatientPathsProps) {
+    const nearest = (tr: LineTrace, ev: ReactMouseEvent<SVGPathElement>) => {
+      const svg = ev.currentTarget.ownerSVGElement;
+      if (!svg || !xInverse) return {};
+      const xv = Number(xInverse(ev.clientX - svg.getBoundingClientRect().left));
+      let best = -1;
+      for (let i = 0; i < tr.x.length; i++) {
+        if (tr.y[i] == null) continue;
+        if (best < 0 || Math.abs(tr.x[i] - xv) < Math.abs(tr.x[best] - xv)) best = i;
+      }
+      return best < 0 ? {} : { x: tr.x[best], y: tr.y[best] ?? undefined };
+    };
+    return (
+      <>
+        {lines.map((tr, i) => (
+          <path
+            key={`${tr.cohortId ?? ''}-${tr.patientId}`}
+            d={pathOf(tr, sx, sy)}
+            fill="none"
+            stroke={tr.color}
+            strokeWidth={tr.width}
+            strokeOpacity={tr.opacity}
+            style={drillDownActive ? { cursor: 'pointer' } : undefined}
+            onMouseMove={(ev) =>
+              onHover({ patientId: tr.patientId, ...nearest(tr, ev), clientX: ev.clientX, clientY: ev.clientY, lineIndex: lineHoverActive ? i : -2 })}
+            onMouseLeave={() => onHover(null)}
+            onClick={drillDownActive ? () => onClick(tr.patientId) : undefined}
+          />
+        ))}
+        {scatter.map((tr) =>
+          tr.points.map((p, j) => (
+            <circle
+              key={`${tr.cohortId ?? ''}-${j}`}
+              cx={sx(p.x)}
+              cy={sy(p.y)}
+              r={3.5}
+              fill={rgba(tr.color, tr.opacity)}
+              style={drillDownActive ? { cursor: 'pointer' } : undefined}
+              onMouseEnter={(ev) => onHover({ patientId: p.patientId, x: p.x, y: p.y, clientX: ev.clientX, clientY: ev.clientY, lineIndex: -1 })}
+              onMouseLeave={() => onHover(null)}
+              onClick={drillDownActive ? () => onClick(p.patientId) : undefined}
+            />
+          )),
+        )}
+      </>
+    );
+  },
+  // Scale functions are recreated by the hooks on every chart render; compare their mapping instead.
+  (a, b) =>
+    a.lines === b.lines &&
+    a.scatter === b.scatter &&
+    a.lineHoverActive === b.lineHoverActive &&
+    a.drillDownActive === b.drillDownActive &&
+    a.onHover === b.onHover &&
+    a.onClick === b.onClick &&
+    sameScale(a.sx, b.sx) &&
+    sameScale(a.sy, b.sy),
+);
+
+/** Two scales map identically if they agree on three probe values (linear scales). */
+function sameScale(a: (v: number) => number, b: (v: number) => number): boolean {
+  if (a === b) return true;
+  return [0, 1, 1000].every((v) => a(v) === b(v));
+}
+
+// ---------------------------------------------------------------------------
+// jsdom marker DOM — the same descriptors as data-testids, hover/click wired to the same handlers.
+// ---------------------------------------------------------------------------
+
+function SeriesMarkers({
   eye,
   isCrossMode,
   traces,
-  hasScatter,
-  scatterPoints,
-  onScatterHover,
-  onScatterLeave,
-  onScatterClick,
-  onLineHover,
-  onLineLeave,
-  onLineClick,
   lineHoverActive,
-  lineClickActive,
-  scatterClickActive,
-}: ChartFallbackProps) {
-  // Derive per-trace markers from the trace list (same descriptors fed to Plotly).
-  const medianTraces = traces.filter(
-    (tr) =>
-      tr.name != null &&
-      !String(tr.name).startsWith('iqr') &&
-      !String(tr.name).startsWith('perpatient') &&
-      tr.name !== 'scatter',
-  );
-  const iqrTraces = traces.filter((tr) => String(tr.name).startsWith('iqr') && tr.fill === 'tonexty');
-  // Single-cohort per-patient lines are named `perpatient-${id}`; cross-cohort ones
-  // are `perpatient-${cohortId}-${id}` (handled separately below so they don't pollute
-  // the single-cohort `outcomes-perpatient-${id}` markers the tests key on).
-  const perPatientTraces = isCrossMode
-    ? []
-    : traces.filter((tr) => String(tr.name).startsWith('perpatient-'));
-  // M3 (v1.18 WS-A): cross-cohort scatter + per-patient presence markers, so the tests
-  // (and any DOM consumers) can confirm the toggles actually emit traces in compare mode.
-  const crossScatterTraces = isCrossMode
-    ? traces.filter((tr) => String(tr.name).startsWith('scatter-'))
-    : [];
-  const crossPerPatientTraces = isCrossMode
-    ? traces.filter((tr) => String(tr.name).startsWith('perpatient-'))
-    : [];
-
+  drillDownActive,
+  onHover,
+  onClick,
+}: {
+  eye: string;
+  isCrossMode: boolean;
+  traces: TraceDescriptor[];
+  lineHoverActive: boolean;
+  drillDownActive: boolean;
+  onHover: (h: PatientHover | null) => void;
+  onClick: (pid: string) => void;
+}) {
+  const lines = traces.filter((tr): tr is LineTrace => tr.kind === 'perpatient');
+  const scatter = traces.filter((tr): tr is ScatterTrace => tr.kind === 'scatter');
   return (
     <div data-testid={`outcomes-fallback-${eye}`}>
-      {/* Median line(s) — single-cohort median or one per cohort series. */}
-      {medianTraces.map((tr, i) => (
-        <div
-          key={`median-${i}`}
-          data-testid="outcomes-trace-median"
-          data-name={tr.name}
-          data-stroke-width={String((tr.line as { width?: number } | undefined)?.width ?? '')}
-          data-color={String((tr.line as { color?: string } | undefined)?.color ?? '')}
-        />
-      ))}
-
-      {/* IQR band marker(s). */}
-      {iqrTraces.map((tr, i) => (
-        <div key={`iqr-${i}`} data-testid="outcomes-trace-iqr" data-fillcolor={String(tr.fillcolor ?? '')} />
-      ))}
-
-      {/* Per-patient lines — tagged by pseudonym, hover/click wired per the gates. */}
-      {perPatientTraces.map((tr) => {
-        const pid = String(tr.name).replace('perpatient-', '');
-        return (
-          <div
-            key={`pp-${pid}`}
-            data-testid={`outcomes-perpatient-${pid}`}
-            data-has-onclick={lineClickActive ? 'true' : 'false'}
-            data-has-hover={lineHoverActive ? 'true' : 'false'}
-            data-color={String((tr.line as { color?: string } | undefined)?.color ?? '')}
-            data-stroke-width={String((tr.line as { width?: number } | undefined)?.width ?? '')}
-            onMouseEnter={lineHoverActive ? (e) => onLineHover(pid, e.nativeEvent as MouseEvent) : undefined}
-            onMouseLeave={lineHoverActive ? onLineLeave : undefined}
-            onClick={lineClickActive ? () => onLineClick(pid) : undefined}
-          />
-        );
-      })}
-
-      {/* Scatter cloud — one marker carrying the count, plus per-point nodes. */}
-      {hasScatter && (
-        <div
-          data-testid={`outcomes-scatter-${eye}`}
-          data-count={String(scatterPoints.length)}
-          data-has-onclick={scatterClickActive ? 'true' : 'false'}
-        >
-          {scatterPoints.map((pt) => (
-            <div
-              key={pt.patientId}
-              data-testid={`outcomes-scatter-point-${pt.patientId}`}
-              onMouseEnter={(e) => onScatterHover(pt, e.nativeEvent as MouseEvent)}
-              onMouseLeave={onScatterLeave}
-              onClick={() => onScatterClick(pt)}
-            />
-          ))}
-        </div>
+      {traces.map((tr, i) =>
+        tr.kind === 'median' ? (
+          <div key={`m-${i}`} data-testid="outcomes-trace-median" data-name={tr.name} data-stroke-width={String(tr.width)} data-color={tr.color} />
+        ) : tr.kind === 'iqr' ? (
+          <div key={`i-${i}`} data-testid="outcomes-trace-iqr" data-fillcolor={rgba(tr.color, tr.fillOpacity)} />
+        ) : null,
       )}
-
-      {/* M3 (v1.18 WS-A): cross-cohort scatter clouds — one presence marker per cohort,
-          carrying the cohort colour + point count. Hover tooltips are driven by the live
-          Plotly path; drill-down stays disabled in cross mode (no onClick wiring). */}
-      {crossScatterTraces.map((tr) => {
-        const cohortId = String(tr.name).replace('scatter-', '');
-        const count = Array.isArray(tr.x) ? tr.x.length : 0;
-        return (
+      {lines.map((tr, i) =>
+        isCrossMode ? (
+          <div key={`cp-${tr.cohortId}-${tr.patientId}`} data-testid={`outcomes-cross-perpatient-${tr.cohortId}-${tr.patientId}`} data-color={tr.color} />
+        ) : (
           <div
-            key={`cross-scatter-${cohortId}`}
-            data-testid={`outcomes-cross-scatter-${cohortId}`}
-            data-count={String(count)}
-            data-color={String((tr.marker as { color?: string } | undefined)?.color ?? '')}
+            key={`pp-${tr.patientId}`}
+            data-testid={`outcomes-perpatient-${tr.patientId}`}
+            data-has-onclick={drillDownActive ? 'true' : 'false'}
+            data-has-hover={lineHoverActive ? 'true' : 'false'}
+            data-color={tr.color}
+            data-stroke-width={String(tr.width)}
+            onMouseEnter={lineHoverActive ? (e) => onHover({ patientId: tr.patientId, clientX: e.clientX, clientY: e.clientY, lineIndex: i }) : undefined}
+            onMouseLeave={lineHoverActive ? () => onHover(null) : undefined}
+            onClick={drillDownActive ? () => onClick(tr.patientId) : undefined}
           />
-        );
-      })}
-
-      {/* M3: cross-cohort per-patient lines — one presence marker per line, in the
-          cohort colour. */}
-      {crossPerPatientTraces.map((tr) => (
-        <div
-          key={`cross-pp-${tr.name}`}
-          data-testid={`outcomes-cross-perpatient-${String(tr.name).replace('perpatient-', '')}`}
-          data-color={String((tr.line as { color?: string } | undefined)?.color ?? '')}
-        />
-      ))}
+        ),
+      )}
+      {scatter.map((tr) =>
+        isCrossMode ? (
+          <div key={`cs-${tr.cohortId}`} data-testid={`outcomes-cross-scatter-${tr.cohortId}`} data-count={String(tr.points.length)} data-color={rgba(tr.color, tr.opacity)} />
+        ) : (
+          <div key="s" data-testid={`outcomes-scatter-${eye}`} data-count={String(tr.points.length)} data-has-onclick={drillDownActive ? 'true' : 'false'}>
+            {tr.points.map((p, j) => (
+              <div
+                key={`${p.patientId}-${j}`}
+                data-testid={`outcomes-scatter-point-${p.patientId}`}
+                onMouseEnter={(e) => onHover({ patientId: p.patientId, x: p.x, y: p.y, clientX: e.clientX, clientY: e.clientY, lineIndex: -1 })}
+                onMouseLeave={() => onHover(null)}
+                onClick={() => onClick(p.patientId)}
+              />
+            ))}
+          </div>
+        ),
+      )}
     </div>
   );
 }

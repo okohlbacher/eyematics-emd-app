@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   Area,
   CartesianGrid,
@@ -17,14 +18,21 @@ import type { CombinedDataPoint } from '../../hooks/useCaseData';
 import type { TranslationKey } from '../../i18n/translations';
 import type { Observation, Procedure } from '../../types/fhir';
 import { translateClinical } from '../../utils/clinicalTerms';
+import {
+  AXIS_TICK_FONT_SIZE,
+  CHART_CARD_CLASS,
+  CHART_TITLE_CLASS,
+  CRT_COLOR,
+  CRT_MEDIAN_COLOR,
+  decimalToLogmar,
+  toLogmarRow,
+  VISUS_COLOR,
+  VISUS_MEDIAN_COLOR,
+} from '../charts/chartStyle';
+import ChartTooltipBox from '../charts/ChartTooltipBox';
 import { InfoTooltip } from '../primitives';
 import { caseChartColors, IQR_FILL_OPACITY } from './chartTheme';
 
-/** Patient curve colours — shared so the legend swatches stay in sync. */
-const VISUS_COLOR = '#10b981';
-const CRT_COLOR = '#8b5cf6';
-const VISUS_MEDIAN_COLOR = '#6ee7b7';
-const CRT_MEDIAN_COLOR = '#c4b5fd';
 
 export interface VisusCrtChartProps {
   /** A3 v2: single merged data array — patient rows already carry the cohort
@@ -38,6 +46,8 @@ export interface VisusCrtChartProps {
    *  and the click-highlight follow whichever axis is active. */
   combinedData: CombinedDataPoint[];
   cohortAvgVisus: number;
+  /** Z0-P23 (Q31): mean of the cohort's logMAR values for "Visus Ø"; default: logMAR of the decimal mean. */
+  cohortAvgVisusLogmar?: number;
   cohortAvgCrt: number;
   highlightDate: string | null;
   dateFmt: string;
@@ -55,8 +65,9 @@ export interface VisusCrtChartProps {
 }
 
 export default function VisusCrtChart({
-  combinedData,
+  combinedData: decimalData,
   cohortAvgVisus,
+  cohortAvgVisusLogmar,
   cohortAvgCrt,
   highlightDate,
   dateFmt,
@@ -72,6 +83,12 @@ export default function VisusCrtChart({
   const { effectiveTheme } = useThemeSafe();
   const isDark = effectiveTheme === 'dark';
   const colors = caseChartColors(isDark);
+
+  // Z0-P23 (Q31): this chart shows Visus in logMAR (axis, tooltip, "Visus Ø", legend), like Verläufe. The data stay
+  // decimal; the patient value, the cohort median and the IQR band are converted here (the band bounds swap because
+  // logMAR falls as decimal Visus rises).
+  const combinedData = useMemo(() => decimalData.map(toLogmarRow), [decimalData]);
+  const avgVisusLogmar = cohortAvgVisusLogmar ?? decimalToLogmar(cohortAvgVisus) ?? 0;
 
   const hasReference =
     showCohortReference &&
@@ -122,6 +139,7 @@ export default function VisusCrtChart({
   // interpolation series. Content + format are identical on both axes; only the
   // label adapts (calendar date vs "X Monate seit Erstvisite").
   const fmtVisus = (v: number) => v.toFixed(2);
+  const visusLabel = t('outcomesYAxisVisusAbsolute');
   const fmtCrt = (v: number) => `${v.toFixed(0)} µm`;
   const renderTooltip = (props: {
     active?: boolean;
@@ -136,7 +154,7 @@ export default function VisusCrtChart({
     for (const e of props.payload) {
       const key = String(e.dataKey ?? '');
       if (typeof e.value !== 'number') continue;
-      if (key === 'visus') rows.push({ key, name: 'Visus', color: e.color, text: fmtVisus(e.value) });
+      if (key === 'visus') rows.push({ key, name: visusLabel, color: e.color, text: fmtVisus(e.value) });
       else if (key === 'crt') rows.push({ key, name: t('crtLegendLabel'), color: e.color, text: fmtCrt(e.value) });
       else if (key === 'visusMedian') rows.push({ key, name: t('cohortReferenceMedianVisus'), color: e.color, text: fmtVisus(e.value) });
       else if (key === 'crtMedian') rows.push({ key, name: t('cohortReferenceMedianCrt'), color: e.color, text: fmtCrt(e.value) });
@@ -152,19 +170,10 @@ export default function VisusCrtChart({
         ? new Date(rawDate).toLocaleDateString(dateFmt)
         : '';
     return (
-      <div
-        className="rounded-lg shadow-lg px-3 py-2 text-sm border"
-        style={{ background: colors.tooltipBg, borderColor: colors.tooltipBorder }}
-      >
-        {label && (
-          <div className="text-xs font-semibold mb-1" style={{ color: colors.tooltipHeading }}>{label}</div>
-        )}
-        {rows.map((r) => (
-          <div key={r.key} className="text-xs" style={{ color: colors.tooltipText }}>
-            <span style={{ color: r.color }}>{r.name}</span>: {r.text}
-          </div>
-        ))}
-      </div>
+      <ChartTooltipBox
+        heading={label}
+        rows={rows.map((r) => ({ key: r.key, label: r.name, value: r.text, color: r.color }))}
+      />
     );
   };
 
@@ -212,8 +221,8 @@ export default function VisusCrtChart({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-      <h3 className="font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-1.5">
+    <div data-testid="visus-crt-chart" className={CHART_CARD_CLASS}>
+      <h3 className={`${CHART_TITLE_CLASS} mb-1 flex items-center gap-1.5`}>
         {t('visusAndCrt')}
         {/* K-bl1 + L10: short explanation; when the overlay is on, append the
             overlay-specific note about the IQR band + relative-time alignment. */}
@@ -250,7 +259,7 @@ export default function VisusCrtChart({
               type="number"
               domain={['dataMin', 'dataMax']}
               tickFormatter={(m: number) => String(m)}
-              tick={{ fontSize: 10, fill: colors.axisTick }}
+              tick={{ fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisTick }}
               stroke={colors.grid}
               label={{ value: t('relativeMonthsAxisLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: colors.axisLabel }}
             />
@@ -261,36 +270,39 @@ export default function VisusCrtChart({
               scale="time"
               domain={['dataMin', 'dataMax']}
               tickFormatter={(ms: number) => (ms ? new Date(ms).toLocaleDateString(dateFmt, { month: '2-digit', year: '2-digit' }) : '')}
-              tick={{ fontSize: 10, fill: colors.axisTick }}
+              tick={{ fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisTick }}
               stroke={colors.grid}
             />
           )}
           <YAxis
             yAxisId="visus"
-            domain={[0, 1]}
+            domain={[
+              (dataMin: number) => Math.min(0, Math.floor(dataMin * 10) / 10),
+              (dataMax: number) => Math.max(1, Math.ceil(dataMax * 10) / 10),
+            ]}
             tickCount={5}
             allowDecimals
-            tick={{ fontSize: 10, fill: colors.axisTick }}
+            tick={{ fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisTick }}
             stroke={colors.grid}
-            label={{ value: t('visusShortLabel'), angle: -90, position: 'insideLeft', fontSize: 11, fill: VISUS_COLOR }}
+            label={{ value: visusLabel, angle: -90, position: 'insideLeft', fontSize: AXIS_TICK_FONT_SIZE, fill: VISUS_COLOR, style: { textAnchor: 'middle' } }}
           />
           <YAxis
             yAxisId="crt"
             orientation="right"
             tickCount={5}
             allowDecimals={false}
-            tick={{ fontSize: 10, fill: colors.axisTick }}
+            tick={{ fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisTick }}
             stroke={colors.grid}
-            label={{ value: t('crtLegendLabel'), angle: -90, position: 'insideRight', fontSize: 11, fill: CRT_COLOR }}
+            label={{ value: t('outcomesYAxisCrtAbsolute'), angle: -90, position: 'insideRight', fontSize: AXIS_TICK_FONT_SIZE, fill: CRT_COLOR, style: { textAnchor: 'middle' } }}
           />
           <Tooltip content={renderTooltip} />
           <Legend content={renderLegend} />
           <ReferenceLine
             yAxisId="visus"
-            y={cohortAvgVisus}
+            y={avgVisusLogmar}
             stroke="#94a3b8"
             strokeDasharray="5 5"
-            label={{ value: `Visus Ø ${cohortAvgVisus.toFixed(2)}`, position: 'insideTopLeft', fontSize: 9, fill: '#94a3b8' }}
+            label={{ value: `Visus Ø ${avgVisusLogmar.toFixed(2)}`, position: 'insideTopLeft', fontSize: 9, fill: '#94a3b8' }}
           />
           <ReferenceLine
             yAxisId="crt"
@@ -394,8 +406,9 @@ export default function VisusCrtChart({
             yAxisId="visus"
             type="monotone"
             dataKey="visus"
+            className="series-visus"
             stroke={VISUS_COLOR}
-            name={t('visusYAxisLabel')}
+            name={t('visusLogmarLegendLabel')}
             strokeWidth={2}
             dot={(props: Record<string, unknown>) => {
               const { cx, cy } = props as { cx?: number; cy?: number };
@@ -409,6 +422,7 @@ export default function VisusCrtChart({
             yAxisId="crt"
             type="monotone"
             dataKey="crt"
+            className="series-crt"
             stroke={CRT_COLOR}
             name={t('crtLegendLabel')}
             strokeWidth={2}

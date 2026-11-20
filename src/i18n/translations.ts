@@ -759,6 +759,8 @@ const translations = {
   crtLegendLabel: { de: 'CRT (µm)', en: 'CRT (µm)' },
   visusYAxisLabel: { de: 'Visus (Dezimal, bestkorrigiert)', en: 'Visual acuity (decimal, best-corrected)' },
   visusShortLabel: { de: 'Visus', en: 'Visus' },
+  // Z0-P23 (Q31): legend of the case-view Visus/CRT chart (logMAR).
+  visusLogmarLegendLabel: { de: 'Visus (logMAR, bestkorrigiert)', en: 'Visual acuity (logMAR, best-corrected)' },
   scatterVisusAxisLabel: { de: 'Visus (dezimal)', en: 'Visus (decimal)' },
   scatterCrtAxisLabel: { de: 'CRT (µm)', en: 'CRT (µm)' },
   distributionTitle: { de: 'Werteverteilung', en: 'Value Distribution' },
@@ -935,6 +937,8 @@ const translations = {
   outcomesComparePatientsUnit: { de: 'Patient:innen', en: 'patients' },
   outcomesCrossMode: { de: '{count} Kohorten verglichen', en: '{count} cohorts compared' },
   outcomesCompareReset: { de: 'Einzelne Kohorte anzeigen', en: 'Reset to single cohort' },
+  // Z0-P23 (Q21 a): drag-to-zoom / Brush reset on the Verläufe panels.
+  outcomesZoomReset: { de: 'Zoom zurücksetzen', en: 'Reset zoom' },
   // --- v1.18 WS-A (outcomes Plotly round-6) keys ---
   // M3: per-patient + scatter layers are now opt-in (each cohort in its own colour)
   // in compare mode, replacing the old "suppressed in comparison mode" note.
@@ -1263,6 +1267,8 @@ const translations = {
   // ==== v1.19 WS-B (per-patient case-detail view — UAT round 7) ====
   // N10/N11: overlay-cohort label + selector near the cohort-reference toggle.
   overlayCohortSelectorLabel: { de: 'Vergleichskohorte wählen', en: 'Select comparison cohort' },
+  // Z0-P23 (Q22): hint of the case-view comparison panel (exactly one comparison cohort).
+  overlayCohortCompareHint: { de: 'Genau eine Vergleichskohorte auswählen (Kohorten, die diesen Fall enthalten)', en: 'Select exactly one comparison cohort (cohorts that contain this case)' },
   overlayCohortActiveLabel: { de: 'Vergleichskohorte', en: 'Comparison cohort' },
   // Default overlay cohort = all other patients (the v1.18 behaviour).
   overlayCohortAllPatients: { de: 'Alle Patienten', en: 'All patients' },

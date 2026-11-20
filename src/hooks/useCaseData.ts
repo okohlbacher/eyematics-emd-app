@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 
+import { meanLogmar } from '../components/charts/chartStyle';
 import { CRITICAL_CRT_THRESHOLD, CRITICAL_IOP_THRESHOLD, CRITICAL_VISUS_THRESHOLD } from '../config/clinicalThresholds';
 import type { TranslationKey } from '../i18n/translations';
 import {
@@ -136,6 +137,13 @@ export function useCaseData(
     if (!all.length) return 0;
     return all.reduce((s, o) => s + (o.valueQuantity?.value ?? 0), 0) / all.length;
   }, [cohortCases]);
+
+  // Z0-P23 (Q31): the Visus/CRT chart shows logMAR, so its "Visus Ø" is the mean of the logMAR values
+  // (decimal values ≤ 0 have no logMAR and are left out).
+  const cohortAvgVisusLogmar = useMemo(
+    () => meanLogmar(cohortCases.flatMap((c) => getObservationsByCode(c.observations, LOINC_VISUS)).map((o) => o.valueQuantity?.value ?? 0)),
+    [cohortCases],
+  );
 
   const cohortAvgCrt = useMemo(() => {
     const all = cohortCases.flatMap((c) => getObservationsByCode(c.observations, LOINC_CRT));
@@ -762,6 +770,7 @@ export function useCaseData(
 
   return {
     cohortAvgVisus,
+    cohortAvgVisusLogmar,
     cohortAvgCrt,
     cohortReference,
     combinedDataWithReference,

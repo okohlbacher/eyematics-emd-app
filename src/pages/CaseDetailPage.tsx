@@ -107,6 +107,7 @@ export default function CaseDetailPage() {
 
   const {
     cohortAvgVisus,
+    cohortAvgVisusLogmar,
     cohortAvgCrt,
     combinedDataWithReference,
     visusObs,
@@ -261,6 +262,7 @@ export default function CaseDetailPage() {
           <VisusCrtChart
             combinedData={combinedDataWithReference}
             cohortAvgVisus={cohortAvgVisus}
+            cohortAvgVisusLogmar={cohortAvgVisusLogmar}
             cohortAvgCrt={cohortAvgCrt}
             highlightDate={highlightDate}
             dateFmt={dateFmt}

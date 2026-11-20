@@ -19,10 +19,11 @@
  * unconditional and above any early return; their internal hook call order
  * mirrors the original OutcomesView exactly.
  */
-import { GitCompare, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import type { TranslationKey } from '../../i18n/translations';
+import CompareCohortsButton from '../charts/CompareCohortsButton';
 import CohortCompareDrawer from './CohortCompareDrawer';
 import CrtMetricContainer from './CrtMetricContainer';
 import IntervalHistogram from './IntervalHistogram';
@@ -314,15 +315,6 @@ export default function OutcomesView(
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label={s.t('outcomesCompareOpenDrawer')}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
-            onClick={s.openCompare}
-          >
-            <GitCompare className="w-4 h-4" />
-            <span>{s.t('outcomesCompareOpenDrawer')}</span>
-          </button>
           {/* K1d (v1.16-A): self-explanatory display-settings button — a labelled
               button ("Diagramm-Anzeige" / "Chart display") with a descriptive title
               naming the layers + axes it controls, replacing the bare gear icon the
@@ -338,6 +330,13 @@ export default function OutcomesView(
             <Settings className="w-4 h-4" />
             <span>{s.t('outcomesSettingsButton')}</span>
           </button>
+          {/* Z0-P23: "Kohorten vergleichen" is the rightmost header control, at the same position as on Aggregiert. */}
+          <CompareCohortsButton
+            label={s.t('outcomesCompareOpenDrawer')}
+            onClick={s.openCompare}
+            expanded={s.compareOpen}
+            controls="outcomes-compare-drawer"
+          />
         </div>
       </header>
 

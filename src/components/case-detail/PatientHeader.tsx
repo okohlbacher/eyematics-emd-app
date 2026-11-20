@@ -12,13 +12,16 @@ import {
   User,
   Users,
 } from 'lucide-react';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { pickCoding } from '../../../shared/fhirQueries';
 import type { TranslationKey } from '../../i18n/translations';
 import { getAge, SNOMED_EYE_RIGHT } from '../../services/fhirLoader';
 import { useDiagnosisDisplay } from '../../services/terminology';
 import type { Condition } from '../../types/fhir';
+import { VISUS_MEDIAN_COLOR } from '../charts/chartStyle';
+import CompareCohortsButton from '../charts/CompareCohortsButton';
+import CohortCompareDrawer from '../outcomes/CohortCompareDrawer';
 import { InfoTooltip } from '../primitives';
 
 interface TimelineEvent {
@@ -149,6 +152,15 @@ export default function PatientHeader({
   activeOverlayCohortLabel,
   activeOverlayCohortCount,
 }: PatientHeaderProps) {
+  // Z0-P23: the comparison panel of the case view (closed on Escape, the close button or a new case view).
+  const [compareOpen, setCompareOpen] = useState(false);
+  const closeCompare = useCallback(() => setCompareOpen(false), []);
+  // A new case view (another pseudonym in the same mounted page) starts with the panel closed.
+  const [panelCase, setPanelCase] = useState(pseudonym);
+  if (panelCase !== pseudonym) {
+    setPanelCase(pseudonym);
+    setCompareOpen(false);
+  }
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
       <div className="flex items-start justify-between">
@@ -212,24 +224,16 @@ export default function PatientHeader({
               peer group is chosen right where the overlay is switched on. */}
           {onToggleCohortReference && (
             <div className="flex items-center gap-2">
-              {/* N11: overlay-cohort selector — cohorts that CONTAIN this patient.
-                  Only shown when there is a real choice (more than one option). */}
-              {onSelectOverlayCohort && overlayCohortOptions.length > 1 && (
-                <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                  <Users className="w-3.5 h-3.5" />
-                  <select
-                    className="px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs"
-                    value={overlayCohortId ?? ''}
-                    onChange={(e) => onSelectOverlayCohort(e.target.value)}
-                    aria-label={t('overlayCohortSelectorLabel')}
-                  >
-                    {overlayCohortOptions.map((opt) => (
-                      <option key={opt.id} value={opt.id}>
-                        {opt.label} (N={opt.patientCount})
-                      </option>
-                    ))}
-                  </select>
-                </label>
+              {/* N11 + Z0-P23 (C11, Q22, Q32): the comparison cohort is chosen in a panel analogous to Verläufe —
+                  the always-visible button "Kohorten vergleichen" opens it; "Alle Patienten" first, then the cohorts
+                  that CONTAIN this patient, exactly one selectable (radio group "Vergleichskohorte wählen"). */}
+              {onSelectOverlayCohort && (
+                <CompareCohortsButton
+                  label={t('outcomesCompareOpenDrawer')}
+                  onClick={() => setCompareOpen(true)}
+                  expanded={compareOpen}
+                  controls="outcomes-compare-drawer"
+                />
               )}
               <label
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer select-none border transition-colors ${
@@ -254,6 +258,23 @@ export default function PatientHeader({
           )}
         </div>
       </div>
+
+      {onSelectOverlayCohort && (
+        <CohortCompareDrawer
+          open={compareOpen}
+          onClose={closeCompare}
+          title={t('overlayCohortSelectorLabel')}
+          maxSelections={1}
+          // The comparison cohort is drawn as the cohort median/band in the Visus colour tone of the case view.
+          swatchColor={() => VISUS_MEDIAN_COLOR}
+          savedSearches={overlayCohortOptions.map((o) => ({ id: o.id, name: o.label, createdAt: '', filters: {} }))}
+          patientCounts={Object.fromEntries(overlayCohortOptions.map((o) => [o.id, o.patientCount]))}
+          primaryCohortId={null}
+          selectedIds={overlayCohortId ? [overlayCohortId] : []}
+          onChange={(ids) => { if (ids[0]) onSelectOverlayCohort(ids[0]); }}
+          t={t as (key: string) => string}
+        />
+      )}
 
       {/* N10 (v1.19 WS-B): when the overlay is active, surface WHICH cohort it
           aggregates (label + patient count N) under the control cluster, so the
