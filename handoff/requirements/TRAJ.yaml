@@ -586,10 +586,10 @@ requirements:
     title: "Hovering a per-patient line thickens it and shows patient tooltip"
     statement: "The UI thickens a hovered per-patient line and shows that patient's tooltip when \"Streupunkte\" is off and \"Individuelle Kurven\" is on; with both layers on, the scatter-point tooltip wins."
     status: implemented
-    sources: ["UAT v1.16 K1b/K1c; v1.18 M1; confirmed v1.19", "code: src/components/outcomes/OutcomesPanel.tsx:392-424,472-477"]
+    sources: ["UAT v1.16 K1b/K1c; v1.18 M1; confirmed v1.19", "Z0-P23 (Recharts)", "code: src/components/outcomes/OutcomesPanel.tsx:258,593-614,653-665"]
     evidence:
-      - "src/components/outcomes/OutcomesPanel.tsx:394-424 — restoreEmphasis / emphasizeLine restyle line.width ×2.5, opacity 0.95; 472-477 only when !isCrossMode && perPatient && !scatter; 519 fallback lineHoverActive gate"
-      - "src/components/outcomes/plotlyTraces.ts:117-141 — per-patient traces carry customdata pseudonym, hoverinfo 'none'"
+      - "src/components/outcomes/OutcomesPanel.tsx:258 — lineHoverActive = !isCrossMode && perPatient && !scatter; 593 emphasised line = hovered lineIndex ≥ 0; 607-614 overlay path strokeWidth ×2.5, opacity 0.95"
+      - "src/components/outcomes/OutcomesPanel.tsx:653-665 — each per-patient line is an SVG path; onMouseMove shows the patient tooltip anywhere along the path (nearest measurement 639-650), with lineIndex -2 (no emphasis) when lineHoverActive is false"
     tests:
       - file: tests/OutcomesPanelLineClick.test.tsx
         name: "wires line hover when scatter is OFF and per-patient is ON"
@@ -601,18 +601,18 @@ requirements:
       route: "/analysis?tab=trajectories"
       steps:
         - "Open Analyse → \"Verläufe\" on a cohort ≤100 patients; in \"Diagramm-Anzeige\" untick \"Streupunkte\", tick \"Individuelle Kurven\"."
-        - "Hover a grey thin line near one of its vertices."
+        - "Hover a grey thin line, near a vertex or between two vertices."
         - "Tick \"Streupunkte\" and hover a dot that lies on a line."
       expect: "Step 2: the hovered line becomes thicker and darker and a tooltip with that patient's pseudonym appears; moving away restores the line. Step 3: the tooltip shows the dot's pseudonym/values and no line is thickened."
-    notes: "The thickening itself (Plotly.restyle) is browser-only; tests cover the hover wiring and tooltip on the jsdom fallback."
+    notes: "Since Z0-P23 the emphasis is an SVG overlay path (no Plotly.restyle) and works along the whole line (Z0-P21, C14). Tests cover the hover wiring and tooltip on the jsdom fallback; tests/acceptance/Z0/Z0-P21.spec.ts asserts the ≥ 1 px wider hovered curve in the container e2e run. With \"Streupunkte\" on, a line hover still shows the tooltip but does not thicken the line (step 3 unchanged)."
   - id: UIR-TRAJ-027
-    title: "Line emphasis only at measurement points, not between visits"
-    statement: "The hovered per-patient line is emphasised only near measurement points, not along empty stretches between visits (no synthetic values)."
+    title: "Line hover and emphasis along the whole curve, tooltip names the nearest measurement"
+    statement: "Hovering a per-patient line anywhere along its length, including between two visits, emphasises the line and shows that patient's tooltip; the tooltip shows the nearest real measurement, no interpolated value (Z0-P21, C14; supersedes 'only near measurement points')."
     status: implemented
-    sources: ["UAT v1.19 N1 (kept by design)", "code: src/components/outcomes/OutcomesPanel.tsx:213-226,340"]
+    sources: ["UAT v1.19 N1 (kept by design until Z0)", "Z0-P21 (C14), resolved by Z0-P23", "code: src/components/outcomes/OutcomesPanel.tsx:639-665"]
     evidence:
-      - "src/components/outcomes/OutcomesPanel.tsx:213-226 — per-patient series x/y are the raw measurements only (no interpolation); 340 hovermode 'closest' → Plotly fires hover on data points only"
-      - "src/components/outcomes/plotlyTraces.ts:117-141 — mode 'lines' with customdata per measurement; no synthetic points"
+      - "src/components/outcomes/OutcomesPanel.tsx:653-665 — per-patient SVG path with onMouseMove/onClick along the whole stroke"
+      - "src/components/outcomes/OutcomesPanel.tsx:639-650 — nearest(): tooltip x/y = the measurement closest to the cursor's x (raw values only, no interpolation)"
     tests: []
     browser:
       route: "/analysis?tab=trajectories"
@@ -620,8 +620,8 @@ requirements:
         - "Open Analyse → \"Verläufe\" on a cohort ≤100 patients; untick \"Streupunkte\", tick \"Individuelle Kurven\"."
         - "Hover the middle of a long straight segment between two visits of a line."
         - "Move the cursor onto a vertex (visit) of the same line."
-      expect: "Step 2: no line thickening and no tooltip. Step 3: the line thickens and the patient tooltip appears."
-    notes: "Behaviour follows from Plotly hovering on data points only; not unit-testable in jsdom."
+      expect: "Step 2: the line thickens and the patient tooltip appears, showing the values of the nearer visit. Step 3: the line stays thick and the tooltip shows that visit's values."
+    notes: "Covered by tests/acceptance/Z0/Z0-P21.spec.ts (container e2e, d2aa2a2). Hover position is not unit-testable in jsdom. Open (NF 2026-11-20, note only): the hit target is the 1.5 px stroke itself, so hitting a line may still be hard; no wider hit area is required by Z0."
   - id: UIR-TRAJ-028
     title: "Click a scatter point opens that patient's Fallansicht"
     statement: "The user can single-click a scatter point in Verläufe to open /case/<id> for that pseudonym, even among clustered points; only cases within the user's authorised centres are reachable."
@@ -654,10 +654,10 @@ requirements:
     title: "Click an individual curve opens that patient's case"
     statement: "The user can click an individual per-patient trajectory line (\"Individuelle Kurven\") to open that patient's case."
     status: implemented
-    sources: ["UAT v1.15 J1b; confirmed v1.16", "code: src/components/outcomes/OutcomesPanel.tsx:375-390"]
+    sources: ["UAT v1.15 J1b; confirmed v1.16", "Z0-P21 (C14), resolved by Z0-P23", "code: src/components/outcomes/OutcomesPanel.tsx:233-240,653-665"]
     evidence:
-      - "src/components/outcomes/OutcomesPanel.tsx:383-390 — handlePlotlyClick resolves customdata for any trace; 520 lineClickActive gate; 579 onPointClick"
-      - "src/components/outcomes/plotlyTraces.ts:131 — per-patient customdata = pseudonym per point"
+      - "src/components/outcomes/OutcomesPanel.tsx:233-240 — drillDownActive = onPointClick && !isCrossMode; handlePatientClick passes the pseudonym through resolveDrillDownId (trajectoryTraces.ts:43, IDOR gate)"
+      - "src/components/outcomes/OutcomesPanel.tsx:653-665 — onClick on the whole per-patient path, pointer cursor while drill-down is active"
     tests:
       - file: tests/OutcomesPanelLineClick.test.tsx
         name: "clicking a patient line calls onPointClick with that patient pseudonym"
@@ -665,10 +665,10 @@ requirements:
       route: "/analysis?tab=trajectories"
       steps:
         - "Open Analyse → \"Verläufe\" on a cohort ≤100 patients; untick \"Streupunkte\", tick \"Individuelle Kurven\"."
-        - "Hover a grey line near a vertex until it thickens and the tooltip shows a pseudonym."
+        - "Hover a grey line between two vertices until it thickens and the tooltip shows a pseudonym."
         - "Click there."
       expect: "The browser navigates to /case/<id> whose Fallansicht shows that pseudonym."
-    notes: "In the live chart Plotly only registers clicks on line data points (vertices), consistent with UIR-TRAJ-027."
+    notes: "Since Z0-P23 the whole stroke is clickable, not only the vertices (Z0-P21, C14). tests/acceptance/Z0/Z0-P21.spec.ts clicks the midpoint of a segment and a vertex and checks the case header pseudonym. Not in compare mode (Q12 b, see UIR-TRAJ-023)."
   - id: UIR-TRAJ-030
     title: "Drill-down is disabled in cross-cohort compare mode"
     statement: "The UI disables drill-down in cross-cohort compare mode: clicking a scatter point or line does not navigate to a case."
