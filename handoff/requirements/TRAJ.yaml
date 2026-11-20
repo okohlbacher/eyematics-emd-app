@@ -522,13 +522,15 @@ requirements:
       expect: "After step 3 every panel still shows its median, lines and dots; the console shows no render error and no WebGL warning."
     notes: "Rewritten for Z0-P23 (C8 a: Plotly/WebGL removed); the former WebGL-context concern no longer applies. No dedicated test."
   - id: UIR-TRAJ-023
-    title: "Tooltip shows hovered point's pseudonym, x and y with unit"
-    statement: "The UI shows, on scatter-point hover, a tooltip with that exact point's pseudonym, x (\"<n> d\" or \"#<n>\") and y value with unit, not the nearest point on the X-axis, and hides it on unhover."
+    title: "Patient tooltip shows the hovered point and names the click action"
+    statement: "On hover over a per-patient point or curve the UI shows one tooltip for that exact patient (not the nearest point on the X-axis) with the heading \"<x-axis setting>: <x>\", the rows \"Patient: <Pseudonym>\" and \"<y-axis title>: <Wert>\", and a closing line \"Klicken öffnet die Einzelfallansicht\" (in compare mode, where there is no drill-down: \"Einzelfallansicht nur ohne Kohortenvergleich\"); clickable elements show the pointer cursor; the tooltip hides on unhover (Z0-P20, C9, Q12 b; supersedes the three-line Plotly tooltip)."
     status: implemented
-    sources: ["UAT v1.15 J1a; v1.16 K1", "code: src/components/outcomes/OutcomesPanel.tsx:147-199,449-487,539-546", "manual: .planning/v1.20-ROADMAP.md v1.20.1"]
+    sources: ["UAT v1.15 J1a; v1.16 K1", "Z0-P20 (C9, Q12 b)", "code: src/components/outcomes/OutcomesPanel.tsx:340-364,655-680,740-765"]
     evidence:
-      - "src/components/outcomes/OutcomesPanel.tsx:149-163 — valueLabel is always outcomesTooltipLogmar ('logMAR'); valueUnit 'logMAR' / 'Δ logMAR' / '%' for visus, 'Absolute CRT (µm)' / 'Δ CRT (µm)' / 'Δ CRT (%)' for CRT; 165-179 formatHoverTooltip: pseudonym, '<xLabel>: <n> d' or '#<n>', '<valueLabel>: <y> <unit>'; 181-199 show/hide; 340 hovermode 'closest'; 449-487 plotly_hover uses points[0].customdata/x/y; unhover hides; 539-546 single tooltip div"
-      - "src/components/outcomes/plotlyTraces.ts:164-176 — customdata = patientId, hoverinfo 'none'"
+      - "src/components/outcomes/OutcomesPanel.tsx:341-346 — patient rows 'Patient: <Pseudonym>' and '<yLabel>: <y>' (y label follows metric and mode, no fixed 'logMAR'); 347-351 hint outcomesTooltipClickHint when drill-down is active, outcomesTooltipCompareClickHint in compare mode; 352-364 one tooltip element per panel, heading formatX (UIR-TRAJ-024), hidden while hover is null"
+      - "src/components/outcomes/OutcomesPanel.tsx:660,675 — cursor pointer on per-patient points/curves while drill-down is active; 663,677,747,762 onMouseLeave hides the tooltip"
+      - "src/components/charts/ChartTooltipBox.tsx:16,33-35 — optional closing hint line data-tooltip-hint after the value rows"
+      - "src/i18n/translations.ts:908,968-969 — DE 'Patient', 'Klicken öffnet die Einzelfallansicht', 'Einzelfallansicht nur ohne Kohortenvergleich'"
     tests:
       - file: tests/OutcomesPanelHoverTooltip.test.tsx
         name: "shows the HOVERED point in the tooltip"
@@ -540,8 +542,8 @@ requirements:
         - "Open Analyse → \"Verläufe\"; click \"Diagramm-Anzeige\"; tick \"Streupunkte\"."
         - "Hover two vertically stacked dots at the same x position one after the other."
         - "Move the mouse off the plot."
-      expect: "A white tooltip appears next to the cursor with three lines: the pseudonym, 'Tag: <n> d' (or 'Behandlung #: #<n>' in treatments mode) and 'logMAR: <value> Δ logMAR' (unit follows the Y mode; on the CRT metric the line reads 'logMAR: <value> Δ CRT (µm)'). The pseudonym changes between the two stacked dots. Step 3: the tooltip disappears."
-    notes: "Tests assert the pseudonym and show/hide only; the x/y text format is not asserted. Code quirk: the value line is prefixed 'logMAR:' even for CRT (the unit then says 'Δ CRT (µm)')."
+      expect: "A tooltip box appears next to the cursor: heading 'Tage seit Baseline: <n>', rows 'Patient: <Pseudonym>' and 'Visus-Veränderung zum Ausgangswert (logMAR): <Wert>' (on CRT the CRT title), closing line 'Klicken öffnet die Einzelfallansicht'; the cursor is a pointer. The pseudonym changes between the two stacked dots. With a cohort comparison active the closing line reads 'Einzelfallansicht nur ohne Kohortenvergleich'. Step 3: the tooltip disappears."
+    notes: "Since Z0-P20 the acceptance spec tests/acceptance/Z0/Z0-P20.spec.ts asserts the click hint, the pointer cursor and that a click opens the case view of the hovered pseudonym (container e2e). The mapped unit tests assert the pseudonym and show/hide only. The 'logMAR:' prefix on CRT was removed in Z0-P23."
   - id: UIR-TRAJ-024
     title: "Exactly one tooltip; heading names the x-axis, rows name the series"
     statement: "The Verläufe chart shows at most one tooltip box at a time (no nearest-x label beside it). Its heading reads \"<x-axis setting>: <x>\" (\"Tage seit Baseline: 30\", \"Anzahl Behandlungen: 5\") for median and patient tooltips alike; in compare mode each median row reads \"<Kohorte> · Median: <Wert> <Einheit>\" in the cohort colour, without a comparison the row stays \"Kohorten-Median Visus/CRT\"; the active median point is enlarged like the case view's (Z0-P08, C9, Q33 b, Q34; supersedes the Plotly 'Median' label)."
