@@ -80,6 +80,7 @@ const deStrings: Partial<Record<TranslationKey, string>> = {
   crtLegendLabel: 'CRT (µm)',
   visusYAxisLabel: 'Visus (Dezimal, bestkorrigiert)',
   visusShortLabel: 'Visus',
+  visusLogmarLegendLabel: 'Visus (logMAR, bestkorrigiert)',
   visusAndCrt: 'Visusverlauf und Netzhautdicke (CRT)',
   critical: 'Kritisch',
   cohortReferenceMedianVisus: 'Kohorten-Median Visus',
@@ -138,13 +139,13 @@ describe('VisusCrtChart — FALL-012 / A4 i18n labels', () => {
     expect(longAxis).toBeUndefined();
   });
 
-  it('renders the full Visus description as the measured-Visus legend name (I4)', () => {
+  it('renders the full Visus description as the measured-Visus legend name (I4; logMAR since Z0-P23, Q31)', () => {
     const { container } = render(<VisusCrtChart {...minimalProps} />);
-    // I4: the full "Visus (Dezimal, bestkorrigiert)" label moved from the
-    // under-title caption into the chart legend (measured-Visus Line `name`).
+    // I4: the full Visus label lives in the chart legend (measured-Visus Line `name`);
+    // Z0-P23 (Q31): the case-view Visus/CRT chart shows logMAR.
     const visusLine = Array.from(
       container.querySelectorAll('[data-testid="recharts-line"]'),
-    ).find((el) => el.getAttribute('data-name') === 'Visus (Dezimal, bestkorrigiert)');
+    ).find((el) => el.getAttribute('data-name') === 'Visus (logMAR, bestkorrigiert)');
     expect(visusLine).not.toBeUndefined();
     // The redundant caption text must no longer render outside the legend.
     expect(screen.queryByText(/Visus \(Dezimal, bestkorrigiert\)/)).toBeNull();

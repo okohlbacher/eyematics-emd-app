@@ -329,12 +329,12 @@ requirements:
     tests:
       - file: tests/OutcomesPage.test.tsx
         name: "10. toggling spreadBand off removes the IQR marker from the OD panel"
-      - file: tests/OutcomesPanelScatterCap.test.tsx
+      - file: tests/OutcomesPanelRecharts.test.tsx
         name: "renders no scatter when the layer is off"
       - file: tests/OutcomesPanelLineClick.test.tsx
         name: "does NOT render per-patient lines when the layer is hidden (gate)"
-      - file: tests/plotlyTracesHover.test.ts
-        name: "emits NO scatter / per-patient traces when the toggles are off"
+      - file: tests/trajectoryTraces.test.ts
+        name: "emits no scatter / per-patient series when the toggles are off"
     browser:
       route: "/analysis?tab=trajectories"
       steps:
@@ -490,12 +490,8 @@ requirements:
       - "src/components/outcomes/OutcomesPanel.tsx:230-240 — downsample + console.info '[OutcomesPanel] scatter downsampled …'"
       - "src/components/outcomes/PlotlyChart.tsx:1-8,118 — plotly.js-strict-dist-min, CSP-safe WebGL"
     tests:
-      - file: tests/OutcomesPanelScatterCap.test.tsx
-        name: "renders ALL points unchanged when below the cap"
-      - file: tests/OutcomesPanelScatterCap.test.tsx
-        name: "downsamples to at most the cap for a very large cohort (and logs, never silent)"
-      - file: tests/OutcomesPanelScatterCap.test.tsx
-        name: "downsample is even-stride (spans the range), not a truncated prefix"
+      - file: tests/OutcomesPanelRecharts.test.tsx
+        name: "draws EVERY scatter point — no cap (C8 b)"
     browser:
       route: "/analysis?tab=trajectories"
       steps:
@@ -555,10 +551,8 @@ requirements:
     tests:
       - file: tests/OutcomesPanelHoverTooltip.test.tsx
         name: "renders exactly ONE tooltip element (no second nearest-x pop-up)"
-      - file: tests/plotlyTracesHover.test.ts
-        name: "scattergl trace uses hoverinfo:\"none\" and no hovertemplate"
-      - file: tests/plotlyTracesHover.test.ts
-        name: "per-patient line uses hoverinfo:\"none\" and no hovertemplate"
+      - file: tests/OutcomesPanelRecharts.test.tsx
+        name: "a hovered scatter point shows one tooltip box: heading with the x value, rows \"<Bezeichnung>: <Wert>\""
     browser:
       route: "/analysis?tab=trajectories"
       steps:
@@ -640,8 +634,8 @@ requirements:
         name: "navigates to /case/CASE-7 when patientId PSN-7 is in cohort"
       - file: tests/OutcomesPanelDrillDown.test.tsx
         name: "does NOT navigate when patientId is unknown (IDOR gate)"
-      - file: tests/plotlyDrillDownGate.test.ts
-        name: "returns null for an UNKNOWN pseudonym (the hostile/crafted customdata vector)"
+      - file: tests/trajectoryTraces.test.ts
+        name: "returns null for an UNKNOWN pseudonym (crafted id)"
     browser:
       route: "/analysis?tab=trajectories"
       steps:
@@ -765,7 +759,7 @@ requirements:
       - file: tests/OutcomesPanel.test.tsx
         name: "XCOHORT-02: renders one median trace per cohortSeries entry"
       - file: tests/OutcomesPanel.test.tsx
-        name: "XCOHORT-03: median trace name uses \"(N=X patients)\" format"
+        name: "XCOHORT-03: median trace name uses \"(N=X <outcomesComparePatientsUnit>)\" format (Z0-P23, C15)"
     browser:
       route: "/analysis?tab=trajectories&cohorts=<id1>,<id2>"
       steps:
@@ -791,8 +785,8 @@ requirements:
         name: "M3: scatter toggle OFF emits no cross-cohort scatter clouds"
       - file: tests/OutcomesPanel.test.tsx
         name: "M3: per-patient toggle ON renders cross-cohort per-patient lines per cohort (in cohort colour)"
-      - file: tests/plotlyTracesHover.test.ts
-        name: "emits scattergl + per-patient line per cohort when both toggles are on"
+      - file: tests/trajectoryTraces.test.ts
+        name: "emits scatter + per-patient series per cohort in the cohort colour when both toggles are on"
     browser:
       route: "/analysis?tab=trajectories&cohorts=<id1>,<id2>"
       steps:

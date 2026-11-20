@@ -48,7 +48,7 @@ vi.mock('recharts', async (importOriginal) => {
   };
 });
 
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
 
 import ClinicalParametersRow from '../src/components/case-detail/ClinicalParametersRow';
 import PatientHeader from '../src/components/case-detail/PatientHeader';
@@ -230,8 +230,10 @@ describe('PatientHeader — N10/N11 overlay-cohort label + selector', () => {
     onSelectOverlayCohort: () => {},
   };
 
-  it('N11: renders a selector listing the patient-containing cohorts', () => {
-    const { getByLabelText } = render(
+  // Z0-P23 (C11, Q22, Q32): the <select> is replaced by the always-visible button "Kohorten vergleichen" that opens a
+  // radio panel "Vergleichskohorte wählen" (more cases: tests/CaseCompareSelection.test.tsx).
+  it('N11: the button opens a panel listing the patient-containing cohorts (Z0-P23)', () => {
+    const { getByRole, getAllByRole } = render(
       <PatientHeader
         {...headerBase}
         {...overlayProps}
@@ -240,14 +242,14 @@ describe('PatientHeader — N10/N11 overlay-cohort label + selector', () => {
         onToggleCohortReference={() => {}}
       />,
     );
-    const select = getByLabelText('overlayCohortSelectorLabel') as HTMLSelectElement;
-    expect(select).not.toBeNull();
-    expect(select.value).toBe('coh-1');
-    expect(select.querySelectorAll('option').length).toBe(2);
+    fireEvent.click(getByRole('button', { name: 'outcomesCompareOpenDrawer' }));
+    const radios = getAllByRole('radio') as HTMLInputElement[];
+    expect(radios.length).toBe(2);
+    expect(radios.find((r) => r.checked)?.getAttribute('aria-label')).toBe('AMD Tübingen (N=42 outcomesComparePatientsUnit)');
   });
 
-  it('N11: omits the selector when there is no real choice (single cohort)', () => {
-    const { queryByLabelText } = render(
+  it('N11: shows the button even with a single option ("Alle Patienten" only, Z0-P23)', () => {
+    const { getByRole, getAllByRole } = render(
       <PatientHeader
         {...headerBase}
         overlayCohortOptions={[{ id: '__all_patients__', label: 'overlayCohortAllPatients', patientCount: 120 }]}
@@ -257,7 +259,8 @@ describe('PatientHeader — N10/N11 overlay-cohort label + selector', () => {
         onToggleCohortReference={() => {}}
       />,
     );
-    expect(queryByLabelText('overlayCohortSelectorLabel')).toBeNull();
+    fireEvent.click(getByRole('button', { name: 'outcomesCompareOpenDrawer' }));
+    expect(getAllByRole('radio').length).toBe(1);
   });
 
   it('N10: shows the active cohort label + N only when the overlay is ON', () => {

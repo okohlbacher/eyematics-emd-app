@@ -51,8 +51,8 @@ ok "GET / serves the SPA" sh -c "curl -fsS '$BASE/' | grep -q '<div id=\"root\"'
 # v1.20.1 — the production CSP (helmet, script-src 'self') is only active here, never in Vite dev:
 ok "index.html has no inline <script> (CSP blocks them)" \
   sh -c "! curl -fsS '$BASE/' | grep -o '<script[^>]*>' | grep -qv 'src='"
-ok "Plotly chunk is the CSP-safe strict build (dist-min needs 'unsafe-eval' for WebGL)" \
-  "$CLI" exec "$NAME" sh -c 'ls /app/dist/assets/plotly-strict.min-*.js'
+ok "no Plotly chunk in the bundle (Z0-P23: all analysis charts are Recharts/SVG)" \
+  "$CLI" exec "$NAME" sh -c '! ls /app/dist/assets/ | grep -qi plotly'
 ok "CSP has no upgrade-insecure-requests (would blank plain-HTTP hosts)" \
   sh -c "curl -fsSI '$BASE/' | grep -i '^content-security-policy:' | grep -vqi 'upgrade-insecure-requests'"
 ok "GET /data/manifest.json is 403 (raw bundles guarded)" \

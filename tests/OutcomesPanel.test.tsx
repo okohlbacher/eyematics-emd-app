@@ -122,13 +122,13 @@ describe('OutcomesPanel — cross-cohort mode (Phase 16)', () => {
     expect(medians.length).toBe(2);
   });
 
-  it('XCOHORT-03: median trace name uses "(N=X patients)" format', () => {
+  it('XCOHORT-03: median trace name uses "(N=X <outcomesComparePatientsUnit>)" format (Z0-P23, C15)', () => {
     const { container } = render(
       <OutcomesPanel {...defaultProps} panel={buildPanelNoPatients(0)} cohortSeries={[seriesA]} />,
     );
     const median = container.querySelector('[data-testid="outcomes-trace-median"]');
     expect(median).not.toBeNull();
-    expect(median!.getAttribute('data-name') ?? '').toMatch(/Cohort A \(N=42 patients\)/);
+    expect(median!.getAttribute('data-name') ?? '').toMatch(/Cohort A \(N=42 outcomesComparePatientsUnit\)/);
   });
 
   it('M3: single-cohort per-patient markers are never emitted in cross mode (cross uses its own testids)', () => {

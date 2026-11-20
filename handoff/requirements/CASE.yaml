@@ -246,9 +246,9 @@ requirements:
       - "src/i18n/translations.ts:1244 (overlayCohortSelectorLabel 'Vergleichskohorte wählen'), :1247 (overlayCohortAllPatients 'Alle Patienten')"
     tests:
       - file: tests/CaseDetailRound7.test.tsx
-        name: "N11: renders a selector listing the patient-containing cohorts"
+        name: "N11: the button opens a panel listing the patient-containing cohorts (Z0-P23)"
       - file: tests/CaseDetailRound7.test.tsx
-        name: "N11: omits the selector when there is no real choice (single cohort)"
+        name: "N11: shows the button even with a single option (\"Alle Patienten\" only, Z0-P23)"
     browser:
       route: "/case/:caseId"
       steps:
@@ -447,7 +447,7 @@ requirements:
       - file: tests/VisusCrtChartLabels.test.tsx
         name: "uses the SHORT Visus Y-axis label (A4/I4: full text lives in the legend)"
       - file: tests/VisusCrtChartLabels.test.tsx
-        name: "renders the full Visus description as the measured-Visus legend name (I4)"
+        name: "renders the full Visus description as the measured-Visus legend name (I4; logMAR since Z0-P23, Q31)"
     browser:
       route: "/case/pat-uka-003"
       steps:
