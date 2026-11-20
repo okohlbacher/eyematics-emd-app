@@ -884,6 +884,9 @@ const translations = {
   outcomesLayerPerPatientLargeCohort: { de: 'Einzelverläufe bei großen Kohorten standardmäßig ausgeblendet', en: 'Per-patient curves hidden by default for large cohorts' },
   outcomesLayerScatter: { de: 'Streupunkte', en: 'Scatter' },
   outcomesLayerSpreadBand: { de: 'Streuband (IQR)', en: 'Spread band (IQR)' },
+  // Z0-P12: highlight the cases with critical values (same predicate as the header count, Z0-P09).
+  outcomesHighlightCritical: { de: 'Fälle mit kritischen Werten hervorheben', en: 'Highlight cases with critical values' },
+  outcomesLegendCritical: { de: 'Fälle mit kritischen Werten', en: 'Cases with critical values' },
   outcomesSettingsScatterAdvisory: { de: 'Streupunkte bei Kohorten > 30 Patient:innen standardmäßig aus (Performance)', en: 'Scatter disabled by default for cohorts > 30 patients (performance)' },
   outcomesSectionGrid: { de: 'Interpolationsraster', en: 'Interpolation grid' },
   outcomesGridSliderLabel: { de: '{n} Stützstellen', en: '{n} grid points' },

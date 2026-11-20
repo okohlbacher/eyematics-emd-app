@@ -7,8 +7,8 @@ import { X } from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import type { CriticalCase } from '../../../shared/criticalCases';
 import { useLanguage } from '../../context/LanguageContext';
-import type { CriticalCase } from '../../utils/criticalCases';
 
 interface CriticalCasesDialogProps {
   /** Cohort name shown under the title (compare mode: one list per cohort, Q36). */

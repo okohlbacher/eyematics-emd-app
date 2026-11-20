@@ -20,9 +20,11 @@
  * mirrors the original OutcomesView exactly.
  */
 import { Settings } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
+import { criticalCasesOf } from '../../../shared/criticalCases';
 import type { TranslationKey } from '../../i18n/translations';
+import { getSettings } from '../../services/settingsService';
 import CompareCohortsButton from '../charts/CompareCohortsButton';
 import CohortCompareDrawer from './CohortCompareDrawer';
 import CrtMetricContainer from './CrtMetricContainer';
@@ -54,6 +56,15 @@ export default function OutcomesView(
   // WR-01 / Pitfall 3: both hooks called unconditionally before any return.
   const s = useOutcomesRouteState(cohort, centers);
   const a = useOutcomesAggregation(s);
+
+  // Z0-P12: pseudonyms of the cases with critical values (the predicate and threshold of the header count, Z0-P09),
+  // over the shown cohort and, in compare mode, every compared cohort; null while the option is off.
+  const crtThreshold = getSettings().crtImplausibleThresholdUm;
+  const criticalIds = useMemo<ReadonlySet<string> | null>(() => {
+    if (!s.highlightCritical) return null;
+    const cases = s.isCrossMode ? a.crossCohortCaseSeries.flatMap((c) => c.cases) : (s.cohort?.cases ?? []);
+    return new Set(criticalCasesOf(cases, crtThreshold).map((c) => c.pseudonym));
+  }, [s.highlightCritical, s.isCrossMode, a.crossCohortCaseSeries, s.cohort, crtThreshold]);
 
   // I2 (v1.14-p4): client-path loading/status. The server path already shows a
   // role="status" indicator while the fetch is in flight; the default 1000-patient
@@ -214,6 +225,7 @@ export default function OutcomesView(
           isCrossMode={s.isCrossMode}
           crossCohortAggregates={a.crossCohortAggregates}
           handlePointDrillDown={s.handlePointDrillDown}
+          criticalIds={criticalIds}
         />
       );
     }
@@ -234,6 +246,7 @@ export default function OutcomesView(
           isCrossMode={s.isCrossMode}
           crossCohortAggregates={a.crossCohortAggregates}
           handlePointDrillDown={s.handlePointDrillDown}
+          criticalIds={criticalIds}
         />
       );
     }
@@ -360,6 +373,8 @@ export default function OutcomesView(
         layers={s.layers}
         setLayers={s.setLayersWithOverride}
         onResetLayersDefaults={s.resetLayersToDefaults}
+        highlightCritical={s.highlightCritical}
+        setHighlightCritical={s.setHighlightCritical}
         perPatientDefaultedOff={s.perPatientDefaultedOff}
         thresholdLetters={s.thresholdLetters}
         setThresholdLetters={s.setThresholdLetters}

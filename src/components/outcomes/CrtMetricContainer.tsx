@@ -27,6 +27,8 @@ interface CrtMetricContainerProps {
   isCrossMode: boolean;
   crossCohortAggregates: null | { od: CohortSeriesEntry[]; os: CohortSeriesEntry[]; combined: CohortSeriesEntry[] };
   handlePointDrillDown: (patientId: string) => void;
+  /** Z0-P12: pseudonyms of the cases to highlight (null = option off). */
+  criticalIds?: ReadonlySet<string> | null;
 }
 
 export default function CrtMetricContainer({
@@ -40,6 +42,7 @@ export default function CrtMetricContainer({
   isCrossMode,
   crossCohortAggregates,
   handlePointDrillDown,
+  criticalIds = null,
 }: CrtMetricContainerProps) {
   // J2 (v1.15-p4): progressive panel staging — see VisusMetricContainer. Hook runs
   // before the early return below (the guard never changes between renders for a
@@ -78,6 +81,7 @@ export default function CrtMetricContainer({
             metric="crt"
             cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.od : undefined}
             onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
+            criticalIds={criticalIds}
           />
         ) : (
           <PanelPlaceholder eye="od" titleKey="metricsCrtPanelOd" t={t} />
@@ -96,6 +100,7 @@ export default function CrtMetricContainer({
             metric="crt"
             cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.os : undefined}
             onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
+            criticalIds={criticalIds}
           />
         ) : (
           <PanelPlaceholder eye="os" titleKey="metricsCrtPanelOs" t={t} />
@@ -114,6 +119,7 @@ export default function CrtMetricContainer({
             metric="crt"
             cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.combined : undefined}
             onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
+            criticalIds={criticalIds}
           />
         ) : (
           <PanelPlaceholder eye="combined" titleKey="metricsCrtPanelCombined" t={t} />

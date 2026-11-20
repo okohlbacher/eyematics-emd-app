@@ -33,6 +33,7 @@ import {
   YAxis,
 } from 'recharts';
 
+import { criticalCasesOf } from '../../shared/criticalCases';
 import CriticalCasesDialog from '../components/analysis/CriticalCasesDialog';
 import ChartLegend from '../components/charts/ChartLegend';
 import {
@@ -72,7 +73,6 @@ import {
   visusTrendOf,
 } from '../utils/aggregateDistributions';
 import { parseCohortFilterJson, summarizeCohortFilter } from '../utils/cohortFilterSerialization';
-import { criticalCasesOf } from '../utils/criticalCases';
 
 type AnalysisTab = 'aggregate' | 'trajectories';
 

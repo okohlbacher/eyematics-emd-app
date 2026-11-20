@@ -35,6 +35,9 @@ interface Props {
   patientCount: number;
   t: (key: string) => string;
   isCrossMode?: boolean;
+  /** Z0-P12: "Fälle mit kritischen Werten hervorheben" (default off). */
+  highlightCritical?: boolean;
+  setHighlightCritical?: (v: boolean) => void;
 }
 
 function yMetricKey(m: MetricType, y: YMetric): string {
@@ -68,6 +71,8 @@ export default function OutcomesSettingsDrawer({
   patientCount,
   t,
   isCrossMode = false,
+  highlightCritical = false,
+  setHighlightCritical,
 }: Props) {
   const firstRadioRef = useRef<HTMLInputElement>(null);
 
@@ -94,6 +99,7 @@ export default function OutcomesSettingsDrawer({
     // OFF) instead of forcing perPatient ON. This keeps the >100 auto-off from
     // being permanently defeated by the reset button.
     onResetLayersDefaults();
+    setHighlightCritical?.(false);
   };
 
   return (
@@ -202,6 +208,17 @@ export default function OutcomesSettingsDrawer({
                     {t(labelKey)}
                   </label>
                 ))}
+              {/* Z0-P12: highlight the cases the header's critical-value count refers to, independent of the layers. */}
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  aria-label={t('outcomesHighlightCritical')}
+                  className="accent-blue-600"
+                  checked={highlightCritical}
+                  onChange={() => setHighlightCritical?.(!highlightCritical)}
+                />
+                {t('outcomesHighlightCritical')}
+              </label>
               {isCrossMode && (
                 <p className="text-xs text-gray-500 italic mt-2" data-testid="compare-layers-note">
                   {t('outcomesCompareLayersOptIn')}

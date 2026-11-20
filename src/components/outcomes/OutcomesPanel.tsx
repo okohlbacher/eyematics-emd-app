@@ -48,10 +48,12 @@ import {
 } from '../charts/chartStyle';
 import ChartTooltipBox, { type ChartTooltipRow } from '../charts/ChartTooltipBox';
 import HoverTooltip from '../primitives/Tooltip';
-import { SERIES_STYLES } from './palette';
+import { CRITICAL_HIGHLIGHT, SERIES_STYLES } from './palette';
 import {
   buildCrossCohortTraces,
   buildSingleCohortTraces,
+  type CriticalSeries,
+  criticalSeriesOf,
   type LayerState,
   mergeSeriesRows,
   perPatientSeriesOf,
@@ -86,6 +88,8 @@ interface Props {
   cohortSeries?: CohortSeriesEntry[];
   /** FALL-010: optional callback fired when a point/line is clicked; receives the patient pseudonym. Not active in cross-cohort mode. */
   onPointClick?: (patientId: string) => void;
+  /** Z0-P12: pseudonyms of the cases with critical values to highlight (null/absent = option off). */
+  criticalIds?: ReadonlySet<string> | null;
 }
 
 function yDomain(
@@ -138,6 +142,7 @@ export default function OutcomesPanel({
   metric = 'visus',
   cohortSeries,
   onPointClick,
+  criticalIds = null,
 }: Props) {
   const { effectiveTheme } = useThemeSafe();
   const isDark = effectiveTheme === 'dark';
@@ -175,6 +180,14 @@ export default function OutcomesPanel({
     () => (!layers.scatter || isCrossMode ? [] : (panel.scatterPoints as ScatterDatum[])),
     [layers.scatter, isCrossMode, panel.scatterPoints],
   );
+
+  // Z0-P12: highlighted cases — every measurement of a critical case, independent of the per-patient layer (Q11 a/b).
+  const criticalColor = isDark ? CRITICAL_HIGHLIGHT.dark : CRITICAL_HIGHLIGHT.light;
+  const criticalSeries = useMemo<CriticalSeries[]>(() => {
+    if (!criticalIds) return [];
+    if (isCrossMode) return cohortSeries!.flatMap((s) => criticalSeriesOf(s.panel, criticalIds, s.cohortId));
+    return criticalSeriesOf(panel, criticalIds);
+  }, [criticalIds, isCrossMode, cohortSeries, panel]);
 
   const totalPatients = isCrossMode
     ? cohortSeries!.reduce((n, s) => n + s.panel.summary.patientCount, 0)
@@ -298,6 +311,9 @@ export default function OutcomesPanel({
   };
 
   const legendEntries = medianTraces.map((tr) => ({ key: tr.seriesKey, label: tr.name, color: tr.color, glyph: 'line' as const }));
+  if (criticalSeries.length > 0) {
+    legendEntries.push({ key: 'critical', label: t('outcomesLegendCritical'), color: criticalColor, glyph: 'line' as const });
+  }
 
   if (totalPatients === 0) {
     return (
@@ -464,6 +480,8 @@ export default function OutcomesPanel({
               <PatientLayer
                 lines={lineTraces}
                 scatter={scatterTraces}
+                critical={criticalSeries}
+                criticalColor={criticalColor}
                 hover={hover}
                 lineHoverActive={lineHoverActive}
                 drillDownActive={drillDownActive}
@@ -539,6 +557,7 @@ export default function OutcomesPanel({
           eye={eye}
           isCrossMode={isCrossMode}
           traces={traces}
+          critical={criticalSeries}
           lineHoverActive={lineHoverActive}
           drillDownActive={drillDownActive}
           onHover={handlePatientHover}
@@ -557,7 +576,7 @@ export default function OutcomesPanel({
 type LineTrace = Extract<TraceDescriptor, { kind: 'perpatient' }>;
 type ScatterTrace = Extract<TraceDescriptor, { kind: 'scatter' }>;
 
-function pathOf(tr: LineTrace, sx: (v: number) => number, sy: (v: number) => number): string {
+function pathOf(tr: { x: number[]; y: Array<number | null> }, sx: (v: number) => number, sy: (v: number) => number): string {
   let d = '';
   let pen = false;
   for (let i = 0; i < tr.x.length; i++) {
@@ -575,6 +594,8 @@ function pathOf(tr: LineTrace, sx: (v: number) => number, sy: (v: number) => num
 interface PatientLayerProps {
   lines: LineTrace[];
   scatter: ScatterTrace[];
+  critical: CriticalSeries[];
+  criticalColor: string;
   hover: PatientHover | null;
   lineHoverActive: boolean;
   drillDownActive: boolean;
@@ -583,7 +604,7 @@ interface PatientLayerProps {
   ringColor: string;
 }
 
-function PatientLayer({ lines, scatter, hover, lineHoverActive, drillDownActive, onHover, onClick, ringColor }: PatientLayerProps) {
+function PatientLayer({ lines, scatter, critical, criticalColor, hover, lineHoverActive, drillDownActive, onHover, onClick, ringColor }: PatientLayerProps) {
   const xScale = useXAxisScale();
   const yScale = useYAxisScale();
   const xInverse = useXAxisInverseScale();
@@ -604,6 +625,46 @@ function PatientLayer({ lines, scatter, hover, lineHoverActive, drillDownActive,
         onHover={onHover}
         onClick={onClick}
       />
+      {/* Z0-P12: highlighted cases with critical values — line and measurement points, above the other patients. */}
+      {critical.length > 0 && (
+        <g data-critical-layer>
+          {critical.map((tr) => (
+            <g
+              key={`${tr.cohortId ?? ''}-${tr.patientId}`}
+              data-critical="true"
+              data-patient-id={tr.patientId}
+              style={drillDownActive ? { cursor: 'pointer' } : undefined}
+              onClick={drillDownActive ? () => onClick(tr.patientId) : undefined}
+            >
+              <path
+                d={pathOf(tr, sx, sy)}
+                fill="none"
+                stroke={criticalColor}
+                strokeWidth={CRITICAL_HIGHLIGHT.strokeWidth}
+                onMouseMove={(ev) => onHover({ patientId: tr.patientId, clientX: ev.clientX, clientY: ev.clientY, lineIndex: -2 })}
+                onMouseLeave={() => onHover(null)}
+              />
+              {tr.x.map((x, j) => {
+                const y = tr.y[j];
+                if (y == null || !Number.isFinite(y)) return null;
+                return (
+                  <circle
+                    key={j}
+                    cx={sx(x)}
+                    cy={sy(y)}
+                    r={CRITICAL_HIGHLIGHT.pointRadius}
+                    fill={criticalColor}
+                    stroke="#fff"
+                    strokeWidth={1}
+                    onMouseEnter={(ev) => onHover({ patientId: tr.patientId, x, y, clientX: ev.clientX, clientY: ev.clientY, lineIndex: -1 })}
+                    onMouseLeave={() => onHover(null)}
+                  />
+                );
+              })}
+            </g>
+          ))}
+        </g>
+      )}
       {emphasised && (
         <path
           d={pathOf(emphasised, sx, sy)}
@@ -708,6 +769,7 @@ function SeriesMarkers({
   eye,
   isCrossMode,
   traces,
+  critical,
   lineHoverActive,
   drillDownActive,
   onHover,
@@ -716,6 +778,7 @@ function SeriesMarkers({
   eye: string;
   isCrossMode: boolean;
   traces: TraceDescriptor[];
+  critical: CriticalSeries[];
   lineHoverActive: boolean;
   drillDownActive: boolean;
   onHover: (h: PatientHover | null) => void;
@@ -766,6 +829,15 @@ function SeriesMarkers({
           </div>
         ),
       )}
+      {critical.map((tr) => (
+        <div
+          key={`cr-${tr.cohortId ?? ''}-${tr.patientId}`}
+          data-critical="true"
+          data-patient-id={tr.patientId}
+          data-testid={`outcomes-critical-${tr.patientId}`}
+          onClick={drillDownActive ? () => onClick(tr.patientId) : undefined}
+        />
+      ))}
     </div>
   );
 }

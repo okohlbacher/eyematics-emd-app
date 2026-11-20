@@ -28,6 +28,8 @@ interface VisusMetricContainerProps {
   isCrossMode: boolean;
   crossCohortAggregates: null | { od: CohortSeriesEntry[]; os: CohortSeriesEntry[]; combined: CohortSeriesEntry[] };
   handlePointDrillDown: (patientId: string) => void;
+  /** Z0-P12: pseudonyms of the cases to highlight (null = option off). */
+  criticalIds?: ReadonlySet<string> | null;
 }
 
 export default function VisusMetricContainer({
@@ -41,6 +43,7 @@ export default function VisusMetricContainer({
   isCrossMode,
   crossCohortAggregates,
   handlePointDrillDown,
+  criticalIds = null,
 }: VisusMetricContainerProps) {
   // J2 (v1.15-p4): stage the three panels (od/os/combined) one at a time on a heavy
   // single-cohort render so the main thread yields between Recharts builds and the
@@ -106,6 +109,7 @@ export default function VisusMetricContainer({
             titleKey="outcomesPanelOd"
             cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.od : undefined}
             onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
+            criticalIds={criticalIds}
           />
         ) : (
           <PanelPlaceholder eye="od" titleKey="outcomesPanelOd" t={t} />
@@ -123,6 +127,7 @@ export default function VisusMetricContainer({
             titleKey="outcomesPanelOs"
             cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.os : undefined}
             onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
+            criticalIds={criticalIds}
           />
         ) : (
           <PanelPlaceholder eye="os" titleKey="outcomesPanelOs" t={t} />
@@ -140,6 +145,7 @@ export default function VisusMetricContainer({
             titleKey="outcomesPanelCombined"
             cohortSeries={isCrossMode && crossCohortAggregates ? crossCohortAggregates.combined : undefined}
             onPointClick={!isCrossMode ? handlePointDrillDown : undefined}
+            criticalIds={criticalIds}
           />
         ) : (
           <PanelPlaceholder eye="combined" titleKey="outcomesPanelCombined" t={t} />

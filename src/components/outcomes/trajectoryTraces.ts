@@ -56,6 +56,26 @@ export function perPatientSeriesOf(panel: PanelResult): PerPatientSeries[] {
     }));
 }
 
+/** Z0-P12: the measurements of one highlighted case (cases with critical values), per panel and cohort. */
+export interface CriticalSeries {
+  cohortId?: string;
+  patientId: string;
+  x: number[];
+  y: Array<number | null>;
+}
+
+/** Z0-P12: series of the panel's cases in `ids` with at least one measurement (one series per case, Q11 a). */
+export function criticalSeriesOf(panel: PanelResult, ids: ReadonlySet<string>, cohortId?: string): CriticalSeries[] {
+  return panel.patients
+    .filter((p) => !p.excluded && p.measurements.length > 0 && ids.has(p.pseudonym))
+    .map((p) => ({
+      cohortId,
+      patientId: p.pseudonym,
+      x: p.measurements.map((m) => m.x),
+      y: p.measurements.map((m) => (typeof m.y === 'number' ? m.y : null)),
+    }));
+}
+
 function iqrOf(grid: GridPoint[], seriesKey: string, color: string, cohortId?: string): TraceDescriptor {
   return {
     kind: 'iqr',

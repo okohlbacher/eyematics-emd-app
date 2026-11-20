@@ -28,6 +28,12 @@ export const SERIES_STYLES = {
   iqr: { fillOpacity: 0.15, stroke: 'none' as const },
 } as const;
 
+/**
+ * Z0-P12: highlighted cases with critical values in Verläufe (Q11 c: red, distinct from the quantity colours violet/
+ * green and the cohort palette). red-600 ≈ 4.8:1 vs #ffffff; red-400 ≈ 6.0:1 vs #111827.
+ */
+export const CRITICAL_HIGHLIGHT = { light: '#dc2626', dark: '#f87171', strokeWidth: 2.5, pointRadius: 3.5 } as const;
+
 export const PANEL_BACKGROUND = '#ffffff';
 
 /**

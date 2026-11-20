@@ -509,6 +509,15 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
     },
     [searchParams],
   );
+  // Z0-P12: highlight the cases with critical values (default off), kept for the session like the other settings.
+  const [highlightCritical, setHighlightCritical] = useState<boolean>(() => persisted?.highlightCritical === true);
+  const setHighlightCriticalPersist = useCallback(
+    (v: boolean) => {
+      setHighlightCritical(v);
+      writePersistedViewState(searchParams.get('cohort'), { highlightCritical: v });
+    },
+    [searchParams],
+  );
   const setGridPointsPersist = useCallback(
     (v: number) => {
       setGridPoints(v);
@@ -598,6 +607,8 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
     // (drawer "reset defaults" button) instead of marking a user override.
     resetLayersToDefaults,
     perPatientDefaultedOff,
+    highlightCritical,
+    setHighlightCritical: setHighlightCriticalPersist,
     threshold,
     serverAggregate,
     setServerAggregate,

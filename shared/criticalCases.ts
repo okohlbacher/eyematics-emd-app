@@ -1,6 +1,10 @@
-/** Z0-P09: cases with critical CRT values (count and list in the cohort analysis). */
-import { getObservationsByCode, LOINC_CRT } from '../services/fhirLoader';
-import type { PatientCase } from '../types/fhir';
+/**
+ * Z0-P09 / Z0-P12: cases with critical CRT values — the count and list in the cohort analysis header (P09) and the
+ * highlighted series in Verläufe (P12) use this one predicate (D-01: cross-boundary helper in shared/).
+ */
+import { LOINC_CRT } from './fhirCodes';
+import { getObservationsByCode } from './fhirQueries';
+import type { PatientCase } from './types/fhir';
 
 export interface CriticalCase {
   id: string;

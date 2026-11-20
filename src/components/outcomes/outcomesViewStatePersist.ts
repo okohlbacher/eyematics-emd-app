@@ -37,6 +37,8 @@ export interface PersistedOutcomesViewState {
   metric?: MetricType;
   /** Z0-P06 (Q24 a): the analysis header's centre narrowing (empty = all authorized centres). */
   centers?: string[];
+  /** Z0-P12: "Fälle mit kritischen Werten hervorheben" (default off). */
+  highlightCritical?: boolean;
 }
 
 /** Z0-P06: a single session-wide key (the former per-cohort suffix is dropped). */
