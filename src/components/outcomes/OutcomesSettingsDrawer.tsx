@@ -231,10 +231,15 @@ export default function OutcomesSettingsDrawer({
                 step={10}
                 value={gridPoints}
                 onChange={(e) => setGridPoints(Number(e.target.value))}
-                className="w-full accent-blue-600"
+                // Z0-P08 (Q8): in treatments mode the grid is fixed to whole treatment counts — slider disabled, hint.
+                disabled={axisMode === 'treatments'}
+                aria-describedby="outcomes-grid-hint"
+                className="w-full accent-blue-600 disabled:opacity-50"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                {t('outcomesGridSliderLabel').replace('{n}', String(gridPoints))}
+              <p id="outcomes-grid-hint" className="text-xs text-gray-500 mt-1">
+                {axisMode === 'treatments'
+                  ? t('outcomesGridFixedTreatments')
+                  : t('outcomesGridSliderLabel').replace('{n}', String(gridPoints))}
               </p>
             </section>
           </>

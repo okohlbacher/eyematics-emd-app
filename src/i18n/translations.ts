@@ -884,6 +884,7 @@ const translations = {
   outcomesSettingsScatterAdvisory: { de: 'Streupunkte bei Kohorten > 30 Patient:innen standardmäßig aus (Performance)', en: 'Scatter disabled by default for cohorts > 30 patients (performance)' },
   outcomesSectionGrid: { de: 'Interpolationsraster', en: 'Interpolation grid' },
   outcomesGridSliderLabel: { de: '{n} Stützstellen', en: '{n} grid points' },
+  outcomesGridFixedTreatments: { de: 'Bei „Anzahl Behandlungen“ ist das Raster auf ganze Behandlungszahlen festgelegt.', en: 'With “Number of treatments” the grid is fixed to whole treatment counts.' },
   outcomesResetSettings: { de: 'Auf Standard zurücksetzen', en: 'Reset to defaults' },
 
   // Data preview (D-27..D-30)
@@ -908,6 +909,7 @@ const translations = {
   outcomesTooltipEye: { de: 'Auge', en: 'Eye' },
   outcomesTooltipDay: { de: 'Tag', en: 'Day' },
   outcomesTooltipTreatmentIndex: { de: 'Behandlung #', en: 'Treatment #' },
+  outcomesTooltipMedianLabel: { de: 'Median', en: 'Median' },
   outcomesTooltipLogmar: { de: 'logMAR', en: 'logMAR' },
   outcomesTooltipSnellen: { de: 'Snellen', en: 'Snellen' },
   outcomesTooltipDelta: { de: 'Δ', en: 'Δ' },

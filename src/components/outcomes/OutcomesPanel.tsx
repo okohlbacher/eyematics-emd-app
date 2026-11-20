@@ -34,6 +34,7 @@ import {
 } from 'recharts';
 
 import { useThemeSafe } from '../../context/ThemeContext';
+import { t as translate } from '../../i18n/translations';
 import type { AxisMode, GridPoint, PanelResult, YMetric } from '../../utils/cohortTrajectory';
 import { caseChartColors } from '../case-detail/chartTheme';
 import ChartLegend from '../charts/ChartLegend';
@@ -156,11 +157,14 @@ export default function OutcomesPanel({
   // Z0-P23 (C15): the single-cohort median is named like the case view's ("Kohorten-Median Visus/CRT").
   const medianName = t(metric === 'crt' ? 'cohortReferenceMedianCrt' : 'cohortReferenceMedianVisus');
 
+  // Z0-P08 (Q33 b): every Verläufe tooltip heading is "<x-axis setting>: <x>" ("Tage seit Baseline: 30",
+  // "Anzahl Behandlungen: 5"); the label is the x-axis setting's own name in the active locale.
+  const tooltipXLabel = translate(axisMode === 'days' ? 'outcomesXAxisTime' : 'outcomesXAxisTreatments', locale);
+  // Z0-P08: unit of the y value in the compare-mode median rows.
+  const yUnit = yMetric === 'delta_percent' ? '%' : metric === 'crt' ? 'µm' : 'logMAR';
+
   const numberFmt = useMemo(() => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }), [locale]);
-  const formatX = useCallback(
-    (x: number) => (axisMode === 'days' ? `${xLabel} ${Math.round(x)}` : `${xLabel}${Math.round(x)}`),
-    [axisMode, xLabel],
-  );
+  const formatX = useCallback((x: number) => `${tooltipXLabel}: ${Math.round(x)}`, [tooltipXLabel]);
   const formatY = useCallback((y: number) => numberFmt.format(y), [numberFmt]);
 
   const perPatientSeries = useMemo(
@@ -307,6 +311,10 @@ export default function OutcomesPanel({
     );
   }
 
+  // Series name on the median point hooks (data-series): the cohort name in compare mode, else the median name.
+  const seriesLabel = (tr: { cohortId?: string; name: string }) =>
+    isCrossMode ? (cohortSeries!.find((c) => c.cohortId === tr.cohortId)?.cohortName ?? tr.name) : tr.name;
+
   const medianTooltip = (props: { active?: boolean; label?: unknown; payload?: ReadonlyArray<{ dataKey?: unknown; value?: unknown }> }) => {
     if (!props.active || hover || !Array.isArray(props.payload) || props.payload.length === 0) return null;
     const out: ChartTooltipRow[] = [];
@@ -315,8 +323,12 @@ export default function OutcomesPanel({
       if (key.startsWith('m_') && typeof e.value === 'number') {
         const tr = medianTraces.find((m) => `m_${m.seriesKey}` === key);
         if (!tr) continue;
-        const label = isCrossMode ? (cohortSeries!.find((c) => c.cohortId === tr.cohortId)?.cohortName ?? tr.name) : tr.name;
-        out.push({ key, label, value: formatY(e.value), color: tr.color });
+        // Z0-P08 (Q34): compare mode "<Kohorte> · Median: <Wert> <Einheit>" in the cohort colour; single mode unchanged.
+        if (isCrossMode) {
+          out.push({ key, label: `${seriesLabel(tr)} · ${translate('outcomesTooltipMedianLabel', locale)}`, value: `${formatY(e.value)} ${yUnit}`, color: tr.color });
+        } else {
+          out.push({ key, label: tr.name, value: formatY(e.value), color: tr.color });
+        }
       } else if (key.startsWith('iqr_') && Array.isArray(e.value) && !isCrossMode) {
         const [lo, hi] = e.value as [number, number];
         out.push({ key, label: 'IQR', value: `${formatY(lo)} – ${formatY(hi)}` });
@@ -461,7 +473,33 @@ export default function OutcomesPanel({
                   name={tr.name}
                   stroke={tr.color}
                   strokeWidth={tr.width}
-                  dot={false}
+                  // Z0-P08: invisible point markers (one per grid x of this series) and the active point like the
+                  // case view's (Recharts' default r = 4, white 2 px ring), both with data-x hooks.
+                  dot={(p: { cx?: number; cy?: number; index?: number; value?: unknown; payload?: { x?: unknown } }) => (
+                    <circle
+                      key={`md-${tr.seriesKey}-${p.index}`}
+                      cx={p.cx ?? 0}
+                      cy={p.cy ?? 0}
+                      r={0}
+                      pointerEvents="none"
+                      {...(typeof p.value === 'number' && p.cx != null && p.cy != null
+                        ? { 'data-median-point': '', 'data-series': seriesLabel(tr), 'data-x': String(p.payload?.x) }
+                        : {})}
+                    />
+                  )}
+                  activeDot={(p: { cx?: number; cy?: number; payload?: { x?: unknown } }) => (
+                    <circle
+                      cx={p.cx}
+                      cy={p.cy}
+                      r={4}
+                      fill={tr.color}
+                      stroke="#fff"
+                      strokeWidth={2}
+                      data-median-active=""
+                      data-series={seriesLabel(tr)}
+                      data-x={String(p.payload?.x)}
+                    />
+                  )}
                   connectNulls
                   isAnimationActive={false}
                 />

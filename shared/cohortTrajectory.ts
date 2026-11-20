@@ -192,8 +192,10 @@ export function percentile(sorted: number[], p: number): number {
  * inclusive from min to max.
  * - Empty input → []
  * - min === max → single-point grid [min]
+ * - axisMode 'treatments' (Z0-P08): the x axis is a whole treatment count, so the grid is every integer from
+ *   ceil(min) to floor(max) (step 1) and `gridPoints` does not apply.
  */
-export function buildGrid(xsByPatient: number[][], gridPoints: number): number[] {
+export function buildGrid(xsByPatient: number[][], gridPoints: number, axisMode: AxisMode = 'days'): number[] {
   if (xsByPatient.length === 0) return [];
 
   let globalMin = Infinity;
@@ -208,6 +210,12 @@ export function buildGrid(xsByPatient: number[][], gridPoints: number): number[]
 
   if (!isFinite(globalMin)) return [];
   if (globalMin === globalMax) return [globalMin];
+
+  if (axisMode === 'treatments') {
+    const from = Math.ceil(globalMin);
+    const to = Math.floor(globalMax);
+    return Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => from + i);
+  }
 
   const step = (globalMax - globalMin) / (gridPoints - 1);
   return Array.from({ length: gridPoints }, (_, i) => globalMin + i * step);
@@ -452,9 +460,9 @@ export function computeCohortTrajectory(input: {
   });
 
   return {
-    od: buildPanel(odSeries, gridPoints, spreadMode),
-    os: buildPanel(osSeries, gridPoints, spreadMode),
-    combined: buildPanel(combinedSeries, gridPoints, spreadMode),
+    od: buildPanel(odSeries, gridPoints, spreadMode, axisMode),
+    os: buildPanel(osSeries, gridPoints, spreadMode, axisMode),
+    combined: buildPanel(combinedSeries, gridPoints, spreadMode, axisMode),
   };
 }
 
@@ -564,6 +572,7 @@ function buildPanel(
   allSeries: PatientSeries[],
   gridPoints: number,
   spreadMode: SpreadMode,
+  axisMode: AxisMode,
   minN = 2,
 ): PanelResult {
   const active = allSeries.filter((s) => !s.excluded);
@@ -571,7 +580,7 @@ function buildPanel(
 
   // Build shared grid from non-excluded patients' x values
   const xsByPatient = active.map((s) => s.measurements.map((m) => m.x));
-  const grid = buildGrid(xsByPatient, gridPoints);
+  const grid = buildGrid(xsByPatient, gridPoints, axisMode);
 
   // Compute median grid
   const medianGrid: GridPoint[] = [];
@@ -689,9 +698,9 @@ export function computeCrtTrajectory(input: {
   // CRT uses minN=1: a single patient's µm trajectory is clinically meaningful.
   // (Visus uses default minN=2 so IQR band is non-degenerate per D-04.)
   return {
-    od: buildPanel(odSeries, gridPoints, spreadMode, 1),
-    os: buildPanel(osSeries, gridPoints, spreadMode, 1),
-    combined: buildPanel(combinedSeries, gridPoints, spreadMode, 1),
+    od: buildPanel(odSeries, gridPoints, spreadMode, axisMode, 1),
+    os: buildPanel(osSeries, gridPoints, spreadMode, axisMode, 1),
+    combined: buildPanel(combinedSeries, gridPoints, spreadMode, axisMode, 1),
   };
 }
 
