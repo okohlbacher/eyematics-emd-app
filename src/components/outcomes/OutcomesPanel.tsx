@@ -14,6 +14,7 @@
  * jsdom has no layout (no ResizeObserver): the panel then renders a marker DOM from the same series descriptors
  * (data-testids per series) and wires hover/click to the same handlers, so unit tests never need an SVG layout.
  */
+import { Info } from 'lucide-react';
 import { memo, type MouseEvent as ReactMouseEvent, useCallback, useMemo, useRef, useState } from 'react';
 import {
   Area,
@@ -45,6 +46,7 @@ import {
   VISUS_COLOR,
 } from '../charts/chartStyle';
 import ChartTooltipBox, { type ChartTooltipRow } from '../charts/ChartTooltipBox';
+import HoverTooltip from '../primitives/Tooltip';
 import { SERIES_STYLES } from './palette';
 import {
   buildCrossCohortTraces,
@@ -382,7 +384,23 @@ export default function OutcomesPanel({
       <div hidden data-testid={`outcomes-panel-${eye}-ylabel`} data-ylabel={yLabel} />
 
       {canLayout() ? (
-        <div style={{ width: '100%', height: 340 }}>
+        <div className="relative" style={{ width: '100%', height: 340 }}>
+          {/* Z0-P03: info icon at the upper end of the (rotated) y-axis title, explaining baseline, Δ and Δ %. */}
+          <span className="absolute left-0 top-1 z-10">
+            <HoverTooltip text={t('outcomesYAxisInfo')} align="start" wrap>
+              {(tooltipId) => (
+                <button
+                  type="button"
+                  data-testid={`outcomes-panel-${eye}-ylabel-info`}
+                  aria-label={t('outcomesYAxisInfoLabel')}
+                  aria-describedby={tooltipId}
+                  className="inline-flex items-center rounded text-gray-500 dark:text-gray-400 cursor-help focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                >
+                  <Info className="w-3.5 h-3.5" aria-hidden="true" />
+                </button>
+              )}
+            </HoverTooltip>
+          </span>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={rows}

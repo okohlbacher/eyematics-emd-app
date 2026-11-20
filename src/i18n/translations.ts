@@ -948,11 +948,17 @@ const translations = {
   // N9: y-axis titles for the Plotly Verläufe panels — reflect the active metric +
   // mode so the plotted quantity is self-evident without opening the settings drawer.
   outcomesYAxisVisusAbsolute: { de: 'Visus (logMAR)', en: 'Visual acuity (logMAR)' },
-  outcomesYAxisVisusDelta: { de: 'Δ logMAR', en: 'Δ logMAR' },
-  outcomesYAxisVisusDeltaPercent: { de: 'Δ logMAR %', en: 'Δ logMAR %' },
+  outcomesYAxisVisusDelta: { de: 'Visus-Veränderung zum Ausgangswert (logMAR)', en: 'Visual acuity change from baseline (logMAR)' },
+  outcomesYAxisVisusDeltaPercent: { de: 'Visus-Veränderung zum Ausgangswert (%)', en: 'Visual acuity change from baseline (%)' },
   outcomesYAxisCrtAbsolute: { de: 'Netzhautdicke (µm)', en: 'Retinal thickness (µm)' },
-  outcomesYAxisCrtDelta: { de: 'Δ µm', en: 'Δ µm' },
-  outcomesYAxisCrtDeltaPercent: { de: 'Δ %', en: 'Δ %' },
+  outcomesYAxisCrtDelta: { de: 'CRT-Veränderung zum Ausgangswert (µm)', en: 'CRT change from baseline (µm)' },
+  outcomesYAxisCrtDeltaPercent: { de: 'CRT-Veränderung zum Ausgangswert (%)', en: 'CRT change from baseline (%)' },
+  // Z0-P03 (Q3): explanation behind the info icon next to the y-axis title.
+  outcomesYAxisInfo: {
+    de: 'Ausgangswert = erste Messung der jeweiligen Kennzahl je Auge. Δ zeigt die Differenz, Δ % die prozentuale Änderung zum Ausgangswert.',
+    en: 'Baseline = first measurement of the metric per eye. Δ shows the difference, Δ % the percent change from baseline.',
+  },
+  outcomesYAxisInfoLabel: { de: 'Erläuterung der Y-Achse', en: 'Explanation of the y-axis' },
   // --- end v1.19 WS-A keys ---
   // FALL-010: drill-down hint shown in aria-label when scatter points are clickable
   outcomesDrillDownHint: { de: 'Datenpunkt anklicken, um den Fall zu öffnen', en: 'Click a data point to open the case' },
