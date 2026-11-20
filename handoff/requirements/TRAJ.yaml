@@ -10,9 +10,9 @@ requirements:
     evidence:
       - "src/components/outcomes/OutcomesView.tsx:99-135 — role=tablist nav, role=tab buttons, data-testid metric-tab-<m>, onKeyDown → handleMetricKeyDown; non-active tabs tabIndex -1"
       - "src/components/outcomes/useOutcomesRouteState.ts:58-67 — VALID_METRICS, METRIC_TAB_ORDER; 273-277 activeMetric from ?metric=, invalid → visus; 488-507 handleMetricChange sets ?metric=, handleMetricKeyDown ArrowLeft/Right with wrap"
-      - "src/components/outcomes/useOutcomesRouteState.ts:416-442 — resetToMetricDefaults: a metric-tab switch to visus/crt resets Y to delta and X to days (layers keep explicit overrides)"
+      - "src/components/outcomes/useOutcomesRouteState.ts:520-539 — handleMetricChange / handleMetricKeyDown; since Z0-P06 a metric-tab switch keeps x-axis, y-mode and layers (UIR-TRAJ-020)"
       - "src/i18n/translations.ts:941-944 — metricsVisus/Crt/Interval/Responder DE labels 'Visus', 'CRT', 'Behandlungsintervall', 'Responder'"
-      - "src/components/outcomes/OutcomesPanel.tsx:138-145 — CRT y-axis title 'Netzhautdicke (µm)' / 'Δ µm'"
+      - "src/components/outcomes/OutcomesPanel.tsx:152-155 — CRT y-axis title 'Netzhautdicke (µm)' / 'CRT-Veränderung zum Ausgangswert (µm)' (Z0-P03, C3)"
     tests:
       - file: tests/metricSelector.test.tsx
         name: "renders visus by default when no ?metric= param"
@@ -37,7 +37,7 @@ requirements:
         - "Observe the tab strip under the header: \"Visus\" (underlined/active), \"CRT\", \"Behandlungsintervall\", \"Responder\"."
         - "Click \"CRT\"."
         - "Click into the \"CRT\" tab to focus it and press ArrowRight; then press ArrowLeft once."
-      expect: "After step 3 the URL contains metric=crt and the OD panel y-axis title reads 'Δ µm' (default Δ/days; since Z0-P06 a metric switch keeps the current x-axis/y-mode/layers instead of resetting them, see UIR-TRAJ-020). After ArrowRight the \"Behandlungsintervall\" tab is active (metric=interval) and is document.activeElement with tabIndex 0; after the single ArrowLeft the \"CRT\" tab is active again (metric=crt) and is document.activeElement with tabIndex 0."
+      expect: "After step 3 the URL contains metric=crt and the OD panel y-axis title reads 'CRT-Veränderung zum Ausgangswert (µm)' (default Δ/days; since Z0-P06 a metric switch keeps the current x-axis/y-mode/layers instead of resetting them, see UIR-TRAJ-020). After ArrowRight the \"Behandlungsintervall\" tab is active (metric=interval) and is document.activeElement with tabIndex 0; after the single ArrowLeft the \"CRT\" tab is active again (metric=crt) and is document.activeElement with tabIndex 0."
     notes: "The keyboard handler fires on the focused tab button; non-active tabs have tabIndex -1, so Tab-key focus lands only on the active tab. Since Z0-P06 (C7, Q24 b, 2026-11-19) switching the metric tab no longer resets the Y-metric to Δ and the X-axis to days; all chart settings survive (UIR-TRAJ-019/-020). Known deviation (backlog, found 2026-10-08): focus does not follow the selection — after ArrowRight document.activeElement stays on the previously focused tab (tabIndex -1) and handleMetricKeyDown (useOutcomesRouteState.ts:531-539) computes the next tab from the focused one, so a second press is off by one (CRT → ArrowRight → ArrowLeft lands on Visus, not CRT; ArrowRight twice stays on Behandlungsintervall). The focus check in expect fails until this is fixed; tests/metricSelector.test.tsx:122-147 fire a single keyDown only."
   - id: UIR-TRAJ-002
     title: "Header buttons Kohorten vergleichen and Diagramm-Anzeige"
@@ -143,8 +143,8 @@ requirements:
     sources: ["code: src/components/outcomes/useOutcomesRouteState.ts:193-196"]
     evidence:
       - "src/components/outcomes/useOutcomesRouteState.ts:193-196 — useState defaults axisMode 'days', yMetric 'delta', gridPoints 120 when nothing persisted"
-      - "src/components/outcomes/OutcomesPanel.tsx:138-145 — yLabel 'Δ logMAR' for visus delta"
-      - "src/i18n/translations.ts:856,860,931 — DE 'Tage seit Baseline', 'Δ (Differenz zur Baseline)', 'Δ logMAR'"
+      - "src/components/outcomes/OutcomesPanel.tsx:152-155 — yLabel 'Visus-Veränderung zum Ausgangswert (logMAR)' for visus delta (Z0-P03, C3)"
+      - "src/i18n/translations.ts:872,876,951 — DE 'Tage seit Baseline', 'Δ (Differenz zur Baseline)', 'Visus-Veränderung zum Ausgangswert (logMAR)'"
     tests: []
     browser:
       route: "/analysis?tab=trajectories"
@@ -152,27 +152,27 @@ requirements:
         - "In DevTools → Application → Session Storage, delete all keys starting with 'emd.outcomesView.v1' (or open a fresh private window and log in)."
         - "Open Analyse → \"Verläufe\" (Visus)."
         - "Read the OD panel's y-axis title; then click \"Diagramm-Anzeige\"."
-      expect: "The y-axis title reads 'Δ logMAR'; in the drawer the radio \"Tage seit Baseline\" is selected, \"Δ (Differenz zur Baseline)\" is selected and the slider caption reads '120 Stützstellen'."
+      expect: "The y-axis title reads 'Visus-Veränderung zum Ausgangswert (logMAR)'; in the drawer the radio \"Tage seit Baseline\" is selected, \"Δ (Differenz zur Baseline)\" is selected and the slider caption reads '120 Stützstellen'."
     notes: "No test asserts the first-visit defaults (tests only assert y-domain for explicitly passed yMetric props). Note the drawer's \"Auf Standard zurücksetzen\" resets Y to absolute, not Δ (UIR-TRAJ-014)."
   - id: UIR-TRAJ-007
     title: "Every panel shows Y- and X-axis titles matching metric and mode"
-    statement: "The Verläufe panels show a Y-axis title naming metric and mode ('Visus (logMAR)', 'Δ logMAR', 'Δ logMAR %', 'Netzhautdicke (µm)', 'Δ µm', 'Δ %') and an X-axis title 'Tag' or 'Behandlung #'."
+    statement: "The Verläufe panels show a Y-axis title naming quantity, reference and unit ('Visus (logMAR)', 'Visus-Veränderung zum Ausgangswert (logMAR)', 'Visus-Veränderung zum Ausgangswert (%)', 'Netzhautdicke (µm)', 'CRT-Veränderung zum Ausgangswert (µm)', 'CRT-Veränderung zum Ausgangswert (%)'), an info icon at the upper end of the y-axis whose hover/focus tooltip explains baseline, Δ and Δ %, and an X-axis title 'Tag' or 'Behandlung #' (Z0-P03, C3, Q3; supersedes the symbol-only Δ titles)."
     status: implemented
     sources: ["UAT v1.19 N9", "code: src/components/outcomes/OutcomesPanel.tsx:131-145,345-359,565-571", "manual: .planning/v1.20-ROADMAP.md v1.20.2"]
     evidence:
-      - "src/components/outcomes/OutcomesPanel.tsx:132 — xLabel from outcomesTooltipDay / outcomesTooltipTreatmentIndex; 138-145 yLabelKey per metric × yMetric; 345-359 xaxis.title / yaxis.title in the Plotly layout; 567-571 hidden marker outcomes-panel-<eye>-ylabel data-ylabel"
-      - "src/components/outcomes/useOutcomesRouteState.ts:416-442 — metric switch resets axis to days and Y to delta"
-      - "src/i18n/translations.ts:893-894,930-935 — DE 'Tag', 'Behandlung #', 'Visus (logMAR)', 'Δ logMAR', 'Δ logMAR %', 'Netzhautdicke (µm)', 'Δ µm', 'Δ %'"
+      - "src/components/outcomes/OutcomesPanel.tsx:149 — xLabel from outcomesTooltipDay / outcomesTooltipTreatmentIndex; 152-155 yLabelKey per metric × yMetric; 384 hidden marker outcomes-panel-<eye>-ylabel data-ylabel; 387-403 info button outcomes-panel-<eye>-ylabel-info with HoverTooltip outcomesYAxisInfo; 420/429 Recharts XAxis/YAxis label"
+      - "src/i18n/translations.ts:957-961 — outcomesYAxisInfo DE 'Ausgangswert = erste Messung der jeweiligen Kennzahl je Auge. Δ zeigt die Differenz, Δ % die prozentuale Änderung zum Ausgangswert.', outcomesYAxisInfoLabel 'Erläuterung der Y-Achse'"
+      - "src/i18n/translations.ts:909-910,950-955 — DE 'Tag', 'Behandlung #', 'Visus (logMAR)', 'Visus-Veränderung zum Ausgangswert (logMAR)', 'Visus-Veränderung zum Ausgangswert (%)', 'Netzhautdicke (µm)', 'CRT-Veränderung zum Ausgangswert (µm)', 'CRT-Veränderung zum Ausgangswert (%)'"
     tests: []
     browser:
       route: "/analysis?tab=trajectories"
       steps:
         - "Open Analyse → \"Verläufe\" (Visus); open \"Diagramm-Anzeige\"."
         - "Select Y radio \"Δ % (prozentuale Änderung)\"; then X radio \"Anzahl Behandlungen\"."
-        - "Click metric tab \"CRT\" (resets to Δ/days: 'Δ µm' / 'Tag'); then select Y radio \"Absolut (µm)\"."
+        - "Click metric tab \"CRT\" (settings are kept: 'CRT-Veränderung zum Ausgangswert (%)' / 'Behandlung #'); select Y radio \"Absolut (µm)\" and X radio \"Tage seit Baseline\"."
         - "In DevTools inspect [data-testid=outcomes-panel-od-ylabel]."
-      expect: "Step 2: all three panels' y-axis title becomes 'Δ logMAR %' and x-axis title 'Behandlung #'. Step 3: y-axis title 'Netzhautdicke (µm)' and x-axis 'Tag'. Step 4: data-ylabel equals the visible y-axis title."
-    notes: "Label list matches the exact strings in translations.ts. No test asserts the ylabel marker or the Plotly axis titles (Plotly does not run in jsdom)."
+      expect: "Step 2: all three panels' y-axis title becomes 'Visus-Veränderung zum Ausgangswert (%)' and x-axis title 'Behandlung #'. Hovering or focusing the info icon above the y-axis shows the baseline/Δ/Δ % explanation. Step 3: y-axis title 'Netzhautdicke (µm)' and x-axis 'Tag'. Step 4: data-ylabel equals the visible y-axis title."
+    notes: "Label list matches the exact strings in translations.ts. Since Z0-P03 the acceptance spec tests/acceptance/Z0/Z0-P03.spec.ts asserts the titles (DE/EN) and the info tooltip in the container e2e run; no unit test asserts them. Open review points (Z0-P03, team decision): the info button sits inside the role=img card and is likely not announced by screen readers (UIR-TRAJ-009 structure); its placement next to the rotated title is not asserted geometrically; icon and text show in every y-mode, including absolute."
   - id: UIR-TRAJ-008
     title: "Drag-to-zoom and Brush with \"Zoom zurücksetzen\" (Plotly modebar removed)"
     statement: "The user can zoom each Verläufe panel by dragging across the plot or with the Brush below it and restore the full extent with \"Zoom zurücksetzen\"; pan, box-select and lasso are not offered (Z0-P23, C8 a, Q21 a; supersedes the Plotly modebar)."
@@ -238,7 +238,7 @@ requirements:
         - "Read the drawer sections top to bottom."
         - "Select \"Δ % (prozentuale Änderung)\"."
         - "Drag the slider fully left, then fully right."
-      expect: "Sections \"X-Achse\" (radios \"Tage seit Baseline\", \"Anzahl Behandlungen\"), \"Y-Metrik\" (\"Absolut (logMAR)\", \"Δ (Differenz zur Baseline)\", \"Δ % (prozentuale Änderung)\"), \"Anzeigeebenen\" (checkboxes \"Median\", \"Individuelle Kurven\", \"Streupunkte\", \"Streuband (IQR)\"), \"Interpolationsraster\" slider. Step 3: panel y-axis title becomes 'Δ logMAR %'. Step 4: caption reads '20 Stützstellen' then '300 Stützstellen'."
+      expect: "Sections \"X-Achse\" (radios \"Tage seit Baseline\", \"Anzahl Behandlungen\"), \"Y-Metrik\" (\"Absolut (logMAR)\", \"Δ (Differenz zur Baseline)\", \"Δ % (prozentuale Änderung)\"), \"Anzeigeebenen\" (checkboxes \"Median\", \"Individuelle Kurven\", \"Streupunkte\", \"Streuband (IQR)\"), \"Interpolationsraster\" slider. Step 3: panel y-axis title becomes 'Visus-Veränderung zum Ausgangswert (%)'. Step 4: caption reads '20 Stützstellen' then '300 Stützstellen'."
     notes: "The grid slider range and the Y radios are not covered by any test. On the CRT metric the Y radios read 'Absolut (µm)', 'Δ (µm zur Baseline)', 'Δ % (prozentuale Änderung)'."
   - id: UIR-TRAJ-011
     title: "Settings drawer focuses first radio on open and closes on Escape"
