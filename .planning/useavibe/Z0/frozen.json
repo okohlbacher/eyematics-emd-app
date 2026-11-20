@@ -27,7 +27,7 @@
     "acceptance/Z0/Z0-P24.feature": "0259ce3cf4204efc536a4961a44e019dcacb85703aa4bfa829e8453783be6803",
     "acceptance/Z0/Z0-P25.feature": "54187f8dd82dacd237cd14b49ac3db68ce269cbff3fc297b66d39219ae44dbf5",
     "acceptance/Z0/Z0-P26.feature": "09bf49df7fc8778849d1f2b69bf4daa353e172e09e9913b02679f9fa07b457f9",
-    ".planning/useavibe/Z0/PLAN.md": "4621addfd7ca696975816267ab67b8da5d3ddee65e9f05b20ea826347b64837d"
+    ".planning/useavibe/Z0/PLAN.md": "10013f5b254e844cf94c31c8ccce14202a909c75cd3249cabf0f9aab2c8306c2"
   },
   "events": [
     {
@@ -177,6 +177,14 @@
         "acceptance/Z0/Z0-P25.feature",
         "acceptance/Z0/Z0-P26.feature",
         ".planning/useavibe/Z0/PROBLEMS.md"
+      ],
+      "operator": null
+    },
+    {
+      "ts": "2026-11-20T17:14:34Z",
+      "kind": "plan-approve by NF",
+      "files": [
+        ".planning/useavibe/Z0/PLAN.md"
       ],
       "operator": null
     }
