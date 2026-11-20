@@ -345,6 +345,12 @@ export default function OutcomesPanel({
         ...(typeof hover.y === 'number' ? [{ key: 'y', label: yLabel, value: formatY(hover.y) }] : []),
       ]
     : [];
+  // Z0-P20: the tooltip ends with the click action; in compare mode (no drill-down, Q12 b) it says so instead.
+  const patientHint = drillDownActive
+    ? t('outcomesTooltipClickHint')
+    : isCrossMode
+      ? t('outcomesTooltipCompareClickHint')
+      : undefined;
   const patientTooltip = (
     <div
       data-testid={`outcomes-hover-tooltip-${eye}`}
@@ -354,7 +360,7 @@ export default function OutcomesPanel({
       style={{ display: hover ? 'block' : 'none', left: hover?.left ?? 0, top: hover?.top ?? 0 }}
     >
       {hover && (
-        <ChartTooltipBox heading={typeof hover.x === 'number' ? formatX(hover.x) : hover.patientId} rows={patientRows} />
+        <ChartTooltipBox heading={typeof hover.x === 'number' ? formatX(hover.x) : hover.patientId} rows={patientRows} hint={patientHint} />
       )}
     </div>
   );

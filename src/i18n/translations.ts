@@ -964,6 +964,9 @@ const translations = {
   // --- end v1.19 WS-A keys ---
   // FALL-010: drill-down hint shown in aria-label when scatter points are clickable
   outcomesDrillDownHint: { de: 'Datenpunkt anklicken, um den Fall zu öffnen', en: 'Click a data point to open the case' },
+  // Z0-P20: closing line of the per-patient tooltip (click action; compare mode has no drill-down, Q12 b)
+  outcomesTooltipClickHint: { de: 'Klicken öffnet die Einzelfallansicht', en: 'Click to open the case view' },
+  outcomesTooltipCompareClickHint: { de: 'Einzelfallansicht nur ohne Kohortenvergleich', en: 'Case view only without cohort comparison' },
 
   // ---- Phase 13: Metric Selector (METRIC-04 / D-01) ----
   metricsVisus: { de: 'Visus', en: 'Visus' },

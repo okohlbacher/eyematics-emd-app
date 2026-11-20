@@ -1,6 +1,7 @@
 /**
  * Z0-P23: the one tooltip box of the analysis charts — one heading line with the x-axis value, then one row per value
  * in the form "<Bezeichnung>: <Wert>". Used by Aggregiert, Verläufe and the case view.
+ * Z0-P20: an optional closing hint line (e.g. the click action), after the rows.
  */
 import { useThemeSafe } from '../../context/ThemeContext';
 import { caseChartColors } from '../case-detail/chartTheme';
@@ -12,7 +13,7 @@ export interface ChartTooltipRow {
   color?: string;
 }
 
-export default function ChartTooltipBox({ heading, rows }: { heading: string; rows: ChartTooltipRow[] }) {
+export default function ChartTooltipBox({ heading, rows, hint }: { heading: string; rows: ChartTooltipRow[]; hint?: string }) {
   const { effectiveTheme } = useThemeSafe();
   const colors = caseChartColors(effectiveTheme === 'dark');
   return (
@@ -29,6 +30,11 @@ export default function ChartTooltipBox({ heading, rows }: { heading: string; ro
           <span style={r.color ? { color: r.color } : undefined}>{r.label}</span>: {r.value}
         </div>
       ))}
+      {hint && (
+        <div data-tooltip-hint className="mt-1 italic" style={{ color: colors.tooltipText }}>
+          {hint}
+        </div>
+      )}
     </div>
   );
 }
