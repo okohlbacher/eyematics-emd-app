@@ -263,6 +263,7 @@ export default function OutcomesView(
           <OutcomesDataPreview
             activeMetric="interval"
             cases={s.cohort.cases}
+            onOpenCase={s.handlePointDrillDown}
             aggregate={a.aggregate ?? { od: { patients: [], scatterPoints: [], medianGrid: [], summary: { patientCount: 0, measurementCount: 0, excludedCount: 0 } }, os: { patients: [], scatterPoints: [], medianGrid: [], summary: { patientCount: 0, measurementCount: 0, excludedCount: 0 } }, combined: { patients: [], scatterPoints: [], medianGrid: [], summary: { patientCount: 0, measurementCount: 0, excludedCount: 0 } } }}
             t={s.t}
             locale={s.locale as 'de' | 'en'}
@@ -284,6 +285,7 @@ export default function OutcomesView(
           <OutcomesDataPreview
             activeMetric="responder"
             cases={s.cohort.cases}
+            onOpenCase={s.handlePointDrillDown}
             aggregate={a.aggregate ?? { od: { patients: [], scatterPoints: [], medianGrid: [], summary: { patientCount: 0, measurementCount: 0, excludedCount: 0 } }, os: { patients: [], scatterPoints: [], medianGrid: [], summary: { patientCount: 0, measurementCount: 0, excludedCount: 0 } }, combined: { patients: [], scatterPoints: [], medianGrid: [], summary: { patientCount: 0, measurementCount: 0, excludedCount: 0 } } }}
             t={s.t}
             locale={s.locale as 'de' | 'en'}

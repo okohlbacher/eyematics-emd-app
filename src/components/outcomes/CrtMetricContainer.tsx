@@ -131,6 +131,7 @@ export default function CrtMetricContainer({
         aggregate={crtAggregate}
         t={t}
         locale={locale as 'de' | 'en'}
+        onOpenCase={handlePointDrillDown}
       />
     </>
   );

@@ -157,6 +157,7 @@ export default function VisusMetricContainer({
         aggregate={aggregate}
         t={t}
         locale={locale as 'de' | 'en'}
+        onOpenCase={handlePointDrillDown}
       />
     </>
   );

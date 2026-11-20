@@ -41,6 +41,8 @@ interface Props {
   locale: 'de' | 'en';
   activeMetric?: MetricType;
   thresholdLetters?: number;
+  /** Z0-P19: opens the case view for a row's pseudonym (same resolution as the chart drill-down). */
+  onOpenCase?: (pseudonym: string) => void;
 }
 
 type Translate = (key: TranslationKey) => string;
@@ -88,9 +90,33 @@ export default function OutcomesDataPreview({
   locale,
   activeMetric = 'visus',
   thresholdLetters = 5,
+  onOpenCase,
 }: Props) {
   const fmt = (n: number, digits = 3) =>
     new Intl.NumberFormat(locale, { maximumFractionDigits: digits }).format(n);
+
+  // Z0-P19: the pseudonym cell is a link to the case view. First case per pseudonym, as in
+  // handlePointDrillDown. The CSV getters below are unchanged and stay plain text.
+  const caseIdByPseudonym = new Map<string, string>();
+  for (const c of cases) if (!caseIdByPseudonym.has(c.pseudonym)) caseIdByPseudonym.set(c.pseudonym, c.id);
+  const pseudonymCell = (pseudonym: string): ReactNode => {
+    const caseId = caseIdByPseudonym.get(pseudonym);
+    if (!onOpenCase || caseId === undefined) return pseudonym;
+    return (
+      <a
+        href={`/case/${encodeURIComponent(caseId)}`}
+        onClick={(e) => {
+          // Modified clicks (new tab/window) keep the browser's native link behaviour.
+          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          e.preventDefault();
+          onOpenCase(pseudonym);
+        }}
+        className="text-blue-600 dark:text-blue-400 hover:underline focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
+      >
+        {pseudonym}
+      </a>
+    );
+  };
 
   // ---------------------------------------------------------------------------
   // Resolve the active metric's config. Each branch preserves the exact prior
@@ -101,7 +127,7 @@ export default function OutcomesDataPreview({
       return buildConfig({
         rows: flattenCrtRows(cases),
         columns: [
-          { headerKey: 'outcomesPreviewColPseudonym', csv: (r) => r.patient_pseudonym, cell: (r) => r.patient_pseudonym },
+          { headerKey: 'outcomesPreviewColPseudonym', csv: (r) => r.patient_pseudonym, cell: (r) => pseudonymCell(r.patient_pseudonym) },
           { headerKey: 'outcomesPreviewColEye', csv: (r) => r.eye.toUpperCase(), cell: (r) => eyeCell(t, r.eye) },
           { headerKey: 'outcomesPreviewColDate', csv: (r) => r.observation_date, cell: (r) => r.observation_date },
           { headerKey: 'metricsPreviewColCrtUm', csv: (r) => String(r.crt_um), cell: (r) => fmt(r.crt_um, 0) },
@@ -117,7 +143,7 @@ export default function OutcomesDataPreview({
       return buildConfig({
         rows: flattenIntervalRows(cases),
         columns: [
-          { headerKey: 'outcomesPreviewColPseudonym', csv: (r) => r.patient_pseudonym, cell: (r) => r.patient_pseudonym },
+          { headerKey: 'outcomesPreviewColPseudonym', csv: (r) => r.patient_pseudonym, cell: (r) => pseudonymCell(r.patient_pseudonym) },
           { headerKey: 'outcomesPreviewColEye', csv: (r) => r.eye.toUpperCase(), cell: (r) => eyeCell(t, r.eye) },
           { headerKey: 'metricsPreviewColGapIndex', csv: (r) => String(r.gap_index), cell: (r) => r.gap_index },
           { headerKey: 'metricsPreviewColGapDays', csv: (r) => String(r.gap_days), cell: (r) => r.gap_days },
@@ -133,7 +159,7 @@ export default function OutcomesDataPreview({
       return buildConfig({
         rows: projectResponderRows(cases, thresholdLetters),
         columns: [
-          { headerKey: 'outcomesPreviewColPseudonym', csv: (r) => r.patient_pseudonym, cell: (r) => r.patient_pseudonym },
+          { headerKey: 'outcomesPreviewColPseudonym', csv: (r) => r.patient_pseudonym, cell: (r) => pseudonymCell(r.patient_pseudonym) },
           { headerKey: 'outcomesPreviewColEye', csv: (r) => r.eye.toUpperCase(), cell: (r) => eyeCell(t, r.eye) },
           { headerKey: 'metricsPreviewColBucket', csv: (r) => r.bucket, cell: (r) => r.bucket },
           { headerKey: 'metricsPreviewColDeltaVisusLetters', csv: (r) => String(r.delta_visus_letters), cell: (r) => r.delta_visus_letters },
@@ -161,7 +187,7 @@ export default function OutcomesDataPreview({
     return buildConfig({
       rows: visusRows,
       columns: [
-        { headerKey: 'outcomesPreviewColPseudonym', csv: (r) => r.patient_pseudonym, cell: (r) => r.patient_pseudonym },
+        { headerKey: 'outcomesPreviewColPseudonym', csv: (r) => r.patient_pseudonym, cell: (r) => pseudonymCell(r.patient_pseudonym) },
         { headerKey: 'outcomesPreviewColEye', csv: (r) => r.eye.toUpperCase(), cell: (r) => eyeCell(t, r.eye) },
         { headerKey: 'outcomesPreviewColDate', csv: (r) => r.observation_date, cell: (r) => r.observation_date },
         { headerKey: 'outcomesPreviewColDaysSinceBaseline', csv: (r) => String(r.days_since_baseline), cell: (r) => r.days_since_baseline },
