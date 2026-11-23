@@ -408,9 +408,9 @@ export default function QualityCaseDetail({
           <span>
             {t('therapyDiscontinuation')}:{' '}
             {therapyStatus?.status === 'breaker' ? (
-              <span className="font-medium text-red-600">{t('therapyBreaker')} ({therapyStatus.gapDays}d)</span>
+              <span className="font-medium px-1.5 py-0.5 rounded bg-slate-200 text-slate-800 dark:bg-slate-600 dark:text-slate-100">{t('therapyBreaker')} ({therapyStatus.gapDays}d)</span>
             ) : therapyStatus?.status === 'interrupter' ? (
-              <span className="font-medium text-amber-600">{t('therapyInterrupter')} ({therapyStatus.gapDays}d)</span>
+              <span className="font-medium px-1.5 py-0.5 rounded bg-sky-200 text-sky-900 dark:bg-sky-900/60 dark:text-sky-200">{t('therapyInterrupter')} ({therapyStatus.gapDays}d)</span>
             ) : (
               <span className="font-medium text-green-600">{t('therapyActive')}</span>
             )}

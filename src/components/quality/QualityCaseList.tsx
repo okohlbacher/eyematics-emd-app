@@ -82,14 +82,18 @@ export default function QualityCaseList({
   const therapyBadge = (caseId: string) => {
     const ts = therapyStatuses.get(caseId);
     if (!ts || ts.status === 'active') return null;
+    // Z0-P25: own colour family (slate = AB, sky = UB), distinct from the amber
+    // "auffällig" and red "Kritisch" value statuses; the term is named in title/aria-label.
+    const term = t(ts.status === 'breaker' ? 'therapyBreaker' : 'therapyInterrupter');
     return (
       <span
         className={`text-[9px] px-1 py-0.5 rounded ${
           ts.status === 'breaker'
-            ? 'bg-red-100 text-red-700'
-            : 'bg-amber-100 text-amber-700'
+            ? 'bg-slate-200 text-slate-800 dark:bg-slate-600 dark:text-slate-100'
+            : 'bg-sky-200 text-sky-900 dark:bg-sky-900/60 dark:text-sky-200'
         }`}
-        title={`${ts.gapDays} ${t('therapyGapDays')}`}
+        title={`${term} – ${ts.gapDays} ${t('therapyGapDays')}`}
+        aria-label={term}
       >
         {ts.status === 'breaker' ? 'AB' : 'UB'}
       </span>
