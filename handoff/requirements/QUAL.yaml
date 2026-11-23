@@ -11,7 +11,7 @@ requirements:
       - "src/pages/QualityPage.tsx:103 (selectedCohortId state)"
       - "src/pages/QualityPage.tsx:135-145 (scopedCases via applyFilters on the saved search)"
       - "src/pages/QualityPage.tsx:153-165,175-196 (timeScopedCases/caseStatus/statusCounts derive from the scoped set)"
-      - "src/pages/QualityPage.tsx:345-364 (\"Kohorte\" <select> with \"Alle Fälle\" + savedSearches options)"
+      - "src/pages/QualityPage.tsx:334-353 (\"Kohorte\" <select> with associated label, \"Alle Fälle\" + savedSearches options, directly left of the region \"Filterkriterien\"; Z0-P16)"
       - "src/utils/cohortFilterSerialization.ts (safePickCohortFilter)"
     tests:
       - file: tests/qualityCohortScope.test.tsx
@@ -27,11 +27,11 @@ requirements:
       steps:
         - "Log in (e.g. as admin) and make sure at least one saved search exists in Kohortenbildung (/cohort) that matches fewer cases than the total."
         - "Open /quality and note the number next to \"Grundgesamtheit\" and the case-count line above the case list (\"N Fälle\")."
-        - "In the \"Kohorte\" dropdown (left of \"CSV exportieren\") select the saved search."
+        - "In the single \"Kohorte\" dropdown (directly left of the region \"Filterkriterien\", \"CSV exportieren\" to the right) select the saved search."
         - "Observe the case list, the \"Grundgesamtheit\" number and the \"Ungeprüft\" / \"In Bearbeitung\" / \"Geprüft\" tiles."
         - "Select \"Alle Fälle\" again."
       expect: "After selecting the saved search the case list contains only that cohort's pseudonyms and Grundgesamtheit plus the tile totals drop to the cohort size; selecting \"Alle Fälle\" restores the original numbers."
-    notes: "The dropdown lists only the signed-in user's own saved searches (per-user storage, see dataDb isolation tests). Changing the scope also clears the open case detail (QualityPage.tsx:353)."
+    notes: "The dropdown lists only the signed-in user's own saved searches (per-user storage, see dataDb isolation tests). Changing the scope also clears the open case detail (QualityPage.tsx:353). Since Z0-P16 (135449d) the \"Kohorte\" select has an associated label and sits directly left of the region \"Filterkriterien\"."
 
   - id: UIR-QUAL-002
     title: "Per-cohort quality-check checklist persists"
@@ -40,7 +40,7 @@ requirements:
     sources: ["EMDREQ-QUAL-001 / N03.01", "UAT v1.13 C2 / v1.12 QUAL-020/021 (confirmed v1.14)", "code: src/components/quality/QualityParamsChecklist.tsx:26-64"]
     evidence:
       - "src/pages/QualityPage.tsx:170-173 (activeQualityParams from the selected saved search)"
-      - "src/pages/QualityPage.tsx:379-399 (card with hint for \"Alle Fälle\", checklist otherwise; onChange → updateSavedSearchQualityParams)"
+      - "src/pages/QualityPage.tsx:388-408 (card with hint for \"Alle Fälle\", checklist otherwise; onChange → updateSavedSearchQualityParams)"
       - "src/components/quality/QualityParamsChecklist.tsx:26-64 (one checkbox per QUALITY_PARAM_KEYS, labels via t(key))"
       - "shared/qualityParams.ts:16-23,37-78 (keys, sanitize, canonicalize, resolve)"
       - "src/context/DataContext.tsx:177-185 (updateSavedSearchQualityParams → PATCH /api/data/saved-searches/:id, server response adopted)"
@@ -102,7 +102,7 @@ requirements:
     sources: ["code: src/pages/QualityPage.tsx:147-165,329-339,401-405", "code: src/components/doc-quality/QualityFilterBar.tsx:72-126"]
     evidence:
       - "src/pages/QualityPage.tsx:105,153-165 (timeScopedCases: a case stays when it has ≥1 observation inside the window)"
-      - "src/pages/QualityPage.tsx:329-339 (QualityFilterBar without centre filter)"
+      - "src/components/quality/QualityFilterPanel.tsx:62-71 (QualityFilterBar embedded in the region \"Filterkriterien\", without centre filter; Z0-P16)"
       - "src/pages/QualityPage.tsx:401-413 (Grundgesamtheit + tiles use timeScopedCases)"
       - "src/components/doc-quality/QualityFilterBar.tsx:41-46,78-126 (preset buttons, custom from/to date inputs)"
       - "src/utils/qualityMetrics.ts:170-189 (timeRangeWindow)"
@@ -119,7 +119,7 @@ requirements:
       route: "/quality"
       steps:
         - "Open /quality and note \"Grundgesamtheit: N\" and the \"Ungeprüft\" tile's \"n / N\" line."
-        - "In the \"Zeitraum\" bar click \"Letzte 3 Monate\"."
+        - "In the \"Zeitraum\" bar inside the region \"Filterkriterien\" click \"Letzte 3 Monate\"."
         - "Click \"Benutzerdefiniert\"; set \"Von\" and \"Bis\" to a one-month window in the past with data."
         - "Click \"Gesamter Zeitraum\"."
       expect: "\"Letzte 3 Monate\" lowers Grundgesamtheit and every tile denominator; the custom window changes them again; \"Gesamter Zeitraum\" restores the original N."
@@ -152,9 +152,9 @@ requirements:
     title: "Centre chip multi-select narrows the view"
     statement: "The Datenqualität page has a multi-select \"Zentrum\" chip filter that narrows the client view and never widens beyond the user's authorised centres."
     status: implemented
-    sources: ["UAT v1.12 QUAL-024 (confirmed v1.13)", "code: src/components/quality/QualityCaseList.tsx:147-153"]
+    sources: ["UAT v1.12 QUAL-024 (confirmed v1.13)", "code: src/components/quality/QualityFilterPanel.tsx:117-122"]
     evidence:
-      - "src/components/quality/QualityCaseList.tsx:147-153 (CenterMultiSelect in the filter panel)"
+      - "src/components/quality/QualityFilterPanel.tsx:117-122 (CenterMultiSelect in the collapsible part of the region \"Filterkriterien\"; Z0-P16)"
       - "src/components/common/CenterMultiSelect.tsx:40-95 (toggle chips, count badge, \"Zurücksetzen\", \"Alle Zentren\")"
       - "src/pages/QualityPage.tsx:210-213,219 (centerNames from the loaded cases; selectedCenters narrows filteredCases)"
       - "server/fhirApi.ts:110,404 (filterBundlesByCenters — server only returns authorised centres; client cannot widen)"
@@ -170,17 +170,17 @@ requirements:
     browser:
       route: "/quality"
       steps:
-        - "Open /quality as a non-admin user assigned to two or more centres; click the funnel icon (title \"Filterkriterien\") next to the search box."
+        - "Open /quality as a non-admin user assigned to two or more centres; click the funnel icon (title \"Filterkriterien\") next to the search box in the region \"Filterkriterien\"."
         - "Under \"Zentrum\" click one centre chip, then a second one; note the blue count badge."
         - "Click \"Zurücksetzen\"."
       expect: "With two chips active only cases of those two centres are listed and the count line reads \"N gefiltert / M Fälle\"; after \"Zurücksetzen\" the label \"Alle Zentren\" shows and all cases of the user's authorised centres (never others) are listed."
-    notes: ""
+    notes: " Since Z0-P16 (135449d) all case-list filters sit in one region \"Filterkriterien\" (role=region; Zeitraum, search and toggle always visible; Prüfstatus, Zentrum, Therapiestatus, CRT-Wert, \"Ausgeschlossene anzeigen\" collapsible, Q14 a/b); the toggle keeps title \"Filterkriterien\" (C13). tests/acceptance/Z0/Z0-P16.spec.ts asserts the region contents and the single adjacent \"Kohorte\" control (\"directly next to\" read as a gap ≤ 32 px, team to confirm). Open: the filter labels are not associated with their selects (htmlFor missing, pre-existing)."
 
   - id: UIR-QUAL-007
     title: "Summary tiles with counts, n/total and percentage"
     statement: "The Datenqualität page shows summary tiles \"Ungeprüft\", \"In Bearbeitung\", \"Geprüft\" and \"Ausgeschlossene Fälle\", each with count / total and a percentage for the current scope."
     status: partial
-    sources: ["EMDREQ-QUAL-002 / N03.02", "UAT v1.10 QUAL-011; v1.12 QUAL-023", "code: src/pages/QualityPage.tsx:35-53,407-413"]
+    sources: ["EMDREQ-QUAL-002 / N03.02", "UAT v1.10 QUAL-011; v1.12 QUAL-023", "code: src/pages/QualityPage.tsx:35-53,416-421"]
     evidence:
       - "src/pages/QualityPage.tsx:35-53 (SummaryCard shows \"n / total\" and % only when total is passed)"
       - "src/pages/QualityPage.tsx:409-411 (three status tiles receive total=timeScopedCases.length)"
@@ -203,11 +203,11 @@ requirements:
     title: "Pseudonym search narrows the case list"
     statement: "The user can search the Datenqualität case list by pseudonym (\"Pseudonym suchen...\") and the list narrows with a \"x gefiltert / n Fälle\" count line."
     status: implemented
-    sources: ["EMDREQ-QUAL-003 / N03.07", "code: src/components/quality/QualityCaseList.tsx:101-126,197-204"]
+    sources: ["EMDREQ-QUAL-003 / N03.07", "code: src/components/quality/QualityFilterPanel.tsx:75-81", "code: src/components/quality/QualityCaseList.tsx:74-78"]
     evidence:
-      - "src/components/quality/QualityCaseList.tsx:104-112 (search input, placeholder \"Pseudonym suchen...\")"
+      - "src/components/quality/QualityFilterPanel.tsx:75-81 (search input, placeholder \"Pseudonym suchen...\", in the region \"Filterkriterien\"; Z0-P16)"
       - "src/pages/QualityPage.tsx:217 (case-insensitive substring match on pseudonym)"
-      - "src/components/quality/QualityCaseList.tsx:197-204 (count line \"N gefiltert / M Fälle\" vs \"M Fälle\")"
+      - "src/components/quality/QualityCaseList.tsx:74-78 (count line \"N gefiltert / M Fälle\" vs \"M Fälle\")"
     tests: []
     browser:
       route: "/quality"
@@ -222,11 +222,11 @@ requirements:
     title: "Prüfstatus filter on the case list"
     statement: "The user can filter the Datenqualität case list by \"Prüfstatus\" (Ungeprüft / In Bearbeitung / Geprüft) and the filtered count is shown."
     status: implemented
-    sources: ["EMDREQ-QUAL-002 / N03.02", "manual: Benutzerhandbuch §7.6", "code: src/components/quality/QualityCaseList.tsx:132-146"]
+    sources: ["EMDREQ-QUAL-002 / N03.02", "manual: Benutzerhandbuch §7.6", "code: src/components/quality/QualityFilterPanel.tsx:101-114"]
     evidence:
-      - "src/components/quality/QualityCaseList.tsx:132-146 (\"Prüfstatus\" select with Alle/Ungeprüft/In Bearbeitung/Geprüft)"
+      - "src/components/quality/QualityFilterPanel.tsx:101-114 (\"Prüfstatus\" select with Alle/Ungeprüft/In Bearbeitung/Geprüft)"
       - "src/pages/QualityPage.tsx:175-190,218 (caseStatus map; filterStatus applied)"
-      - "src/components/quality/QualityCaseList.tsx:197-204 (count line)"
+      - "src/components/quality/QualityCaseList.tsx:74-78 (count line)"
     tests: []
     browser:
       route: "/quality"
@@ -241,9 +241,9 @@ requirements:
     title: "Therapiestatus and CRT-Wert filters"
     statement: "The user can filter the Datenqualität list by \"Therapiestatus\" (Aktiv / Therapieunterbrecher / Therapieabbrecher) and by \"CRT-Wert\" (implausible only); the URL reflects the choice."
     status: partial
-    sources: ["EMDREQ-QUAL-010 / N06.03", "manual: Benutzerhandbuch §7.6", "code: src/components/quality/QualityCaseList.tsx:154-181"]
+    sources: ["EMDREQ-QUAL-010 / N06.03", "manual: Benutzerhandbuch §7.6", "code: src/components/quality/QualityFilterPanel.tsx:124-149"]
     evidence:
-      - "src/components/quality/QualityCaseList.tsx:154-181 (\"Therapiestatus\" select with Aktiv/Therapieunterbrecher/Therapieabbrecher; \"CRT-Wert\" select with \"Unplausibel (> 400 µm)\")"
+      - "src/components/quality/QualityFilterPanel.tsx:124-149 (\"Therapiestatus\" select with Aktiv/Therapieunterbrecher/Therapieabbrecher; \"CRT-Wert\" select with \"Unplausibel (> 400 µm)\"; Z0-P16)"
       - "src/pages/QualityPage.tsx:220-226 (therapy and CRT filtering; CRT uses getSettings().crtImplausibleThresholdUm)"
       - "src/pages/QualityPage.tsx:74,84-98 (useSearchParams is read-only: filters are seeded from the URL but setSearchParams is never called)"
     tests:
@@ -313,11 +313,11 @@ requirements:
     title: "Ausgeschlossene anzeigen reveals excluded cases"
     statement: "The \"Ausgeschlossene anzeigen\" checkbox in the case-list filter (on by default) shows excluded cases dimmed with a red ban icon; unticking it hides them from the list."
     status: implemented
-    sources: ["EMDREQ-QUAL-008 / N04.04", "manual: Benutzerhandbuch §7.4", "code: src/components/quality/QualityCaseList.tsx:182-192,206-229"]
+    sources: ["EMDREQ-QUAL-008 / N04.04", "manual: Benutzerhandbuch §7.4", "code: src/components/quality/QualityFilterPanel.tsx:151-160", "code: src/components/quality/QualityCaseList.tsx:82-106"]
     evidence:
-      - "src/components/quality/QualityCaseList.tsx:182-192 (checkbox \"Ausgeschlossene anzeigen\")"
+      - "src/components/quality/QualityFilterPanel.tsx:151-160 (checkbox \"Ausgeschlossene anzeigen\"; Z0-P16)"
       - "src/pages/QualityPage.tsx:99,227 (showExcluded defaults to true; false hides excluded cases)"
-      - "src/components/quality/QualityCaseList.tsx:209-223 (excluded rows get opacity-50 and a red Ban icon)"
+      - "src/components/quality/QualityCaseList.tsx:85-100 (excluded rows get opacity-50 and a red Ban icon)"
       - "src/components/quality/QualityCaseDetail.tsx:360-365 (the text badge \"Ausgeschlossen\" is in the detail header)"
     tests: []
     browser:
@@ -336,7 +336,7 @@ requirements:
     sources: ["EMDREQ-QUAL-010 / N06.05", "manual: Benutzerhandbuch §7.5, §15", "code: src/pages/QualityPage.tsx:291-316,365-372"]
     evidence:
       - "src/pages/QualityPage.tsx:291-316 (headers Pseudonym, Zentrum, Alter, Diagnose, Prüfstatus, Therapieabbruch/-unterbrechung, Ausgeschlossen; one row per filteredCases entry)"
-      - "src/pages/QualityPage.tsx:365-372 (button disabled={filteredCases.length === 0})"
+      - "src/pages/QualityPage.tsx:374-381 (button disabled={filteredCases.length === 0})"
       - "src/utils/download.ts:21-35,50-52 (buildCsv with BOM, datedFilename 'quality-review-YYYY-MM-DD.csv')"
     tests: []
     browser:
@@ -354,7 +354,7 @@ requirements:
     status: implemented
     sources: ["EMDREQ-QUAL-003 / N03.07", "manual: Benutzerhandbuch §6"]
     evidence:
-      - "src/components/quality/QualityCaseList.tsx:206-231 (row buttons call onSelectCase)"
+      - "src/components/quality/QualityCaseList.tsx:82-106 (row buttons call onSelectCase)"
       - "src/pages/QualityPage.tsx:446-466 (placeholder \"Fall auswählen, um Datenqualität zu prüfen\" vs QualityCaseDetail)"
       - "src/components/quality/QualityCaseDetail.tsx:424-441,486-500 (\"Zu prüfende Messwerte\" tab and table)"
     tests: []
@@ -850,7 +850,7 @@ requirements:
     sources: ["code: src/components/quality/QualityCaseList.tsx:45-54,206-229"]
     evidence:
       - "src/components/quality/QualityCaseList.tsx:45-54 (statusIcon per QualityStatus)"
-      - "src/components/quality/QualityCaseList.tsx:206-229 (row: icon, mono pseudonym, centerName, bg-blue-50 when selected)"
+      - "src/components/quality/QualityCaseList.tsx:82-106 (row: icon, mono pseudonym, centerName, bg-blue-50 when selected)"
       - "src/pages/QualityPage.tsx:175-190 (caseStatus: reviewed / open flag → in_progress / none → unchecked)"
     tests: []
     browser:

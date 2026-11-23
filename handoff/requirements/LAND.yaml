@@ -397,7 +397,7 @@ requirements:
       - "src/pages/LandingPage.tsx:358 (aria-label reviewTherapyBreakers, navigate('/quality?therapy=breaker'))"
       - "src/pages/LandingPage.tsx:372 (aria-label reviewImplausibleCrt, navigate('/quality?crt=implausible'))"
       - "src/pages/QualityPage.tsx:92-98 (filterTherapy/filterCrt seeded from search params) and :109-115 (showFilters auto-open when therapy/status/crt param present)"
-      - "src/components/quality/QualityCaseList.tsx:159-179 (select 'Therapiestatus' option 'Therapieabbrecher'; select 'CRT-Wert' option 'Unplausibel (> 400 µm)')"
+      - "src/components/quality/QualityFilterPanel.tsx:124-149 (select 'Therapiestatus' option 'Therapieabbrecher'; select 'CRT-Wert' option 'Unplausibel (> 400 µm)')"
       - "src/App.tsx:59 (/quality is ProtectedRoute for all roles)"
     tests:
       - file: tests/landingPageAlerts.test.tsx

@@ -657,7 +657,7 @@ requirements:
     evidence:
       - "src/pages/CohortBuilderPage.tsx:80-82,355-360 (C2 comment; handleSave omits qualityParams)"
       - "server/dataApi.ts:272-300 (checklist edited via PATCH from Datenqualität only)"
-      - "src/pages/QualityPage.tsx:375-390 (checklist lives on QualityPage)"
+      - "src/pages/QualityPage.tsx:388-408 (checklist lives on QualityPage)"
     tests:
       - file: tests/qualityCohortScope.test.tsx
         name: "(b) qualityParams=undefined → all applicable anomaly checks run (fallback)"
@@ -739,7 +739,7 @@ requirements:
       - "src/pages/CohortBuilderPage.tsx:520-526 (Trash button title 'Löschen' → removeSavedSearch)"
       - "src/context/DataContext.tsx:194-199 (optimistic removal + DELETE /api/data/saved-searches/:id)"
       - "server/dataApi.ts:259-265 (delete scoped by username)"
-      - "src/pages/QualityPage.tsx:345-362 (\"Kohorte\" dropdown maps the same savedSearches)"
+      - "src/pages/QualityPage.tsx:334-353 (\"Kohorte\" dropdown maps the same savedSearches)"
     tests:
       - file: tests/dataDb.test.ts
         name: "removes a search"
