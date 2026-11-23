@@ -22,6 +22,7 @@ import DistributionCharts from '../components/case-detail/DistributionCharts';
 import MedicationCard from '../components/case-detail/MedicationCard';
 import PatientHeader from '../components/case-detail/PatientHeader';
 import VisusCrtChart from '../components/case-detail/VisusCrtChart';
+import { chartNumberFormat } from '../components/charts/chartStyle';
 import OctViewer from '../components/OctViewer';
 import { InfoTooltip } from '../components/primitives';
 import { useData } from '../context/DataContext';
@@ -41,6 +42,8 @@ export default function CaseDetailPage() {
   // L11b: theme-aware chart colours for the inline baseline-change ComposedChart.
   const { effectiveTheme } = useThemeSafe();
   const chartColors = caseChartColors(effectiveTheme === 'dark');
+  // Z0-P23 (Q42): chart ticks and tooltip values in the locale's number format (decimal comma in German).
+  const fmtChartNumber = chartNumberFormat(locale, 2);
 
   // Case view is audit-logged server-side via the /api/* requests
   const octViewerRef = useRef<HTMLDivElement>(null);
@@ -367,7 +370,7 @@ export default function CaseDetailPage() {
                   dataKey="relMonths"
                   type="number"
                   domain={['dataMin', 'dataMax']}
-                  tickFormatter={(m: number) => String(m)}
+                  tickFormatter={fmtChartNumber}
                   tick={{ fontSize: 10, fill: chartColors.axisTick }}
                   stroke={chartColors.grid}
                   label={{ value: t('relativeMonthsAxisLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: chartColors.axisLabel }}
@@ -383,7 +386,7 @@ export default function CaseDetailPage() {
                   stroke={chartColors.grid}
                 />
               )}
-              <YAxis tick={{ fontSize: 10, fill: chartColors.axisTick }} stroke={chartColors.grid} label={{ value: '%', position: 'insideLeft', fontSize: 11, fill: chartColors.axisLabel }} />
+              <YAxis tickFormatter={fmtChartNumber} tick={{ fontSize: 10, fill: chartColors.axisTick }} stroke={chartColors.grid} label={{ value: '%', position: 'insideLeft', fontSize: 11, fill: chartColors.axisLabel }} />
               {/* L4c: custom tooltip whitelisting the measured changes + cohort
                   medians (numbers only) so the IQR band tuples (visusChangeBand /
                   crtChangeBand = [p25,p75]) never leak into the tooltip as raw
@@ -403,12 +406,12 @@ export default function CaseDetailPage() {
                 for (const e of props.payload) {
                   const key = String(e.dataKey ?? '');
                   if (typeof e.value !== 'number' || !(key in names)) continue;
-                  rows.push({ key, name: names[key], color: e.color, text: `${e.value}%` });
+                  rows.push({ key, name: names[key], color: e.color, text: `${fmtChartNumber(e.value)}%` });
                 }
                 if (rows.length === 0) return null;
                 const ref = props.payload.find((e) => e.payload)?.payload;
                 const label = baselineRelativeAxis
-                  ? (ref?.relMonths != null ? `${ref.relMonths} ${t('relativeMonthsAxisLabel')}` : '')
+                  ? (ref?.relMonths != null ? `${fmtChartNumber(ref.relMonths)} ${t('relativeMonthsAxisLabel')}` : '')
                   : (ref?.date ? new Date(ref.date).toLocaleDateString(dateFmt) : '');
                 return (
                   <div className="rounded-lg shadow-lg px-3 py-2 text-xs border" style={{ background: chartColors.tooltipBg, borderColor: chartColors.tooltipBorder }}>
@@ -490,6 +493,7 @@ export default function CaseDetailPage() {
           cohortVisusCrtScatter={cohortVisusCrtScatter}
           showCohortReference={showCohortReference}
           t={t}
+          locale={locale}
         />
       )}
 

@@ -34,6 +34,7 @@ import {
 import { useThemeSafe } from '../../context/ThemeContext';
 import type { TranslationKey } from '../../i18n/translations';
 import type { PatientCase } from '../../types/fhir';
+import { chartNumberFormat } from '../charts/chartStyle';
 import type { IntervalCohortSeries } from './IntervalHistogram';
 import { rechartsTheme } from './palette';
 
@@ -121,7 +122,9 @@ function CohortResponderPanel({ series, thresholdLetters, t, ct }: CohortRespond
 // ---------------------------------------------------------------------------
 // ResponderView — main export
 // ---------------------------------------------------------------------------
-export default function ResponderView({ cases, thresholdLetters, t, locale: _locale, cohortSeries }: Props) {
+export default function ResponderView({ cases, thresholdLetters, t, locale, cohortSeries }: Props) {
+  // Z0-P23 (Q42): trajectory ticks and tooltip values in the locale's number format (decimal comma in German).
+  const fmtNumber = chartNumberFormat(locale, 2);
   // M12 (v1.18 WS-A): theme-aware Recharts tokens (axes/grid/legend/tooltip restyle
   // for dark mode). useThemeSafe is test-safe (light default outside ThemeProvider).
   const { effectiveTheme } = useThemeSafe();
@@ -295,17 +298,25 @@ export default function ResponderView({ cases, thresholdLetters, t, locale: _loc
               dataKey="x"
               type="number"
               tickCount={5}
+              tickFormatter={fmtNumber}
               tick={{ fontSize: 11, fill: ct.axisTick }}
               stroke={ct.axisTick}
               label={{ value: 'Tage', position: 'insideBottom', offset: -4, fontSize: 11, fill: ct.axisLabel }}
             />
             <YAxis
               tickCount={5}
+              tickFormatter={fmtNumber}
               tick={{ fontSize: 11, fill: ct.axisTick }}
               stroke={ct.axisTick}
               label={{ value: t('metricsPreviewColDeltaVisusLetters'), angle: -90, position: 'insideLeft', fontSize: 11, fill: ct.axisLabel }}
             />
-            <Tooltip contentStyle={{ backgroundColor: ct.tooltipBg, border: `1px solid ${ct.tooltipBorder}`, borderRadius: 6, color: ct.tooltipText }} itemStyle={{ color: ct.tooltipText }} labelStyle={{ color: ct.tooltipText }} />
+            <Tooltip
+              contentStyle={{ backgroundColor: ct.tooltipBg, border: `1px solid ${ct.tooltipBorder}`, borderRadius: 6, color: ct.tooltipText }}
+              itemStyle={{ color: ct.tooltipText }}
+              labelStyle={{ color: ct.tooltipText }}
+              formatter={(v) => (typeof v === 'number' ? fmtNumber(v) : v)}
+              labelFormatter={(l) => (typeof l === 'number' ? fmtNumber(l) : l)}
+            />
             <Legend wrapperStyle={{ fontSize: 12, color: ct.legend }} />
             <Line type="monotone" dataKey="responder" stroke={BUCKET_COLORS.responder} strokeWidth={3} dot={false} name={t('metricsResponderBucketResponder')} connectNulls />
             <Line type="monotone" dataKey="partial" stroke={BUCKET_COLORS.partial} strokeWidth={3} dot={false} name={t('metricsResponderBucketPartial')} connectNulls />

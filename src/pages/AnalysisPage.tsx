@@ -41,6 +41,7 @@ import {
   AXIS_TICK_FONT_SIZE,
   CHART_CARD_CLASS,
   CHART_TITLE_CLASS,
+  chartNumberFormat,
   cohortColor,
   CRT_COLOR,
   VISUS_COLOR,
@@ -412,6 +413,10 @@ export default function AnalysisPage() {
 
   // Z0-P23: one tooltip box for every chart — heading = x-axis value, rows "<Bezeichnung>: <Wert>".
   const axisTick = { fontSize: AXIS_TICK_FONT_SIZE, fill: ct.axisTick };
+  // Z0-P23 (Q42): tooltip values and numeric tick labels in the locale's number format (decimal comma in German).
+  const fmtTick = chartNumberFormat(locale, 2);
+  const fmtVisus2 = chartNumberFormat(locale, 2, 2);
+  const fmtVisus3 = chartNumberFormat(locale, 3, 3);
   const categoryTooltip = (headingPrefix = '', fmt: (v: number) => string = (v) => String(v)) =>
     function CategoryTooltip(props: TooltipProps) {
       if (!props.active || !props.payload?.length) return null;
@@ -432,7 +437,7 @@ export default function AnalysisPage() {
     return (
       <ChartTooltipBox
         heading={`${t('age')}: ${pt.age} J.`}
-        rows={[{ key: 'v', label: t('visus'), value: pt.visus.toFixed(2) }]}
+        rows={[{ key: 'v', label: t('visus'), value: fmtVisus2(pt.visus) }]}
       />
     );
   };
@@ -608,7 +613,7 @@ export default function AnalysisPage() {
                   <BarChart data={compareCenter}>
                     <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
                     <XAxis dataKey="name" tick={axisTick} stroke={ct.axisTick} />
-                    <YAxis tick={axisTick} stroke={ct.axisTick} />
+                    <YAxis tickFormatter={fmtTick} tick={axisTick} stroke={ct.axisTick} />
                     <Tooltip content={categoryTooltip()} cursor={{ fill: ct.grid, fillOpacity: 0.3 }} />
                     {centeredCrossCohorts.map((c) => (
                       <Bar key={c.cohortId} dataKey={c.cohortId} name={c.cohortName} fill={c.color} radius={[4, 4, 0, 0]} />
@@ -660,8 +665,8 @@ export default function AnalysisPage() {
                   <LineChart data={compareVisusTrend}>
                     <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
                     <XAxis dataKey="quarter" tick={axisTick} stroke={ct.axisTick} />
-                    <YAxis domain={[0, 1]} tick={axisTick} stroke={ct.axisTick} />
-                    <Tooltip content={categoryTooltip(`${t('quarter')}: `, (v) => v.toFixed(3))} />
+                    <YAxis tickFormatter={fmtTick} domain={[0, 1]} tick={axisTick} stroke={ct.axisTick} />
+                    <Tooltip content={categoryTooltip(`${t('quarter')}: `, fmtVisus3)} />
                     <Legend wrapperStyle={{ color: ct.legend, fontSize: AXIS_TICK_FONT_SIZE }} />
                     {centeredCrossCohorts.map((c) => (
                       <Line key={c.cohortId} type="monotone" dataKey={c.cohortId} name={c.cohortName} stroke={c.color} strokeWidth={2} dot={{ r: 3 }} connectNulls />
@@ -677,7 +682,7 @@ export default function AnalysisPage() {
                   <BarChart data={compareCrt}>
                     <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
                     <XAxis dataKey="range" tick={axisTick} stroke={ct.axisTick} />
-                    <YAxis tick={axisTick} stroke={ct.axisTick} />
+                    <YAxis tickFormatter={fmtTick} tick={axisTick} stroke={ct.axisTick} />
                     <Tooltip content={categoryTooltip()} cursor={{ fill: ct.grid, fillOpacity: 0.3 }} />
                     {centeredCrossCohorts.map((c) => (
                       <Bar key={c.cohortId} dataKey={c.cohortId} name={c.cohortName} fill={c.color} radius={[4, 4, 0, 0]} />
@@ -692,8 +697,8 @@ export default function AnalysisPage() {
                 <ResponsiveContainer width="100%" height={300}>
                   <ScatterChart>
                     <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
-                    <XAxis type="number" dataKey="age" name={t('age')} unit=" J." domain={['dataMin', 'dataMax']} tick={axisTick} stroke={ct.axisTick} />
-                    <YAxis type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} tick={axisTick} stroke={ct.axisTick} />
+                    <XAxis type="number" dataKey="age" name={t('age')} unit=" J." tickFormatter={fmtTick} domain={['dataMin', 'dataMax']} tick={axisTick} stroke={ct.axisTick} />
+                    <YAxis tickFormatter={fmtTick} type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} tick={axisTick} stroke={ct.axisTick} />
                     <Tooltip cursor={{ strokeDasharray: '3 3' }} content={ageVisusTooltip} />
                     <Legend wrapperStyle={{ color: ct.legend, fontSize: AXIS_TICK_FONT_SIZE }} />
                     {centeredCrossCohorts.map((cohort) => (
@@ -714,7 +719,7 @@ export default function AnalysisPage() {
                 <BarChart data={centerDist}>
                   <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
                   <XAxis dataKey="name" tick={axisTick} stroke={ct.axisTick} />
-                  <YAxis tick={axisTick} stroke={ct.axisTick} />
+                  <YAxis tickFormatter={fmtTick} tick={axisTick} stroke={ct.axisTick} />
                   <Tooltip content={categoryTooltip()} cursor={{ fill: ct.grid, fillOpacity: 0.3 }} />
                   <Bar dataKey="count" fill="#3b82f6" name={t('cases')} radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -779,8 +784,8 @@ export default function AnalysisPage() {
                 <LineChart data={visusTrend}>
                   <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
                   <XAxis dataKey="quarter" tick={axisTick} stroke={ct.axisTick} />
-                  <YAxis domain={[0, 1]} tick={axisTick} stroke={ct.axisTick} />
-                  <Tooltip content={categoryTooltip(`${t('quarter')}: `, (v) => v.toFixed(3))} />
+                  <YAxis tickFormatter={fmtTick} domain={[0, 1]} tick={axisTick} stroke={ct.axisTick} />
+                  <Tooltip content={categoryTooltip(`${t('quarter')}: `, fmtVisus3)} />
                   <Legend wrapperStyle={{ color: ct.legend, fontSize: AXIS_TICK_FONT_SIZE }} />
                   <Line
                     type="monotone"
@@ -802,7 +807,7 @@ export default function AnalysisPage() {
                 <BarChart data={crtDistribution}>
                   <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
                   <XAxis dataKey="range" tick={axisTick} stroke={ct.axisTick} />
-                  <YAxis tick={axisTick} stroke={ct.axisTick} />
+                  <YAxis tickFormatter={fmtTick} tick={axisTick} stroke={ct.axisTick} />
                   <Tooltip content={categoryTooltip()} cursor={{ fill: ct.grid, fillOpacity: 0.3 }} />
                   <Bar dataKey="count" className="series-crt" fill={CRT_COLOR} name={t('measurements')} radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -815,8 +820,8 @@ export default function AnalysisPage() {
               <ResponsiveContainer width="100%" height={280}>
                 <ScatterChart>
                   <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
-                  <XAxis type="number" dataKey="age" name={t('age')} unit=" J." domain={['dataMin', 'dataMax']} tick={axisTick} stroke={ct.axisTick} />
-                  <YAxis type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} tick={axisTick} stroke={ct.axisTick} />
+                  <XAxis type="number" dataKey="age" name={t('age')} unit=" J." tickFormatter={fmtTick} domain={['dataMin', 'dataMax']} tick={axisTick} stroke={ct.axisTick} />
+                  <YAxis tickFormatter={fmtTick} type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} tick={axisTick} stroke={ct.axisTick} />
                   <Tooltip cursor={{ strokeDasharray: '3 3' }} content={ageVisusTooltip} />
                   <Scatter data={ageVisusScatter} className="series-visus" fill={VISUS_COLOR} name={displayCohortName ?? t('overlayCohortAllPatients')} />
                   {medianVisus !== null && (

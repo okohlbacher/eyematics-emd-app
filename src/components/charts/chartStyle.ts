@@ -71,3 +71,43 @@ export function toLogmarRow<T extends { visus?: number; visusMedian?: number; vi
 /** Cohort median colours of the case view (lighter tones of the quantity colours); also the case-view panel swatch. */
 export const VISUS_MEDIAN_COLOR = '#6ee7b7';
 export const CRT_MEDIAN_COLOR = '#c4b5fd';
+
+/**
+ * Z0-P23 (Q42): the one number format of chart tooltips and axis tick labels — decimal comma in the German UI, decimal
+ * point in English; no digit grouping (so "1000" never reads as "1.000" next to a decimal comma).
+ */
+export function chartNumberFormat(locale: string, maxFractionDigits = 2, minFractionDigits = 0): (v: number) => string {
+  const fmt = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: minFractionDigits,
+    maximumFractionDigits: maxFractionDigits,
+    useGrouping: false,
+  });
+  return (v: number) => fmt.format(v);
+}
+
+/**
+ * Z0-P23 (Q41): rounded tick values inside [lo, hi] — one step of 1, 2, 2.5 or 5 × 10^n chosen for about `target`
+ * ticks (at least `minStep`; with minStep ≥ 1 a whole-number step), every tick an integer multiple of that step. The
+ * domain itself is not changed.
+ */
+export function niceTicks(lo: number, hi: number, target = 5, minStep = 0): number[] {
+  if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi <= lo) return Number.isFinite(lo) ? [lo] : [];
+  const raw = Math.max((hi - lo) / Math.max(target - 1, 1), minStep, Number.EPSILON);
+  const exp = Math.floor(Math.log10(raw));
+  const base = 10 ** exp;
+  // An axis with minStep ≥ 1 counts whole units: a 2.5 step would put whole-number labels at fractional positions.
+  const mant = [1, 2, 2.5, 5, 10].find((m) => m * base >= raw - 1e-12 && (minStep < 1 || Number.isInteger(m * base))) ?? 10;
+  const step = Math.max(mant * base, minStep);
+  const decimals = Math.max(0, -Math.floor(Math.log10(step)) + 1);
+  const round = (v: number) => Number(v.toFixed(decimals));
+  const ticks: number[] = [];
+  for (let k = Math.ceil(lo / step - 1e-9); k * step <= hi + step * 1e-9; k++) ticks.push(round(k * step) + 0);
+  return ticks;
+}
+
+/**
+ * Z0-P23 (Q42): decimal numbers inside a fixed label (e.g. the bin label "0.2–0.4") in the locale's decimal separator.
+ */
+export function localizeDecimals(text: string, locale: string): string {
+  return locale === 'de' ? text.replace(/(\d)\.(\d)/g, '$1,$2') : text;
+}

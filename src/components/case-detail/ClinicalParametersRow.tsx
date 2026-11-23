@@ -18,6 +18,7 @@ import type { IopDataPoint } from '../../hooks/useCaseData';
 import type { TranslationKey } from '../../i18n/translations';
 import type { Condition, Observation } from '../../types/fhir';
 import { translateClinical } from '../../utils/clinicalTerms';
+import { chartNumberFormat } from '../charts/chartStyle';
 import { InfoTooltip } from '../primitives';
 import { caseChartColors, IQR_FILL_OPACITY } from './chartTheme';
 
@@ -55,6 +56,8 @@ export default function ClinicalParametersRow({
   const { effectiveTheme } = useThemeSafe();
   const isDark = effectiveTheme === 'dark';
   const colors = caseChartColors(isDark);
+  // Z0-P23 (Q42): relative-month ticks and tooltip heading in the locale's number format (decimal comma in German).
+  const fmtTick = chartNumberFormat(locale, 2);
 
   // K3b: show the IOP cohort overlay only when the toggle is on AND the data
   // actually carries cohort reference fields for at least one row.
@@ -135,8 +138,8 @@ export default function ClinicalParametersRow({
     for (const e of props.payload) {
       const key = String(e.dataKey ?? '');
       if (typeof e.value !== 'number') continue;
-      if (key === 'iop') rows.push({ key, name: t('iop'), color: e.color, text: `${e.value} mmHg` });
-      else if (key === 'iopMedian') rows.push({ key, name: t('cohortReferenceMedianIop'), color: e.color, text: `${e.value} mmHg` });
+      if (key === 'iop') rows.push({ key, name: t('iop'), color: e.color, text: `${fmtTick(e.value)} mmHg` });
+      else if (key === 'iopMedian') rows.push({ key, name: t('cohortReferenceMedianIop'), color: e.color, text: `${fmtTick(e.value)} mmHg` });
     }
     if (rows.length === 0) return null;
     // M7: the label adapts to the active axis — "X Monate seit Erstvisite" on the
@@ -144,7 +147,7 @@ export default function ClinicalParametersRow({
     const ref = props.payload.find((e) => e.payload)?.payload;
     const label = useIopRelativeAxis
       ? ref?.relMonths != null
-        ? `${ref.relMonths} ${t('relativeMonthsAxisLabel')}`
+        ? `${fmtTick(ref.relMonths)} ${t('relativeMonthsAxisLabel')}`
         : ''
       : ref?.date
         ? new Date(ref.date).toLocaleDateString(dateFmt)
@@ -203,7 +206,7 @@ export default function ClinicalParametersRow({
                      ticks; the formatter only ever sees a number. */
                   ticks={chartData.map((d) => d.relMonths)}
                   allowDuplicatedCategory={false}
-                  tickFormatter={(m: number) => String(m)}
+                  tickFormatter={fmtTick}
                   tick={{ fontSize: 9, fill: colors.axisTick }}
                   stroke={colors.grid}
                   label={{ value: t('relativeMonthsAxisLabel'), position: 'insideBottom', offset: -2, fontSize: 9, fill: colors.axisLabel }}

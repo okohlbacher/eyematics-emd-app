@@ -502,3 +502,224 @@ test('[Z0-P23] Einheitliches Erscheinungsbild der Diagramme @visual', async ({ p
   expect(trajectoriesCrt).toBe(caseCrt);
   expect(aggregateCrt).toBe(caseCrt);
 });
+
+// --- Scenarios added by NF on 2026-11-23 (Q41, Q42; release pre-check deviations D1–D4) ---------------------------
+// Readings:
+// - Tick labels are the rendered Recharts axis tick texts (Recharts 3 renders them in the label layer `.recharts-xAxis-tick-labels` / `.recharts-yAxis-tick-labels`,
+//   `.recharts-cartesian-axis-tick-value`) of every Verläufe chart card (`[data-testid^="outcomes-panel-"][role="img"]`).
+//   German labels are parsed with the decimal comma; a label that is not a plain number (e.g. "990.3865546218487" in the
+//   German UI) does not parse and fails.
+// - "a multiple of 1, 2, 2.5 or 5 times a power of ten" = the ticks of one axis lie on one step s ∈ {1, 2, 2.5, 5}·10^n:
+//   consecutive ticks differ by s and every tick is an integer multiple of s (D2 "98,59 / 51,41 / -48,59" fails).
+// - "drawn outside the plot area" (@visual proxy): the plot area is the chart's own Recharts clip rectangle
+//   (`clipPath[id^="recharts"][id$="-clip"] rect`). Every curve, point and band (per-patient layer, IQR areas, median
+//   lines) has its geometry box, cut by the clip rectangles of its own or ancestor `clip-path`, inside the plot area.
+// - "every decimal number in the tooltips and axis tick labels" = every token "<digits><. or ,><digits>" in the visible
+//   tooltip rows and headings and the axis tick labels of the hovered chart. The case view's calendar x-axis ticks and
+//   its date heading are dates, not decimal numbers, and are left out.
+
+function chartPanels(page: Page): Locator {
+  return trajectoriesPanel(page).locator('[data-testid^="outcomes-panel-"][role="img"]');
+}
+
+async function openSettings(page: Page): Promise<Locator> {
+  await page.getByRole('button', { name: 'Diagramm-Anzeige', exact: true }).click();
+  return page.getByRole('complementary', { name: 'Einstellungen', exact: true });
+}
+
+/** Parse a German tick label ("-48,59", "0", "120"); NaN if it is not a plain number with a decimal comma. */
+function parseGerman(label: string): number {
+  const s = label.trim().replace('−', '-');
+  if (!/^-?\d+(,\d+)?$/.test(s)) return Number.NaN;
+  return Number(s.replace(',', '.'));
+}
+
+function decimalPlaces(label: string): number {
+  const m = /,(\d+)$/.exec(label.trim());
+  return m ? m[1].length : 0;
+}
+
+function isNiceStep(step: number): boolean {
+  const exp = Math.floor(Math.log10(step));
+  const mant = step / 10 ** exp;
+  return [1, 2, 2.5, 5, 10].some((m) => Math.abs(mant - m) < 1e-6);
+}
+
+async function tickLabels(card: Locator, axis: 'x' | 'y'): Promise<string[]> {
+  const ticks = card.locator(`.recharts-${axis}Axis-tick-labels .recharts-cartesian-axis-tick-value`);
+  await expect(ticks.first()).toBeVisible();
+  return (await ticks.allTextContents()).map((s) => s.trim()).filter((s) => s !== '');
+}
+
+async function expectRoundedTicks(page: Page, metric: string): Promise<void> {
+  const panels = chartPanels(page);
+  await expect(panels).toHaveCount(3, { timeout: 30_000 });
+  for (const card of await panels.all()) {
+    const id = await card.getAttribute('data-testid');
+    const xs = await tickLabels(card, 'x');
+    for (const l of xs) {
+      expect(/^-?\d+$/.test(l.replace('−', '-')), `${metric} ${id}: x tick "${l}" is a whole number`).toBe(true);
+    }
+    const ys = await tickLabels(card, 'y');
+    expect(ys.length, `${metric} ${id}: y ticks`).toBeGreaterThan(1);
+    for (const l of ys) {
+      expect(Number.isNaN(parseGerman(l)), `${metric} ${id}: y tick "${l}" is a number`).toBe(false);
+      expect(decimalPlaces(l), `${metric} ${id}: y tick "${l}" has at most 2 decimal places`).toBeLessThanOrEqual(2);
+    }
+    const vals = ys.map(parseGerman).sort((a, b) => a - b);
+    const step = vals[1] - vals[0];
+    expect(isNiceStep(step), `${metric} ${id}: y step ${step} (${ys.join(' / ')}) is 1, 2, 2.5 or 5 × 10^n`).toBe(true);
+    for (let i = 1; i < vals.length; i++) {
+      expect(Math.abs(vals[i] - vals[i - 1] - step), `${metric} ${id}: equal y steps (${ys.join(' / ')})`).toBeLessThan(step * 1e-6);
+    }
+    for (const v of vals) {
+      const k = v / step;
+      expect(Math.abs(k - Math.round(k)), `${metric} ${id}: y tick ${v} is a multiple of ${step}`).toBeLessThan(1e-6);
+    }
+  }
+}
+
+test('[Z0-P23] Achsenbeschriftungen der Verläufe zeigen gerundete Werte', async ({ page }) => {
+  await openTab(page, 'Verläufe');
+  await openMetric(page, 'crt');
+  const settings = await openSettings(page);
+  const delta = settings.getByRole('radio', { name: 'Δ (µm zur Baseline)', exact: true });
+  await delta.check();
+  await expect(delta).toBeChecked();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('outcomes-panel-ydomain').first()).toHaveAttribute('data-ymetric', 'delta');
+  await expectRoundedTicks(page, 'CRT');
+
+  await openMetric(page, 'visus');
+  await expect(page.getByTestId('outcomes-panel-ydomain').first()).toHaveAttribute('data-metric', 'visus');
+  await expectRoundedTicks(page, 'Visus');
+});
+
+test('[Z0-P23] Kurven bleiben innerhalb der Diagrammfläche @visual', async ({ page }) => {
+  await openTab(page, 'Verläufe');
+  await openMetric(page, 'crt');
+  const settings = await openSettings(page);
+  const perPatient = settings.getByRole('checkbox', { name: 'Individuelle Kurven', exact: true });
+  if (!(await perPatient.isChecked())) await perPatient.check();
+  await expect(perPatient).toBeChecked();
+  await page.keyboard.press('Escape');
+  const panels = chartPanels(page);
+  await expect(panels).toHaveCount(3, { timeout: 30_000 });
+  await expect(panels.first().locator('[data-perpatient-layer] path').first()).toBeAttached({ timeout: 30_000 });
+
+  for (const card of await panels.all()) {
+    const id = await card.getAttribute('data-testid');
+    const outside = await card.evaluate((root) => {
+      type Box = { x0: number; y0: number; x1: number; y1: number };
+      const rectBox = (r: Element): Box => {
+        const n = (a: string) => Number(r.getAttribute(a));
+        return { x0: n('x'), y0: n('y'), x1: n('x') + n('width'), y1: n('y') + n('height') };
+      };
+      const plotRect = root.querySelector('svg.recharts-surface clipPath[id^="recharts"][id$="-clip"] rect');
+      if (!plotRect) return ['no plot-area clip rectangle'];
+      const plot = rectBox(plotRect);
+      const svg = plotRect.ownerSVGElement!;
+      const items = svg.querySelectorAll<SVGGraphicsElement>(
+        '[data-perpatient-layer] path, [data-perpatient-layer] circle, .recharts-area path, .recharts-line path',
+      );
+      const bad: string[] = [];
+      for (const el of items) {
+        const b = el.getBBox();
+        if (b.width === 0 && b.height === 0) continue;
+        let box: Box = { x0: b.x, y0: b.y, x1: b.x + b.width, y1: b.y + b.height };
+        for (let a: Element | null = el; a && a !== svg; a = a.parentElement) {
+          const cp = a.getAttribute('clip-path') ?? (a as SVGElement).style?.clipPath ?? '';
+          const m = /url\(["']?#([^"')]+)["']?\)/.exec(cp);
+          const r = m ? svg.querySelector(`clipPath[id="${m[1]}"] rect`) : null;
+          if (!r) continue;
+          const c = rectBox(r);
+          box = { x0: Math.max(box.x0, c.x0), y0: Math.max(box.y0, c.y0), x1: Math.min(box.x1, c.x1), y1: Math.min(box.y1, c.y1) };
+        }
+        if (box.x1 <= box.x0 || box.y1 <= box.y0) continue;
+        const tol = 1;
+        if (box.x0 < plot.x0 - tol || box.y0 < plot.y0 - tol || box.x1 > plot.x1 + tol || box.y1 > plot.y1 + tol) {
+          bad.push(`${el.tagName}.${el.getAttribute('class') ?? ''} [${box.x0.toFixed(0)},${box.y0.toFixed(0)}–${box.x1.toFixed(0)},${box.y1.toFixed(0)}]`);
+        }
+      }
+      return bad.length ? [`plot [${plot.x0},${plot.y0}–${plot.x1},${plot.y1}]`, ...bad.slice(0, 5), `(${bad.length} elements)`] : [];
+    });
+    expect(outside, `${id}: curves, points and bands outside the plot area`).toEqual([]);
+  }
+});
+
+/** Texts of the visible tooltip (heading unless `skipHeading`, rows) and the chart's axis tick labels. */
+async function numberTexts(page: Page, chart: Locator, opts: { skipHeading?: boolean; skipXTicks?: boolean } = {}): Promise<string[]> {
+  const tip = page.getByTestId('chart-tooltip').filter({ visible: true });
+  await expect(tip).toHaveCount(1);
+  const texts = await tip.locator('[data-tooltip-row]').allInnerTexts();
+  if (!opts.skipHeading) texts.push(...(await tip.locator('[data-tooltip-heading]').allInnerTexts()));
+  const axes = opts.skipXTicks ? ['.recharts-yAxis-tick-labels'] : ['.recharts-xAxis-tick-labels', '.recharts-yAxis-tick-labels'];
+  for (const axis of axes) {
+    texts.push(...(await chart.locator(`${axis} .recharts-cartesian-axis-tick-value`).allTextContents()));
+  }
+  return texts;
+}
+
+function expectDecimalSeparator(texts: string[], sep: ',' | '.', where: string): void {
+  const decimals = texts.flatMap((s) => s.match(/\d+[.,]\d+/g) ?? []);
+  expect(decimals.length, `${where}: decimal numbers found in ${JSON.stringify(texts)}`).toBeGreaterThan(0);
+  for (const d of decimals) {
+    expect(d.includes(sep), `${where}: "${d}" uses the decimal ${sep === ',' ? 'comma' : 'point'}`).toBe(true);
+  }
+}
+
+async function switchLanguage(page: Page, to: 'English' | 'Deutsch'): Promise<void> {
+  await page.mouse.move(0, 0);
+  await page.getByRole('button', { name: to, exact: true }).click();
+  await expect(page.getByRole('button', { name: to === 'English' ? 'Deutsch' : 'English', exact: true })).toBeVisible();
+}
+
+test('[Z0-P23] Einheitliches Zahlenformat in Aggregiert, Verläufe und Einzelfallansicht', async ({ page }) => {
+  await expect(page.getByRole('button', { name: 'English', exact: true })).toBeVisible(); // UI language Deutsch
+
+  const hoverAgeVisus = async () => {
+    const chart = aggregatePanel(page).getByTestId('age-visus-chart');
+    const point = chart.locator('.recharts-scatter-symbol').first();
+    await expect(point).toBeVisible();
+    await page.mouse.move(0, 0);
+    await point.hover({ force: true });
+    return chart;
+  };
+  await openTab(page, 'Aggregiert');
+  let chart = await hoverAgeVisus();
+  expectDecimalSeparator(await numberTexts(page, chart), ',', 'Aggregiert (Deutsch)');
+  await switchLanguage(page, 'English');
+  chart = await hoverAgeVisus();
+  expectDecimalSeparator(await numberTexts(page, chart), '.', 'Aggregiert (English)');
+  await switchLanguage(page, 'Deutsch');
+
+  await openTab(page, 'Verläufe');
+  await openMetric(page, 'visus');
+  const od = trajectoriesPanel(page).getByTestId('outcomes-panel-od');
+  await page.mouse.move(0, 0);
+  await hoverPlotCentre(od);
+  expectDecimalSeparator(await numberTexts(page, od), ',', 'Verläufe (Deutsch)');
+  await switchLanguage(page, 'English');
+  await hoverPlotCentre(od);
+  expectDecimalSeparator(await numberTexts(page, od), '.', 'Verläufe (English)');
+  await switchLanguage(page, 'Deutsch');
+
+  await openCaseOfTestkohorte(page);
+  const caseChart = page.getByTestId('visus-crt-chart');
+  const hoverVisusPoint = async () => {
+    const p = caseChart.locator('circle[r="4"][fill="#10b981"]').first();
+    await expect(p).toBeVisible();
+    await page.mouse.move(0, 0);
+    await p.hover({ force: true });
+  };
+  await hoverVisusPoint();
+  expectDecimalSeparator(
+    await numberTexts(page, caseChart, { skipHeading: true, skipXTicks: true }), ',', 'Einzelfallansicht (Deutsch)',
+  );
+  await switchLanguage(page, 'English');
+  await hoverVisusPoint();
+  expectDecimalSeparator(
+    await numberTexts(page, caseChart, { skipHeading: true, skipXTicks: true }), '.', 'Einzelfallansicht (English)',
+  );
+  await switchLanguage(page, 'Deutsch');
+});

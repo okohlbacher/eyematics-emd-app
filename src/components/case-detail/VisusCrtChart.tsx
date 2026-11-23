@@ -22,6 +22,7 @@ import {
   AXIS_TICK_FONT_SIZE,
   CHART_CARD_CLASS,
   CHART_TITLE_CLASS,
+  chartNumberFormat,
   CRT_COLOR,
   CRT_MEDIAN_COLOR,
   decimalToLogmar,
@@ -138,9 +139,12 @@ export default function VisusCrtChart({
   // cohort MEDIAN, but NEVER the raw IQR band ([p25,p75]) values nor the
   // interpolation series. Content + format are identical on both axes; only the
   // label adapts (calendar date vs "X Monate seit Erstvisite").
-  const fmtVisus = (v: number) => v.toFixed(2);
+  // Z0-P23 (Q42): tooltip values and tick labels in the locale's number format (decimal comma in German).
+  const fmtVisus = chartNumberFormat(locale, 2, 2);
+  const fmtTick = chartNumberFormat(locale, 2);
   const visusLabel = t('outcomesYAxisVisusAbsolute');
-  const fmtCrt = (v: number) => `${v.toFixed(0)} µm`;
+  const fmtCrtValue = chartNumberFormat(locale, 0);
+  const fmtCrt = (v: number) => `${fmtCrtValue(v)} µm`;
   const renderTooltip = (props: {
     active?: boolean;
     label?: unknown;
@@ -164,7 +168,7 @@ export default function VisusCrtChart({
     const rawDate = ref?.date ?? '';
     const label = useRelativeAxis
       ? ref != null
-        ? `${ref.relMonths} ${t('relativeMonthsAxisLabel')}`
+        ? `${fmtTick(ref.relMonths)} ${t('relativeMonthsAxisLabel')}`
         : ''
       : rawDate
         ? new Date(rawDate).toLocaleDateString(dateFmt)
@@ -258,7 +262,7 @@ export default function VisusCrtChart({
               dataKey="relMonths"
               type="number"
               domain={['dataMin', 'dataMax']}
-              tickFormatter={(m: number) => String(m)}
+              tickFormatter={fmtTick}
               tick={{ fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisTick }}
               stroke={colors.grid}
               label={{ value: t('relativeMonthsAxisLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: colors.axisLabel }}
@@ -282,6 +286,7 @@ export default function VisusCrtChart({
             ]}
             tickCount={5}
             allowDecimals
+            tickFormatter={fmtTick}
             tick={{ fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisTick }}
             stroke={colors.grid}
             label={{ value: visusLabel, angle: -90, position: 'insideLeft', fontSize: AXIS_TICK_FONT_SIZE, fill: VISUS_COLOR, style: { textAnchor: 'middle' } }}
@@ -291,6 +296,7 @@ export default function VisusCrtChart({
             orientation="right"
             tickCount={5}
             allowDecimals={false}
+            tickFormatter={fmtTick}
             tick={{ fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisTick }}
             stroke={colors.grid}
             label={{ value: t('outcomesYAxisCrtAbsolute'), angle: -90, position: 'insideRight', fontSize: AXIS_TICK_FONT_SIZE, fill: CRT_COLOR, style: { textAnchor: 'middle' } }}

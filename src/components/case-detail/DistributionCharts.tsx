@@ -18,6 +18,7 @@ import {
 import { useThemeSafe } from '../../context/ThemeContext';
 import type { TranslationKey } from '../../i18n/translations';
 import type { ComparableDistributionBin } from '../../utils/distributionBins';
+import { chartNumberFormat, localizeDecimals } from '../charts/chartStyle';
 import { InfoTooltip } from '../primitives';
 import { caseChartColors } from './chartTheme';
 
@@ -45,6 +46,8 @@ export interface DistributionChartsProps {
   /** J3d: gate all cohort overlays on the same toggle as the trajectory chart. */
   showCohortReference?: boolean;
   t: (key: TranslationKey) => string;
+  /** Z0-P23 (Q42): number format of the scatter's ticks and tooltip (decimal comma in German). */
+  locale?: string;
 }
 
 export default function DistributionCharts({
@@ -54,7 +57,12 @@ export default function DistributionCharts({
   cohortVisusCrtScatter = [],
   showCohortReference = false,
   t,
+  locale = 'de',
 }: DistributionChartsProps) {
+  const fmtTick = chartNumberFormat(locale, 2);
+  const fmtVisus = chartNumberFormat(locale, 2, 2);
+  const fmtPct = chartNumberFormat(locale, 1);
+  const binLabel = (range: string) => localizeDecimals(range, locale);
   // L11b: theme-aware chart colours.
   const { effectiveTheme } = useThemeSafe();
   const isDark = effectiveTheme === 'dark';
@@ -79,12 +87,12 @@ export default function DistributionCharts({
       const e = props.payload.find((p) => String(p.dataKey ?? '') === 'count');
       if (!e || typeof e.value !== 'number') return null;
       const pct = patientTotal > 0 ? Math.round((e.value / patientTotal) * 1000) / 10 : 0;
-      const label = props.label != null ? String(props.label) : '';
+      const label = props.label != null ? binLabel(String(props.label)) : '';
       return (
         <div className="rounded-lg shadow-lg px-3 py-2 text-xs border" style={{ background: colors.tooltipBg, borderColor: colors.tooltipBorder }}>
           {label && <div className="font-semibold mb-1" style={{ color: colors.tooltipHeading }}>{label}</div>}
           <div style={{ color: colors.tooltipText }}>
-            <span style={{ color: e.color }}>{t('measurements')}</span>: {e.value} ({pct}%)
+            <span style={{ color: e.color }}>{t('measurements')}</span>: {e.value} ({fmtPct(pct)}%)
           </div>
         </div>
       );
@@ -129,7 +137,7 @@ export default function DistributionCharts({
         </div>
         <div className="flex" style={{ paddingLeft: 30 }}>
           {bins.map((bin) => (
-            <span key={bin.range} className="flex-1 text-center" style={{ fontSize: 8, color: colors.axisTick }}>{bin.range}</span>
+            <span key={bin.range} className="flex-1 text-center" style={{ fontSize: 8, color: colors.axisTick }}>{binLabel(bin.range)}</span>
           ))}
         </div>
         <div className="flex justify-center gap-4 mt-2" style={{ fontSize: 10, color: colors.legend }}>
@@ -164,7 +172,7 @@ export default function DistributionCharts({
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={bins}>
             <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-            <XAxis dataKey="range" tick={{ fontSize: 9, fill: colors.axisTick }} stroke={colors.grid} />
+            <XAxis dataKey="range" tickFormatter={binLabel} tick={{ fontSize: 9, fill: colors.axisTick }} stroke={colors.grid} />
             <YAxis allowDecimals={false} tickCount={5} tick={{ fontSize: 10, fill: colors.axisTick }} stroke={colors.grid} label={{ value: t('frequency'), angle: -90, position: 'insideLeft', fontSize: 10, fill: colors.axisLabel }} />
             <Tooltip content={makeCountTooltip(patientTotal)} />
             {critical && <ReferenceLine x={critical.range} stroke="#ef4444" strokeDasharray="3 3" />}
@@ -188,12 +196,12 @@ export default function DistributionCharts({
           className="pointer-events-none rounded-lg shadow-lg px-3 py-2 text-xs border"
           style={{ position: 'fixed', left: distTip.x + 12, top: distTip.y + 12, zIndex: 60, background: colors.tooltipBg, borderColor: colors.tooltipBorder }}
         >
-          <div className="font-semibold mb-1" style={{ color: colors.tooltipHeading }}>{distTip.bin.range}</div>
+          <div className="font-semibold mb-1" style={{ color: colors.tooltipHeading }}>{binLabel(distTip.bin.range)}</div>
           <div style={{ color: colors.tooltipText }}>
-            <span style={{ color: distTip.color }}>{t('distributionPatientPct')}</span>: {distTip.bin.patientPct}% ({distTip.bin.count} {t('distributionMeasurementsUnit')})
+            <span style={{ color: distTip.color }}>{t('distributionPatientPct')}</span>: {fmtPct(distTip.bin.patientPct)}% ({distTip.bin.count} {t('distributionMeasurementsUnit')})
           </div>
           <div style={{ color: colors.tooltipText }}>
-            <span style={{ color: COHORT_COLOR }}>{t('distributionCohortMedianPct')}</span>: {distTip.bin.cohortMedianPct}% ({distTip.bin.cohortMedianCount} {t('distributionMeasurementsUnit')})
+            <span style={{ color: COHORT_COLOR }}>{t('distributionCohortMedianPct')}</span>: {fmtPct(distTip.bin.cohortMedianPct)}% ({distTip.bin.cohortMedianCount} {t('distributionMeasurementsUnit')})
           </div>
         </div>,
         document.body,
@@ -210,7 +218,7 @@ export default function DistributionCharts({
           <ResponsiveContainer width="100%" height={180}>
             <ScatterChart>
               <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-              <XAxis dataKey="visus" name="Visus" type="number" domain={[0, 1]} tickCount={5} tick={{ fontSize: 9, fill: colors.axisTick }} stroke={colors.grid} label={{ value: t('scatterVisusAxisLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: colors.axisLabel }} />
+              <XAxis dataKey="visus" name="Visus" type="number" domain={[0, 1]} tickCount={5} tickFormatter={fmtTick} tick={{ fontSize: 9, fill: colors.axisTick }} stroke={colors.grid} label={{ value: t('scatterVisusAxisLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: colors.axisLabel }} />
               <YAxis dataKey="crt" name="CRT" unit=" µm" tickCount={5} tick={{ fontSize: 9, fill: colors.axisTick }} stroke={colors.grid} label={{ value: t('scatterCrtAxisLabel'), angle: -90, position: 'insideLeft', fontSize: 10, fill: colors.axisLabel }} />
               <Tooltip
                 content={({ active, payload }) => {
@@ -219,7 +227,7 @@ export default function DistributionCharts({
                   return (
                     <div className="rounded-lg shadow-lg px-3 py-2 text-xs border" style={{ background: colors.tooltipBg, borderColor: colors.tooltipBorder }}>
                       <p style={{ color: colors.tooltipText }}>{d.date}</p>
-                      <p style={{ color: colors.tooltipHeading }}>Visus: <strong>{d.visus.toFixed(2)}</strong></p>
+                      <p style={{ color: colors.tooltipHeading }}>Visus: <strong>{fmtVisus(d.visus)}</strong></p>
                       <p style={{ color: colors.tooltipHeading }}>CRT: <strong>{d.crt} µm</strong></p>
                     </div>
                   );

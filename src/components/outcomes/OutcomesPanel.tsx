@@ -15,7 +15,7 @@
  * (data-testids per series) and wires hover/click to the same handlers, so unit tests never need an SVG layout.
  */
 import { Info } from 'lucide-react';
-import { memo, type MouseEvent as ReactMouseEvent, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, type MouseEvent as ReactMouseEvent, useCallback, useId, useMemo, useRef, useState } from 'react';
 import {
   Area,
   Brush,
@@ -26,6 +26,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
+  usePlotArea,
   useXAxisInverseScale,
   useXAxisScale,
   useYAxisScale,
@@ -42,7 +43,9 @@ import {
   AXIS_TICK_FONT_SIZE,
   CHART_CARD_CLASS,
   CHART_TITLE_CLASS,
+  chartNumberFormat,
   CRT_COLOR,
+  niceTicks,
   themedCohortColor,
   VISUS_COLOR,
 } from '../charts/chartStyle';
@@ -168,9 +171,11 @@ export default function OutcomesPanel({
   // Z0-P08: unit of the y value in the compare-mode median rows.
   const yUnit = yMetric === 'delta_percent' ? '%' : metric === 'crt' ? 'µm' : 'logMAR';
 
-  const numberFmt = useMemo(() => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }), [locale]);
+  const numberFmt = useMemo(() => new Intl.NumberFormat(locale, { maximumFractionDigits: 2, useGrouping: false }), [locale]);
   const formatX = useCallback((x: number) => `${tooltipXLabel}: ${Math.round(x)}`, [tooltipXLabel]);
   const formatY = useCallback((y: number) => numberFmt.format(y), [numberFmt]);
+  // Z0-P23 (Q41, Q42): x ticks are whole days / treatment counts in the locale's number format.
+  const formatXTick = useMemo(() => chartNumberFormat(locale, 0), [locale]);
 
   const perPatientSeries = useMemo(
     () => (!layers.perPatient || isCrossMode ? [] : perPatientSeriesOf(panel)),
@@ -290,6 +295,9 @@ export default function OutcomesPanel({
     setBrushEpoch((n) => n + 1);
   }
   const xDomain = zoom ?? fullXDomain;
+  // Z0-P23 (Q41): rounded tick values (steps of 1, 2, 2.5 or 5 × 10^n; whole numbers on the x-axis) inside the domain.
+  const xTicks = useMemo(() => niceTicks(xDomain[0], xDomain[1], 6, 1), [xDomain]);
+  const yTicks = useMemo(() => niceTicks(yMin, yMax, 5), [yMin, yMax]);
   // The Brush index range lives in Recharts' chart state (dataStartIndex/dataEndIndex) and survives a remount, so it
   // is passed explicitly: all rows without a zoom, else the rows of the zoom plus the neighbour just outside each edge
   // (the median/IQR stay drawn up to the plot border; a Brush zoom's edges are rows, so its range is exact).
@@ -449,6 +457,8 @@ export default function OutcomesPanel({
                 dataKey="x"
                 domain={xDomain}
                 allowDataOverflow
+                ticks={xTicks}
+                tickFormatter={formatXTick}
                 tick={{ fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisTick }}
                 stroke={colors.grid}
                 label={{ value: xLabel, position: 'insideBottom', offset: -8, fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisLabel }}
@@ -457,6 +467,7 @@ export default function OutcomesPanel({
                 type="number"
                 domain={[yMin, yMax]}
                 allowDataOverflow
+                ticks={yTicks}
                 tick={{ fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisTick }}
                 tickFormatter={(v: number) => formatY(v)}
                 stroke={colors.grid}
@@ -608,12 +619,22 @@ function PatientLayer({ lines, scatter, critical, criticalColor, hover, lineHove
   const xScale = useXAxisScale();
   const yScale = useYAxisScale();
   const xInverse = useXAxisInverseScale();
+  // Z0-P23 (Q41): curves, points and the hover overlay are clipped to the plot area (not over the axes or the Brush).
+  const plotArea = usePlotArea();
+  const clipId = `perpatient-clip-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   if (!xScale || !yScale) return null;
   const sx = (v: number) => xScale(v) as number;
   const sy = (v: number) => yScale(v) as number;
   const emphasised = hover && hover.lineIndex >= 0 ? lines[hover.lineIndex] : null;
   return (
-    <g data-perpatient-layer>
+    <g data-perpatient-layer clipPath={plotArea ? `url(#${clipId})` : undefined}>
+      {plotArea && (
+        <defs>
+          <clipPath id={clipId}>
+            <rect x={plotArea.x} y={plotArea.y} width={plotArea.width} height={plotArea.height} />
+          </clipPath>
+        </defs>
+      )}
       <PatientPaths
         lines={lines}
         scatter={scatter}
