@@ -231,7 +231,7 @@ requirements:
       steps:
         - "Open a case that shows an orange or red warning badge in the header."
         - "Confirm the checkbox \"Kohorten-Referenz anzeigen\" is unchecked and is the rightmost element of the header's top-right cluster, badges to its left."
-        - "Tick the checkbox; inspect Visus/CRT, Veränderung zum Ausgangswert, Visus-/CRT-Verteilung, Visus vs. CRT and IOD."
+        - "Tick the checkbox; inspect Visus/CRT, Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung), Visus-/CRT-Verteilung, Visus vs. CRT and IOD."
         - "Untick it."
       expect: "Step 3: dashed median lines/bands (Visus/CRT, baseline, IOD), grouped % bars (distributions) and grey cloud (scatter) appear. Step 4: all of them vanish and the count histograms return."
     notes: "Statement corrected: PatientHeader renders no 'implausible-data' warning — only the adverse-event and critical-value badges sit left of the toggle. The toggle does NOT govern the always-visible grey 'Visus Ø' / 'CRT Ø' average lines (see UIR-CASE-056)."
@@ -315,7 +315,7 @@ requirements:
       steps:
         - "Open the case page with the overlay off."
         - "Click the body of a Behandlungsverlauf tile that contains an eye or pulse icon."
-        - "Look at \"Visusverlauf und Netzhautdicke (CRT)\" and \"Veränderung zum Ausgangswert\"."
+        - "Look at \"Visusverlauf und Netzhautdicke (CRT)\" and \"Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung)\"."
         - "Click the same tile again."
       expect: "Step 2-3: the tile turns amber and a vertical amber dashed line labelled with the date appears in both charts. Step 4: tile and lines are cleared."
     notes: "The Round5 test only proves the syringe icon does not fire the visit highlight; the second test proves the highlight line is positioned at the date's epoch-ms. No test clicks the tile body and asserts onHighlightDate(date)."
@@ -491,7 +491,7 @@ requirements:
     browser:
       route: "/case/pat-uka-003"
       steps:
-        - "With the overlay off, read every legend entry of Visusverlauf und Netzhautdicke (CRT), Veränderung zum Ausgangswert, the histograms, Visus vs. CRT and IOD."
+        - "With the overlay off, read every legend entry of Visusverlauf und Netzhautdicke (CRT), Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung), the histograms, Visus vs. CRT and IOD."
         - "Tick \"Kohorten-Referenz anzeigen\" and repeat."
       expect: "Every legend entry corresponds to a visible line/band/bar in that chart; with the overlay off no 'Kohorten-…' entries exist."
     notes: "The reverse direction is not fully symmetric: the always-drawn grey 'Visus Ø' / 'CRT Ø' average lines in Visusverlauf und Netzhautdicke (CRT) have no legend entry (in-chart labels only, see UIR-CASE-056)."
@@ -511,7 +511,7 @@ requirements:
       route: "/case/pat-uka-003"
       steps:
         - "Open the case page at desktop width (≥1280 px)."
-        - "For each chart (Visusverlauf und Netzhautdicke (CRT), Veränderung zum Ausgangswert, Visus-Verteilung, CRT-Verteilung, Visus vs. CRT, IOD) check the first, last and intermediate tick labels on both axes."
+        - "For each chart (Visusverlauf und Netzhautdicke (CRT), Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung), Visus-Verteilung, CRT-Verteilung, Visus vs. CRT, IOD) check the first, last and intermediate tick labels on both axes."
         - "Narrow the window to ~1024 px and repeat."
       expect: "Every axis shows labels at both ends and in between. Known risk: the calendar-time X axes (type number, scale time) use Recharts auto ticks and may omit the exact first/last date label on narrow layouts."
     notes: "Y axes were given explicit tickCount in v1.12/v1.13, but the time-based X axes and the baseline chart's Y axis still use defaults; the original A-06 chart was never confirmed by the tester. Treat as needing a browser check each round."
@@ -536,7 +536,7 @@ requirements:
     notes: "/settings requires the admin role. The threshold is read synchronously from the settings cache, so a reload after saving may be needed."
   - id: UIR-CASE-028
     title: "Calendar-date x-axis is linear in time"
-    statement: "With the overlay off, the calendar-date x-axis on the Visus/CRT, \"Veränderung zum Ausgangswert\" and IOD charts is linear in time, with spacing proportional to the real interval between visits."
+    statement: "With the overlay off, the calendar-date x-axis on the Visus/CRT, \"Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung)\" and IOD charts is linear in time, with spacing proportional to the real interval between visits."
     status: implemented
     sources: ["uat: v1.18 M6", "code: src/components/case-detail/VisusCrtChart.tsx:258-266"]
     evidence:
@@ -557,7 +557,7 @@ requirements:
       route: "/case/:caseId"
       steps:
         - "Open a case whose Behandlungsverlauf shows uneven gaps (e.g. 1 month then 6 months) with the overlay off."
-        - "Compare horizontal distances between consecutive points in Visusverlauf und Netzhautdicke (CRT), Veränderung zum Ausgangswert and IOD."
+        - "Compare horizontal distances between consecutive points in Visusverlauf und Netzhautdicke (CRT), Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung) and IOD."
       expect: "The 6-month gap is visibly about six times wider than the 1-month gap; X tick labels are MM/YY dates."
     notes: ""
   - id: UIR-CASE-029
@@ -644,7 +644,7 @@ requirements:
       route: "/case/pat-uka-003"
       steps:
         - "Tick \"Kohorten-Referenz anzeigen\"."
-        - "Read legends of Visusverlauf und Netzhautdicke (CRT), Veränderung zum Ausgangswert and IOD, and hover the ℹ icons."
+        - "Read legends of Visusverlauf und Netzhautdicke (CRT), Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung) and IOD, and hover the ℹ icons."
       expect: "Band entries read 'Kohorten-IQR … (25.–75. Perz.)'; the words 'SD', 'Standardabweichung' or 'σ' do not occur anywhere on the page."
     notes: ""
   - id: UIR-CASE-033
@@ -685,7 +685,7 @@ requirements:
       route: "/case/pat-uka-003"
       steps:
         - "Tick \"Kohorten-Referenz anzeigen\"."
-        - "Hover a visit point in \"Visusverlauf und Netzhautdicke (CRT)\"; then hover the same relative month in \"Veränderung zum Ausgangswert\" and in IOD."
+        - "Hover a visit point in \"Visusverlauf und Netzhautdicke (CRT)\"; then hover the same relative month in \"Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung)\" and in IOD."
       expect: "Tooltips show a header like '7 Monate seit Erstvisite', the patient values and rows 'Kohorten-Median Visus/CRT' (or 'Kohorten-Median Änderung', 'Kohorten-Median IOD'); no comma-separated pairs such as '12,14'."
     notes: "Since Z0-P23 all case-view tooltips use the shared box (heading + '<Bezeichnung>: <Wert>'). In the baseline tooltip both median rows still carry the same name 'Kohorten-Median Änderung' (CaseDetailPage.tsx:399-400) and are distinguished by colour only (observed, not changed)."
   - id: UIR-CASE-035
@@ -706,7 +706,7 @@ requirements:
     browser:
       route: "/case/pat-uka-003"
       steps:
-        - "Hover the ℹ next to 'Visusverlauf und Netzhautdicke (CRT)', 'Veränderung zum Ausgangswert' and 'Augeninnendruck (IOD)' with the overlay off."
+        - "Hover the ℹ next to 'Visusverlauf und Netzhautdicke (CRT)', 'Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung)' and 'Augeninnendruck (IOD)' with the overlay off."
         - "Tick \"Kohorten-Referenz anzeigen\" and hover the same three icons; also press Tab until an icon is focused."
       expect: "Step 1: a short explanation of each plot. Step 2: the texts additionally mention the IQR band (25.–75. Perzentil) and 'Monate seit Erstvisite'; icons are keyboard-focusable with a visible ring."
     notes: "The cited test exercises the shared InfoTooltip primitive through MetricCard, not the case page. The overlay addendum is appended only when reference rows exist (hasReference), not merely when the box is ticked."
@@ -728,24 +728,24 @@ requirements:
       expect: "Step 1-2: heading \"Intravitreale Injektionen (N)\", rows numbered 1..N with date, 'OD'/'OS' tag and a violet badge (agent name, e.g. Aflibercept); N equals the row count. Step 3: heading '(0)' and the no-injections text."
     notes: "The substance badge shows the display of the case's first MedicationStatement for every row (CaseDetailPage.tsx:288), not a per-injection substance; a case with a Präparatwechsel shows the same badge on all rows."
   - id: UIR-CASE-037
-    title: "Veränderung zum Ausgangswert chart"
-    statement: "The case page shows a \"Veränderung zum Ausgangswert\" line chart of the percentage change of visus and CRT relative to baseline with a zero line, shown when more than one baseline point exists."
+    title: "Baseline-change chart titled with quantities and reference"
+    statement: "The case page shows a \"Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung)\" (EN \"Change in visual acuity and CRT from baseline (first measurement of each)\") line chart of the percentage change of visus and CRT relative to baseline with a zero line, shown when more than one baseline point exists; the title is the same with and without the cohort reference (Z0-P15, C12 b)."
     status: implemented
     sources: ["spec: EMDREQ-FALL-004 / N05.27", "manual: Benutzerhandbuch §6.4", "code: src/pages/CaseDetailPage.tsx:333-481"]
     evidence:
       - "src/pages/CaseDetailPage.tsx:333 (baselineData.length > 1 guard), 342-352 (title + InfoTooltip), 425 (ReferenceLine y=0), 476-477 (Lines 'Visus %' and 'CRT %')"
       - "src/hooks/useCaseData.ts:421-452 (baselineData %-change)"
-      - "src/i18n/translations.ts:292 (baselineChange 'Veränderung zum Ausgangswert')"
+      - "src/i18n/translations.ts:309-312 (baselineChange 'Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung)', Z0-P15)"
     tests:
       - file: tests/VisusCrtChartReference.test.tsx
         name: "K-bl2: anchors Visus %-change to first VISUS and CRT %-change to first CRT"
     browser:
       route: "/case/pat-uka-003"
       steps:
-        - "Open the case; find the card \"Veränderung zum Ausgangswert\" under the Visus/CRT row."
+        - "Open the case; find the card \"Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung)\" under the Visus/CRT row."
         - "Hover the ℹ icon and the first point of each series."
-      expect: "A chart with Y axis '%', a dashed grey zero line, a green 'Visus %' and a violet 'CRT %' series each starting at 0 %; the ℹ explains the plot."
-    notes: "The card title icon is a green up-trend or red down-trend arrow depending on the sign of the last visus change. Only the hook data is unit-tested; the inline chart has no component test."
+      expect: "A chart with Y axis '%', a dashed grey zero line, a green 'Visus %' and a violet 'CRT %' series each starting at 0 %; the ℹ explains the plot. The card title reads 'Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung)', also with \"Kohorten-Referenz anzeigen\" ticked."
+    notes: "Title changed by Z0-P15 (afab82e); the container e2e spec tests/acceptance/Z0/Z0-P15.spec.ts asserts it (DE with and without reference, EN). Browser check of legend/axes unchanged (@visual) pending. Open for the acceptance round: the legend mixes 'Visus %' with 'Kohorten-Median Visus-Änderung', and EN keeps 'Visus'. The card title icon is a green up-trend or red down-trend arrow depending on the sign of the last visus change. Only the hook data is unit-tested; the inline chart has no component test."
   - id: UIR-CASE-038
     title: "Baseline change anchored per metric"
     statement: "Change-from-baseline is anchored per metric: Visus change from the first Visus measurement and CRT change from the first CRT measurement."
@@ -762,12 +762,12 @@ requirements:
       route: "/case/:caseId"
       steps:
         - "Open a case whose Behandlungsverlauf shows a first tile with only an eye icon (Visus) and a later tile with the first pulse icon (CRT)."
-        - "In \"Veränderung zum Ausgangswert\" hover the first point of 'Visus %' and the first point of 'CRT %'."
+        - "In \"Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung)\" hover the first point of 'Visus %' and the first point of 'CRT %'."
       expect: "Each series' first point is 0 % at its own first measurement date; the CRT series starts later than the Visus series."
     notes: ""
   - id: UIR-CASE-039
     title: "Baseline chart overlay with unified legend"
-    statement: "With the overlay on, \"Veränderung zum Ausgangswert\" switches to the relative axis and shows cohort median change plus IQR bands, with a legend styled like Visus/CRT and a synced highlight line."
+    statement: "With the overlay on, \"Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung)\" switches to the relative axis and shows cohort median change plus IQR bands, with a legend styled like Visus/CRT and a synced highlight line."
     status: implemented
     sources: ["uat: v1.15 J3d; v1.18 M5", "code: src/pages/CaseDetailPage.tsx:333-481"]
     evidence:
@@ -781,7 +781,7 @@ requirements:
       route: "/case/pat-uka-003"
       steps:
         - "Click a timeline tile (amber line visible), then tick \"Kohorten-Referenz anzeigen\"."
-        - "Inspect \"Veränderung zum Ausgangswert\"."
+        - "Inspect \"Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung)\"."
       expect: "X axis becomes 'Monate seit Erstvisite'; translucent green/violet bands and dashed median lines appear; legend lists 'Kohorten-IQR Visus-Änderung (25.–75. Perz.)', 'Kohorten-IQR CRT-Änderung …', 'Kohorten-Median Visus-Änderung', 'Kohorten-Median CRT-Änderung' with the same swatch style as Visusverlauf und Netzhautdicke (CRT); the amber line sits at the same relative month as in Visusverlauf und Netzhautdicke (CRT)."
     notes: "Only the hook-level data is unit-tested; the inline chart/legend in CaseDetailPage has no component test."
   - id: UIR-CASE-040
