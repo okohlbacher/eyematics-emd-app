@@ -999,3 +999,22 @@ requirements:
         - "Switch the language to English and repeat step 2."
       expect: "Step 1: 'Blenden Sie unter „Diagramm-Anzeige“ individuelle Kurven ein, um einzelne Fälle zu öffnen.' Step 2: 'Klicken Sie auf eine Kurve oder einen Messpunkt, um die Einzelfallansicht zu öffnen.' Step 3: 'Einzelfallansicht nur ohne Kohortenvergleich'. Step 4: 'Click a curve or a measurement point to open the case view.' The line sits directly above the charts in both metric views."
     notes: "Added after Z0-P13 (2d15d1c). The container e2e spec tests/acceptance/Z0/Z0-P13.spec.ts asserts the layer-dependent texts (DE/EN) and the position directly above the chart; the compare-mode text is not asserted by a test. The aria-label drill-down hint (UIR-TRAJ-009) is unchanged. Reviewer verdict findings-open without details (severity unknown). Browser check pending."
+  - id: UIR-TRAJ-044
+    title: "Help dialog \"Hilfe zu Verläufen\" explains the Verläufe tab"
+    statement: "A header button \"Hilfe\" (accessible name \"Hilfe zu Verläufen\", EN \"Help on trajectories\") sits directly after \"Diagramm-Anzeige\" and opens a modal dialog with the sections \"Einzelfallansicht öffnen\", \"Kohorten vergleichen\", \"Diagramm-Anzeige\" and \"Rohdaten anzeigen\"; focus moves into the dialog and stays there, Escape, backdrop or the close button close it, and focus returns to the help button (Z0-P11, Q10)."
+    status: implemented
+    sources: ["Z0-P11 (Q10, NF 2026-11-18; wording drafted in the fix session)", "code: src/components/outcomes/OutcomesHelpDialog.tsx"]
+    evidence:
+      - "src/components/outcomes/OutcomesView.tsx:354-361 — help button, aria-label/title outcomesHelpTitle, visible text outcomesHelpButton; 379 dialog rendered while helpOpen"
+      - "src/components/outcomes/OutcomesHelpDialog.tsx — role=dialog, focus to close button, Tab trap, Escape/backdrop/close, focus return"
+      - "src/i18n/translations.ts:986-1007 — DE/EN button, title and four section headings and bodies"
+    tests: []
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" and click \"Hilfe\" next to \"Diagramm-Anzeige\"."
+        - "Read the four sections and compare them with the tab's behaviour (single case only with curves or points shown, not in compare mode; raw-data pseudonym links)."
+        - "Press Tab repeatedly, then Escape."
+        - "Switch to English and open the help again."
+      expect: "Step 1: dialog 'Hilfe zu Verläufen' opens. Step 2: sections 'Einzelfallansicht öffnen', 'Kohorten vergleichen', 'Diagramm-Anzeige', 'Rohdaten anzeigen' describe the current behaviour. Step 3: focus stays inside the dialog; Escape closes it and focus is back on the help button. Step 4: dialog 'Help on trajectories'."
+    notes: "Added after Z0-P11 (8a5aa55). The container e2e spec tests/acceptance/Z0/Z0-P11.spec.ts asserts button, dialog name, section headings, Escape/focus return and the EN dialog name; the body wording is not asserted. The wording was drafted by the fix session (Q10 'do the wording') and still needs team approval in the acceptance round. Reviewer: findings-fixed (compare-mode accuracy, focus on re-render). Browser check pending."
