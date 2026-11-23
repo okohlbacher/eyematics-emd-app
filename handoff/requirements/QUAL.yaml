@@ -253,29 +253,29 @@ requirements:
       route: "/quality"
       steps:
         - "Open /quality, open the filter panel via the funnel icon."
-        - "In \"Therapiestatus\" choose \"Therapieabbrecher\"; hover a red \"AB\" badge."
+        - "In \"Therapiestatus\" choose \"Therapieabbrecher\"; hover a grey (slate) \"AB\" badge."
         - "In \"CRT-Wert\" choose \"Unplausibel (> 400 µm)\"."
         - "Look at the browser address bar."
-      expect: "Every listed case carries the red AB badge whose tooltip gives the gap days; with the CRT filter only cases whose latest CRT exceeds the configured threshold remain. The address bar still shows /quality without ?therapy=breaker or ?crt=implausible (not reflected)."
+      expect: "Every listed case carries the grey (slate) AB badge whose tooltip reads \"Therapieabbrecher – <N> Tage ohne Behandlung\" (Z0-P25, C17); with the CRT filter only cases whose latest CRT exceeds the configured threshold remain. The address bar still shows /quality without ?therapy=breaker or ?crt=implausible (not reflected)."
     notes: "Filtering is implemented; URL reflection is one-way (URL → filter, see UIR-QUAL-012). The \"Unplausibel (> 400 µm)\" option label is a static string and does not follow the configured threshold. Sharpened statement if current behaviour is accepted: drop \"; the URL reflects the choice\"."
 
   - id: UIR-QUAL-011
-    title: "Case list therapy badges in yellow and red"
-    statement: "The Datenqualität case list marks therapy interrupters (UB badge, yellow) and therapy breakers (AB badge, red) with gap days according to the configured day thresholds."
+    title: "Case list therapy badges in their own colour family"
+    statement: "The Datenqualität case list marks therapy interrupters (UB badge, sky blue) and therapy breakers (AB badge, slate grey), a colour family distinct from the amber \"auffällig\" and red \"Kritisch\" value statuses and from each other, with tooltip \"<Therapieunterbrecher|Therapieabbrecher> – <N> Tage ohne Behandlung\" and the term as accessible name, according to the configured day thresholds (Z0-P25, C17, Q19; supersedes yellow/red)."
     status: implemented
     sources: ["manual: Benutzerhandbuch §7.1, §9.2", "code: src/components/quality/QualityCaseList.tsx:82-97"]
     evidence:
-      - "src/components/quality/QualityCaseList.tsx:82-97 (therapyBadge: AB red / UB amber, title \"<gapDays> Tage ohne Behandlung\")"
+      - "src/components/quality/QualityCaseList.tsx:82-100 (therapyBadge: AB bg-slate-200 text-slate-800 / dark bg-slate-600 text-slate-100; UB bg-sky-200 text-sky-900 / dark bg-sky-900/60 text-sky-200; title \"<term> – <gapDays> Tage ohne Behandlung\", aria-label <term>; Z0-P25)"
       - "src/pages/QualityPage.tsx:199-208 (getTherapyStatus with settings.therapyInterrupterDays / therapyBreakerDays)"
       - "shared/qualityPredicates.ts:15-39 (max gap between injections or since last injection > thresholds)"
     tests: []
     browser:
       route: "/quality"
       steps:
-        - "Open /quality (defaults: interrupter > 120 d, breaker > 365 d) and locate a case with a yellow \"UB\" badge and one with a red \"AB\" badge; hover each."
+        - "Open /quality (defaults: interrupter > 120 d, breaker > 365 d) and locate a case with a sky-blue \"UB\" badge and one with a grey \"AB\" badge; hover each."
         - "As admin, in /settings set \"Therapieunterbrecher-Schwellenwert (Tage)\" to 30, click \"Speichern\", return to /quality."
-      expect: "The tooltip shows \"<N> Tage ohne Behandlung\"; UB is amber/yellow and AB is red; after lowering the threshold additional cases show the UB badge."
-    notes: "tests/ui-requirements.test.ts 'classifies patient by days since last injection' uses a local toy classifier and does not exercise the UI, so it is not cited. Cases with fewer than two injections are always \"Aktiv\" (qualityPredicates.ts:25)."
+      expect: "The tooltip shows \"Therapieunterbrecher – <N> Tage ohne Behandlung\" / \"Therapieabbrecher – <N> Tage ohne Behandlung\"; UB is sky blue and AB slate grey, neither amber nor red (also in dark mode); after lowering the threshold additional cases show the UB badge."
+    notes: "tests/ui-requirements.test.ts 'classifies patient by days since last injection' uses a local toy classifier and does not exercise the UI, so it is not cited. Cases with fewer than two injections are always \"Aktiv\" (qualityPredicates.ts:25). Colours changed by Z0-P25 (abaeb65); tests/acceptance/Z0/Z0-P25.spec.ts asserts the colour distances (vs. auffällig, red reference, AB vs. UB) and title/aria-label. UB uses sky-200/sky-900 instead of Q19's sky-100/sky-800 because sky-100 was too close to slate-200 (gate attempt 1). Open: blue is close to the OD colour in Verläufe (Q19 note); dark-mode contrast not asserted by a test."
 
   - id: UIR-QUAL-012
     title: "URL params seed filters and open the panel"
@@ -413,9 +413,9 @@ requirements:
     title: "Therapy classification with gap days in header"
     statement: "The Datenqualität review detail shows \"Therapieabbruch/-unterbrechung\" as \"Therapieabbrecher (Nd)\", \"Therapieunterbrecher (Nd)\" or \"Aktiv\" with the gap in days as the criterion."
     status: implemented
-    sources: ["EMDREQ-QUAL-009 / N06.07", "code: src/components/quality/QualityCaseDetail.tsx:381-391"]
+    sources: ["EMDREQ-QUAL-009 / N06.07", "code: src/components/quality/QualityCaseDetail.tsx:409-416"]
     evidence:
-      - "src/components/quality/QualityCaseDetail.tsx:381-391 (red breaker / amber interrupter with (gapDays d) / green Aktiv)"
+      - "src/components/quality/QualityCaseDetail.tsx:409-416 (breaker pill slate / interrupter pill sky with (gapDays d), as the list badges (Z0-P25); green Aktiv)"
       - "src/pages/QualityPage.tsx:454 (therapyStatus passed from therapyStatuses map)"
       - "shared/qualityPredicates.ts:15-39 (gapDays = rounded max gap)"
     tests: []
@@ -425,7 +425,7 @@ requirements:
         - "Open /quality?therapy=breaker and click the first listed case."
         - "Read the header line \"Therapieabbruch/-unterbrechung:\"."
         - "Open /quality, pick a case without a badge and read the same line."
-      expect: "The breaker case shows a red \"Therapieabbrecher (Nd)\" with N > the configured breaker days; the unbadged case shows a green \"Aktiv\"."
+      expect: "The breaker case shows a grey (slate) pill \"Therapieabbrecher (Nd)\" with N > the configured breaker days; the unbadged case shows a green \"Aktiv\"."
     notes: ""
 
   - id: UIR-QUAL-019
