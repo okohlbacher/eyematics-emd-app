@@ -810,6 +810,11 @@ If C8 is answered "no migration", the chart fixes move to step 6 on Plotly. P23 
 - **Q39 (P13 → compare mode):** Hint text in compare mode, where drill-down from the chart is off (Q12 b)?
   Answer: "Einzelfallansicht nur ohne Kohortenvergleich" / EN "Case view only without cohort comparison", the same text as the P20 tooltip (`outcomesTooltipCompareClickHint`).
 
+### Follow-up questions (round 8, 2026-11-23, from the Z0-P18 Blocked report; addendum after approval)
+- **Q40 (P18 → feature):** All 245 synthetic pseudonyms have the form `EM-U<site>-<nnnn>` (`EM-UKA-0…` … `EM-UKT-0…`), so the first 4 characters are always "EM-U". With substring matching (Q15 b), scenario 3 ("a pseudonym of another site", first 4 characters) always matches the restricted user's own cases and can never show "Kein Fall gefunden"; scenario 2 would list all 245 cases.
+  Answer: Scenarios 2 and 3 type the first "8" characters (e.g. "EM-UKC-0", which matches no UKA pseudonym). Q15 b (substring, all matches by score descending) stays. The feature was amended by the operator for NF and the criteria re-frozen.
+  Side points from the same report, already settled: Q15 a is answered by Q30 a (one case per Patient; the case-wise paged view is out of scope for P18, "Observed, not changed"); Q15 c is in scope (each search is written to the audit log, see "Decisions applied", Z0-P18), although no scenario checks it.
+
 ## Decisions applied from the study team's answers (2026-11-18)
 Settled answers are applied here per problem; they take precedence over the option lists in the problem sections above. Items that are still ambiguous are only referenced (Q20–Q30). Registry and AT amendments that the team approved (C1–C4, C7–C10, C14–C17) are made in the fix session of the problem that triggers them, in the same commit series, and named in the commit body. The registry-mapped Vitest tests named in C4 and C7 are released for amendment by those answers. No registry or test file is changed during planning.
 
@@ -871,3 +876,4 @@ Settled answers are applied here per problem; they take precedence over the opti
 - Update 2026-11-20 (round 5): the Z0-P09 session blocked on the "Pseudonym" label in the case view header (feature line 24) and asked about the compare-mode count; answered by NF as Q35 (a) / Q36 (count per cohort). No test release needed.
 - Update 2026-11-20 (round 6): operator found that Z0-P09/Z0-P12 read `crtImplausibleThresholdUm` instead of the editable `thresholds.criticalCrtUm`; NF decided on a correction session under Z0-P09 (Q37).
 - Update 2026-11-20 (round 7): the Z0-P13 session blocked on contradictory scenarios for the default state of large cohorts; answered by NF as Q38 (hint follows layer state, feature amended and re-frozen) / Q39 (compare text as P20).
+- Update 2026-11-23 (round 8): the Z0-P18 session blocked because all synthetic pseudonyms share the prefix "EM-U", so scenario 3 could not pass with 4 typed characters; answered by NF as Q40 (8 characters in scenarios 2 and 3, feature amended and re-frozen).
