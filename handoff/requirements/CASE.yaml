@@ -848,7 +848,7 @@ requirements:
       steps:
         - "Open the case; find the card \"Visus vs. CRT\" right of the histograms."
         - "Hover an amber point."
-      expect: "X axis titled 'Visus (dezimal)', Y axis titled 'CRT (µm)'; tooltip shows the ISO date (yyyy-mm-dd), 'Visus: 0.xx' and 'CRT: NNN µm'."
+      expect: "X axis titled 'Visus (dezimal)', Y axis titled 'CRT (µm)'; tooltip shows the ISO date (yyyy-mm-dd), 'Visus: 0,xx' (decimal comma in German, '0.xx' in English; Z0-P23, Q42) and 'CRT: NNN µm'."
     notes: "The scatter date is the raw ISO string, not locale-formatted like the other tooltips. With fewer than two pairs the card shows 'Keine Daten verfügbar'."
   - id: UIR-CASE-043
     title: "Scatter shows cohort cloud with overlay on"

@@ -1018,3 +1018,29 @@ requirements:
         - "Switch to English and open the help again."
       expect: "Step 1: dialog 'Hilfe zu Verläufen' opens. Step 2: sections 'Einzelfallansicht öffnen', 'Kohorten vergleichen', 'Diagramm-Anzeige', 'Rohdaten anzeigen' describe the current behaviour. Step 3: focus stays inside the dialog; Escape closes it and focus is back on the help button. Step 4: dialog 'Help on trajectories'."
     notes: "Added after Z0-P11 (8a5aa55). The container e2e spec tests/acceptance/Z0/Z0-P11.spec.ts asserts button, dialog name, section headings, Escape/focus return and the EN dialog name; the body wording is not asserted. The wording was drafted by the fix session (Q10 'do the wording') and still needs team approval in the acceptance round. Reviewer: findings-fixed (compare-mode accuracy, focus on re-render). Browser check pending."
+  - id: UIR-TRAJ-045
+    title: "Rounded axis ticks, curves clipped to the plot area, locale number format in all analysis charts"
+    statement: "Verläufe x-axis ticks are whole numbers and y-axis ticks lie on one step of 1, 2, 2.5 or 5 × 10^n with at most 2 decimals; per-patient curves, points, the critical highlight and the hover overlay are clipped to the plot area; chart tooltips and axis ticks in Aggregiert, Verläufe and the case view use a decimal comma in German and a decimal point in English, without digit grouping (Z0-P23 follow-up, Q41, Q42)."
+    status: implemented
+    sources: ["Z0-P23 (PLAN round 9, Q41/Q42, NF 2026-11-23; release pre-check deviations D1-D4)", "code: src/components/charts/chartStyle.ts"]
+    evidence:
+      - "src/components/charts/chartStyle.ts:79 chartNumberFormat (Intl, no grouping), 93 niceTicks (1/2/2.5/5 × 10^n inside the unchanged domain; minStep for count axes), 111 localizeDecimals (fixed bin labels)"
+      - "src/components/outcomes/OutcomesPanel.tsx:299-300 — xTicks niceTicks(…, 6, 1), yTicks niceTicks(…, 5); 630-635 per-patient layer clipPath to the plot area"
+      - "src/pages/AnalysisPage.tsx, src/pages/CaseDetailPage.tsx, src/components/case-detail/VisusCrtChart.tsx, DistributionCharts.tsx, ClinicalParametersRow.tsx, src/components/outcomes/ResponderView.tsx — locale-formatted ticks/tooltips (dae3de0)"
+    tests:
+      - file: tests/acceptance/Z0/Z0-P23.test.ts
+        name: "x ticks (minStep 1) are whole numbers on an integer step for every span, incl. zoomed and treatment axes"
+      - file: tests/acceptance/Z0/Z0-P23.test.ts
+        name: "y ticks lie on one step of 1, 2, 2.5 or 5 × 10^n with at most 2 decimals"
+      - file: tests/acceptance/Z0/Z0-P23.test.ts
+        name: "German uses a decimal comma, English a decimal point, neither groups digits"
+      - file: tests/acceptance/Z0/Z0-P23.test.ts
+        name: "fixed bin labels follow the locale"
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Verläufe, metric CRT, Y 'Δ (µm zur Baseline)': read the x and y tick labels; switch to Visus and read them again."
+        - "Tick \"Individuelle Kurven\" in \"Diagramm-Anzeige\" and look below the x-axis and at the zoom bar."
+        - "Hover a median point in Verläufe, a point of 'Alter vs. Visus' on Aggregiert and a visus point in a case view (also with \"Kohorten-Referenz anzeigen\"); repeat in English."
+      expect: "Step 1: x ticks whole numbers, y ticks round steps with at most 2 decimals. Step 2: no curve, point or band outside the plot area. Step 3: German shows decimal commas (e.g. '0,5'), English decimal points ('0.5'), no thousands separators."
+    notes: "Added after the Z0-P23 follow-up (dae3de0). The container e2e spec tests/acceptance/Z0/Z0-P23.spec.ts covers the three added scenarios (curves-in-plot-area is @visual with a DOM proxy). Unchanged per Q42: 'Visus Ø'/'CRT Ø' and the Aggregiert median line label (outside chart tooltips/ticks). UIR-AGG-013 and UIR-CASE-042 expects amended to the decimal comma. Browser check pending (release pre-check)."

@@ -317,7 +317,7 @@ requirements:
         - "Read the x-axis tick labels."
         - "Hover a data point and read the tooltip."
         - "Switch to \"Verläufe\" and compare the Visus median curve shape."
-      expect: "X-axis ticks are quarters like \"2024-Q1\"; the tooltip header reads \"Quartal: 2024-Q1\" with a line \"Mittlerer Visus: 0.xxx\"; a single green line (legend \"Mittlerer Visus\") is drawn; it differs from the Verläufe median without any error."
+      expect: "X-axis ticks are quarters like \"2024-Q1\"; the tooltip header reads \"Quartal: 2024-Q1\" with a line \"Mittlerer Visus: 0,xxx\" (decimal comma in German, \"0.xxx\" in English; Z0-P23, Q42); a single green line (legend \"Mittlerer Visus\") is drawn; it differs from the Verläufe median without any error."
     notes: "Mean is over all observations in the quarter (not per patient first), which is why it differs from the Verläufe median."
   - id: UIR-AGG-014
     title: "CRT distribution histogram with visible bars"
