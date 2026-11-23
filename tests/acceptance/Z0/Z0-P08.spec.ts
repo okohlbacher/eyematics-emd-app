@@ -76,7 +76,11 @@ async function compareWith(page: Page, other: CohortName): Promise<void> {
   const d = page.getByRole('complementary', { name: 'Kohorten vergleichen', exact: true });
   await expect(d.getByRole('checkbox').first()).toBeVisible();
   const all = optionRow(d, 'Alle Patienten').getByRole('checkbox');
-  if (await all.isChecked()) await all.uncheck();
+  // Opening the drawer from the single-cohort view preselects "Alle Patienten" through an async URL transition
+  // (Z0-P05, compareSelection.ts openCompare); wait for it before unticking, otherwise the late preselection
+  // re-ticks the box after the uncheck (flaky race, Z0 deviation 20).
+  await expect(all).toBeChecked();
+  await all.uncheck();
   await optionRow(d, other).getByRole('checkbox').check();
   await expect(optionRow(d, other).getByRole('checkbox')).toBeChecked();
   await expect(all).not.toBeChecked();
