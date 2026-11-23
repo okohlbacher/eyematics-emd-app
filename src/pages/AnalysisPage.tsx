@@ -701,7 +701,9 @@ export default function AnalysisPage() {
                     <YAxis tickFormatter={fmtTick} type="number" dataKey="visus" name={t('visus')} domain={[0, 1]} tick={axisTick} stroke={ct.axisTick} />
                     <Tooltip cursor={{ strokeDasharray: '3 3' }} content={ageVisusTooltip} />
                     <Legend wrapperStyle={{ color: ct.legend, fontSize: AXIS_TICK_FONT_SIZE }} />
-                    {centeredCrossCohorts.map((cohort) => (
+                    {/* Z0-P26 (Q44 a): drawn in descending N, so subsets lie on top of "Alle Patienten". The legend
+                        keeps its own order (Recharts sorts it by name). */}
+                    {[...centeredCrossCohorts].sort((a, b) => b.patientCount - a.patientCount).map((cohort) => (
                       <Scatter key={cohort.cohortId} data={ageVisusOf(cohort.cases)} fill={cohort.color} name={cohort.cohortName} />
                     ))}
                   </ScatterChart>

@@ -138,3 +138,39 @@ test('[Z0-P26] Grundgesamtheit im Vergleich nutzt die Fälle aller berechtigten 
   const caseLabel = await optionRow(caseDrawer, 'Alle Patienten').locator('[data-compare-option-label]').innerText();
   expect(countOf(caseLabel, 'Alle Patienten')).toBe(analysisN);
 });
+
+// @visual — DOM proxy (Q44 a: series drawn in descending N, so subsets lie on top). In SVG a later sibling is painted
+// over an earlier one, so "drawn on top" = the Recharts scatter series (`.recharts-scatter`) of "Testkohorte" comes
+// after the one of "Alle Patienten" in "compare-age-visus". A series is identified by the computed fill of its symbols,
+// matched against the colour swatch of the cohort legend entry. Visibility itself is checked in the browser pass.
+test('[Z0-P26] Basis-Kohorte bleibt im Vergleich mit der Grundgesamtheit sichtbar', async ({ page }) => {
+  const d = await openCompareDrawer(page);
+  const all = optionRow(d, 'Alle Patienten').getByRole('checkbox');
+  if (!(await all.isChecked())) await all.check();
+  await expect(d.locator('input[type="checkbox"]:checked')).toHaveCount(2);
+  await expect(optionRow(d, COHORT).getByRole('checkbox')).toBeChecked();
+  await page.keyboard.press('Escape');
+
+  const panel = aggregatePanel(page);
+  const swatchColour = async (name: string): Promise<string> =>
+    panel
+      .locator('.legend li')
+      .filter({ has: page.locator('.legendtext', { hasText: new RegExp(`^${name} \\(N=`) }) })
+      .locator('[data-legend-swatch]')
+      .evaluate((el) => getComputedStyle(el).backgroundColor);
+  const cohortColour = await swatchColour(COHORT);
+  const allColour = await swatchColour('Alle Patienten');
+  expect(cohortColour).not.toBe(allColour);
+
+  const series = panel.getByTestId('compare-age-visus').locator('.recharts-scatter');
+  await expect(series).toHaveCount(2);
+  await expect(series.nth(0).locator('.recharts-scatter-symbol').first()).toBeAttached();
+  await expect(series.nth(1).locator('.recharts-scatter-symbol').first()).toBeAttached();
+  const fills = await series.evaluateAll((groups) =>
+    groups.map((g) => {
+      const sym = g.querySelector('.recharts-scatter-symbol path, .recharts-scatter-symbol circle, .recharts-symbols');
+      return sym ? getComputedStyle(sym).fill : null;
+    }),
+  );
+  expect(fills, 'drawing order of the series (bottom → top)').toEqual([allColour, cohortColour]);
+});
