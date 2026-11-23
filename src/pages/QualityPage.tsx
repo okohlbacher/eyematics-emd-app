@@ -1,17 +1,17 @@
 /** Data quality review page — EMDREQ-QUAL-001 to QUAL-010 (SDV, error flagging, exclusions, therapy discontinuation). */
 import { Ban, CheckCircle2, Circle, Clock, Download } from 'lucide-react';
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useId, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { pickCoding } from '../../shared/fhirQueries';
 import { applyFilters } from '../../shared/patientCases';
 import { canonicalizeQualityParams, resolveQualityParams } from '../../shared/qualityParams';
 import { getTherapyStatus } from '../../shared/qualityPredicates';
-import { QualityFilterBar } from '../components/doc-quality/QualityFilterBar';
 import QualityCaseDetail, {
   CONFIRMED_ERROR_TYPE,
 } from '../components/quality/QualityCaseDetail';
 import QualityCaseList from '../components/quality/QualityCaseList';
+import QualityFilterPanel from '../components/quality/QualityFilterPanel';
 import QualityFlagDialog from '../components/quality/QualityFlagDialog';
 import { QualityParamsChecklist } from '../components/quality/QualityParamsChecklist';
 import { useAuth } from '../context/AuthContext';
@@ -73,6 +73,7 @@ export default function QualityPage() {
   const { locale, t } = useLanguage();
   const [searchParams] = useSearchParams();
   const { record } = useRecentActivity();
+  const cohortSelectId = useId();
 
   const [selectedCase, setSelectedCase] = useState<PatientCase | null>(null);
   const [flagDialog, setFlagDialog] = useState<{ parameter: string; value: string } | null>(null);
@@ -326,27 +327,16 @@ export default function QualityPage() {
         <p className="text-gray-500 dark:text-gray-400 mt-1">{t('qualitySubtitle')}</p>
       </div>
 
-      {/* Time-range filter — QUAL-022: reuses DocQualityPage / QualityFilterBar pattern */}
-      <div className="mb-4">
-        <QualityFilterBar
-          timeRange={timeRange}
-          onTimeRangeChange={setTimeRange}
-          selectedCenter=""
-          onCenterChange={() => undefined}
-          centerOptions={[]}
-          showCenterFilter={false}
-        />
-      </div>
-
-      {/* Export button + cohort scope selector in the same row */}
-      <div className="flex items-center justify-between mb-2">
-        {/* Cohort scope selector — placed on-page (not in QualityCaseList) to avoid prop churn.
-            Restricts the reviewed set to a specific cohort's cases + honors its qualityParams. */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
+      {/* Z0-P16: "Kohorte" directly next to the single filter region "Filterkriterien";
+          "CSV exportieren" stays to the right of both. The cohort selector is the first
+          select on the page. */}
+      <div className="flex flex-wrap items-start gap-3 mb-4">
+        <div className="flex items-center gap-2 shrink-0 pt-3">
+          <label htmlFor={cohortSelectId} className="text-sm font-medium text-gray-600 dark:text-gray-300">
             {t('qualityCohortScopeLabel')}
           </label>
           <select
+            id={cohortSelectId}
             value={selectedCohortId}
             onChange={(e) => {
               setSelectedCohortId(e.target.value);
@@ -362,10 +352,29 @@ export default function QualityPage() {
             ))}
           </select>
         </div>
+        <QualityFilterPanel
+          timeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
+          searchQuery={searchQuery}
+          filterStatus={filterStatus}
+          selectedCenters={selectedCenters}
+          filterTherapy={filterTherapy}
+          filterCrt={filterCrt}
+          showExcluded={showExcluded}
+          showFilters={showFilters}
+          centerNames={centerNames}
+          onSearchChange={setSearchQuery}
+          onFilterStatusChange={setFilterStatus}
+          onSelectedCentersChange={setSelectedCenters}
+          onFilterTherapyChange={setFilterTherapy}
+          onFilterCrtChange={setFilterCrt}
+          onShowExcludedChange={setShowExcluded}
+          onToggleFilters={() => setShowFilters((v) => !v)}
+        />
         <button
           onClick={handleExportCsv}
           disabled={filteredCases.length === 0}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:text-gray-300 transition-colors disabled:opacity-50"
+          className="shrink-0 mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:text-gray-300 transition-colors disabled:opacity-50"
         >
           <Download className="w-4 h-4" />
           {t('exportCsv')}
@@ -422,22 +431,7 @@ export default function QualityPage() {
             caseStatus={caseStatus}
             therapyStatuses={therapyStatuses}
             excludedCases={excludedCases}
-            searchQuery={searchQuery}
-            filterStatus={filterStatus}
-            selectedCenters={selectedCenters}
-            filterTherapy={filterTherapy}
-            filterCrt={filterCrt}
-            showExcluded={showExcluded}
-            showFilters={showFilters}
-            centerNames={centerNames}
             onSelectCase={setSelectedCase}
-            onSearchChange={setSearchQuery}
-            onFilterStatusChange={setFilterStatus}
-            onSelectedCentersChange={setSelectedCenters}
-            onFilterTherapyChange={setFilterTherapy}
-            onFilterCrtChange={setFilterCrt}
-            onShowExcludedChange={setShowExcluded}
-            onToggleFilters={() => setShowFilters((v) => !v)}
           />
         </div>
 

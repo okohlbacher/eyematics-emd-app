@@ -18,6 +18,8 @@ export interface QualityFilterBarProps {
   onCenterChange: (centerId: string) => void;
   centerOptions: CenterOption[];
   showCenterFilter?: boolean;
+  /** Render without the card frame, e.g. inside another filter region (Z0-P16). */
+  embedded?: boolean;
 }
 
 /** Today as a yyyy-mm-dd string for the date inputs (local calendar). */
@@ -35,6 +37,7 @@ export function QualityFilterBar({
   onCenterChange,
   centerOptions,
   showCenterFilter = true,
+  embedded = false,
 }: QualityFilterBarProps) {
   const { t } = useLanguage();
 
@@ -70,7 +73,13 @@ export function QualityFilterBar({
     !isCustomActive && timeRange === value;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex flex-wrap gap-4 items-center">
+    <div
+      className={
+        embedded
+          ? 'flex flex-wrap gap-4 items-center'
+          : 'bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex flex-wrap gap-4 items-center'
+      }
+    >
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {t('docQualityTimeRange')}:
