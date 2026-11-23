@@ -280,3 +280,24 @@ requirements:
         - "Hover the row to see its tooltip, then click it."
       expect: "The row shows the teal circle \"FO\", the username \"forscher1\" and the role \"Researcher\" (CSS-capitalised); the tooltip reads \"Konto\"; clicking changes the URL to /account and renders the page headed \"Konto\" with \"forscher1 · researcher\" beneath it."
     notes: "Added by the refutation pass: the /account entry point was not covered by any sweep. Password change and 2FA on that page belong to AUTH. No test renders Layout or AccountPage."
+  - id: UIR-NAV-015
+    title: "Case search \"Fall öffnen (Pseudonym)\" in the sidebar on every page"
+    statement: "The sidebar navigation on every page holds a search field \"Fall öffnen (Pseudonym)\" (EN \"Open case (pseudonym)\", combobox with listbox) that suggests the user's accessible cases by case-insensitive substring match, all matches sorted by match score (exact > prefix > substring); \"Kein Fall gefunden\" when nothing matches; choosing a suggestion opens /case/<id> and the field is cleared on every route change; each search is written to the audit log as \"case_search\" with query length and match count only (Z0-P18, Q15 b/c, Q40)."
+    status: implemented
+    sources: ["Z0-P18 (Q15, Q30 a, Q40; NF 2026-11-18/23)", "spec: EMDREQ-USM-004 (site restriction via the server-filtered DataContext cases)", "code: src/components/CaseSearch.tsx"]
+    evidence:
+      - "src/components/Layout.tsx:94 — CaseSearch at the top of the sidebar <nav> (inside <aside>, outside <main>; AT-SYS-RB-001-01)"
+      - "src/components/CaseSearch.tsx:3,28-30 — matchScore, filter score > 0, sort by score then pseudonym"
+      - "src/components/CaseSearch.tsx:38 — audit beacon name 'case_search', filter {queryLength, matchCount}, no identifier"
+      - "src/components/CaseSearch.tsx:106 — navigate(`/case/${id}`); 142,161 role=combobox / listbox"
+      - "src/i18n/translations.ts:56-57 — caseSearchLabel, caseSearchNoResult DE/EN"
+    tests: []
+    browser:
+      route: "/"
+      steps:
+        - "As klinikleitung open Startseite, Kohortenbildung, Analyse and Datenqualität and look at the sidebar."
+        - "On Analyse type 'EM-UKA-0' into \"Fall öffnen (Pseudonym)\", move with the arrow keys and press Enter."
+        - "Log in as forscher1 (one site) and type 'EM-UKC-0'."
+        - "Switch to dark mode and repeat step 2."
+      expect: "Step 1: the field is visible on all four pages. Step 2: a scrollable suggestion list overlays the navigation; Enter opens the case view of the highlighted pseudonym and the field is empty afterwards. Step 3: the list shows 'Kein Fall gefunden'. Step 4: field and list are legible. The audit log shows case_search rows without the typed text."
+    notes: "Added after Z0-P18 (9d98642). tests/acceptance/Z0/Z0-P18.spec.ts asserts the field on the four pages, opening a case with 8 characters and 'Kein Fall gefunden' for a restricted user; the audit row and keyboard handling are not asserted. Open for the acceptance round: whether the search term itself should be logged (auditApi forbids identifiers in filter); case-wise paged view out of scope (Q30 a). Browser check pending."
