@@ -306,7 +306,10 @@ const translations = {
   treatmentIndication: { de: 'Behandlungsindikation', en: 'Treatment Indication' },
   adverseEvents: { de: 'Unerwünschte Ereignisse', en: 'Adverse Events' },
   noAdverseEvents: { de: 'Keine unerwünschten Ereignisse', en: 'No adverse events' },
-  baselineChange: { de: 'Veränderung zum Ausgangswert', en: 'Change from Baseline' },
+  baselineChange: {
+    de: 'Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung)',
+    en: 'Change in visual acuity and CRT from baseline (first measurement of each)',
+  },
   noFindings: { de: 'Keine Befunde', en: 'No findings' },
   noAnamnesis: { de: 'Keine Anamnese dokumentiert', en: 'No anamnesis documented' },
   clinicalParameters: { de: 'Klinische Parameter', en: 'Clinical Parameters' },
