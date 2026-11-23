@@ -6,6 +6,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 
 import { QUALITY_ROLES, useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import CaseSearch from './CaseSearch';
 import FeedbackButton from './FeedbackButton';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -90,6 +91,7 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 overflow-y-auto py-4 px-2.5">
+          <CaseSearch />
           <div className="text-[10px] font-semibold tracking-[0.12em] uppercase text-[var(--color-ink-3)] px-2.5 pb-2">
             {t('navGroupResearch')}
           </div>

@@ -52,6 +52,9 @@ const translations = {
   navAnalysis: { de: 'Analyse', en: 'Analysis' },
   navQuality: { de: 'Datenqualität', en: 'Data Quality' },
   navLogout: { de: 'Abmelden', en: 'Log out' },
+  // Z0-P18: case search in the sidebar navigation.
+  caseSearchLabel: { de: 'Fall öffnen (Pseudonym)', en: 'Open case (pseudonym)' },
+  caseSearchNoResult: { de: 'Kein Fall gefunden', en: 'No case found' },
   clinicalDemonstrator: { de: 'Klinischer Demonstrator', en: 'Clinical Demonstrator' },
 
   // Login
