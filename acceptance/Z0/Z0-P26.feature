@@ -23,3 +23,12 @@ Feature: Z0-P26 Grundgesamtheit als Standardvergleich in den aggregierten Daten
   Scenario: Grundgesamtheit im Vergleich nutzt die Fälle aller berechtigten Standorte
     When I compare "Testkohorte" with "Alle Patienten"
     Then the patient count of "Alle Patienten" equals the patient count shown for "Alle Patienten" in the "Einzelfallansicht" selector "Vergleichskohorte wählen"
+
+  # Added by NF on 2026-11-23 (drafted_by: ai-assisted) from the second /useavibe-release 0 browser pass on emd-smoke
+  # built from 4b7b17e: the active cohort was hidden under "Alle Patienten" in the age-versus-visus chart (Q44 a:
+  # series drawn in descending patient count, so subsets lie on top).
+  @visual
+  Scenario: Basis-Kohorte bleibt im Vergleich mit der Grundgesamtheit sichtbar
+    When I compare "Testkohorte" with "Alle Patienten"
+    Then in the age-versus-visus chart the points of "Testkohorte" are drawn on top of the points of "Alle Patienten"
+    And the points of "Testkohorte" are visible in the colour of "Testkohorte" in the legend

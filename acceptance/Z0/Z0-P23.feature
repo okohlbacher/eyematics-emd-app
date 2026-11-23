@@ -110,3 +110,15 @@ Feature: Z0-P23 Kohortenvergleich im Tab Aggregiert und einheitliche Abbildungen
     When I hover over a data point in the age-versus-visus chart on "Aggregiert", a median point on "Verläufe" and a visus point in the "Einzelfallansicht"
     Then every decimal number in the tooltips and axis tick labels uses a decimal comma, e.g. "0,5" and not "0.5"
     And with the UI language "English" every decimal number uses a decimal point, e.g. "0.5"
+
+  # Added by NF on 2026-11-23 (drafted_by: ai-assisted) after the second /useavibe-release 0 browser pass on emd-smoke
+  # built from 4b7b17e: an unsaved filtered cohort could not be compared (Q46).
+  Scenario: Gefilterte, nicht gespeicherte Kohorte lässt sich vergleichen
+    Given in "Kohortenbildung" I have entered "70" in the "Alter" field "Min"
+    And I have opened the cohort analysis for this filter
+    And the tab "Aggregiert" is open
+    When I click "Kohorten vergleichen"
+    Then the drawer "Kohorten vergleichen" lists the cohort named after "Aktive Kohorte: " in the header, starting with "Gefilterte Kohorte", marked "Basis-Kohorte (fest)"
+    When I close the drawer with "Alle Patienten" selected
+    Then the legend lists the "Gefilterte Kohorte" entry and "Alle Patienten" with their patient counts
+    And after opening the tab "Verläufe" the legend still lists both cohorts
