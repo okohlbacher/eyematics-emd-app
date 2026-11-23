@@ -12,11 +12,11 @@ Feature: Z0-P18 Einzelfallansicht von jeder Seite aus öffnen
 
   Scenario: Fall über die Navigation öffnen
     Given I am on "Analyse"
-    When I type the first "4" characters of an existing pseudonym into "Fall öffnen (Pseudonym)"
+    When I type the first "8" characters of an existing pseudonym into "Fall öffnen (Pseudonym)"
     And I choose that pseudonym from the suggestions
     Then the "Einzelfallansicht" of that case opens
 
   Scenario: Nur berechtigte Fälle werden vorgeschlagen
     Given I am logged in as a user restricted to "1" site
-    When I type the first "4" characters of a pseudonym of another site into "Fall öffnen (Pseudonym)"
+    When I type the first "8" characters of a pseudonym of another site into "Fall öffnen (Pseudonym)"
     Then the suggestion list shows "Kein Fall gefunden"
