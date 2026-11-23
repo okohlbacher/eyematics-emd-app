@@ -8,6 +8,7 @@
  */
 import type { TranslationKey } from '../../i18n/translations';
 import type { AxisMode, TrajectoryResult, YMetric } from '../../utils/cohortTrajectory';
+import DrillDownHint from './DrillDownHint';
 import OutcomesDataPreview from './OutcomesDataPreview';
 import OutcomesEmptyState from './OutcomesEmptyState';
 import type { CohortSeriesEntry } from './OutcomesPanel';
@@ -95,7 +96,8 @@ export default function VisusMetricContainer({
         locale={locale as 'de' | 'en'}
       />
       <div data-testid={layers.scatter ? 'outcomes-scatter-default-on' : 'outcomes-scatter-default-off'} />
-      <div className="mt-12 grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <DrillDownHint layers={layers} isCrossMode={isCrossMode} className="mt-12" t={t} />
+      <div className="mt-2 grid grid-cols-1 xl:grid-cols-3 gap-6">
         {mountedPanels >= 1 ? (
           <OutcomesPanel
             panel={aggregate.od}

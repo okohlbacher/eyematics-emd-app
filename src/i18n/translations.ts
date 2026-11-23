@@ -973,6 +973,15 @@ const translations = {
   // Z0-P20: closing line of the per-patient tooltip (click action; compare mode has no drill-down, Q12 b)
   outcomesTooltipClickHint: { de: 'Klicken öffnet die Einzelfallansicht', en: 'Click to open the case view' },
   outcomesTooltipCompareClickHint: { de: 'Einzelfallansicht nur ohne Kohortenvergleich', en: 'Case view only without cohort comparison' },
+  // Z0-P13 (Q38): visible hint above the Verläufe charts; follows the per-patient/scatter layer state
+  outcomesDrillDownHintVisible: {
+    de: 'Klicken Sie auf eine Kurve oder einen Messpunkt, um die Einzelfallansicht zu öffnen.',
+    en: 'Click a curve or a measurement point to open the case view.',
+  },
+  outcomesDrillDownHintLayersOff: {
+    de: 'Blenden Sie unter „Diagramm-Anzeige“ individuelle Kurven ein, um einzelne Fälle zu öffnen.',
+    en: 'Show per-patient curves under “Chart display” to open single cases.',
+  },
 
   // ---- Phase 13: Metric Selector (METRIC-04 / D-01) ----
   metricsVisus: { de: 'Visus', en: 'Visus' },
