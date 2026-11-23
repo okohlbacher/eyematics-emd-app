@@ -306,7 +306,8 @@ export default function OutcomesView(
       <header className="mb-6 flex items-start justify-between">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">
-            {s.cohort?.name ? `${s.t('outcomesTitle')}: ${s.cohort.name}` : s.t('outcomesTitle')}
+            {/* Z0-P04 (Q27, Q43): the active cohort, the same text as after "Aktive Kohorte: " in the header. */}
+            {s.cohort?.name ?? s.t('overlayCohortAllPatients')}
           </h2>
           <p className="text-gray-500 text-sm mt-1" data-testid="outcomes-subtitle">
             {s.isCrossMode && a.crossCohortAggregates

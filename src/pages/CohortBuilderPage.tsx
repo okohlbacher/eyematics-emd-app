@@ -89,7 +89,7 @@ export default function CohortBuilderPage() {
   const [showSaved, setShowSaved] = useState(false);
   // Z0-P02: the saved cohort last loaded, shown while its filters are unchanged (any filter edit
   // replaces the `filters` object, so the reference check hides the line on the next change).
-  const [loadedSearch, setLoadedSearch] = useState<{ name: string; filters: CohortFilter } | null>(null);
+  const [loadedSearch, setLoadedSearch] = useState<{ id: string; name: string; filters: CohortFilter } | null>(null);
   const [saveName, setSaveName] = useState('');
 
   // C2: the per-cohort quality-check selection moved to the Datenqualität tab
@@ -380,7 +380,7 @@ export default function CohortBuilderPage() {
 
   const handleLoadSearch = (s: SavedSearch) => {
     setFilters(s.filters);
-    setLoadedSearch({ name: s.name, filters: s.filters });
+    setLoadedSearch({ id: s.id, name: s.name, filters: s.filters });
     // C2: qualityParams are no longer edited here — they live on the Datenqualität tab.
     setShowSaved(false);
   };
@@ -1022,7 +1022,16 @@ export default function CohortBuilderPage() {
                 <button
                   onClick={() => {
                     const params = new URLSearchParams();
-                    params.set('filters', JSON.stringify(filters));
+                    // Z0-P04 (Q45): a loaded saved cohort whose filters are unchanged (the Z0-P02 status-line check)
+                    // keeps its name; after any filter change, or once it was deleted, it is analysed as
+                    // "Gefilterte Kohorte · …" (Q26 a).
+                    if (
+                      loadedSearch &&
+                      loadedSearch.filters === filters &&
+                      savedSearches.some((s) => s.id === loadedSearch.id)
+                    ) {
+                      params.set('cohort', loadedSearch.id);
+                    } else params.set('filters', JSON.stringify(filters));
                     navigate(`/analysis?${params.toString()}`);
                   }}
                   disabled={filteredCases.length === 0}

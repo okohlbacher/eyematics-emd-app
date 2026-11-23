@@ -74,7 +74,7 @@ import {
   mergeByCategory,
   visusTrendOf,
 } from '../utils/aggregateDistributions';
-import { parseCohortFilterJson, summarizeCohortFilter } from '../utils/cohortFilterSerialization';
+import { formatFilteredCohortName, parseCohortFilterJson } from '../utils/cohortFilterSerialization';
 
 type AnalysisTab = 'aggregate' | 'trajectories';
 
@@ -162,18 +162,13 @@ export default function AnalysisPage() {
   /**
    * ANL-012: name of the unsaved filtered cohort (?filters=), null without one.
    * - with ?name=: the supplied name (React auto-escapes text content — T-42-06)
-   * - without ?name=: synthesized from t('analysisFilteredCohort') + summarizeCohortFilter
+   * - without ?name=: synthesized by formatFilteredCohortName (Z0-P04: shared with the Verläufe heading)
    * Total length is capped at 80 chars with ellipsis to mirror OutcomesView cross-mode truncation.
    * Z0-P22 (Q26 a): the header and the "Kohorte wählen" option use this same text.
    */
   const filteredCohortName: string | null = useMemo(() => {
     if (searchParams.get('filters') === null) return null;
-    const urlName = searchParams.get('name')?.trim();
-    if (urlName) return urlName.length > 80 ? urlName.slice(0, 79) + '…' : urlName;
-    const base = t('analysisFilteredCohort');
-    const summary = summarizeCohortFilter(urlFilters, locale);
-    const full = summary ? `${base} · ${summary}` : base;
-    return full.length > 80 ? full.slice(0, 79) + '…' : full;
+    return formatFilteredCohortName(t('analysisFilteredCohort'), urlFilters, locale, searchParams.get('name'));
   }, [searchParams, urlFilters, t, locale]);
 
   /** ANL-012: display name — saved name, else the filtered cohort, else null ("Alle Patienten", Z0-P17). */

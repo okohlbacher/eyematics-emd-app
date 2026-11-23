@@ -134,3 +134,15 @@ export function summarizeCohortFilter(f: CohortFilter, locale: Locale = 'de'): s
 
   return parts.join(' · ');
 }
+
+/**
+ * Z0-P04 (Q26 a, Q27): display name of an unsaved filtered cohort — `<base> · <summary>` (base = the localised
+ * "Gefilterte Kohorte"), or the supplied `name` (?name=) when given; capped at 80 chars with an ellipsis.
+ * The analysis header ("Aktive Kohorte: …") and the Verläufe heading use this one function.
+ */
+export function formatFilteredCohortName(base: string, f: CohortFilter, locale: Locale, name?: string | null): string {
+  const trimmed = name?.trim();
+  const summary = summarizeCohortFilter(f, locale);
+  const full = trimmed || (summary ? `${base} · ${summary}` : base);
+  return full.length > 80 ? full.slice(0, 79) + '…' : full;
+}

@@ -14,7 +14,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import type { PatientCase, SavedSearch } from '../../../shared/types/fhir';
+import type { CohortFilter, PatientCase, SavedSearch } from '../../../shared/types/fhir';
 import { useData } from '../../context/DataContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useRecentActivity } from '../../hooks/useRecentActivity';
@@ -22,7 +22,7 @@ import { ALL_PATIENTS_COHORT_ID, withAllPatientsCohort } from '../../services/al
 import { authFetch } from '../../services/authHeaders';
 import { applyFilters } from '../../services/fhirLoader';
 import { getSettings, loadSettings } from '../../services/settingsService';
-import { parseCohortFilterJson, safePickCohortFilter } from '../../utils/cohortFilterSerialization';
+import { formatFilteredCohortName, parseCohortFilterJson, safePickCohortFilter } from '../../utils/cohortFilterSerialization';
 import {
   type AxisMode,
   defaultScatterOn,
@@ -106,12 +106,15 @@ export function deriveDefaultLayers(cases: { pseudonym?: string }[]): LayerState
  * late to seed the initializer). Pure — no hooks.
  */
 export type ResolvedCohort = { name: string | null; cases: PatientCase[] };
+// Z0-P04 (Q47 a): `nameFiltered` names an unnamed filtered cohort (?filter= / ?filters=) like the analysis header,
+// "Gefilterte Kohorte · …" (formatFilteredCohortName); default null keeps the pure call sites unchanged.
 
 export function resolveCohort(
   searchParams: URLSearchParams,
   activeCases: PatientCase[],
   savedSearches: SavedSearch[],
   filterOptions: FilterOptions,
+  nameFiltered: (f: CohortFilter) => string | null = () => null,
 ): ResolvedCohort | null {
   const cohortId = searchParams.get('cohort');
   const filterParam = searchParams.get('filter');
@@ -121,14 +124,15 @@ export function resolveCohort(
   }
   if (filterParam) {
     try {
-      const parsed = JSON.parse(decodeURIComponent(filterParam));
-      return { name: null, cases: applyFilters(activeCases, safePickCohortFilter(parsed), filterOptions) };
+      const f = safePickCohortFilter(JSON.parse(decodeURIComponent(filterParam)));
+      return { name: nameFiltered(f), cases: applyFilters(activeCases, f, filterOptions) };
     } catch { return null; }
   }
   // Z0-P04: "Kohorte analysieren" writes the unsaved filter cohort as ?filters= (shared parser).
   const filtersParam = searchParams.get('filters');
   if (filtersParam !== null) {
-    return { name: null, cases: applyFilters(activeCases, parseCohortFilterJson(filtersParam), filterOptions) };
+    const f = parseCohortFilterJson(filtersParam);
+    return { name: nameFiltered(f), cases: applyFilters(activeCases, f, filterOptions) };
   }
   return { name: null, cases: activeCases };
 }
@@ -358,8 +362,9 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
   const cohort = useMemo(
     () => (cohortFromPage !== undefined
       ? cohortFromPage
-      : resolveCohort(searchParams, activeCases, savedSearches, filterOptions)),
-    [cohortFromPage, activeCases, savedSearches, searchParams, filterOptions],
+      : resolveCohort(searchParams, activeCases, savedSearches, filterOptions, (f) =>
+        formatFilteredCohortName(t('analysisFilteredCohort'), f, locale, searchParams.get('name')))),
+    [cohortFromPage, activeCases, savedSearches, searchParams, filterOptions, t, locale],
   );
 
   // FALL-010: drill-down handler — resolves scatter patientId (pseudonym) to PatientCase.id
