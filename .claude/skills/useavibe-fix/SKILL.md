@@ -77,7 +77,8 @@ new file; nothing may stay unstaged), then write the commit message to `.plannin
 (handoff §9 types/scopes), body ends with `Verified: …`, trailers:
 `Usability-Problem: $ARGUMENTS` · `Acceptance: acceptance/Z<k>/$ARGUMENTS.feature@<first 8 of its SHA-256>` ·
 `Attempts: <gate attempts>` · `Reviewer: pass|findings-fixed|findings-open` (· `Round-Finding: Z<k>-R<r>-F<m>` in follow-ups) ·
-Co-Authored-By as in the session's system reminder. Do not run `--clear`; end the report with
+Co-Authored-By as in the session's system reminder — all trailers incl. Co-Authored-By in one final block with no
+blank line between them (git reads only the last paragraph). Do not run `--clear`; end the report with
 `Ready to commit: node scripts/useavibe/activate.mjs --commit` (it checks the trailers, commits and closes the session).
 
 ## 7. Report (≤ 15 lines)

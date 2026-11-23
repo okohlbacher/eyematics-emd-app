@@ -55,7 +55,8 @@ fix (`git add` of every changed and new file; nothing may stay unstaged), then w
 `.planning/useavibe/COMMIT_MSG` (handoff §9 types/scopes), body ends with `Verified: …`, trailers:
 `Acceptance-Defect: $ARGUMENTS` · `Acceptance-Test: <AT case ID or —>` · `Attempts: <gate attempts>` ·
 `Reviewer: pass|findings-fixed|findings-open` · `Regression-Of: <ID>` when the .feature's `Cause:` is `latent Z<j>-P<nn>` or
-`defect-fix AT-M-<nnn>` · Co-Authored-By as in the session's system reminder. Never a `Usability-Problem:` trailer.
+`defect-fix AT-M-<nnn>` · Co-Authored-By as in the session's system reminder, all trailers in one final block with no
+blank line between them (git reads only the last paragraph). Never a `Usability-Problem:` trailer.
 End the report with `Ready to commit: node scripts/useavibe/activate.mjs --commit`.
 
 ## 7. Report (≤ 15 lines)

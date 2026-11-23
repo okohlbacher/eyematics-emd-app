@@ -46,6 +46,15 @@ if (args.includes('--commit')) {
   const missing = [`${idTrailer}: ${a.id}`, 'Attempts:', 'Reviewer:', ...(regressionOf ? [`Regression-Of: ${regressionOf}`] : [])]
     .filter((t) => !new RegExp(`^${t}`, 'm').test(msg));
   if (missing.length) die(`commit message lacks trailer(s): ${missing.join(', ')}`);
+  // Git reads trailers only from the last paragraph: a blank line before Co-Authored-By hides them from
+  // `%(trailers)` (Z0: P03, P05, P16, P18, P22). Check the message as git parses it.
+  const parsed = execFileSync('git', ['interpret-trailers', '--parse', msgFile], { cwd: root, encoding: 'utf8' });
+  const unparsed = [`${idTrailer}: ${a.id}`, 'Attempts:', 'Reviewer:']
+    .filter((t) => !new RegExp(`^${t}`, 'm').test(parsed));
+  if (unparsed.length) {
+    die(`trailer(s) not in the message's last paragraph, so git does not read them: ${unparsed.join(', ')} — ` +
+      'put all trailers incl. Co-Authored-By in one final block without blank lines');
+  }
   // Porcelain lines keep their leading status column, so not via the trimming git() helper.
   const loose = execFileSync('git', ['status', '--porcelain', '--', '.', ':(exclude).planning/useavibe'], {
     cwd: root, encoding: 'utf8',
