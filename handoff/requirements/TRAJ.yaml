@@ -960,8 +960,8 @@ requirements:
       expect: "OD median becomes light blue (#93c5fd), OS light red, combined light violet; axis titles, tick labels and the 'Median' legend text turn light grey on the dark card background; grid lines are a subtle dark grey."
     notes: "Cited tests assert the dark palette contrast values and theme tokens, not that OutcomesPanel applies them (Plotly layout is not rendered in jsdom). The palette test title is generated from a template literal (`DARK_EYE_COLORS['OD']=#93c5fd ratio >= 4.5` etc.); the substring 'DARK_EYE_COLORS[' matches all three."
   - id: UIR-TRAJ-042
-    title: "Header shows Outcomes title with cohort name, patient and case count"
-    statement: "The Verläufe header shows 'Outcomes: <cohort name>' for a named cohort — a saved cohort or the filtered cohort 'Gefilterte Kohorte · <filter summary>' (plain 'Outcomes' otherwise) — and the subtitle '<p> Patient:innen · <c> Fälle' (amended per Z0 C4/C5 a after Z0-P04 and Z0-P17; the shared analysis header above both tabs names the active cohort, UIR-AGG-004)."
+    title: "Header names the active cohort with patient and case count"
+    statement: "The Verläufe heading names the active cohort with the same text as the analysis header after 'Aktive Kohorte: ' — the saved cohort's name, 'Gefilterte Kohorte · <filter summary>' for an unsaved filtered cohort, or 'Alle Patienten' without a cohort; there is no 'Outcomes' prefix — and the subtitle '<p> Patient:innen · <c> Fälle' (amended per Z0 C4/C5 a after Z0-P04 and Z0-P17, and per Z0 Q27/Q43/Q47 a; the shared analysis header above both tabs names the active cohort, UIR-AGG-004)."
     status: implemented
     sources: ["code: src/components/outcomes/OutcomesView.tsx:283-299"]
     evidence:
@@ -978,8 +978,8 @@ requirements:
       steps:
         - "Open Analyse → \"Verläufe\" with no ?cohort= and read the header."
         - "In Kohortenbildung open a saved search via \"Outcomes anzeigen\" (or set ?cohort=<savedId>&tab=trajectories) and read the header again."
-      expect: "Step 1: heading 'Outcomes' with subtitle '<p> Patient:innen · <c> Fälle'. Step 2: heading 'Outcomes: <saved search name>' with subtitle '<p> Patient:innen · <c> Fälle' (p = distinct patients, c = cases of the cohort)."
-    notes: "Added by the refute pass (all sweeps missed it). Tests assert only that the title key renders; the ': <name>' suffix and subtitle counts are not asserted. Since Z0-P04 the subtitle shows patients and cases separately (C5 a)."
+      expect: "Step 1: heading 'Alle Patienten' with subtitle '<p> Patient:innen · <c> Fälle'. Step 2: heading '<saved search name>' (no 'Outcomes' prefix) with subtitle '<p> Patient:innen · <c> Fälle' (p = distinct patients, c = cases of the cohort)."
+    notes: "Added by the refute pass (all sweeps missed it). Tests assert only that the title key renders; the ': <name>' suffix and subtitle counts are not asserted. Since Z0-P04 the subtitle shows patients and cases separately (C5 a). Z0 Q47 a (2026-11-23): statement and the two mapped tests' assertions amended by the operator before the Z0-P04 follow-up session (test titles unchanged: test 1 asserts 'overlayCohortAllPatients', test 4 a heading starting with 'analysisFilteredCohort'); evidence lines follow after that fix."
   - id: UIR-TRAJ-043
     title: "Visible single-case hint above the Verläufe charts follows the layer state"
     statement: "A hint line sits directly above the Visus and CRT chart grids. With \"Individuelle Kurven\" or \"Streupunkte\" shown it reads \"Klicken Sie auf eine Kurve oder einen Messpunkt, um die Einzelfallansicht zu öffnen.\"; with both hidden (also the default for large cohorts) \"Blenden Sie unter „Diagramm-Anzeige“ individuelle Kurven ein, um einzelne Fälle zu öffnen.\"; in compare mode \"Einzelfallansicht nur ohne Kohortenvergleich\" (Z0-P13, Q12 b, Q38, Q39). The layers stay switchable by hand."

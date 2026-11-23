@@ -255,7 +255,8 @@ describe('OutcomesPage — route resolution, audit beacon, empty states (09-01)'
       buildPatientCase('p3'),
     ];
     renderWith({ activeCases: cases });
-    expect(screen.getByText('outcomesTitle')).toBeDefined();
+    // Z0 Q47 a / Q27 (operator amendment): the heading names the active cohort — "Alle Patienten" without a cohort.
+    expect(screen.getByText('overlayCohortAllPatients')).toBeDefined();
   });
 
   /**
@@ -294,7 +295,8 @@ describe('OutcomesPage — route resolution, audit beacon, empty states (09-01)'
       activeCases: cases,
       initialEntries: [`/analysis?tab=trajectories&filter=${filter}`],
     });
-    expect(screen.getByText('outcomesTitle')).toBeDefined();
+    // Z0 Q47 a / Q26 a (operator amendment): an unnamed filtered cohort is headed "Gefilterte Kohorte · <summary>".
+    expect(screen.getByText(/^analysisFilteredCohort/)).toBeDefined();
   });
 
   /**
