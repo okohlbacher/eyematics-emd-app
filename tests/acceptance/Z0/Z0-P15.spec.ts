@@ -7,13 +7,26 @@
 //   "visus-crt-chart"); "titled" = the full text of that card's h3 heading (the info icon has no text content).
 // - "I tick 'Kohorten-Referenz anzeigen'" = the header checkbox with that accessible name (as in Z0-P23).
 // - "the UI language is English" = locale 'en' (localStorage `emd-locale`, as in Z0-P03/P05/P13) followed by a reload.
-// - The @visual scenario (legend entries and axis labels unchanged) is left to the browser pass.
+// - @visual proxy (full check in the browser pass): with the overlay on, the legend entries (`li` of the custom
+//   legend) and the axis titles (`.recharts-label`) of the second chart equal the pre-change strings (added by the
+//   operator after Z0-P15, release-check needs a test per scenario; legend/axis keys untouched by afab82e).
 import type { Locator, Page } from '@playwright/test';
 
 import { expect, test } from '../fixtures';
 
 const TITLE_DE = 'Veränderung von Visus und CRT zum Ausgangswert (jeweils erste Messung)';
 const TITLE_EN = 'Change in visual acuity and CRT from baseline (first measurement of each)';
+
+// Pre-change legend and axis strings of the baseline-change chart with the cohort overlay on (translations.ts).
+const LEGEND_WITH_OVERLAY_DE = [
+  'CRT %',
+  'Kohorten-IQR CRT-Änderung (25.–75. Perz.)',
+  'Kohorten-IQR Visus-Änderung (25.–75. Perz.)',
+  'Kohorten-Median CRT-Änderung',
+  'Kohorten-Median Visus-Änderung',
+  'Visus %',
+];
+const AXIS_WITH_OVERLAY_DE = ['%', 'Monate seit Erstvisite'];
 
 async function openCaseWithVisusSeries(page: Page): Promise<void> {
   await page.goto('/cohort');
@@ -53,4 +66,17 @@ test('[Z0-P15] Englische Oberfläche', async ({ page }) => {
   await page.reload();
   await expect(page.getByRole('checkbox', { name: 'Show cohort reference', exact: true })).toBeVisible();
   await expect(secondChartTitle(page)).toHaveText(TITLE_EN);
+});
+
+test('[Z0-P15] Legende und Achsenbeschriftung bleiben unverändert', async ({ page }) => {
+  const box = page.getByRole('checkbox', { name: 'Kohorten-Referenz anzeigen', exact: true });
+  await box.check();
+  await expect(box).toBeChecked();
+  const chart = secondChartTitle(page).locator('xpath=..');
+  const legend = chart.locator('ul li');
+  await expect(legend).toHaveCount(LEGEND_WITH_OVERLAY_DE.length);
+  expect([...(await legend.allTextContents())].map((s) => s.trim()).sort()).toEqual(LEGEND_WITH_OVERLAY_DE);
+  const axis = chart.locator('.recharts-label');
+  await expect(axis.first()).toBeVisible();
+  expect([...(await axis.allTextContents())].map((s) => s.trim()).sort()).toEqual(AXIS_WITH_OVERLAY_DE);
 });
