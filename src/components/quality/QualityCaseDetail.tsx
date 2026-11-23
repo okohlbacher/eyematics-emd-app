@@ -305,15 +305,22 @@ export default function QualityCaseDetail({
     return (
       <div className="inline-flex items-center gap-1.5">
         {/* Missing rows cannot be "confirmed correct" — only corrected upstream or flagged. */}
+        {/* Z0-P24 (C16 a): title stays "Bestätigen" (AT-SYS-RB-001-01); the explanation is the shared
+            hover/focus tooltip, referenced via aria-describedby. */}
         {!row.missing && (
-          <button
-            onClick={() => onConfirmRow(selectedCase.id, row.paramKey, row.value)}
-            aria-label={`${t('confirmValue')} ${subj}`}
-            title={t('confirmValue')}
-            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border border-green-200 text-green-700 hover:bg-green-50"
-          >
-            <Check className="w-3.5 h-3.5" /> {t('confirmValue')}
-          </button>
+          <Tooltip text={t('confirmValueHint')} align="end" wrap>
+            {(tooltipId) => (
+              <button
+                onClick={() => onConfirmRow(selectedCase.id, row.paramKey, row.value)}
+                aria-label={`${t('confirmValue')} ${subj}`}
+                aria-describedby={tooltipId}
+                title={t('confirmValue')}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border border-green-200 text-green-700 hover:bg-green-50"
+              >
+                <Check className="w-3.5 h-3.5" /> {t('confirmValue')}
+              </button>
+            )}
+          </Tooltip>
         )}
         {/* J6b: the "Behoben" (corrected-upstream) action was removed — the site
             is not planning to access the Quellsystem, so a reviewer can no longer
@@ -413,20 +420,27 @@ export default function QualityCaseDetail({
         {/* Z0-P14: points to the cohort comparison in the full case view. */}
         <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{t('fullCaseViewCompareHint')}</p>
         <div className="mt-3 flex gap-2">
-          <button
-            onClick={() => onExclude(selectedCase.id)}
-            className={`px-3 py-1.5 text-xs rounded-lg border flex items-center gap-1.5 ${
-              isExcluded
-                ? 'border-green-200 text-green-700 hover:bg-green-50'
-                : 'border-red-200 text-red-700 hover:bg-red-50'
-            }`}
-          >
-            {isExcluded ? (
-              <><CheckCheck className="w-3.5 h-3.5" /> {t('includeInAnalysis')}</>
-            ) : (
-              <><Ban className="w-3.5 h-3.5" /> {t('excludeFromAnalysis')}</>
+          {/* Z0-P24: the exclude action explains effect, per-user scope and how to undo it (hover and focus). */}
+          {/* One wrapper in both states, so the button keeps keyboard focus across the toggle. */}
+          <Tooltip text={isExcluded ? '' : t('excludeFromAnalysisHint')} align="start" wrap>
+            {(tooltipId) => (
+              <button
+                onClick={() => onExclude(selectedCase.id)}
+                aria-describedby={isExcluded ? undefined : tooltipId}
+                className={`px-3 py-1.5 text-xs rounded-lg border flex items-center gap-1.5 ${
+                  isExcluded
+                    ? 'border-green-200 text-green-700 hover:bg-green-50'
+                    : 'border-red-200 text-red-700 hover:bg-red-50'
+                }`}
+              >
+                {isExcluded ? (
+                  <><CheckCheck className="w-3.5 h-3.5" /> {t('includeInAnalysis')}</>
+                ) : (
+                  <><Ban className="w-3.5 h-3.5" /> {t('excludeFromAnalysis')}</>
+                )}
+              </button>
             )}
-          </button>
+          </Tooltip>
         </div>
       </div>
 

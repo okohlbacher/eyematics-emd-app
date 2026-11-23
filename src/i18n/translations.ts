@@ -396,6 +396,11 @@ const translations = {
     en: 'Corrected upstream – the value was fixed directly in the source EHR. The demonstrator itself does not change any data.',
   },
   confirmValue: { de: 'Bestätigen', en: 'Confirm' },
+  // Z0-P24: effect and per-user scope of the confirmation (C16 a, Q12 a).
+  confirmValueHint: {
+    de: 'Markiert diesen Messwert als geprüft und korrekt. Die Markierung gilt nur für Ihr Benutzerkonto. Die Daten im Quellsystem werden nicht verändert.',
+    en: 'Marks this measurement as checked and correct. The mark applies to your user account only. The data in the source system are not changed.',
+  },
   // J6b: the "Behoben" action was removed; its button labels (correctedUpstream /
   // correctedUpstreamShort) are gone. correctedUpstreamNote + logCorrectedUpstream
   // are KEPT — pre-existing resolved rows/log entries still render them.
@@ -520,6 +525,11 @@ const translations = {
 
   // Exclusion
   excludeFromAnalysis: { de: 'Von Analysen ausschließen', en: 'Exclude from analyses' },
+  // Z0-P24: effect and per-user scope of the exclusion (C16 a, Q12 a).
+  excludeFromAnalysisHint: {
+    de: 'Dieser Fall wird in Ihren Kohortenanalysen nicht mehr berücksichtigt. Der Ausschluss gilt nur für Ihr Benutzerkonto und ist jederzeit rückgängig zu machen über „In Analysen einschließen“.',
+    en: 'This case will no longer be included in your cohort analyses. The exclusion applies to your user account only and can be undone at any time via “Include in analyses”.',
+  },
   includeInAnalysis: { de: 'In Analysen einschließen', en: 'Include in analyses' },
   excludedCase: { de: 'Ausgeschlossen', en: 'Excluded' },
   excludedCasesCount: { de: 'Ausgeschlossene Fälle', en: 'Excluded Cases' },

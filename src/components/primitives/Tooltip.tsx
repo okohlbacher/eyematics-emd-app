@@ -36,13 +36,16 @@ export default function Tooltip({
       }}
     >
       {children(id)}
-      <span
-        id={id}
-        role="tooltip"
-        className={`${open ? 'block' : 'hidden'} absolute top-full ${position} mt-1 z-50 ${width} rounded-md bg-gray-900 px-2 py-1 text-xs font-normal text-white shadow-lg dark:bg-gray-100 dark:text-gray-900`}
-      >
-        {text}
-      </span>
+      {/* An empty text renders no tooltip, so a caller can switch it off without remounting the control (Z0-P24). */}
+      {text && (
+        <span
+          id={id}
+          role="tooltip"
+          className={`${open ? 'block' : 'hidden'} absolute top-full ${position} mt-1 z-50 ${width} rounded-md bg-gray-900 px-2 py-1 text-xs font-normal text-white shadow-lg dark:bg-gray-100 dark:text-gray-900`}
+        >
+          {text}
+        </span>
+      )}
     </span>
   );
 }
