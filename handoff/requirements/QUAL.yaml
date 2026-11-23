@@ -393,9 +393,9 @@ requirements:
     status: implemented
     sources: ["code: src/components/quality/QualityCaseDetail.tsx:356-420", "UAT v1.13 C1 UI-SPEC §6", "manual: Benutzerhandbuch §6"]
     evidence:
-      - "src/components/quality/QualityCaseDetail.tsx:358-385 (pseudonym, \"Vollständige Fallansicht\" button with Tooltip fullCaseViewHint (363-374), \"Ausgeschlossen\" badge, \"Fortschritt: judged / all beurteilt\")"
-      - "src/components/quality/QualityCaseDetail.tsx:386-412 (\"<age> Alter\", Diagnose, Zentrum, Therapieabbruch/-unterbrechung, Messwerte gesamt)"
-      - "src/components/quality/QualityCaseDetail.tsx:414 (hint fullCaseViewCompareHint); 415-430 (exclude/include toggle)"
+      - "src/components/quality/QualityCaseDetail.tsx:363-392 (pseudonym, \"Vollständige Fallansicht\" button with Tooltip fullCaseViewHint (370-381), \"Ausgeschlossen\" badge, \"Fortschritt: judged / all beurteilt\")"
+      - "src/components/quality/QualityCaseDetail.tsx:393-419 (\"<age> Alter\", Diagnose, Zentrum, Therapieabbruch/-unterbrechung, Messwerte gesamt)"
+      - "src/components/quality/QualityCaseDetail.tsx:421 (hint fullCaseViewCompareHint); 422-444 (exclude/include toggle with explanation, see UIR-QUAL-019)"
       - "src/i18n/translations.ts:347-354 (fullCaseViewHint, fullCaseViewCompareHint DE/EN)"
       - "src/pages/QualityPage.tsx:461 (onNavigateToCase → navigate(`/case/${id}`))"
       - "src/App.tsx:58 (/case/:caseId route)"
@@ -430,11 +430,12 @@ requirements:
 
   - id: UIR-QUAL-019
     title: "Exclude / include a case from analyses"
-    statement: "The user can exclude a case via \"Von Analysen ausschließen\"; it is marked \"Ausgeschlossen\", leaves the Kohortenbildung/Analyse counts, and \"In Analysen einschließen\" reverts it."
+    statement: "The user can exclude a case via \"Von Analysen ausschließen\"; it is marked \"Ausgeschlossen\", leaves the Kohortenbildung/Analyse counts, and \"In Analysen einschließen\" reverts it. On hover/focus the exclude button explains: \"Dieser Fall wird in Ihren Kohortenanalysen nicht mehr berücksichtigt. Der Ausschluss gilt nur für Ihr Benutzerkonto und ist jederzeit rückgängig zu machen über „In Analysen einschließen“.\" (Z0-P24)."
     status: implemented
     sources: ["EMDREQ-QUAL-008 / N04.04", "manual: Benutzerhandbuch §7.4", "code: src/components/quality/QualityCaseDetail.tsx:395-412"]
     evidence:
-      - "src/components/quality/QualityCaseDetail.tsx:360-365,395-412 (badge + toggle button)"
+      - "src/components/quality/QualityCaseDetail.tsx:382-386 (badge), 425-443 (toggle button, Tooltip excludeFromAnalysisHint with aria-describedby only in the exclude state; Z0-P24)"
+      - "src/i18n/translations.ts:529-532 (excludeFromAnalysisHint DE/EN)"
       - "src/pages/QualityPage.tsx:281,412 (toggleExcludeCase; \"Ausgeschlossene Fälle\" tile = excludedCases.length)"
       - "src/context/DataContext.tsx:150-154,244-254 (activeCases = cases minus excluded; PUT /api/data/excluded-cases)"
       - "src/pages/CohortBuilderPage.tsx:949 and src/pages/AnalysisPage.tsx:65,148 (use activeCases)"
@@ -449,7 +450,7 @@ requirements:
         - "Observe the header badge, the button label and the \"Ausgeschlossene Fälle\" tile."
         - "Return to /cohort and read the total; then back on /quality click \"In Analysen einschließen\"."
       expect: "After exclusion the header shows the red \"Ausgeschlossen\" badge, the button reads \"In Analysen einschließen\", the \"Ausgeschlossene Fälle\" tile rises by one and the Kohortenbildung total drops by one; including again restores the total and the tile."
-    notes: "The Kohortenbildung route is /cohort (not /kohorte) and its total reads \"von N Gesamtfällen\". The Startseite total (LandingPage.tsx:52) counts raw cases and does not drop. tests/ui-requirements.test.ts 'exclusion is togglable' is a toy array test that does not exercise the UI or DataContext and is therefore not cited; no UI test covers the toggle."
+    notes: "The Kohortenbildung route is /cohort (not /kohorte) and its total reads \"von N Gesamtfällen\". The Startseite total (LandingPage.tsx:52) counts raw cases and does not drop. tests/ui-requirements.test.ts 'exclusion is togglable' is a toy array test that does not exercise the UI or DataContext and is therefore not cited; no UI test covers the toggle. The exclude explanation (hover, keyboard focus, EN) is asserted by tests/acceptance/Z0/Z0-P24.spec.ts since Z0-P24 (8fc6188); \"In Analysen einschließen\" has no explanation (open team decision)."
 
   - id: UIR-QUAL-020
     title: "Measurement and OCT tabs in the case detail"
@@ -584,11 +585,12 @@ requirements:
 
   - id: UIR-QUAL-026
     title: "Per-row Bestätigen with tooltip and reset"
-    statement: "The user can confirm a value with the per-row \"Bestätigen\" action (with mouseover tooltip); the pill becomes \"bestätigt\", persists across reload, and a reset icon returns the row to \"Offen\"."
+    statement: "The user can confirm a value with the per-row \"Bestätigen\" action (native title \"Bestätigen\" kept, C16 a, plus a hover/focus tooltip referenced via aria-describedby explaining effect and scope: \"Markiert diesen Messwert als geprüft und korrekt. Die Markierung gilt nur für Ihr Benutzerkonto. Die Daten im Quellsystem werden nicht verändert.\", Z0-P24); the pill becomes \"bestätigt\", persists across reload, and a reset icon returns the row to \"Offen\"."
     status: implemented
     sources: ["EMDREQ-QUAL-005 / N03.10", "UAT v1.13 C1; v1.14 I6b (confirmed v1.15)", "code: src/components/quality/QualityCaseDetail.tsx:307-349"]
     evidence:
-      - "src/components/quality/QualityCaseDetail.tsx:307-349 (Bestätigen button with title tooltip; reset RotateCcw button titled \"Zurücksetzen\" for judged rows)"
+      - "src/components/quality/QualityCaseDetail.tsx:290-302 (reset RotateCcw button titled \"Zurücksetzen\" for judged rows); 309-323 (Bestätigen button, title \"Bestätigen\", wrapped in Tooltip confirmValueHint with aria-describedby; Z0-P24)"
+      - "src/i18n/translations.ts:400-403 (confirmValueHint DE/EN)"
       - "src/pages/QualityPage.tsx:250-279 (handleConfirmRow → acknowledged flag with sentinel 'confirmed'; handleResetRow → removeQualityFlagByParameter)"
       - "src/context/DataContext.tsx:201-242 (PUT /api/data/quality-flags, server response adopted)"
       - "server/dataApi.ts:92-135 (per-user persistence)"
@@ -608,8 +610,8 @@ requirements:
         - "Click \"Bestätigen\"."
         - "Reload the page, reselect the case."
         - "Click the circular-arrow reset icon (tooltip \"Zurücksetzen\") in the row's Aktion cell."
-      expect: "Hover shows the tooltip \"Bestätigen\"; after the click the Status cell shows the green \"bestätigt\" pill and the Aktion cell only the reset icon; the pill survives the reload; the reset returns the row to \"Offen\" with Bestätigen + flag buttons."
-    notes: ""
+      expect: "Hover shows the native tooltip \"Bestätigen\" and the explanation box \"Markiert diesen Messwert als geprüft und korrekt. Die Markierung gilt nur für Ihr Benutzerkonto. Die Daten im Quellsystem werden nicht verändert.\" (also on keyboard focus); after the click the Status cell shows the green \"bestätigt\" pill and the Aktion cell only the reset icon; the pill survives the reload; the reset returns the row to \"Offen\" with Bestätigen + flag buttons."
+    notes: "Explanation tooltip since Z0-P24 (8fc6188), asserted by tests/acceptance/Z0/Z0-P24.spec.ts (hover text, EN). Open for the browser check: position of the box on the last table rows; native title and custom tooltip show at the same time (accepted by C16 a)."
 
   - id: UIR-QUAL-027
     title: "Only Bestätigen and Fehler melden row actions"

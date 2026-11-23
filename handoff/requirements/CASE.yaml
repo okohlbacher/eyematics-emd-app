@@ -29,7 +29,7 @@ requirements:
     status: implemented
     sources: ["spec: EMDREQ-FALL-001 / N03.07"]
     evidence:
-      - "src/components/quality/QualityCaseDetail.tsx:363-374 (button t('fullCaseView') in the header row next to the pseudonym, tooltip fullCaseViewHint → onNavigateToCase; Z0-P14)"
+      - "src/components/quality/QualityCaseDetail.tsx:370-381 (button t('fullCaseView') in the header row next to the pseudonym, tooltip fullCaseViewHint → onNavigateToCase; Z0-P14)"
       - "src/pages/QualityPage.tsx:461 (onNavigateToCase={(id) => navigate(`/case/${id}`)})"
       - "src/i18n/translations.ts:326 (fullCaseView: 'Vollständige Fallansicht')"
     tests: []
