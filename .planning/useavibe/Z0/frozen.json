@@ -23,7 +23,7 @@
     "acceptance/Z0/Z0-P20.feature": "2f85e95c7a83bc4930a271a17a7d93d5bc9dac29da73227c96b5c77510e4c2ac",
     "acceptance/Z0/Z0-P21.feature": "9b1aab52b71b07c9ec96f541d368ab72945cdc880656a3dd9007188123ca79ea",
     "acceptance/Z0/Z0-P22.feature": "528d902d267c564c2d4425da859c479024e3c46ad6af741806bda1a70806a15c",
-    "acceptance/Z0/Z0-P23.feature": "2bbe5d830a38a9401be5c6d08efbc77ddfd8ea89c3fbf83e15d877e2f6075d7f",
+    "acceptance/Z0/Z0-P23.feature": "960098652918f3f90f5ba3dd0610858ee61b8e2f3922abd8c6eeb121675b0d13",
     "acceptance/Z0/Z0-P24.feature": "0259ce3cf4204efc536a4961a44e019dcacb85703aa4bfa829e8453783be6803",
     "acceptance/Z0/Z0-P25.feature": "54187f8dd82dacd237cd14b49ac3db68ce269cbff3fc297b66d39219ae44dbf5",
     "acceptance/Z0/Z0-P26.feature": "09bf49df7fc8778849d1f2b69bf4daa353e172e09e9913b02679f9fa07b457f9",
@@ -227,6 +227,40 @@
       "kind": "plan-approve by NF",
       "files": [
         ".planning/useavibe/Z0/PLAN.md"
+      ],
+      "operator": null
+    },
+    {
+      "ts": "2026-11-23T13:45:20Z",
+      "kind": "criteria-freeze",
+      "files": [
+        "acceptance/Z0/Z0-P01.feature",
+        "acceptance/Z0/Z0-P02.feature",
+        "acceptance/Z0/Z0-P03.feature",
+        "acceptance/Z0/Z0-P04.feature",
+        "acceptance/Z0/Z0-P05.feature",
+        "acceptance/Z0/Z0-P06.feature",
+        "acceptance/Z0/Z0-P07.feature",
+        "acceptance/Z0/Z0-P08.feature",
+        "acceptance/Z0/Z0-P09.feature",
+        "acceptance/Z0/Z0-P10.feature",
+        "acceptance/Z0/Z0-P11.feature",
+        "acceptance/Z0/Z0-P12.feature",
+        "acceptance/Z0/Z0-P13.feature",
+        "acceptance/Z0/Z0-P14.feature",
+        "acceptance/Z0/Z0-P15.feature",
+        "acceptance/Z0/Z0-P16.feature",
+        "acceptance/Z0/Z0-P17.feature",
+        "acceptance/Z0/Z0-P18.feature",
+        "acceptance/Z0/Z0-P19.feature",
+        "acceptance/Z0/Z0-P20.feature",
+        "acceptance/Z0/Z0-P21.feature",
+        "acceptance/Z0/Z0-P22.feature",
+        "acceptance/Z0/Z0-P23.feature",
+        "acceptance/Z0/Z0-P24.feature",
+        "acceptance/Z0/Z0-P25.feature",
+        "acceptance/Z0/Z0-P26.feature",
+        ".planning/useavibe/Z0/PROBLEMS.md"
       ],
       "operator": null
     }

@@ -88,3 +88,25 @@ Feature: Z0-P23 Kohortenvergleich im Tab Aggregiert und einheitliche Abbildungen
     When I compare the chart cards on "Aggregiert", "Verläufe" and in the "Einzelfallansicht"
     Then card frame, title style, grid lines, axis font and tooltip box look the same in all three views
     And the same quantity uses the same colour in all three views
+
+  # Added by NF on 2026-11-23 (drafted_by: ai-assisted) from the /useavibe-release 0 browser pass on emd-smoke built
+  # from c6edd3b: regressions of the Recharts migration in Verläufe (D1–D3) and the number format across the three
+  # views (D4, decision: decimal comma in German everywhere, decimal point in English).
+  Scenario: Achsenbeschriftungen der Verläufe zeigen gerundete Werte
+    Given I open the tab "Verläufe" with the metric tab "CRT" and the y-metric "Δ (µm zur Baseline)"
+    And I open the metric tab "Visus" afterwards
+    Then on both metric tabs every x-axis tick label of "Tage seit Baseline" is a whole number
+    And every y-axis tick label is a multiple of "1", "2", "2.5" or "5" times a power of ten
+    And no tick label shows more than "2" decimal places
+
+  @visual
+  Scenario: Kurven bleiben innerhalb der Diagrammfläche
+    Given I open the tab "Verläufe" with the metric tab "CRT"
+    And "Individuelle Kurven" is ticked in "Diagramm-Anzeige"
+    Then no curve, point or band of any chart card is drawn outside the plot area of that card
+
+  Scenario: Einheitliches Zahlenformat in Aggregiert, Verläufe und Einzelfallansicht
+    Given the UI language is "Deutsch"
+    When I hover over a data point in the age-versus-visus chart on "Aggregiert", a median point on "Verläufe" and a visus point in the "Einzelfallansicht"
+    Then every decimal number in the tooltips and axis tick labels uses a decimal comma, e.g. "0,5" and not "0.5"
+    And with the UI language "English" every decimal number uses a decimal point, e.g. "0.5"
