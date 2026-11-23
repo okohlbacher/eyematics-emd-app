@@ -980,3 +980,22 @@ requirements:
         - "In Kohortenbildung open a saved search via \"Outcomes anzeigen\" (or set ?cohort=<savedId>&tab=trajectories) and read the header again."
       expect: "Step 1: heading 'Outcomes' with subtitle '<p> Patient:innen · <c> Fälle'. Step 2: heading 'Outcomes: <saved search name>' with subtitle '<p> Patient:innen · <c> Fälle' (p = distinct patients, c = cases of the cohort)."
     notes: "Added by the refute pass (all sweeps missed it). Tests assert only that the title key renders; the ': <name>' suffix and subtitle counts are not asserted. Since Z0-P04 the subtitle shows patients and cases separately (C5 a)."
+  - id: UIR-TRAJ-043
+    title: "Visible single-case hint above the Verläufe charts follows the layer state"
+    statement: "A hint line sits directly above the Visus and CRT chart grids. With \"Individuelle Kurven\" or \"Streupunkte\" shown it reads \"Klicken Sie auf eine Kurve oder einen Messpunkt, um die Einzelfallansicht zu öffnen.\"; with both hidden (also the default for large cohorts) \"Blenden Sie unter „Diagramm-Anzeige“ individuelle Kurven ein, um einzelne Fälle zu öffnen.\"; in compare mode \"Einzelfallansicht nur ohne Kohortenvergleich\" (Z0-P13, Q12 b, Q38, Q39). The layers stay switchable by hand."
+    status: implemented
+    sources: ["Z0-P13 (PLAN round 7, Q38/Q39, NF 2026-11-20)", "code: src/components/outcomes/DrillDownHint.tsx"]
+    evidence:
+      - "src/components/outcomes/DrillDownHint.tsx — key outcomesTooltipCompareClickHint in cross mode, outcomesDrillDownHintVisible when perPatient or scatter is shown, else outcomesDrillDownHintLayersOff; data-testid outcomes-drilldown-hint"
+      - "src/components/outcomes/VisusMetricContainer.tsx:99, CrtMetricContainer.tsx:70 — hint rendered directly before the chart grid"
+      - "src/i18n/translations.ts:977-984 — DE/EN texts (EN 'Click a curve or a measurement point to open the case view.', 'Show per-patient curves under “Chart display” to open single cases.')"
+    tests: []
+    browser:
+      route: "/analysis?tab=trajectories"
+      steps:
+        - "Open Analyse → \"Verläufe\" with the Testkohorte (146 patients) and read the line above the charts."
+        - "Under \"Diagramm-Anzeige\" tick \"Individuelle Kurven\"."
+        - "Activate a cohort comparison."
+        - "Switch the language to English and repeat step 2."
+      expect: "Step 1: 'Blenden Sie unter „Diagramm-Anzeige“ individuelle Kurven ein, um einzelne Fälle zu öffnen.' Step 2: 'Klicken Sie auf eine Kurve oder einen Messpunkt, um die Einzelfallansicht zu öffnen.' Step 3: 'Einzelfallansicht nur ohne Kohortenvergleich'. Step 4: 'Click a curve or a measurement point to open the case view.' The line sits directly above the charts in both metric views."
+    notes: "Added after Z0-P13 (2d15d1c). The container e2e spec tests/acceptance/Z0/Z0-P13.spec.ts asserts the layer-dependent texts (DE/EN) and the position directly above the chart; the compare-mode text is not asserted by a test. The aria-label drill-down hint (UIR-TRAJ-009) is unchanged. Reviewer verdict findings-open without details (severity unknown). Browser check pending."
