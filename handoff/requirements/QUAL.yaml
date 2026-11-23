@@ -389,13 +389,14 @@ requirements:
 
   - id: UIR-QUAL-017
     title: "Case detail header content and links"
-    statement: "The Datenqualität case detail header shows pseudonym, excluded badge, \"Fortschritt\", age, diagnosis, centre, therapy status, the exclude/include toggle and a \"Vollständige Fallansicht\" link."
+    statement: "The Datenqualität case detail header shows pseudonym, excluded badge, \"Fortschritt\", age, diagnosis, centre, therapy status, the exclude/include toggle, a \"Vollständige Fallansicht\" button in the header row next to the pseudonym with the tooltip \"Einzelfallansicht mit Verläufen und Vergleich mit einer Kohorte öffnen\", and the hint \"In der vollständigen Fallansicht können Sie diesen Fall mit einer Kohorte vergleichen.\" (Z0-P14, C10, Q13)."
     status: implemented
     sources: ["code: src/components/quality/QualityCaseDetail.tsx:356-420", "UAT v1.13 C1 UI-SPEC §6", "manual: Benutzerhandbuch §6"]
     evidence:
-      - "src/components/quality/QualityCaseDetail.tsx:356-367 (pseudonym, \"Ausgeschlossen\" badge, \"Fortschritt: judged / all beurteilt\")"
-      - "src/components/quality/QualityCaseDetail.tsx:368-394 (\"<age> Alter\", Diagnose, Zentrum, Therapieabbruch/-unterbrechung, Messwerte gesamt)"
-      - "src/components/quality/QualityCaseDetail.tsx:395-419 (exclude/include toggle, \"Vollständige Fallansicht\")"
+      - "src/components/quality/QualityCaseDetail.tsx:358-385 (pseudonym, \"Vollständige Fallansicht\" button with Tooltip fullCaseViewHint (363-374), \"Ausgeschlossen\" badge, \"Fortschritt: judged / all beurteilt\")"
+      - "src/components/quality/QualityCaseDetail.tsx:386-412 (\"<age> Alter\", Diagnose, Zentrum, Therapieabbruch/-unterbrechung, Messwerte gesamt)"
+      - "src/components/quality/QualityCaseDetail.tsx:414 (hint fullCaseViewCompareHint); 415-430 (exclude/include toggle)"
+      - "src/i18n/translations.ts:347-354 (fullCaseViewHint, fullCaseViewCompareHint DE/EN)"
       - "src/pages/QualityPage.tsx:461 (onNavigateToCase → navigate(`/case/${id}`))"
       - "src/App.tsx:58 (/case/:caseId route)"
     tests: []
@@ -405,8 +406,8 @@ requirements:
         - "Open /quality and click a case."
         - "Read the top card of the detail panel."
         - "Click \"Vollständige Fallansicht\"."
-      expect: "The card shows the pseudonym, \"Fortschritt: n / N beurteilt\", \"<age> Alter\", \"Diagnose:\", \"Zentrum:\", \"Therapieabbruch/-unterbrechung:\", \"Messwerte gesamt:\", the button \"Von Analysen ausschließen\" (or \"In Analysen einschließen\") and the link; the link navigates to /case/<id> showing the same pseudonym."
-    notes: "The age is rendered as \"<number> Alter\" (t('age')), not \"<number> Jahre\"."
+      expect: "The card shows the pseudonym, \"Fortschritt: n / N beurteilt\", \"<age> Alter\", \"Diagnose:\", \"Zentrum:\", \"Therapieabbruch/-unterbrechung:\", \"Messwerte gesamt:\", the hint \"In der vollständigen Fallansicht können Sie diesen Fall mit einer Kohorte vergleichen.\", the button \"Von Analysen ausschließen\" (or \"In Analysen einschließen\") and, next to the pseudonym, the button \"Vollständige Fallansicht\" whose hover/focus tooltip reads \"Einzelfallansicht mit Verläufen und Vergleich mit einer Kohorte öffnen\"; the button navigates to /case/<id> showing the same pseudonym."
+    notes: "The age is rendered as \"<number> Alter\" (t('age')), not \"<number> Jahre\". Header button, tooltip and hint since Z0-P14 (6ae8cf9), asserted by tests/acceptance/Z0/Z0-P14.spec.ts. Open for the acceptance round: hint placement (Q13 named only the header row for the button), the \"Ausgeschlossen\" badge now sits right of the button."
 
   - id: UIR-QUAL-018
     title: "Therapy classification with gap days in header"

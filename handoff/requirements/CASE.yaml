@@ -29,7 +29,7 @@ requirements:
     status: implemented
     sources: ["spec: EMDREQ-FALL-001 / N03.07"]
     evidence:
-      - "src/components/quality/QualityCaseDetail.tsx:413-418 (button t('fullCaseView') → onNavigateToCase)"
+      - "src/components/quality/QualityCaseDetail.tsx:363-374 (button t('fullCaseView') in the header row next to the pseudonym, tooltip fullCaseViewHint → onNavigateToCase; Z0-P14)"
       - "src/pages/QualityPage.tsx:461 (onNavigateToCase={(id) => navigate(`/case/${id}`)})"
       - "src/i18n/translations.ts:326 (fullCaseView: 'Vollständige Fallansicht')"
     tests: []
@@ -38,9 +38,9 @@ requirements:
       steps:
         - "Open Datenqualität (/quality)."
         - "Click a case in the case list so the detail panel opens; note its Pseudonym."
-        - "Click \"Vollständige Fallansicht\" in the action row under the panel's header strip."
+        - "Click the button \"Vollständige Fallansicht\" in the header row next to the pseudonym."
       expect: "URL becomes /case/<id> and the case page header shows the same pseudonym."
-    notes: "The link sits in the 'mt-3 flex gap-2' action row next to the exclude/include button (QualityCaseDetail.tsx:398-419)."
+    notes: "Since Z0-P14 (6ae8cf9, C10/Q13) the single control sits as a button in the header row next to the pseudonym (moved, not duplicated; AT-QUAL-006-01 unchanged); hover/focus tooltip 'Einzelfallansicht mit Verläufen und Vergleich mit einer Kohorte öffnen'. tests/acceptance/Z0/Z0-P14.spec.ts asserts position, tooltip and navigation."
   - id: UIR-CASE-003
     title: "Unknown case id shows not-found message"
     statement: "The case page shows \"Fall nicht gefunden.\" with a \"Zurück\" button for an unknown or inaccessible case id, without crashing."
