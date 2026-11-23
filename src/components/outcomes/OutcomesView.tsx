@@ -19,7 +19,7 @@
  * unconditional and above any early return; their internal hook call order
  * mirrors the original OutcomesView exactly.
  */
-import { Settings } from 'lucide-react';
+import { HelpCircle, Settings } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { criticalCasesOf } from '../../../shared/criticalCases';
@@ -31,6 +31,7 @@ import CrtMetricContainer from './CrtMetricContainer';
 import IntervalHistogram from './IntervalHistogram';
 import OutcomesDataPreview from './OutcomesDataPreview';
 import OutcomesEmptyState from './OutcomesEmptyState';
+import OutcomesHelpDialog from './OutcomesHelpDialog';
 import OutcomesSettingsDrawer from './OutcomesSettingsDrawer';
 import ResponderView from './ResponderView';
 import { useOutcomesAggregation } from './useOutcomesAggregation';
@@ -56,6 +57,8 @@ export default function OutcomesView(
   // WR-01 / Pitfall 3: both hooks called unconditionally before any return.
   const s = useOutcomesRouteState(cohort, centers);
   const a = useOutcomesAggregation(s);
+  // Z0-P11: help dialog of the Verläufe tab (local to this view; closes on unmount).
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // Z0-P12: pseudonyms of the cases with critical values (the predicate and threshold of the header count, Z0-P09),
   // over the shown cohort and, in compare mode, every compared cohort; null while the option is off.
@@ -345,6 +348,18 @@ export default function OutcomesView(
             <Settings className="w-4 h-4" />
             <span>{s.t('outcomesSettingsButton')}</span>
           </button>
+          {/* Z0-P11: help next to "Diagramm-Anzeige"; "Kohorten vergleichen" stays rightmost (Z0-P23). */}
+          <button
+            type="button"
+            aria-label={s.t('outcomesHelpTitle')}
+            title={s.t('outcomesHelpTitle')}
+            aria-haspopup="dialog"
+            onClick={() => setHelpOpen(true)}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
+          >
+            <HelpCircle className="w-4 h-4" aria-hidden="true" />
+            <span>{s.t('outcomesHelpButton')}</span>
+          </button>
           {/* Z0-P23: "Kohorten vergleichen" is the rightmost header control, at the same position as on Aggregiert. */}
           <CompareCohortsButton
             label={s.t('outcomesCompareOpenDrawer')}
@@ -360,6 +375,8 @@ export default function OutcomesView(
 
       {/* Conditional metric body */}
       {renderBody()}
+
+      {helpOpen && <OutcomesHelpDialog onClose={() => setHelpOpen(false)} t={s.t} />}
 
       {/* Settings drawer (OUTCOME-03 through -06) */}
       <OutcomesSettingsDrawer

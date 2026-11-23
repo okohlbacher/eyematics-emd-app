@@ -982,6 +982,29 @@ const translations = {
     de: 'Blenden Sie unter „Diagramm-Anzeige“ individuelle Kurven ein, um einzelne Fälle zu öffnen.',
     en: 'Show per-patient curves under “Chart display” to open single cases.',
   },
+  // Z0-P11 (Q10): help button and dialog for the Verläufe tab — four sections, wording by the developer.
+  outcomesHelpButton: { de: 'Hilfe', en: 'Help' },
+  outcomesHelpTitle: { de: 'Hilfe zu Verläufen', en: 'Help on trajectories' },
+  outcomesHelpCaseHeading: { de: 'Einzelfallansicht öffnen', en: 'Open the case view' },
+  outcomesHelpCaseBody: {
+    de: 'Klicken Sie im Diagramm auf eine Kurve oder einen Messpunkt, um die Einzelfallansicht zu diesem Pseudonym zu öffnen. Dafür müssen unter „Diagramm-Anzeige“ individuelle Kurven oder Streupunkte eingeblendet sein. Alternativ öffnet ein Klick auf ein Pseudonym unter „Rohdaten anzeigen“ die Einzelfallansicht. Im Kohortenvergleich öffnet ein Klick im Diagramm keinen Fall; die Rohdaten zeigen dann nur die Basis-Kohorte.',
+    en: 'Click a curve or a measurement point in the chart to open the case view for that pseudonym. Per-patient curves or scatter points must be shown under “Chart display”. Alternatively, click a pseudonym under “Show raw data”. While cohorts are compared, clicking the chart does not open a case; the raw data then show only the primary cohort.',
+  },
+  outcomesHelpCompareHeading: { de: 'Kohorten vergleichen', en: 'Compare cohorts' },
+  outcomesHelpCompareBody: {
+    de: 'Über „Kohorten vergleichen“ wählen Sie bis zu 4 Kohorten aus. Ihre Verläufe erscheinen in eigenen Farben in denselben Diagrammen. „Einzelne Kohorte anzeigen“ beendet den Vergleich.',
+    en: 'Use “Compare cohorts” to select up to 4 cohorts. Their trajectories appear in their own colours in the same charts. “Reset to single cohort” ends the comparison.',
+  },
+  outcomesHelpDisplayHeading: { de: 'Diagramm-Anzeige', en: 'Chart display' },
+  outcomesHelpDisplayBody: {
+    de: 'Unter „Diagramm-Anzeige“ legen Sie fest, was die Diagramme zeigen: Median, individuelle Kurven, Streupunkte und Streuband (IQR), die Zeitachse (Tage seit Baseline oder Anzahl Behandlungen) und die Y-Metrik (Absolut, Δ oder Δ %). Ihre Änderungen bleiben für die gesamte Sitzung erhalten.',
+    en: 'Under “Chart display” you choose what the charts show: median, per-patient curves, scatter points and spread band (IQR), the time axis (days since baseline or number of treatments) and the y metric (absolute, Δ or Δ %). Your changes are kept for the whole session.',
+  },
+  outcomesHelpRawHeading: { de: 'Rohdaten anzeigen', en: 'Show raw data' },
+  outcomesHelpRawBody: {
+    de: '„Rohdaten anzeigen“ unter den Diagrammen blendet die Messwerte als Tabelle ein; sie entspricht dem CSV-Export. Ein Klick auf ein Pseudonym öffnet die Einzelfallansicht.',
+    en: '“Show raw data” below the charts shows the measurements as a table; it matches the CSV export. Clicking a pseudonym opens the case view.',
+  },
 
   // ---- Phase 13: Metric Selector (METRIC-04 / D-01) ----
   metricsVisus: { de: 'Visus', en: 'Visus' },
