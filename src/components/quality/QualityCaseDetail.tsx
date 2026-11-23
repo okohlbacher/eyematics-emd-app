@@ -31,6 +31,7 @@ import { getCachedDisplay } from '../../services/terminology';
 import type { PatientCase, QualityFlag } from '../../types/fhir';
 import OctViewer from '../OctViewer';
 import InfoTooltip from '../primitives/InfoTooltip';
+import Tooltip from '../primitives/Tooltip';
 import type { TherapyStatusEntry } from './QualityCaseList';
 
 /**
@@ -357,6 +358,20 @@ export default function QualityCaseDetail({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h3 className="font-semibold text-gray-900 dark:text-white">{selectedCase.pseudonym}</h3>
+            {/* Z0-P14 (C10, Q13): the single "Vollständige Fallansicht" control, moved into the header row as a
+                visible button with the shared hover/focus tooltip. */}
+            <Tooltip text={t('fullCaseViewHint')} align="start">
+              {(tooltipId) => (
+                <button
+                  onClick={() => onNavigateToCase(selectedCase.id)}
+                  aria-describedby={tooltipId}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 flex items-center gap-1.5"
+                >
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                  {t('fullCaseView')}
+                </button>
+              )}
+            </Tooltip>
             {isExcluded && (
               <span className="px-2 py-0.5 bg-red-50 text-red-600 rounded text-xs font-medium flex items-center gap-1">
                 <Ban className="w-3 h-3" /> {t('excludedCase')}
@@ -395,6 +410,8 @@ export default function QualityCaseDetail({
           </span>
           <span>{t('totalMeasurements')}: <span className="font-medium text-gray-900 dark:text-white">{selectedCase.observations.length}</span></span>
         </div>
+        {/* Z0-P14: points to the cohort comparison in the full case view. */}
+        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{t('fullCaseViewCompareHint')}</p>
         <div className="mt-3 flex gap-2">
           <button
             onClick={() => onExclude(selectedCase.id)}
@@ -409,12 +426,6 @@ export default function QualityCaseDetail({
             ) : (
               <><Ban className="w-3.5 h-3.5" /> {t('excludeFromAnalysis')}</>
             )}
-          </button>
-          <button
-            onClick={() => onNavigateToCase(selectedCase.id)}
-            className="text-sm text-blue-600 hover:underline"
-          >
-            {t('fullCaseView')}
           </button>
         </div>
       </div>

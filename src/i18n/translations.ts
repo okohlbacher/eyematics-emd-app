@@ -344,6 +344,14 @@ const translations = {
     en: 'Select a case to review data quality',
   },
   fullCaseView: { de: 'Vollständige Fallansicht', en: 'Full Case View' },
+  fullCaseViewHint: {
+    de: 'Einzelfallansicht mit Verläufen und Vergleich mit einer Kohorte öffnen',
+    en: 'Open the case view with trajectories and comparison with a cohort',
+  },
+  fullCaseViewCompareHint: {
+    de: 'In der vollständigen Fallansicht können Sie diesen Fall mit einer Kohorte vergleichen.',
+    en: 'In the full case view you can compare this case with a cohort.',
+  },
   anomalousValues: { de: 'Auffällige Werte', en: 'Anomalous Values' },
   reportError: { de: 'Fehler melden', en: 'Report Error' },
   valuesToReview: { de: 'Zu prüfende Messwerte', en: 'Values to Review' },
