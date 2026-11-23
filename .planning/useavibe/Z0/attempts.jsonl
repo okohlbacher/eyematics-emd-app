@@ -235,3 +235,5 @@
 {"id":"Z0-P26","ts":"2026-11-23T15:50:32.427Z","session_id":"2bd6cae6-f02b-4061-918e-0b1d49a0e55b","head":"8cc02eab0859e8cd0d6161e7eac7f0d2b127b9ce","result":"recheck","attempt":1,"fingerprint":"e17917943735e9ae316ccecb209e4b7324d306aff2030abd14f8f201b36afca5"}
 {"id":"Z0-P26","ts":"2026-11-23T15:50:33.605Z","session_id":"2bd6cae6-f02b-4061-918e-0b1d49a0e55b","head":"8cc02eab0859e8cd0d6161e7eac7f0d2b127b9ce","result":"recheck","attempt":1,"fingerprint":"e17917943735e9ae316ccecb209e4b7324d306aff2030abd14f8f201b36afca5"}
 {"id":"Z0-P26","ts":"2026-11-23T15:51:11.397Z","head":"8cc02eab0859e8cd0d6161e7eac7f0d2b127b9ce","result":"review","verdict":"pass"}
+{"id":"Z0-P26","ts":"2026-11-23T15:51:32.562Z","session_id":"2bd6cae6-f02b-4061-918e-0b1d49a0e55b","head":"8cc02eab0859e8cd0d6161e7eac7f0d2b127b9ce","result":"recheck","attempt":1,"fingerprint":"e17917943735e9ae316ccecb209e4b7324d306aff2030abd14f8f201b36afca5"}
+{"id":"Z0-P04","ts":"2026-11-23T16:03:37.467Z","session_id":"507d6b17-5d46-4d61-9355-5646110caa80","head":"ff43ecd09ad7946bfb5b3132a5a1d8997b54fcc1","result":"blocked","attempt":0}
