@@ -1,9 +1,10 @@
 # Software Bill of Materials (SBOM)
 
 **Project:** EyeMatics Clinical Demonstrator (EMD) — `emd-app`
-**Application version:** 1.20.3
+**Application version:** 1.21.0
 **Project license:** MIT
-**Generated:** 2026-10-09 (branch `useavibe/harness`: `@playwright/test` 1.63.0 added as exact-pinned devDependency for the UseAVibe acceptance tests — +3 packages: `@playwright/test`, `playwright`, `playwright-core`, all Apache-2.0; production dependencies unchanged since v1.20.1)
+**Generated:** 2026-11-24 (v1.21.0, UseAVibe cycle Z0: `plotly.js-strict-dist-min` removed — all analysis charts are Recharts/SVG since Z0-P23; −1 package, no additions; development dependencies unchanged)
+**Previous:** 2026-10-09 (branch `useavibe/harness`: `@playwright/test` 1.63.0 added as exact-pinned devDependency for the UseAVibe acceptance tests — +3 packages: `@playwright/test`, `playwright`, `playwright-core`, all Apache-2.0; production dependencies unchanged since v1.20.1)
 **Format:** Human-readable Markdown SBOM derived from `package.json` + `package-lock.json` (lockfileVersion 3) and per-package `license` fields.
 **Replaces:** the earlier point-in-time `BOM.md` (v1.9.3, removed). `SBOM.md` is the canonical, maintained software bill of materials going forward.
 **Runtime:** Node.js ≥ 22 · npm ≥ 10 · ECMAScript modules (`"type": "module"`)
@@ -22,10 +23,10 @@ end-of-phase verification and the pre-release checklist both include an "SBOM cu
 
 | Metric | Value |
 |--------|-------|
-| Direct production dependencies | 24 |
+| Direct production dependencies | 23 |
 | Direct development dependencies | 27 |
-| Total installed packages (incl. transitive) | 643 |
-| License distribution (direct deps) | MIT ×44 · OFL-1.1 ×2 · ISC ×2 · BSD-3-Clause ×1 · Apache-2.0 ×2 |
+| Total installed packages (incl. transitive) | 642 |
+| License distribution (direct deps) | MIT ×43 · OFL-1.1 ×2 · ISC ×2 · BSD-3-Clause ×1 · Apache-2.0 ×2 |
 | Copyleft / restrictive licenses | none for code — the two font packages are OFL-1.1 (bundling with any software permitted; obligations apply only to modified fonts) |
 
 All direct dependency licenses are OSI-approved permissive licenses compatible with the
@@ -52,7 +53,6 @@ direct dependency set.
 | `jwks-rsa` | ^3.2.0 | 3.2.2 | MIT |
 | `lucide-react` | ^1.9.0 | 1.9.0 | ISC |
 | `otplib` | ^12.0.1 | 12.0.1 | MIT |
-| `plotly.js-strict-dist-min` | ^3.6.0 | 3.6.0 | MIT |
 | `qrcode` | ^1.5.4 | 1.5.4 | MIT |
 | `react` | ^19.2.4 | 19.2.5 | MIT |
 | `react-dom` | ^19.2.4 | 19.2.5 | MIT |
@@ -66,10 +66,9 @@ direct dependency set.
 `refresh_sessions` + saved-search storage; `jsonwebtoken` + `jwks-rsa` + `bcryptjs` +
 `otplib` + `qrcode` — auth (JWT/HS256, Keycloak JWKS prep, password hashing, TOTP 2FA);
 `js-yaml` — `config/settings.yaml` loading; `react` + `react-dom` + `react-router-dom` —
-UI; `recharts` — trajectory/outcome charts; `tailwindcss` + `@tailwindcss/vite` — styling; `@fontsource-variable/*` — self-hosted Inter /
+UI; `recharts` — all analysis charts (Aggregiert, Verläufe, case view; SVG, no WebGL, no `new Function`); `tailwindcss` + `@tailwindcss/vite` — styling; `@fontsource-variable/*` — self-hosted Inter /
 JetBrains Mono (no Google Fonts request — CSP + GDPR);
-`lucide-react` — icons; `html-to-image` — chart export; `plotly.js-strict-dist-min` — WebGL
-cohort trajectories (strict build: no `new Function`, so it runs under the production CSP); `tsx` — runs the uncompiled
+`lucide-react` — icons; `html-to-image` — chart export; `tsx` — runs the uncompiled
 TypeScript server (`node --import tsx server/index.ts`), hence a production dependency since v1.20.
 
 ## Development dependencies
@@ -106,7 +105,7 @@ TypeScript server (`node --import tsx server/index.ts`), hence a production depe
 
 ## Transitive dependencies
 
-405 packages are installed in total (direct + transitive); the authoritative, fully-resolved
+642 packages are installed in total (direct + transitive; `package-lock.json` entries); the authoritative, fully-resolved
 set with integrity hashes is `package-lock.json` (lockfileVersion 3), which is committed to
 the repository and is the canonical machine-readable manifest. The tables above enumerate the
 **direct** dependencies; transitive packages are pinned transitively by the lockfile.
