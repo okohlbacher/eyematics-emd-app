@@ -130,3 +130,116 @@ test('[Z0-P03] Englische Oberfläche', async ({ page }) => {
   await expect(trajectoriesTab(page)).toHaveText(/Trajectories/);
   await expectYAxisTitle(page, 'CRT change from baseline (µm)');
 });
+
+// Scenario "Infosymbol verdeckt den Y-Achsentitel nicht" (D8, Q52: fixed by placement, titles unchanged). Readings:
+// - "every chart card" = each rendered Verläufe chart card `outcomes-panel-{od,os,combined}` (role="img");
+//   y-axis settings = the "Diagramm-Anzeige" radios starting with "Absolut"/"Absolute", "Δ (" and "Δ %".
+// - "stays at the upper end of the y-axis" = the icon lies left of the plot area, its vertical centre is within 24 px of
+//   the plot area's top edge, and it sits above the y-axis title (icon bottom ≤ title top).
+// - "overlaps neither …" = the icon's box intersects neither the y-axis title's box, nor any y-axis tick label's box,
+//   nor the plot area (the box of the CartesianGrid).
+// - "drawn in full inside its chart card" = the title's box lies inside the card's and the chart SVG's box, and its text
+//   equals the y-axis title marker (data-ylabel), which ends with ")".
+type Box = { left: number; top: number; right: number; bottom: number };
+type Geometry = { icon: Box; title: Box | null; titleText: string; ylabel: string; ticks: Box[]; plot: Box; card: Box; svg: Box };
+
+const Y_MODES: { mode: 'absolute' | 'delta' | 'delta_percent'; de: RegExp; en: RegExp }[] = [
+  { mode: 'absolute', de: /^Absolut \(/, en: /^Absolute \(/ },
+  { mode: 'delta', de: /^Δ \(/, en: /^Δ \(/ },
+  { mode: 'delta_percent', de: /^Δ % \(/, en: /^Δ % \(/ },
+];
+
+function intersects(a: Box, b: Box): boolean {
+  return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+}
+
+function inside(inner: Box, outer: Box): boolean {
+  return inner.left >= outer.left - 0.5 && inner.right <= outer.right + 0.5 && inner.top >= outer.top - 0.5 && inner.bottom <= outer.bottom + 0.5;
+}
+
+async function setYModeByPattern(page: Page, button: string, settingsName: string, label: RegExp, mode: string): Promise<void> {
+  await page.getByRole('button', { name: button, exact: true }).click();
+  const settings = page.getByRole('complementary', { name: settingsName, exact: true });
+  const radio = settings.getByRole('radio', { name: label });
+  await expect(radio).toHaveCount(1);
+  await radio.check();
+  await expect(radio).toBeChecked();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('analysis-tab-trajectories').getByTestId('outcomes-panel-ydomain').first()).toHaveAttribute('data-ymetric', mode);
+}
+
+async function panelGeometry(card: Locator): Promise<Geometry> {
+  return card.evaluate((el) => {
+    const box = (r: DOMRect) => ({ left: r.left, top: r.top, right: r.right, bottom: r.bottom });
+    const eye = (el.getAttribute('data-testid') ?? '').replace('outcomes-panel-', '');
+    const icon = el.querySelector(`[data-testid="outcomes-panel-${eye}-ylabel-info"]`);
+    const ylabel = el.querySelector(`[data-testid="outcomes-panel-${eye}-ylabel"]`)?.getAttribute('data-ylabel') ?? '';
+    const svg = el.querySelector('svg.recharts-surface');
+    const grid = el.querySelector('.recharts-cartesian-grid');
+    const title = [...el.querySelectorAll('.recharts-label')].find((n) => n.textContent === ylabel) ?? null;
+    const ticks = [...el.querySelectorAll('.recharts-yAxis-tick-labels .recharts-cartesian-axis-tick-value')];
+    if (!icon || !svg || !grid) throw new Error(`chart card ${eye}: icon, svg or grid missing`);
+    return {
+      icon: box(icon.getBoundingClientRect()),
+      title: title ? box(title.getBoundingClientRect()) : null,
+      titleText: title?.textContent ?? '',
+      ylabel,
+      ticks: ticks.map((n) => box(n.getBoundingClientRect())),
+      plot: box(grid.getBoundingClientRect()),
+      card: box(el.getBoundingClientRect()),
+      svg: box(svg.getBoundingClientRect()),
+    };
+  });
+}
+
+async function expectIconClearOfAxis(page: Page, context: string, iconName: string): Promise<void> {
+  const cards = page.getByTestId('analysis-tab-trajectories').locator('[role="img"][data-testid^="outcomes-panel-"]');
+  await expect(cards.first()).toBeVisible({ timeout: 30_000 });
+  const count = await cards.count();
+  expect(count, `${context}: chart cards`).toBeGreaterThan(0);
+  for (let i = 0; i < count; i++) {
+    const card = cards.nth(i);
+    await expect(card.locator('.recharts-yAxis-tick-labels .recharts-cartesian-axis-tick-value').first()).toBeVisible();
+    // The measured icon is the one named "Erläuterung der Y-Achse" (EN "Explanation of the y-axis").
+    await expect(card.locator('[data-testid$="-ylabel-info"]')).toHaveAccessibleName(iconName);
+    const g = await panelGeometry(card);
+    const where = `${context}, card ${i} (${g.ylabel})`;
+    expect(g.title, `${where}: y-axis title drawn`).not.toBeNull();
+    const title = g.title as Box;
+    expect(g.titleText, `${where}: title text`).toBe(g.ylabel);
+    expect(g.titleText.endsWith(')'), `${where}: title ends with ")"`).toBe(true);
+    // Upper end of the y-axis.
+    expect(g.icon.right, `${where}: icon left of the plot area`).toBeLessThanOrEqual(g.plot.left);
+    expect(Math.abs((g.icon.top + g.icon.bottom) / 2 - g.plot.top), `${where}: icon at the top of the y-axis`).toBeLessThanOrEqual(24);
+    expect(g.icon.bottom, `${where}: icon above the title`).toBeLessThanOrEqual(title.top);
+    // No overlap.
+    expect(intersects(g.icon, title), `${where}: icon overlaps the title`).toBe(false);
+    expect(g.ticks.length, `${where}: tick labels`).toBeGreaterThan(0);
+    for (const tick of g.ticks) expect(intersects(g.icon, tick), `${where}: icon overlaps a tick label`).toBe(false);
+    expect(intersects(g.icon, g.plot), `${where}: icon overlaps the plot area`).toBe(false);
+    // Title in full.
+    expect(inside(title, g.card), `${where}: title inside the card`).toBe(true);
+    expect(inside(title, g.svg), `${where}: title inside the chart`).toBe(true);
+  }
+}
+
+test('[Z0-P03] Infosymbol verdeckt den Y-Achsentitel nicht', async ({ page }) => {
+  for (const locale of ['de', 'en'] as const) {
+    if (locale === 'en') {
+      await page.evaluate(() => localStorage.setItem('emd-locale', 'en'));
+      await page.reload();
+      await openTrajectories(page);
+      await expect(trajectoriesTab(page)).toHaveText(/Trajectories/);
+    }
+    const button = locale === 'de' ? 'Diagramm-Anzeige' : 'Chart display';
+    const settingsName = locale === 'de' ? 'Einstellungen' : 'Settings';
+    const iconName = locale === 'de' ? 'Erläuterung der Y-Achse' : 'Explanation of the y-axis';
+    for (const metric of ['visus', 'crt'] as const) {
+      await openMetric(page, metric);
+      for (const m of Y_MODES) {
+        await setYModeByPattern(page, button, settingsName, m[locale], m.mode);
+        await expectIconClearOfAxis(page, `${locale} ${metric} ${m.mode}`, iconName);
+      }
+    }
+  }
+});

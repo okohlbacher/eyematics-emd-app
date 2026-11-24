@@ -135,6 +135,11 @@ const canLayout = () => typeof ResizeObserver !== 'undefined';
 
 /** Height of the time range slider (Brush). Q53: the x-axis title is drawn below it, inside the bottom margin. */
 const BRUSH_HEIGHT = 18;
+/**
+ * Z0-P03 (D8, Q52): the y-axis title is drawn this many px below the plot's vertical centre so that its upper end
+ * starts below the info icon at the top of the y-axis (plot area and title text unchanged).
+ */
+const Y_TITLE_SHIFT = 16;
 
 export default function OutcomesPanel({
   panel,
@@ -431,8 +436,9 @@ export default function OutcomesPanel({
 
       {canLayout() ? (
         <div className="relative" style={{ width: '100%', height: 340 }}>
-          {/* Z0-P03: info icon at the upper end of the (rotated) y-axis title, explaining baseline, Δ and Δ %. */}
-          <span className="absolute left-0 top-1 z-10">
+          {/* Z0-P03: info icon at the upper end of the (rotated) y-axis title, explaining baseline, Δ and Δ %.
+              It sits at the very top, level with the plot's upper edge, and the title starts below it (D8, Q52). */}
+          <span className="absolute left-0 top-0 z-10 leading-none">
             <HoverTooltip text={t('outcomesYAxisInfo')} align="start" wrap>
               {(tooltipId) => (
                 <button
@@ -475,7 +481,7 @@ export default function OutcomesPanel({
                 tick={{ fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisTick }}
                 tickFormatter={(v: number) => formatY(v)}
                 stroke={colors.grid}
-                label={{ value: yLabel, angle: -90, position: 'insideLeft', fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisLabel, style: { textAnchor: 'middle' } }}
+                label={{ value: yLabel, angle: -90, position: 'insideLeft', dy: Y_TITLE_SHIFT, fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisLabel, style: { textAnchor: 'middle' } }}
               />
               {yMetric !== 'absolute' && <ReferenceLine y={0} stroke="#94a3b8" />}
               {iqrTraces.map((tr) => (
