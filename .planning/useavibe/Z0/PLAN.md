@@ -881,9 +881,9 @@ Scenario drafts for the re-freeze (drafted_by: ai-assisted; both are red on 4fc8
   # built from 4fc84aa: the info icon covers the end of the y-axis title (D8, Q52).
   Scenario: Infosymbol verdeckt den Y-Achsentitel nicht
     When I open each metric tab "Visus" and "CRT" with each y-axis setting "Absolut", "Δ" and "Δ %" in "Diagramm-Anzeige"
-    Then in every chart card the info icon stays at the upper end of the y-axis
-    And the info icon overlaps neither the y-axis title, nor the y-axis tick labels, nor the plot area
-    And the y-axis title is drawn in full inside its chart card
+    Then in every chart card the info icon "Erläuterung der Y-Achse" stays at the upper end of the y-axis
+    And the info icon "Erläuterung der Y-Achse" overlaps neither the y-axis title, nor the y-axis tick labels, nor the plot area
+    And the y-axis title, e.g. "Visus-Veränderung zum Ausgangswert (logMAR)", is drawn in full inside its chart card, including the closing ")"
     And the same holds with the UI language "English"
 ```
 
@@ -894,8 +894,8 @@ Scenario drafts for the re-freeze (drafted_by: ai-assisted; both are red on 4fc8
   Scenario: Zeitachsentitel steht unterhalb des Zeitbereichsreglers
     Given I open the tab "Verläufe" with the metric tab "Visus"
     Then in every chart card the x-axis title "Tag" lies completely below the time range slider
-    And the x-axis title overlaps neither the time range slider, nor the x-axis tick labels, nor the legend
-    And the x-axis title is drawn in full inside its chart card
+    And the x-axis title "Tag" overlaps neither the time range slider, nor the x-axis tick labels, nor the legend
+    And the x-axis title "Tag" is drawn in full inside its chart card
     And the same holds for the x-axis title "Behandlung #" after choosing "Anzahl Behandlungen" in "Diagramm-Anzeige"
     And the same holds when I compare "Testkohorte" with "Alle Patienten"
 ```
