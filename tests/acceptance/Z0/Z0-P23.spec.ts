@@ -889,3 +889,98 @@ test('[Z0-P23] Gefilterte Kohorte steht in beiden Auswahlen direkt nach Alle Pat
     await setExtraCohort(request, false);
   }
 });
+
+// Readings for "Zeitachsentitel steht unterhalb des Zeitbereichsreglers" (Q53):
+// - "the x-axis title" = the visible SVG axis title (`.recharts-label`) with the exact text "Tag" / "Behandlung #" in a
+//   Verläufe chart card; "the time range slider" = the card's Recharts Brush (`.recharts-brush`); "the x-axis tick
+//   labels" = `.recharts-xAxis-tick-labels .recharts-cartesian-axis-tick-value`; "the legend" = the card's `.legend`.
+// - "completely below" = the title's top edge is at or below the slider's bottom edge (screen boxes);
+//   "overlaps" = the two boxes intersect with positive area; "drawn in full inside its chart card" = the title box lies
+//   inside the card box and inside the chart's SVG surface (which clips its content).
+// - In the comparison both x-axis settings are checked, so the clause holds for "Tag" and "Behandlung #".
+type ScreenBox = { x: number; y: number; width: number; height: number };
+
+function intersects(a: ScreenBox, b: ScreenBox): boolean {
+  return Math.min(a.x + a.width, b.x + b.width) > Math.max(a.x, b.x)
+    && Math.min(a.y + a.height, b.y + b.height) > Math.max(a.y, b.y);
+}
+
+function inside(inner: ScreenBox, outer: ScreenBox): boolean {
+  const tol = 0.5;
+  return inner.x >= outer.x - tol && inner.y >= outer.y - tol
+    && inner.x + inner.width <= outer.x + outer.width + tol && inner.y + inner.height <= outer.y + outer.height + tol;
+}
+
+const fmtBox = (b: ScreenBox) => `[${b.x.toFixed(0)},${b.y.toFixed(0)} ${b.width.toFixed(0)}×${b.height.toFixed(0)}]`;
+
+async function expectXTitleBelowSlider(page: Page, title: 'Tag' | 'Behandlung #', where: string): Promise<void> {
+  const panels = chartPanels(page);
+  await expect(panels.first()).toBeVisible({ timeout: 30_000 });
+  const cards = await panels.all();
+  expect(cards.length, `${where}: chart cards`).toBeGreaterThan(0);
+  for (const card of cards) {
+    const id = `${where} ${await card.getAttribute('data-testid')}`;
+    const label = axisLabel(card, title);
+    await expect(label, `${id}: x-axis title "${title}"`).toHaveCount(1);
+    const brush = card.locator('.recharts-brush');
+    await expect(brush, `${id}: time range slider`).toHaveCount(1);
+    // All screen boxes in one round trip (per-element boundingBox() calls exceed the test timeout).
+    const geo = await card.evaluate((root, text) => {
+      const box = (el: Element) => {
+        const r = el.getBoundingClientRect();
+        return { x: r.x, y: r.y, width: r.width, height: r.height };
+      };
+      const title = [...root.querySelectorAll('.recharts-label')].find((el) => el.textContent === text)!;
+      return {
+        t: box(title),
+        b: box(root.querySelector('.recharts-brush')!),
+        c: box(root),
+        s: box(root.querySelector('svg.recharts-surface')!),
+        ticks: [...root.querySelectorAll('.recharts-xAxis-tick-labels .recharts-cartesian-axis-tick-value')]
+          .map((el) => ({ text: el.textContent ?? '', box: box(el) })),
+        legends: [...root.querySelectorAll('.legend')].map(box),
+      };
+    }, title);
+    const { t, b, c, s } = geo;
+    expect(t.y, `${id}: title ${fmtBox(t)} completely below the slider ${fmtBox(b)}`).toBeGreaterThanOrEqual(b.y + b.height);
+    expect(intersects(t, b), `${id}: title ${fmtBox(t)} overlaps the slider ${fmtBox(b)}`).toBe(false);
+    expect(geo.ticks.length, `${id}: x-axis tick labels`).toBeGreaterThan(0);
+    for (const k of geo.ticks) {
+      expect(intersects(t, k.box), `${id}: title ${fmtBox(t)} overlaps tick "${k.text}" ${fmtBox(k.box)}`).toBe(false);
+    }
+    expect(geo.legends.length, `${id}: legend`).toBeGreaterThan(0);
+    for (const l of geo.legends) {
+      expect(intersects(t, l), `${id}: title ${fmtBox(t)} overlaps the legend ${fmtBox(l)}`).toBe(false);
+    }
+    expect(inside(t, c), `${id}: title ${fmtBox(t)} inside the card ${fmtBox(c)}`).toBe(true);
+    expect(inside(t, s), `${id}: title ${fmtBox(t)} inside the chart surface ${fmtBox(s)}`).toBe(true);
+  }
+}
+
+async function chooseXAxis(page: Page, name: 'Tage seit Baseline' | 'Anzahl Behandlungen'): Promise<void> {
+  const settings = await openSettings(page);
+  const radio = settings.getByRole('radio', { name, exact: true });
+  await radio.check();
+  await expect(radio).toBeChecked();
+  await page.keyboard.press('Escape');
+}
+
+test('[Z0-P23] Zeitachsentitel steht unterhalb des Zeitbereichsreglers', async ({ page }) => {
+  await openTab(page, 'Verläufe');
+  await openMetric(page, 'visus');
+  await expectXTitleBelowSlider(page, 'Tag', 'Visus');
+
+  await chooseXAxis(page, 'Anzahl Behandlungen');
+  await expectXTitleBelowSlider(page, 'Behandlung #', 'Visus, Anzahl Behandlungen');
+
+  // Compare "Testkohorte" with "Alle Patienten" (preselected when the drawer opens from the single-cohort view).
+  const d = await openCompareDrawer(page);
+  await expect(optionRow(d, 'Alle Patienten').getByRole('checkbox')).toBeChecked();
+  await page.keyboard.press('Escape');
+  const trajectories = trajectoriesPanel(page);
+  await expect(legendStartingWith(trajectories, 'Alle Patienten').first()).toBeVisible();
+  await expect(legendStartingWith(trajectories, 'Testkohorte').first()).toBeVisible();
+  await expectXTitleBelowSlider(page, 'Behandlung #', 'comparison, Anzahl Behandlungen');
+  await chooseXAxis(page, 'Tage seit Baseline');
+  await expectXTitleBelowSlider(page, 'Tag', 'comparison, Tage seit Baseline');
+});

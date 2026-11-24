@@ -133,6 +133,9 @@ interface PatientHover {
 
 const canLayout = () => typeof ResizeObserver !== 'undefined';
 
+/** Height of the time range slider (Brush). Q53: the x-axis title is drawn below it, inside the bottom margin. */
+const BRUSH_HEIGHT = 18;
+
 export default function OutcomesPanel({
   panel,
   eye,
@@ -238,6 +241,7 @@ export default function OutcomesPanel({
   const medianTraces = traces.filter((tr): tr is Extract<TraceDescriptor, { kind: 'median' }> => tr.kind === 'median');
   const iqrTraces = traces.filter((tr): tr is Extract<TraceDescriptor, { kind: 'iqr' }> => tr.kind === 'iqr');
   const rows = useMemo(() => mergeSeriesRows(traces), [traces]);
+  const hasBrush = rows.length > 2;
   const fullXDomain = useMemo(() => xExtent(traces), [traces]);
   const [yMin, yMax] = yDomain(yMetric, panel.medianGrid, metric);
 
@@ -446,7 +450,7 @@ export default function OutcomesPanel({
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={rows}
-              margin={{ top: 8, right: 16, bottom: 16, left: 8 }}
+              margin={{ top: 8, right: 16, bottom: hasBrush ? 24 : 16, left: 8 }}
               onMouseDown={(s) => { if (typeof s?.activeLabel === 'number') setDragFrom(s.activeLabel); }}
               onMouseMove={(s) => { if (dragFrom != null && typeof s?.activeLabel === 'number') setDragTo(s.activeLabel); }}
               onMouseUp={finishDrag}
@@ -461,7 +465,7 @@ export default function OutcomesPanel({
                 tickFormatter={formatXTick}
                 tick={{ fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisTick }}
                 stroke={colors.grid}
-                label={{ value: xLabel, position: 'insideBottom', offset: -8, fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisLabel }}
+                label={{ value: xLabel, position: 'insideBottom', offset: hasBrush ? -(BRUSH_HEIGHT + 14) : -8, fontSize: AXIS_TICK_FONT_SIZE, fill: colors.axisLabel }}
               />
               <YAxis
                 type="number"
@@ -543,13 +547,13 @@ export default function OutcomesPanel({
               {dragFrom != null && dragTo != null && (
                 <ReferenceArea x1={dragFrom} x2={dragTo} strokeOpacity={0.3} fill={colors.axisTick} fillOpacity={0.15} />
               )}
-              {rows.length > 2 && (
+              {hasBrush && (
                 <Brush
                   key={`brush-${brushEpoch}`}
                   dataKey="x"
                   startIndex={brushStart}
                   endIndex={brushEnd}
-                  height={18}
+                  height={BRUSH_HEIGHT}
                   stroke={colors.axisTick}
                   fill="transparent"
                   tickFormatter={() => ''}
