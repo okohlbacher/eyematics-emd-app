@@ -256,3 +256,4 @@
 {"id":"Z0-P23","ts":"2026-11-23T17:03:43.165Z","session_id":"ffc7c8fe-5310-4857-bd5a-bd492313a46c","head":"f89946cd604f1363b701646144451f873dc6b1d5","result":"recheck","attempt":3,"fingerprint":"4a5e109c91d934a88bce4be13e15110861cb25ce7dc22a5a452cc2c72bc6b90e"}
 {"id":"Z0-P23","ts":"2026-11-23T17:04:53.952Z","head":"f89946cd604f1363b701646144451f873dc6b1d5","result":"review","verdict":"findings-open"}
 {"id":"Z0-P23","ts":"2026-11-23T17:05:17.282Z","session_id":"ffc7c8fe-5310-4857-bd5a-bd492313a46c","head":"f89946cd604f1363b701646144451f873dc6b1d5","result":"recheck","attempt":3,"fingerprint":"4a5e109c91d934a88bce4be13e15110861cb25ce7dc22a5a452cc2c72bc6b90e"}
+{"id":"Z0-P23","ts":"2026-11-24T09:36:37.422Z","session_id":"308d6941-382a-4215-b521-57933891fc69","head":"dd525ba76a33c054125e14181cc029e369f72093","result":"blocked","attempt":0}
