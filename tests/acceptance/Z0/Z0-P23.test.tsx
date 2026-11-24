@@ -21,8 +21,43 @@ vi.mock('recharts', async (importOriginal) => {
   };
 });
 
+// Q49 a / Q51 a: AnalysisPage wiring of "Kohorte wählen" (selectCohort). Only page-level context is mocked; the
+// panel tests above take `t` as a prop and use none of these modules.
+vi.mock('../../../src/context/DataContext', () => ({
+  useData: () => mockData,
+}));
+vi.mock('../../../src/context/LanguageContext', () => ({
+  useLanguage: () => ({ locale: 'de', t: (k: string) => deText(k) }),
+}));
+vi.mock('../../../src/hooks/useRecentActivity', () => ({
+  useRecentActivity: () => ({ record: () => {} }),
+}));
+vi.mock('../../../src/services/settingsService', () => ({
+  getSettings: () => ({ therapyInterrupterDays: 90, therapyBreakerDays: 365, crtImplausibleThresholdUm: 400 }),
+  loadSettings: () => {},
+}));
+vi.mock('../../../src/services/fhirLoader', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../src/services/fhirLoader')>()),
+  applyFilters: <T,>(cases: T[]) => cases,
+}));
+vi.mock('../../../src/components/outcomes/OutcomesView', () => ({ default: () => null }));
+
+import { MemoryRouter, useLocation } from 'react-router-dom';
+
 import OutcomesPanel from '../../../src/components/outcomes/OutcomesPanel';
+import { translations } from '../../../src/i18n/translations';
+import AnalysisPage from '../../../src/pages/AnalysisPage';
+import { ALL_PATIENTS_COHORT_ID } from '../../../src/services/allPatientsCohort';
+import { FILTERED_COHORT_ID } from '../../../src/services/filteredCompareCohort';
+import type { SavedSearch } from '../../../src/types/fhir';
 import type { PanelResult } from '../../../src/utils/cohortTrajectory';
+
+const deText = (k: string) => (translations as Record<string, { de: string }>)[k]?.de ?? k;
+const mockData: { activeCases: never[]; savedSearches: SavedSearch[]; loading: boolean } = {
+  activeCases: [],
+  savedSearches: [{ id: 's-test', name: 'Testkohorte', createdAt: '2026-01-01', filters: { ageRange: [70, null] } }],
+  loading: false,
+};
 
 const t = (k: string) => k;
 
@@ -129,5 +164,45 @@ describe('[Z0-P23] Brush zoom does not outlive reset or a scope change (Q21 a)',
     rerender(<OutcomesPanel {...base} panel={panel(7)} />);
     expect(medianPoints(container)).toBe(7);
     expect(iqrPoints(container)).toBe(7);
+  });
+});
+
+describe('[Z0-P23] "Kohorte wählen" wiring of the filtered cohort during a comparison (Q49 a, Q51 a)', () => {
+  let search = '';
+  function LocationProbe() {
+    search = useLocation().search;
+    return null;
+  }
+
+  it('choosing the filtered cohort puts its reserved id first in ?cohorts= and drops ?cohort=', () => {
+    const filters = encodeURIComponent(JSON.stringify({ ageRange: [70, null] }));
+    const start = `/analysis?tab=aggregate&filters=${filters}&cohorts=${FILTERED_COHORT_ID},${ALL_PATIENTS_COHORT_ID}`;
+    const { container } = render(
+      <MemoryRouter initialEntries={[start]}>
+        <AnalysisPage />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+    const select = container.querySelector<HTMLSelectElement>('#analysis-cohort-select');
+    expect(select).not.toBeNull();
+    const options = [...select!.options].map((o) => o.textContent ?? '');
+    const filteredOption = [...select!.options].find((o) => (o.textContent ?? '').startsWith('Gefilterte Kohorte'));
+    expect(filteredOption).not.toBeUndefined();
+
+    act(() => {
+      fireEvent.change(select!, { target: { value: 's-test' } });
+    });
+    let p = new URLSearchParams(search);
+    expect(p.get('cohort')).toBe('s-test');
+    expect(p.get('cohorts')?.split(',')).toEqual(['s-test', ALL_PATIENTS_COHORT_ID]);
+
+    act(() => {
+      fireEvent.change(select!, { target: { value: filteredOption!.value } });
+    });
+    p = new URLSearchParams(search);
+    expect(p.get('cohort')).toBeNull();
+    expect(p.get('cohorts')?.split(',')).toEqual([FILTERED_COHORT_ID, ALL_PATIENTS_COHORT_ID]);
+    expect(p.get('filters')).not.toBeNull();
+    expect(options.indexOf(filteredOption!.textContent ?? '')).toBe(1);
   });
 });

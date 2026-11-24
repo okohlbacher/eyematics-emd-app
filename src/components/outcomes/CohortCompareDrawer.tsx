@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useThemeSafe } from '../../context/ThemeContext';
 import { ALL_PATIENTS_COHORT_ID } from '../../services/allPatientsCohort';
 import { groupByParent } from '../../services/cohortNames';
+import { FILTERED_COHORT_ID } from '../../services/filteredCompareCohort';
 import type { SavedSearch } from '../../types/fhir';
 import { cohortColor } from '../charts/chartStyle';
 
@@ -86,9 +87,10 @@ export default function CohortCompareDrawer({
 
   // Derive the tree grouping at render time — no persisted state (anti-pattern per RESEARCH)
   const { parents, subcohortsByParentId } = groupByParent(savedSearches);
-  // Z0-P23: the same order in every view — "Alle Patienten" first, then by name (sub-cohorts by name under their parent).
-  const byName = (a: SavedSearch, b: SavedSearch) =>
-    a.id === ALL_PATIENTS_COHORT_ID ? -1 : b.id === ALL_PATIENTS_COHORT_ID ? 1 : a.name.localeCompare(b.name);
+  // Z0-P23: the same order in every view — "Alle Patienten" first, then the unsaved filtered cohort (Q48 a, as in
+  // "Kohorte wählen"), then by name (sub-cohorts by name under their parent).
+  const rank = (s: SavedSearch) => (s.id === ALL_PATIENTS_COHORT_ID ? 0 : s.id === FILTERED_COHORT_ID ? 1 : 2);
+  const byName = (a: SavedSearch, b: SavedSearch) => rank(a) - rank(b) || a.name.localeCompare(b.name);
   const parentIds = new Set(parents.map((p) => p.id));
 
   // Subcohort id set for filtering top-level items

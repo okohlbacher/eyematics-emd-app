@@ -786,3 +786,106 @@ test('[Z0-P23] Gefilterte, nicht gespeicherte Kohorte lässt sich vergleichen', 
   await expect(legendStartingWith(trajectories, name).first()).toBeVisible();
   await expect(legendStartingWith(trajectories, 'Alle Patienten').first()).toBeVisible();
 });
+
+// Q48 a / Q49 a (NF, 2026-11-24): the filtered cohort comes directly after "Alle Patienten" in the drawer and in
+// "Kohorte wählen" (DE and EN); switching the base to a saved cohort and back to the filtered cohort during a running
+// comparison keeps the comparison with the filtered cohort as its base. "Alterskohorte" sorts before "Gefilterte
+// Kohorte" by name, so a name order is visible.
+const EXTRA_COHORT = 'Alterskohorte';
+
+async function setExtraCohort(request: APIRequestContext, create: boolean): Promise<void> {
+  const headers = bearer(await apiToken(request, 'klinikleitung'));
+  const list = await request.get('/api/data/saved-searches', { headers });
+  expect(list.status()).toBe(200);
+  const { savedSearches } = (await list.json()) as { savedSearches: { id: string; name: string }[] };
+  for (const s of savedSearches.filter((x) => x.name === EXTRA_COHORT)) {
+    expect((await request.delete(`/api/data/saved-searches/${s.id}`, { headers })).status()).toBe(200);
+  }
+  if (create) {
+    const created = await request.post('/api/data/saved-searches', {
+      headers,
+      data: { name: EXTRA_COHORT, filters: { ageRange: [50, null] } },
+    });
+    expect(created.status()).toBe(201);
+  }
+}
+
+/** Positions of the given entries (matched by prefix) in a list of option texts; -1 if missing. */
+function positions(texts: string[], prefixes: string[]): number[] {
+  return prefixes.map((p) => texts.findIndex((x) => x === p || x.startsWith(`${p} `)));
+}
+
+test('[Z0-P23] Gefilterte Kohorte steht in beiden Auswahlen direkt nach Alle Patienten', async ({ page, request }) => {
+  await setExtraCohort(request, true);
+  try {
+    await page.goto('/cohort');
+    await page.getByRole('button', { name: 'Zurücksetzen' }).click();
+    await filterGroup(page, 'Alter (Jahre)').getByPlaceholder('Min').fill('70');
+    expect(await cohortCount(page)).toBeGreaterThan(0);
+    await page.getByRole('button', { name: 'Kohorte analysieren', exact: true }).click();
+    await page.waitForURL(/\/analysis\?/);
+    await openTab(page, 'Aggregiert');
+
+    const header = page.getByTestId('analysis-active-cohort');
+    await expect(header).toHaveText(/^Aktive Kohorte: Gefilterte Kohorte/);
+    const name = (await header.locator('span').first().innerText()).trim();
+    expect(name.startsWith('Gefilterte Kohorte'), `header cohort name "${name}"`).toBe(true);
+    // Independent reference for the filtered cohort's count (read before any comparison, as in the Q46 scenario).
+    const caseLine = page.getByText(/^\d+ Fälle in der aktuellen Kohorte/);
+    await expect(caseLine).toBeVisible();
+    const headerCases = Number(/^(\d+)/.exec(await caseLine.innerText())![1]);
+    const select = page.getByLabel('Kohorte wählen', { exact: true });
+    const saved = [EXTRA_COHORT, 'Testkohorte', 'Vergleichskohorte'];
+
+    const expectOrder = (texts: string[], all: string, filtered: string, where: string) => {
+      const [iAll, iFiltered, ...iSaved] = positions(texts, [all, filtered, ...saved]);
+      const msg = `${where}: ${JSON.stringify(texts)}`;
+      expect(iAll, msg).toBe(0);
+      expect(iFiltered, msg).toBe(1);
+      for (const i of iSaved) expect(i, msg).toBeGreaterThan(1);
+      expect([...iSaved].sort((a, b) => a - b), msg).toEqual(iSaved);
+    };
+
+    // Deutsch: drawer and "Kohorte wählen".
+    const d = await openCompareDrawer(page);
+    const drawerDe = (await optionLabels(d).allInnerTexts()).map((s) => s.trim());
+    expectOrder(drawerDe, 'Alle Patienten', name, 'drawer (Deutsch)');
+    await expect(optionRow(d, 'Alle Patienten').getByRole('checkbox')).toBeChecked();
+    await page.keyboard.press('Escape');
+    const selectDe = (await select.locator('option').allInnerTexts()).map((s) => s.trim());
+    expectOrder(selectDe, 'Alle Patienten', name, '"Kohorte wählen" (Deutsch)');
+
+    // English: both lists show "All patients" first and the "Filtered cohort" entry second.
+    await switchLanguage(page, 'English');
+    await expect(header).toHaveText(/^Active cohort: Filtered cohort/);
+    const nameEn = (await header.locator('span').first().innerText()).trim();
+    expect(nameEn.startsWith('Filtered cohort'), `header cohort name "${nameEn}"`).toBe(true);
+    await page.getByRole('button', { name: 'Compare cohorts', exact: true }).click();
+    const dEn = page.getByRole('complementary', { name: 'Compare Cohorts', exact: true });
+    await expect(dEn.getByRole('checkbox').first()).toBeVisible();
+    const drawerEn = (await optionLabels(dEn).allInnerTexts()).map((s) => s.trim());
+    expectOrder(drawerEn, 'All patients', nameEn, 'drawer (English)');
+    await page.keyboard.press('Escape');
+    const selectEn = (await page.getByLabel('Select cohort', { exact: true }).locator('option').allInnerTexts())
+      .map((s) => s.trim());
+    expectOrder(selectEn, 'All patients', nameEn, '"Select cohort" (English)');
+    await switchLanguage(page, 'Deutsch');
+
+    // The drawer was closed with "Alle Patienten" selected; switch the base to "Testkohorte" and back.
+    const panel = aggregatePanel(page);
+    await expect(legendStartingWith(panel, 'Alle Patienten')).toBeVisible();
+    await select.selectOption({ label: 'Testkohorte' });
+    await expect(header).toHaveText(/^Aktive Kohorte: Testkohorte/);
+    await select.selectOption({ label: name });
+    await expect(header).toHaveText(/^Aktive Kohorte: /);
+    await expect(header.locator('span').first()).toHaveText(name);
+    await expect(legendStartingWith(panel, name)).toHaveText(`${name} (N=${headerCases} Patient:innen)`);
+    await expect(legendStartingWith(panel, 'Alle Patienten')).toHaveText(/^Alle Patienten \(N=\d+ Patient:innen\)$/);
+    const url = new URL(page.url());
+    expect(url.searchParams.get('cohort'), 'no saved cohort in ?cohort=').toBeNull();
+    expect(url.searchParams.get('cohorts')?.split(','), '?cohorts= keeps the filtered cohort as base')
+      .toContain('__filtered_cohort__');
+  } finally {
+    await setExtraCohort(request, false);
+  }
+});
