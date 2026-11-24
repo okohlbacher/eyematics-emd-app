@@ -42,6 +42,10 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
+          # O-37: a tag push publishes a candidate (:<version> + :dev) only. Without this the action's default
+          # latest=auto adds :latest on tag pushes (v1.21 moved :latest). :latest is set only by the promote job.
+          flavor: |
+            latest=false
           # Tags are not strict semver (v1.19, v1.19.1) → plain match instead of type=semver.
           tags: |
             type=match,pattern=v(.*),group=1
