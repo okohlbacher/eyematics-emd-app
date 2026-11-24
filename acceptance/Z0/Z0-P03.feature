@@ -34,3 +34,12 @@ Feature: Z0-P03 Selbsterklärende Y-Achse der Verläufe
   Scenario: Englische Oberfläche
     Given the UI language is "English"
     Then the y-axis title reads "CRT change from baseline (µm)"
+
+  # Added by NF on 2026-11-24 (drafted_by: ai-assisted) from the third /useavibe-release 0 browser pass on emd-smoke
+  # built from 4fc84aa: the info icon covers the end of the y-axis title (D8, Q52).
+  Scenario: Infosymbol verdeckt den Y-Achsentitel nicht
+    When I open each metric tab "Visus" and "CRT" with each y-axis setting "Absolut", "Δ" and "Δ %" in "Diagramm-Anzeige"
+    Then in every chart card the info icon "Erläuterung der Y-Achse" stays at the upper end of the y-axis
+    And the info icon "Erläuterung der Y-Achse" overlaps neither the y-axis title, nor the y-axis tick labels, nor the plot area
+    And the y-axis title, e.g. "Visus-Veränderung zum Ausgangswert (logMAR)", is drawn in full inside its chart card, including the closing ")"
+    And the same holds with the UI language "English"

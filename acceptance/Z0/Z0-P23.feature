@@ -139,3 +139,13 @@ Feature: Z0-P23 Kohortenvergleich im Tab Aggregiert und einheitliche Abbildungen
     And I choose the "Gefilterte Kohorte" entry in "Kohorte wählen"
     Then the header reads "Aktive Kohorte: " followed by the "Gefilterte Kohorte" entry
     And the legend lists the "Gefilterte Kohorte" entry and "Alle Patienten" with their patient counts
+
+  # Added by NF on 2026-11-24 (drafted_by: ai-assisted) from the third /useavibe-release 0 browser pass on emd-smoke
+  # built from 4fc84aa: the x-axis title is drawn on the time range slider (D9, Q53).
+  Scenario: Zeitachsentitel steht unterhalb des Zeitbereichsreglers
+    Given I open the tab "Verläufe" with the metric tab "Visus"
+    Then in every chart card the x-axis title "Tag" lies completely below the time range slider
+    And the x-axis title "Tag" overlaps neither the time range slider, nor the x-axis tick labels, nor the legend
+    And the x-axis title "Tag" is drawn in full inside its chart card
+    And the same holds for the x-axis title "Behandlung #" after choosing "Anzahl Behandlungen" in "Diagramm-Anzeige"
+    And the same holds when I compare "Testkohorte" with "Alle Patienten"
