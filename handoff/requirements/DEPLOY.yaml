@@ -4,7 +4,7 @@ area: DEPLOY
 requirements:
   - id: UIR-DEPLOY-001
     title: "Published image is public and multi-arch"
-    statement: "The published image ghcr.io/okohlbacher/eyematics-emd-app:<version> is pullable anonymously for linux/amd64 and linux/arm64 and carries the same version tag as the app."
+    statement: "The published image ghcr.io/okohlbacher/eyematics-emd-app:<version> is pullable anonymously for linux/amd64 and linux/arm64 and its tag denotes the same version as the app (a two-part tag X.Y denotes X.Y.0)."
     status: implemented
     when: release
     sources: ["uat: v1.20 Phase 4–5 (.planning/v1.20-ROADMAP.md:25)", "code: .github/workflows/container.yml"]
@@ -23,8 +23,8 @@ requirements:
         - "Run: H1=\"Authorization: Bearer $T\"; H2='Accept: application/vnd.oci.image.index.v1+json'; U=https://ghcr.io/v2/okohlbacher/eyematics-emd-app/manifests/<version>; curl -s -o /dev/null -w '%{http_code}\\n' -H \"$H1\" -H \"$H2\" $U; curl -s -H \"$H1\" -H \"$H2\" $U | jq '{mediaType, platforms: [.manifests[].platform]}' (manifest only — no layer download, no login state involved)."
         - "Run the published image on the spot-check port: docker run -d --name emd-release -p 127.0.0.1:3312:3000 -v emd-release-vol:/data ghcr.io/okohlbacher/eyematics-emd-app:<version>; until curl -fsS http://127.0.0.1:3312/healthz >/dev/null; do sleep 0.5; done"
         - "Open http://127.0.0.1:3312, log in, click the amber \"Problem melden\" tab at the right edge of the page; wait until role=dialog \"Problem melden\" exists (≥ 2 s) and read its \"Version\" line."
-      expect: "Step 1 prints token-ok without credentials; step 2 answers HTTP 200 with an OCI image index (mediaType application/vnd.oci.image.index.v1+json) whose platforms include linux/amd64 and linux/arm64; the dialog's \"Version\" line reads v<version>, the same as the image tag."
-    notes: "Public visibility of the GHCR package is a registry setting (.planning/v1.20-ROADMAP.md:4,25) not expressible in repo code; CI only proves multi-arch build/push. \"Problem melden\" is a right-edge tab (src/components/Layout.tsx:157), not a sidebar entry. when: release — the tag exists only after /uat-release pushes it, so the verify pass skips this entry pre-release (N/A) and uat-release §2 runs it on the published image (127.0.0.1:3312). The anonymous token + manifest GET replaces the former double pull (podman is not installed here, HANDOFF §7; docker pull of the tag works without login too). Clean up: docker rm -f emd-release; docker volume rm emd-release-vol."
+      expect: "Step 1 prints token-ok without credentials; step 2 answers HTTP 200 with an OCI image index (mediaType application/vnd.oci.image.index.v1+json) whose platforms include linux/amd64 and linux/arm64; the dialog's \"Version\" line reads the same version as the image tag (identical, or v<X.Y>.0 for a two-part tag X.Y, e.g. v1.21.0 for :1.21)."
+    notes: "Owner decision NF 2026-11-24 (v1.21 release): same version, not the same string (vX.Y tag convention for X.Y.0 releases). Public visibility of the GHCR package is a registry setting (.planning/v1.20-ROADMAP.md:4,25) not expressible in repo code; CI only proves multi-arch build/push. \"Problem melden\" is a right-edge tab (src/components/Layout.tsx:157), not a sidebar entry. when: release — the tag exists only after /uat-release pushes it, so the verify pass skips this entry pre-release (N/A) and uat-release §2 runs it on the published image (127.0.0.1:3312). The anonymous token + manifest GET replaces the former double pull (podman is not installed here, HANDOFF §7; docker pull of the tag works without login too). Clean up: docker rm -f emd-release; docker volume rm emd-release-vol."
   - id: UIR-DEPLOY-002
     title: "Container runs with no environment variables"
     statement: "The deployed container runs with no operator-supplied environment variables; all UI-visible configuration (e.g. auth.inactivityTimeoutMs, warningBeforeMs) comes from settings.yaml on the volume."
@@ -444,7 +444,7 @@ requirements:
     notes: "On 127.0.0.1 (the verify container) the origin is a secure context, so the refresh cookie is accepted over plain http regardless of refreshCookieSecure; the plain-HTTP failure mode needs a LAN hostname and is BLOCKED locally (see UIR-DEPLOY-012)."
   - id: UIR-DEPLOY-021
     title: "UI version matches the image version label"
-    statement: "The deployed UI shows the running application version (in the \"Problem melden\" dialog) matching the image's org.opencontainers.image.version label."
+    statement: "The deployed UI shows the running application version (in the \"Problem melden\" dialog), and it is the same version as the image's org.opencontainers.image.version label (a two-part label X.Y denotes X.Y.0)."
     status: implemented
     when: release
     sources: ["manual: .planning/v1.20-ROADMAP.md:9 (__APP_VERSION__); docs/Deployment.md:83"]
@@ -460,8 +460,8 @@ requirements:
       steps:
         - "Log in, click the amber \"Problem melden\" tab at the right edge of the page, wait until role=dialog \"Problem melden\" exists (≥ 2 s) and read the \"Version\" line in the dialog."
         - "On the host run: podman inspect EMD --format '{{index .Config.Labels \"org.opencontainers.image.version\"}}' (docker: docker inspect)."
-      expect: "The dialog shows v<version> (e.g. v1.20.2) and the label prints the same version string; after an update both show the new release."
-    notes: "The version is displayed only in the feedback dialog (right-edge tab, Layout.tsx:157), not in the sidebar or login footer. Equality relies on the release tag matching package.json; nothing enforces it in code. when: release — org.opencontainers.image.version is set by CI (docker/metadata-action); the local build emd-smoke carries no version label, so this is checked on the published image (uat-release §2, container emd-release on 127.0.0.1:3312: docker inspect emd-release …)."
+      expect: "The dialog shows v<version> (e.g. v1.20.2) and the label denotes the same version — identical string, or the two-part form for a .0 release (dialog v1.21.0, label 1.21); after an update both show the new release."
+    notes: "Owner decision NF 2026-11-24 (v1.21 release, /useavibe-release 0): same version, not the same string — release tags follow the vX.Y convention for X.Y.0, so CI labels 1.21 while package.json says 1.21.0. The version is displayed only in the feedback dialog (right-edge tab, Layout.tsx:157), not in the sidebar or login footer. Equality relies on the release tag matching package.json; nothing enforces it in code. when: release — org.opencontainers.image.version is set by CI (docker/metadata-action); the local build emd-smoke carries no version label, so this is checked on the published image (uat-release §2, container emd-release on 127.0.0.1:3312: docker inspect emd-release …)."
   - id: UIR-DEPLOY-022
     title: "Auto-update keeps users and data"
     statement: "The deployed container becomes reachable again on the same port with existing users, saved searches and flags after `podman auto-update` installs a new :latest image."
