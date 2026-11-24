@@ -23,7 +23,7 @@
     "acceptance/Z0/Z0-P20.feature": "2f85e95c7a83bc4930a271a17a7d93d5bc9dac29da73227c96b5c77510e4c2ac",
     "acceptance/Z0/Z0-P21.feature": "9b1aab52b71b07c9ec96f541d368ab72945cdc880656a3dd9007188123ca79ea",
     "acceptance/Z0/Z0-P22.feature": "528d902d267c564c2d4425da859c479024e3c46ad6af741806bda1a70806a15c",
-    "acceptance/Z0/Z0-P23.feature": "b67f68168c1d9a2f7863855c058d575b163545dbe781509655bdf913cb7b522d",
+    "acceptance/Z0/Z0-P23.feature": "075c88bdb0b01d15ef374058e60a1f457fc6e085a4c3b9c2f0c6319dcaa579c5",
     "acceptance/Z0/Z0-P24.feature": "0259ce3cf4204efc536a4961a44e019dcacb85703aa4bfa829e8453783be6803",
     "acceptance/Z0/Z0-P25.feature": "54187f8dd82dacd237cd14b49ac3db68ce269cbff3fc297b66d39219ae44dbf5",
     "acceptance/Z0/Z0-P26.feature": "44f226125bb2b3aee1a73bde1957f5a71cdc24bd6af7ae05127a00f34093364f",
@@ -319,6 +319,40 @@
       "kind": "plan-approve by NF",
       "files": [
         ".planning/useavibe/Z0/PLAN.md"
+      ],
+      "operator": "NF"
+    },
+    {
+      "ts": "2026-11-24T09:31:26Z",
+      "kind": "criteria-freeze",
+      "files": [
+        "acceptance/Z0/Z0-P01.feature",
+        "acceptance/Z0/Z0-P02.feature",
+        "acceptance/Z0/Z0-P03.feature",
+        "acceptance/Z0/Z0-P04.feature",
+        "acceptance/Z0/Z0-P05.feature",
+        "acceptance/Z0/Z0-P06.feature",
+        "acceptance/Z0/Z0-P07.feature",
+        "acceptance/Z0/Z0-P08.feature",
+        "acceptance/Z0/Z0-P09.feature",
+        "acceptance/Z0/Z0-P10.feature",
+        "acceptance/Z0/Z0-P11.feature",
+        "acceptance/Z0/Z0-P12.feature",
+        "acceptance/Z0/Z0-P13.feature",
+        "acceptance/Z0/Z0-P14.feature",
+        "acceptance/Z0/Z0-P15.feature",
+        "acceptance/Z0/Z0-P16.feature",
+        "acceptance/Z0/Z0-P17.feature",
+        "acceptance/Z0/Z0-P18.feature",
+        "acceptance/Z0/Z0-P19.feature",
+        "acceptance/Z0/Z0-P20.feature",
+        "acceptance/Z0/Z0-P21.feature",
+        "acceptance/Z0/Z0-P22.feature",
+        "acceptance/Z0/Z0-P23.feature",
+        "acceptance/Z0/Z0-P24.feature",
+        "acceptance/Z0/Z0-P25.feature",
+        "acceptance/Z0/Z0-P26.feature",
+        ".planning/useavibe/Z0/PROBLEMS.md"
       ],
       "operator": "NF"
     }

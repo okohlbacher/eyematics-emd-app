@@ -122,3 +122,20 @@ Feature: Z0-P23 Kohortenvergleich im Tab Aggregiert und einheitliche Abbildungen
     When I close the drawer with "Alle Patienten" selected
     Then the legend lists the "Gefilterte Kohorte" entry and "Alle Patienten" with their patient counts
     And after opening the tab "Verläufe" the legend still lists both cohorts
+
+  # Added by NF on 2026-11-24 (drafted_by: ai-assisted) from the open reviewer findings of the Z0-P23 follow-up 29f32d3
+  # (Q48 a: order of the filtered cohort; Q49 a: switching the base cohort back to the filtered cohort).
+  Scenario: Gefilterte Kohorte steht in beiden Auswahlen direkt nach Alle Patienten
+    Given a saved cohort "Alterskohorte" also exists
+    And in "Kohortenbildung" I have entered "70" in the "Alter" field "Min"
+    And I have opened the cohort analysis for this filter
+    And the tab "Aggregiert" is open
+    When I click "Kohorten vergleichen"
+    Then the drawer "Kohorten vergleichen" lists "Alle Patienten" first and the "Gefilterte Kohorte" entry second, before "Alterskohorte", "Testkohorte" and "Vergleichskohorte"
+    And the selector "Kohorte wählen" lists the entries in the same order
+    And with the UI language "English" both lists show "All patients" first and the "Filtered cohort" entry second
+    When I close the drawer with "Alle Patienten" selected
+    And I choose "Testkohorte" in "Kohorte wählen"
+    And I choose the "Gefilterte Kohorte" entry in "Kohorte wählen"
+    Then the header reads "Aktive Kohorte: " followed by the "Gefilterte Kohorte" entry
+    And the legend lists the "Gefilterte Kohorte" entry and "Alle Patienten" with their patient counts
