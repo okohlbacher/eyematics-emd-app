@@ -21,6 +21,7 @@ import { useRecentActivity } from '../../hooks/useRecentActivity';
 import { ALL_PATIENTS_COHORT_ID, withAllPatientsCohort } from '../../services/allPatientsCohort';
 import { authFetch } from '../../services/authHeaders';
 import { applyFilters } from '../../services/fhirLoader';
+import { compareBaseCohortId, FILTERED_COHORT_ID, withFilteredCohort } from '../../services/filteredCompareCohort';
 import { getSettings, loadSettings } from '../../services/settingsService';
 import { formatFilteredCohortName, parseCohortFilterJson, safePickCohortFilter } from '../../utils/cohortFilterSerialization';
 import {
@@ -151,7 +152,8 @@ export function withBaseCohort(
   compareBaseId: string | null = nextId,
 ): URLSearchParams {
   // Without ?cohort= and ?filters= the base is "Alle Patienten" (header, Z0-P17), compared as its reserved id.
-  const previous = p.get('cohort') ?? (p.get('filters') === null ? ALL_PATIENTS_COHORT_ID : null);
+  // Z0-P23 (Q46): with ?filters= the base is the filtered cohort, compared as its reserved id.
+  const previous = p.get('cohort') ?? (p.get('filters') === null ? ALL_PATIENTS_COHORT_ID : FILTERED_COHORT_ID);
   const rawCohorts = p.get('cohorts');
   if (rawCohorts !== null) {
     const others = rawCohorts
@@ -193,11 +195,20 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
   );
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale } = useLanguage();
+  const urlCohortId = searchParams.get('cohort');
+  const rawFiltersParam = searchParams.get('filters');
+  const nameParam = searchParams.get('name');
   // Z0-P05: "Alle Patienten" is the first comparison option; it resolves like a saved search with no filters.
-  const savedSearches = useMemo(
-    () => withAllPatientsCohort(userSavedSearches, t('overlayCohortAllPatients')),
-    [userSavedSearches, t],
-  );
+  // Z0-P23 (Q46): the unsaved filtered cohort (?filters=, no ?cohort=) is a comparison option too, named as in the header.
+  const savedSearches = useMemo(() => {
+    const filtered = urlCohortId === null && rawFiltersParam !== null
+      ? (() => {
+        const f = parseCohortFilterJson(rawFiltersParam);
+        return { name: formatFilteredCohortName(t('analysisFilteredCohort'), f, locale, nameParam), filters: f };
+      })()
+      : null;
+    return withFilteredCohort(withAllPatientsCohort(userSavedSearches, t('overlayCohortAllPatients')), filtered);
+  }, [userSavedSearches, t, urlCohortId, rawFiltersParam, nameParam, locale]);
   const { record } = useRecentActivity();
   const navigate = useNavigate();
 
@@ -214,7 +225,8 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
 
   // Phase 16 / XCOHORT-01..04: cross-cohort URL parsing (placed here, above any early return, per Pitfall 3 hook-order rule).
   const rawCohortsParam = searchParams.get('cohorts');
-  const primaryCohortId = searchParams.get('cohort');
+  // Z0-P23 (Q46): the comparison's base cohort — the saved cohort, else the unsaved filtered cohort.
+  const primaryCohortId = compareBaseCohortId(urlCohortId, rawFiltersParam !== null);
 
   // Parse, cap at 4, drop unknown ids, always include primary first.
   const crossCohortIds: string[] = useMemo(() => {
@@ -382,17 +394,17 @@ export function useOutcomesRouteState(cohortFromPage?: ResolvedCohort | null, ce
   );
 
   // Record a recent-activity entry when a cohort is active (UX-02).
-  // Keyed on primaryCohortId so recording updates when the user switches cohorts.
+  // Keyed on ?cohort= so recording updates when the user switches cohorts.
   // path captures the full URL so cohort/filter params are preserved for restoration.
   useEffect(() => {
     if (!cohort || cohort.cases.length === 0) return;
     record({
-      id: primaryCohortId ?? 'outcomes',
+      id: urlCohortId ?? 'outcomes',
       label: cohort.name ?? t('outcomesTitle'),
       sub: t('outcomesTitle'),
       path: window.location.pathname + window.location.search,
     });
-  }, [primaryCohortId]); // eslint-disable-line react-hooks/exhaustive-deps -- record/t/cohort are stable per primaryCohortId change
+  }, [urlCohortId]); // eslint-disable-line react-hooks/exhaustive-deps -- record/t/cohort are stable per ?cohort= change
 
   // I2 (v1.14-p4): RE-derive the size-based layer defaults when the cohort CHANGES.
   //

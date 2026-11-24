@@ -5,6 +5,7 @@
 import type { SetURLSearchParams } from 'react-router-dom';
 
 import { ALL_PATIENTS_COHORT_ID } from '../../services/allPatientsCohort';
+import { FILTERED_COHORT_ID } from '../../services/filteredCompareCohort';
 
 export interface CompareHandlers {
   handleCompareChange: (nextIds: string[], options?: { replace?: boolean }) => void;
@@ -20,6 +21,8 @@ export function compareHandlers(args: {
   setCompareOpen: (open: boolean) => void;
 }): CompareHandlers {
   const { primaryCohortId, crossCohortIds, isCrossMode, setSearchParams, setCompareOpen } = args;
+  // Z0-P23 (Q46): the filtered cohort's reserved id is kept in ?cohorts= only; ?filters= already names it.
+  const urlPrimary = primaryCohortId === FILTERED_COHORT_ID ? null : primaryCohortId;
 
   const handleCompareChange = (nextIds: string[], options?: { replace?: boolean }) => {
     setSearchParams((p) => {
@@ -41,10 +44,10 @@ export function compareHandlers(args: {
         p.set('cohorts', capped.join(','));
         // D-05: ?cohorts= takes precedence — remove ?cohort= to avoid ambiguity, then re-add primary.
         p.delete('cohort');
-        if (primary) p.set('cohort', primary);
+        if (urlPrimary) p.set('cohort', urlPrimary);
       } else {
         p.delete('cohorts');
-        if (primary) p.set('cohort', primary);
+        if (urlPrimary) p.set('cohort', urlPrimary);
       }
       return p;
     }, options);
@@ -66,7 +69,7 @@ export function compareHandlers(args: {
   const handleCompareReset = () => {
     setSearchParams((p) => {
       p.delete('cohorts');
-      if (primaryCohortId) p.set('cohort', primaryCohortId);
+      if (urlPrimary) p.set('cohort', urlPrimary);
       return p;
     });
     setCompareOpen(false);

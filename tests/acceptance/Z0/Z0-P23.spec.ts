@@ -19,7 +19,7 @@
 //   have changed and a frame has been painted, measured in the page with performance.now().
 import type { APIRequestContext, Locator, Page } from '@playwright/test';
 
-import { apiToken, bearer } from '../../acceptance-at/helpers';
+import { apiToken, bearer, cohortCount, filterGroup } from '../../acceptance-at/helpers';
 import { expect, test } from '../fixtures';
 
 const COHORTS = {
@@ -722,4 +722,67 @@ test('[Z0-P23] Einheitliches Zahlenformat in Aggregiert, Verläufe und Einzelfal
     await numberTexts(page, caseChart, { skipHeading: true, skipXTicks: true }), '.', 'Einzelfallansicht (English)',
   );
   await switchLanguage(page, 'Deutsch');
+});
+
+// Q46 (NF, 2026-11-23): the unsaved filtered cohort is the fixed base cohort of the comparison, named as in the header.
+// "the cohort named after 'Aktive Kohorte: ' in the header" = the header's cohort name span; its drawer option reads
+// "<that name> (N=<n> Patient:innen)" and carries the badge "Basis-Kohorte (fest)".
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function legendStartingWith(scope: Locator, name: string): Locator {
+  return scope.locator('.legend .legendtext').filter({ hasText: new RegExp(`^${escapeRegExp(name)}(\\s|$)`) });
+}
+
+test('[Z0-P23] Gefilterte, nicht gespeicherte Kohorte lässt sich vergleichen', async ({ page }) => {
+  await page.goto('/cohort');
+  await page.getByRole('button', { name: 'Zurücksetzen' }).click();
+  await filterGroup(page, 'Alter (Jahre)').getByPlaceholder('Min').fill('70');
+  expect(await cohortCount(page)).toBeGreaterThan(0);
+  await page.getByRole('button', { name: 'Kohorte analysieren', exact: true }).click();
+  await page.waitForURL(/\/analysis\?/);
+  await openTab(page, 'Aggregiert');
+
+  // Independent reference for the filtered cohort's count: the header's "<n> Fälle in der aktuellen Kohorte"
+  // (the drawer and legend count cases per cohort, Z0-P05).
+  const caseLine = page.getByText(/^\d+ Fälle in der aktuellen Kohorte/);
+  await expect(caseLine).toBeVisible();
+  const headerCases = Number(/^(\d+)/.exec(await caseLine.innerText())![1]);
+  expect(headerCases, 'the synthetic filtered cohort is not empty').toBeGreaterThan(0);
+
+  const header = page.getByTestId('analysis-active-cohort');
+  await expect(header).toHaveText(/^Aktive Kohorte: Gefilterte Kohorte/);
+  const name = (await header.locator('span').first().innerText()).trim();
+  expect(name.startsWith('Gefilterte Kohorte'), `header cohort name "${name}"`).toBe(true);
+
+  const d = await openCompareDrawer(page);
+  const filteredFormat = new RegExp(`^${escapeRegExp(name)} \\(N=\\d+ Patient:innen\\)$`);
+  const filteredLabel = optionLabels(d).filter({ hasText: filteredFormat });
+  await expect(filteredLabel).toHaveCount(1);
+  // `has` takes a locator relative to the row (as in optionRow), not one rooted at the drawer.
+  const filteredRow = d.locator('label').filter({
+    has: page.locator('[data-compare-option-label]', { hasText: filteredFormat }),
+  });
+  await expect(filteredRow).toHaveCount(1);
+  await expect(filteredRow).toContainText('Basis-Kohorte (fest)');
+  await expect(filteredRow.getByRole('checkbox')).toBeChecked();
+  await expect(filteredRow.getByRole('checkbox')).toBeDisabled();
+  const all = optionRow(d, 'Alle Patienten').getByRole('checkbox');
+  await expect(all).toBeChecked();
+  const filteredText = await filteredLabel.innerText();
+  expect(filteredText).toBe(`${name} (N=${headerCases} Patient:innen)`);
+  const allText = await optionRow(d, 'Alle Patienten').locator('[data-compare-option-label]').innerText();
+  const allCount = Number(/\(N=(\d+) Patient:innen\)$/.exec(allText)![1]);
+  expect(allCount, '"Alle Patienten" contains the filtered cohort and more').toBeGreaterThan(headerCases);
+  await page.keyboard.press('Escape');
+
+  const panel = aggregatePanel(page);
+  await expect(legendStartingWith(panel, name)).toHaveText(filteredText);
+  await expect(legendStartingWith(panel, 'Alle Patienten')).toHaveText(allText);
+
+  await openTab(page, 'Verläufe');
+  const trajectories = trajectoriesPanel(page);
+  await expect(legendStartingWith(trajectories, name).first()).toBeVisible();
+  await expect(legendStartingWith(trajectories, 'Alle Patienten').first()).toBeVisible();
 });

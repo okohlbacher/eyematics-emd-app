@@ -63,6 +63,7 @@ import { useRecentActivity } from '../hooks/useRecentActivity';
 import { ALL_PATIENTS_COHORT_ID, withAllPatientsCohort } from '../services/allPatientsCohort';
 import { groupByParent } from '../services/cohortNames';
 import { applyFilters } from '../services/fhirLoader';
+import { compareBaseCohortId, FILTERED_COHORT_ID, withFilteredCohort } from '../services/filteredCompareCohort';
 import { getSettings } from '../services/settingsService';
 import type { CohortFilter, PatientCase, SavedSearch } from '../types/fhir';
 import {
@@ -128,7 +129,6 @@ export default function AnalysisPage() {
   // Phase 42 / ANL-011: cross-cohort URL parsing — placed here above any early return per Rules of Hooks.
   // Mirrors the pattern OutcomesView uses for consistency (same COHORT_PALETTES index order).
   const rawCohortsParam = searchParams.get('cohorts');
-  const primaryCohortId = searchParams.get('cohort');
   const isCrossMode = Boolean(rawCohortsParam);
 
   // Resolve active cohort: either a saved search (?cohort=<id>) or inline filters (?filters=<json>).
@@ -171,6 +171,9 @@ export default function AnalysisPage() {
     return formatFilteredCohortName(t('analysisFilteredCohort'), urlFilters, locale, searchParams.get('name'));
   }, [searchParams, urlFilters, t, locale]);
 
+  // Z0-P23 (Q46): the comparison's base cohort — the saved cohort, else the unsaved filtered cohort.
+  const primaryCohortId = compareBaseCohortId(savedSearchId, filteredCohortName !== null);
+
   /** ANL-012: display name — saved name, else the filtered cohort, else null ("Alle Patienten", Z0-P17). */
   const displayCohortName: string | null = activeSavedSearch ? activeSavedSearch.name : filteredCohortName;
 
@@ -201,7 +204,9 @@ export default function AnalysisPage() {
     (value: string) => {
       setSearchParams((p) => {
         const savedId = value === ALL_PATIENTS_OPTION || value === FILTERED_COHORT_OPTION ? null : value;
-        const next = withBaseCohort(p, savedId, value === ALL_PATIENTS_OPTION ? ALL_PATIENTS_COHORT_ID : savedId);
+        const compareId =
+          value === ALL_PATIENTS_OPTION ? ALL_PATIENTS_COHORT_ID : value === FILTERED_COHORT_OPTION ? FILTERED_COHORT_ID : savedId;
+        const next = withBaseCohort(p, savedId, compareId);
         if (value === ALL_PATIENTS_OPTION) {
           next.delete('filters');
           next.delete('name');
@@ -226,9 +231,13 @@ export default function AnalysisPage() {
   // ---------------------------------------------------------------------------
 
   // Z0-P05: compare ids resolve against the saved searches plus "Alle Patienten" (reserved id, no filters).
+  // Z0-P23 (Q46): plus the unsaved filtered cohort while it is the active cohort (header name, Q26 a).
   const compareSearches = useMemo(
-    () => withAllPatientsCohort(savedSearches, t('overlayCohortAllPatients')),
-    [savedSearches, t],
+    () => withFilteredCohort(
+      withAllPatientsCohort(savedSearches, t('overlayCohortAllPatients')),
+      !savedSearchId && filteredCohortName !== null ? { name: filteredCohortName, filters: urlFilters } : null,
+    ),
+    [savedSearches, t, savedSearchId, filteredCohortName, urlFilters],
   );
 
   /** Parse, deduplicate, cap at 4, drop unknown ids, always include primary first. */
@@ -269,8 +278,8 @@ export default function AnalysisPage() {
 
   // Z0-P17: cohorts compared with the active cohort (compare mode only), in selection order.
   const comparedCohortNames: string[] = useMemo(
-    () => crossCohorts.filter((c) => c.cohortId !== savedSearchId).map((c) => c.cohortName),
-    [crossCohorts, savedSearchId],
+    () => crossCohorts.filter((c) => c.cohortId !== primaryCohortId).map((c) => c.cohortName),
+    [crossCohorts, primaryCohortId],
   );
 
   // ---------------------------------------------------------------------------
