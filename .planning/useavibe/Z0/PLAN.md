@@ -861,6 +861,46 @@ The Z0-P23 session (base dd525ba) blocked at the gate's integrity step before th
 - **Q51 (Z0-P23 Blocked → Q49):** Where does the `selectCohort` test go? a) a test file that no registry entry maps; b) operator test-only commit to `tests/AnalysisPage.test.tsx` plus deviation; c) release the mapped file for additive tests (integrity-check change).
   Answer: a) (NF, 2026-11-24). Q49 a is amended: the session adds the `selectCohort` Vitest test to `tests/acceptance/Z0/Z0-P23.test.tsx` (not registry-mapped; `tests/acceptance/Z0/Z0-P23.test.ts` is mapped and stays unchanged). The name matches the gate's own-test pattern `tests/acceptance/Z0/Z0-P23.*`, so the red check still runs while only own tests have changed. `tests/AnalysisPage.test.tsx` is not changed. Fresh session `/useavibe-fix Z0-P23`.
 
+### Follow-up questions (round 14, 2026-11-24, from the third /useavibe-release 0 browser pass; addendum after approval)
+The release pre-check (step 2e, emd-smoke built from 4fc84aa; steps 1–2d green: 1387/1387 unit, 134/134 acceptance, registry FAIL 0) confirmed the intent of all 26 problems and the 7 `@visual` scenarios, but found three layout regressions that no frozen scenario covers:
+- D8 (Z0-P03): the info button "Erläuterung der Y-Achse" (`data-testid="outcomes-panel-<eye>-ylabel-info"`, `src/components/outcomes/OutcomesPanel.tsx:430-436`) covers the upper end of the rotated y-axis title "Visus-Veränderung zum Ausgangswert (logMAR)": button 285–299 × 286–300 px, title 291–305 × 292–548 px, so the closing ")" is hidden. The shorter CRT title does not overlap; the longer EN titles are at risk.
+- D9 (Z0-P23, `Brush` from c8d3cbd): the x-axis title "Tag" (`OutcomesPanel.tsx:464`, `position: 'insideBottom', offset: -8`) is drawn on the time range slider (`OutcomesPanel.tsx:547-552`): title 581–595 px, slider 584–602 px, in all three Verläufe chart cards.
+- D10 (Z0-P23, `src/components/case-detail/PatientHeader.tsx`): the always-visible case-view button "Kohorten vergleichen" squeezes the patient facts at ≤ ~1420 px viewport width ("Alter: 86 Jahre" 55 px wide on three lines, "Rechtes Auge (OD)" 78 px on three lines).
+- **Q52 (D8 → Z0-P03 feature):** Shorter y-axis titles or another position of the info button?
+  Answer: fix it, by a shorter title or a better button placement (NF, 2026-11-24). The titles are fixed by the frozen Z0-P03 scenarios ("Visus-Veränderung zum Ausgangswert (logMAR)" etc.) and by UIR-TRAJ-007 (`handoff/requirements/TRAJ.yaml:159`), so the fix is the placement; the titles stay unchanged. UIR-TRAJ-007 ("info icon at the upper end of the y-axis") stays true. New scenario in `acceptance/Z0/Z0-P03.feature` (text below); fresh session `/useavibe-fix Z0-P03`.
+- **Q53 (D9 → Z0-P23 feature):** Where does the x-axis title go?
+  Answer: below the time range slider (NF, 2026-11-24). The text stays "Tag" / "Behandlung #" (UIR-TRAJ-007). New scenario in `acceptance/Z0/Z0-P23.feature` (text below); fresh session `/useavibe-fix Z0-P23`.
+- **Q54 (D10):** Fix the case-header wrapping in Z0?
+  Answer: no, remark only (NF, 2026-11-24). Listed under "Observed, not changed".
+
+Scenario drafts for the re-freeze (drafted_by: ai-assisted; both are red on 4fc84aa):
+
+`acceptance/Z0/Z0-P03.feature` (uses the feature's Background, metric tab "CRT"):
+```gherkin
+  # Added by NF on 2026-11-24 (drafted_by: ai-assisted) from the third /useavibe-release 0 browser pass on emd-smoke
+  # built from 4fc84aa: the info icon covers the end of the y-axis title (D8, Q52).
+  Scenario: Infosymbol verdeckt den Y-Achsentitel nicht
+    When I open each metric tab "Visus" and "CRT" with each y-axis setting "Absolut", "Δ" and "Δ %" in "Diagramm-Anzeige"
+    Then in every chart card the info icon stays at the upper end of the y-axis
+    And the info icon overlaps neither the y-axis title, nor the y-axis tick labels, nor the plot area
+    And the y-axis title is drawn in full inside its chart card
+    And the same holds with the UI language "English"
+```
+
+`acceptance/Z0/Z0-P23.feature` (uses the feature's Background, "Testkohorte"):
+```gherkin
+  # Added by NF on 2026-11-24 (drafted_by: ai-assisted) from the third /useavibe-release 0 browser pass on emd-smoke
+  # built from 4fc84aa: the x-axis title is drawn on the time range slider (D9, Q53).
+  Scenario: Zeitachsentitel steht unterhalb des Zeitbereichsreglers
+    Given I open the tab "Verläufe" with the metric tab "Visus"
+    Then in every chart card the x-axis title "Tag" lies completely below the time range slider
+    And the x-axis title overlaps neither the time range slider, nor the x-axis tick labels, nor the legend
+    And the x-axis title is drawn in full inside its chart card
+    And the same holds for the x-axis title "Behandlung #" after choosing "Anzahl Behandlungen" in "Diagramm-Anzeige"
+    And the same holds when I compare "Testkohorte" with "Alle Patienten"
+```
+Order: Z0-P23 (D9) first, then Z0-P03 (D8); both touch `OutcomesPanel.tsx`, so the second session starts from the first one's commit. Afterwards the release pre-check (`/useavibe-release 0`) runs again from step 2a.
+
 ## Decisions applied from the study team's answers (2026-11-18)
 Settled answers are applied here per problem; they take precedence over the option lists in the problem sections above. Items that are still ambiguous are only referenced (Q20–Q30). Registry and AT amendments that the team approved (C1–C4, C7–C10, C14–C17) are made in the fix session of the problem that triggers them, in the same commit series, and named in the commit body. The registry-mapped Vitest tests named in C4 and C7 are released for amendment by those answers. No registry or test file is changed during planning.
 
@@ -914,6 +954,7 @@ Settled answers are applied here per problem; they take precedence over the opti
 - `AnalysisPage.tsx:303-308`: the critical threshold 400 is hard-coded instead of coming from settings. This is fixed in P09 (Q28).
 - Team suggestion (Q15a/Q30): a case-wise data view, newest first, with pages per case. Out of scope for Z0; candidate for a later cycle.
 - Release pre-check round 10 (browser pass on 4b7b17e), not covered by any Z0 scenario: the case-view x-axis ends at "9,8" (the rounding scenario covers Verläufe only); the case-view tooltip reads "CRT (µm): 622 µm" (unit twice); decimal points in the German UI outside chart tooltips and ticks ("Visusbereich 0.05–0.90", Datenqualität "0.38" and "Sprung > 0.3", see Q42); parameter names in Datenqualität are English in the German UI; the legend of the Aggregiert visus line chart lists the cohorts in reverse order to the main legend.
+- Release pre-check round 14 (browser pass on 4fc84aa), not covered by any Z0 scenario: D10, the case-view header wraps the patient facts at ≤ ~1420 px viewport width since the always-visible "Kohorten vergleichen" button (Z0-P23) ("Alter: 86 Jahre" and "Rechtes Auge (OD)" on three lines each; NF: remark, no fix in Z0, Q54); the Verläufe x-axis title reads "Tag" (`outcomesTooltipDay`, as in UIR-TRAJ-007) while the setting and the tooltip heading say "Tage seit Baseline"; the sidebar case search opens nothing on Enter unless a suggestion is highlighted; `<html lang="en">` while the UI is German; the age inputs in Kohortenbildung have no accessible name (placeholder "Min"/"Max" only).
 
 ## Blocked
 - Nothing is blocked so far. P04, P06, P17 and P23 cannot be completed without answers to C4, C7 and C8, because registry-mapped tests would go red.
@@ -929,3 +970,4 @@ Settled answers are applied here per problem; they take precedence over the opti
 - Update 2026-11-23 (round 11): the Z0-P04 session blocked on UIR-TRAJ-042 and its two mapped tests in `tests/OutcomesPage.test.tsx`, which still assert the "Outcomes" heading; answered by NF as Q47 a (tests released and amended by the operator, registry follows Q27; test 4 expects "Gefilterte Kohorte · …").
 - Update 2026-11-24 (round 12): the Z0-P23 follow-up 29f32d3 was committed with three open reviewer findings (attempt cap): no test for the filtered-option wiring, unspecified order of the filtered cohort, a new file outside the REG list. Answered by NF as Q48 a (filtered cohort directly after "Alle Patienten" in both selections; new scenario), Q49 a (wiring covered by that scenario and a Vitest test in the same session) and Q50 (REG list extended); feature amended and re-frozen, follow-up fix session under Z0-P23.
 - Update 2026-11-24 (round 13): the Z0-P23 session blocked at the integrity step, because Q49 a named the registry-mapped `tests/AnalysisPage.test.tsx`; answered by NF as Q51 a (test in the unmapped `tests/acceptance/Z0/Z0-P23.test.tsx`). No feature change; plan re-approved, follow-up session Z0-P23.
+- Update 2026-11-24 (round 14): the third release pre-check browser pass (4fc84aa) found D8 (info icon covers the Visus y-axis title, Z0-P03), D9 (x-axis title on the time range slider, Z0-P23) and D10 (case-header wrapping, Z0-P23). Answered by NF as Q52 (fix by placement, titles unchanged), Q53 (x-axis title below the slider) and Q54 (D10 remark only); features to be amended and re-frozen, follow-up fix sessions under Z0-P23 and Z0-P03.
